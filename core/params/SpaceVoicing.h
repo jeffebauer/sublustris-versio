@@ -93,8 +93,19 @@ constexpr float kHoldSeconds        = 8.0f; // the slow level a held tail's ceil
 // in all). ATTACK into or out of REVERSE crossfades over kAttackFadeSeconds.
 constexpr float kSpaceFlipSeconds  = 0.05f;
 constexpr float kAttackFadeSeconds = 0.05f;
-// PROTOTYPE REVERSE C (swell to a cut): how fast the tail falls after the cut.
-constexpr float kReverseCutT60 = 0.3f;
+
+// ---- REVERSE (SPEC §4.11, ADR 0015 amendment 22 Oct 2026) ------------------------
+// Rising taps over TIME into a short reverb of its own (Reverse.h). Tuned
+// together: tap spacing (TIME / kReverseTaps) against the short reverb's
+// line lengths, and the rise against how sudden the stop is.
+constexpr int   kReverseTaps            = 32;     // per side *(start)*
+constexpr float kReverseRiseDb          = 30.0f;  // first tap to last *(start)*
+constexpr float kReverseMeanMinSeconds  = 0.02f;  // the short reverb's mean line at SIZE fully CCW *(start)*
+constexpr float kReverseMeanMaxSeconds  = 0.09f;  // at SIZE fully CW *(start)*
+constexpr float kReverseMaxLineSeconds  = 0.25f;  // its memory: mean × 1.41 + DRIFT's room
+constexpr float kReverseTailMinSeconds  = 0.15f;  // its T60 at DECAY fully CCW: a sharp stop *(start)*
+constexpr float kReverseTailMaxSeconds  = 1.0f;   // at DECAY's top: a softer stop *(start)*
+constexpr float kReverseLevel           = 6.0f;   // +15.5 dB: loudness matches the forward wet (skank, vibes; every space)
 
 // ---- Plate (SPEC §4.2) -----------------------------------------------------
 constexpr float kPlateMaxScale     = 1.6f;  // SIZE fully CW

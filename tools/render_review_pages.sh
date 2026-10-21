@@ -54,7 +54,7 @@ cat > $SRC/freeze_vibes.json <<'EOF'
 { "buttons": [[2.4, 2.5], [6.0, 9.5], [14.5, 14.6]] }
 EOF
 
-# r <page> <folder> <tag> <auto prefix or ""> --set ...   (env vars such as IV_REVERSE_MODE pass through)
+# r <page> <folder> <tag> <auto prefix or ""> --set ...   (env vars pass through)
 r() {
     local page=$1 dir=$2 tag=$3 auto=$4; shift 4
     mkdir -p renders/$page/$dir
@@ -122,7 +122,7 @@ if on m4_massive; then
     done
     r m4_massive infinite A_hall "" --set space=HALL --set era=0 --set decay=1 --set size=0.7
     r m4_massive infinite B_massive "" --set space=MASSIVE --set era=0 --set decay=1 --set size=0.7
-    finish m4_massive "Immensio M4: MASSIVE and ATTACK" "After your M4 notes: MASSIVE starts with what you play and swells from there (it was silent for over a second), SIZE fully CCW is a wash, not rhythmic echoes, and DARKEN lets go sooner between phrases. The four ATTACK settings in HALL and MASSIVE, and infinite DECAY (ERA clean). REVERSE here is today's; the smoother one is on renders/reverse_options.
+    finish m4_massive "Immensio M4: MASSIVE and ATTACK" "After your M4 notes: MASSIVE starts with what you play and swells from there (it was silent for over a second), SIZE fully CCW is a wash, not rhythmic echoes, and DARKEN lets go sooner between phrases. The four ATTACK settings in HALL and MASSIVE, and infinite DECAY (ERA clean). REVERSE is shown in full on renders/reverse.
 
 massive_size    MASSIVE's SIZE, DECAY 0.7
 attack_hall     the ATTACK switch in HALL
@@ -222,23 +222,38 @@ fi
 
 # ---- Decision pages (built WITHOUT --showcase: they ask the owner to pick) -------------------
 
-if on reverse_options; then
-    page reverse_options
-    for col in massive:MASSIVE:0.4 massive_long:MASSIVE:0.8 hall:HALL:0.4; do
-        IFS=: read c sp t <<< "$col"
-        for v in 1:A_last_time 2:B_swell_cut 3:C_reversed_in; do
-            IV_REVERSE_MODE=${v%%:*} r reverse_options $c ${v##*:} "" --set space=$sp --set era=0 --set attack=REVERSE --set time=$t --set decay=0.45 --set size=0.7
-        done
+if on reverse; then
+    page reverse
+    RV=(--set era=0 --set attack=REVERSE)
+    for tm in 0:A_0.2s 0.4:B_0.5s 0.8:C_1.3s 1:D_2s; do
+        r reverse time ${tm##*:} "" --set space=HALL $RV --set time=${tm%%:*} --set decay=0.45 --set size=0.5
     done
-    print -r -- "Your notes on the smooth REVERSE: a delay, then a break after the first repeat, then audible chunks of reversed audio, not a smooth wash. Measured: MASSIVE's reverb swells up, so playing a piece of it backwards makes it fall away, then a hole; after that, backwards pieces of a steady wash are just pieces with seams. Two new ways to reverse, without pieces of the reverb:
+    for dc in 0:A_sharp 0.5:B_middle 1:C_soft; do
+        r reverse decay ${dc##*:} "" --set space=HALL $RV --set time=0.4 --set decay=${dc%%:*} --set size=0.5
+    done
+    for sz in 0:A_fine 1:B_coarse; do
+        r reverse size ${sz##*:} "" --set space=HALL $RV --set time=0.4 --set decay=0.45 --set size=${sz%%:*}
+    done
+    r reverse attack A_normal "" --set space=HALL --set era=0 --set attack=NORMAL --set time=0 --set decay=0.45 --set size=0.5
+    r reverse attack B_bloom "" --set space=HALL --set era=0 --set attack=BLOOM --set time=0.4 --set decay=0.45 --set size=0.5
+    r reverse attack C_reverse "" --set space=HALL $RV --set time=0.4 --set decay=0.45 --set size=0.5
+    finish reverse "Immensio: REVERSE, the hardware way" "REVERSE rebuilt the established way (AMS RMX16, Lexicon and Midiverb reverse programs): each note blooms into a swell that starts with it, rises over TIME, then stops. Nothing plays backwards; the reverb's shape is reversed. Inside: a delay with 32 taps per side that get louder over TIME, into a short reverb of its own that smooths them into one swell. TIME is the swell's length, DECAY how sudden the stop is, SIZE the short reverb's size (the swell's grain). It's the same in every SPACE (MASSIVE adds its predelay), as on the hardware, where reverse is its own program.
 
-massive       MASSIVE, TIME 0.4
-massive_long  MASSIVE, TIME 0.8
-hall          HALL, TIME 0.4
+time     TIME (HALL, DECAY 0.45)
+decay    DECAY, the stop (TIME 0.4)
+size     SIZE, the grain (TIME 0.4)
+attack   the three ATTACK settings side by side (TIME 0.4)
 
-A_last_time    last time's B: backwards pieces of the reverb, overlapping (for comparison)
-B_swell_cut    the classic hardware reverse: the reverb starts with the note and swells over TIME, then stops (in MASSIVE its long lines soften the stop)
-C_reversed_in  what you play is reversed (overlapping, faded pieces) and fed into the reverb: backwards notes inside a smooth wash. Still TIME late" > renders/reverse_options/README.txt
-    python3 tools/review/make_review.py renders/reverse_options --title "Immensio: REVERSE, three ways" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/reverse_options/index.html"
+A_0.2s     TIME fully CCW: a 0.2 s swell
+B_0.5s     TIME 0.4: 0.5 s
+C_1.3s     TIME 0.8: 1.3 s
+D_2s       TIME fully CW: 2 s
+A_sharp    DECAY fully CCW: the swell stops within ~0.2 s
+B_middle   DECAY noon
+C_soft     DECAY fully CW: a softer stop (~1 s)
+A_fine     SIZE fully CCW: a fine, dense grain
+B_coarse   SIZE fully CW: a coarser, roomier grain
+A_normal   NORMAL: the reverb as usual
+B_bloom    BLOOM: swells over TIME, then decays naturally
+C_reverse  REVERSE: swells over TIME, then stops"
 fi

@@ -1,12 +1,12 @@
 # Owner tasks
 
-**Last updated:** 22 Oct 2026 (REVERSE round 2 on `renders/reverse_options`, after your notes. Every page is rendered from the same build by `tools/render_review_pages.sh`).
+**Last updated:** 22 Oct 2026 (REVERSE rebuilt the hardware way, on `renders/reverse`. Every page is rendered from the same build by `tools/render_review_pages.sh`).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- [ ] **REVERSE, round 2** (`renders/reverse_options/index.html`, level-matched, picks): your notes (a delay, a break after the first repeat, chunks) came from playing pieces of the reverb backwards, so both new ways skip that. A is last time's smooth pieces, for comparison. B: the classic reverse, where the reverb starts with the note, swells over TIME and stops. C: what you play is reversed and fed into the reverb, so backwards notes sit inside a smooth wash (still TIME late).
+- [ ] **Listen: REVERSE, the hardware way** (`renders/reverse/index.html`): rebuilt the established way (RMX16/Lexicon reverse programs), as you picked: each note blooms into a swell over TIME, then stops. Is this the sound? Is the swell the right shape, and is the stop sudden enough (DECAY) and the grain right (SIZE)?
 - [ ] **Approve or reject (ADR 0008 amendment):** infinite tails and frozen pads get a small, capped "makeup" that lifts a sagging held tail back to its own level (never above, ≤ 0.3 dB/s). Without it, infinite tails with tape wow fade out over ~10 minutes. It's the one place the loop gain may go a hair over 1.
 - [ ] **MASSIVE's SIZE glide:** SIZE moves bend at most a semitone (ADR 0012), so a full SIZE sweep in MASSIVE glides for ~40 s. Keep that gentle bend, or allow a faster swoop with more bend in MASSIVE only?
 - [ ] **Plugin identity** (one-line answers): keep manufacturer code `Rslo` and company name / bundle-ID prefix as Resilio's, with plugin code `ImVs`? (Same developer, so it groups both plugins together in Ableton.)
@@ -30,11 +30,12 @@
 ## Waiting on Claude
 
 - **Frozen MASSIVE resonance and the PLATE's early repeats** (your freeze_options notes: an upper harmonic building in a frozen MASSIVE; two audible repeats on skank in PLATE before it diffuses): to measure and fix next.
-- **REVERSE**, once you've picked on round 2: make it the only behaviour, tidy the prototype away, add tests (no hole after the first swell, no level jumps).
+- **REVERSE tuning** from your notes on `renders/reverse`.
 - **M8 tuning** from your listening notes on the pages above.
 
 ## Done
 
+- 22 Oct 2026: **REVERSE rebuilt the established way** (your pick: the hardware kind). Starts with the note, swells over TIME, stops within ~0.25 s; no break, no chunks. The old reversed pieces are gone.
 - 22 Oct 2026: **REVERSE notes** measured (the first reversed piece fades out into a 0.2 s hole, then jumps of up to 13 dB) and two new ways rendered for round 2.
 - 21 Oct 2026: **M1 notes** acted on: HALL's SIZE now reads small to huge (20 → 260 ms, small rooms have shorter tails), the buzz on long small rooms gone (ringing score 43 → 26 dB), TONE's ends wider (dark +4 dB lows / −9 dB highs, bright the opposite). Fixed on the way: a click when freezing at infinite DECAY, and the limiter edging past −1 dBFS.
 - 21 Oct 2026: **Freeze confirmed: the twin** (B on every card). It's the only behaviour now: quieter (−10.5 dB), fading back to the untouched pad, and painting adds ~1 dB (it was 7 dB). The old companion plate is gone (84 KB of fast memory freed).

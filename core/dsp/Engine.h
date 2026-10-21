@@ -6,7 +6,8 @@
 //
 // M5: the three SPACEs (PLATE on the Plate, HALL and MASSIVE on the FDN),
 // ATTACK, and the freeze: In → predelay → input diffusion → swell → big
-// tank → (REVERSE) → MIX (SPEC §4.1). The button and the gate feed one
+// tank → MIX (SPEC §4.1); in REVERSE the diffused input's rising taps feed
+// a short reverb of its own, which replaces the big tank's wet. The button and the gate feed one
 // gesture reader (ADR 0011): a tap freezes the big tank into a still pad and
 // moves the input to the twin, a second tank of the same space whose sound
 // fades back out over the pad (SIZE and DECAY play it); holding while frozen
@@ -46,6 +47,7 @@ public:
         return dsp::Fdn::memoryFloats(sampleRate) + dsp::Swell::memoryFloats(sampleRate)
              + dsp::Reverse::memoryFloats(sampleRate) + 2 * dsp::Plate::memoryFloats(sampleRate, voicing::kPlateMaxScale, true)
              + dsp::Fdn::memoryFloats(sampleRate) // the freeze twin
+             + dsp::Fdn::memoryFloats(sampleRate, voicing::kReverseMaxLineSeconds) // REVERSE's short reverb
              + 2 * dsp::nextPow2(size_t(voicing::kPredelayMaxSeconds * sampleRate) + 4);
     }
     static constexpr size_t fastFloats(float sampleRate)
@@ -75,9 +77,6 @@ public:
 
     bool  frozen() const { return gesture_.frozen(); }
     bool  painting() const { return gesture_.painting(); }
-    // PROTOTYPE, renders/reverse_options: 0 A pieces, 1 B smooth pieces, 2 C swell to a cut,
-    // 3 D the input reversed into the tank.
-    void  setReverseMode(int m) { reverseMode_ = m; reverse_.setSmooth(m == 1 || m == 3); }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.
@@ -133,6 +132,7 @@ private:
     dsp::Plate        plate_;
     // The freeze twin: the frozen tank's space, with its own decay.
     dsp::Fdn          twinFdn_;
+    dsp::Fdn          reverseFdn_; // REVERSE's short reverb
     dsp::Plate        twinPlate_;
     dsp::Diffuser<4>  twinDiffuser_[2];
     float             twinMean_ = -1.0f, twinSpread_ = -1.0f;
@@ -155,10 +155,10 @@ private:
     // tank restarts in the new voicing, and both fade back in.
     int   activeSpace_ = 1, flipPhase_ = 0; // 0 steady, 1 fading out, 2 fading in
     float flipGain_ = 1.0f, flipStep_ = 0.0f;
-    // ATTACK = REVERSE: crossfade between the forward and the reversed wet.
+    // ATTACK = REVERSE: crossfade between the forward wet and the reverse swell.
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f;
-    int   reverseMode_ = 0; // PROTOTYPE (setReverseMode)
-    float cutGain_ = 1.0f, cutGainTarget_ = 1.0f; // PROTOTYPE C: makeup for the short tail
+    bool  reverseRunning_ = false;
+    float reverseMean_ = -1.0f;
 
     // Freeze (ADR 0009–0011). Button and gate edges this block, by offset.
     struct Edge {
@@ -189,6 +189,7 @@ private:
     // Scratch for one chunk.
     float bufL_[kChunk] = {}, bufR_[kChunk] = {}, wetL_[kChunk] = {}, wetR_[kChunk] = {};
     float twinInL_[kChunk] = {}, twinInR_[kChunk] = {}, twinL_[kChunk] = {}, twinR_[kChunk] = {};
+    float revInL_[kChunk] = {}, revInR_[kChunk] = {}, revL_[kChunk] = {}, revR_[kChunk] = {};
 };
 
 } // namespace iv

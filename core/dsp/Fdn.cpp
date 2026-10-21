@@ -43,12 +43,12 @@ float uniform(uint32_t& s) // −1..1
 
 } // namespace
 
-IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed)
+IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed, float maxLineSeconds)
 {
     sampleRate_ = sampleRate;
-    maxLen_ = voicing::kFdnMaxLineSeconds * sampleRate - 4.0f;
+    maxLen_ = maxLineSeconds * sampleRate - 4.0f;
     ready_ = true;
-    for (auto& l : line_) ready_ &= l.init(arena, size_t(voicing::kFdnMaxLineSeconds * sampleRate));
+    for (auto& l : line_) ready_ &= l.init(arena, size_t(maxLineSeconds * sampleRate));
     for (int i = 0; i < kN; ++i)
         for (int k = 0; k < 2; ++k) {
             apLen_[i][k] = uint32_t(voicing::kInLoopSeconds[i][k] * sampleRate);

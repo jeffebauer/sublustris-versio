@@ -119,8 +119,6 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
                const std::vector<std::string>& sets, std::string& error)
 {
     engine.prepare(sampleRate, block);
-    // Prototype, desktop only: IV_REVERSE_MODE picks the REVERSE on trial (Engine::setReverseMode).
-    if (const char* rm = std::getenv("IV_REVERSE_MODE")) engine.setReverseMode(std::atoi(rm));
     if (!presetPath.empty()) {
         iv::json::Value preset;
         if (!iv::json::loadFile(presetPath, preset, error)) return false;

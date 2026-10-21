@@ -29,13 +29,14 @@ public:
     static constexpr int kControlBlock = 32;
 
     // Floats of delay memory prepare() takes from its arena at this rate.
-    static constexpr size_t memoryFloats(float sampleRate)
+    // maxLineSeconds: the longest a line may get (REVERSE's short reverb uses far less than the tank).
+    static constexpr size_t memoryFloats(float sampleRate, float maxLineSeconds = voicing::kFdnMaxLineSeconds)
     {
-        return size_t(kN) * (nextPow2(size_t(voicing::kFdnMaxLineSeconds * sampleRate) + 4)
+        return size_t(kN) * (nextPow2(size_t(maxLineSeconds * sampleRate) + 4)
                              + 2 * nextPow2(size_t(voicing::kInLoopMaxSeconds * sampleRate) + 4));
     }
 
-    bool prepare(Arena& arena, float sampleRate, uint32_t seed);
+    bool prepare(Arena& arena, float sampleRate, uint32_t seed, float maxLineSeconds = voicing::kFdnMaxLineSeconds);
     void reset();
 
     // Targets, read at the next control tick. meanSeconds: the lines' mean

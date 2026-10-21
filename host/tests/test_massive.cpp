@@ -2,8 +2,8 @@
 // 0013, 0015). BLOOM's rise follows TIME in every space; MASSIVE's gentle
 // built-in mass follows DECAY and SIZE, starting soon after the source (M4
 // notes); HALL in NORMAL attacks at once; infinite tails hold a floor for
-// 10 minutes without growing; MASSIVE has no rhythmic echoes at any SIZE; REVERSE plays each segment backwards,
-// rising to its cut; SPACE flips are click-free; HALL and MASSIVE match in
+// 10 minutes without growing; MASSIVE has no rhythmic echoes at any SIZE; REVERSE swells from the
+// note over TIME and stops, with no hole or jumps; SPACE flips are click-free; HALL and MASSIVE match in
 // loudness; MASSIVE is stable at every corner.
 
 #include "Metrics.h"
@@ -260,36 +260,44 @@ void noRhythmicEchoes()
     check(smooth, "MASSIVE has no rhythmic echoes at any SIZE (spikiness dB:" + detail + "; < 1 everywhere, was 2+ at SIZE 0)");
 }
 
-// REVERSE (ADR 0015): nothing for the first segment (the reversed wet is
-// TIME late), then each segment rises to its cut; no clicks at the cuts.
+// REVERSE (ADR 0015, amended 22 Oct 2026): the hardware reverse. A click
+// blooms into a swell that starts with it, rises smoothly over TIME and
+// stops (the owner's notes on the old segments: a delay, a break after the
+// first repeat, then chunks). No clicks on a held tone.
 void reverseSwells()
 {
-    for (float t : {0.0f, 0.5f}) {
-        const double segment = iv::map::reverseSeconds(t);
-        std::vector<float> in(size_t(4.0f * kSr), 0.0f);
-        in[10] = 0.8f;
-        Setting s;
-        s.attack = 2;
-        s.time = t;
-        // A tail that falls >= 10 dB across one segment, so a reversed rise
-        // is measurable (a 0.2 s segment of a 4.5 s tail only moves ~3 dB).
-        s.decay = t == 0.0f ? 0.0f : 0.3f;
-        const Stereo out = render(in, s);
-        const size_t L = size_t(segment * kSr);
-        double before = 0.0;
-        for (size_t i = 0; i + 1 < L; ++i) before = std::fmax(before, std::fabs(out.l[i]));
-        int rising = 0, segs = 0;
-        for (size_t k = 2; (k + 1) * L <= out.l.size() && k < 6; ++k, ++segs) {
-            double q1 = 0.0, q4 = 0.0;
-            for (size_t i = k * L; i < k * L + L / 4; ++i) q1 += double(out.l[i]) * out.l[i];
-            for (size_t i = (k + 1) * L - L / 4; i < (k + 1) * L; ++i) q4 += double(out.l[i]) * out.l[i];
-            rising += q4 > 2.0 * q1;
+    for (int space : {0, 1, 2})
+        for (float t : {0.0f, 0.4f, 1.0f}) {
+            const double length = iv::map::reverseSeconds(t);
+            std::vector<float> in(size_t((length + 2.0) * kSr), 0.0f);
+            in[10] = 0.8f;
+            Setting s;
+            s.space = space;
+            s.attack = 2;
+            s.time = t;
+            s.decay = 0.45f;
+            const auto e = envelope(render(in, s), 480); // 10 ms windows
+            size_t peak = 0;
+            for (size_t i = 0; i < e.size(); ++i)
+                if (e[i] > e[peak]) peak = i;
+            size_t onset = 0;
+            while (onset < peak && e[onset] < e[peak] * 1e-3) ++onset; // −60 dB: it has started
+            double worstDrop = 0.0; // the biggest 10 ms fall during the rise, dB (a break)
+            for (size_t i = onset + 1; i <= peak; ++i)
+                worstDrop = std::fmax(worstDrop, 20.0 * std::log10(e[i - 1] / (e[i] + 1e-12)));
+            size_t stop = peak;
+            while (stop < e.size() && e[stop] > e[peak] * 0.01) ++stop; // −40 dB
+            const double peakAt = double(peak) * 0.01, onsetAt = double(onset) * 0.01, stopAfter = double(stop - peak) * 0.01;
+            // MASSIVE adds SIZE's predelay (up to 100 ms) before both.
+            const double pre = space == 2 ? iv::map::massivePredelaySeconds(s.size) : 0.0;
+            char msg[240];
+            std::snprintf(msg, sizeof msg,
+                          "REVERSE space %d, %.2f s: starts at %.2f s, peaks at %.2f s, no break (worst 10 ms fall %.1f dB), stops 40 dB in %.2f s",
+                          space, length, onsetAt - pre, peakAt - pre, worstDrop, stopAfter);
+            check(onsetAt - pre < 0.06 && std::fabs(peakAt - pre - length) < 0.15 * length + 0.03 && worstDrop < 6.0
+                      && stopAfter < 0.5,
+                  msg);
         }
-        char msg[200];
-        std::snprintf(msg, sizeof msg, "REVERSE %.2f s: silent for the first segment (peak %.1g), %d of %d segments rise to their cut",
-                      segment, before, rising, segs);
-        check(before < 1e-6 && segs > 0 && rising == segs, msg);
-    }
     std::vector<float> held(size_t(6.0f * kSr));
     for (auto& x : held) x = 0.2f * std::sin(0.03f * float(&x - held.data())) + 0.02f * noise();
     Setting s;
@@ -298,7 +306,7 @@ void reverseSwells()
     s.mix = 1.0f;
     const Stereo out = render(held, s);
     const auto m = iv::metrics::compute({out.l, out.r}, kSr);
-    check(finite(out) && m.clickCount == 0, "REVERSE on a held tone: no clicks at the cuts (" + std::to_string(m.clickCount) + ")");
+    check(finite(out) && m.clickCount == 0, "REVERSE on a held tone: no clicks (" + std::to_string(m.clickCount) + ")");
 }
 
 // ADR 0013: SPACE flips mid-tail crossfade without clicks.

@@ -87,6 +87,10 @@ inline float massiveNormalAttackSeconds(float decay, float size) { return expLer
 inline float normalPredelaySeconds(float v) { return 0.25f * v * v; }
 inline float bloomSeconds(float v) { return expLerp(0.1f, 4.0f, v); }
 inline float reverseSeconds(float v) { return expLerp(0.2f, 2.0f, v); }
+// DECAY in REVERSE: the short reverb's T60, how sudden the stop is.
+// SIZE in REVERSE: the short reverb's mean line, the swell's grain.
+inline float reverseMeanSeconds(float v) { return expLerp(voicing::kReverseMeanMinSeconds, voicing::kReverseMeanMaxSeconds, v); }
+inline float reverseTailSeconds(float v) { return expLerp(voicing::kReverseTailMinSeconds, voicing::kReverseTailMaxSeconds, v); }
 
 // SIZE (P5) in PLATE: the tank's scale, 0.5 → 1.6 of Dattorro's (SPEC §3).
 inline float plateScale(float v) { return expLerp(voicing::kPlateMinScale, voicing::kPlateMaxScale, v); }

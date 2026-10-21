@@ -24,9 +24,9 @@ Shared vocabulary for this project. Use these terms exactly in code, comments an
 | **Hiss** | Cassette-stage noise fed into the tank input, ducked by the input level. |
 | **Duck** | Tail ducking from the input envelope, only at infinite Decay. Always DARKEN: a loop low-pass closes while you play, plus a ~3 dB dip. |
 | **ATTACK** | SW1: NORMAL / BLOOM / REVERSE. Sets the attack in every space. |
-| **TIME** | P7: NORMAL predelay, BLOOM swell time, or REVERSE segment length. |
+| **TIME** | P7: NORMAL predelay, BLOOM swell time, or REVERSE swell length. |
 | **Bloom** | The tail swells in over TIME (the swell stage, in every space). |
-| **Reverse** | Classic reverse swell: each TIME-long segment of the tank output plays backwards, rising to a cut; the wet is TIME late. |
+| **Reverse** | The hardware reverse reverb (AMS RMX16-style): each note blooms into a swell that starts with it, rises over TIME and stops. Rising taps into a short reverb of its own; nothing plays backwards. |
 | **SPACE** | SW0: PLATE / HALL / MASSIVE. Flips crossfade ~100 ms. |
 | **P1–P7** | Pots by panel position, reading order (Resilio ADR 0028), not libDaisy index. |
 | **Normalised** | 0–1 parameter value every host passes; mapping curves live only in `core/params/`. |
