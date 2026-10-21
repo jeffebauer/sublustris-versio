@@ -67,6 +67,10 @@ STIMULI = {
     "08_held_tones": {"name": "Held tones", "note": "1 kHz sine, then a held A minor chord",
                       "marks": [["Sine", 1], ["Chord", 10]], "loud": [1, 10]},
     "09_pink_noise": {"name": "Pink noise", "note": "steady pink noise", "marks": [], "loud": []},
+    # Immensio's sparse vibraphone phrase (tools/render_review_pages.sh), three
+    # chords, each left to ring.
+    "10_vibes": {"name": "Vibes", "note": "three soft vibraphone chords, each left to ring",
+                 "marks": [["Chord 1", 0], ["Chord 2", 6], ["Chord 3", 12], ["Tail", 18]], "loud": [0, 6, 12]},
 }
 STIM_BY_SHORT = {k.split("_", 1)[1]: k for k in STIMULI}  # "hits" -> "02_hits"
 
@@ -665,8 +669,10 @@ ATT_COLOR = {"CLEAN": "--clean", "TAPE": "--driven", "VALVE": "--kicked"}  # CSS
 
 
 def build_page_data(root, out_path, items, refs, rows=None, columns=None, variants=None,
-                    title=None, level_match=None):
-    """level_match: True / False, or None for the default (see default_level_match)."""
+                    title=None, level_match=None, dry_dir=None):
+    """level_match: True / False, or None for the default (see default_level_match).
+    dry_dir: a folder of the dry inputs, <material>.wav: each row whose material
+    has one gets it as a "Dry" version in every card (the input, no reverb)."""
     if not items:
         raise LayoutError("no renders found in {} (no manifest.json and no .wav files)".format(root))
     row_keys, col_key, var_key = choose_roles(items, rows, columns, variants)
@@ -705,7 +711,8 @@ def build_page_data(root, out_path, items, refs, rows=None, columns=None, varian
                 names = [STIMULI[stim]["name"]]
         info = STIMULI.get(stim, {})
         rows_out.append({"id": "r{}".format(ri), "name": " · ".join(names) if names else (info.get("name") or ""),
-                         "note": info.get("note", ""), "marks": info.get("marks", []), "loud": info.get("loud", [])})
+                         "note": info.get("note", ""), "marks": info.get("marks", []), "loud": info.get("loud", []),
+                         "material": sample.dims.get("material") or sample.dims.get("stimulus")})
 
     cols_out = []
     for ci, cv in enumerate(col_vals):
@@ -714,6 +721,9 @@ def build_page_data(root, out_path, items, refs, rows=None, columns=None, varian
             continue
         sample = next(it for it in items if it.dims.get(col_key) == cv)
         name, what = dim_display(col_key, cv, sample)
+        # A README line naming the folder ("era_hall   ERA's stages in HALL")
+        # says what the column holds.
+        what = rdesc.get(str(cv), what)
         color = ATT_COLOR.get(str(cv)) if col_key == "attitude" else None
         cols_out.append({"id": "c{}".format(ci), "name": name, "what": what,
                          "color": color or PALETTE[ci % len(PALETTE)]})
@@ -767,6 +777,17 @@ def build_page_data(root, out_path, items, refs, rows=None, columns=None, varian
     if uniform and var_key:
         first = next(iter(panels.values()))["variants"]
         legend = [{"k": v["k"], "n": v["n"], "d": v["d"]} for v in first]
+
+    # The dry input per row (the same file length as the renders, so it lines up).
+    if dry_dir:
+        for row in rows_out:
+            mat = row.get("material")
+            dry = Path(dry_dir) / "{}.wav".format(mat) if mat else None
+            if dry and dry.exists():
+                it = Item(dry, "dry " + str(mat))
+                iid = "i{}".format(len(items_out))
+                items_out[iid] = dict(item_json(it, rel), flags=[])
+                row["dry"] = iid
 
     refs_out = []
     for i, r in enumerate(refs):
@@ -853,7 +874,7 @@ def axis_title(key):
     if key in PARAM_NAMES:
         return param_name(key)
     return {"stimulus": "material", "material": "material", "_sweep": "sweep"}.get(
-        key, "folder" if key.startswith("folder") else display_key(key).replace("_", " "))
+        key, "group of settings" if key.startswith("folder") else display_key(key).replace("_", " "))
 
 
 def variant_title(var_key, items):
@@ -898,6 +919,32 @@ def collect(root, with_spec=True):
     if manifests:
         return collect_from_manifests(root, sorted(manifests), with_spec), "manifests", None
     return collect_from_wavs(root, with_spec), "wavs", None
+
+
+def write_audio_sidecars(data, out_dir):
+    """Writes every WAV on the page as _audio/<name>.js next to the page.
+
+    Browsers won't let a page opened from Finder (file://) read a WAV into the
+    Web Audio API, which the page needs to play its versions sample-locked and
+    to crossfade between them without a click. A <script> may still load from
+    file://, so each WAV goes into one as base64 and the page decodes it.
+    Files already up to date are skipped. Returns (written, total) counts."""
+    out_dir = Path(out_dir)
+    audio_dir = out_dir / "_audio"
+    audio_dir.mkdir(exist_ok=True)
+    srcs = list(data["items"].values()) + list(data["references"])
+    written = 0
+    for src in srcs:
+        wav = (out_dir / src["wav"]).resolve()
+        name = re.sub(r"[^A-Za-z0-9._-]+", "_", src["wav"].replace("../", "up_")).strip("_") + ".js"
+        js = audio_dir / name
+        src["audioJs"] = "_audio/" + name
+        if js.exists() and wav.exists() and js.stat().st_mtime >= wav.stat().st_mtime:
+            continue
+        b64 = base64.b64encode(wav.read_bytes()).decode("ascii")
+        js.write_text("__rvAudio({}, \"{}\");\n".format(json.dumps(src["wav"]), b64), encoding="ascii")
+        written += 1
+    return written, len(srcs)
 
 
 def render_html(data):

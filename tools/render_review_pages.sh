@@ -61,18 +61,20 @@ r() {
     for m in $MATERIALS; do
         local a=()
         [ -n "$auto" ] && a=(--auto $SRC/${auto}_${m}.json)
-        $R $SRC/$m.wav renders/$page/$dir/${m}_${tag}.wav --set mix=0.5 "${a[@]}" "$@" > /dev/null
+        $R $SRC/$m.wav renders/$page/$dir/${m}_${tag}.wav --set mix=1 --sidecar "${a[@]}" "$@" > /dev/null
     done
 }
 page() { # page title readme
     rm -rf renders/$1; mkdir -p renders/$1
 }
+# The renders are 100 % wet (MIX fully up): the page's MIX fader blends the
+# dry back in live (--wet-only --dry), so any balance can be heard.
 # Every page here shows settings, it doesn't ask for a decision, so it's a
 # --showcase (no "My pick", no blind mode; notes only). A page that asks the
 # owner to choose (like renders/p7_sw1_demos) is built without it.
 finish() {
     print -r -- "$3" > renders/$1/README.txt
-    python3 tools/review/make_review.py renders/$1 --title "$2" --no-level-match --showcase > /dev/null
+    python3 tools/review/make_review.py renders/$1 --title "$2" --no-level-match --showcase --dry $SRC --wet-only > /dev/null
     echo "renders/$1/index.html"
 }
 
@@ -91,6 +93,11 @@ if on m1_hall; then
         r m1_hall tone ${tc##*:} "" --set space=HALL --set era=0 --set time=0 --set size=0.6 --set decay=0.6 --set tone=${tc%%:*}
     done
     finish m1_hall "Immensio M1: the Hall" "The HALL tank on its own (ERA clean). SIZE columns with DECAY as versions; TONE dark / noon / bright.
+
+size_small   SIZE fully CCW: a big room
+size_medium  SIZE noon
+size_large   SIZE fully CW: a huge hall
+tone         TONE at SIZE 0.6, DECAY 0.6
 
 A_short     DECAY 0.15
 B_medium    DECAY 0.45
@@ -117,6 +124,11 @@ if on m4_massive; then
     r m4_massive infinite B_massive "" --set space=MASSIVE --set era=0 --set decay=1 --set size=0.7
     finish m4_massive "Immensio M4: MASSIVE and ATTACK" "MASSIVE's SIZE (echoes to wash), the four ATTACK settings in HALL and MASSIVE, and infinite DECAY (ERA clean). At infinite, DARKEN ducks the tail while you play.
 
+massive_size    MASSIVE's SIZE, DECAY 0.7: echoes to wash
+attack_hall     the ATTACK switch in HALL
+attack_massive  the ATTACK switch in MASSIVE
+infinite        DECAY fully up, both FDN spaces
+
 A_echoes       MASSIVE, SIZE fully CCW
 B_middle       MASSIVE, SIZE noon
 C_wash         MASSIVE, SIZE fully CW
@@ -140,6 +152,10 @@ if on m5_plate_freeze; then
     r m5_plate_freeze paint A_hall_paint freeze --set space=HALL --set size=0.7 --set decay=0.6
     r m5_plate_freeze paint B_massive_paint freeze --set space=MASSIVE --set size=0.7 --set decay=0.6
     finish m5_plate_freeze "Immensio M5: PLATE, freeze and paint" "The PLATE; freeze (a tap freezes the tank into a still pad, the rest plays over it through the small companion reverb, a second tap unfreezes); paint (a long hold while frozen blends what's playing into the pad). ERA at its default (a touch of Neve).
+
+plate    the PLATE from small and short to large and infinite
+freeze   a tap freezes; the rest plays over the pad; a tap unfreezes
+paint    freeze, then a long hold while frozen blends the playing into the pad
 
 A_small_short     PLATE, SIZE CCW, DECAY 0.3
 B_medium          PLATE, SIZE noon, DECAY 0.5
@@ -168,6 +184,11 @@ if on m6_character; then
     done
     finish m6_character "Immensio M6: ERA, DRIFT and TONE" "ERA's five stacked stages (loudness matched), DRIFT both ways, TONE's full range. Starting numbers from the spec, for your ears to tune.
 
+era_hall     ERA's five stages in HALL (DECAY 0.6, SIZE 0.6)
+era_massive  three ERA stages in MASSIVE (DECAY 0.65, SIZE 0.7)
+drift        DRIFT left, noon, right (HALL, DECAY 0.65)
+tone         TONE dark, noon, bright (HALL, DECAY 0.6)
+
 A_clean     ERA 0
 B_neve      ERA 0.3
 C_cassette  ERA 0.55 (hiss while you play)
@@ -188,6 +209,9 @@ if on m7_duck; then
         r m7_duck duck_massive ${dc##*:} "" --set space=MASSIVE --set size=0.7 --set decay=${dc%%:*}
     done
     finish m7_duck "Immensio M7: DARKEN" "Ducking is always DARKEN and only from DECAY's infinite stretch up: while you play, the tail darkens and dips so the dry stays clear; when you stop, it brightens back.
+
+duck_hall      DARKEN in HALL (SIZE 0.7)
+duck_massive   DARKEN in MASSIVE (SIZE 0.7)
 
 A_long_no_duck   DECAY 0.8 (long, finite: no ducking)
 B_infinite_duck  DECAY 0.9 (infinite, ducking)

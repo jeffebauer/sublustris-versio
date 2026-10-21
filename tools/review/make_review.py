@@ -27,6 +27,11 @@ The default page is laid out like the SPLASH voicings page the owner approved
     every panel as version R.
 Picks and notes persist in the browser (localStorage) where it allows.
 
+Playback is Web Audio: a card's versions play sample-locked and switching
+crossfades (no clicks). Pages opened from Finder can't read WAVs into Web
+Audio, so each WAV is also written next to the page as _audio/<name>.js
+(base64, ~1.33x the WAV) and the page decodes that.
+
 What it reads from <dir> (first that applies):
   1. <dir>/manifest.json (rv_render --sweep, docs/m1-contracts.md) + sidecars.
   2. manifest.json files in subfolders, merged on one page: before/ + after/,
@@ -349,10 +354,14 @@ def write_listen(out_dir, out_path, args):
         rows = [r.strip() for r in args.rows.split(",") if r.strip()] if args.rows is not None else None
         data = listen.build_page_data(out_dir, out_path, items, refs, rows=rows, columns=args.columns,
                                       variants=args.variants, title=args.title or (name and name.replace("_", " ")),
-                                      level_match=args.level_match)
+                                      level_match=args.level_match, dry_dir=args.dry)
     except listen.LayoutError as e:
         die(str(e))
     data["choices"] = not args.showcase
+    data["wetOnly"] = bool(args.wet_only)
+    if not args.no_audio_files:
+        written, total = listen.write_audio_sidecars(data, out_path.parent)
+        print("Audio for the page: {} of {} files written to {}/_audio".format(written, total, out_path.parent))
     out_path.write_text(listen.render_html(data), encoding="utf-8")
     print("Wrote {} (from {}: {})".format(out_path, {"manifest": "manifest.json", "manifests": "manifests in subfolders",
                                                     "wavs": "WAV file names"}[source], listen.describe(data)))
@@ -377,6 +386,14 @@ def main():
     lm.add_argument("--no-level-match", dest="level_match", action="store_false",
                     help="Start with level-matching off (the page still has the toggle)")
     parser.add_argument("--no-spectrograms", action="store_true", help="Leave out the small spectrograms (smaller page)")
+    parser.add_argument("--dry", default=None, type=Path,
+                        help="Folder of the dry inputs (<material>.wav, the same length as the renders): adds a 'Dry' "
+                             "version to every card")
+    parser.add_argument("--wet-only", action="store_true",
+                        help="The renders are 100%% wet (MIX fully up); with --dry the page gets a live MIX fader "
+                             "that blends the dry back in (Immensio's equal-power law)")
+    parser.add_argument("--no-audio-files", action="store_true",
+                        help="Don't write _audio/*.js (the page then only plays over http, e.g. a local server)")
     parser.add_argument("--showcase", action="store_true",
                         help="A page that shows settings rather than asks for a decision: no 'My pick', no blind mode; "
                              "notes only (Copy notes for Claude)")
