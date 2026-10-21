@@ -58,7 +58,7 @@ float duckWhilePlaying(float decay, bool frozen)
         if (frozen && b == 10) e->button(true, 0);
         if (frozen && b == 12) e->button(false, 0);
         e->process(in.data(), in.data(), l.data(), r.data(), 48);
-        if (b > 100) mx = std::fmax(mx, e->duckAmount());
+        if (b > 400) mx = std::fmax(mx, e->duckAmount()); // after the freeze's 0.2 s glide (the duck fades out with it)
     }
     delete e;
     return mx;
@@ -129,7 +129,7 @@ void limiter()
     for (size_t i = 0; i < n; ++i) peak = std::fmax(peak, std::fmax(std::fabs(l[i]), std::fabs(r[i])));
     delete e;
     char msg[200];
-    std::snprintf(msg, sizeof msg, "limiter: a hot wet peaks at %.3f (ceiling %.3f) and reports its gain (%.2f)", peak,
+    std::snprintf(msg, sizeof msg, "limiter: a hot wet peaks at %.5f (ceiling %.5f) and reports its gain (%.2f)", peak,
                   iv::voicing::kLimitCeiling, minGain);
     check(peak <= iv::voicing::kLimitCeiling + 1e-4f && minGain < 0.99f, msg);
 

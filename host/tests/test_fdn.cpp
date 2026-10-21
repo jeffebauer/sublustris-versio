@@ -109,7 +109,7 @@ void stabilityGrid()
                 const double early = rmsDb(out.l, size_t(1.0f * sr), size_t(2.0f * sr));
                 const double late = rmsDb(out.l, size_t(7.0f * sr), size_t(8.0f * sr));
                 bool ok = finite(out) && peak(out) < 2.0f;
-                if (d < iv::map::kDecayFiniteTop + 1e-3f) ok &= late < early - 3.0;
+                if (d < iv::map::kDecayFiniteTop + 1e-3f) ok &= late < early - 3.0 || early < -200.0; // or already silent
                 else ok &= late < early + 1.0; // infinite: holds, never grows
                 if (!ok) {
                     ++bad;
@@ -139,7 +139,7 @@ void t60FollowsDecay()
 {
     const float sr = 48000.0f;
     for (float d : {0.2f, 0.5f, 0.75f}) {
-        const double want = 1.0 / iv::map::decayRate(d, 1);
+        const double want = iv::map::hallT60Scale(0.5f) / iv::map::decayRate(d, 1); // SIZE scales a HALL's T60 (M1 notes)
         std::vector<float> in(size_t((2.0 * want + 3.0) * sr), 0.0f);
         in[100] = 0.5f;
         const Stereo out = render(in, {d, 0.5f, 0.5f});

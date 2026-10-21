@@ -92,9 +92,9 @@ if on m1_hall; then
     for tc in 0:A_dark 0.5:B_noon 1:C_bright; do
         r m1_hall tone ${tc##*:} "" --set space=HALL --set era=0 --set time=0 --set size=0.6 --set decay=0.6 --set tone=${tc%%:*}
     done
-    finish m1_hall "Immensio M1: the Hall" "The HALL tank on its own (ERA clean). SIZE columns with DECAY as versions; TONE dark / noon / bright.
+    finish m1_hall "Immensio M1: the Hall" "The HALL tank on its own (ERA clean), after your M1 notes: SIZE now goes from a small room (shorter lines, and its tails are shorter too, as a small room's are) to a huge hall, which also stops the buzzy build-up on long small rooms; TONE's ends go further (dark: more lows, fewer highs; bright: the opposite; noon unchanged). SIZE columns with DECAY as versions; TONE dark / noon / bright.
 
-size_small   SIZE fully CCW: a big room
+size_small   SIZE fully CCW: a small room
 size_medium  SIZE noon
 size_large   SIZE fully CW: a huge hall
 tone         TONE at SIZE 0.6, DECAY 0.6

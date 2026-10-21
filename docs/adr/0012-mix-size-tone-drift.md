@@ -15,3 +15,8 @@
 - SIZE crossfading with no pitch change (smoother, less playable).
 - TONE noon gently dark.
 - One-way DRIFT (tape wobble left to ERA only).
+
+**Amendment (21 Oct 2026, owner's M1 listening notes; SPEC v1.0.8):**
+- "Difference between small, medium, and large halls seem quite subtle. Small doesn't read as small." HALL's SIZE is now 20 → 260 ms of mean line, and it scales HALL's finite T60s (× 0.4 at SIZE fully CCW, × 1 at CW; a small room can't ring for 16 s), with the level made up. DECAY still sets the tail; infinite stays infinite.
+- "Size small, vibes: long has a buzzy resonance build up": the same change (a small room's long, sparse tail let pitched notes build up; vibes ringing score 43 → 26 dB, noise unchanged).
+- "Dark and bright don't feel like extreme ends... lower lows, higher highs": TONE also tilts the wet round 600 Hz (CCW +4 / −9 dB, CW −4 / +6 dB, flat at noon), and its loop damping range widens (high-end T60 ratio 0.08 → 1.5). Noon stays flat.

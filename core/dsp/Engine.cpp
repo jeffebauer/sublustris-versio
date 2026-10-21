@@ -81,6 +81,7 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
             ready_ &= twinDiffuser_[c].stage[k].init(fast_, uint32_t(s * sampleRate), voicing::kDiffuserCoeff[k]);
         }
     gesture_.prepare(sampleRate);
+    tilt_.prepare(sampleRate);
     darken_.prepare(sampleRate);
     limiter_.prepare(sampleRate);
     duckAttack_ = 1.0f - std::exp(-1.0f / (voicing::kDuckAttackSeconds * sampleRate));
@@ -123,6 +124,9 @@ IV_SIZE_OPT void Engine::reset()
     plate_.reset();
     reverse_.reset();
     muLaw_.reset();
+    tilt_.reset();
+    tilt_.set(smoothed(ParamId::Tone));
+    tilt_.snap();
     darken_.reset();
     limiter_.reset();
     duckEnv_ = duck_ = 0.0f;
@@ -241,16 +245,22 @@ void Engine::applySpace(bool snap)
     // Freezing: loss → 0, highs kept (ratio → 1), the governor caps paint.
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
     const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
-    const float rate = map::decayRate(decay, activeSpace_) * (1.0f - freezeMix_);
+    const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(size) : 1.0f;
+    const float rate = map::decayRate(decay, activeSpace_) / sizeT60 * (1.0f - freezeMix_);
     const float highRatio = toneRatio + freezeMix_ * (1.0f - toneRatio);
     // Frozen: full weight (only the pad's own hold acts, there's no floor). Not frozen: DECAY's own
     // weight at once, not glided with freezeMix_: gliding it pulled a fed pad (above the floor) down
     // hard on unfreeze, "a pronounced immediate drop" and a too-steep decay (owner, freeze options).
-    const float governor = frozen ? 1.0f : map::governorWeight(decay);
+    // Freezing glides the weight up with freezeMix_ (a jump to full changed a finite tail's loss in
+    // one sample: a click).
+    const float governor = frozen ? std::fmax(map::governorWeight(decay), freezeMix_) : map::governorWeight(decay);
     // The cap: a still pad's own level (or + headroom while painting); an
     // infinite tail's settled level once the input has gone quiet; else the
     // floor. Darkening always stops at the floor (ADR 0008).
-    const float floorDb = frozen ? 0.0f : voicing::kFloorDbfs; // a pad isn't pulled to the floor
+    // A pad isn't pulled to the floor: the floor glides away with freezeMix_ (and back on unfreeze).
+    // Switched in one sample, a fed infinite tail's governor loss vanished at once and the wet
+    // stepped (up to 20x a sample's normal change, PLATE; heard once the dark tilt took the highs out).
+    const float floorDb = voicing::kFloorDbfs * (1.0f - freezeMix_);
     float holdDb = 0.0f;
     if (frozen) holdDb = padFloorDb_;
     else if (tailCaptured_) holdDb = tailCeilingDb_;
@@ -280,7 +290,7 @@ void Engine::applySpace(bool snap)
         // material as audible repeats (owner, M5 listening).
         const float diff = massive ? map::massiveDiffusion(size) : 0.0f;
         fdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : 0.0f);
-        fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : 1.0f);
+        fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(size, decay));
         fdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
     }
 
@@ -317,7 +327,9 @@ void Engine::applySpace(bool snap)
     // DECAY is. Not while frozen (playing over a pad mustn't darken it).
     const float envDb = 20.0f * std::log10(duckEnv_ + 1e-10f);
     const float loud = map::clamp01((envDb - voicing::kDuckFromDbfs) / (voicing::kDuckFullDbfs - voicing::kDuckFromDbfs));
-    duck_ = frozen ? 0.0f : loud * map::governorWeight(smoothed(ParamId::Decay));
+    // Fades out with the freeze glide (set to 0 in one sample, DARKEN's filter and dip jumped: a click).
+    duck_ = loud * map::governorWeight(smoothed(ParamId::Decay)) * (1.0f - freezeMix_);
+    tilt_.set(smoothed(ParamId::Tone));
     darken_.set(duck_);
     // Hiss follows the input (none in silence, so an infinite tail doesn't
     // fill with noise, ADR 0005); crackle the same.
@@ -349,7 +361,8 @@ void Engine::applySpace(bool snap)
     // pad's twin); it always fades within kTwinMaxT60. Full in-loop diffusion in MASSIVE, like the pad.
     if (twinActive_) {
         const float tSize = smoothed(ParamId::Size), tDecay = smoothed(ParamId::Decay);
-        const float tRate = std::fmax(map::decayRate(tDecay, activeSpace_), 1.0f / voicing::kTwinMaxT60);
+        const float tT60 = activeSpace_ == 1 ? map::hallT60Scale(tSize) : 1.0f;
+        const float tRate = std::fmax(map::decayRate(tDecay, activeSpace_) / tT60, 1.0f / voicing::kTwinMaxT60);
         dsp::EraMix tEra = era;
         tEra.even *= 1.0f - map::governorWeight(tDecay);
         if (plate) {
@@ -371,7 +384,7 @@ void Engine::applySpace(bool snap)
             twinFdn_.setHighT60Ratio(toneRatio);
             twinFdn_.setGovernor(0.0f);
             twinFdn_.setInLoopDiffusion(massive ? 1.0f : 0.0f);
-            twinFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : 1.0f);
+            twinFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(tSize, tDecay));
             twinFdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
             twinFdn_.setEra(tEra);
             twinFdn_.setDrift(drift);
@@ -551,6 +564,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             wl *= eraMakeup_;
             wr *= eraMakeup_;
             muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)
+            tilt_.process(wl, wr);
             darken_.process(wl, wr);
             limiter_.process(wl, wr);
             dryNow_ += dryStep_;

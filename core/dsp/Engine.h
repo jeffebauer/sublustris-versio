@@ -140,6 +140,7 @@ private:
     dsp::MuLawOut     muLaw_;
     float             eraMakeup_ = 1.0f;
     // Ducking (ADR 0014) and the limiter (SPEC §4.10).
+    dsp::Tilt         tilt_;
     dsp::Darken       darken_;
     dsp::Limiter      limiter_;
     float             duckEnv_ = 0.0f, duck_ = 0.0f, duckAttack_ = 0.0f, duckRelease_ = 0.0f;

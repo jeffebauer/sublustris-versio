@@ -10,7 +10,7 @@
 | M0 desktop | Built: Core (passthrough `iv::Engine`) + Renderer + tests + Plugin (AU/VST3) |
 | M0 firmware | Built: release / m0test / profile |
 | M0 hardware | **Owner check pending** (`docs/m0-hardware-check.md`) |
-| M1 Hall | **Built**: FDN (8 lines), diffusers, predelay; `test_fdn` passes; listening page `renders/m1_hall/` (owner check pending) |
+| M1 Hall | **Built**; M1 notes acted on (SPEC v1.0.8: SIZE 20 → 260 ms with small-room tails, TONE wet tilt); page re-rendered for a listen |
 | M4 MASSIVE + ATTACK | **Built**, M4 notes acted on (SPEC v1.0.6: early taps, shorter SIZE predelay, no echoes at SIZE 0); REVERSE **awaiting the owner's pick** on `renders/reverse_options/` (prototype `Reverse::setSmooth`, `IV_REVERSE_SMOOTH`) |
 | M5 PLATE + freeze | **Built**; freeze settled on the **twin** (owner, SPEC v1.0.7; companion removed); M5 page re-rendered for a listen. Still to fix: frozen-MASSIVE upper resonance, PLATE-skank early repeats |
 | M6 character | **Built**: ERA (5 stacked layers), DRIFT, soft saturation, μ-law output, Midiverb box, hiss, crackle; `test_era` passes; listening page `renders/m6_character/` |
@@ -20,7 +20,7 @@
 | M8, M9 | Not started (M8 = tuning from the owner listening notes) |
 
 - **Gates (wrap, `7906f5c`):** ctest "100% tests passed out of 12".
-- **Firmware sizes (21 Oct, twin only):** release 87,884 B (67 %), profile 88,920 B (67 %), m0test 82,356 B (62 %). DTCM 36,864 B of 128 KB (the companion's 84 KB freed). SDRAM 25.2 MB. ~22 KB left to the 110 KB budget.
+- **Firmware sizes (21 Oct, after the M1 notes):** release 88,564 B (67 %), profile 89,616 B (68 %), m0test 82,356 B (62 %). DTCM 36,864 B of 128 KB. SDRAM 25.2 MB. ~21 KB left to the 110 KB budget.
 - **Plugin in Ableton:** none installed.
 - **Seed provenance:** copied from Resilio Versio at `2ab71a9` (NOTICE, ADR 0001).
 
@@ -41,6 +41,7 @@
 - Plugin identity (`docs/TASKS.md`): the AU shows as "Resilio: Immensio Versio" (company name "Resilio", manufacturer `Rslo`, plugin code `ImVs`). Keep, or name the company differently?
 
 ## Will bite
+- **Anything that changes at the freeze must glide** (`Engine::controlTick` / `applySpace`, with `freezeMix_`): the duck, the floor and the governor weight each stepped the wet in one sample at a freeze (SPEC v1.0.8). The click detector only caught it once the dark TONE tilt took the music's highs out, so test clicks at TONE fully CCW too.
 - **MASSIVE's early taps** (`Fdn::setEarlyTaps`, `SpaceVoicing.h` kEarlyTap*): 3 linear reads per line per sample (24 more reads, SDRAM) while in MASSIVE. M3 must measure MASSIVE, frozen and not. Its rise can't be shorter than ~1 s (`test_massive` kMassiveBuildSeconds).
 - **A fresh (or freshly painted) pad wanders a few dB while it settles** (HALL: +3 dB over its first ~10 s with no input at all; MASSIVE more). It has no ceiling until `kPadSettleSeconds` (20 s), then holds within ±0.5 dB. Judge paint against a no-paint run, not against the level at the freeze.
 - **The twin tank costs:** a second FDN or Plate runs while frozen (only then). `Engine::largeFloats`/`fastFloats` must count every buffer the Engine attaches, with the same size factors (the twin's diffusers use 1.13): a mismatch fails 7 suites with arena overruns.

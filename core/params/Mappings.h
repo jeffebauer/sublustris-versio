@@ -53,10 +53,13 @@ inline float decayRate(float v, int space)
 // absorbent filter; the pivoted shelf lands with the loop chain (M6).
 inline float toneHighT60Ratio(float v)
 {
-    constexpr float kDark = 0.12f, kBright = 1.3f; // CW: the highs outlast the lows (a bright, thinning tail)
+    constexpr float kDark = 0.08f, kBright = 1.5f; // M1 notes: wider ends (was 0.12, 1.3) // CW: the highs outlast the lows (a bright, thinning tail)
     const float noon = voicing::kDampingHighT60Ratio;
     return v < 0.5f ? kDark + (noon - kDark) * (v * 2.0f) : noon + (kBright - noon) * ((v - 0.5f) * 2.0f);
 }
+
+// HALL's SIZE scales its finite T60s, short for a small room (M1 notes).
+inline float hallT60Scale(float size) { return expLerp(voicing::kHallSmallT60Scale, 1.0f, size); }
 
 // SIZE (P5) in HALL: mean line delay, seconds (SPEC §3).
 inline float hallMeanSeconds(float v)
@@ -149,6 +152,14 @@ inline dsp::EraMix eraMix(float v)
 inline float governorWeight(float decay)
 {
     return clamp01((decay - kDecayFiniteTop) / (kDecayInfiniteAt - kDecayFiniteTop));
+}
+
+// HALL: The level a finite tail loses by being shorter (its energy goes with its
+// T60), made up on the output; none at infinite, where nothing is shorter.
+inline float hallSizeLevelTrim(float size, float decay)
+{
+    const float full = 1.0f / std::sqrt(hallT60Scale(size));
+    return full + (1.0f - full) * governorWeight(decay);
 }
 
 } // namespace iv::map

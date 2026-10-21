@@ -6,7 +6,8 @@
 ## To do
 
 - [ ] **M0 hardware check** (`docs/m0-hardware-check.md`): flash `firmware/build/immensio_versio_m0test.bin`, check the boot pattern, switches, button (USB session), then knobs, gate and a quick passthrough listen (rack session). Tell Claude the results.
-- [ ] **M1 listening: the Hall** (`renders/m1_hall/index.html`, open in a browser): warm and smooth, never metallic? Does SIZE go from big room to huge, and DECAY from short to infinite, the way you want? TONE dark / noon / bright. Notes or picks via "Copy results for Claude". It's the bare tank: no ERA colour, DRIFT or saturation yet.
+- [ ] **M1 listening (again, after your notes)** (`renders/m1_hall/index.html`): SIZE now goes from a small room (shorter lines, and shorter tails, as a small room has) to a huge hall; is small small enough, and has the buzz on long small rooms gone? TONE's ends go further (dark: more lows, fewer highs; bright: the opposite). Too much, too little?
+- [x] ~~M1 listening~~ (21 Oct): your notes are in. Changed: HALL's SIZE range and its small-room tails, TONE's range; fixed on the way: a click when freezing at infinite DECAY.
 - [ ] **M4 listening (again, after your notes)** (`renders/m4_massive/index.html`): MASSIVE now starts with what you play and swells from there (it was silent for 1.2 s), SIZE fully CCW is a wash instead of rhythmic echoes, and DARKEN lets go sooner. Does MASSIVE feel connected to the source now? Is the smallest SIZE still big enough?
 - [ ] **Decide: REVERSE** (`renders/reverse_options/index.html`, level-matched, picks): A today's (pieces that rise to a cut, what you heard as choppy) or B smooth (overlapping, faded backwards pieces, no cuts).
 - [x] ~~Confirm: playing over a frozen pad~~ (21 Oct): B, the twin, on every card. Done: it's the only behaviour now, quieter (−10.5 dB), and painting adds only a little (~1 dB, it was 7 dB). Hear it on the M5 page below.

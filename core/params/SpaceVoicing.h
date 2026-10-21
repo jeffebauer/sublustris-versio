@@ -17,8 +17,13 @@ constexpr float kFdnRatios[kFdnLines] = {0.60f, 0.69f, 0.79f, 0.90f, 1.01f, 1.13
 constexpr float kFdnMaxLineSeconds = 2.05f * 1.41f + 0.01f + 0.07f; // + DRIFT's room (EraVoicing.h kDriftMaxSeconds)
 
 // Hall's mean line delay across SIZE (SPEC §3: 40 → 180 ms, exponential).
-constexpr float kHallMeanMinMs = 40.0f;
-constexpr float kHallMeanMaxMs = 180.0f;
+constexpr float kHallMeanMinMs = 20.0f;  // M1 notes: "small doesn't read as small" (was 40 → 180 ms)
+constexpr float kHallMeanMaxMs = 260.0f;
+// A small HALL's finite tails are shorter (× this at SIZE fully CCW, × 1 at
+// CW): a small room can't ring for 16 s, and a long, sparse small-room tail
+// let pitched notes build into a buzz (owner, M1 vibes). Infinite stays
+// infinite. (start)
+constexpr float kHallSmallT60Scale = 0.4f;
 
 // SIZE moves glide: a line's length changes by at most this fraction of a
 // second per second, which is at most a semitone of bend (2^(1/12) − 1).
@@ -142,6 +147,13 @@ constexpr float kTailSettleSeconds = 10.0f;
 // above it, it loses kGovernorRatePerDb per dB, as at the floor.
 constexpr float kHoldRatePerDb = 0.004f;
 constexpr float kMakeupMaxRate = 0.005f;
+
+// ---- TONE's tilt on the wet (Output.h Tilt; M1 notes) (start) ----------
+constexpr float kToneTiltHz       = 600.0f;
+constexpr float kToneDarkLowDb    = 4.0f;  // TONE fully CCW
+constexpr float kToneDarkHighDb   = -9.0f;
+constexpr float kToneBrightLowDb  = -4.0f; // TONE fully CW
+constexpr float kToneBrightHighDb = 6.0f;
 
 // ---- Ducking: always DARKEN (ADR 0014, SPEC §4.9) -------------------------
 // An envelope follower on the input; depth 0 below DECAY 0.85, full at 1.
