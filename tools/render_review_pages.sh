@@ -67,9 +67,12 @@ r() {
 page() { # page title readme
     rm -rf renders/$1; mkdir -p renders/$1
 }
+# Every page here shows settings, it doesn't ask for a decision, so it's a
+# --showcase (no "My pick", no blind mode; notes only). A page that asks the
+# owner to choose (like renders/p7_sw1_demos) is built without it.
 finish() {
     print -r -- "$3" > renders/$1/README.txt
-    python3 tools/review/make_review.py renders/$1 --title "$2" --no-level-match > /dev/null
+    python3 tools/review/make_review.py renders/$1 --title "$2" --no-level-match --showcase > /dev/null
     echo "renders/$1/index.html"
 }
 

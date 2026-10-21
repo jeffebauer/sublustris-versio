@@ -14,7 +14,8 @@ The default page is laid out like the SPLASH voicings page the owner approved
     it at the same playback position, and "Switch every panel to" does it
     for every panel at once;
   - settings as readable chips (DECAY 0.6, TENSION noon), not raw JSON;
-  - "My pick" per panel, notes per column plus overall notes, and
+  - "My pick" per panel (not with --showcase: a page that shows settings
+    rather than asks for a decision), notes per column plus overall notes, and
     "Copy results for Claude" (plain text) / "Download results";
   - level-matched playback: every version is moved towards the median
     loudness of its panel (at most +/-12 dB), shown per version. On by default
@@ -351,6 +352,7 @@ def write_listen(out_dir, out_path, args):
                                       level_match=args.level_match)
     except listen.LayoutError as e:
         die(str(e))
+    data["choices"] = not args.showcase
     out_path.write_text(listen.render_html(data), encoding="utf-8")
     print("Wrote {} (from {}: {})".format(out_path, {"manifest": "manifest.json", "manifests": "manifests in subfolders",
                                                     "wavs": "WAV file names"}[source], listen.describe(data)))
@@ -375,6 +377,9 @@ def main():
     lm.add_argument("--no-level-match", dest="level_match", action="store_false",
                     help="Start with level-matching off (the page still has the toggle)")
     parser.add_argument("--no-spectrograms", action="store_true", help="Leave out the small spectrograms (smaller page)")
+    parser.add_argument("--showcase", action="store_true",
+                        help="A page that shows settings rather than asks for a decision: no 'My pick', no blind mode; "
+                             "notes only (Copy notes for Claude)")
     parser.add_argument("--classic", action="store_true", help="Write the older metrics page (template.html) instead")
     args = parser.parse_args()
 

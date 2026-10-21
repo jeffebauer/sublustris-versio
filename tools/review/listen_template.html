@@ -143,7 +143,7 @@ kbd { background: var(--chip); border: 1px solid var(--line); border-radius: 4px
     <span class="tlabel">Switch every panel to</span>
     <div class="seg" id="global"></div>
     <label class="toggle" id="lmwrap"><input type="checkbox" id="levelmatch"> Level-match</label>
-    <label class="toggle"><input type="checkbox" id="blind"> Blind (hide and shuffle)</label>
+    <label class="toggle" id="blindwrap"><input type="checkbox" id="blind"> Blind (hide and shuffle)</label>
     <label class="toggle"><input type="checkbox" id="loop"> Loop</label>
     <label class="toggle" id="refwrap" hidden>Compare with <select class="ctl" id="ref"><option value="">no reference</option></select></label>
     <button class="ctl primary" type="button" id="copy">Copy results for Claude</button>
@@ -183,8 +183,17 @@ function save() {
 /* ---------- header ---------- */
 $("title").textContent = DATA.title;
 document.title = DATA.title;
-$("lede").textContent = DATA.lede ||
-  "Each panel plays its versions in sync: pick one and it switches at the same moment, so you only hear the difference.";
+// Showcase pages (DATA.choices false) show settings, they don't ask for a
+// decision: no "My pick", no blind mode, and the results are notes only.
+const CHOICES = DATA.choices !== false;
+$("lede").textContent = DATA.lede || (CHOICES
+  ? "Each panel plays its versions in sync: pick one and it switches at the same moment, so you only hear the difference."
+  : "Each panel plays its versions in sync: switch between them at the same moment to hear what each setting does. Nothing to choose here; notes welcome.");
+if (!CHOICES) {
+  $("blindwrap").hidden = true;
+  $("copy").textContent = "Copy notes for Claude";
+  $("download").textContent = "Download notes";
+}
 const ax = [];
 if (DATA.axes.columns) ax.push("columns are " + DATA.colsTitle);
 if (DATA.axes.rows) ax.push("rows are " + DATA.axes.rows);
@@ -258,7 +267,7 @@ function makeGroup(row, col, panel, key) {
       </div>
       <input class="scrub" type="range" min="0" max="1000" value="0" aria-label="Position">
       <div class="reveal"></div>
-      ${n > 1 ? `<div class="pick"><span class="pl">My pick</span></div>` : ""}
+      ${n > 1 && CHOICES ? `<div class="pick"><span class="pl">My pick</span></div>` : ""}
     </div>`;
   g.el = cell;
   panel.variants.forEach((v, i) => {
@@ -524,12 +533,12 @@ overallEl.addEventListener("input", () => { state.overall = overallEl.value; sav
 
 /* ---------- results ---------- */
 function results() {
-  const lines = [`${DATA.title}: my picks and notes`, `Page: ${DATA.source}/${DATA.page}`];
+  const lines = [`${DATA.title}: ${CHOICES ? "my picks and notes" : "my notes"}`, `Page: ${DATA.source}/${DATA.page}`];
   if (ax.length) lines.push("Layout: " + ax.join(" · "));
   if (lmEl.checked) lines.push("Listened level-matched.");
   if (refEl.value) lines.push("Compared with reference: " + (refById(refEl.value) || {}).name);
   lines.push("");
-  DATA.rows.forEach(row => {
+  if (CHOICES) DATA.rows.forEach(row => {
     const inRow = DATA.cols.filter(col => DATA.panels[row.id + "|" + col.id] && DATA.panels[row.id + "|" + col.id].variants.length > 1);
     if (!inRow.length) return;
     const indent = row.name ? "- " : "";
@@ -582,7 +591,7 @@ window.addEventListener("resize", () => groups.forEach(g => g.drawSpec()));
 
 /* ---------- keys ---------- */
 const nk = Math.min(9, maxVariants);
-$("keys").innerHTML = `Keys, on the last panel you touched: ${nk > 1 ? `<kbd>1</kbd>–<kbd>${nk}</kbd> pick a version · ` : ""}` +
+$("keys").innerHTML = `Keys, on the last panel you touched: ${nk > 1 ? `<kbd>1</kbd>–<kbd>${nk}</kbd> ${CHOICES ? "pick" : "play"} a version · ` : ""}` +
   `${DATA.references.length ? "<kbd>0</kbd> the reference · " : ""}<kbd>Space</kbd> play/pause · <kbd>←</kbd> <kbd>→</kbd> 2 s back/forward` +
   `${DATA.rows.some(r => r.loud.length) ? " · <kbd>L</kbd> next loud hit" : ""} · <kbd>Tab</kbd> between buttons.`;
 document.addEventListener("keydown", e => {

@@ -9,7 +9,7 @@ A huge, warm, lush reverb firmware for the Noise Engineering Versio (Daisy Seed,
 - `IMMENSIO_BRIEF.md` is the original brief; `docs/spec-session.md` the session that turned it into the spec. Both are history: the spec and ADRs win.
 
 ## The owner
-A senior designer, new to DSP and embedded C++. Brings the ears and musical goals. Explain DSP in plain language. Ask technical decisions as musical questions ("should the tail fade or hold?"). When a control's job is in doubt, render a demo and let the owner listen before deciding (that's how P7 and SW1 were settled, ADR 0014/0015). Keep `docs/TASKS.md` current whenever something changes for the owner, in the same commit.
+A senior designer, new to DSP and embedded C++. Brings the ears and musical goals. Explain DSP in plain language. Ask technical decisions as musical questions ("should the tail fade or hold?"). When a control's job is in doubt, render a demo and let the owner listen before deciding (that's how P7 and SW1 were settled, ADR 0014/0015). Listening pages that only show settings are built with `make_review.py --showcase` (no "My pick", no blind mode, notes only); pick buttons appear only on pages that ask the owner to choose. Keep `docs/TASKS.md` current whenever something changes for the owner, in the same commit.
 
 ## Hard rules (carried over from Resilio, each learned the hard way there)
 - `core/` never includes libDaisy, JUCE or any host header. Every Host uses the one ParamSpec table (`core/params/ParamSpec.h`); mappings live in `core/params/`.
