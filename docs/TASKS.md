@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 21 Oct 2026 (M1, M4–M7 built; five listening pages ready, all rendered from the same build: `tools/render_review_pages.sh` remakes them).
+**Last updated:** 21 Oct 2026, end of session 1 (M1, M4–M7 built; freeze confirmation page `renders/freeze_twin` waiting on you; `tools/render_review_pages.sh` remakes every page).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
@@ -8,7 +8,8 @@
 - [ ] **M0 hardware check** (`docs/m0-hardware-check.md`): flash `firmware/build/immensio_versio_m0test.bin`, check the boot pattern, switches, button (USB session), then knobs, gate and a quick passthrough listen (rack session). Tell Claude the results.
 - [ ] **M1 listening: the Hall** (`renders/m1_hall/index.html`, open in a browser): warm and smooth, never metallic? Does SIZE go from big room to huge, and DECAY from short to infinite, the way you want? TONE dark / noon / bright. Notes or picks via "Copy results for Claude". It's the bare tank: no ERA colour, DRIFT or saturation yet.
 - [ ] **M4 listening: MASSIVE and ATTACK** (`renders/m4_massive/index.html`): does MASSIVE's SIZE go from long repeating echoes to a wash the way you hoped (I set its range, ADR 0007 amendment)? Is BLOOM's timing control what you wanted, and is REVERSE the classic reverse you pictured? Infinite DECAY in both spaces.
-- [ ] **Decide: playing over a frozen pad** (`renders/freeze_options/index.html`, a decision page with picks, level-matched): A today's small companion plate on top of the pad, B what you play goes into the frozen pad itself, C both. From your M5 note ("too disparate... maybe the input should influence the frozen buffer").
+- [ ] **Confirm: playing over a frozen pad** (`renders/freeze_twin/index.html`, level-matched, picks): you picked B (feed the pad) on every card and asked for it subtler, receding back to the frozen pad. **A** is B as you picked it; **B** is the twin: what you play goes into a twin of the frozen tank (same space, its own decay), heard beside the untouched pad and receding; holding paints it in. The steep drop on unfreeze is fixed in both. Still to fix after your pick: the upper resonance building in frozen MASSIVE, and the PLATE's two early repeats on skank.
+- [x] ~~Decide: playing over a frozen pad~~ (21 Oct): B (feed the pad) on every card; notes acted on in the twin version above.
 - [x] ~~M5 listening~~ (21 Oct): your notes are in. Fixed: the PLATE's left-channel static at large SIZE (a bug), the seasick PLATE freeze, MASSIVE paint repeats, DARKEN dwelling between skanks. M5 and M7 pages re-rendered.
 - [ ] **M5 listening (again, after the fixes): PLATE, freeze and paint** (`renders/m5_plate_freeze/index.html`): does the PLATE sound like ours, not a stock Dattorro? Is playing over a frozen pad (through the companion) what you pictured, and does paint blend the way you want?
 - [ ] **M6 listening: ERA, DRIFT, TONE** (`renders/m6_character/index.html`): does ERA feel like going back in time, stage by stage? Is DRIFT's tape side and Cathedra side what you hear in your head? TONE's bright end now lets the highs outlast the lows. All numbers are starting guesses for you to tune.

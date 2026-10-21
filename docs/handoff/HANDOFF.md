@@ -1,6 +1,6 @@
 # Handoff
 
-**Written:** 21 Oct 2026, session 1 (owner away; Claude built M1 and M4–M7 from the frozen spec). Start the next session with `/immensio-start`. **Nothing running:** every agent finished and was reviewed.
+**Written:** 21 Oct 2026, end of session 1 (M1, M4–M7 built from the frozen spec; review pages rebuilt; M5 notes and the freeze pick acted on). Start the next session with `/immensio-start`. **Nothing running:** no agents, no worktrees, no branches besides `main`. No git remote yet (commits are local only).
 
 ## State
 
@@ -12,33 +12,40 @@
 | M0 hardware | **Owner check pending** (`docs/m0-hardware-check.md`) |
 | M1 Hall | **Built**: FDN (8 lines), diffusers, predelay; `test_fdn` passes; listening page `renders/m1_hall/` (owner check pending) |
 | M4 MASSIVE + ATTACK | **Built**: MASSIVE voicing, swell (BLOOM), REVERSE, floor governor, in-loop diffusion; `test_massive` passes; listening page `renders/m4_massive/` |
-| M5 PLATE + freeze | **Built**: Dattorro-family PLATE, companion (DTCM), gesture reader, freeze / paint / unfreeze; `test_plate_freeze` passes; listening page `renders/m5_plate_freeze/` |
+| M5 PLATE + freeze | **Built**, M5 notes fixed (Plate tap bug, calmer frozen Plate, washier MASSIVE paint); freeze voicing **awaiting the owner's confirmation** on `renders/freeze_twin/` (prototype voicings 0-3 still in the code) |
 | M6 character | **Built**: ERA (5 stacked layers), DRIFT, soft saturation, μ-law output, Midiverb box, hiss, crackle; `test_era` passes; listening page `renders/m6_character/` |
 | M7 duck + limiter | **Built**: DARKEN on the wet, soft limiter; `test_output` passes (incl. a 40-run random integration sweep); listening page `renders/m7_duck/` |
 | M2 | Criteria pass in `plugin_host_test`; **not installed in Ableton** (the owner decides when: `tools/install_plugin.sh`) |
 | M3 | Needs the owner at the rack (profile build ready) |
 | M8, M9 | Not started (M8 = tuning from the owner listening notes) |
 
-- **Gates:** see the commit message of this handoff's commit for the ctest summary line and firmware sizes at wrap.
-- **Firmware sizes (21 Oct, M7):** release 85,076 B (64 %), profile 86,008 B (65 %), m0test 82,356 B (62 %). DTCM 100.6 KB of 128 KB. ~25 KB left to the 110 KB budget. Budget for release at v1.0 is 110 KB (ADR 0002). History in `firmware/README.md`.
+- **Gates (wrap, `7906f5c`):** ctest "100% tests passed out of 12".
+- **Firmware sizes (21 Oct, wrap, `7906f5c`):** release 88,204 B (67 %), profile 89,208 B (68 %), m0test 82,356 B (62 %). DTCM 121,080 B of 128 KB (the companion plate is still in; it can go if the twin wins). SDRAM 25.2 MB (twin FDN + Plate added). ~22 KB left to the 110 KB budget. Budget for release at v1.0 is 110 KB (ADR 0002). History in `firmware/README.md`.
 - **Plugin in Ableton:** none installed.
 - **Seed provenance:** copied from Resilio Versio at `2ab71a9` (NOTICE, ADR 0001).
 
 ## In flight
-Nothing. `build-plugin/` is the plugin agent's scratch build dir (gitignored; safe to delete).
+**The freeze voicing (prototype, committed in `7906f5c`).** The owner picked B (voicing 1, "feed the pad") on every `freeze_options` card, with notes: subtler; recede back to the original frozen pad rather than persist; Hall and MASSIVE decay too steeply after unfreeze (MASSIVE drops immediately); MASSIVE's secondary has too much predelay; an upper resonance builds in frozen MASSIVE; PLATE on skank gives two audible repeats before it diffuses.
+- Done: voicing 3, the **twin tank** (`Engine.h` `twinFdn_` / `twinPlate_` / `twinDiffuser_`; `SpaceVoicing.h` `kTwinLevel` 0.5, `kTwinMaxT60` 8 s): input goes to a second tank of the same space and size with a finite decay, own input diffusers, no predelay or swell; heard beside the untouched pad; painting copies it into the pad. Unfreeze drop fixed for all voicings (governor weight no longer glides with freezeMix; `Engine.cpp`).
+- Page `renders/freeze_twin/` (A = voicing 1 as picked, B = voicing 3), level-matched, decision page. The WAVs differ (checked).
+- **Not done:** measure and fix the frozen-MASSIVE upper resonance and the PLATE-skank early repeats (likely the input diffusers / first reflections of the voice used while frozen); no tests yet for voicing 3.
+- `build-plugin/` is a scratch plugin build dir (gitignored; safe to delete).
 
 ## Next steps
-1. **Owner runs the M0 hardware check.** If anything lands in the wrong place, the fix is in `firmware/main.cpp` (`kPotKnob` is a hardware fact from Resilio; `kPotParams` is ADR 0017).
-2. **Owner listening** on the five pages (`tools/render_review_pages.sh` remakes them after any change), then **M8 tuning** from the notes: every *(start)* number is in `core/params/SpaceVoicing.h` and `EraVoicing.h`.
-3. **Freeze voicing:** the owner picks A/B/C on `renders/freeze_options`; then make it the only behaviour (`SpaceVoicing.h` "FREEZE VOICING PROTOTYPE", `Engine::setFreezeVoicing`, the `IV_FREEZE_VOICING` hook in `host/render/main.cpp`), amend ADR 0009/0010, drop the losers' code, add tests for the chosen one (if B: the companion and its DTCM can go, ~85 KB DTCM and some flash back).
-4. **Owner decisions pending:** the ADR 0008 makeup; MASSIVE's SIZE glide speed (ADR 0007 amendment); plugin identity.
-4. **At the rack:** the M0 check, then M3 (flash `immensio_versio_profile.bin`, read the serial CPU report; an SDRAM microbenchmark decides whether the PLATE moves to AXI SRAM).
+1. **Owner confirms on `renders/freeze_twin`.** Then make the winner the only behaviour: remove the losing voicings (the companion plate and its DTCM if the twin wins; `SpaceVoicing.h` "FREEZE VOICING PROTOTYPE"; `Engine::setFreezeVoicing`; the `IV_FREEZE_VOICING` hook in `host/render/main.cpp:122`), amend ADRs 0009/0010, SPEC changelog v1.0.6, and add tests in `test_plate_freeze` (input recedes back to the pad within ~T60; no drop on unfreeze; paint stays bounded). Raise or remove clamps consistently ([[verify-voicing-labels]]).
+2. **Frozen MASSIVE resonance and PLATE skank repeats:** measure first (spectrum of a 60 s frozen MASSIVE pad over time for a growing peak; onset envelope of `skank` into the frozen PLATE), fix, re-render `freeze_twin` and `m5_plate_freeze`.
+3. **Owner runs the M0 hardware check** (`docs/m0-hardware-check.md`). Fixes go in `firmware/main.cpp` (`kPotKnob` hardware fact, `kPotParams` ADR 0017).
+4. **Owner listening** on M1/M4/M5/M6/M7 pages, then **M8 tuning**: *(start)* numbers live in `core/params/SpaceVoicing.h` and `EraVoicing.h`.
+5. **Owner decisions:** ADR 0008 makeup; MASSIVE SIZE glide speed (ADR 0007 amendment); plugin identity.
+6. **At the rack:** M3 (flash `immensio_versio_profile.bin`, read the serial CPU report). The twin tank roughly doubles the frozen-state DSP cost: M3 must measure the frozen case.
 
 ## Waiting on the owner
 - M0 hardware check results.
 - Plugin identity (`docs/TASKS.md`): the AU shows as "Resilio: Immensio Versio" (company name "Resilio", manufacturer `Rslo`, plugin code `ImVs`). Keep, or name the company differently?
 
 ## Will bite
+- **The twin tank costs:** a second FDN or Plate runs while frozen (only then). `Engine::largeFloats`/`fastFloats` must count every buffer the Engine attaches, with the same size factors (the twin's diffusers use 1.13): a mismatch fails 7 suites with arena overruns.
+- **Review pages:** `tools/review/make_review.py` options `--showcase` (no picks), `--level-match`, `--dry <dir> --wet-only` (MIX fader). Render everything with `tools/render_review_pages.sh [page]`. Memory [[owner-listens-before-deciding]].
 - **Review pages** (`tools/review/`): playback is Web Audio, fed from `_audio/*.js` next to each page (a page opened from Finder can't read WAVs into Web Audio, but can load scripts). That roughly doubles a page's size on disk (renders/ is ~2.8 GB, gitignored). Serving them (`.claude/launch.json` "review-pages", http://localhost:8765) also works and `?audio=js` tests the Finder path. Click-free switching was measured, not assumed: the output's second-difference spikes stay at the music's own level for every transition, against 52× for a deliberate instant switch.
 - **In-loop allpass reads must keep their fraction in [0.5, 1.5)** (`Memory.h` readAllpass). Near 0 the interpolator's pole sits by Nyquist and moving reads leak energy into the top octave: frozen pads drift toward hiss.
 - The ringing metric flags long or infinite renders of **pitched** material (vibes) as "steady tone": the reverb holding the notes, not metallic modes. On broadband noise the Hall reads ≤ 5 dB at every length. Judge metallic-ness on noise / hits, not on held notes.
