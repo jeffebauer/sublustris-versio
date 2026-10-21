@@ -42,12 +42,12 @@ public:
     static constexpr size_t largeFloats(float sampleRate)
     {
         return dsp::Fdn::memoryFloats(sampleRate) + dsp::Swell::memoryFloats(sampleRate)
-             + dsp::Reverse::memoryFloats(sampleRate) + dsp::Plate::memoryFloats(sampleRate, voicing::kPlateMaxScale)
+             + dsp::Reverse::memoryFloats(sampleRate) + dsp::Plate::memoryFloats(sampleRate, voicing::kPlateMaxScale, true)
              + 2 * dsp::nextPow2(size_t(voicing::kPredelayMaxSeconds * sampleRate) + 4);
     }
     static constexpr size_t fastFloats(float sampleRate)
     {
-        size_t n = dsp::Plate::memoryFloats(sampleRate, voicing::kCompanionMaxScale);
+        size_t n = dsp::Plate::memoryFloats(sampleRate, voicing::kCompanionMaxScale, false);
         for (int c = 0; c < 2; ++c)
             for (float s : voicing::kDiffuserSeconds)
                 n += dsp::nextPow2(size_t(s * (c ? voicing::kDiffuserRightScale : 1.0f) * sampleRate) + 4);
@@ -125,6 +125,11 @@ private:
     dsp::Plate        plate_;
     dsp::Plate        companion_;
     dsp::Reverse      reverse_;
+    dsp::MuLawOut     muLaw_;
+    float             eraMakeup_ = 1.0f;
+    // ERA's sources into the tank's input (SPEC §4.7): cassette hiss, Midiverb crackle.
+    uint32_t          noiseSeed_ = 0xA11CEu;
+    float             hissLp_[2] = {}, hissGain_ = 0.0f, crackleChance_ = 0.0f, crackleGain_ = 0.0f;
     float             lastMean_ = -1.0f, lastSpread_ = -1.0f;
 
     // SPACE flips (ADR 0013): the wet and the tank's input fade out, the

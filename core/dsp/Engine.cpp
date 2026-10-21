@@ -71,8 +71,8 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
         }
     ready_ &= swell_.prepare(large_, sampleRate);
     ready_ &= fdn_.prepare(large_, sampleRate, 0x1D5A7u);
-    ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, 0x9A7Eu);
-    ready_ &= companion_.prepare(fast_, sampleRate, voicing::kCompanionMaxScale, 0xC0A1u);
+    ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
+    ready_ &= companion_.prepare(fast_, sampleRate, voicing::kCompanionMaxScale, false, 0xC0A1u);
     ready_ &= reverse_.prepare(large_, sampleRate);
     gesture_.prepare(sampleRate);
     reset();
@@ -106,6 +106,9 @@ IV_SIZE_OPT void Engine::reset()
     plate_.reset();
     companion_.reset();
     reverse_.reset();
+    muLaw_.reset();
+    hissLp_[0] = hissLp_[1] = 0.0f;
+    noiseSeed_ = 0xA11CEu;
     reverseMix_ = reverseTarget_;
     predelayStep_ = 0.0f;
     const auto g = map::mixGains(smoothed(ParamId::Mix));
@@ -207,7 +210,8 @@ void Engine::applySpace(bool snap)
     const bool massive = activeSpace_ == 2, plate = activeSpace_ == 0;
 
     // Freezing: loss → 0, highs kept (ratio → 1), the governor caps paint.
-    const float toneRatio = map::toneHighT60Ratio(tone);
+    // ERA's darkening scales the high end's T60 share with TONE (Era.h).
+    const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
     const float rate = map::decayRate(decay, activeSpace_) * (1.0f - freezeMix_);
     const float highRatio = toneRatio + freezeMix_ * (1.0f - toneRatio);
     const float governor = map::governorWeight(decay) + freezeMix_ * (1.0f - map::governorWeight(decay));
@@ -242,6 +246,42 @@ void Engine::applySpace(bool snap)
         fdn_.setInLoopDiffusion(massive ? map::massiveDiffusion(size) : 0.0f);
         fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : 1.0f);
     }
+
+    // ERA in the loop and DRIFT (SPEC §4.6, §4.7). Freezing glides the
+    // in-loop colour out (the pad holds still, ADR 0009); DRIFT stays.
+    const dsp::EraMix era = map::eraMix(smoothed(ParamId::Era));
+    dsp::EraMix loopEra = era;
+    const float keep = 1.0f - freezeMix_;
+    loopEra.midiRound = map::governorWeight(decay) >= 1.0f; // infinite: no systematic loss
+    // Neve's even harmonics add energy in proportion to the level: harmless
+    // while DECAY loses energy, a runaway in a lossless loop (measured: the
+    // tail jumping 2-3 dB, then the governor overshooting into dips). So
+    // they fade out across DECAY's infinite crossover.
+    loopEra.even *= keep * (1.0f - map::governorWeight(decay));
+    loopEra.drive = 1.0f + keep * (era.drive - 1.0f);
+    loopEra.midiEngage *= keep;
+    const dsp::DriftAmounts drift = map::driftAmounts(smoothed(ParamId::Drift), era.cassette);
+    // The cassette's slow 2:1 compression: more loss above −18 dBFS.
+    const float over = tankLevelDb() - voicing::kCompressThresholdDb;
+    const float compress = over > 0.0f ? keep * era.cassette * voicing::kCompressRatePerDb * over : 0.0f;
+    if (plate) {
+        plate_.setEra(loopEra);
+        plate_.setDrift(drift);
+        plate_.setExtraRate(compress);
+    } else {
+        fdn_.setEra(loopEra);
+        fdn_.setDrift(drift);
+        fdn_.setExtraRate(compress);
+    }
+    muLaw_.set(era);
+    eraMakeup_ = era.makeup;
+    // Hiss follows the input (none in silence, so an infinite tail doesn't
+    // fill with noise, ADR 0005); crackle the same.
+    const float inDb = 10.0f * std::log10(inputPower_ + 1e-20f);
+    const float follow = map::clamp01((inDb - (voicing::kHissFollowFromDbfs - 30.0f)) / 30.0f);
+    hissGain_ = era.cassette * follow * std::pow(10.0f, voicing::kHissDbfs / 20.0f);
+    crackleChance_ = era.midiverb * follow * voicing::kCracklePerSecond / sampleRate_;
+    crackleGain_ = std::pow(10.0f, voicing::kCrackleDbfs / 20.0f);
 
     const float diffusion = massive ? map::massiveDiffusion(size) : 1.0f;
     for (int c = 0; c < 2; ++c)
@@ -296,9 +336,11 @@ void Engine::controlTick(int n)
         tailCaptured_ = false;
     } else if (map::governorWeight(smoothed(ParamId::Decay)) >= 1.0f
                && clock_ - quietSince_ > uint64_t(voicing::kQuietSeconds * sampleRate_)) {
-        // Ratchets down with the tail as it settles, never up.
+        // Ratchets down with the tail while it settles, then stays put (the
+        // hold makeup brings a sagging tail back up to it).
         const float c = tankSlowLevelDb() + voicing::kPadCeilingDb;
-        if (!tailCaptured_ || c < tailCeilingDb_) tailCeilingDb_ = c;
+        const bool settling = clock_ - quietSince_ < uint64_t((voicing::kQuietSeconds + voicing::kTailSettleSeconds) * sampleRate_);
+        if (!tailCaptured_ || (settling && c < tailCeilingDb_)) tailCeilingDb_ = c;
         tailCaptured_ = true;
     }
     if (map::governorWeight(smoothed(ParamId::Decay)) < 1.0f) tailCaptured_ = false;
@@ -380,6 +422,22 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             compInR_[i] = compIn_ * pr;
             compL_[i] = compR_[i] = 0.0f;
             swell_.process(pl, pr);
+            if (hissGain_ > 0.0f || crackleChance_ > 0.0f) {
+                // ERA's noise into the tank: soft (3 kHz) hiss, sparse crackle.
+                for (int c = 0; c < 2; ++c) {
+                    noiseSeed_ = noiseSeed_ * 1664525u + 1013904223u;
+                    const float w = float(int32_t(noiseSeed_)) * (1.0f / 2147483648.0f);
+                    hissLp_[c] += 0.33f * (w - hissLp_[c]);
+                }
+                pl += hissGain_ * 2.0f * hissLp_[0];
+                pr += hissGain_ * 2.0f * hissLp_[1];
+                noiseSeed_ = noiseSeed_ * 1664525u + 1013904223u;
+                if (float(noiseSeed_ >> 8) * (1.0f / 16777216.0f) < crackleChance_) {
+                    const float a = crackleGain_ * (0.3f + 0.7f * float((noiseSeed_ >> 4) & 0xFFu) / 255.0f);
+                    pl += (noiseSeed_ & 1u) ? a : -a;
+                    pr += (noiseSeed_ & 2u) ? a : -a;
+                }
+            }
             const float g = tankIn_ * flipGain_;
             bufL_[i] = g * pl;
             bufR_[i] = g * pr;
@@ -405,8 +463,11 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             float rl = wetL_[i], rr = wetR_[i];
             reverse_.process(rl, rr);
             reverseMix_ = approach(reverseMix_, reverseTarget_, reverseStep);
-            const float wl = (wetL_[i] + reverseMix_ * (rl - wetL_[i])) * flipGain_ + compL_[i];
-            const float wr = (wetR_[i] + reverseMix_ * (rr - wetR_[i])) * flipGain_ + compR_[i];
+            float wl = (wetL_[i] + reverseMix_ * (rl - wetL_[i])) * flipGain_ + compL_[i];
+            float wr = (wetR_[i] + reverseMix_ * (rr - wetR_[i])) * flipGain_ + compR_[i];
+            wl *= eraMakeup_;
+            wr *= eraMakeup_;
+            muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)
             dryNow_ += dryStep_;
             wetNow_ += wetStep_;
             outL[start + i] = dryNow_ * inL[start + i] + wetNow_ * wl;

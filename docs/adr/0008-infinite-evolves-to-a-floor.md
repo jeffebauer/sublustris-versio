@@ -11,3 +11,9 @@
 - The frozen pad is different: it holds still (ADR 0009).
 
 **Rejected:** holding still at infinite (in-loop colour bypassed); Andromeda-style fade over thousands of seconds instead of true infinite.
+
+**Amendment (21 Oct 2026, M5/M6 build; SPEC v1.0.2 and v1.0.3; the makeup is for the owner to approve):**
+- **Held tails hold.** Once the input has been quiet for 2 s, an infinite tail's own level (on an 8 s average, settled over 10 s) becomes its ceiling, so it can't creep up toward the floor. A frozen pad's ceiling is its own level 20 s after the freeze (ADR 0009). Above the ceiling the governor adds loss in proportion, as at the floor.
+- **Makeup (an exception to SPEC §2.3 rule 2, loop gain ≤ 1):** a held tail that sags below its ceiling is raised back toward it, never above it, at most ~0.3 dB/s. Moving allpass-interpolated reads (fast DRIFT, the cassette's wow and flutter) lose a little energy, and without makeup an infinite tail at the cassette stage faded ~0.1 dB/s (60 dB in 10 minutes). The exception is bounded: only a held tail, only up to its own level, slowly.
+- **Measured:** infinite tails hold within 0.5 dB for 10 minutes at every ERA stage (`test_era`), pads within 1 dB for 5 minutes in every SPACE (`test_plate_freeze`), and the levels stay put across random seeds.
+- **Rejected:** a one-sided or symmetric-capped correction (it overshot into dips of several dB while Neve's even harmonics were still in the loop at infinite); keeping Neve's even harmonics at infinite (they made the tail jump 2-3 dB by themselves).

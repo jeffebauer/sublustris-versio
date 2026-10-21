@@ -55,6 +55,10 @@ IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed)
             ready_ &= apLine_[i][k].init(arena, size_t(voicing::kInLoopMaxSeconds * sampleRate));
         }
     rng_ = seed ? seed : 1u;
+    for (int i = 0; i < kN; ++i) {
+        era_[i].prepare(sampleRate);
+        driftGen_[i].prepare(sampleRate, seed * 2654435761u + uint32_t(i) * 40503u + 1u, float(i) / float(kN - 1));
+    }
     for (auto& t : lenTarget_) t = 0.0f;
     setMeanSeconds(0.1f, 1.0f, true);
     reset();
@@ -69,6 +73,8 @@ IV_SIZE_OPT void Fdn::reset()
         apLine_[i][1].clear();
         absorbY_[i] = 0.0f;
         interp_[i] = 0.0f;
+        era_[i].reset();
+        driftGen_[i].reset();
         floorTarget_[i] = floorA_[i] = floorB_[i] = 0.0f;
         floorCountdown_[i] = 0.0f;
         governor_.reset();
@@ -122,7 +128,9 @@ void Fdn::control(int n)
         floorA_[i] += floorCoeff * (floorTarget_[i] - floorA_[i]);
         floorB_[i] += floorCoeff * (floorA_[i] - floorB_[i]);
 
-        float target = lenNow_[i] + floorDepth * floorB_[i];
+        float driftRoom = voicing::kDriftMaxShareOfLine * lenNow_[i];
+        if (driftRoom > voicing::kDriftMaxSeconds * sampleRate_) driftRoom = voicing::kDriftMaxSeconds * sampleRate_;
+        float target = lenNow_[i] + floorDepth * floorB_[i] + driftGen_[i].control(dt, drift_, driftRoom);
         if (target < 4.0f) target = 4.0f;
         if (target > maxLen_) target = maxLen_;
         readStep_[i] = (target - readNow_[i]) / float(n);
@@ -132,7 +140,8 @@ void Fdn::control(int n)
         // highRatio; at infinite the highs fade until the tail reaches its
         // floor, then it holds (ADR 0008).
         const float apSeconds = inLoopNow_ > 0.0f ? float(apLen_[i][0] + apLen_[i][1]) / sampleRate_ : 0.0f;
-        const Absorb a = absorbent(lenNow_[i] / sampleRate_ + apSeconds, decayRate_ + governRate, highRatio_, governor_.darken);
+        const Absorb a = absorbent(lenNow_[i] / sampleRate_ + apSeconds, decayRate_ + governRate + extraRate_, highRatio_,
+                                   governor_.darken);
         gain_[i] = a.gain;
         pole_[i] = a.pole;
     }
@@ -160,7 +169,7 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                         x = d - apG * v;
                     }
                 absorbY_[i] = gain_[i] * x + pole_[i] * absorbY_[i];
-                y[i] = absorbY_[i];
+                y[i] = era_[i].process(absorbY_[i]);
             }
             float l = 0.0f, r = 0.0f;
             for (int i = 0; i < kN; ++i) {

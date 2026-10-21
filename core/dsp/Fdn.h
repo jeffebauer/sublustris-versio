@@ -12,6 +12,8 @@
 //
 // Control work (SIZE slew, modulation, gains) runs every kControlBlock
 // samples; the per-sample loop only reads, filters, mixes and writes.
+#include "dsp/Drift.h"
+#include "dsp/Era.h"
 #include "dsp/Governor.h"
 #include "dsp/Memory.h"
 #include "params/SpaceVoicing.h"
@@ -57,6 +59,14 @@ public:
     void resyncHoldLevel() { governor_.resyncSlow(); }
     // In-loop diffusion amount 0..1 (MASSIVE's SIZE); 0 bypasses it.
     void setInLoopDiffusion(float amount) { inLoopTarget_ = amount; }
+    // ERA's in-loop layers and DRIFT, set at control rate (SPEC §4.6, §4.7).
+    void setEra(const EraMix& m)
+    {
+        for (auto& e : era_) e.set(m);
+    }
+    void setDrift(const DriftAmounts& a) { drift_ = a; }
+    // More loss on top of DECAY (ERA's cassette compression), 1/T60 in 1/s.
+    void setExtraRate(float rate) { extraRate_ = rate; }
     // Extra output level for a voicing (MASSIVE's loudness match).
     void setOutputTrim(float trim) { outputTrim_ = trim; }
     float levelDb() const { return governor_.levelDb; }
@@ -84,6 +94,10 @@ private:
     // Absorbent filters: y = g (1 − b) x + b y.
     float     gain_[kN] = {}, pole_[kN] = {}, absorbY_[kN] = {};
     float     decayRate_ = 0.2f, highRatio_ = voicing::kDampingHighT60Ratio;
+    LoopEra   era_[kN];
+    Drift     driftGen_[kN];
+    DriftAmounts drift_;
+    float     extraRate_ = 0.0f;
     DelayLine apLine_[kN][2];
     uint32_t  apLen_[kN][2] = {};
     float     inLoopTarget_ = 0.0f, inLoopNow_ = 0.0f, outputTrim_ = 1.0f, levelGain_ = 1.0f;

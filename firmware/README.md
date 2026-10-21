@@ -36,6 +36,7 @@ The M0 release figure is the platform's floor before any DSP: libDaisy, the HAL,
 | M1 (Hall: FDN, diffusers, predelay) | 61,484 (46 %) | 62,312 | 82,356 |
 | M4 (MASSIVE, swell, REVERSE, floor governor, in-loop diffusion) | 66,628 (50 %) | 68,248 | 82,356 |
 | M5 (PLATE, companion, gesture reader, freeze, paint) | 75,044 (57 %) | 76,112 | 82,356 |
+| M6 (ERA, DRIFT, soft saturation, μ-law, Midiverb box) | 84,100 (64 %) | 85,088 | 82,356 |
 
 Memory at M5: `gLarge` 16 MB in SDRAM (FDN lines and in-loop allpasses, the PLATE, swell, REVERSE segments, predelay), `gFast` 100.6 KB of DTCM's 128 KB (the companion plate and the input diffusers), the Engine object in AXI SRAM. M3 decides whether the PLATE moves from SDRAM to AXI SRAM (SPEC §5.2).
 

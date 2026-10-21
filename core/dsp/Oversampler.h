@@ -29,7 +29,6 @@
 // ≥ 85 dB down from 0.28·fs_high (26.9 kHz). Computed offline, fixed.
 
 
-#include "params/Mappings.h"
 
 #include <array>
 #include <cmath>
@@ -126,7 +125,7 @@ public:
     static float latencySamples(float freqHz, float sampleRate)
     {
         if constexpr (kFactor == 1) return 0.0f;
-        const float w = 2.0f * map::kPi * freqHz / sampleRate;
+        const float w = 2.0f * 3.14159265358979f * freqHz / sampleRate;
         float d = Halfband::groupDelay(w);
         if constexpr (kFactor == 4) d += 0.5f * Halfband::groupDelay(0.5f * w);
         return d;

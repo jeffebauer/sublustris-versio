@@ -48,8 +48,22 @@ struct FloorGovernor {
         levelDb = 10.0f * std::log10(power_ + 1e-20f);
         slowLevelDb = 10.0f * std::log10(slow_ + 1e-20f);
         const float over = levelDb - floorDb;
-        const float overHold = slowLevelDb - holdDb;
-        extraRate = weight * voicing::kGovernorRatePerDb * ((over > 0.0f ? over : 0.0f) + (overHold > 0.0f ? overHold : 0.0f));
+        // The floor: loss in proportion to how far a fed tail is over it.
+        extraRate = over > 0.0f ? weight * voicing::kGovernorRatePerDb * over : 0.0f;
+        // A held tail (a pad, or an infinite tail once the input is quiet)
+        // is kept at its own settled level (SPEC v1.0.3, ADR 0008
+        // amendment): above it, loss in proportion (as the floor); below
+        // it, a gentle capped makeup, because fast DRIFT or the cassette's
+        // wow and flutter (moving allpass reads) lose a little energy.
+        if (holdDb < 0.0f) {
+            const float off = slowLevelDb - holdDb;
+            if (off > 0.0f) extraRate += weight * voicing::kGovernorRatePerDb * off;
+            else {
+                float up = -voicing::kHoldRatePerDb * off;
+                if (up > voicing::kMakeupMaxRate) up = voicing::kMakeupMaxRate;
+                extraRate -= weight * up;
+            }
+        }
         float above = (levelDb - (floorDb - 3.0f)) / 6.0f;
         above = above < 0.0f ? 0.0f : (above > 1.0f ? 1.0f : above);
         darken = 1.0f - weight * (1.0f - above);

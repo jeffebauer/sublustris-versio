@@ -45,17 +45,21 @@ float lerpRead(const ExactLine& l, float d)
 
 } // namespace
 
-IV_SIZE_OPT bool Plate::prepare(Arena& arena, float sampleRate, float maxScale, uint32_t seed)
+IV_SIZE_OPT bool Plate::prepare(Arena& arena, float sampleRate, float maxScale, bool colour, uint32_t seed)
 {
     sampleRate_ = sampleRate;
     maxScale_ = maxScale;
+    colour_ = colour;
+    const float room = colour ? voicing::kDriftMaxSeconds * sampleRate : 0.0f;
     const float k = maxScale * sampleRate / kPaperRate;
     ready_ = true;
     for (int b = 0; b < 2; ++b) {
         Branch& br = b_[b];
         // The excursion isn't scaled (the chorus depth stays put), so it's
         // added on top of the scaled length.
-        ready_ &= br.ap1.init(arena, size_t(kAp1[b] * k + 2.0f * kExcursion * sampleRate / kPaperRate) + 4);
+        ready_ &= br.ap1.init(arena, size_t(kAp1[b] * k + 2.0f * kExcursion * sampleRate / kPaperRate + 2.0f * room) + 4);
+        br.era.prepare(sampleRate);
+        br.drift.prepare(sampleRate, (seed + 1u) * 2246822519u + uint32_t(b) * 3266489917u, float(b));
         ready_ &= br.d1.init(arena, size_t(kD1[b] * k) + 4);
         ready_ &= br.ap2.init(arena, size_t(kAp2[b] * k) + 4);
         ready_ &= br.d2.init(arena, size_t(kD2[b] * k) + 4);
@@ -77,6 +81,8 @@ IV_SIZE_OPT void Plate::reset()
         br.d2.clear();
         br.y1 = br.y2 = br.out = 0.0f;
         br.i1 = br.i2 = br.i3 = br.i4 = 0.0f;
+        br.era.reset();
+        br.drift.reset();
         br.lfoPhase = 0.5f * float(b);
         br.floorA = br.floorB = br.floorTarget = br.floorCountdown = 0.0f;
         br.modNow = br.modStep = 0.0f;
@@ -102,7 +108,7 @@ void Plate::control(int n)
     const float k = scaleNow_ * sampleRate_ / kPaperRate;
 
     governor_.control(n, sampleRate_);
-    const float lowRate = decayRate_ * voicing::kPlateRateCalibration + governor_.extraRate;
+    const float lowRate = decayRate_ * voicing::kPlateRateCalibration + governor_.extraRate + extraRate_;
     levelGain_ = voicing::kPlateOutputTrim * std::sqrt(scaleNow_ / kLevelRefScale);
 
     const float excursion = kExcursion * sampleRate_ / kPaperRate; // not scaled: the chorus depth stays put
@@ -127,7 +133,15 @@ void Plate::control(int n)
         }
         br.floorA += floorCoeff * (br.floorTarget - br.floorA);
         br.floorB += floorCoeff * (br.floorA - br.floorB);
-        const float target = excursion * (1.0f + 0.7f * std::sin(6.2831853f * br.lfoPhase) + 0.3f * br.floorB);
+        float target = excursion * (1.0f + 0.7f * std::sin(6.2831853f * br.lfoPhase) + 0.3f * br.floorB);
+        if (colour_) {
+            // DRIFT swings the modulated allpass's length (the buffer has
+            // room for the longest swing).
+            const float room = voicing::kDriftMaxSeconds * sampleRate_;
+            float cap = voicing::kDriftMaxShareOfLine * br.ap1Len;
+            if (cap > room) cap = room;
+            target += br.drift.control(dt, drift_, cap);
+        }
         br.modStep = (target - br.modNow) / float(n);
     }
 }
@@ -167,7 +181,7 @@ void Plate::process(const float* inL, const float* inR, float* outL, float* outR
                 br.d2.write(x);
                 x = br.d2.readAllpass(br.d2Len, br.i4);
                 br.y2 = br.loss2.gain * x + br.loss2.pole * br.y2;
-                next[b] = br.y2;
+                next[b] = colour_ ? br.era.process(br.y2) : br.y2;
             }
             b_[0].out = next[0];
             b_[1].out = next[1];

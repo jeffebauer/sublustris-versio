@@ -41,6 +41,7 @@ struct Stereo {
 struct Setting {
     int   space = 1, attack = 0;
     float time = 0.0f, decay = 0.6f, size = 0.5f, mix = 1.0f;
+    float era = 0.0f; // clean: these are M4's checks (ATTACK, MASSIVE, the floor); ERA has its own (test_era)
 };
 
 // spaceAt: optional SPACE position per sample (automation).
@@ -54,6 +55,7 @@ Stereo render(const std::vector<float>& in, const Setting& s, const std::vector<
     e.setParam(iv::ParamId::Decay, s.decay);
     e.setParam(iv::ParamId::Size, s.size);
     e.setParam(iv::ParamId::Mix, s.mix);
+    e.setParam(iv::ParamId::Era, s.era);
     e.reset();
     Stereo out{std::vector<float>(in.size()), std::vector<float>(in.size())};
     for (size_t pos = 0; pos < in.size(); pos += 48) {

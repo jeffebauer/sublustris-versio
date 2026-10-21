@@ -14,7 +14,7 @@ constexpr float kFdnRatios[kFdnLines] = {0.60f, 0.69f, 0.79f, 0.90f, 1.01f, 1.13
 
 // The longest a line may get (Massive's 2 s mean × the longest ratio, plus
 // modulation room). Sets the FDN's memory: kFdnLines × this, in SDRAM.
-constexpr float kFdnMaxLineSeconds = 2.05f * 1.41f + 0.01f;
+constexpr float kFdnMaxLineSeconds = 2.05f * 1.41f + 0.01f + 0.07f; // + DRIFT's room (EraVoicing.h kDriftMaxSeconds)
 
 // Hall's mean line delay across SIZE (SPEC §3: 40 → 180 ms, exponential).
 constexpr float kHallMeanMinMs = 40.0f;
@@ -119,6 +119,14 @@ constexpr float kPadSettleSeconds    = 20.0f;
 // drifting up toward the floor (measured +4 dB over 10 min without it).
 constexpr float kQuietDbfs   = -70.0f;
 constexpr float kQuietSeconds = 2.0f;
+// The infinite tail's ceiling ratchets down with its slow level for this
+// long after the input goes quiet (settling), then stays put.
+constexpr float kTailSettleSeconds = 10.0f;
+// A held tail below its settled level is raised back by kHoldRatePerDb
+// (1/T60 in 1/s per dB), capped at kMakeupMaxRate (0.005 ≈ 0.3 dB/s);
+// above it, it loses kGovernorRatePerDb per dB, as at the floor.
+constexpr float kHoldRatePerDb = 0.004f;
+constexpr float kMakeupMaxRate = 0.005f;
 
 // Predelay memory: SIZE's (Massive) + TIME's (NORMAL), SPEC §5.2.
 constexpr float kPredelayMaxSeconds = 0.75f;

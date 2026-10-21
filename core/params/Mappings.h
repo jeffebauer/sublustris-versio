@@ -2,6 +2,9 @@
 // Normalised (0–1) → internal units. The only place mapping curves live, so a
 // setting in the Plugin sounds identical on the module (SPEC §6). Curves land
 // per milestone; numbers marked (start) in SPEC §3 are starting guesses.
+#include "dsp/Drift.h"
+#include "dsp/Era.h"
+#include "params/EraVoicing.h"
 #include "params/SpaceVoicing.h"
 
 #include <cmath>
@@ -50,7 +53,7 @@ inline float decayRate(float v, int space)
 // absorbent filter; the pivoted shelf lands with the loop chain (M6).
 inline float toneHighT60Ratio(float v)
 {
-    constexpr float kDark = 0.12f, kBright = 0.92f;
+    constexpr float kDark = 0.12f, kBright = 1.3f; // CW: the highs outlast the lows (a bright, thinning tail)
     const float noon = voicing::kDampingHighT60Ratio;
     return v < 0.5f ? kDark + (noon - kDark) * (v * 2.0f) : noon + (kBright - noon) * ((v - 0.5f) * 2.0f);
 }
@@ -87,6 +90,62 @@ inline float plateScale(float v) { return expLerp(voicing::kPlateMinScale, voici
 // While frozen, SIZE and DECAY play the companion (ADR 0009, SPEC §4.2).
 inline float companionScale(float v) { return expLerp(voicing::kCompanionMinScale, voicing::kCompanionMaxScale, v); }
 inline float companionDecayRate(float v) { return 1.0f / expLerp(voicing::kCompanionT60Min, voicing::kCompanionT60Max, v); }
+
+// DRIFT (P6), bipolar (ADR 0012) + ERA's cassette wow/flutter (SPEC §4.7).
+inline dsp::DriftAmounts driftAmounts(float drift, float cassette)
+{
+    using namespace voicing;
+    dsp::DriftAmounts a;
+    if (drift < kDriftDeadLo) {
+        const float t = (kDriftDeadLo - drift) / kDriftDeadLo;
+        a.wowCents = kWowCents * t;
+        a.wowHz = kWowHzMin + (kWowHzMax - kWowHzMin) * t;
+        a.flutterCents = kFlutterCents * t;
+        a.flutterHz = kFlutterHzMin + (kFlutterHzMax - kFlutterHzMin) * t;
+    } else if (drift > kDriftDeadHi) {
+        const float t = (drift - kDriftDeadHi) / (1.0f - kDriftDeadHi);
+        a.driftCents = kDriftCents * t;
+        a.driftHz = kDriftHzMin + (kDriftHzMax - kDriftHzMin) * t;
+    }
+    // The cassette's own wow and flutter add on top (rates blended by depth).
+    if (cassette > 0.0f) {
+        const float w = kCassetteWowCents * cassette, f = kCassetteFlutterCents * cassette;
+        if (a.wowCents + w > 0.0f) a.wowHz = (a.wowCents * a.wowHz + w * kCassetteWowHz) / (a.wowCents + w);
+        a.wowCents += w;
+        if (a.flutterCents + f > 0.0f) a.flutterHz = (a.flutterCents * a.flutterHz + f * kCassetteFlutterHz) / (a.flutterCents + f);
+        a.flutterCents += f;
+    }
+    return a;
+}
+
+// ERA (P4), stacking (ADR 0003): each layer fades in across its stretch
+// (smoothstep) and stays.
+inline float layer(float v, float from, float to)
+{
+    const float t = clamp01((v - from) / (to - from));
+    return t * t * (3.0f - 2.0f * t);
+}
+inline dsp::EraMix eraMix(float v)
+{
+    using namespace voicing;
+    dsp::EraMix m;
+    m.neve = layer(v, kEraNeveFrom, kEraCassetteFrom);
+    m.cassette = layer(v, kEraCassetteFrom, kEraMuFrom);
+    m.mu = layer(v, kEraMuFrom, kEraMidiverbFrom);
+    m.midiverb = layer(v, kEraMidiverbFrom, 1.0f);
+    // The era's darkening, as a share of the high end's T60 (Era.h): Neve
+    // a little, the cassette a lot (SPEC §4.7's 16 kHz / 9 kHz in spirit).
+    m.highRatioScale = expLerp(expLerp(1.0f, kNeveHighRatio, m.neve), kCassetteHighRatio, m.cassette);
+    m.even = kNeveEven * m.neve;
+    m.drive = 1.0f + (kCassetteDrive - 1.0f) * m.cassette;
+    m.muEngage = clamp01((v - kEraMuFrom) / kMuEngageSpan);
+    m.muBits = kMuBitsStart + (kMuBitsEnd - kMuBitsStart) * clamp01((v - kEraMuFrom) / (kEraMidiverbFrom - kEraMuFrom));
+    m.midiEngage = clamp01((v - kEraMidiverbFrom) / kMidiEngageSpan);
+    m.midiBits = kMidiBitsStart + (kMidiBitsEnd - kMidiBitsStart) * clamp01((v - kEraMidiverbFrom) / (1.0f - kEraMidiverbFrom));
+    const float makeupDb = kMakeupNeveDb * m.neve + kMakeupCassetteDb * m.cassette + kMakeupMuDb * m.mu + kMakeupMidiverbDb * m.midiverb;
+    m.makeup = std::pow(10.0f, makeupDb / 20.0f);
+    return m;
+}
 
 // The floor governor's weight across DECAY's crossover (ADR 0008): 0 while
 // the tail is finite, 1 from infinite on.

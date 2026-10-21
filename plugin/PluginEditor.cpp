@@ -7,6 +7,8 @@
 
 #include "PluginEditor.h"
 
+#include "params/EraVoicing.h"
+
 #include "../firmware/LedMeter.h"
 #include "params/ParamSpec.h"
 
@@ -35,8 +37,8 @@ struct Knob {
 };
 
 // DRIFT's noon dead zone (SPEC §3 P6): still, only the modulation floor.
-constexpr float kDriftDeadLo = 0.47f;
-constexpr float kDriftDeadHi = 0.53f;
+constexpr float kDriftDeadLo = iv::voicing::kDriftDeadLo;
+constexpr float kDriftDeadHi = iv::voicing::kDriftDeadHi;
 
 constexpr Knob kKnobs[] = {
     {ParamId::Mix,   {7.770f, 18.530f}, false},  // P1
