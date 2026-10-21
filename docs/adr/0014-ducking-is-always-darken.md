@@ -11,3 +11,5 @@
 - SW1 is freed for ATTACK (ADR 0015).
 
 **Rejected (heard in the demos):** PUSH BACK (more smear, narrower image), LEVEL (plain dip), and a switch to choose between them; a duck depth fixed once infinite.
+
+**Amendment (21 Oct 2026, M7 build; SPEC v1.0.4):** DARKEN's low-pass sits on the wet output, not inside the loop. A filter in the loop removes the highs from the tail for good, so the tail could never "brighten back when you stop"; on the output it does (measured: highs above 4 kHz 4 % of the wet while playing at infinite, 31 % a second after). There's no ducking while frozen: playing over a pad mustn't darken the pad.
