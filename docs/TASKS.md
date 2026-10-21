@@ -6,7 +6,6 @@
 ## To do
 
 ### Decide
-- [ ] **Listen: REVERSE, the hardware way** (`renders/reverse/index.html`): rebuilt the established way (RMX16/Lexicon reverse programs), as you picked: each note blooms into a swell over TIME, then stops. Is this the sound? Is the swell the right shape, and is the stop sudden enough (DECAY) and the grain right (SIZE)?
 - [ ] **Approve or reject (ADR 0008 amendment):** infinite tails and frozen pads get a small, capped "makeup" that lifts a sagging held tail back to its own level (never above, ≤ 0.3 dB/s). Without it, infinite tails with tape wow fade out over ~10 minutes. It's the one place the loop gain may go a hair over 1.
 - [ ] **MASSIVE's SIZE glide:** SIZE moves bend at most a semitone (ADR 0012), so a full SIZE sweep in MASSIVE glides for ~40 s. Keep that gentle bend, or allow a faster swoop with more bend in MASSIVE only?
 - [ ] **Plugin identity** (one-line answers): keep manufacturer code `Rslo` and company name / bundle-ID prefix as Resilio's, with plugin code `ImVs`? (Same developer, so it groups both plugins together in Ableton.)
@@ -37,12 +36,13 @@
 ## Waiting on Claude
 
 - **Frozen MASSIVE resonance and the PLATE's early repeats** (your freeze_options notes: an upper harmonic building in a frozen MASSIVE; two audible repeats on skank in PLATE before it diffuses): to measure and fix next.
-- **REVERSE tuning** from your notes on `renders/reverse`.
+- **REVERSE tuning**, only if you have notes on `renders/reverse` (shape, stop, grain).
 - **M8 tuning** from your listening notes on the pages above.
 - **Modulation ideas from Mutable Instruments** (research doc above) and the DSP audit session's findings: to try together on an A/B page, starting with the PLATE gap.
 
 ## Done
 
+- 22 Oct 2026: **REVERSE confirmed**: "Reverse, the hardware way sounds much better."
 - 22 Oct 2026: **More material on every page**: dub techno stabs, an ambient pad, a synth lead, a drum groove, a dub bassline, electric piano and a spoken voice, beside the skank and vibes (`tools/make_material.py`).
 - 22 Oct 2026: **Mutable Instruments' Clouds and Beads reverbs analysed** (`docs/research/mutable-instruments-reverbs.md`): four ideas worth trying (more modulation in PLATE, the input diffusers and MASSIVE's loop; independent stereo diffusers). One is a gap in our own spec: the PLATE's long delays aren't modulated.
 - 22 Oct 2026: **REVERSE rebuilt the established way** (your pick: the hardware kind). Starts with the note, swells over TIME, stops within ~0.25 s; no break, no chunks. The old reversed pieces are gone.
