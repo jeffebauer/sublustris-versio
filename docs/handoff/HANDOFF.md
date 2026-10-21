@@ -1,6 +1,6 @@
 # Handoff
 
-**Written:** 21 Oct 2026, end of session 1 (M1, M4–M7 built from the frozen spec; review pages rebuilt; M5 notes and the freeze pick acted on). Start the next session with `/immensio-start`. **Nothing running:** no agents, no worktrees, no branches besides `main`. No git remote yet (commits are local only).
+**Written:** 21 Oct 2026, end of session 1 (M1, M4–M7 built from the frozen spec; review pages rebuilt; M5 notes and the freeze pick acted on). Start the next session with `/immensio-start`. **Nothing running:** no agents, no worktrees, no branches besides `main`. Remote: private repo https://github.com/jeffebauer/immensio-versio (`origin`, main tracked).
 
 ## State
 

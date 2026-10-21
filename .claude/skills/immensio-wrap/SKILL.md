@@ -43,6 +43,6 @@ The next session knows nothing this one knew. Write down **what is true now, wha
    - **Will bite:** known risks and traps (thin test margins, CPU headroom, flaky environment issues such as the GitHub routing drops, anything surprising this session).
    - **Where to look:** the 3–6 files the next session should read first for the next step.
 
-6. **Commit** the handoff and doc updates (explicit paths), and push if a remote exists (none yet). If a push fails, say so in the reply; the commit is safe locally.
+6. **Commit** the handoff and doc updates (explicit paths), and push to `origin`. If a push fails, say so in the reply; the commit is safe locally.
 
 7. **Tell the owner** in a few lines: what's committed, what's in flight, and that it's safe to clear context (or why not yet).

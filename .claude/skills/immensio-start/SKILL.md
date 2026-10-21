@@ -17,7 +17,7 @@ The previous session left a handoff. Read it before touching anything; don't re-
    git log --oneline -10
    git worktree list
    git branch --no-merged main
-   git remote | grep -q . && git fetch -q && git status -sb | head -1   # only once a remote exists (none yet)
+   git fetch -q && git status -sb | head -1   # ahead/behind origin (private GitHub repo)
    cat dist/installed_plugin.txt 2>/dev/null || echo "no plugin installed yet"
    test -x build/iv_render || echo "rebuild needed"
    ```
