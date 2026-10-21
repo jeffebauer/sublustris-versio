@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 22 Oct 2026 (REVERSE rebuilt the hardware way, on `renders/reverse`. Every page is rendered from the same build by `tools/render_review_pages.sh`).
+**Last updated:** 22 Oct 2026 (REVERSE rebuilt the hardware way, on `renders/reverse`; every page now plays nine kinds of material. Every page is rendered from the same build by `tools/render_review_pages.sh`).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
@@ -25,16 +25,24 @@
 - [ ] **M3 CPU check** (after M0): flash `firmware/build/immensio_versio_profile.bin` and send Claude the serial CPU report, so the CPU budget is measured, not estimated. Include a frozen MASSIVE: the twin and MASSIVE's early taps are the heaviest case.
 
 ### When convenient
-- [ ] **Reference recordings:** your Mercury7 Cathedra on a few stimulus files (`test_audio/stimulus/`), for M1/M4 listening comparisons. Never committed.
+- [ ] **Reference recordings** (yes, useful: they let each page carry a "Compare with" version R). Play the dry material in `renders/_material/` (skank, vibes, stabs, pad, lead, drums, bass, keys, voice; each already has 12 s of silence for the tail) through each unit, **100 % wet**, record at 48 kHz / 24-bit, and save as `test_audio/reference/<unit>_<algorithm>/<material>.wav` with a `settings.txt` beside it (knob positions in words). Never committed. In order of use:
+  1. **Eventide H9 *Reverse*** (and Blackhole with Gravity negative): the yardstick for our new REVERSE.
+  2. **Valhalla Supermassive** Sagittarius, Andromeda and Large Magellanic Cloud: for MASSIVE.
+  3. **Meris Mercury7 Cathedra**: for HALL and DRIFT.
+  4. **Valhalla Plate** and **VintageVerb** (an 80s mode): for PLATE and ERA.
+  5. **Vongon Ultrasheer**, **Intellijel Swells**, **Valhalla Room**, **H9 Blackhole**: as you have time (ERA's vintage end, BLOOM, small HALLs, infinite tails).
 
 ## Waiting on Claude
 
 - **Frozen MASSIVE resonance and the PLATE's early repeats** (your freeze_options notes: an upper harmonic building in a frozen MASSIVE; two audible repeats on skank in PLATE before it diffuses): to measure and fix next.
 - **REVERSE tuning** from your notes on `renders/reverse`.
 - **M8 tuning** from your listening notes on the pages above.
+- **Modulation ideas from Mutable Instruments** (research doc above) and the DSP audit session's findings: to try together on an A/B page, starting with the PLATE gap.
 
 ## Done
 
+- 22 Oct 2026: **More material on every page**: dub techno stabs, an ambient pad, a synth lead, a drum groove, a dub bassline, electric piano and a spoken voice, beside the skank and vibes (`tools/make_material.py`).
+- 22 Oct 2026: **Mutable Instruments' Clouds and Beads reverbs analysed** (`docs/research/mutable-instruments-reverbs.md`): four ideas worth trying (more modulation in PLATE, the input diffusers and MASSIVE's loop; independent stereo diffusers). One is a gap in our own spec: the PLATE's long delays aren't modulated.
 - 22 Oct 2026: **REVERSE rebuilt the established way** (your pick: the hardware kind). Starts with the note, swells over TIME, stops within ~0.25 s; no break, no chunks. The old reversed pieces are gone.
 - 22 Oct 2026: **REVERSE notes** measured (the first reversed piece fades out into a 0.2 s hole, then jumps of up to 13 dB) and two new ways rendered for round 2.
 - 21 Oct 2026: **M1 notes** acted on: HALL's SIZE now reads small to huge (20 → 260 ms, small rooms have shorter tails), the buzz on long small rooms gone (ringing score 43 → 26 dB), TONE's ends wider (dark +4 dB lows / −9 dB highs, bright the opposite). Fixed on the way: a click when freezing at infinite DECAY, and the limiter edging past −1 dBFS.

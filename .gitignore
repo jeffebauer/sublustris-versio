@@ -19,3 +19,4 @@ __pycache__/
 /test_audio/demo_sources/
 build-*/
 build-config.log
+.venv/

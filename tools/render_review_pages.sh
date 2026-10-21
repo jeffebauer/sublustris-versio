@@ -5,7 +5,8 @@
 # renders/<page>/index.html in a browser.
 #
 # Material: the dub skank (test_audio/stimulus/04_skank.wav, from
-# tools/make_stimulus.py) and a sparse vibes phrase built from the CC0 vibes
+# tools/make_stimulus.py), the wider set from tools/make_material.py (stabs,
+# pad, lead, drums, bass, keys, voice; needs .venv) and a sparse vibes phrase built from the CC0 vibes
 # samples in Resilio Versio's test_audio/demo_sources (not in either repo;
 # the vibes page rows are skipped if they're missing). Each gets 12 s of
 # silence appended so tails ring out.
@@ -39,6 +40,10 @@ if [ ! -f $SRC/vibes.wav ] && [ -d $VIBES ]; then
 fi
 MATERIALS=(skank)
 [ -f $SRC/vibes.wav ] && MATERIALS+=(vibes)
+# The wider set (tools/make_material.py): pads, stabs, a lead, drums, bass, keys, a voice.
+EXTRA=(stabs pad lead drums bass keys voice)
+if [ ! -f $SRC/voice.wav ] && [ -x .venv/bin/python ]; then .venv/bin/python tools/make_material.py > /dev/null; fi
+for m in $EXTRA; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
 
 # Freeze gestures per material (seconds): [press, release] pairs.
 cat > $SRC/freeze_only_skank.json <<'EOF'
@@ -53,6 +58,12 @@ EOF
 cat > $SRC/freeze_vibes.json <<'EOF'
 { "buttons": [[2.4, 2.5], [6.0, 9.5], [14.5, 14.6]] }
 EOF
+
+# The wider set's gestures: freeze at 3 s, paint 8-11 s, unfreeze at 16 s.
+for m in $EXTRA; do
+    print -r -- '{ "buttons": [[3.0, 3.1], [16.0, 16.1]] }' > $SRC/freeze_only_$m.json
+    print -r -- '{ "buttons": [[3.0, 3.1], [8.0, 11.0], [16.0, 16.1]] }' > $SRC/freeze_$m.json
+done
 
 # r <page> <folder> <tag> <auto prefix or ""> --set ...   (env vars pass through)
 r() {
