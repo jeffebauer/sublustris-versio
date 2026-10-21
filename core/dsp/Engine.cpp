@@ -74,6 +74,13 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
     ready_ &= companion_.prepare(fast_, sampleRate, voicing::kCompanionMaxScale, false, 0xC0A1u);
     ready_ &= reverse_.prepare(large_, sampleRate);
+    ready_ &= twinFdn_.prepare(large_, sampleRate, 0x7A1Eu);
+    ready_ &= twinPlate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x7B2Fu);
+    for (int c = 0; c < 2; ++c)
+        for (int k = 0; k < 4; ++k) {
+            const float s = voicing::kDiffuserSeconds[k] * (c ? voicing::kDiffuserRightScale : 1.0f) * 1.13f;
+            ready_ &= twinDiffuser_[c].stage[k].init(fast_, uint32_t(s * sampleRate), voicing::kDiffuserCoeff[k]);
+        }
     gesture_.prepare(sampleRate);
     darken_.prepare(sampleRate);
     limiter_.prepare(sampleRate);
@@ -95,6 +102,12 @@ IV_SIZE_OPT void Engine::reset()
     compIn_ = paint_ = 0.0f;
     tankInStep_ = compInStep_ = 0.0f;
     companionActive_ = false;
+    twinActive_ = false;
+    twinIn_ = twinInStep_ = 0.0f;
+    twinMean_ = twinSpread_ = -1.0f;
+    twinFdn_.reset();
+    twinPlate_.reset();
+    for (auto& d : twinDiffuser_) d.clear();
     inputPower_ = 0.0f;
     quietSince_ = 0;
     tailCaptured_ = false;
@@ -180,9 +193,18 @@ void Engine::onGesture(GestureReader::Event e)
         fdn_.resyncHoldLevel();
         plate_.resyncHoldLevel();
         // The tank's input closes, or (voicings 1, 2) drops to the feed level so playing goes into the pad.
-        tankInTarget_ = freezeVoicing_ == 0 ? 0.0f : voicing::kFreezeFeed;
+        tankInTarget_ = freezeVoicing_ == 0 || freezeVoicing_ == 3 ? 0.0f : voicing::kFreezeFeed;
         tankInStep_ = tankStep;
-        if (freezeVoicing_ != 1) {
+        if (freezeVoicing_ == 3) {
+            if (!twinActive_) {
+                twinFdn_.reset();
+                twinPlate_.reset();
+                for (auto& d : twinDiffuser_) d.clear();
+                twinMean_ = twinSpread_ = -1.0f;
+                twinActive_ = true;
+            }
+            twinInStep_ = compStep;
+        } else if (freezeVoicing_ != 1) {
             if (!companionActive_) {
                 companion_.reset();
                 companionActive_ = true;
@@ -194,6 +216,7 @@ void Engine::onGesture(GestureReader::Event e)
         tankInTarget_ = 1.0f;
         tankInStep_ = tankStep;
         compInStep_ = -compStep;
+        twinInStep_ = -compStep;
         break;
     case GestureReader::Event::PaintStart:
         // Room to grow while painting: the pad's level or the floor, + 3 dB.
@@ -227,7 +250,10 @@ void Engine::applySpace(bool snap)
     const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
     const float rate = map::decayRate(decay, activeSpace_) * (1.0f - freezeMix_);
     const float highRatio = toneRatio + freezeMix_ * (1.0f - toneRatio);
-    const float governor = map::governorWeight(decay) + freezeMix_ * (1.0f - map::governorWeight(decay));
+    // Frozen: full weight (only the pad's own hold acts, there's no floor). Not frozen: DECAY's own
+    // weight at once, not glided with freezeMix_: gliding it pulled a fed pad (above the floor) down
+    // hard on unfreeze, "a pronounced immediate drop" and a too-steep decay (owner, freeze options).
+    const float governor = frozen ? 1.0f : map::governorWeight(decay);
     // The cap: a still pad's own level (or + headroom while painting); an
     // infinite tail's settled level once the input has gone quiet; else the
     // floor. Darkening always stops at the floor (ADR 0008).
@@ -323,6 +349,39 @@ void Engine::applySpace(bool snap)
     const float pd = predelay * sampleRate_;
     if (snap) predelayNow_ = pd;
     predelayTarget_ = pd;
+
+    // The twin (voicing 3): the frozen tank's space and size and the knobs' colour, never frozen,
+    // decaying at the held DECAY but always within kTwinMaxT60. Full in-loop diffusion in MASSIVE,
+    // like the pad (no audible repeats).
+    if (twinActive_) {
+        const float tSize = heldSize_;
+        const float tRate = std::fmax(map::decayRate(heldDecay_, activeSpace_), 1.0f / voicing::kTwinMaxT60);
+        dsp::EraMix tEra = era;
+        tEra.even *= 1.0f - map::governorWeight(heldDecay_);
+        if (plate) {
+            twinPlate_.setScale(map::plateScale(tSize), snap);
+            twinPlate_.setDecayRate(tRate);
+            twinPlate_.setHighT60Ratio(toneRatio);
+            twinPlate_.setGovernor(0.0f);
+            twinPlate_.setEra(tEra);
+            twinPlate_.setDrift(drift);
+        } else {
+            const float mean = massive ? map::massiveMeanSeconds(tSize) : map::hallMeanSeconds(tSize);
+            const float spread = massive ? map::massiveSpread(tSize) : 1.0f;
+            if (std::fabs(mean - twinMean_) > 1e-6f || std::fabs(spread - twinSpread_) > 1e-6f) {
+                twinFdn_.setMeanSeconds(mean, spread, twinMean_ < 0.0f);
+                twinMean_ = mean;
+                twinSpread_ = spread;
+            }
+            twinFdn_.setDecayRate(tRate);
+            twinFdn_.setHighT60Ratio(toneRatio);
+            twinFdn_.setGovernor(0.0f);
+            twinFdn_.setInLoopDiffusion(massive ? 1.0f : 0.0f);
+            twinFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : 1.0f);
+            twinFdn_.setEra(tEra);
+            twinFdn_.setDrift(drift);
+        }
+    }
 
     // The companion: SIZE and DECAY's while frozen (ADR 0009).
     companion_.setScale(map::companionScale(smoothed(ParamId::Size)), snap);
@@ -450,6 +509,11 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             compInL_[i] = compIn_ * pl;
             compInR_[i] = compIn_ * pr;
             compL_[i] = compR_[i] = 0.0f;
+            // The twin hears the input itself, through its own diffusion: no predelay, no swell.
+            twinIn_ = clamp01(twinIn_ + twinInStep_);
+            twinInL_[i] = twinDiffuser_[0].process(twinIn_ * l);
+            twinInR_[i] = twinDiffuser_[1].process(twinIn_ * r);
+            twinL_[i] = twinR_[i] = 0.0f;
             swell_.process(pl, pr);
             if (hissGain_ > 0.0f || crackleChance_ > 0.0f) {
                 // ERA's noise into the tank: soft (3 kHz) hiss, sparse crackle.
@@ -478,7 +542,19 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             companion_.process(compInL_, compInR_, compL_, compR_, n);
             if (!gesture_.frozen() && compIn_ == 0.0f && companion_.levelDb() < -100.0f) companionActive_ = false;
         }
-        if (paint_ > 0.0f && freezeVoicing_ != 1)
+        if (twinActive_) {
+            if (activeSpace_ == 0) twinPlate_.process(twinInL_, twinInR_, twinL_, twinR_, n);
+            else twinFdn_.process(twinInL_, twinInR_, twinL_, twinR_, n);
+            const float lvl = activeSpace_ == 0 ? twinPlate_.levelDb() : twinFdn_.levelDb();
+            if (!gesture_.frozen() && twinIn_ == 0.0f && lvl < -100.0f) twinActive_ = false;
+            // Painting (holding) copies the twin into the pad: what you played becomes part of it.
+            if (paint_ > 0.0f)
+                for (int i = 0; i < n; ++i) {
+                    bufL_[i] += paint_ * voicing::kPaintLevel * twinL_[i];
+                    bufR_[i] += paint_ * voicing::kPaintLevel * twinR_[i];
+                }
+        }
+        if (paint_ > 0.0f && freezeVoicing_ != 1 && freezeVoicing_ != 3)
             for (int i = 0; i < n; ++i) {
                 bufL_[i] += paint_ * voicing::kPaintLevel * compL_[i];
                 bufR_[i] += paint_ * voicing::kPaintLevel * compR_[i];
@@ -493,8 +569,8 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             reverse_.process(rl, rr);
             reverseMix_ = approach(reverseMix_, reverseTarget_, reverseStep);
             const float cg = freezeVoicing_ == 2 ? voicing::kBothCompanionLevel : 1.0f;
-            float wl = (wetL_[i] + reverseMix_ * (rl - wetL_[i])) * flipGain_ + cg * compL_[i];
-            float wr = (wetR_[i] + reverseMix_ * (rr - wetR_[i])) * flipGain_ + cg * compR_[i];
+            float wl = (wetL_[i] + reverseMix_ * (rl - wetL_[i])) * flipGain_ + cg * compL_[i] + voicing::kTwinLevel * twinL_[i];
+            float wr = (wetR_[i] + reverseMix_ * (rr - wetR_[i])) * flipGain_ + cg * compR_[i] + voicing::kTwinLevel * twinR_[i];
             wl *= eraMakeup_;
             wr *= eraMakeup_;
             muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)

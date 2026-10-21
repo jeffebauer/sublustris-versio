@@ -9,7 +9,7 @@ The previous session left a handoff. Read it before touching anything; don't re-
 
 ## Steps
 
-1. **Read, in order:** `CLAUDE.md` (rules, commands), `docs/handoff/HANDOFF.md` (state, in flight, next steps, what will bite), `docs/TASKS.md` (the owner's list, installed plugin, waiting-on-Claude), then the "Where to look" files the handoff names. Skim `docs/adr/` titles for decisions newer than you'd expect.
+1. **Read, in order:** `CLAUDE.md` (rules, commands), `docs/handoff/HANDOFF.md` (state, in flight, next steps, what will bite), `docs/TASKS.md` (the owner's list, installed plugin, waiting-on-Claude), then the "Where to look" files the handoff names. The memory index (`~/.claude/projects/-Users-jesse-Documents-Sites-immensio-versio/memory/MEMORY.md`) loads automatically; open any memory whose hook matches the next step. Skim `docs/adr/` titles for decisions newer than you'd expect.
 
 2. **Check reality against the handoff.**
    ```bash
@@ -17,9 +17,9 @@ The previous session left a handoff. Read it before touching anything; don't re-
    git log --oneline -10
    git worktree list
    git branch --no-merged main
-   git fetch -q && git status -sb | head -1     # ahead/behind origin (fetch may fail on this network's GitHub routing drops)
-   cat dist/installed_plugin.txt
-   test -x build/rv_render || echo "rebuild needed"
+   git remote | grep -q . && git fetch -q && git status -sb | head -1   # only once a remote exists (none yet)
+   cat dist/installed_plugin.txt 2>/dev/null || echo "no plugin installed yet"
+   test -x build/iv_render || echo "rebuild needed"
    ```
    ⚠ Uncommitted changes that the handoff doesn't explain are probably an agent's unreviewed work from the last session. Read the diff and the handoff's "In flight" notes before committing or discarding anything. Never discard without asking.
 

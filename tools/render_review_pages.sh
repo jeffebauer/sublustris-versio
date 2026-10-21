@@ -240,3 +240,22 @@ C_both       B, plus the small plate at half level" > renders/freeze_options/REA
     python3 tools/review/make_review.py renders/freeze_options --title "Immensio: playing over a frozen pad" --level-match --dry $SRC --wet-only > /dev/null
     echo "renders/freeze_options/index.html"
 fi
+
+if on freeze_twin; then
+    page freeze_twin
+    for sp in HALL MASSIVE PLATE; do
+        for fv in 1:A_feed_as_picked 3:B_twin_recedes; do
+            IV_FREEZE_VOICING=${fv%%:*} r freeze_twin ${(L)sp} ${fv##*:} freeze --set space=$sp --set size=0.7 --set decay=0.6
+        done
+    done
+    print -r -- "Confirming your pick (B, feed the pad) with your notes applied: subtler, receding back to the frozen pad, no predelay on what you play, no drop on unfreeze. A is B as you picked it; B is the twin: what you play goes into a twin of the frozen tank (same space and colour, its own decay), heard beside the untouched pad, receding; holding paints it into the pad. Freeze 2.4 s / 3 s, paint 6-9.5 s / 9-12 s, unfreeze 14.5 s / 18 s.
+
+hall      in HALL (SIZE 0.7, DECAY 0.6)
+massive   in MASSIVE (SIZE 0.7, DECAY 0.6)
+plate     in PLATE (SIZE 0.7, DECAY 0.6)
+
+A_feed_as_picked   the input feeds the frozen pad (what you picked)
+B_twin_recedes     the twin: subtler, recedes back to the pad" > renders/freeze_twin/README.txt
+    python3 tools/review/make_review.py renders/freeze_twin --title "Immensio: freeze, confirming the pick" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/freeze_twin/index.html"
+fi

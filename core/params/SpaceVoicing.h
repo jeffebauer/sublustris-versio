@@ -115,6 +115,14 @@ constexpr float kFrozenPlateModDepth = 0.15f;
 // companion quieter. Chosen by ear on renders/freeze_options, then fixed.
 constexpr float kFreezeFeed          = 0.35f; // the input's level into a frozen pad (voicings 1, 2)
 constexpr float kBothCompanionLevel  = 0.5f;  // the companion's level in voicing 2
+// Voicing 3, the TWIN (owner's picks: B "feed the pad" everywhere, "but the
+// influence should be a little more subtle, and should eventually recede
+// back to the original frozen buffer state"): what you play goes into a twin
+// of the frozen tank (the same space, size and colour, its own decay), heard
+// beside the untouched pad; it recedes, and holding paints it into the pad.
+// No predelay or swell on its input (owner: "too much predelay... disjointed").
+constexpr float kTwinLevel     = 0.5f;  // its output, × the tank's wet (−6 dB: "more subtle")
+constexpr float kTwinMaxT60    = 8.0f;  // it always recedes, even when the pad froze at infinite DECAY
 constexpr float kPaintHeadroomDb     = 3.0f;  // a painted pad may grow this far above its frozen level (or the floor)
 // A still pad's ceiling over the level it settled at: its slowly wandering
 // reads (the modulation floor) nudge its energy up or down a little; the

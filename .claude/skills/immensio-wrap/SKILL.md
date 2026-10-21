@@ -23,9 +23,9 @@ The next session knows nothing this one knew. Write down **what is true now, wha
 
 3. **Run the gates and record the actual numbers.**
    ```bash
-   cmake --build build && ctest --test-dir build
+   cmake --build build && ctest --test-dir build > build/ctest.log 2>&1; grep "tests passed" build/ctest.log   # gate on this line, never a pipe's exit code
    export PATH="$HOME/.local/arm-gnu-toolchain/bin:$PATH"; make -C firmware all-variants
-   cat dist/installed_plugin.txt
+   cat dist/installed_plugin.txt 2>/dev/null || echo "no plugin installed yet"
    ```
    Record in the handoff: suites passed/failed (name any red one: that's the most important line), each firmware variant's bytes and %, and which commit is installed in Ableton vs `main`'s HEAD.
 
@@ -33,7 +33,7 @@ The next session knows nothing this one knew. Write down **what is true now, wha
    - `docs/TASKS.md`: the "Last updated" line, the "Plugin installed" line, ticked items moved to Done with the date, new owner tasks added, "Waiting on Claude" current.
    - Decisions made this session each have an ADR in `docs/adr/`, a SPEC changelog line, and CONTEXT.md terms if new vocabulary appeared.
    - the current milestone's backlog, if one exists: status of each item.
-   - Memory (`~/.claude/projects/-Users-jesse-Documents-Sites-immensio-versio/memory/`): add a feedback memory for any new "learned the hard way" rule; consider whether it also belongs in `CLAUDE.md`'s Hard rules.
+   - Memory (`~/.claude/projects/-Users-jesse-Documents-Sites-immensio-versio/memory/`): one fact per file with frontmatter (name, description, metadata.type) and a one-line pointer in `MEMORY.md`. Add a feedback memory for any new "learned the hard way" rule or owner preference, update an existing one rather than duplicating, delete any that proved wrong; consider whether it also belongs in `CLAUDE.md`'s Hard rules.
 
 5. **Write `docs/handoff/HANDOFF.md`** (overwrite; the previous one is in git history). Sections:
    - **State:** milestone status table (M0–M9: built / owner check pending / not started), `main` HEAD, installed plugin commit, gate numbers from step 3.
@@ -43,6 +43,6 @@ The next session knows nothing this one knew. Write down **what is true now, wha
    - **Will bite:** known risks and traps (thin test margins, CPU headroom, flaky environment issues such as the GitHub routing drops, anything surprising this session).
    - **Where to look:** the 3–6 files the next session should read first for the next step.
 
-6. **Commit and push** the handoff and doc updates (explicit paths). If the push fails (GitHub has had routing drops on this network), say so in the reply; the commit is safe locally.
+6. **Commit** the handoff and doc updates (explicit paths), and push if a remote exists (none yet). If a push fails, say so in the reply; the commit is safe locally.
 
 7. **Tell the owner** in a few lines: what's committed, what's in flight, and that it's safe to clear context (or why not yet).

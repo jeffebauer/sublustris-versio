@@ -43,15 +43,17 @@ public:
     static constexpr size_t largeFloats(float sampleRate)
     {
         return dsp::Fdn::memoryFloats(sampleRate) + dsp::Swell::memoryFloats(sampleRate)
-             + dsp::Reverse::memoryFloats(sampleRate) + dsp::Plate::memoryFloats(sampleRate, voicing::kPlateMaxScale, true)
+             + dsp::Reverse::memoryFloats(sampleRate) + 2 * dsp::Plate::memoryFloats(sampleRate, voicing::kPlateMaxScale, true)
+             + dsp::Fdn::memoryFloats(sampleRate) // the freeze twin (voicing 3)
              + 2 * dsp::nextPow2(size_t(voicing::kPredelayMaxSeconds * sampleRate) + 4);
     }
     static constexpr size_t fastFloats(float sampleRate)
     {
         size_t n = dsp::Plate::memoryFloats(sampleRate, voicing::kCompanionMaxScale, false);
-        for (int c = 0; c < 2; ++c)
-            for (float s : voicing::kDiffuserSeconds)
-                n += dsp::nextPow2(size_t(s * (c ? voicing::kDiffuserRightScale : 1.0f) * sampleRate) + 4);
+        for (int twin = 0; twin < 2; ++twin) // the input diffusers, and the twin's (13 % longer)
+            for (int c = 0; c < 2; ++c)
+                for (float s : voicing::kDiffuserSeconds)
+                    n += dsp::nextPow2(size_t(s * (c ? voicing::kDiffuserRightScale : 1.0f) * (twin ? 1.13f : 1.0f) * sampleRate) + 4);
         return n;
     }
 
@@ -72,8 +74,8 @@ public:
 
     bool  frozen() const { return gesture_.frozen(); }
     bool  painting() const { return gesture_.painting(); }
-    // Freeze voicing prototype (SpaceVoicing.h): 0 companion, 1 feed the pad, 2 both.
-    void  setFreezeVoicing(int v) { freezeVoicing_ = v < 0 ? 0 : (v > 2 ? 2 : v); }
+    // Freeze voicing prototype (SpaceVoicing.h): 0 companion, 1 feed the pad, 2 both, 3 the twin.
+    void  setFreezeVoicing(int v) { freezeVoicing_ = v < 0 ? 0 : (v > 3 ? 3 : v); }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.
@@ -128,6 +130,13 @@ private:
     dsp::Fdn          fdn_;
     dsp::Plate        plate_;
     dsp::Plate        companion_;
+    // The freeze twin (voicing 3): the frozen tank's space, with its own decay.
+    dsp::Fdn          twinFdn_;
+    dsp::Plate        twinPlate_;
+    dsp::Diffuser<4>  twinDiffuser_[2];
+    float             twinMean_ = -1.0f, twinSpread_ = -1.0f;
+    float             twinIn_ = 0.0f, twinInStep_ = 0.0f;
+    bool              twinActive_ = false;
     dsp::Reverse      reverse_;
     dsp::MuLawOut     muLaw_;
     float             eraMakeup_ = 1.0f;
@@ -179,6 +188,7 @@ private:
     // Scratch for one chunk.
     float bufL_[kChunk] = {}, bufR_[kChunk] = {}, wetL_[kChunk] = {}, wetR_[kChunk] = {};
     float compInL_[kChunk] = {}, compInR_[kChunk] = {}, compL_[kChunk] = {}, compR_[kChunk] = {};
+    float twinInL_[kChunk] = {}, twinInR_[kChunk] = {}, twinL_[kChunk] = {}, twinR_[kChunk] = {};
 };
 
 } // namespace iv
