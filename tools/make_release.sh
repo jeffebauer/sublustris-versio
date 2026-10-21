@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+# Build a shareable release of the current main: a universal plugin (VST3 +
+# AU, Apple Silicon + Intel, macOS 12+), the Versio release firmware, and the
+# read-me (releases/README.md), zipped into dist/release/<tag>/.
+#   tools/make_release.sh            build + package
+#   tools/make_release.sh --publish  also create a GitHub Release with the zip
+#                                    and the firmware attached, marked Latest
+#   --dry-run (with --publish)       print the gh command instead of running it
+#   --notes <file> (any release)     "what's new" notes into the read-me, which
+#                                    is also the GitHub Release's notes
+#                                    (e.g. releases/whats-new-since-1-oct.md)
+#   tools/make_release.sh --candidate <ref> <label> [--notes <file>] [--publish]
+#       a sound candidate that isn't on main yet, for friends to A/B: the
+#       plugin is built from <ref> as "Immensio Versio <label>" (its own name
+#       and plugin code, so it installs next to the released plugin), no
+#       firmware (a candidate hasn't had its CPU run on the module), the
+#       read-me gets <file> as its "what's new" notes, and the GitHub Release
+#       is marked as a pre-release (never Latest).
+# Assets (ADR 0045): the dated ImmensioVersio_<tag>.zip and
+# immensio_versio_firmware_<sha>.bin, plus, on full releases, the same files under
+# stable names (resilio-versio-plugin-macos.zip, resilio-versio-firmware.bin) so
+# .../releases/latest/download/<name> always works, and SHA256SUMS.txt. The zip
+# carries LICENSE, NOTICE, LICENSES/AGPL-3.0.txt (the plugin binaries are AGPLv3
+# because of JUCE) and the read-me with a link to the source at the tag.
+# The plugin installed in Ableton is separate: tools/install_plugin.sh <commit>.
+# Never touches build/ (uses its own worktree and build dir).
+set -euo pipefail
+REPO="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$REPO"
+
+PUBLISH=0 DRY=0 REF="" LABEL="" NOTES=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --publish) PUBLISH=1; shift ;;
+        --dry-run) DRY=1; shift ;;
+        --candidate) REF="$2"; LABEL="$3"; shift 3 ;;
+        --notes) NOTES="$2"; shift 2 ;;
+        *) echo "Unknown option: $1" >&2; exit 1 ;;
+    esac
+done
+
+if [ -z "$REF" ]; then
+    [ "$(git rev-parse --abbrev-ref HEAD)" = main ] || { echo "Run on main." >&2; exit 1; }
+    git diff --quiet HEAD -- core firmware plugin host CMakeLists.txt || { echo "Uncommitted changes in code: commit first." >&2; exit 1; }
+    REF=HEAD
+fi
+SHA="$(git rev-parse --short "$REF")"
+N="$(git rev-list --count "$SHA")"; PLUGIN_VERSION="1.$((N / 100)).$((N % 100))"   # always goes up (plugin/CMakeLists.txt)
+if [ -n "$LABEL" ]; then
+    NAME="Immensio Versio $LABEL"
+    BUNDLE="com.Resilio.ImmensioVersio$LABEL"
+    CODE="RsV$(printf '%s' "$LABEL" | tr '[:lower:]' '[:upper:]' | cut -c1)"   # 4 characters, one per candidate letter
+    TAG="v$(date +%Y.%m.%d)-$SHA-candidate-$LABEL"
+else
+    NAME="Immensio Versio" CODE="RsVs" BUNDLE="com.Resilio.ImmensioVersio" TAG="v$(date +%Y.%m.%d)-$SHA"
+fi
+OUT="dist/release/$TAG"
+SOURCE_URL="https://github.com/jeffebauer/resilio-versio/tree/$TAG"
+mkdir -p "$OUT"
+
+WT=".claude/worktrees/share"
+if [ -d "$WT" ]; then git -C "$WT" checkout -q --detach "$SHA"; else git worktree add -q --detach "$WT" "$SHA"; fi
+[ -L "$WT/libs/JUCE" ] || { rmdir "$WT/libs/JUCE" 2>/dev/null || true; ln -s "$REPO/libs/JUCE" "$WT/libs/JUCE"; }
+
+FW=""
+if [ -z "$LABEL" ]; then
+    echo "== Firmware (release) at $SHA"
+    export PATH="$HOME/.local/arm-gnu-toolchain/bin:$PATH"
+    make -C firmware MODE=release >/dev/null
+    FW="$OUT/immensio_versio_firmware_$SHA.bin"
+    cp firmware/build/immensio_versio.bin "$FW"
+    FW_BYTES=$(stat -f %z "$FW")
+    [ "$FW_BYTES" -le 131072 ] || { echo "Firmware over 128 KB ($FW_BYTES B)." >&2; exit 1; }
+fi
+
+echo "== Universal plugin \"$NAME\" at $SHA (version $PLUGIN_VERSION)"
+cmake -S "$WT" -B "$WT/build-share" -G Ninja -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64" -DIV_INSTALL_PLUGIN=OFF \
+    "-DIV_PLUGIN_VERSION=$PLUGIN_VERSION" "-DIV_PLUGIN_NAME=$NAME" "-DIV_PLUGIN_CODE=$CODE" "-DIV_PLUGIN_BUNDLE_ID=$BUNDLE" >/dev/null
+cmake --build "$WT/build-share" --target ImmensioVersio_VST3 ImmensioVersio_AU >/dev/null
+ART="$WT/build-share/plugin/ImmensioVersio_artefacts/Release"
+rm -rf "$OUT/$NAME.vst3" "$OUT/$NAME.component"
+cp -R "$ART/VST3/$NAME.vst3" "$ART/AU/$NAME.component" "$OUT/"
+for b in "$OUT/$NAME.vst3" "$OUT/$NAME.component"; do
+    codesign --force --deep -s - "$b" 2>/dev/null
+    codesign -v "$b"
+    lipo -archs "$b/Contents/MacOS/$NAME" | grep -q "x86_64 arm64\|arm64 x86_64" || { echo "Not universal: $b" >&2; exit 1; }
+done
+
+echo "== Package"
+README="$OUT/READ ME - $NAME.txt"
+python3 - "$REPO/releases/README.md" "$README" "$TAG" "$NAME" "$(basename "${FW:-none}")" "${NOTES:-}" "$SOURCE_URL" <<'EOF'
+import re, sys
+src, dst, tag, name, fw, notes, source = sys.argv[1:8]
+s = open(src).read()
+if fw == "none":
+    s = re.sub(r"\{\{FIRMWARE_START\}\}\n.*?\{\{FIRMWARE_END\}\}\n", "", s, flags=re.S)
+else:
+    s = s.replace("{{FIRMWARE_START}}\n", "").replace("{{FIRMWARE_END}}\n", "")
+s = s.replace("{{NOTES}}\n", ("\n" + open(notes).read().rstrip("\n") + "\n") if notes else "")
+s = s.replace("{{VERSION}}", tag).replace("{{NAME}}", name).replace("{{FIRMWARE}}", fw).replace("{{SOURCE}}", source)
+open(dst, "w").write(s)
+EOF
+# Licence files from the released commit (older refs fall back to this checkout's).
+LIC="$WT"; [ -f "$LIC/NOTICE" ] || LIC="$REPO"
+rm -rf "$OUT/LICENSES"; mkdir -p "$OUT/LICENSES"
+cp "$LIC/LICENSE" "$OUT/LICENSE"
+sed "s#tree/<tag>#tree/$TAG#" "$LIC/NOTICE" > "$OUT/NOTICE"
+cp "$LIC/LICENSES/AGPL-3.0.txt" "$OUT/LICENSES/AGPL-3.0.txt"
+ZIP="ImmensioVersio_$TAG.zip"
+FILES=("$NAME.vst3" "$NAME.component" "$(basename "$README")" LICENSE NOTICE LICENSES)
+[ -n "$FW" ] && FILES+=("$(basename "$FW")")
+(cd "$OUT" && rm -f "$ZIP" && zip -q -r "$ZIP" "${FILES[@]}")
+echo "Built $OUT/$ZIP"
+
+# Stable names for .../releases/latest/download/<name> (full releases only:
+# candidates are pre-releases, which /latest/ skips anyway).
+ASSETS=("$OUT/$ZIP"); [ -n "$FW" ] && ASSETS+=("$FW")
+if [ -z "$LABEL" ]; then
+    cp "$OUT/$ZIP" "$OUT/resilio-versio-plugin-macos.zip"
+    cp "$FW" "$OUT/resilio-versio-firmware.bin"
+    ASSETS+=("$OUT/resilio-versio-plugin-macos.zip" "$OUT/resilio-versio-firmware.bin")
+fi
+NAMES=(); for a in "${ASSETS[@]}"; do NAMES+=("$(basename "$a")"); done
+(cd "$OUT" && shasum -a 256 "${NAMES[@]}" > SHA256SUMS.txt)
+ASSETS+=("$OUT/SHA256SUMS.txt")
+
+if [ "$PUBLISH" = 1 ]; then
+    echo "== GitHub Release $TAG"
+    if [ -n "$LABEL" ]; then KIND=(--prerelease --latest=false); else KIND=(--latest); fi
+    CMD=(gh release create "$TAG" "${ASSETS[@]}" --target "$(git rev-parse "$SHA")" "${KIND[@]}"
+        --title "Immensio Versio $TAG" --notes-file "$README")
+    if [ "$DRY" = 1 ]; then printf 'Dry run, would run:'; printf ' %q' "${CMD[@]}"; echo; else "${CMD[@]}"; fi
+fi
