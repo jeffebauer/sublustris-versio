@@ -75,7 +75,9 @@ public:
 
     bool  frozen() const { return gesture_.frozen(); }
     bool  painting() const { return gesture_.painting(); }
-    void  setReverseSmooth(bool on) { reverse_.setSmooth(on); } // PROTOTYPE, renders/reverse_options
+    // PROTOTYPE, renders/reverse_options: 0 A pieces, 1 B smooth pieces, 2 C swell to a cut,
+    // 3 D the input reversed into the tank.
+    void  setReverseMode(int m) { reverseMode_ = m; reverse_.setSmooth(m == 1 || m == 3); }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.
@@ -155,6 +157,8 @@ private:
     float flipGain_ = 1.0f, flipStep_ = 0.0f;
     // ATTACK = REVERSE: crossfade between the forward and the reversed wet.
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f;
+    int   reverseMode_ = 0; // PROTOTYPE (setReverseMode)
+    float cutGain_ = 1.0f, cutGainTarget_ = 1.0f; // PROTOTYPE C: makeup for the short tail
 
     // Freeze (ADR 0009–0011). Button and gate edges this block, by offset.
     struct Edge {

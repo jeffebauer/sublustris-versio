@@ -246,7 +246,14 @@ void Engine::applySpace(bool snap)
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
     const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
     const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(size) : 1.0f;
-    const float rate = map::decayRate(decay, activeSpace_) / sizeT60 * (1.0f - freezeMix_);
+    // PROTOTYPE REVERSE C: the swell rises over TIME and the tank lets go at once (the cut).
+    const bool swellCut = attack == 2 && reverseMode_ == 2;
+    float baseRate = map::decayRate(decay, activeSpace_) / sizeT60;
+    // A short tail holds less energy: measured makeup per space (skank, DECAY 0.45), PLATE / HALL / MASSIVE.
+    static constexpr float kCutTrim[3] = {1.12f, 12.6f, 1.6f};
+    cutGainTarget_ = swellCut ? kCutTrim[activeSpace_] : 1.0f;
+    if (swellCut) baseRate = std::fmax(baseRate, 1.0f / voicing::kReverseCutT60);
+    const float rate = baseRate * (1.0f - freezeMix_);
     const float highRatio = toneRatio + freezeMix_ * (1.0f - toneRatio);
     // Frozen: full weight (only the pad's own hold acts, there's no floor). Not frozen: DECAY's own
     // weight at once, not glided with freezeMix_: gliding it pulled a fed pad (above the floor) down
@@ -289,7 +296,8 @@ void Engine::applySpace(bool snap)
         // A frozen MASSIVE goes to full in-loop diffusion: its long lines otherwise replay painted
         // material as audible repeats (owner, M5 listening).
         const float diff = massive ? map::massiveDiffusion(size) : 0.0f;
-        fdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : 0.0f);
+        const float fullDiff = swellCut ? 1.0f : freezeMix_;
+        fdn_.setInLoopDiffusion(massive ? diff + fullDiff * (1.0f - diff) : 0.0f);
         fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(size, decay));
         fdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
     }
@@ -348,9 +356,10 @@ void Engine::applySpace(bool snap)
     float attackSeconds = massive ? map::massiveNormalAttackSeconds(decay, size) : 0.0f;
     if (attack == 0) predelay += map::normalPredelaySeconds(time);
     if (attack == 1) attackSeconds = map::bloomSeconds(time) * (massive ? map::massiveMass(size) : 1.0f);
+    if (swellCut) attackSeconds = map::reverseSeconds(time) / dsp::Swell::kSpanPerAttack; // the last tap lands at TIME
     swell_.setAttackSeconds(attackSeconds, snap);
     reverse_.setSegmentSeconds(map::reverseSeconds(time));
-    reverseTarget_ = attack == 2 && !frozen ? 1.0f : 0.0f; // REVERSE rests while frozen (ADR 0015)
+    reverseTarget_ = attack == 2 && !frozen && reverseMode_ != 2 ? 1.0f : 0.0f; // REVERSE rests while frozen (ADR 0015)
 
     const float pd = predelay * sampleRate_;
     if (snap) predelayNow_ = pd;
@@ -508,6 +517,13 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             }
             pl = diffuser_[0].process(pl);
             pr = diffuser_[1].process(pr);
+            if (reverseMode_ == 3) { // PROTOTYPE REVERSE D: the input reversed, into the tank
+                float rl = pl, rr = pr;
+                reverse_.process(rl, rr);
+                reverseMix_ = approach(reverseMix_, reverseTarget_, reverseStep);
+                pl += reverseMix_ * (rl - pl);
+                pr += reverseMix_ * (rr - pr);
+            }
             // The twin hears the input itself, through its own diffusion: no predelay, no swell.
             twinIn_ = clamp01(twinIn_ + twinInStep_);
             twinInL_[i] = twinDiffuser_[0].process(twinIn_ * l);
@@ -557,10 +573,13 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         for (int i = 0; i < n; ++i) {
             // REVERSE: always recording, crossfaded in and out over ~50 ms.
             float rl = wetL_[i], rr = wetR_[i];
-            reverse_.process(rl, rr);
-            reverseMix_ = approach(reverseMix_, reverseTarget_, reverseStep);
-            float wl = (wetL_[i] + reverseMix_ * (rl - wetL_[i])) * flipGain_ + voicing::kTwinLevel * twinL_[i];
-            float wr = (wetR_[i] + reverseMix_ * (rr - wetR_[i])) * flipGain_ + voicing::kTwinLevel * twinR_[i];
+            if (reverseMode_ < 2) {
+                reverse_.process(rl, rr);
+                reverseMix_ = approach(reverseMix_, reverseTarget_, reverseStep);
+            }
+            cutGain_ = approach(cutGain_, cutGainTarget_, 20.0f * reverseStep);
+            float wl = (wetL_[i] + reverseMix_ * (rl - wetL_[i])) * flipGain_ * cutGain_ + voicing::kTwinLevel * twinL_[i];
+            float wr = (wetR_[i] + reverseMix_ * (rr - wetR_[i])) * flipGain_ * cutGain_ + voicing::kTwinLevel * twinR_[i];
             wl *= eraMakeup_;
             wr *= eraMakeup_;
             muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)

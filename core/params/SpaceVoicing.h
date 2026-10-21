@@ -93,6 +93,8 @@ constexpr float kHoldSeconds        = 8.0f; // the slow level a held tail's ceil
 // in all). ATTACK into or out of REVERSE crossfades over kAttackFadeSeconds.
 constexpr float kSpaceFlipSeconds  = 0.05f;
 constexpr float kAttackFadeSeconds = 0.05f;
+// PROTOTYPE REVERSE C (swell to a cut): how fast the tail falls after the cut.
+constexpr float kReverseCutT60 = 0.3f;
 
 // ---- Plate (SPEC §4.2) -----------------------------------------------------
 constexpr float kPlateMaxScale     = 1.6f;  // SIZE fully CW

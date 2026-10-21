@@ -54,7 +54,7 @@ cat > $SRC/freeze_vibes.json <<'EOF'
 { "buttons": [[2.4, 2.5], [6.0, 9.5], [14.5, 14.6]] }
 EOF
 
-# r <page> <folder> <tag> <auto prefix or ""> --set ...   (env vars such as IV_REVERSE_SMOOTH pass through)
+# r <page> <folder> <tag> <auto prefix or ""> --set ...   (env vars such as IV_REVERSE_MODE pass through)
 r() {
     local page=$1 dir=$2 tag=$3 auto=$4; shift 4
     mkdir -p renders/$page/$dir
@@ -226,18 +226,19 @@ if on reverse_options; then
     page reverse_options
     for col in massive:MASSIVE:0.4 massive_long:MASSIVE:0.8 hall:HALL:0.4; do
         IFS=: read c sp t <<< "$col"
-        for v in 0:A_today 1:B_smooth; do
-            IV_REVERSE_SMOOTH=${v%%:*} r reverse_options $c ${v##*:} "" --set space=$sp --set era=0 --set attack=REVERSE --set time=$t --set decay=0.45 --set size=0.7
+        for v in 1:A_last_time 2:B_swell_cut 3:C_reversed_in; do
+            IV_REVERSE_MODE=${v%%:*} r reverse_options $c ${v##*:} "" --set space=$sp --set era=0 --set attack=REVERSE --set time=$t --set decay=0.45 --set size=0.7
         done
     done
-    print -r -- "Your M4 note: REVERSE sounds choppy and disjointed rather than a reversed reverb. A is today's: the reverb is cut into TIME-long pieces, each played backwards, rising to a cut. B plays the same backwards pieces as two overlapping readers that fade in and out, so there are no cuts: a continuous reversed wash, still TIME late.
+    print -r -- "Your notes on the smooth REVERSE: a delay, then a break after the first repeat, then audible chunks of reversed audio, not a smooth wash. Measured: MASSIVE's reverb swells up, so playing a piece of it backwards makes it fall away, then a hole; after that, backwards pieces of a steady wash are just pieces with seams. Two new ways to reverse, without pieces of the reverb:
 
 massive       MASSIVE, TIME 0.4
-massive_long  MASSIVE, TIME 0.8 (longer pieces)
+massive_long  MASSIVE, TIME 0.8
 hall          HALL, TIME 0.4
 
-A_today    today's REVERSE: pieces that rise to a cut
-B_smooth   overlapping, faded pieces: no cuts" > renders/reverse_options/README.txt
-    python3 tools/review/make_review.py renders/reverse_options --title "Immensio: REVERSE, choppy or smooth" --level-match --dry $SRC --wet-only > /dev/null
+A_last_time    last time's B: backwards pieces of the reverb, overlapping (for comparison)
+B_swell_cut    the classic hardware reverse: the reverb starts with the note and swells over TIME, then stops (in MASSIVE its long lines soften the stop)
+C_reversed_in  what you play is reversed (overlapping, faded pieces) and fed into the reverb: backwards notes inside a smooth wash. Still TIME late" > renders/reverse_options/README.txt
+    python3 tools/review/make_review.py renders/reverse_options --title "Immensio: REVERSE, three ways" --level-match --dry $SRC --wet-only > /dev/null
     echo "renders/reverse_options/index.html"
 fi

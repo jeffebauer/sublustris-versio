@@ -14,7 +14,9 @@
 // PROTOTYPE (M4 notes, "choppy and disjointed"): setSmooth(true) plays two
 // backwards readers half a segment apart, each faded in and out over its
 // whole length (sin², so the two always sum to one): no cuts at all, each
-// stretch still runs backwards. Picked on renders/reverse_options.
+// stretch still runs backwards. The owner heard it as still chunky, with a
+// break after the first repeat; renders/reverse_options now also tries the
+// swell to a cut and the input reversed into the tank (Engine::setReverseMode).
 #include "dsp/Memory.h"
 
 #include <cmath>
