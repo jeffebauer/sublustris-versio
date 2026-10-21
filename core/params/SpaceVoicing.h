@@ -94,6 +94,11 @@ constexpr float kHoldSeconds        = 8.0f; // the slow level a held tail's ceil
 constexpr float kSpaceFlipSeconds  = 0.05f;
 constexpr float kAttackFadeSeconds = 0.05f;
 
+// PROTOTYPE (renders/massive_options, version C): MASSIVE's weight and motion.
+constexpr float kProtoMassiveBassMultiply = 1.6f; // lows' T60 × this (below ~250 Hz) *(start)*
+constexpr float kProtoMassiveHighScale    = 0.6f; // highs fade sooner: TONE's high T60 ratio × this *(start)*
+constexpr float kProtoMassiveModDepth     = 4.0f; // the modulation floor × this: Cathedra-style drift *(start)*
+
 // ---- REVERSE (SPEC §4.11, ADR 0015 amendment 22 Oct 2026) ------------------------
 // Rising taps over TIME into a short reverb of its own (Reverse.h). Tuned
 // together: tap spacing (TIME / kReverseTaps) against the short reverb's

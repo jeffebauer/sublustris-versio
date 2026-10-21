@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 22 Oct 2026 (REVERSE rebuilt the hardware way, on `renders/reverse`; every page now plays nine kinds of material. Every page is rendered from the same build by `tools/render_review_pages.sh`).
+**Last updated:** 22 Oct 2026 (MASSIVE without its swell on `renders/massive_options`; REVERSE rebuilt the hardware way, on `renders/reverse`; every page now plays nine kinds of material. Every page is rendered from the same build by `tools/render_review_pages.sh`).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
@@ -10,6 +10,8 @@
 - [ ] **Approve or reject (ADR 0008 amendment):** infinite tails and frozen pads get a small, capped "makeup" that lifts a sagging held tail back to its own level (never above, ≤ 0.3 dB/s). Without it, infinite tails with tape wow fade out over ~10 minutes. It's the one place the loop gain may go a hair over 1.
 - [ ] **MASSIVE's SIZE glide:** SIZE moves bend at most a semitone (ADR 0012), so a full SIZE sweep in MASSIVE glides for ~40 s. Keep that gentle bend, or allow a faster swoop with more bend in MASSIVE only?
 - [ ] **Plugin identity** (one-line answers): keep manufacturer code `Rslo` and company name / bundle-ID prefix as Resilio's, with plugin code `ImVs`? (Same developer, so it groups both plugins together in Ableton.)
+
+- [ ] **MASSIVE without its swell** (`renders/massive_options/index.html`, level-matched, picks): your idea, so ATTACK alone sets the attack in every space. A today, B no swell, C no swell plus weight (the lows ring longer, the highs fade sooner) and motion (a little more pitch drift), D HALL for reference. Does B or C still feel massive, and distinct from HALL? If B or C wins, it amends ADR 0007 (your earlier "built-in mass" choices).
 
 ### Listen (after your notes)
 - [ ] **M1: the Hall** (`renders/m1_hall/index.html`): SIZE now goes from a small room (shorter lines, and shorter tails, as a small room has) to a huge hall. Is small small enough, and has the buzz on long small rooms gone? TONE's ends go further (dark: more lows, fewer highs; bright: the opposite). Too much, too little?

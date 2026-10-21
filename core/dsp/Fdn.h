@@ -74,6 +74,11 @@ public:
     // "too much delay before the reverb starts swelling") and every pass is
     // denser. Output only: the loop itself is unchanged.
     void setEarlyTaps(float amount) { earlyTarget_ = amount; }
+    // PROTOTYPE (renders/massive_options): the lows' T60 × bassMultiply (> 1: they ring
+    // longer than the mids; a low shelf after each line's loss, so the gain stays <= 1),
+    // and the modulation floor's depth × modDepth.
+    void setBassMultiply(float m) { bassMult_ = m < 1.0f ? 1.0f : m; }
+    void setModDepth(float k) { modDepth_ = k; }
     // Extra output level for a voicing (MASSIVE's loudness match).
     void setOutputTrim(float trim) { outputTrim_ = trim; }
     float levelDb() const { return governor_.levelDb; }
@@ -100,6 +105,7 @@ private:
     float     interp_[kN] = {}; // allpass-interpolation state per read
     // Absorbent filters: y = g (1 − b) x + b y.
     float     gain_[kN] = {}, pole_[kN] = {}, absorbY_[kN] = {};
+    float     shelf_[kN] = {}, shelfY_[kN] = {}, shelfCoeff_ = 0.03f, bassMult_ = 1.0f, modDepth_ = 1.0f;
     float     decayRate_ = 0.2f, highRatio_ = voicing::kDampingHighT60Ratio;
     LoopEra   era_[kN];
     Drift     driftGen_[kN];

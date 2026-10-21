@@ -268,3 +268,26 @@ A_normal   NORMAL: the reverb as usual
 B_bloom    BLOOM: swells over TIME, then decays naturally
 C_reverse  REVERSE: swells over TIME, then stops"
 fi
+
+if on massive_options; then
+    page massive_options
+    for col in medium:0.6:0.5 huge:0.8:0.9; do
+        IFS=: read c dc sz <<< "$col"
+        S=(--set era=0 --set attack=NORMAL --set time=0 --set decay=$dc --set size=$sz)
+        for v in 0:A_today 1:B_no_swell 2:C_weight_motion; do
+            IV_MASSIVE_PROTO=${v%%:*} r massive_options $c ${v##*:} "" --set space=MASSIVE $S
+        done
+        r massive_options $c D_hall "" --set space=HALL $S
+    done
+    print -r -- "Your question: take MASSIVE's built-in swell out, so ATTACK alone sets the attack in every space (NORMAL: none, BLOOM: a swell over TIME), and make MASSIVE distinct from HALL another way. ATTACK NORMAL, ERA clean.
+
+medium   DECAY 0.6, SIZE noon
+huge     DECAY 0.8, SIZE 0.9
+
+A_today          MASSIVE as it is: the built-in swell (peaks ~1.3 s after a hit)
+B_no_swell       no swell: it starts with the note (peaks ~1 s), still soft at the front (its early taps and predelay); otherwise as today
+C_weight_motion  no swell, plus weight and motion: the lows ring ~1.5x longer than the mids, the highs fade in about half the time (darker, heavier), and the tail drifts in pitch a little more (Cathedra-like)
+D_hall           HALL at the same settings, for reference: a room, defined and immediate" > renders/massive_options/README.txt
+    python3 tools/review/make_review.py renders/massive_options --title "Immensio: MASSIVE without its swell" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/massive_options/index.html"
+fi

@@ -77,6 +77,9 @@ public:
 
     bool  frozen() const { return gesture_.frozen(); }
     bool  painting() const { return gesture_.painting(); }
+    // PROTOTYPE, renders/massive_options: 0 MASSIVE today, 1 no built-in swell in NORMAL,
+    // 2 no swell plus weight (lows ring longer, highs fade sooner) and motion (deeper drift).
+    void  setMassivePrototype(int v) { massiveProto_ = v; }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.
@@ -158,6 +161,7 @@ private:
     // ATTACK = REVERSE: crossfade between the forward wet and the reverse swell.
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f;
     bool  reverseRunning_ = false;
+    int   massiveProto_ = 0; // PROTOTYPE (setMassivePrototype)
     float reverseMean_ = -1.0f;
 
     // Freeze (ADR 0009–0011). Button and gate edges this block, by offset.

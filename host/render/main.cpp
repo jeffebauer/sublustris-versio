@@ -119,6 +119,8 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
                const std::vector<std::string>& sets, std::string& error)
 {
     engine.prepare(sampleRate, block);
+    // Prototype, desktop only: IV_MASSIVE_PROTO picks the MASSIVE on trial (Engine::setMassivePrototype).
+    if (const char* mp = std::getenv("IV_MASSIVE_PROTO")) engine.setMassivePrototype(std::atoi(mp));
     if (!presetPath.empty()) {
         iv::json::Value preset;
         if (!iv::json::loadFile(presetPath, preset, error)) return false;

@@ -82,7 +82,7 @@ IV_SIZE_OPT void Fdn::reset()
         line_[i].clear();
         apLine_[i][0].clear();
         apLine_[i][1].clear();
-        absorbY_[i] = 0.0f;
+        absorbY_[i] = shelfY_[i] = 0.0f;
         interp_[i] = 0.0f;
         era_[i].reset();
         driftGen_[i].reset();
@@ -113,7 +113,8 @@ void Fdn::control(int n)
 {
     const float dt = float(n) / sampleRate_;
     const float slew = voicing::kSizeSlewPerSecond * float(n); // samples of length per block
-    const float floorDepth = voicing::kFloorDepthSeconds * sampleRate_;
+    const float floorDepth = voicing::kFloorDepthSeconds * sampleRate_ * modDepth_;
+    shelfCoeff_ = 1.0f - std::exp(-2.0f * 3.14159265f * 250.0f / sampleRate_); // the low shelf's corner
     const float floorCoeff = 1.0f - std::exp(-2.0f * 3.14159265f * 0.3f * dt);
 
     // The floor governor's extra loss (ADR 0008).
@@ -158,6 +159,9 @@ void Fdn::control(int n)
                                    governor_.darken);
         gain_[i] = a.gain;
         pole_[i] = a.pole;
+        // Bass multiply: below ~250 Hz the loss is DECAY's rate / bassMult_ (DC gain gLow <= 1).
+        const float passSeconds = lenNow_[i] / sampleRate_ + apSeconds;
+        shelf_[i] = std::pow(10.0f, 3.0f * passSeconds * decayRate_ * (1.0f - 1.0f / bassMult_)) - 1.0f;
     }
 }
 
@@ -184,7 +188,12 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                         x = d - apG * v;
                     }
                 absorbY_[i] = gain_[i] * x + pole_[i] * absorbY_[i];
-                y[i] = era_[i].process(absorbY_[i]);
+                float ab = absorbY_[i];
+                if (shelf_[i] > 0.0f) {
+                    shelfY_[i] += shelfCoeff_ * (ab - shelfY_[i]);
+                    ab += shelf_[i] * shelfY_[i];
+                }
+                y[i] = era_[i].process(ab);
             }
             float l = 0.0f, r = 0.0f;
             for (int i = 0; i < kN; ++i) {
