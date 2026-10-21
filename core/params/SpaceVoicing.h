@@ -75,11 +75,50 @@ constexpr float kInLoopCoeff = 0.62f;
 constexpr float kFloorDbfs          = -24.0f;
 constexpr float kGovernorRatePerDb  = 0.08f;
 constexpr float kGovernorSeconds    = 1.5f;
+constexpr float kHoldSeconds        = 8.0f; // the slow level a held tail's ceiling is judged on
 
 // SPACE flips fade out, then in, over this long each (ADR 0013: ~100 ms
 // in all). ATTACK into or out of REVERSE crossfades over kAttackFadeSeconds.
 constexpr float kSpaceFlipSeconds  = 0.05f;
 constexpr float kAttackFadeSeconds = 0.05f;
+
+// ---- Plate (SPEC §4.2) and the freeze companion ---------------------------
+constexpr float kPlateMaxScale     = 1.6f;  // SIZE fully CW
+constexpr float kPlateMinScale     = 0.5f;  // SIZE fully CCW
+constexpr float kCompanionMaxScale = 0.6f;
+constexpr float kCompanionMinScale = 0.25f;
+constexpr float kCompanionT60Min   = 0.3f;  // DECAY fully CCW, while frozen (SPEC §4.2)
+constexpr float kCompanionT60Max   = 6.0f;
+// The Plate's tails measured ~9 % longer than DECAY's mapping (low-band
+// T60, test_plate_freeze), so its loss rate is scaled up by this. At the
+// very short end with SIZE up, one pass round the figure 8 (~0.55 s at
+// scale 1.6) is longer than the T60 asked for, so those tails stay longer
+// than the mapping: a big plate can't ring for only 0.4 s.
+constexpr float kPlateRateCalibration = 1.09f;
+constexpr float kPlateOutputTrim   = 0.41f; // −7.8 dB: PLATE matches HALL's loudness (test_plate_freeze)
+
+// ---- Freeze and paint (ADR 0009, 0010; SPEC §3 "Button + Gate") -----------
+constexpr float kFreezeInputSeconds  = 0.02f; // the big tank's input closes
+constexpr float kFreezeColourSeconds = 0.2f;  // in-loop colour glides out
+constexpr float kUnfreezeSeconds     = 1.0f;  // the big tank glides back to the knobs
+constexpr float kCompanionFadeSeconds = 0.02f;
+constexpr float kPaintSeconds        = 3.0f;  // painting builds into the pad over ~this
+constexpr float kPaintReleaseSeconds = 0.2f;
+constexpr float kPaintLevel          = 0.5f;  // the companion's share sent into the pad
+constexpr float kPaintHeadroomDb     = 3.0f;  // a painted pad may grow this far above its frozen level (or the floor)
+// A still pad's ceiling over the level it settled at: its slowly wandering
+// reads (the modulation floor) nudge its energy up or down a little; the
+// governor stops it creeping up (measured +1.5 dB over 5 min without it).
+constexpr float kPadCeilingDb        = 0.25f;
+// A fresh pad settles for a while (MASSIVE's 1–3 s lines take several passes
+// to spread their energy evenly: measured ±3 dB over its first ~15 s), so
+// its ceiling is taken after this long.
+constexpr float kPadSettleSeconds    = 20.0f;
+// The same for an infinite tail once the input has been quiet (below
+// kQuietDbfs) for kQuietSeconds: it holds where it settled instead of
+// drifting up toward the floor (measured +4 dB over 10 min without it).
+constexpr float kQuietDbfs   = -70.0f;
+constexpr float kQuietSeconds = 2.0f;
 
 // Predelay memory: SIZE's (Massive) + TIME's (NORMAL), SPEC §5.2.
 constexpr float kPredelayMaxSeconds = 0.75f;

@@ -75,13 +75,16 @@ void buttonAndGateEdgesArrive()
 {
     iv::Engine engine;
     engine.prepare(48000.0f, 48);
+    std::vector<float> z(48, 0.0f), ol(48), orr(48);
     engine.button(true, 10);
     engine.gate(true, 3);
+    engine.process(z.data(), z.data(), ol.data(), orr.data(), 48);
     bool ok = engine.buttonDown() && engine.gateHigh();
     engine.button(false, 0);
     engine.gate(false, 0);
+    engine.process(z.data(), z.data(), ol.data(), orr.data(), 48);
     ok &= !engine.buttonDown() && !engine.gateHigh();
-    check(ok, "button and gate edges reach the Engine");
+    check(ok, "button and gate edges reach the Engine (applied in the block they land in)");
 }
 
 void panelOrderMatchesAdr0017()

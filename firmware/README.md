@@ -35,8 +35,9 @@ The M0 release figure is the platform's floor before any DSP: libDaisy, the HAL,
 | M0 (passthrough) | 53,852 | 52,224 | 82,356 |
 | M1 (Hall: FDN, diffusers, predelay) | 61,484 (46 %) | 62,312 | 82,356 |
 | M4 (MASSIVE, swell, REVERSE, floor governor, in-loop diffusion) | 66,628 (50 %) | 68,248 | 82,356 |
+| M5 (PLATE, companion, gesture reader, freeze, paint) | 75,044 (57 %) | 76,112 | 82,356 |
 
-Memory at M4: `gLarge` 15 MB in SDRAM (FDN lines and in-loop allpasses, swell, REVERSE segments, predelay; power-of-two buffers), `gFast` 16 KB in DTCM (input diffusers), the Engine object in AXI SRAM.
+Memory at M5: `gLarge` 16 MB in SDRAM (FDN lines and in-loop allpasses, the PLATE, swell, REVERSE segments, predelay), `gFast` 100.6 KB of DTCM's 128 KB (the companion plate and the input diffusers), the Engine object in AXI SRAM. M3 decides whether the PLATE moves from SDRAM to AXI SRAM (SPEC §5.2).
 
 ### Flash-budget techniques in use (from Resilio's flash study, SPEC §5.3)
 

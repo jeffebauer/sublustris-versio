@@ -68,10 +68,10 @@ IV_SIZE_OPT void Fdn::reset()
         apLine_[i][0].clear();
         apLine_[i][1].clear();
         absorbY_[i] = 0.0f;
+        interp_[i] = 0.0f;
         floorTarget_[i] = floorA_[i] = floorB_[i] = 0.0f;
         floorCountdown_[i] = 0.0f;
-        levelPower_ = blockPower_ = 0.0f;
-        levelDb_ = -200.0f;
+        governor_.reset();
         lenNow_[i] = lenTarget_[i];
         readNow_[i] = lenNow_[i];
         inLoopNow_ = inLoopTarget_;
@@ -98,12 +98,9 @@ void Fdn::control(int n)
     const float floorDepth = voicing::kFloorDepthSeconds * sampleRate_;
     const float floorCoeff = 1.0f - std::exp(-2.0f * 3.14159265f * 0.3f * dt);
 
-    // Wet level over the last ~1.5 s, and the governor's extra loss.
-    levelPower_ += (1.0f - std::exp(-dt / voicing::kGovernorSeconds)) * (blockPower_ / float(n) - levelPower_);
-    blockPower_ = 0.0f;
-    levelDb_ = 10.0f * std::log10(levelPower_ + 1e-20f);
-    const float over = levelDb_ - voicing::kFloorDbfs;
-    const float governRate = over > 0.0f ? governorWeight_ * voicing::kGovernorRatePerDb * over : 0.0f;
+    // The floor governor's extra loss (ADR 0008).
+    governor_.control(n, sampleRate_);
+    const float governRate = governor_.extraRate;
 
     inLoopNow_ += (1.0f - std::exp(-dt / 0.08f)) * (inLoopTarget_ - inLoopNow_);
     if (inLoopNow_ < 1e-4f && inLoopTarget_ == 0.0f) inLoopNow_ = 0.0f;
@@ -131,24 +128,13 @@ void Fdn::control(int n)
         readStep_[i] = (target - readNow_[i]) / float(n);
 
         // Loss per pass from this line's own length (Jot): the low end
-        // decays at decayRate, the high end at decayRate / highRatio. At
-        // infinite (rate 0) the highs still fade, over ~kInfiniteHighT60.
+        // decays at decayRate (+ the governor), the high end at that /
+        // highRatio; at infinite the highs fade until the tail reaches its
+        // floor, then it holds (ADR 0008).
         const float apSeconds = inLoopNow_ > 0.0f ? float(apLen_[i][0] + apLen_[i][1]) / sampleRate_ : 0.0f;
-        const float seconds = lenNow_[i] / sampleRate_ + apSeconds;
-        const float lowRate = decayRate_ + governRate;
-        float highRate = lowRate / highRatio_;
-        // ...but only while the tail is above its floor: at the floor the
-        // darkening stops and the tail holds (ADR 0008). Weighted by the
-        // governor, so finite tails are unaffected.
-        const float aboveFloor = (levelDb_ - (voicing::kFloorDbfs - 3.0f)) / 6.0f;
-        const float darken = 1.0f - governorWeight_ * (1.0f - (aboveFloor < 0.0f ? 0.0f : (aboveFloor > 1.0f ? 1.0f : aboveFloor)));
-        const float infiniteHigh = darken * (1.0f / highRatio_ - 1.0f) / voicing::kInfiniteHighT60Seconds;
-        if (highRate < infiniteHigh) highRate = infiniteHigh;
-        const float gLow  = std::pow(10.0f, -3.0f * seconds * lowRate);
-        const float gHigh = std::pow(10.0f, -3.0f * seconds * highRate);
-        const float q = gHigh / gLow; // Nyquist gain over DC gain, <= 1
-        pole_[i] = (1.0f - q) / (1.0f + q);
-        gain_[i] = gLow * (1.0f - pole_[i]);
+        const Absorb a = absorbent(lenNow_[i] / sampleRate_ + apSeconds, decayRate_ + governRate, highRatio_, governor_.darken);
+        gain_[i] = a.gain;
+        pole_[i] = a.pole;
     }
 }
 
@@ -165,7 +151,7 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
             float y[kN];
             for (int i = 0; i < kN; ++i) {
                 readNow_[i] += readStep_[i];
-                float x = line_[i].readCubic(readNow_[i]);
+                float x = line_[i].readAllpass(readNow_[i], interp_[i]);
                 if (apG > 0.0f)
                     for (int k = 0; k < 2; ++k) { // in-loop diffusion (MASSIVE)
                         const float d = apLine_[i][k].read(apLen_[i][k]);
@@ -183,7 +169,7 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
             }
             outL[s] += outGain * l;
             outR[s] += outGain * r;
-            blockPower_ += 0.5f * outGain * outGain * (l * l + r * r);
+            governor_.add(0.5f * outGain * outGain * (l * l + r * r));
 
             // Fast Walsh–Hadamard transform: 24 adds for the 8×8 mix.
             for (int span = 1; span < kN; span <<= 1)

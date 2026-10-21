@@ -365,13 +365,17 @@ int main()
         const std::vector<EdgeRecorder::Edge> want = {{'g', true, 17}, {'g', false, 517}, {'g', true, 518}, {'g', false, 1324}};
         check(rec.edges == want, "MIDI notes: gate high while any note is held, each edge at its exact sample");
 
-        // The Engine itself records the gate's level (Engine::gateHigh()).
+        // The Engine itself records the gate's level (Engine::gateHigh()),
+        // once the block holding the edge has been processed.
         iv::Engine engine;
         engine.prepare(48000.0f, 64);
+        std::vector<float> z(64, 0.0f), ol(64), orr(64);
         iv::plugin::MidiGate g2;
         g2.noteOn(engine, 48, 3);
+        engine.process(z.data(), z.data(), ol.data(), orr.data(), 64);
         const bool high = engine.gateHigh();
         g2.noteOff(engine, 48, 9);
+        engine.process(z.data(), z.data(), ol.data(), orr.data(), 64);
         check(high && !engine.gateHigh(), "MIDI note on/off reach Engine::gate() (gateHigh() follows)");
     }
 
@@ -400,7 +404,9 @@ int main()
         iv::plugin::ButtonLink l2;
         l2.press();
         l2.feed(engine, 64);
-        check(engine.buttonDown(), "panel button reaches Engine::button() (buttonDown() follows)");
+        std::vector<float> z(64, 0.0f), ol(64), orr(64);
+        engine.process(z.data(), z.data(), ol.data(), orr.data(), 64);
+        check(engine.buttonDown() && engine.frozen(), "panel button reaches Engine::button() (buttonDown() follows, a press freezes)");
     }
 
     // ---- 7. State save / restore ----

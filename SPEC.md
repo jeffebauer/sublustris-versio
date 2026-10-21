@@ -6,6 +6,7 @@
 **Status:** Spec **v1.0 (frozen)**, 21 Oct 2026. Input: `IMMENSIO_BRIEF.md`. Vocabulary: `CONTEXT.md`. Decisions: `docs/adr/` (0001–0017; index in `docs/adr/README.md`). Session record: `docs/spec-session.md`. Changes after freeze: new ADR + changelog entry. Numbers marked *(start)* are starting guesses; tuned numbers replace them as milestones confirm them.
 
 ### Changelog
+- v1.0.2 — M5 build (21 Oct 2026): every in-loop read is **allpass-interpolated** (Dattorro), so a frozen pad loses nothing pass after pass (a cubic read cost ~5 dB in 5 min); the floor governor also **holds** a still pad at its own settled level (taken 20 s after the freeze, once a MASSIVE pad has spread out) and an infinite tail where it settled once the input goes quiet, judged on an 8 s level, so neither creeps up; the PLATE's loss is calibrated (+9 %) to DECAY's mapping, and its shortest tails are set by its size (one pass round the figure 8 is ~0.65 s at SIZE noon); SPACE flips wait while frozen; the M5 pad criterion is measured from 25 s after the freeze.
 - v1.0.1 — M1/M4 build (21 Oct 2026, ADR 0007 amendment): §3 SIZE in MASSIVE made consistent with ADR 0007's "long echoes at low SIZE" (mean line 0.35 → 2 s, was 60 ms → 2 s, which can't give long echoes); MASSIVE gets in-loop diffusion (two allpasses per line, scaled by SIZE) so its long lines blur into a wash; the FDN's output is level-compensated for line length (√(mean / 0.1 s)) so SIZE doesn't turn the tail down, and MASSIVE is trimmed −3.3 dB to match HALL; the swell stage is a 24-tap rising feedforward (§4.5); the infinite floor stops darkening once the tail is at its floor (§4.4). No change for the owner to re-approve except the MASSIVE SIZE range, flagged for listening in `docs/TASKS.md`.
 - v1.0 — frozen after owner approval (21 Oct 2026); decisions split into ADRs 0001–0017. TIME = predelay in NORMAL and the P1–P7 layout approved (ADR 0015, 0017).
 - v0.2 — after the P7 / SW1 demos (owner, 21 Oct 2026): DESK removed; P7 = TIME; SW1 = ATTACK (NORMAL / BLOOM / REVERSE); ducking fixed to DARKEN; the switch governs the attack in every space, Massive included (ADR 0014, 0015).
@@ -280,7 +281,7 @@ immensio-versio/
 
 ### M5 — Plate + companion + freeze/paint
 - [A] Gesture reader (button and gate share tests): tap < 0.3 s toggles, freeze engages on press, a hold ≥ 0.3 s while frozen paints, pulses from a sequencer, bounces.
-- [A] Freeze: the pad's level stays within ±0.5 dB over 5 min with in-loop colour bypassed, and its pitch is stable (pitch tracker). Unfreeze glide has no clicks.
+- [A] Freeze: the pad's level stays within ±0.5 dB over 5 min (from 25 s after the freeze, v1.0.2) with in-loop colour bypassed, and its pitch is stable (pitch tracker). Unfreeze glide has no clicks.
 - [A] SPACE flips mid-tail: no clicks, and the loudness of Plate/Hall/Massive is within ±1.5 dB.
 - [L] Playing over the pad feels like playing into a small room, not dry.
 

@@ -82,6 +82,12 @@ inline float normalPredelaySeconds(float v) { return 0.25f * v * v; }
 inline float bloomSeconds(float v) { return expLerp(0.1f, 4.0f, v); }
 inline float reverseSeconds(float v) { return expLerp(0.2f, 2.0f, v); }
 
+// SIZE (P5) in PLATE: the tank's scale, 0.5 → 1.6 of Dattorro's (SPEC §3).
+inline float plateScale(float v) { return expLerp(voicing::kPlateMinScale, voicing::kPlateMaxScale, v); }
+// While frozen, SIZE and DECAY play the companion (ADR 0009, SPEC §4.2).
+inline float companionScale(float v) { return expLerp(voicing::kCompanionMinScale, voicing::kCompanionMaxScale, v); }
+inline float companionDecayRate(float v) { return 1.0f / expLerp(voicing::kCompanionT60Min, voicing::kCompanionT60Max, v); }
+
 // The floor governor's weight across DECAY's crossover (ADR 0008): 0 while
 // the tail is finite, 1 from infinite on.
 inline float governorWeight(float decay)

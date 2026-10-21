@@ -12,6 +12,7 @@
 //
 // Control work (SIZE slew, modulation, gains) runs every kControlBlock
 // samples; the per-sample loop only reads, filters, mixes and writes.
+#include "dsp/Governor.h"
 #include "dsp/Memory.h"
 #include "params/SpaceVoicing.h"
 
@@ -48,12 +49,17 @@ public:
     // Floor governor weight, 0..1 (ADR 0008): 1 at infinite DECAY. Above
     // the floor level the loop loses a little more per pass, so an infinite
     // tail fed for minutes settles at the floor instead of growing.
-    void setGovernor(float weight) { governorWeight_ = weight; }
+    void setGovernor(float weight) { governor_.weight = weight; }
+    void setFloorDb(float db) { governor_.floorDb = db; }
+    // A held tail's ceiling, on the slow level (0 dBFS = no hold).
+    void setHoldDb(float db) { governor_.holdDb = db; }
+    float slowLevelDb() const { return governor_.slowLevelDb; }
+    void resyncHoldLevel() { governor_.resyncSlow(); }
     // In-loop diffusion amount 0..1 (MASSIVE's SIZE); 0 bypasses it.
     void setInLoopDiffusion(float amount) { inLoopTarget_ = amount; }
     // Extra output level for a voicing (MASSIVE's loudness match).
     void setOutputTrim(float trim) { outputTrim_ = trim; }
-    float levelDb() const { return levelDb_; }
+    float levelDb() const { return governor_.levelDb; }
 
     // Adds the wet to outL/outR (does not clear them).
     void process(const float* inL, const float* inR, float* outL, float* outR, int n);
@@ -74,13 +80,14 @@ private:
     uint32_t  rng_ = 1;
     // Per-sample read position for the current control block.
     float     readNow_[kN] = {}, readStep_[kN] = {};
+    float     interp_[kN] = {}; // allpass-interpolation state per read
     // Absorbent filters: y = g (1 − b) x + b y.
     float     gain_[kN] = {}, pole_[kN] = {}, absorbY_[kN] = {};
     float     decayRate_ = 0.2f, highRatio_ = voicing::kDampingHighT60Ratio;
     DelayLine apLine_[kN][2];
     uint32_t  apLen_[kN][2] = {};
     float     inLoopTarget_ = 0.0f, inLoopNow_ = 0.0f, outputTrim_ = 1.0f, levelGain_ = 1.0f;
-    float     governorWeight_ = 0.0f, levelPower_ = 0.0f, levelDb_ = -200.0f, blockPower_ = 0.0f;
+    FloorGovernor governor_;
     bool      ready_ = false;
 };
 

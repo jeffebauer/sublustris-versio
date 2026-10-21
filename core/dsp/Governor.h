@@ -1,0 +1,81 @@
+#pragma once
+// The floor governor (ADR 0008), shared by every tank. It follows the wet's
+// level over ~1.5 s and, at infinite DECAY (weight 1), adds loss in
+// proportion to how far the tail sits above its floor, so an infinite tail
+// fed for minutes settles at the floor instead of growing (every loop gain
+// stays <= 1, SPEC §2.3 rule 2). darken() tells the tank how much of its
+// infinite high-end fade to keep: all of it above the floor, none of it once
+// the tail is down at the floor, so the tail stops darkening and holds.
+#include "params/SpaceVoicing.h"
+
+#include <cmath>
+
+namespace iv::dsp {
+
+struct FloorGovernor {
+    float weight = 0.0f;                 // 0 finite DECAY .. 1 infinite
+    float floorDb = voicing::kFloorDbfs;   // the level an infinite tail settles at (darkening stops there)
+    float holdDb = 0.0f;                   // a held tail's ceiling (a pad, or infinite after the input), on the slow level
+    float slowLevelDb = -200.0f;           // the level over ~kHoldSeconds (an echoey MASSIVE tail swings for seconds)
+    float levelDb = -200.0f;
+    float extraRate = 0.0f;              // added loss, 1/T60 in 1/s
+    float darken = 1.0f;                 // share of the infinite high-end fade to keep
+
+    void reset()
+    {
+        power_ = slow_ = block_ = 0.0f;
+        levelDb = slowLevelDb = -200.0f;
+        extraRate = 0.0f;
+        darken = 1.0f;
+    }
+    // The slow level starts over from the fast one (a fresh freeze: judge
+    // the pad on its own level, not on the minutes before it).
+    void resyncSlow()
+    {
+        slow_ = power_;
+        slowLevelDb = levelDb;
+    }
+    // One output sample's power (mean of the channels' squares).
+    void add(float power) { block_ += power; }
+
+    // Once per control chunk of n samples.
+    void control(int n, float sampleRate)
+    {
+        const float dt = float(n) / sampleRate;
+        power_ += (1.0f - std::exp(-dt / voicing::kGovernorSeconds)) * (block_ / float(n) - power_);
+        slow_ += (1.0f - std::exp(-dt / voicing::kHoldSeconds)) * (block_ / float(n) - slow_);
+        block_ = 0.0f;
+        levelDb = 10.0f * std::log10(power_ + 1e-20f);
+        slowLevelDb = 10.0f * std::log10(slow_ + 1e-20f);
+        const float over = levelDb - floorDb;
+        const float overHold = slowLevelDb - holdDb;
+        extraRate = weight * voicing::kGovernorRatePerDb * ((over > 0.0f ? over : 0.0f) + (overHold > 0.0f ? overHold : 0.0f));
+        float above = (levelDb - (floorDb - 3.0f)) / 6.0f;
+        above = above < 0.0f ? 0.0f : (above > 1.0f ? 1.0f : above);
+        darken = 1.0f - weight * (1.0f - above);
+    }
+
+private:
+    float power_ = 0.0f, slow_ = 0.0f, block_ = 0.0f;
+};
+
+// A tank segment's absorbent filter (Jot): y = gain·x + pole·y. Its DC gain
+// is the low end's loss for `seconds` of delay at `lowRate` (1/T60), its
+// Nyquist gain the high end's at lowRate / highRatio. At infinite (lowRate
+// 0) the highs still fade over kInfiniteHighT60Seconds, scaled by darken.
+struct Absorb {
+    float gain, pole;
+};
+inline Absorb absorbent(float seconds, float lowRate, float highRatio, float darken)
+{
+    float highRate = lowRate / highRatio;
+    const float infiniteHigh = darken * (1.0f / highRatio - 1.0f) / voicing::kInfiniteHighT60Seconds;
+    if (highRate < infiniteHigh) highRate = infiniteHigh;
+    const float gLow  = std::pow(10.0f, -3.0f * seconds * lowRate);
+    const float gHigh = std::pow(10.0f, -3.0f * seconds * highRate);
+    const float q = gHigh / gLow; // Nyquist gain over DC gain, <= 1
+    const float pole = (1.0f - q) / (1.0f + q);
+    return {gLow * (1.0f - pole), pole};
+}
+
+} // namespace iv::dsp

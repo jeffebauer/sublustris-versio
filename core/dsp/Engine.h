@@ -4,10 +4,13 @@
 // the same way: prepare(), setParam() with Normalised values, button() and
 // gate() edges at a sample offset in the next block, process().
 //
-// M4: HALL and MASSIVE on the FDN, with ATTACK. In → predelay → input
-// diffusion → swell stage → FDN → (REVERSE) → MIX (SPEC §4.1). PLATE plays
-// the Hall until the Plate lands (M5). Button and gate edges are recorded;
-// the gesture reader (ADR 0009–0011) lands at M5.
+// M5: the three SPACEs (PLATE on the Plate, HALL and MASSIVE on the FDN),
+// ATTACK, and the freeze: In → predelay → input diffusion → swell → big
+// tank → (REVERSE) → MIX (SPEC §4.1). The button and the gate feed one
+// gesture reader (ADR 0011): a tap freezes the big tank into a still pad and
+// moves the input to the small companion plate, which SIZE and DECAY then
+// play; holding while frozen paints the companion into the pad (ADR 0010);
+// a tap unfreezes and the big tank glides back to the knobs (ADR 0009).
 //
 // Memory (SPEC §5.2): the firmware calls attachMemory() with its SDRAM and
 // DTCM arrays before prepare(). Desktop Hosts may skip it: the Engine then
@@ -15,8 +18,10 @@
 #include "dsp/Diffuser.h"
 #include "dsp/Fdn.h"
 #include "dsp/Memory.h"
+#include "dsp/Plate.h"
 #include "dsp/Reverse.h"
 #include "dsp/Swell.h"
+#include "params/GestureReader.h"
 #include "params/ParamSpec.h"
 
 #include <array>
@@ -37,12 +42,12 @@ public:
     static constexpr size_t largeFloats(float sampleRate)
     {
         return dsp::Fdn::memoryFloats(sampleRate) + dsp::Swell::memoryFloats(sampleRate)
-             + dsp::Reverse::memoryFloats(sampleRate)
+             + dsp::Reverse::memoryFloats(sampleRate) + dsp::Plate::memoryFloats(sampleRate, voicing::kPlateMaxScale)
              + 2 * dsp::nextPow2(size_t(voicing::kPredelayMaxSeconds * sampleRate) + 4);
     }
     static constexpr size_t fastFloats(float sampleRate)
     {
-        size_t n = 0;
+        size_t n = dsp::Plate::memoryFloats(sampleRate, voicing::kCompanionMaxScale);
         for (int c = 0; c < 2; ++c)
             for (float s : voicing::kDiffuserSeconds)
                 n += dsp::nextPow2(size_t(s * (c ? voicing::kDiffuserRightScale : 1.0f) * sampleRate) + 4);
@@ -58,14 +63,14 @@ public:
     float param(ParamId id) const { return values_[static_cast<size_t>(id)]; }
 
     // Button press / release at a sample offset within the next process() block.
-    void button(bool pressed, int /*sampleOffset*/) { buttonDown_ = pressed; }
+    void button(bool pressed, int sampleOffset) { queueEdge(true, pressed, sampleOffset); }
     // Gate edge: high = a press, low = a release (ADR 0011). Unpatched reads low.
-    void gate(bool high, int /*sampleOffset*/) { gateHigh_ = high; }
+    void gate(bool high, int sampleOffset) { queueEdge(false, high, sampleOffset); }
 
     void process(const float* inL, const float* inR, float* outL, float* outR, int numSamples);
 
-    bool  frozen() const { return frozen_; }
-    bool  painting() const { return false; }
+    bool  frozen() const { return gesture_.frozen(); }
+    bool  painting() const { return gesture_.painting(); }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.
@@ -80,12 +85,19 @@ public:
     int   maxBlockSize() const { return maxBlockSize_; }
 
     // Read-only views for tests.
-    const dsp::Fdn& fdn() const { return fdn_; }
-    int activeSpace() const { return activeSpace_; }
+    const dsp::Fdn&   fdn() const { return fdn_; }
+    const dsp::Plate& plate() const { return plate_; }
+    int   activeSpace() const { return activeSpace_; }
+    float tankLevelDb() const { return activeSpace_ == 0 ? plate_.levelDb() : fdn_.levelDb(); }
+    float tankSlowLevelDb() const { return activeSpace_ == 0 ? plate_.slowLevelDb() : fdn_.slowLevelDb(); }
 
 private:
     static constexpr int kChunk = dsp::Fdn::kControlBlock;
+    static constexpr int kMaxEdges = 16;
 
+    void queueEdge(bool isButton, bool level, int offset);
+    void handleEdges(int chunkStart, int chunkEnd);
+    void onGesture(GestureReader::Event e);
     void controlTick(int n);
     void applySpace(bool snap);
     float smoothed(ParamId id) const { return smooth_[static_cast<size_t>(id)]; }
@@ -94,7 +106,7 @@ private:
     int   maxBlockSize_ = 48;
     std::array<float, static_cast<size_t>(ParamId::Count)> values_{};
     std::array<float, static_cast<size_t>(ParamId::Count)> smooth_{};
-    bool  buttonDown_ = false, gateHigh_ = false, frozen_ = false;
+    bool  buttonDown_ = false, gateHigh_ = false;
     bool  ready_ = false;
 
     dsp::Arena large_, fast_;
@@ -110,6 +122,8 @@ private:
     dsp::Diffuser<4>  diffuser_[2];
     dsp::Swell        swell_;
     dsp::Fdn          fdn_;
+    dsp::Plate        plate_;
+    dsp::Plate        companion_;
     dsp::Reverse      reverse_;
     float             lastMean_ = -1.0f, lastSpread_ = -1.0f;
 
@@ -120,11 +134,36 @@ private:
     // ATTACK = REVERSE: crossfade between the forward and the reversed wet.
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f;
 
+    // Freeze (ADR 0009–0011). Button and gate edges this block, by offset.
+    struct Edge {
+        int  offset;
+        bool isButton, level;
+    };
+    Edge          edges_[kMaxEdges] = {};
+    int           edgeCount_ = 0;
+    GestureReader gesture_;
+    uint64_t      clock_ = 0;            // samples since prepare
+    float heldSize_ = 0.5f, heldDecay_ = 0.5f; // the big tank's SIZE and DECAY, frozen with it
+    float freezeMix_ = 0.0f;             // 0 normal .. 1 a still pad (in-loop colour out, gain 1)
+    float tankIn_ = 1.0f, tankInStep_ = 0.0f;
+    float compIn_ = 0.0f, compInStep_ = 0.0f;
+    float paint_ = 0.0f;
+    float padFloorDb_ = -24.0f;
+    bool  padCaptured_ = false; // the pad's own level has been taken as its ceiling
+    uint64_t frozeAt_ = 0;
+    // Input quiet detector for holding an infinite tail where it settled.
+    float    inputPower_ = 0.0f;
+    uint64_t quietSince_ = 0;
+    bool     tailCaptured_ = false;
+    float    tailCeilingDb_ = -24.0f;
+    bool  companionActive_ = false;
+
     // MIX, ramped per sample across each control chunk.
     float dryNow_ = 1.0f, wetNow_ = 0.0f, dryStep_ = 0.0f, wetStep_ = 0.0f;
 
     // Scratch for one chunk.
     float bufL_[kChunk] = {}, bufR_[kChunk] = {}, wetL_[kChunk] = {}, wetR_[kChunk] = {};
+    float compInL_[kChunk] = {}, compInR_[kChunk] = {}, compL_[kChunk] = {}, compR_[kChunk] = {};
 };
 
 } // namespace iv
