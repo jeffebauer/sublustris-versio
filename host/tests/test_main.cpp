@@ -44,16 +44,18 @@ void switchMappingRoundTrips()
     check(ok, "Switch3 position <-> Normalised round-trips");
 }
 
-// M0: the Engine is a passthrough in every Host (SPEC §7 M0).
+// MIX fully CCW is a clean passthrough, bit for bit (ADR 0012).
 void enginePassthroughIsIdentity()
 {
     iv::Engine engine;
     engine.prepare(48000.0f, 48);
+    engine.setParam(iv::ParamId::Mix, 0.0f);
+    engine.reset();
     std::vector<float> l(4800), r(4800), ol(4800), orr(4800);
     for (int i = 0; i < 4800; ++i) { l[i] = float(i % 48) / 48.0f - 0.5f; r[i] = -l[i]; }
     for (int pos = 0; pos < 4800; pos += 48)
         engine.process(l.data() + pos, r.data() + pos, ol.data() + pos, orr.data() + pos, 48);
-    check(l == ol && r == orr, "Engine (M0) is a bit-identical passthrough");
+    check(l == ol && r == orr, "Engine at MIX 0 is a bit-identical passthrough");
 }
 
 void paramsClampAndRead()

@@ -111,15 +111,15 @@ void cliMatchesPreset()
     check(read, "cli: renders read back");
     if (read) check(sameAudio(viaSet, viaPreset), "cli: --set space=MASSIVE renders identically to the --preset");
 
-    // M0 (SPEC §7): the Renderer copies a WAV through unchanged, bit for bit,
-    // to both outputs (a mono input feeds both, as the Versio's In L normal).
-    check(run(inPath + " " + dir + "/pass.wav") == 0, "cli: default render exits 0");
+    // SPEC §7 M0: at MIX 0 the Renderer copies a WAV through unchanged, bit
+    // for bit, to both outputs (a mono input feeds both, as the In L normal).
+    check(run(inPath + " " + dir + "/pass.wav --set mix=0") == 0, "cli: mix=0 render exits 0");
     iv::wav::Audio pass, written; // compare with the stimulus as written (quantised to the file's bits)
     bool same = readWav(dir + "/pass.wav", pass) && readWav(inPath, written) && pass.channels.size() == 2
              && pass.frames() == written.frames();
     for (size_t c = 0; same && c < 2; ++c)
         for (size_t i = 0; same && i < written.frames(); ++i) same = pass.channels[c][i] == written.channels[0][i];
-    check(same, "cli: M0 passthrough is bit-identical on both outputs");
+    check(same, "cli: MIX 0 passthrough is bit-identical on both outputs");
 
     check(run(inPath + " " + dir + "/bad.wav --set space=CAVE") != 0, "cli: unknown label exits non-zero");
     check(run(inPath + " " + dir + "/bad.wav --set space=1") != 0, "cli: bare number on a switch exits non-zero");

@@ -60,6 +60,16 @@ DaisyVersio hw;
 // Never destroyed (main never returns).
 alignas(iv::Engine) unsigned char gEngineStorage[sizeof(iv::Engine)];
 iv::Engine& engine = *reinterpret_cast<iv::Engine*>(gEngineStorage);
+
+// Delay memory (SPEC §5.2): the long lines (FDN, predelay) in SDRAM, the
+// small hot buffers (input diffusers) in DTCM. Both sections are NOLOAD, so
+// startup doesn't zero them; the Engine's Arena zeroes what it takes. Sized
+// for 48 kHz: at any other rate the Engine finds too little memory and
+// passes the dry only (Engine::ready()).
+constexpr size_t kLargeFloats = iv::Engine::largeFloats(48000.0f);
+constexpr size_t kFastFloats  = iv::Engine::fastFloats(48000.0f);
+DSY_SDRAM_BSS float gLarge[kLargeFloats];
+IV_DTCM float       gFast[kFastFloats];
 #endif
 
 // Panel pots P1..P7 (reading order: top to bottom, left to right) -> libDaisy
@@ -480,6 +490,7 @@ int main()
     }
     hw.seed.SetAudioBlockSize(kBlockSize);
 
+    engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats);
     engine.prepare(hw.AudioSampleRate(), kBlockSize);
     StartCycleCounter();
     iv::prof::markHook = ProfMark;
@@ -898,6 +909,7 @@ int main()
     new (gEngineStorage) iv::Engine(); // before anything touches it (see gEngineStorage)
     hw.Init(true); // boost to 480 MHz
     hw.SetAudioBlockSize(kBlockSize);
+    engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats);
     engine.prepare(hw.AudioSampleRate(), kBlockSize);
 
     BootPattern(); // then metering

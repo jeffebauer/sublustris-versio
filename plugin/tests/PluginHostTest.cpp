@@ -155,6 +155,7 @@ Render renderEngine(const std::vector<float>& in, const std::vector<int>& blocks
     iv::Engine engine;
     engine.prepare(48000.0f, 512);
     setPresetOnEngine(engine, mix);
+    engine.reset(); // as the plugin's prepareToPlay: start at the settings, no glide
     Render r;
     r.outL.assign(in.size(), 0.0f);
     r.outR.assign(in.size(), 0.0f);
@@ -178,8 +179,9 @@ Render renderPlugin(juce::AudioPluginFormatManager& fm, const juce::String& path
     auto inst = loadPlugin(fm, path, 48000.0, 512, error);
     Render r;
     if (!inst) { check(false, "plugin loads for render: " + error.toStdString()); return r; }
-    inst->prepareToPlay(48000.0, 512);
+    // A DAW restores the saved settings, then prepares the plugin.
     setPresetOnPlugin(mapParams(*inst), mix);
+    inst->prepareToPlay(48000.0, 512);
 
     r.outL.assign(in.size(), 0.0f);
     r.outR.assign(in.size(), 0.0f);

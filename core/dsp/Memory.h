@@ -1,0 +1,84 @@
+#pragma once
+// Delay memory for the Core. The Core never allocates on the module: the
+// firmware hands the Engine two plain float arrays, SDRAM for the long lines
+// and DTCM for the small hot ones (SPEC §5.2), and each block takes what it
+// needs from them at prepare(). Desktop Hosts let the Engine own vectors.
+#include <cstddef>
+#include <cstdint>
+
+namespace iv::dsp {
+
+// A bump allocator over one float array. take() hands out zeroed slices
+// in order; prepare() starts over with reset().
+struct Arena {
+    float* base = nullptr;
+    size_t size = 0, used = 0;
+
+    void reset(float* b, size_t n)
+    {
+        base = b;
+        size = n;
+        used = 0;
+    }
+    // nullptr when the arena is too small (the Engine then stays silent
+    // rather than writing out of bounds).
+    float* take(size_t n)
+    {
+        if (!base || used + n > size) return nullptr;
+        float* p = base + used;
+        used += n;
+        for (size_t i = 0; i < n; ++i) p[i] = 0.0f;
+        return p;
+    }
+};
+
+constexpr size_t nextPow2(size_t n)
+{
+    size_t p = 1;
+    while (p < n) p <<= 1;
+    return p;
+}
+
+// A power-of-two ring buffer: write one sample per tick, read any delay
+// behind the write head. Integer reads, linear and cubic interpolation.
+struct DelayLine {
+    float*   buf  = nullptr;
+    uint32_t mask = 0, pos = 0;
+
+    // Takes room for at least maxDelay + 4 samples (cubic needs 2 either side).
+    bool init(Arena& arena, size_t maxDelaySamples)
+    {
+        const size_t n = nextPow2(maxDelaySamples + 4);
+        buf = arena.take(n);
+        mask = uint32_t(n - 1);
+        pos = 0;
+        return buf != nullptr;
+    }
+    void clear()
+    {
+        if (buf)
+            for (uint32_t i = 0; i <= mask; ++i) buf[i] = 0.0f;
+    }
+    void write(float x)
+    {
+        buf[pos] = x;
+        pos = (pos + 1) & mask;
+    }
+    // d >= 1: the sample written d ticks ago (d = 1 is the last write).
+    float read(uint32_t d) const { return buf[(pos - d) & mask]; }
+    // Catmull-Rom cubic (Hermite) read at a fractional delay d >= 2.
+    float readCubic(float d) const
+    {
+        const float    fl = float(int32_t(d));
+        const uint32_t i  = pos - uint32_t(int32_t(d));
+        const float    t  = d - fl; // 0..1, toward older samples
+        const float x0 = buf[(i + 1) & mask], x1 = buf[i & mask], x2 = buf[(i - 1) & mask],
+                    x3 = buf[(i - 2) & mask];
+        const float c1 = 0.5f * (x2 - x0);
+        const float c2 = x0 - 2.5f * x1 + 2.0f * x2 - 0.5f * x3;
+        const float c3 = 0.5f * (x3 - x0) + 1.5f * (x1 - x2);
+        return ((c3 * t + c2) * t + c1) * t + x1;
+    }
+};
+
+} // namespace iv::dsp

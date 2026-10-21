@@ -127,6 +127,7 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     for (const auto& s : sets) {
         if (!iv::paramsjson::applySetArg(engine, s, error)) { error = "bad --set " + s + ": " + error; return false; }
     }
+    engine.reset(); // start at the settings, no glide in from the defaults
     return true;
 }
 
@@ -223,6 +224,7 @@ int runSweep(const std::string& sweepPath, const std::string& outDir, const std:
             if (!iv::paramsjson::findParamId(key, id)) { std::fprintf(stderr, "sweep: unknown grid key '%s'\n", key.c_str()); return 1; }
             engine.setParam(id, float(value));
         }
+        engine.reset(); // start at the grid point, no glide in from the defaults
 
         const std::string base = iv::sweep::fileBaseName(cfg.name, combo);
         const std::string wavName = base + ".wav";

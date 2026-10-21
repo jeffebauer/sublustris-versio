@@ -28,7 +28,14 @@ Sizes at M0 (21 Oct 2026, passthrough Engine):
 | m0test | 82,356 | 62 % |
 | profile | 52,224 | 39 % |
 
-The release figure is the platform's floor before any DSP: libDaisy, the HAL, the audio and LED PWM set-up. Resilio's release with its full Tank was 112,628 B after its flash study, so its DSP and controls cost ~59 KB. Immensio has ~56 KB to its 110 KB budget.
+The M0 release figure is the platform's floor before any DSP: libDaisy, the HAL, the audio and LED PWM set-up. Resilio's release with its full Tank was 112,628 B after its flash study, so its DSP and controls cost ~59 KB.
+
+| Milestone | release | profile | m0test |
+|---|---|---|---|
+| M0 (passthrough) | 53,852 | 52,224 | 82,356 |
+| M1 (Hall: FDN, diffusers, predelay) | 61,484 (46 %) | 62,312 | 82,356 |
+
+Memory at M1: `gLarge` 8.5 MB in SDRAM (FDN lines + predelay, power-of-two lines sized for MASSIVE), `gFast` 16 KB in DTCM (input diffusers), the Engine object ~1.3 KB in AXI SRAM.
 
 ### Flash-budget techniques in use (from Resilio's flash study, SPEC §5.3)
 

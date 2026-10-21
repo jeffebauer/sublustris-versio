@@ -43,6 +43,8 @@ C_DEFS     += $(MODE_DEFS) -DIV_PROFILE_BLOCK=$(PROFILE_BLOCK)
 # Firmware build: core/dsp/SizeOpt.h's IV_SIZE_OPT (-Os on control-rate code)
 # and the shipped-voicings-only switch key off this.
 C_DEFS     += -DIV_FIXED_VOICINGS
+# The Core never allocates on the module: delay memory is attached (SPEC §5.2).
+C_DEFS     += -DIV_NO_HEAP
 # No fused multiply-add (Resilio M3, 29 Sep 2026; its ADR 0030). On the M7, GCC's vfma accumulates
 # into its destination, so every a*b+c becomes vmov/vfma/vmov and each one
 # waits for the last: ~9 cycles per multiply-add, even for independent ones

@@ -42,11 +42,21 @@ public:
     void prepareToPlay(double sampleRate, int maxBlock) override
     {
         engine_.prepare(float(sampleRate), maxBlock);
+        pushParams();
+        engine_.reset(); // start at the knobs' current settings, no glide in from defaults
         midiGate_.reset();
         setLatencySamples(0); // reported to the host once the Core adds latency (M2 criterion)
     }
 
     void releaseResources() override {}
+
+    void pushParams()
+    {
+        for (const auto& p : iv::kParams) {
+            const float v = raw_[static_cast<size_t>(p.id)]->load();
+            engine_.setParam(p.id, p.kind == iv::ParamKind::Switch3 ? iv::switchToNormalised(int(v)) : v);
+        }
+    }
 
     bool isBusesLayoutSupported(const BusesLayout& layouts) const override
     {
@@ -59,10 +69,7 @@ public:
     {
         juce::ScopedNoDenormals noDenormals;
 
-        for (const auto& p : iv::kParams) {
-            const float v = raw_[static_cast<size_t>(p.id)]->load();
-            engine_.setParam(p.id, p.kind == iv::ParamKind::Switch3 ? iv::switchToNormalised(int(v)) : v);
-        }
+        pushParams();
 
         const int n = buffer.getNumSamples();
 
