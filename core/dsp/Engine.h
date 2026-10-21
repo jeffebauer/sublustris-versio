@@ -1,6 +1,6 @@
 #pragma once
 // The Engine: everything between the inputs and the outputs (CONTEXT.md:
-// big tank, companion, loop chain, Era, output stage). Every Host drives it
+// big tank, twin, loop chain, Era, output stage). Every Host drives it
 // the same way: prepare(), setParam() with Normalised values, button() and
 // gate() edges at a sample offset in the next block, process().
 //
@@ -8,9 +8,10 @@
 // ATTACK, and the freeze: In → predelay → input diffusion → swell → big
 // tank → (REVERSE) → MIX (SPEC §4.1). The button and the gate feed one
 // gesture reader (ADR 0011): a tap freezes the big tank into a still pad and
-// moves the input to the small companion plate, which SIZE and DECAY then
-// play; holding while frozen paints the companion into the pad (ADR 0010);
-// a tap unfreezes and the big tank glides back to the knobs (ADR 0009).
+// moves the input to the twin, a second tank of the same space whose sound
+// fades back out over the pad (SIZE and DECAY play it); holding while frozen
+// paints a little of the twin into the pad (ADR 0010); a tap unfreezes and
+// the big tank glides back to the knobs (ADR 0009).
 //
 // Memory (SPEC §5.2): the firmware calls attachMemory() with its SDRAM and
 // DTCM arrays before prepare(). Desktop Hosts may skip it: the Engine then
@@ -44,12 +45,12 @@ public:
     {
         return dsp::Fdn::memoryFloats(sampleRate) + dsp::Swell::memoryFloats(sampleRate)
              + dsp::Reverse::memoryFloats(sampleRate) + 2 * dsp::Plate::memoryFloats(sampleRate, voicing::kPlateMaxScale, true)
-             + dsp::Fdn::memoryFloats(sampleRate) // the freeze twin (voicing 3)
+             + dsp::Fdn::memoryFloats(sampleRate) // the freeze twin
              + 2 * dsp::nextPow2(size_t(voicing::kPredelayMaxSeconds * sampleRate) + 4);
     }
     static constexpr size_t fastFloats(float sampleRate)
     {
-        size_t n = dsp::Plate::memoryFloats(sampleRate, voicing::kCompanionMaxScale, false);
+        size_t n = 0;
         for (int twin = 0; twin < 2; ++twin) // the input diffusers, and the twin's (13 % longer)
             for (int c = 0; c < 2; ++c)
                 for (float s : voicing::kDiffuserSeconds)
@@ -74,9 +75,7 @@ public:
 
     bool  frozen() const { return gesture_.frozen(); }
     bool  painting() const { return gesture_.painting(); }
-    // Freeze voicing prototype (SpaceVoicing.h): 0 companion, 1 feed the pad, 2 both, 3 the twin.
     void  setReverseSmooth(bool on) { reverse_.setSmooth(on); } // PROTOTYPE, renders/reverse_options
-    void  setFreezeVoicing(int v) { freezeVoicing_ = v < 0 ? 0 : (v > 3 ? 3 : v); }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.
@@ -130,8 +129,7 @@ private:
     dsp::Swell        swell_;
     dsp::Fdn          fdn_;
     dsp::Plate        plate_;
-    dsp::Plate        companion_;
-    // The freeze twin (voicing 3): the frozen tank's space, with its own decay.
+    // The freeze twin: the frozen tank's space, with its own decay.
     dsp::Fdn          twinFdn_;
     dsp::Plate        twinPlate_;
     dsp::Diffuser<4>  twinDiffuser_[2];
@@ -169,8 +167,7 @@ private:
     float heldSize_ = 0.5f, heldDecay_ = 0.5f; // the big tank's SIZE and DECAY, frozen with it
     float freezeMix_ = 0.0f;             // 0 normal .. 1 a still pad (in-loop colour out, gain 1)
     float tankIn_ = 1.0f, tankInStep_ = 0.0f;
-    float compIn_ = 0.0f, compInStep_ = 0.0f;
-    float paint_ = 0.0f;
+    float paint_ = 0.0f, paintRoom_ = 1.0f; // paintRoom_: 1 → 0 as a painted pad nears its ceiling
     float padFloorDb_ = -24.0f;
     bool  padCaptured_ = false; // the pad's own level has been taken as its ceiling
     uint64_t frozeAt_ = 0;
@@ -179,8 +176,6 @@ private:
     uint64_t quietSince_ = 0;
     bool     tailCaptured_ = false;
     float    tailCeilingDb_ = -24.0f;
-    bool  companionActive_ = false;
-    int   freezeVoicing_ = 0;
     float tankInTarget_ = 1.0f;
 
     // MIX, ramped per sample across each control chunk.
@@ -188,7 +183,6 @@ private:
 
     // Scratch for one chunk.
     float bufL_[kChunk] = {}, bufR_[kChunk] = {}, wetL_[kChunk] = {}, wetR_[kChunk] = {};
-    float compInL_[kChunk] = {}, compInR_[kChunk] = {}, compL_[kChunk] = {}, compR_[kChunk] = {};
     float twinInL_[kChunk] = {}, twinInR_[kChunk] = {}, twinL_[kChunk] = {}, twinR_[kChunk] = {};
 };
 

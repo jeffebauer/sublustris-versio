@@ -11,7 +11,7 @@
 namespace iv::prof {
 
 // Immensio's sections, in signal order (SPEC §4.1, §5.1).
-enum Section { kControl, kInput, kSwell, kTank, kCompanion, kEra, kOutput, kNumSections };
+enum Section { kControl, kInput, kSwell, kTank, kTwin, kEra, kOutput, kNumSections };
 
 #if defined(IV_PROFILE_HOOKS)
 // Set by the host (profile firmware) before audio starts; null = no timing.

@@ -12,7 +12,7 @@
 | M0 hardware | **Owner check pending** (`docs/m0-hardware-check.md`) |
 | M1 Hall | **Built**: FDN (8 lines), diffusers, predelay; `test_fdn` passes; listening page `renders/m1_hall/` (owner check pending) |
 | M4 MASSIVE + ATTACK | **Built**, M4 notes acted on (SPEC v1.0.6: early taps, shorter SIZE predelay, no echoes at SIZE 0); REVERSE **awaiting the owner's pick** on `renders/reverse_options/` (prototype `Reverse::setSmooth`, `IV_REVERSE_SMOOTH`) |
-| M5 PLATE + freeze | **Built**, M5 notes fixed (Plate tap bug, calmer frozen Plate, washier MASSIVE paint); freeze voicing **awaiting the owner's confirmation** on `renders/freeze_twin/` (prototype voicings 0-3 still in the code) |
+| M5 PLATE + freeze | **Built**; freeze settled on the **twin** (owner, SPEC v1.0.7; companion removed); M5 page re-rendered for a listen. Still to fix: frozen-MASSIVE upper resonance, PLATE-skank early repeats |
 | M6 character | **Built**: ERA (5 stacked layers), DRIFT, soft saturation, μ-law output, Midiverb box, hiss, crackle; `test_era` passes; listening page `renders/m6_character/` |
 | M7 duck + limiter | **Built**: DARKEN on the wet, soft limiter; `test_output` passes (incl. a 40-run random integration sweep); listening page `renders/m7_duck/` |
 | M2 | Criteria pass in `plugin_host_test`; **not installed in Ableton** (the owner decides when: `tools/install_plugin.sh`) |
@@ -20,21 +20,17 @@
 | M8, M9 | Not started (M8 = tuning from the owner listening notes) |
 
 - **Gates (wrap, `7906f5c`):** ctest "100% tests passed out of 12".
-- **Firmware sizes (21 Oct, after the M4 notes):** release 89,604 B (68 %), profile 90,568 B (69 %), m0test 82,356 B (62 %). DTCM 121,080 B of 128 KB (the companion plate is still in; it can go if the twin wins). SDRAM 25.2 MB (twin FDN + Plate added). ~22 KB left to the 110 KB budget. Budget for release at v1.0 is 110 KB (ADR 0002). History in `firmware/README.md`.
+- **Firmware sizes (21 Oct, twin only):** release 87,884 B (67 %), profile 88,920 B (67 %), m0test 82,356 B (62 %). DTCM 36,864 B of 128 KB (the companion's 84 KB freed). SDRAM 25.2 MB. ~22 KB left to the 110 KB budget.
 - **Plugin in Ableton:** none installed.
 - **Seed provenance:** copied from Resilio Versio at `2ab71a9` (NOTICE, ADR 0001).
 
 ## In flight
-**The freeze voicing (prototype, committed in `7906f5c`).** The owner picked B (voicing 1, "feed the pad") on every `freeze_options` card, with notes: subtler; recede back to the original frozen pad rather than persist; Hall and MASSIVE decay too steeply after unfreeze (MASSIVE drops immediately); MASSIVE's secondary has too much predelay; an upper resonance builds in frozen MASSIVE; PLATE on skank gives two audible repeats before it diffuses.
-- Done: voicing 3, the **twin tank** (`Engine.h` `twinFdn_` / `twinPlate_` / `twinDiffuser_`; `SpaceVoicing.h` `kTwinLevel` 0.5, `kTwinMaxT60` 8 s): input goes to a second tank of the same space and size with a finite decay, own input diffusers, no predelay or swell; heard beside the untouched pad; painting copies it into the pad. Unfreeze drop fixed for all voicings (governor weight no longer glides with freezeMix; `Engine.cpp`).
-- Page `renders/freeze_twin/` (A = voicing 1 as picked, B = voicing 3), level-matched, decision page. The WAVs differ (checked).
-- **Not done:** measure and fix the frozen-MASSIVE upper resonance and the PLATE-skank early repeats (likely the input diffusers / first reflections of the voice used while frozen); no tests yet for voicing 3.
+- **REVERSE prototype** (`Reverse::setSmooth`, `IV_REVERSE_SMOOTH` hook in `host/render/main.cpp`): waiting on the owner's pick on `renders/reverse_options`.
 - `build-plugin/` is a scratch plugin build dir (gitignored; safe to delete).
 
 ## Next steps
-0. **Owner picks on `renders/reverse_options`.** If B (smooth): replace the per-sample `std::sin` in `Reverse.h` with a table or recursive oscillator (two sines a sample is costly on the M7), make it the only REVERSE, change `test_massive`'s "segments rise to their cut" to "no cuts", drop `setSmooth` and the hook, finish ADR 0015's amendment.
-1. **Owner confirms on `renders/freeze_twin`.** Then make the winner the only behaviour: remove the losing voicings (the companion plate and its DTCM if the twin wins; `SpaceVoicing.h` "FREEZE VOICING PROTOTYPE"; `Engine::setFreezeVoicing`; the `IV_FREEZE_VOICING` hook in `host/render/main.cpp:122`), amend ADRs 0009/0010, SPEC changelog v1.0.6, and add tests in `test_plate_freeze` (input recedes back to the pad within ~T60; no drop on unfreeze; paint stays bounded). Raise or remove clamps consistently ([[verify-voicing-labels]]).
-2. **Frozen MASSIVE resonance and PLATE skank repeats:** measure first (spectrum of a 60 s frozen MASSIVE pad over time for a growing peak; onset envelope of `skank` into the frozen PLATE), fix, re-render `freeze_twin` and `m5_plate_freeze`.
+1. **Owner picks on `renders/reverse_options`.** If B (smooth): replace the per-sample `std::sin` in `Reverse.h` with a table or recursive oscillator (two sines a sample is costly on the M7), make it the only REVERSE, change `test_massive`'s "segments rise to their cut" to "no cuts", drop `setSmooth` and the hook, finish ADR 0015's amendment.
+2. **Frozen MASSIVE resonance and PLATE skank repeats** (owner, freeze_options notes): measure first (spectrum of a 60 s frozen MASSIVE pad over time for a growing peak; onset envelope of `skank` into the frozen PLATE, which now goes through the twin), fix, re-render `m5_plate_freeze`.
 3. **Owner runs the M0 hardware check** (`docs/m0-hardware-check.md`). Fixes go in `firmware/main.cpp` (`kPotKnob` hardware fact, `kPotParams` ADR 0017).
 4. **Owner listening** on M1/M4/M5/M6/M7 pages, then **M8 tuning**: *(start)* numbers live in `core/params/SpaceVoicing.h` and `EraVoicing.h`.
 5. **Owner decisions:** ADR 0008 makeup; MASSIVE SIZE glide speed (ADR 0007 amendment); plugin identity.
@@ -46,6 +42,7 @@
 
 ## Will bite
 - **MASSIVE's early taps** (`Fdn::setEarlyTaps`, `SpaceVoicing.h` kEarlyTap*): 3 linear reads per line per sample (24 more reads, SDRAM) while in MASSIVE. M3 must measure MASSIVE, frozen and not. Its rise can't be shorter than ~1 s (`test_massive` kMassiveBuildSeconds).
+- **A fresh (or freshly painted) pad wanders a few dB while it settles** (HALL: +3 dB over its first ~10 s with no input at all; MASSIVE more). It has no ceiling until `kPadSettleSeconds` (20 s), then holds within ±0.5 dB. Judge paint against a no-paint run, not against the level at the freeze.
 - **The twin tank costs:** a second FDN or Plate runs while frozen (only then). `Engine::largeFloats`/`fastFloats` must count every buffer the Engine attaches, with the same size factors (the twin's diffusers use 1.13): a mismatch fails 7 suites with arena overruns.
 - **Review pages:** `tools/review/make_review.py` options `--showcase` (no picks), `--level-match`, `--dry <dir> --wet-only` (MIX fader). Render everything with `tools/render_review_pages.sh [page]`. Memory [[owner-listens-before-deciding]].
 - **Review pages** (`tools/review/`): playback is Web Audio, fed from `_audio/*.js` next to each page (a page opened from Finder can't read WAVs into Web Audio, but can load scripts). That roughly doubles a page's size on disk (renders/ is ~2.8 GB, gitignored). Serving them (`.claude/launch.json` "review-pages", http://localhost:8765) also works and `?audio=js` tests the Finder path. Click-free switching was measured, not assumed: the output's second-difference spikes stay at the music's own level for every transition, against 52× for a deliberate instant switch.

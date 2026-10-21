@@ -1,10 +1,11 @@
-// M5: the Plate, the companion, freeze and paint (SPEC §4.2, §3 "Button +
+// M5: the Plate, the freeze twin, freeze and paint (SPEC §4.2, §3 "Button +
 // Gate", §7 M5; ADR 0006, 0009, 0010, 0011, 0013). The gesture reader's
 // taps and holds (button and gate alike); the Plate's T60, stability and
 // metallic check; all three SPACEs matched in loudness; a frozen pad holds
-// its level for 5 minutes in every SPACE; painting grows the pad, boundedly;
-// unfreeze and freeze are click-free; the companion answers SIZE and DECAY
-// while frozen; REVERSE rests while frozen.
+// its level for 5 minutes in every SPACE; painting adds a quiet layer to the
+// pad, boundedly; unfreeze and freeze are click-free; the twin answers SIZE
+// and DECAY while frozen and fades back out to the pad; REVERSE rests while
+// frozen.
 
 #include "Metrics.h"
 #include "dsp/Engine.h"
@@ -274,9 +275,10 @@ void padHolds()
     }
 }
 
-// Playing over the pad is not dry: the companion answers, and SIZE and
-// DECAY play it (longer DECAY, longer companion tail).
-void companion()
+// Playing over the pad is not dry: the twin answers, and SIZE and DECAY
+// play it (longer DECAY, longer twin tail), but it always fades back out
+// (within kTwinMaxT60), leaving the pad as it was.
+void twin()
 {
     std::vector<float> in(size_t(14.0f * kSr), 0.0f);
     for (size_t i = 0; i < size_t(1.0f * kSr); ++i) in[i] = 0.25f * noise();          // the pad's source
@@ -299,10 +301,12 @@ void companion()
     };
     const double shortTail = diffDb(withHit, 7.0, 8.0), longTail = diffDb(longer, 7.0, 8.0);
     const double early = diffDb(withHit, 6.05, 6.3);
-    char msg[200];
-    std::snprintf(msg, sizeof msg, "companion: a hit over the pad gets a reverb (%.1f dBFS) and DECAY plays it "
-                                   "(1-2 s later: %.1f short vs %.1f long)", early, shortTail, longTail);
-    check(early > -60.0 && longTail > shortTail + 6.0, msg);
+    const double gone = diffDb(longer, 13.5, 14.0); // 7.5 s after the hit, DECAY at infinite
+    char msg[240];
+    std::snprintf(msg, sizeof msg, "twin: a hit over the pad gets a reverb (%.1f dBFS), DECAY plays it "
+                                   "(1-2 s later: %.1f short vs %.1f long), and even at infinite it fades back out (%.1f, 7.5 s later)",
+                  early, shortTail, longTail, gone);
+    check(early > -60.0 && longTail > shortTail + 6.0 && gone < early - 40.0, msg);
 }
 
 void paint()
@@ -313,9 +317,9 @@ void paint()
     const Stereo out = render(in, s, {{1.0, true}, {1.1, false}, {30.0, true}, {45.0, false}});
     const double before = rmsDb(out, 26.0, 29.0), during = rmsDb(out, 40.0, 44.0), after = rmsDb(out, 55.0, 59.0);
     char msg[200];
-    std::snprintf(msg, sizeof msg, "paint: the pad grows while held (%.1f -> %.1f dBFS, at most +3 dB + the companion) "
-                                   "and keeps its layers after (%.1f)", before, during, after);
-    check(finite(out) && during > before + 0.5 && during < before + 6.0 && after > before, msg);
+    std::snprintf(msg, sizeof msg, "paint: a quiet layer grows into the pad while held (%.1f -> %.1f dBFS, more than +0.3 dB, "
+                                   "at most +1.5 dB + the twin: never dominant) and stays after (%.1f)", before, during, after);
+    check(finite(out) && during > before + 0.3 && during < before + 3.0 && after > before, msg);
 }
 
 void clickFree()
@@ -363,7 +367,7 @@ int main()
     plate();
     loudness();
     padHolds();
-    companion();
+    twin();
     paint();
     clickFree();
     reverseRestsWhileFrozen();

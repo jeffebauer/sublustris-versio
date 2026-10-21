@@ -89,13 +89,9 @@ constexpr float kHoldSeconds        = 8.0f; // the slow level a held tail's ceil
 constexpr float kSpaceFlipSeconds  = 0.05f;
 constexpr float kAttackFadeSeconds = 0.05f;
 
-// ---- Plate (SPEC §4.2) and the freeze companion ---------------------------
+// ---- Plate (SPEC §4.2) -----------------------------------------------------
 constexpr float kPlateMaxScale     = 1.6f;  // SIZE fully CW
 constexpr float kPlateMinScale     = 0.5f;  // SIZE fully CCW
-constexpr float kCompanionMaxScale = 0.6f;
-constexpr float kCompanionMinScale = 0.25f;
-constexpr float kCompanionT60Min   = 0.3f;  // DECAY fully CCW, while frozen (SPEC §4.2)
-constexpr float kCompanionT60Max   = 6.0f;
 // The Plate's tails measured ~9 % longer than DECAY's mapping (low-band
 // T60, test_plate_freeze), so its loss rate is scaled up by this. At the
 // very short end with SIZE up, one pass round the figure 8 (~0.55 s at
@@ -108,29 +104,23 @@ constexpr float kPlateOutputTrim   = 0.41f; // −7.8 dB: PLATE matches HALL's l
 constexpr float kFreezeInputSeconds  = 0.02f; // the big tank's input closes
 constexpr float kFreezeColourSeconds = 0.2f;  // in-loop colour glides out
 constexpr float kUnfreezeSeconds     = 1.0f;  // the big tank glides back to the knobs
-constexpr float kCompanionFadeSeconds = 0.02f;
 constexpr float kPaintSeconds        = 3.0f;  // painting builds into the pad over ~this
 constexpr float kPaintReleaseSeconds = 0.2f;
-constexpr float kPaintLevel          = 0.5f;  // the companion's share sent into the pad
+constexpr float kPaintLevel          = 0.5f;  // the twin's share sent into the pad (× the room left)
 // A frozen PLATE's chorus depth (× Dattorro's): a lossless loop piles its
 // few cents a pass into a seasick wobble (owner, M5 listening).
 constexpr float kFrozenPlateModDepth = 0.15f;
-// FREEZE VOICING PROTOTYPE (owner, M5 listening: "the frozen reverb and the
-// secondary reverb sound too disparate... maybe the input should influence
-// the frozen buffer"). 0 = today: the companion plate on top of the pad;
-// 1 = the input feeds the frozen pad itself (no companion); 2 = both, the
-// companion quieter. Chosen by ear on renders/freeze_options, then fixed.
-constexpr float kFreezeFeed          = 0.35f; // the input's level into a frozen pad (voicings 1, 2)
-constexpr float kBothCompanionLevel  = 0.5f;  // the companion's level in voicing 2
-// Voicing 3, the TWIN (owner's picks: B "feed the pad" everywhere, "but the
-// influence should be a little more subtle, and should eventually recede
-// back to the original frozen buffer state"): what you play goes into a twin
-// of the frozen tank (the same space, size and colour, its own decay), heard
-// beside the untouched pad; it recedes, and holding paints it into the pad.
-// No predelay or swell on its input (owner: "too much predelay... disjointed").
-constexpr float kTwinLevel     = 0.5f;  // its output, × the tank's wet (−6 dB: "more subtle")
-constexpr float kTwinMaxT60    = 8.0f;  // it always recedes, even when the pad froze at infinite DECAY
-constexpr float kPaintHeadroomDb     = 3.0f;  // a painted pad may grow this far above its frozen level (or the floor)
+// The freeze twin (ADR 0009, owner's picks on freeze_options and
+// freeze_twin): what you play over a pad goes into a twin of the frozen tank
+// (the same space, SIZE and DECAY playing it), heard as a quieter layer over
+// the untouched pad, fading back out within kTwinMaxT60 so the pad returns
+// to what it was. No predelay or swell on its input ("too much
+// predelay... disjointed"). (start)
+constexpr float kTwinLevel     = 0.3f;  // −10.5 dB against the pad: "a more subtle layer... not the main focus"
+constexpr float kTwinMaxT60    = 8.0f;  // it always fades, even when DECAY is infinite
+constexpr float kTwinFadeSeconds = 0.02f; // its input opens / closes at freeze / unfreeze
+constexpr float kPaintHeadroomDb     = 1.5f;  // a painted pad may grow this far above its frozen level (or the floor)
+constexpr float kPaintFadeDb         = 1.0f;  // painting eases off over the last this-many dB below that
 // A still pad's ceiling over the level it settled at: its slowly wandering
 // reads (the modulation floor) nudge its energy up or down a little; the
 // governor stops it creeping up (measured +1.5 dB over 5 min without it).

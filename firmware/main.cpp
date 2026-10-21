@@ -19,7 +19,7 @@
 // can be read top-to-bottom without cross-referencing another.
 //
 // Memory placement (SPEC §5.2): DTCM (zero-wait, 128 KB) is for the hottest
-// small buffers (input diffusers, companion plate); IV_DTCM below places a
+// small buffers (input diffusers, the twin's diffusers); IV_DTCM below places a
 // buffer there. .dtcmram_bss is NOLOAD (startup doesn't zero it), so whoever
 // uses it clears it first. The long tank lines go to SDRAM (M1). The M0
 // Engine is a passthrough and has no buffers yet.

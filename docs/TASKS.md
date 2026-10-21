@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 21 Oct 2026, end of session 1 (M1, M4–M7 built; freeze confirmation page `renders/freeze_twin` waiting on you; `tools/render_review_pages.sh` remakes every page).
+**Last updated:** 21 Oct 2026 (freeze settled on the twin; REVERSE pick waiting on `renders/reverse_options`; every page re-rendered from the same build by `tools/render_review_pages.sh`).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
@@ -9,11 +9,11 @@
 - [ ] **M1 listening: the Hall** (`renders/m1_hall/index.html`, open in a browser): warm and smooth, never metallic? Does SIZE go from big room to huge, and DECAY from short to infinite, the way you want? TONE dark / noon / bright. Notes or picks via "Copy results for Claude". It's the bare tank: no ERA colour, DRIFT or saturation yet.
 - [ ] **M4 listening (again, after your notes)** (`renders/m4_massive/index.html`): MASSIVE now starts with what you play and swells from there (it was silent for 1.2 s), SIZE fully CCW is a wash instead of rhythmic echoes, and DARKEN lets go sooner. Does MASSIVE feel connected to the source now? Is the smallest SIZE still big enough?
 - [ ] **Decide: REVERSE** (`renders/reverse_options/index.html`, level-matched, picks): A today's (pieces that rise to a cut, what you heard as choppy) or B smooth (overlapping, faded backwards pieces, no cuts).
-- [ ] **Confirm: playing over a frozen pad** (`renders/freeze_twin/index.html`, level-matched, picks): you picked B (feed the pad) on every card and asked for it subtler, receding back to the frozen pad. **A** is B as you picked it; **B** is the twin: what you play goes into a twin of the frozen tank (same space, its own decay), heard beside the untouched pad and receding; holding paints it in. The steep drop on unfreeze is fixed in both. Still to fix after your pick: the upper resonance building in frozen MASSIVE, and the PLATE's two early repeats on skank.
+- [x] ~~Confirm: playing over a frozen pad~~ (21 Oct): B, the twin, on every card. Done: it's the only behaviour now, quieter (−10.5 dB), and painting adds only a little (~1 dB, it was 7 dB). Hear it on the M5 page below.
 - [x] ~~M4 listening~~ (21 Oct): your notes are in. Fixed: MASSIVE's late start, SIZE 0's rhythmic echoes; REVERSE has a smooth option to pick.
 - [x] ~~Decide: playing over a frozen pad~~ (21 Oct): B (feed the pad) on every card; notes acted on in the twin version above.
 - [x] ~~M5 listening~~ (21 Oct): your notes are in. Fixed: the PLATE's left-channel static at large SIZE (a bug), the seasick PLATE freeze, MASSIVE paint repeats, DARKEN dwelling between skanks. M5 and M7 pages re-rendered.
-- [ ] **M5 listening (again, after the fixes): PLATE, freeze and paint** (`renders/m5_plate_freeze/index.html`): does the PLATE sound like ours, not a stock Dattorro? Is playing over a frozen pad (through the companion) what you pictured, and does paint blend the way you want?
+- [ ] **M5 listening (again, with the twin): PLATE, freeze and paint** (`renders/m5_plate_freeze/index.html`): does the PLATE sound like ours, not a stock Dattorro? Is your playing over a frozen pad a subtle layer that fades back out? Does paint now add just a little? Still on my list: the resonance building in a frozen MASSIVE, and the PLATE's two early repeats on skank.
 - [ ] **M6 listening: ERA, DRIFT, TONE** (`renders/m6_character/index.html`): does ERA feel like going back in time, stage by stage? Is DRIFT's tape side and Cathedra side what you hear in your head? TONE's bright end now lets the highs outlast the lows. All numbers are starting guesses for you to tune.
 - [ ] **M7 listening: DARKEN** (`renders/m7_duck/index.html`): at infinite DECAY the tail darkens and dips while you play and brightens back when you stop. Too much, too little, too slow?
 - [ ] **Approve or reject (ADR 0008 amendment):** infinite tails and frozen pads get a small, capped "makeup" that lifts a sagging held tail back to its own level (never above, ≤ 0.3 dB/s). Without it, infinite tails with tape wow fade out over ~10 minutes. It's the one place the loop gain may go a hair over 1.

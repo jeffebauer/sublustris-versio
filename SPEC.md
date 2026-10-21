@@ -6,6 +6,7 @@
 **Status:** Spec **v1.0 (frozen)**, 21 Oct 2026. Input: `IMMENSIO_BRIEF.md`. Vocabulary: `CONTEXT.md`. Decisions: `docs/adr/` (0001–0017; index in `docs/adr/README.md`). Session record: `docs/spec-session.md`. Changes after freeze: new ADR + changelog entry. Numbers marked *(start)* are starting guesses; tuned numbers replace them as milestones confirm them.
 
 ### Changelog
+- v1.0.7 — owner's freeze picks (21 Oct 2026; ADR 0009, 0010 amendments): **the twin replaces the companion.** Playing over a frozen pad goes into a twin of the big tank (the same space, SIZE and DECAY playing it, no predelay or swell), heard at −10.5 dB as "a more subtle layer on top of the frozen pad, not the main focus", always fading within 8 s so the pad returns to what it was. **Painting** copies a little of the twin into the pad (never the raw input) and eases off as the pad nears 1.5 dB over its frozen level (it grew 7 dB before: "once it's painted into the pad, it becomes dominant"); a painted pad then settles without a ceiling, like a fresh one (held to the paint headroom, the makeup kept lifting it). Unfreeze no longer drops (the governor weight doesn't glide with the freeze). The companion plate, its DTCM (84 KB) and the freeze-voicing prototypes are gone.
 - v1.0.6 — owner's M4 listening notes (21 Oct 2026; ADR 0007 and 0015 amendments): **MASSIVE starts with the source:** besides each line's end, its output reads three **early taps** partway along every line (louder the later they sit; output only, the loop is unchanged), and its SIZE predelay is 0 → 100 ms (was 500 ms): after a hit the wet starts in 0.13–0.35 s (was 1.17 s at SIZE 0.7) and swells over up to ~1 s; BLOOM can lengthen that swell but not make it shorter than MASSIVE's build. **No rhythmic echoes at SIZE 0** ("too rhythmic and distracting"): spread 0.4 → 1, diffusion 0.45 → 1 (was 0.08 and 0.15); every SIZE is a wash, SIZE sets how long and how big (spikiness 0.3–0.7 dB, HALL's level). MASSIVE's trim is −4.4 dB (the taps add level). **Pending the owner's pick** (`renders/reverse_options`): REVERSE as today's pieces that rise to a cut, or two overlapping faded backwards readers with no cuts.
 - v1.0.5 — owner's M5 listening notes (21 Oct 2026): **bug fixed:** the PLATE's left output read one tap past the end of its line, so at full SIZE it clicked once a lap ("rhythmic flickering static in the left channel"); the taps now follow Dattorro's table (each output starts from the other branch) and a compile-time check keeps every tap inside its line. A frozen PLATE's chorus drops to 15 % depth (it piled up into a seasick wobble); a frozen MASSIVE goes to full in-loop diffusion (painted material came back as audible repeats); DARKEN's release is 150 ms (0.4 s dwelt between skanks). **Pending the owner's pick** (`renders/freeze_options`): how playing over a frozen pad works: the companion plate on top (today, ADR 0009/0010), the input feeding the pad itself, or both.
 - v1.0.4 — M7 build (21 Oct 2026): DARKEN is a two-pole low-pass on the **wet output**, not in the loop: a loop filter takes the highs for good, and §4.9 asks for a tail that "brightens back when you stop" (measured: the wet's > 4 kHz share 4 % while playing, 31 % a second after); no ducking while frozen (playing over a pad mustn't darken it). The soft limiter holds the wet at −1 dBFS and reports its gain to the LEDs. In-loop allpass-interpolated reads keep their fraction in [0.5, 1.5) (Dattorro): with the fraction near 0 the interpolator's pole sat by Nyquist and a moving read leaked energy into the top octave (a frozen MASSIVE pad's share above 12 kHz doubled in 5 min; now steady).
@@ -88,11 +89,11 @@ Ducking has no switch: it is always DARKEN (ADR 0014, from the demos).
 True stereo in (ADR 0013): L and R enter the tank at different points. Mono on L reaches both sides via the hardware normal. Outputs are not normalled.
 
 ### Button + Gate (one gesture reader, ADR 0009–0011)
-- **Tap** (press < 0.3 s) **latches the freeze.** The big tank becomes a still pad (ADR 0009); the input moves to the small companion reverb, which Size and Decay now play. Tap again to unfreeze: the pad decays naturally, and the big tank glides to the current Size and Decay over ~1 s (ADR 0009).
+- **Tap** (press < 0.3 s) **latches the freeze.** The big tank becomes a still pad (ADR 0009); the input moves to the **twin**, a second tank of the same space whose sound is a quieter layer over the pad and fades back out (Size and Decay play it; v1.0.7). Tap again to unfreeze: the pad decays naturally, and the big tank glides to the current Size and Decay over ~1 s (ADR 0009).
 - **Timing:** freeze engages **on the press** (no latency, so you catch the chord). While frozen, a press opens a 0.3 s window. Released inside it: unfreeze on release. Still held at 0.3 s: **paint**.
-- **Hold to paint** (while frozen): what is playing, through the companion, blends into the pad over ~3 s *(start)*; on release the pad keeps the new layers. With no hold, the pad is untouched.
+- **Hold to paint** (while frozen): a little of the twin (what is playing) blends into the pad over ~3 s *(start)*, at most ~1.5 dB, so the pad stays itself; on release the pad keeps the new layers. With no hold, the pad is untouched (v1.0.7).
 - **Gate = the same gestures:** a rising edge is a press, a falling edge is a release. A short pulse toggles; a gate held over 0.3 s while frozen paints. Unpatched, the gate reads low and does nothing.
-- Ramps *(start)*: input to the big tank closes over 20 ms on freeze; the in-loop colour glides out over 0.2 s; the companion fades in over 20 ms.
+- Ramps *(start)*: input to the big tank closes over 20 ms on freeze; the in-loop colour glides out over 0.2 s; the twin's input opens over 20 ms.
 
 ### LEDs (ADR 0016)
 Level meters as Resilio (ADR 0031): LED 1–2 In L / In R, LED 3–4 Out L / Out R, green → amber with level, red on clip or limiter. When frozen, the output pair turns cool blue under the meter; painting pulses it slowly (~1 Hz).
@@ -124,17 +125,17 @@ Level meters as Resilio (ADR 0031): LED 1–2 In L / In R, LED 3–4 Out L / Out
          │                                   │
          │                     tank out ─► REVERSE segmenter (ATTACK = REVERSE, §4.11)
          │                                   │
-         └─frozen──► COMPANION plate ─(paint)─┘ (blends into frozen pad)
+         └─frozen──► TWIN tank (same space) ─(paint, a little)─┘ (into the frozen pad)
                           │
-   tank out + companion out ─► ERA output layer (μ-law 24 kHz / 12→10-bit)
+   tank out + twin out (−10.5 dB) ─► ERA output layer (μ-law 24 kHz / 12→10-bit)
                           ─► output limiter ─► MIX (equal-power) ◄── dry
                           ─► Out L/R
 ```
 
-### 4.2 Plate engine (also the freeze companion)
+### 4.2 Plate engine
 - Dattorro-family figure-8 tank: input diffusers, 2 cross-coupled branches of modulated allpasses and delays, damping, multi-tap stereo output. Written from the 1997 paper; **no Plateau Versio code** (it is GPL-3.0).
 - What makes it ours: every delay is modulated (floor + DRIFT), and the loop carries the full character chain (Tone, saturation, Era).
-- **Companion:** the same code at scale 0.4 *(start)*, with its own state, always in DTCM. Its Size and Decay come from the knobs while frozen: scale 0.25 → 0.6, T60 0.3 → 6 s. It has no in-loop Era; the output μ-law still applies.
+- **Twin (v1.0.7, replaces the companion):** while frozen, a second Plate (or FDN, per SPACE) of the same code takes the input; Size and Decay play it, its T60 at most 8 s; it has the knobs' ERA and DRIFT. SDRAM, like the big tank.
 
 ### 4.3 FDN engine (Hall and Massive)
 - **8 lines** *(start; 16 is a stretch goal, decided at M3)*. Mixed feedforward + feedback as Costello describes. Householder or Hadamard feedback matrix (fast 8-point Walsh transform, 24 add/sub).
@@ -204,7 +205,7 @@ Era's μ-law layer (wet only) → soft limiter (ceiling −1 dBFS, Resilio-style
 | FDN matrix (8-pt Walsh) | ~30 | |
 | Loop chain × 8 (tilt, damping, saturation) | ~250 | cheap soft clip, `Select.h` VSEL |
 | ERA in loop (Neve/Cassette cheap; Midiverb box × 8) | ~350 | worst case, Era at full |
-| Companion plate (when frozen) | ~300 | DTCM |
+| Twin tank (when frozen) | ~ the big tank's | SDRAM; frozen pad + twin is the worst case (M3 measures it) |
 | Output μ-law box (stereo) + limiter + mix | ~200 | Resilio `OutputBits` scale |
 | Control-rate work (amortised) | ~150 | LFOs, coefficient redesigns, governor |
 | **Total (Massive, Era full, BLOOM, frozen + painting)** | **~2,080 → ×2 ≈ 4,200 (≈ 42 %)** | leaves room; 16 lines decided at M3 |
@@ -220,7 +221,7 @@ Plate mode ~1,500 × 2 ≈ 30 %. Mitigations, if short: stagger coefficient rede
 | Predelay (stereo, 0.75 s: Size + TIME) | ~0.3 MB | SDRAM | |
 | REVERSE segments (2 × 2 s, stereo) | ~0.75 MB | SDRAM | |
 | Plate engine (scale up to 1.6, stereo taps) | ~150 KB | AXI SRAM | random-ish taps; internal is faster than SDRAM |
-| Companion plate (scale ≤ 0.6) | ~55 KB | DTCM | always-ready, zero-wait |
+| Twin tank (an FDN and a Plate, as the big tank) | ~3.5 MB | SDRAM | runs only while frozen (v1.0.7) |
 | Input diffusers | ~20 KB | DTCM | hottest loop |
 | Filter states, Era boxes, μ-law, LFOs | < 8 KB | DTCM | |
 | Stack, HAL/USB buffers | as libDaisy | AXI SRAM | (Resilio moved its pool to DTCM and kept the stack in AXI) |
@@ -283,7 +284,7 @@ immensio-versio/
 - [A] Infinite: a 10-minute render at Decay 1 holds the floor (RMS within ±3 dB of the target, no growth, no NaN), in every Era stage.
 - [L] CygnusX1 / DarkMatter / BensonArizona / Ice Floe "family": a slab with mass that swells in (NORMAL's gentle mass, and BLOOM for the slow Sagittarius / Andromeda swells).
 
-### M5 — Plate + companion + freeze/paint
+### M5 — Plate + twin + freeze/paint
 - [A] Gesture reader (button and gate share tests): tap < 0.3 s toggles, freeze engages on press, a hold ≥ 0.3 s while frozen paints, pulses from a sequencer, bounces.
 - [A] Freeze: the pad's level stays within ±0.5 dB over 5 min (from 25 s after the freeze, v1.0.2) with in-loop colour bypassed, and its pitch is stable (pitch tracker). Unfreeze glide has no clicks.
 - [A] SPACE flips mid-tail: no clicks, and the loudness of Plate/Hall/Massive is within ±1.5 dB.

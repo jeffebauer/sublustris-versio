@@ -54,7 +54,7 @@ cat > $SRC/freeze_vibes.json <<'EOF'
 { "buttons": [[2.4, 2.5], [6.0, 9.5], [14.5, 14.6]] }
 EOF
 
-# r <page> <folder> <tag> <auto prefix or ""> --set ...   (env IV_FREEZE_VOICING passes through)
+# r <page> <folder> <tag> <auto prefix or ""> --set ...   (env vars such as IV_REVERSE_SMOOTH pass through)
 r() {
     local page=$1 dir=$2 tag=$3 auto=$4; shift 4
     mkdir -p renders/$page/$dir
@@ -151,11 +151,12 @@ if on m5_plate_freeze; then
     r m5_plate_freeze freeze C_massive_freeze freeze_only --set space=MASSIVE --set size=0.7 --set decay=0.6
     r m5_plate_freeze paint A_hall_paint freeze --set space=HALL --set size=0.7 --set decay=0.6
     r m5_plate_freeze paint B_massive_paint freeze --set space=MASSIVE --set size=0.7 --set decay=0.6
-    finish m5_plate_freeze "Immensio M5: PLATE, freeze and paint" "The PLATE; freeze (a tap freezes the tank into a still pad, the rest plays over it through the small companion reverb, a second tap unfreezes); paint (a long hold while frozen blends what's playing into the pad). ERA at its default (a touch of Neve).
+    r m5_plate_freeze paint C_plate_paint freeze --set space=PLATE --set size=0.7 --set decay=0.6
+    finish m5_plate_freeze "Immensio M5: PLATE, freeze and paint" "The PLATE; freeze, now the twin you picked: a tap freezes the tank into a still pad, and what you play goes into a twin of it, a quieter layer over the pad that fades back out when you stop, leaving the pad as it was; a second tap unfreezes. Paint (a long hold while frozen) blends a little of that layer into the pad, never more than ~1.5 dB, so the pad stays itself. ERA at its default (a touch of Neve).
 
 plate    the PLATE from small and short to large and infinite
-freeze   a tap freezes; the rest plays over the pad; a tap unfreezes
-paint    freeze, then a long hold while frozen blends the playing into the pad
+freeze   a tap freezes; your playing is a layer over the pad, then fades back out; a tap unfreezes
+paint    freeze, then a long hold while frozen blends a little of your playing into the pad
 
 A_small_short     PLATE, SIZE CCW, DECAY 0.3
 B_medium          PLATE, SIZE noon, DECAY 0.5
@@ -165,7 +166,8 @@ A_plate_freeze    freeze in PLATE
 B_hall_freeze     freeze in HALL
 C_massive_freeze  freeze in MASSIVE
 A_hall_paint      freeze + paint in HALL
-B_massive_paint   freeze + paint in MASSIVE"
+B_massive_paint   freeze + paint in MASSIVE
+C_plate_paint     freeze + paint in PLATE"
 fi
 
 if on m6_character; then
@@ -219,46 +221,6 @@ C_full_duck      DECAY 1 (infinite, full ducking)"
 fi
 
 # ---- Decision pages (built WITHOUT --showcase: they ask the owner to pick) -------------------
-
-if on freeze_options; then
-    page freeze_options
-    for sp in HALL MASSIVE PLATE; do
-        for fv in 0:A_companion 1:B_feed 2:C_both; do
-            IV_FREEZE_VOICING=${fv%%:*} r freeze_options ${(L)sp} ${fv##*:} freeze --set space=$sp --set size=0.7 --set decay=0.6
-        done
-    done
-    print -r -- "How should playing over a frozen pad work? (Owner, M5: \"the frozen reverb and the secondary reverb sound too disparate... maybe the input should influence the frozen buffer\".) Each clip: a tap freezes, the rest plays over the pad, a long hold paints (vibes 6-9.5 s, skank 9-12 s), a tap unfreezes. Pick the one that feels most like one instrument.
-
-hall      in HALL (SIZE 0.7, DECAY 0.6)
-massive   in MASSIVE (SIZE 0.7, DECAY 0.6)
-plate     in PLATE (SIZE 0.7, DECAY 0.6)
-
-A_companion  today: what you play gets its own small plate reverb, on top of the pad
-B_feed       what you play goes into the frozen pad itself, gently (no second reverb); holding feeds it fully
-C_both       B, plus the small plate at half level" > renders/freeze_options/README.txt
-    # Level-matched by default: B and C run 1.5-7 dB hotter than A, and louder must not win.
-    python3 tools/review/make_review.py renders/freeze_options --title "Immensio: playing over a frozen pad" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/freeze_options/index.html"
-fi
-
-if on freeze_twin; then
-    page freeze_twin
-    for sp in HALL MASSIVE PLATE; do
-        for fv in 1:A_feed_as_picked 3:B_twin_recedes; do
-            IV_FREEZE_VOICING=${fv%%:*} r freeze_twin ${(L)sp} ${fv##*:} freeze --set space=$sp --set size=0.7 --set decay=0.6
-        done
-    done
-    print -r -- "Confirming your pick (B, feed the pad) with your notes applied: subtler, receding back to the frozen pad, no predelay on what you play, no drop on unfreeze. A is B as you picked it; B is the twin: what you play goes into a twin of the frozen tank (same space and colour, its own decay), heard beside the untouched pad, receding; holding paints it into the pad. Freeze 2.4 s / 3 s, paint 6-9.5 s / 9-12 s, unfreeze 14.5 s / 18 s.
-
-hall      in HALL (SIZE 0.7, DECAY 0.6)
-massive   in MASSIVE (SIZE 0.7, DECAY 0.6)
-plate     in PLATE (SIZE 0.7, DECAY 0.6)
-
-A_feed_as_picked   the input feeds the frozen pad (what you picked)
-B_twin_recedes     the twin: subtler, recedes back to the pad" > renders/freeze_twin/README.txt
-    python3 tools/review/make_review.py renders/freeze_twin --title "Immensio: freeze, confirming the pick" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/freeze_twin/index.html"
-fi
 
 if on reverse_options; then
     page reverse_options

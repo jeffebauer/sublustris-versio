@@ -87,9 +87,6 @@ inline float reverseSeconds(float v) { return expLerp(0.2f, 2.0f, v); }
 
 // SIZE (P5) in PLATE: the tank's scale, 0.5 → 1.6 of Dattorro's (SPEC §3).
 inline float plateScale(float v) { return expLerp(voicing::kPlateMinScale, voicing::kPlateMaxScale, v); }
-// While frozen, SIZE and DECAY play the companion (ADR 0009, SPEC §4.2).
-inline float companionScale(float v) { return expLerp(voicing::kCompanionMinScale, voicing::kCompanionMaxScale, v); }
-inline float companionDecayRate(float v) { return 1.0f / expLerp(voicing::kCompanionT60Min, voicing::kCompanionT60Max, v); }
 
 // DRIFT (P6), bipolar (ADR 0012) + ERA's cassette wow/flutter (SPEC §4.7).
 inline dsp::DriftAmounts driftAmounts(float drift, float cassette)

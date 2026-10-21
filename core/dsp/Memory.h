@@ -101,7 +101,7 @@ struct DelayLine {
 };
 
 // A ring buffer of exactly the length asked for (no power-of-two rounding),
-// for memory-tight places (the Plate and its companion, SPEC §5.2): the
+// for memory-tight places (the Plate and its twin, SPEC §5.2): the
 // wrap costs a compare instead of a mask.
 struct ExactLine {
     float*   buf  = nullptr;

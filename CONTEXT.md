@@ -5,9 +5,9 @@ Shared vocabulary for this project. Use these terms exactly in code, comments an
 | Term | Meaning |
 |---|---|
 | **Big tank** | The main reverb: the Plate engine or the FDN (Hall / Massive), per SPACE. Only one runs at a time. |
-| **Companion** | The small Plate (same code as the Plate engine, scale ≤ 0.6) that takes the input while the big tank is frozen. Size and Decay play it while frozen. Lives in DTCM. |
+| **Twin** | A second tank of the frozen space (an FDN or a Plate, the same code) that takes the input while the big tank is frozen: a quieter layer over the pad that fades back out within 8 s. Size and Decay play it while frozen. Replaced the **companion** (a small DTCM plate) in v1.0.7. |
 | **Freeze / pad** | The big tank held at loop gain 1, input closed, in-loop colour bypassed: a still pad to play over. Latched by a tap. |
-| **Paint** | While frozen, holding the button (or a long gate) blends the companion's sound into the pad over ~3 s; the pad keeps it on release. |
+| **Paint** | While frozen, holding the button (or a long gate) blends a little of the twin into the pad over ~3 s (at most ~1.5 dB); the pad keeps it on release. |
 | **Gesture reader** | One reader for the button and the gate: press < 0.3 s = tap (toggle freeze), hold ≥ 0.3 s while frozen = paint. Freeze engages on the press. |
 | **FDN** | Feedback delay network: 8 modulated delay lines mixed by a matrix. The Hall and Massive voicings. |
 | **Swell stage** | The feedforward cascade before the tank that makes a slow attack: BLOOM in every space, and Massive's built-in mass in NORMAL. |

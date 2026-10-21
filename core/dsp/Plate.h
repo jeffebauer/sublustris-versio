@@ -10,7 +10,7 @@
 // bend), every loss is a Jot absorbent filter set from DECAY and TONE like
 // the FDN's, the floor governor holds infinite tails (ADR 0008), and L and
 // R enter different branches (true stereo in, ADR 0013). The same code at a
-// small size is the freeze companion (CONTEXT "Companion").
+// twin is a second Plate of the same size while frozen (CONTEXT "Twin").
 #include "dsp/Drift.h"
 #include "dsp/Era.h"
 #include "dsp/Governor.h"
@@ -37,8 +37,8 @@ public:
     static constexpr int kControlBlock = 32;
 
     // Floats of delay memory prepare() takes for a largest scale of maxScale;
-    // colour: ERA and DRIFT in the loop (the big Plate; not the companion,
-    // which has no room for DRIFT's swing in DTCM, SPEC §5.2).
+    // colour: ERA and DRIFT in the loop (the big Plate and the twin; false
+    // leaves out DRIFT's swing room, for a small Plate in DTCM, SPEC §5.2).
     static constexpr size_t memoryFloats(float sampleRate, float maxScale, bool colour)
     {
         const float k = maxScale * sampleRate / plate::kPaperRate;
