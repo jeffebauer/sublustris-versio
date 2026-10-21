@@ -75,7 +75,12 @@ select.ctl { padding: 6px 8px; }
 .toggle.blend { gap: 8px; font-weight: 650; }
 .toggle.blend input { width: 160px; accent-color: var(--g1); }
 .toggle.blend .blendend { font-weight: 400; font-size: 12.5px; color: var(--muted); }
-.toggle.blend output { font-variant-numeric: tabular-nums; min-width: 6ch; font-weight: 600; }
+/* The readout is the number only, at a fixed width: a label that came and went as the fader passed
+   noon made the sticky bar reflow while dragging. Noon is a notch on the track instead. */
+.toggle.blend output { font-variant-numeric: tabular-nums; display: inline-block; width: 5ch; text-align: right; white-space: nowrap; font-weight: 600; }
+.blendrange { position: relative; display: inline-flex; align-items: center; }
+.blendrange::after { content: ""; position: absolute; left: 50%; top: 50%; width: 2px; height: 14px; margin: -7px 0 0 -1px;
+  background: var(--muted); border-radius: 1px; pointer-events: none; opacity: 0.7; }
 
 .legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; margin: 12px 0 22px; }
 .legend div { background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--vc); border-radius: 8px;
@@ -95,7 +100,10 @@ select.ctl { padding: 6px 8px; }
 .band { background: var(--ac); color: var(--on-accent); padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
 .band .att { font-weight: 800; letter-spacing: 0.06em; font-size: 15px; text-transform: uppercase; }
 .band .what { font-size: 13px; opacity: 0.95; }
-.body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+.body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+/* The picture and the controls sit at the bottom of every card, so they line up across columns
+   however many versions a card lists. */
+.bottom { margin-top: auto; display: flex; flex-direction: column; gap: 6px; padding-top: 4px; }
 
 .voices { display: grid; grid-template-columns: 1fr; gap: 5px; }
 .voice { display: flex; align-items: center; gap: 10px; width: 100%; border: 1px solid var(--line); background: var(--chip);
@@ -120,7 +128,13 @@ select.ctl { padding: 6px 8px; }
 .ctl.play { background: var(--ink); color: var(--panel); border-color: var(--ink); min-width: 84px; font-weight: 650; }
 .ctl.loopchip { background: var(--loop); border-color: transparent; }
 .time { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; margin-left: auto; }
-.scrub { width: 100%; accent-color: var(--ac); margin: 0; }
+/* Chapters, like a chaptered video: the progress bar in segments, one per passage of the music. */
+.chapters { display: flex; gap: 3px; align-items: center; height: 14px; cursor: pointer; touch-action: none; }
+.chap { flex: 1 1 0; height: 4px; background: var(--line); border-radius: 2px; position: relative; overflow: hidden; transition: height 0.12s; }
+.chapters:hover .chap, .chapters:focus-visible .chap { height: 8px; }
+.chap .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--ac); }
+.chapters:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+.chname { font-size: 13px; font-weight: 650; }
 .reveal { font-size: 12.5px; color: var(--muted); }
 .reveal:empty { display: none; }
 
@@ -157,7 +171,8 @@ kbd { background: var(--chip); border: 1px solid var(--line); border-radius: 4px
     <span class="tlabel">Switch every card to</span>
     <div class="seg" id="global"></div>
     <label class="toggle blend" id="blendwrap" hidden title="Dry/wet for every card, live, as the module's MIX knob (equal-power: noon is an even blend). Keys: [ and ]">
-      MIX <span class="blendend">dry</span><input type="range" id="blend" min="0" max="100" step="1" value="50" aria-label="MIX, dry to wet"><span class="blendend">wet</span>
+      MIX <span class="blendend">dry</span><span class="blendrange"><input type="range" id="blend" min="0" max="100" step="1" value="50" aria-label="MIX, dry to wet" list="blendnoon"></span><span class="blendend">wet</span>
+      <datalist id="blendnoon"><option value="50"></option></datalist>
       <output id="blendval">50 %</output></label>
     <label class="toggle" id="lmwrap"><input type="checkbox" id="levelmatch"> Level-match</label>
     <label class="toggle" id="blindwrap"><input type="checkbox" id="blind"> Blind (hide and shuffle)</label>
@@ -213,8 +228,9 @@ const howto = [
 const BLEND = !!DATA.wetOnly && anyDry;   // versions are 100 % wet: the page mixes in the dry
 if (BLEND) howto.push("<b>MIX</b> in the top bar sets dry/wet for every card, live, as the module's knob does (equal-power: 50 % is an even blend). Try a few balances: a tail can work at 30 % and swamp at 70 %.");
 if (anyDry) howto.push("<b>Dry</b> (<kbd>0</kbd>) is the input alone, no reverb, for reference.");
-if (DATA.rows.some(r => r.marks.length)) howto.push("The jump buttons start at a passage; <b>drag across a card's picture</b> to loop just that stretch, click it to jump.");
-else howto.push("<b>Drag across a card's picture</b> to loop a stretch, click it to jump.");
+howto.push("Cards in a row share one position: switch to another column and it carries on from the same moment.");
+howto.push((DATA.rows.some(r => r.marks.length) ? "The bar under each picture is in chapters (hover for names): click one to jump there. " : "") +
+  "<b>Drag across a picture</b> to loop just that stretch, in every card of the row; <kbd>Esc</kbd> stops looping.");
 howto.push(CHOICES ? "Pick the version you prefer in each card, add notes, then <b>Copy results for Claude</b>."
                    : "Nothing to choose: notes are welcome per column, then <b>Copy notes for Claude</b>.");
 $("howtolist").innerHTML = howto.map(h => `<li>${h}</li>`).join("");
@@ -362,7 +378,14 @@ const maxVariants = Math.max(1, ...Object.values(DATA.panels).map(p => p.variant
 
 function makeGroup(row, col, panel, key) {
   const g = { key, row, col, panel, sel: 0, playing: false, loading: false, order: panel.variants.map((_, i) => i),
-              ref: null, region: null, pos: 0, nodes: null, prev: null, bufs: null };
+              ref: null, nodes: null, prev: null, bufs: null };
+  // Every card in a row plays the same music, so the row shares one position and one loop: moving
+  // to another column carries on from the same moment, and every playhead in the row moves together.
+  const S = row.sync || (row.sync = { pos: 0, region: null });
+  Object.defineProperty(g, "pos", { get: () => S.pos, set: v => { S.pos = v; } });
+  Object.defineProperty(g, "region", { get: () => S.region, set: v => { S.region = v; } });
+  const rowPeers = () => groups.filter(o => o.row === row);
+  const rowPlaying = () => rowPeers().find(o => o.playing && o.nodes);
   const n = panel.variants.length;
   const dry = row.dry ? DATA.items[row.dry] : null;
   const DRY = n;                      // voice index of the dry input
@@ -372,26 +395,38 @@ function makeGroup(row, col, panel, key) {
   const bandMain = col.name || row.name || DATA.title;
   const bandSub = [col.what, col.name && row.name ? "· " + row.name : ""].filter(Boolean).join(" ");
   const hasSpec = panel.variants.some(v => DATA.items[v.item].spec);
+  // Chapters from the material's marks (a first mark within 2 s starts at 0; otherwise an unnamed
+  // opening chapter).
+  const chapters = (() => {
+    const m = row.marks.map(x => [x[0], +x[1]]).sort((a, b) => a[1] - b[1]);
+    if (!m.length) return [["", 0]];
+    if (m[0][1] < 2) m[0][1] = 0; else m.unshift(["", 0]);
+    return m;
+  })();
   cell.innerHTML = `
     <div class="band"><span class="att">${esc(bandMain)}</span>${bandSub ? `<span class="what">${esc(bandSub)}</span>` : ""}</div>
     <div class="body">
       ${panel.chips.length ? `<div class="chips">${panel.chips.map(chipHtml).join("")}</div>` : ""}
       <div class="voices"></div>
-      <div class="specwrap"><canvas class="spec" aria-label="Picture of the selected version over time: click to jump, drag to loop a passage"></canvas>
-        <span class="spechint">${hasSpec ? "frequency over time · " : "level over time · "}drag to loop</span></div>
-      <div class="transport">
-        <button class="ctl play" type="button">Play</button>
-        ${row.marks.map(m => `<button class="ctl jump" type="button" data-t="${m[1]}">${esc(m[0])}</button>`).join("")}
-        <button class="ctl loopchip" type="button" hidden title="Stop looping this passage"></button>
-        <span class="time">0:00.0</span>
+      <div class="bottom">
+        <div class="specwrap"><canvas class="spec" aria-label="Picture of the selected version over time: click to jump, drag to loop a passage"></canvas>
+          <span class="spechint">${hasSpec ? "frequency over time · " : "level over time · "}drag to loop</span></div>
+        <div class="chapters" tabindex="0" role="slider" aria-label="Position: click a chapter to jump, drag to scrub" aria-valuemin="0" aria-valuemax="100">
+          ${chapters.map((c, i) => `<div class="chap" data-i="${i}" title="${esc(c[0] || "Start")}"><div class="fill"></div></div>`).join("")}</div>
+        <div class="transport">
+          <button class="ctl play" type="button">Play</button>
+          <span class="chname"></span>
+          <button class="ctl loopchip" type="button" hidden title="Stop looping this passage"></button>
+          <span class="time">0:00.0</span>
+        </div>
+        <div class="reveal"></div>
+        ${n > 1 && CHOICES ? `<div class="pick"><span class="pl">My pick</span></div>` : ""}
       </div>
-      <input class="scrub" type="range" min="0" max="1000" value="0" aria-label="Position">
-      <div class="reveal"></div>
-      ${n > 1 && CHOICES ? `<div class="pick"><span class="pl">My pick</span></div>` : ""}
     </div>`;
   g.el = cell;
   const voicesEl = cell.querySelector(".voices"), timeEl = cell.querySelector(".time"), loopChip = cell.querySelector(".loopchip");
-  const scrub = cell.querySelector(".scrub"), playBtn = cell.querySelector(".play"), revealEl = cell.querySelector(".reveal");
+  const chapEl = cell.querySelector(".chapters"), chapSegs = [...cell.querySelectorAll(".chap")], chname = cell.querySelector(".chname");
+  const playBtn = cell.querySelector(".play"), revealEl = cell.querySelector(".reveal");
   const pickEl = cell.querySelector(".pick"), canvas = cell.querySelector(".spec");
   g.pick = state.picks[key] != null && state.picks[key] < n ? state.picks[key] : null;
 
@@ -426,7 +461,7 @@ function makeGroup(row, col, panel, key) {
   // start at the boundary, so until then the previous lap still tells the time.
   const sounding = () => (g.prev && actx && actx.currentTime < g.nodes.startCtx ? g.prev : g.nodes);
   g.position = () => {
-    if (!g.playing || !g.nodes) return g.pos;
+    if (!g.playing || !g.nodes) { const p = rowPlaying(); return p && p !== g ? p.position() : g.pos; }
     const nodes = sounding();
     return Math.max(0, nodes.startPos + (actx.currentTime - nodes.startCtx));
   };
@@ -541,8 +576,9 @@ function makeGroup(row, col, panel, key) {
   g.seek = t => {
     const d = g.duration();
     g.pos = Math.max(0, Math.min(d || t, t));
-    if (g.playing) { stopNodes(); startAt(g.pos); }   // the old run fades out as the new one fades in
-    g.drawSpec();
+    const p = rowPlaying();
+    if (p) p.restartAt(g.pos);   // the old run fades out as the new one fades in
+    rowPeers().forEach(o => o.drawSpec());
   };
   g.restart = () => { if (g.playing) { const p = g.position(); stopNodes(); startAt(p); } };
   g.select = vi => {
@@ -578,11 +614,15 @@ function makeGroup(row, col, panel, key) {
   };
   g.setRegion = r => {
     g.region = r && r[1] - r[0] >= 0.05 ? r : null;
+    rowPeers().forEach(o => { o.showLoop(); o.drawSpec(); });
+    const p = rowPlaying();
+    if (p) { const at = g.region ? g.region[0] : p.position(); p.restartAt(at); }
+  };
+  g.showLoop = () => {
     loopChip.hidden = !g.region;
     if (g.region) loopChip.textContent = `Looping ${fmt(g.region[0])}–${fmt(g.region[1])} ✕`;
-    if (g.playing) { const p = g.region ? g.region[0] : g.position(); stopNodes(); startAt(p); }
-    g.drawSpec();
   };
+  g.restartAt = at => { if (g.playing) { stopNodes(); startAt(at); } };
   loopChip.addEventListener("click", () => g.setRegion(null));
   // Never disabled: a preload starts on focus (mouse-down), and a disabled button would swallow
   // the click that follows. "Loading…" only once Play was actually pressed.
@@ -676,6 +716,18 @@ function makeGroup(row, col, panel, key) {
       ctx.fillStyle = "rgba(255, 214, 102, 0.28)"; ctx.fillRect(X(reg[0]), 0, X(reg[1]) - X(reg[0]), canvas.height);
       ctx.fillStyle = "rgba(255, 214, 102, 0.9)"; ctx.fillRect(X(reg[0]), 0, dpr, canvas.height); ctx.fillRect(X(reg[1]) - dpr, 0, dpr, canvas.height);
     }
+    // Chapter marks: a thin line and the chapter's name at the top.
+    ctx.font = `${10.5 * dpr}px -apple-system, sans-serif`;
+    chapters.forEach((c, i) => {
+      if (i === 0 && !c[0]) return;
+      const cx = X(c[1]);
+      if (i > 0) { ctx.fillStyle = "rgba(255,255,255,0.45)"; ctx.fillRect(cx, 0, dpr, canvas.height); }
+      if (c[0]) {
+        const tw = ctx.measureText(c[0]).width + 6 * dpr;
+        ctx.fillStyle = "rgba(8,10,20,0.6)"; ctx.fillRect(cx + 2 * dpr, 2 * dpr, tw, 14 * dpr);
+        ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fillText(c[0], cx + 5 * dpr, 12.5 * dpr);
+      }
+    });
     const x = X(g.position());
     ctx.fillStyle = "rgba(255,255,255,0.95)";
     ctx.fillRect(Math.max(0, Math.min(canvas.width - 2 * dpr, x)), 0, 2 * dpr, canvas.height);
@@ -702,17 +754,45 @@ function makeGroup(row, col, panel, key) {
   });
 
   playBtn.addEventListener("click", () => { current = g; if (g.wantPlay) return; g.playing ? g.pause() : g.play(); });
-  cell.querySelectorAll(".jump").forEach(b => b.addEventListener("click", () => {
-    current = g; g.seek(Math.max(0, parseFloat(b.dataset.t) - 0.2)); if (!g.playing) g.play();
-  }));
-  let lastScrub = 0;
-  scrub.addEventListener("input", () => {
-    current = g;
-    const now = performance.now();
-    if (now - lastScrub < 60) return; // don't restart the audio on every pixel of a drag
-    lastScrub = now; g.seek((g.duration() || 0) * scrub.value / 1000);
+  // The chapter bar: segments sized by each chapter's length. A click jumps (snapping to a chapter's
+  // start when close to it), a drag scrubs; hovering shows the chapter's name.
+  const chapEnd = i => (i + 1 < chapters.length ? chapters[i + 1][1] : g.duration() || chapters[i][1] + 1);
+  g.layoutChapters = () => {
+    const d = g.duration();
+    if (!d || g.laidOut === d) return;
+    g.laidOut = d;
+    chapSegs.forEach((el, i) => { el.style.flexGrow = Math.max(0.01, chapEnd(i) - chapters[i][1]); });
+  };
+  const timeAtBar = e => {
+    // Segments are laid out by length (with small gaps), so find the one under the pointer.
+    const x = e.clientX;
+    for (let i = 0; i < chapSegs.length; i++) {
+      const r = chapSegs[i].getBoundingClientRect();
+      if (x <= r.right + 1.5 || i === chapSegs.length - 1) {
+        const f = Math.max(0, Math.min(1, (x - r.left) / r.width)), a = chapters[i][1], b = chapEnd(i);
+        return f < 0.03 ? a : a + f * (b - a);
+      }
+    }
+    return 0;
+  };
+  let barDrag = false, lastBar = 0;
+  chapEl.addEventListener("pointerdown", e => {
+    current = g; barDrag = true; chapEl.setPointerCapture(e.pointerId);
+    g.seek(timeAtBar(e)); if (!g.playing) g.play();
   });
-  scrub.addEventListener("change", () => g.seek((g.duration() || 0) * scrub.value / 1000));
+  chapEl.addEventListener("pointermove", e => {
+    if (!barDrag) return;
+    const now = performance.now();
+    if (now - lastBar < 60) return; // don't restart the audio on every pixel of a drag
+    lastBar = now; g.seek(timeAtBar(e));
+  });
+  chapEl.addEventListener("pointerup", () => { barDrag = false; });
+  chapEl.addEventListener("keydown", e => {
+    const i = chapterAt(g.position());
+    if (e.key === "ArrowRight" && i + 1 < chapters.length) { g.seek(chapters[i + 1][1]); e.preventDefault(); e.stopPropagation(); }
+    if (e.key === "ArrowLeft") { g.seek(chapters[Math.max(0, g.position() - chapters[i][1] < 1 ? i - 1 : i)][1]); e.preventDefault(); e.stopPropagation(); }
+  });
+  const chapterAt = t => { let i = 0; while (i + 1 < chapters.length && chapters[i + 1][1] <= t) i++; return i; };
   cell.addEventListener("pointerdown", () => { current = g; });
   // Start decoding as soon as the pointer reaches a card, so Play starts at once.
   const warm = () => { if (actx || navigator.userActivation && navigator.userActivation.hasBeenActive) g.ensureLoaded(); };
@@ -722,10 +802,20 @@ function makeGroup(row, col, panel, key) {
   g.tick = () => {
     const d = g.duration();
     if (g.playing && !loopEl.checked && !g.region && d && g.position() >= d) { g.pause(); g.pos = 0; }
-    const p = g.position();
-    timeEl.textContent = fmt(p) + (d ? " / " + fmt(d) : "");
-    if (d && document.activeElement !== scrub) scrub.value = Math.round(1000 * p / d);
-    if (g.playing || !g.drawn) { g.drawSpec(); g.drawn = !!canvas.clientWidth; }
+    const p = g.position(), live = !!rowPlaying();
+    g.layoutChapters();
+    if (live || !g.drawn || g.lastP !== p) {
+      g.lastP = p;
+      timeEl.textContent = fmt(p) + (d ? " / " + fmt(d) : "");
+      const ci = chapterAt(p);
+      chname.textContent = chapters.length > 1 || chapters[0][0] ? (chapters[ci][0] || "Start") : "";
+      chapSegs.forEach((el, i) => {
+        const a = chapters[i][1], b = chapEnd(i);
+        el.firstChild.style.width = (100 * Math.max(0, Math.min(1, (p - a) / Math.max(1e-6, b - a)))) + "%";
+      });
+      if (d) chapEl.setAttribute("aria-valuenow", Math.round(100 * p / d));
+      g.drawSpec(); g.drawn = !!canvas.clientWidth;
+    }
   };
   g.render();
   return g;
@@ -856,10 +946,7 @@ blindEl.addEventListener("change", () => {
 });
 lmEl.addEventListener("change", () => { state.levelMatch = lmEl.checked; save(); groups.forEach(g => g.render()); });
 loopEl.addEventListener("change", () => groups.forEach(g => g.restart()));
-function showBlend() {
-  const v = +blendEl.value;
-  blendVal.textContent = v + " %" + (v === 0 ? " · dry" : v === 100 ? " · wet" : v === 50 ? " · noon" : "");
-}
+function showBlend() { blendVal.textContent = blendEl.value + " %"; }
 if (BLEND) {
   $("blendwrap").hidden = false;
   blendEl.value = state.blend != null ? state.blend : 50;
