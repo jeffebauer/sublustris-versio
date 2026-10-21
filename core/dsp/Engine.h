@@ -75,6 +75,7 @@ public:
     bool  frozen() const { return gesture_.frozen(); }
     bool  painting() const { return gesture_.painting(); }
     // Freeze voicing prototype (SpaceVoicing.h): 0 companion, 1 feed the pad, 2 both, 3 the twin.
+    void  setReverseSmooth(bool on) { reverse_.setSmooth(on); } // PROTOTYPE, renders/reverse_options
     void  setFreezeVoicing(int v) { freezeVoicing_ = v < 0 ? 0 : (v > 3 ? 3 : v); }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }

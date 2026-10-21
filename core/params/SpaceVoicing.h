@@ -56,7 +56,14 @@ constexpr float kDiffuserRightScale = 1.071f;
 // range without it).
 constexpr float kFdnOutputGain      = 0.6f;
 constexpr float kFdnLevelRefSeconds = 0.1f;
-constexpr float kMassiveOutputTrim  = 0.68f; // −3.3 dB: MASSIVE matches HALL's loudness (test_massive)
+constexpr float kMassiveOutputTrim  = 0.60f; // −3.3 dB: MASSIVE matches HALL's loudness (test_massive)
+
+// Early taps (MASSIVE, M4 notes; Fdn::setEarlyTaps): kEarlyTaps reads
+// partway along each line, rising from kEarlyTapLow to 1 with their place,
+// at kEarlyTapLevel against the lines' ends. (start)
+constexpr int   kEarlyTaps     = 3;
+constexpr float kEarlyTapLow   = 0.3f;
+constexpr float kEarlyTapLevel = 0.5f;
 
 // In-loop diffusion (MASSIVE, ADR 0007): two allpasses inside each line,
 // coefficient kInLoopCoeff × SIZE's diffusion, so long lines blur into a

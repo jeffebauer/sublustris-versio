@@ -1,8 +1,8 @@
 // M4: MASSIVE and ATTACK (SPEC §4.4, §4.5, §4.11, §7 M4; ADR 0007, 0008,
 // 0013, 0015). BLOOM's rise follows TIME in every space; MASSIVE's gentle
-// built-in mass follows DECAY and SIZE; HALL in NORMAL attacks at once;
-// infinite tails hold a floor for 10 minutes without growing; MASSIVE's
-// SIZE goes from echoes to wash; REVERSE plays each segment backwards,
+// built-in mass follows DECAY and SIZE, starting soon after the source (M4
+// notes); HALL in NORMAL attacks at once; infinite tails hold a floor for
+// 10 minutes without growing; MASSIVE has no rhythmic echoes at any SIZE; REVERSE plays each segment backwards,
 // rising to its cut; SPACE flips are click-free; HALL and MASSIVE match in
 // loudness; MASSIVE is stable at every corner.
 
@@ -102,6 +102,38 @@ double riseSeconds(const Setting& s)
     return double(b - a) * 0.01;
 }
 
+// MASSIVE's swell is never shorter than asked (BLOOM's TIME, or its mass in
+// NORMAL), but its long lines take up to ~1 s to build however short the
+// ask (the early taps start it soon after the source, then the lines' ends
+// arrive): the owner, M4, "the attack is too short relative to the delay".
+constexpr double kMassiveBuildSeconds = 1.0;
+
+void checkRise(const char* what, double got, double want, bool massive)
+{
+    char msg[200];
+    if (!massive || want >= kMassiveBuildSeconds) {
+        std::snprintf(msg, sizeof msg, "%s: rise %.2f s, target %.2f s (within 20%%)", what, got, want);
+        check(std::fabs(got / want - 1.0) < 0.2, msg);
+    } else {
+        std::snprintf(msg, sizeof msg, "%s: rise %.2f s, at least 0.8 x %.2f s, at most %.1f s (MASSIVE's build)", what, got, want,
+                      1.2 * kMassiveBuildSeconds);
+        check(got > 0.8 * want && got < 1.2 * kMassiveBuildSeconds, msg);
+    }
+}
+
+// Time from a hit to the wet's first sound (−30 dB of its peak).
+double onsetSeconds(const Setting& s)
+{
+    std::vector<float> in(size_t(10.0f * kSr), 0.0f);
+    in[0] = 0.8f;
+    const auto e = envelope(render(in, s), 480);
+    double pk = 0.0;
+    for (double v : e) pk = std::max(pk, v);
+    for (size_t i = 0; i < e.size(); ++i)
+        if (e[i] > 0.0316 * pk) return double(i) * 0.01;
+    return 99.0;
+}
+
 void attackFollowsTime()
 {
     for (int space : {1, 2})
@@ -111,20 +143,26 @@ void attackFollowsTime()
             s.attack = 1;
             s.time = t;
             const double want = iv::map::bloomSeconds(t) * (space == 2 ? iv::map::massiveMass(s.size) : 1.0f);
-            const double got = riseSeconds(s);
-            char msg[160];
-            std::snprintf(msg, sizeof msg, "BLOOM in %s, TIME %.1f: rise %.2f s, target %.2f s (within 20%%)",
-                          space == 2 ? "MASSIVE" : "HALL", t, got, want);
-            check(std::fabs(got / want - 1.0) < 0.2, msg);
+            char what[60];
+            std::snprintf(what, sizeof what, "BLOOM in %s, TIME %.1f", space == 2 ? "MASSIVE" : "HALL", t);
+            checkRise(what, riseSeconds(s), want, space == 2);
         }
     for (float d : {0.0f, 0.7f}) {
         Setting s;
         s.space = 2;
         s.decay = d;
-        const double want = iv::map::massiveNormalAttackSeconds(d, s.size), got = riseSeconds(s);
-        char msg[160];
-        std::snprintf(msg, sizeof msg, "MASSIVE NORMAL mass at DECAY %.1f: rise %.2f s, target %.2f s (within 20%%)", d, got, want);
-        check(std::fabs(got / want - 1.0) < 0.2, msg);
+        char what[60];
+        std::snprintf(what, sizeof what, "MASSIVE NORMAL mass at DECAY %.1f", d);
+        checkRise(what, riseSeconds(s), iv::map::massiveNormalAttackSeconds(d, s.size), true);
+    }
+    for (float z : {0.0f, 0.7f, 1.0f}) {
+        Setting s;
+        s.space = 2;
+        s.size = z;
+        const double on = onsetSeconds(s);
+        char msg[120];
+        std::snprintf(msg, sizeof msg, "MASSIVE at SIZE %.1f starts %.2f s after a hit (< 0.4 s; was 1.17 s at 0.7)", z, on);
+        check(on < 0.4, msg);
     }
     Setting hall;
     const double h = riseSeconds(hall);
@@ -200,7 +238,7 @@ double spikinessDb(const Stereo& s)
     return std::sqrt(ss / double(n));
 }
 
-void echoesToWash()
+void noRhythmicEchoes()
 {
     std::vector<float> in(size_t(9.0f * kSr), 0.0f);
     in[1000] = 0.8f;
@@ -216,10 +254,10 @@ void echoesToWash()
         std::snprintf(buf, sizeof buf, " %.2f", sp.back());
         detail += buf;
     }
-    bool falling = true;
-    for (size_t i = 1; i < sp.size(); ++i) falling &= sp[i] < sp[i - 1] + 0.05;
-    check(falling && sp.front() > 2.0 && sp.back() < 0.6,
-          "MASSIVE SIZE 0 -> 1 goes from echoes to wash (spikiness dB:" + detail + "; > 2 at 0, < 0.6 at 1)");
+    // The owner, M4: "echoes (size 0) sounds bad... too rhythmic". Every SIZE is a wash now.
+    bool smooth = true;
+    for (double v : sp) smooth &= v < 1.0;
+    check(smooth, "MASSIVE has no rhythmic echoes at any SIZE (spikiness dB:" + detail + "; < 1 everywhere, was 2+ at SIZE 0)");
 }
 
 // REVERSE (ADR 0015): nothing for the first segment (the reversed wet is
@@ -336,7 +374,7 @@ int main()
 {
     attackFollowsTime();
     infiniteHoldsTheFloor();
-    echoesToWash();
+    noRhythmicEchoes();
     reverseSwells();
     spaceFlips();
     loudnessMatched();

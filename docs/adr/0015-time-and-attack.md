@@ -22,3 +22,5 @@
 - **Width** (mono / stereo / wide) for SW1.
 - A two-meaning switch (BLOOM / REVERSE only).
 - A reversed wash (short reversed input chunks fed into the tank) instead of the classic reverse swell.
+
+**Amendment (21 Oct 2026, owner's M4 listening notes, pending the owner's pick):** "Reverse is sounding really choppy and disjointed rather than an actual reversed reverb." Measured on the skank: the largest envelope step is 9.5 dB (the cuts). Prototype B plays two backwards readers half a segment apart, each faded in and out over its whole length (sin², summing to one): no cuts, largest step 4.5 dB, still TIME late. Page `renders/reverse_options` (A today, B smooth). If B wins, the per-sample sine becomes a table or recursive oscillator (CPU), the M4 "segments rise to their cut" test becomes "no cuts", and setSmooth / `IV_REVERSE_SMOOTH` go.

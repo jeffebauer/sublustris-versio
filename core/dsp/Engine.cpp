@@ -288,6 +288,7 @@ void Engine::applySpace(bool snap)
         const float diff = massive ? map::massiveDiffusion(size) : 0.0f;
         fdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : 0.0f);
         fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : 1.0f);
+        fdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
     }
 
     // ERA in the loop and DRIFT (SPEC §4.6, §4.7). Freezing glides the
@@ -378,6 +379,7 @@ void Engine::applySpace(bool snap)
             twinFdn_.setGovernor(0.0f);
             twinFdn_.setInLoopDiffusion(massive ? 1.0f : 0.0f);
             twinFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : 1.0f);
+            twinFdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
             twinFdn_.setEra(tEra);
             twinFdn_.setDrift(drift);
         }

@@ -110,7 +110,7 @@ fi
 
 if on m4_massive; then
     page m4_massive
-    for sz in 0:A_echoes 0.5:B_middle 1:C_wash; do
+    for sz in 0:A_smallest 0.5:B_middle 1:C_largest; do
         r m4_massive massive_size ${sz##*:} "" --set space=MASSIVE --set era=0 --set decay=0.7 --set size=${sz%%:*}
     done
     for sp in HALL MASSIVE; do
@@ -122,16 +122,16 @@ if on m4_massive; then
     done
     r m4_massive infinite A_hall "" --set space=HALL --set era=0 --set decay=1 --set size=0.7
     r m4_massive infinite B_massive "" --set space=MASSIVE --set era=0 --set decay=1 --set size=0.7
-    finish m4_massive "Immensio M4: MASSIVE and ATTACK" "MASSIVE's SIZE (echoes to wash), the four ATTACK settings in HALL and MASSIVE, and infinite DECAY (ERA clean). At infinite, DARKEN ducks the tail while you play.
+    finish m4_massive "Immensio M4: MASSIVE and ATTACK" "After your M4 notes: MASSIVE starts with what you play and swells from there (it was silent for over a second), SIZE fully CCW is a wash, not rhythmic echoes, and DARKEN lets go sooner between phrases. The four ATTACK settings in HALL and MASSIVE, and infinite DECAY (ERA clean). REVERSE here is today's; the smoother one is on renders/reverse_options.
 
-massive_size    MASSIVE's SIZE, DECAY 0.7: echoes to wash
+massive_size    MASSIVE's SIZE, DECAY 0.7
 attack_hall     the ATTACK switch in HALL
 attack_massive  the ATTACK switch in MASSIVE
 infinite        DECAY fully up, both FDN spaces
 
-A_echoes       MASSIVE, SIZE fully CCW
+A_smallest     MASSIVE, SIZE fully CCW
 B_middle       MASSIVE, SIZE noon
-C_wash         MASSIVE, SIZE fully CW
+C_largest      MASSIVE, SIZE fully CW
 A_normal       ATTACK NORMAL (TIME = short predelay)
 B_bloom_short  ATTACK BLOOM, TIME 0.3
 C_bloom_long   ATTACK BLOOM, TIME 0.8
@@ -258,4 +258,24 @@ A_feed_as_picked   the input feeds the frozen pad (what you picked)
 B_twin_recedes     the twin: subtler, recedes back to the pad" > renders/freeze_twin/README.txt
     python3 tools/review/make_review.py renders/freeze_twin --title "Immensio: freeze, confirming the pick" --level-match --dry $SRC --wet-only > /dev/null
     echo "renders/freeze_twin/index.html"
+fi
+
+if on reverse_options; then
+    page reverse_options
+    for col in massive:MASSIVE:0.4 massive_long:MASSIVE:0.8 hall:HALL:0.4; do
+        IFS=: read c sp t <<< "$col"
+        for v in 0:A_today 1:B_smooth; do
+            IV_REVERSE_SMOOTH=${v%%:*} r reverse_options $c ${v##*:} "" --set space=$sp --set era=0 --set attack=REVERSE --set time=$t --set decay=0.45 --set size=0.7
+        done
+    done
+    print -r -- "Your M4 note: REVERSE sounds choppy and disjointed rather than a reversed reverb. A is today's: the reverb is cut into TIME-long pieces, each played backwards, rising to a cut. B plays the same backwards pieces as two overlapping readers that fade in and out, so there are no cuts: a continuous reversed wash, still TIME late.
+
+massive       MASSIVE, TIME 0.4
+massive_long  MASSIVE, TIME 0.8 (longer pieces)
+hall          HALL, TIME 0.4
+
+A_today    today's REVERSE: pieces that rise to a cut
+B_smooth   overlapping, faded pieces: no cuts" > renders/reverse_options/README.txt
+    python3 tools/review/make_review.py renders/reverse_options --title "Immensio: REVERSE, choppy or smooth" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/reverse_options/index.html"
 fi

@@ -67,6 +67,12 @@ public:
     void setDrift(const DriftAmounts& a) { drift_ = a; }
     // More loss on top of DECAY (ERA's cassette compression), 1/T60 in 1/s.
     void setExtraRate(float rate) { extraRate_ = rate; }
+    // Early taps 0..1 (MASSIVE): besides each line's end, the output also
+    // reads kEarlyTaps points partway along every line, so the first sound
+    // leaves a long tank within a fraction of a line length (the owner, M4:
+    // "too much delay before the reverb starts swelling") and every pass is
+    // denser. Output only: the loop itself is unchanged.
+    void setEarlyTaps(float amount) { earlyTarget_ = amount; }
     // Extra output level for a voicing (MASSIVE's loudness match).
     void setOutputTrim(float trim) { outputTrim_ = trim; }
     float levelDb() const { return governor_.levelDb; }
@@ -100,6 +106,9 @@ private:
     float     extraRate_ = 0.0f;
     DelayLine apLine_[kN][2];
     uint32_t  apLen_[kN][2] = {};
+    static constexpr int kEarlyTaps = voicing::kEarlyTaps;
+    float     earlyFrac_[kN][kEarlyTaps] = {}, earlyGain_[kN][kEarlyTaps] = {};
+    float     earlyTarget_ = 0.0f, earlyNow_ = 0.0f;
     float     inLoopTarget_ = 0.0f, inLoopNow_ = 0.0f, outputTrim_ = 1.0f, levelGain_ = 1.0f;
     FloorGovernor governor_;
     bool      ready_ = false;

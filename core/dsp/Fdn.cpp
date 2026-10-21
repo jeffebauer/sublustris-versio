@@ -59,6 +59,17 @@ IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed)
         era_[i].prepare(sampleRate);
         driftGen_[i].prepare(sampleRate, seed * 2654435761u + uint32_t(i) * 40503u + 1u, float(i) / float(kN - 1));
     }
+    // Early taps: fixed, staggered points along each line (seeded, so every
+    // build is the same), louder the later they sit, so the first sound is
+    // quiet and the tank swells from there.
+    uint32_t es = 0xEA51u;
+    for (int i = 0; i < kN; ++i)
+        for (int k = 0; k < kEarlyTaps; ++k) {
+            const float u = 0.5f + 0.35f * uniform(es); // 0.15..0.85 of a slot
+            earlyFrac_[i][k] = (float(k) + u) / float(kEarlyTaps);
+            earlyGain_[i][k] = voicing::kEarlyTapLow + (1.0f - voicing::kEarlyTapLow) * earlyFrac_[i][k];
+            if (uniform(es) < 0.0f) earlyGain_[i][k] = -earlyGain_[i][k];
+        }
     for (auto& t : lenTarget_) t = 0.0f;
     setMeanSeconds(0.1f, 1.0f, true);
     reset();
@@ -81,6 +92,7 @@ IV_SIZE_OPT void Fdn::reset()
         lenNow_[i] = lenTarget_[i];
         readNow_[i] = lenNow_[i];
         inLoopNow_ = inLoopTarget_;
+        earlyNow_ = earlyTarget_;
         readStep_[i] = 0.0f;
     }
 }
@@ -110,6 +122,8 @@ void Fdn::control(int n)
 
     inLoopNow_ += (1.0f - std::exp(-dt / 0.08f)) * (inLoopTarget_ - inLoopNow_);
     if (inLoopNow_ < 1e-4f && inLoopTarget_ == 0.0f) inLoopNow_ = 0.0f;
+    earlyNow_ += (1.0f - std::exp(-dt / 0.08f)) * (earlyTarget_ - earlyNow_);
+    if (earlyNow_ < 1e-4f && earlyTarget_ == 0.0f) earlyNow_ = 0.0f;
     float meanLen = 0.0f;
     for (int i = 0; i < kN; ++i) meanLen += lenNow_[i];
     meanLen /= float(kN) * sampleRate_;
@@ -156,6 +170,7 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
         control(m);
         const float outGain = voicing::kFdnOutputGain * kNorm * levelGain_;
         const float apG = voicing::kInLoopCoeff * inLoopNow_;
+        const float earlyG = voicing::kEarlyTapLevel * earlyNow_;
         for (int s = start; s < start + m; ++s) {
             float y[kN];
             for (int i = 0; i < kN; ++i) {
@@ -176,9 +191,24 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                 l += kOutL[i] * y[i];
                 r += kOutR[i] * y[i];
             }
+            governor_.add(0.5f * outGain * outGain * (l * l + r * r)); // the tank's own level, before the taps
+            if (earlyG > 0.0f)
+                for (int i = 0; i < kN; ++i) {
+                    // Each line's taps go out with another line's signs, so they decorrelate from the ends.
+                    const int j = (i + 3) & (kN - 1);
+                    float e = 0.0f;
+                    for (int k = 0; k < kEarlyTaps; ++k) {
+                        const float d  = 1.0f + earlyFrac_[i][k] * lenNow_[i];
+                        const auto  di = uint32_t(d);
+                        const float t  = d - float(di);
+                        const float a0 = line_[i].read(di), a1 = line_[i].read(di + 1);
+                        e += earlyGain_[i][k] * (a0 + t * (a1 - a0));
+                    }
+                    l += earlyG * kOutL[j] * e;
+                    r += earlyG * kOutR[j] * e;
+                }
             outL[s] += outGain * l;
             outR[s] += outGain * r;
-            governor_.add(0.5f * outGain * outGain * (l * l + r * r));
 
             // Fast Walsh–Hadamard transform: 24 adds for the 8×8 mix.
             for (int span = 1; span < kN; span <<= 1)

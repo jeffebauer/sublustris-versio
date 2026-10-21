@@ -64,14 +64,14 @@ inline float hallMeanSeconds(float v)
     return 0.001f * expLerp(voicing::kHallMeanMinMs, voicing::kHallMeanMaxMs, v);
 }
 
-// SIZE (P5) in MASSIVE (ADR 0007, SPEC v1.0.1): from long, near-equal lines
-// with little diffusion (a train of repeating echoes, Large Magellanic
-// Cloud) to long, fanned-out lines with full diffusion (a boundless wash),
-// the predelay growing with it (Andromeda).
+// SIZE (P5) in MASSIVE (ADR 0007, SPEC v1.0.6): from shorter, part-fanned
+// lines with some diffusion (already a wash: the owner found SIZE 0's
+// echoes "too rhythmic") to long, fanned-out lines with full diffusion (a
+// boundless wash), the predelay growing a little with it.
 inline float massiveMeanSeconds(float v) { return expLerp(0.35f, 2.0f, v); }
-inline float massiveSpread(float v) { return 0.08f + 0.92f * v; }
-inline float massiveDiffusion(float v) { return 0.15f + 0.85f * v; } // × the input diffusers' coefficients
-inline float massivePredelaySeconds(float v) { return 0.5f * v * v; }
+inline float massiveSpread(float v) { return 0.4f + 0.6f * v; }
+inline float massiveDiffusion(float v) { return 0.45f + 0.55f * v; } // × the input diffusers' coefficients
+inline float massivePredelaySeconds(float v) { return 0.1f * v * v; }
 
 // MASSIVE's mass m(SIZE), 1 → 1.5 (ADR 0007): multiplies its attack.
 inline float massiveMass(float size) { return 1.0f + 0.5f * size; }

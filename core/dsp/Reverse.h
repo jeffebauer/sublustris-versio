@@ -10,8 +10,14 @@
 // written; the previous segment's last sample is read(2)), so it walks
 // backwards through the previous segment one sample per sample. Each
 // segment fades in and out over kEdgeSeconds so the cuts don't click.
+//
+// PROTOTYPE (M4 notes, "choppy and disjointed"): setSmooth(true) plays two
+// backwards readers half a segment apart, each faded in and out over its
+// whole length (sin², so the two always sum to one): no cuts at all, each
+// stretch still runs backwards. Picked on renders/reverse_options.
 #include "dsp/Memory.h"
 
+#include <cmath>
 #include <cstdint>
 
 namespace iv::dsp {
@@ -42,7 +48,13 @@ public:
         line_[1].clear();
         pos_ = 0;
         length_ = pending_;
+        for (int g = 0; g < 2; ++g) {
+            gLen_[g] = pending_;
+            gPos_[g] = g == 0 ? 0u : pending_ / 2u;
+        }
     }
+
+    void setSmooth(bool on) { smooth_ = on; }
 
     // Takes effect at the next segment start, so a segment never changes
     // length halfway (TIME moves are heard one segment later).
@@ -56,6 +68,25 @@ public:
     // Records (l, r) and returns the reversed signal in place.
     void process(float& l, float& r)
     {
+        if (smooth_) {
+            line_[0].write(l);
+            line_[1].write(r);
+            float ol = 0.0f, orr = 0.0f;
+            for (int g = 0; g < 2; ++g) {
+                if (gPos_[g] >= gLen_[g]) {
+                    gPos_[g] = 0;
+                    gLen_[g] = pending_;
+                }
+                const float sn = std::sin(3.14159265f * float(gPos_[g]) / float(gLen_[g]));
+                const uint32_t back = 2u * gPos_[g] + 2u;
+                ol += sn * sn * line_[0].read(back);
+                orr += sn * sn * line_[1].read(back);
+                ++gPos_[g];
+            }
+            l = ol;
+            r = orr;
+            return;
+        }
         if (pos_ >= length_) {
             pos_ = 0;
             length_ = pending_;
@@ -75,6 +106,8 @@ private:
     float     sampleRate_ = 48000.0f, edge_ = 240.0f;
     DelayLine line_[2];
     uint32_t  pos_ = 0, length_ = 24000, pending_ = 24000;
+    uint32_t  gPos_[2] = {0, 12000}, gLen_[2] = {24000, 24000};
+    bool      smooth_ = false;
 };
 
 } // namespace iv::dsp

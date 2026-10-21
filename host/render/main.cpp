@@ -122,6 +122,8 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     // Prototype, desktop only: IV_FREEZE_VOICING=0/1/2/3 picks how playing over a frozen pad works
     // (SpaceVoicing.h "FREEZE VOICING PROTOTYPE"), for the owner's A/B page.
     if (const char* fv = std::getenv("IV_FREEZE_VOICING")) engine.setFreezeVoicing(std::atoi(fv));
+    // Prototype, desktop only: IV_REVERSE_SMOOTH=1 plays REVERSE with overlapping faded readers.
+    if (const char* rs = std::getenv("IV_REVERSE_SMOOTH")) engine.setReverseSmooth(std::atoi(rs) != 0);
     if (!presetPath.empty()) {
         iv::json::Value preset;
         if (!iv::json::loadFile(presetPath, preset, error)) return false;
