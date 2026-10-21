@@ -54,7 +54,7 @@ cat > $SRC/freeze_vibes.json <<'EOF'
 { "buttons": [[2.4, 2.5], [6.0, 9.5], [14.5, 14.6]] }
 EOF
 
-# r <page> <folder> <tag> <auto prefix or ""> --set ...
+# r <page> <folder> <tag> <auto prefix or ""> --set ...   (env IV_FREEZE_VOICING passes through)
 r() {
     local page=$1 dir=$2 tag=$3 auto=$4; shift 4
     mkdir -p renders/$page/$dir
@@ -216,4 +216,27 @@ duck_massive   DARKEN in MASSIVE (SIZE 0.7)
 A_long_no_duck   DECAY 0.8 (long, finite: no ducking)
 B_infinite_duck  DECAY 0.9 (infinite, ducking)
 C_full_duck      DECAY 1 (infinite, full ducking)"
+fi
+
+# ---- Decision pages (built WITHOUT --showcase: they ask the owner to pick) -------------------
+
+if on freeze_options; then
+    page freeze_options
+    for sp in HALL MASSIVE PLATE; do
+        for fv in 0:A_companion 1:B_feed 2:C_both; do
+            IV_FREEZE_VOICING=${fv%%:*} r freeze_options ${(L)sp} ${fv##*:} freeze --set space=$sp --set size=0.7 --set decay=0.6
+        done
+    done
+    print -r -- "How should playing over a frozen pad work? (Owner, M5: \"the frozen reverb and the secondary reverb sound too disparate... maybe the input should influence the frozen buffer\".) Each clip: a tap freezes, the rest plays over the pad, a long hold paints (vibes 6-9.5 s, skank 9-12 s), a tap unfreezes. Pick the one that feels most like one instrument.
+
+hall      in HALL (SIZE 0.7, DECAY 0.6)
+massive   in MASSIVE (SIZE 0.7, DECAY 0.6)
+plate     in PLATE (SIZE 0.7, DECAY 0.6)
+
+A_companion  today: what you play gets its own small plate reverb, on top of the pad
+B_feed       what you play goes into the frozen pad itself, gently (no second reverb); holding feeds it fully
+C_both       B, plus the small plate at half level" > renders/freeze_options/README.txt
+    # Level-matched by default: B and C run 1.5-7 dB hotter than A, and louder must not win.
+    python3 tools/review/make_review.py renders/freeze_options --title "Immensio: playing over a frozen pad" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/freeze_options/index.html"
 fi

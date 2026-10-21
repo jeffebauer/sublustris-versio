@@ -91,6 +91,7 @@ IV_SIZE_OPT void Engine::reset()
     gesture_.reset();
     freezeMix_ = 0.0f;
     tankIn_ = 1.0f;
+    tankInTarget_ = 1.0f;
     compIn_ = paint_ = 0.0f;
     tankInStep_ = compInStep_ = 0.0f;
     companionActive_ = false;
@@ -178,14 +179,19 @@ void Engine::onGesture(GestureReader::Event e)
         frozeAt_ = clock_;
         fdn_.resyncHoldLevel();
         plate_.resyncHoldLevel();
-        tankInStep_ = -tankStep;
-        if (!companionActive_) {
-            companion_.reset();
-            companionActive_ = true;
+        // The tank's input closes, or (voicings 1, 2) drops to the feed level so playing goes into the pad.
+        tankInTarget_ = freezeVoicing_ == 0 ? 0.0f : voicing::kFreezeFeed;
+        tankInStep_ = tankStep;
+        if (freezeVoicing_ != 1) {
+            if (!companionActive_) {
+                companion_.reset();
+                companionActive_ = true;
+            }
+            compInStep_ = compStep;
         }
-        compInStep_ = compStep;
         break;
     case GestureReader::Event::Unfreeze:
+        tankInTarget_ = 1.0f;
         tankInStep_ = tankStep;
         compInStep_ = -compStep;
         break;
@@ -236,6 +242,7 @@ void Engine::applySpace(bool snap)
         plate_.setHighT60Ratio(highRatio);
         plate_.setGovernor(governor);
         plate_.setFloorDb(floorDb);
+        plate_.setModDepth(1.0f - freezeMix_ * (1.0f - voicing::kFrozenPlateModDepth));
         plate_.setHoldDb(holdDb);
     } else {
         const float mean = massive ? map::massiveMeanSeconds(size) : map::hallMeanSeconds(size);
@@ -250,7 +257,10 @@ void Engine::applySpace(bool snap)
         fdn_.setGovernor(governor);
         fdn_.setFloorDb(floorDb);
         fdn_.setHoldDb(holdDb);
-        fdn_.setInLoopDiffusion(massive ? map::massiveDiffusion(size) : 0.0f);
+        // A frozen MASSIVE goes to full in-loop diffusion: its long lines otherwise replay painted
+        // material as audible repeats (owner, M5 listening).
+        const float diff = massive ? map::massiveDiffusion(size) : 0.0f;
+        fdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : 0.0f);
         fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : 1.0f);
     }
 
@@ -418,7 +428,10 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         // diffused input feeds the companion.
         for (int i = 0; i < n; ++i) {
             flipGain_ = clamp01(flipGain_ + flipStep_);
-            tankIn_ = clamp01(tankIn_ + tankInStep_);
+            {   // toward the target: closed, the feed level, or (painting, voicings 1-2) all the way open
+                const float target = tankInTarget_ + (freezeVoicing_ != 0 && gesture_.frozen() ? paint_ * (1.0f - tankInTarget_) : 0.0f);
+                tankIn_ = tankIn_ < target ? std::fmin(target, tankIn_ + tankInStep_) : std::fmax(target, tankIn_ - tankInStep_);
+            }
             compIn_ = clamp01(compIn_ + compInStep_);
             const float l = inL[start + i], r = inR[start + i];
             inputPower_ += 0.002f * (0.5f * (l * l + r * r) - inputPower_); // ~10 ms follower
@@ -465,7 +478,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             companion_.process(compInL_, compInR_, compL_, compR_, n);
             if (!gesture_.frozen() && compIn_ == 0.0f && companion_.levelDb() < -100.0f) companionActive_ = false;
         }
-        if (paint_ > 0.0f)
+        if (paint_ > 0.0f && freezeVoicing_ != 1)
             for (int i = 0; i < n; ++i) {
                 bufL_[i] += paint_ * voicing::kPaintLevel * compL_[i];
                 bufR_[i] += paint_ * voicing::kPaintLevel * compR_[i];
@@ -479,8 +492,9 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             float rl = wetL_[i], rr = wetR_[i];
             reverse_.process(rl, rr);
             reverseMix_ = approach(reverseMix_, reverseTarget_, reverseStep);
-            float wl = (wetL_[i] + reverseMix_ * (rl - wetL_[i])) * flipGain_ + compL_[i];
-            float wr = (wetR_[i] + reverseMix_ * (rr - wetR_[i])) * flipGain_ + compR_[i];
+            const float cg = freezeVoicing_ == 2 ? voicing::kBothCompanionLevel : 1.0f;
+            float wl = (wetL_[i] + reverseMix_ * (rl - wetL_[i])) * flipGain_ + cg * compL_[i];
+            float wr = (wetR_[i] + reverseMix_ * (rr - wetR_[i])) * flipGain_ + cg * compR_[i];
             wl *= eraMakeup_;
             wr *= eraMakeup_;
             muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)

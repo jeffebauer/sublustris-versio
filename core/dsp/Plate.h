@@ -71,6 +71,10 @@ public:
     }
     void setDrift(const DriftAmounts& a) { drift_ = a; }
     void setExtraRate(float rate) { extraRate_ = rate; }
+    // Scales Dattorro's chorus (the modulated allpasses' sine): 1 normally,
+    // lower on a frozen pad, where a lossless loop piles a few cents a pass
+    // into a seasick wobble (owner, M5 listening).
+    void setModDepth(float scale) { modDepth_ = scale; }
 
     // Adds the wet to outL/outR (does not clear them).
     void process(const float* inL, const float* inR, float* outL, float* outR, int n);
@@ -99,6 +103,7 @@ private:
     uint32_t rng_ = 1;
     float    decayRate_ = 0.2f, highRatio_ = 0.45f, levelGain_ = 1.0f, extraRate_ = 0.0f;
     bool     colour_ = true;
+    float    modDepth_ = 1.0f;
     DriftAmounts drift_;
     FloorGovernor governor_;
     bool     ready_ = false;

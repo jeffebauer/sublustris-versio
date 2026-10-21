@@ -30,7 +30,8 @@ Nothing. `build-plugin/` is the plugin agent's scratch build dir (gitignored; sa
 ## Next steps
 1. **Owner runs the M0 hardware check.** If anything lands in the wrong place, the fix is in `firmware/main.cpp` (`kPotKnob` is a hardware fact from Resilio; `kPotParams` is ADR 0017).
 2. **Owner listening** on the five pages (`tools/render_review_pages.sh` remakes them after any change), then **M8 tuning** from the notes: every *(start)* number is in `core/params/SpaceVoicing.h` and `EraVoicing.h`.
-3. **Owner decisions pending:** the ADR 0008 makeup; MASSIVE's SIZE glide speed (ADR 0007 amendment); plugin identity.
+3. **Freeze voicing:** the owner picks A/B/C on `renders/freeze_options`; then make it the only behaviour (`SpaceVoicing.h` "FREEZE VOICING PROTOTYPE", `Engine::setFreezeVoicing`, the `IV_FREEZE_VOICING` hook in `host/render/main.cpp`), amend ADR 0009/0010, drop the losers' code, add tests for the chosen one (if B: the companion and its DTCM can go, ~85 KB DTCM and some flash back).
+4. **Owner decisions pending:** the ADR 0008 makeup; MASSIVE's SIZE glide speed (ADR 0007 amendment); plugin identity.
 4. **At the rack:** the M0 check, then M3 (flash `immensio_versio_profile.bin`, read the serial CPU report; an SDRAM microbenchmark decides whether the PLATE moves to AXI SRAM).
 
 ## Waiting on the owner

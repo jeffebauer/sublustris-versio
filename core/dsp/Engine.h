@@ -72,6 +72,8 @@ public:
 
     bool  frozen() const { return gesture_.frozen(); }
     bool  painting() const { return gesture_.painting(); }
+    // Freeze voicing prototype (SpaceVoicing.h): 0 companion, 1 feed the pad, 2 both.
+    void  setFreezeVoicing(int v) { freezeVoicing_ = v < 0 ? 0 : (v > 2 ? 2 : v); }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.
@@ -168,6 +170,8 @@ private:
     bool     tailCaptured_ = false;
     float    tailCeilingDb_ = -24.0f;
     bool  companionActive_ = false;
+    int   freezeVoicing_ = 0;
+    float tankInTarget_ = 1.0f;
 
     // MIX, ramped per sample across each control chunk.
     float dryNow_ = 1.0f, wetNow_ = 0.0f, dryStep_ = 0.0f, wetStep_ = 0.0f;

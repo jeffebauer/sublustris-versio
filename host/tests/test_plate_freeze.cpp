@@ -192,6 +192,22 @@ void plate()
             check(finite(out) && !m.ringing, msg);
         }
 
+    // Every output tap inside its line: a tap past the end read off the buffer at full SIZE and
+    // clicked once a lap in the left channel only (owner, M5 listening). Each channel on its own.
+    {
+        std::vector<float> tone(size_t(8.0f * kSr), 0.0f);
+        for (size_t i = 0; i < size_t(4.0f * kSr); ++i)
+            tone[i] = 0.25f * std::sin(2.0f * 3.14159265f * 330.0f * float(i) / kSr) * std::fmin(1.0f, float(i) / 2400.0f);
+        Setting s;
+        s.space = 0;
+        s.size = 1.0f;
+        s.decay = 0.7f;
+        const Stereo out = render(tone, s);
+        const long cl = iv::metrics::compute({out.l}, kSr).clickCount, cr = iv::metrics::compute({out.r}, kSr).clickCount;
+        check(cl == 0 && cr == 0, "PLATE at full SIZE: no clicks in either channel (L " + std::to_string(cl) + ", R " +
+                                      std::to_string(cr) + ")");
+    }
+
     std::vector<float> burst(size_t(8.0f * kSr), 0.0f);
     for (size_t i = 0; i < size_t(0.5f * kSr); ++i) burst[i] = 0.3f * noise();
     int bad = 0;

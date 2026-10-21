@@ -105,6 +105,16 @@ constexpr float kCompanionFadeSeconds = 0.02f;
 constexpr float kPaintSeconds        = 3.0f;  // painting builds into the pad over ~this
 constexpr float kPaintReleaseSeconds = 0.2f;
 constexpr float kPaintLevel          = 0.5f;  // the companion's share sent into the pad
+// A frozen PLATE's chorus depth (× Dattorro's): a lossless loop piles its
+// few cents a pass into a seasick wobble (owner, M5 listening).
+constexpr float kFrozenPlateModDepth = 0.15f;
+// FREEZE VOICING PROTOTYPE (owner, M5 listening: "the frozen reverb and the
+// secondary reverb sound too disparate... maybe the input should influence
+// the frozen buffer"). 0 = today: the companion plate on top of the pad;
+// 1 = the input feeds the frozen pad itself (no companion); 2 = both, the
+// companion quieter. Chosen by ear on renders/freeze_options, then fixed.
+constexpr float kFreezeFeed          = 0.35f; // the input's level into a frozen pad (voicings 1, 2)
+constexpr float kBothCompanionLevel  = 0.5f;  // the companion's level in voicing 2
 constexpr float kPaintHeadroomDb     = 3.0f;  // a painted pad may grow this far above its frozen level (or the floor)
 // A still pad's ceiling over the level it settled at: its slowly wandering
 // reads (the modulation floor) nudge its energy up or down a little; the
@@ -134,7 +144,7 @@ constexpr float kMakeupMaxRate = 0.005f;
 // take the highs for good, and the tail must brighten back when you stop,
 // SPEC v1.0.4), closing to kDuckDarkHz at full depth, plus a kDuckDipDb dip.
 constexpr float kDuckAttackSeconds  = 0.005f;
-constexpr float kDuckReleaseSeconds = 0.4f;
+constexpr float kDuckReleaseSeconds = 0.15f; // 0.4 s dwelt between skanks (owner, M5 listening)
 constexpr float kDuckFromDbfs = -42.0f, kDuckFullDbfs = -24.0f;
 constexpr float kDuckDarkHz = 1500.0f;
 constexpr float kDuckDipDb  = -3.0f;

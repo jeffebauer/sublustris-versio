@@ -13,16 +13,31 @@ using namespace plate;
 constexpr float kDecayDiffusion1 = 0.70f; // the modulated allpasses (drawn with inverted signs)
 constexpr float kDecayDiffusion2 = 0.50f;
 constexpr float kLfoHz[2] = {0.71f, 0.93f};
-// Output taps (his Table 2): which element, which branch, offset (samples
-// at 29.761 kHz), sign. Element 0 = d1, 1 = ap2's delay, 2 = d2.
+// Output taps (his Table 2): which branch, which element, offset (samples at
+// 29.761 kHz), sign. Element 0 = d1, 1 = ap2's delay, 2 = d2. Each output
+// starts from the *other* branch: the left from branch 1 (his 4217 / 2656 /
+// 3163 lines), the right from branch 0 (4453 / 1800 / 3720). Every offset
+// must fit inside its line (checked below): a tap past the end read off the
+// buffer at large SIZE and clicked once a lap (owner, M5 listening).
 struct Tap {
     int   branch, element;
     float offset, sign;
 };
-constexpr Tap kLeft[7]  = {{0, 0, 266, 1},  {0, 0, 2974, 1}, {0, 1, 1913, -1}, {0, 2, 1996, 1},
-                           {1, 0, 1990, -1}, {1, 1, 187, -1}, {1, 2, 1066, -1}};
-constexpr Tap kRight[7] = {{1, 0, 353, 1},  {1, 0, 3627, 1}, {1, 1, 1228, -1}, {1, 2, 2673, 1},
-                           {0, 0, 2111, -1}, {0, 1, 335, -1}, {0, 2, 121, -1}};
+constexpr Tap kLeft[7]  = {{1, 0, 266, 1},  {1, 0, 2974, 1}, {1, 1, 1913, -1}, {1, 2, 1996, 1},
+                           {0, 0, 1990, -1}, {0, 1, 187, -1}, {0, 2, 1066, -1}};
+constexpr Tap kRight[7] = {{0, 0, 353, 1},  {0, 0, 3627, 1}, {0, 1, 1228, -1}, {0, 2, 2673, 1},
+                           {1, 0, 2111, -1}, {1, 1, 335, -1}, {1, 2, 121, -1}};
+constexpr float elementLength(const Tap& t)
+{
+    return t.element == 0 ? kD1[t.branch] : (t.element == 1 ? kAp2[t.branch] : kD2[t.branch]);
+}
+constexpr bool tapsFit(const Tap* taps)
+{
+    for (int i = 0; i < 7; ++i)
+        if (taps[i].offset + 2.0f >= elementLength(taps[i])) return false;
+    return true;
+}
+static_assert(tapsFit(kLeft) && tapsFit(kRight), "every Plate output tap must lie inside its line");
 constexpr float kOutputGain = 0.6f;     // Dattorro's output scaling
 constexpr float kLevelRefScale = 1.0f;  // level compensation reference (√(scale / ref))
 // SIZE glides: the longest element (4453) changes by at most a semitone of
@@ -133,7 +148,7 @@ void Plate::control(int n)
         }
         br.floorA += floorCoeff * (br.floorTarget - br.floorA);
         br.floorB += floorCoeff * (br.floorA - br.floorB);
-        float target = excursion * (1.0f + 0.7f * std::sin(6.2831853f * br.lfoPhase) + 0.3f * br.floorB);
+        float target = excursion * (1.0f + modDepth_ * 0.7f * std::sin(6.2831853f * br.lfoPhase) + 0.3f * br.floorB);
         if (colour_) {
             // DRIFT swings the modulated allpass's length (the buffer has
             // room for the longest swing).
