@@ -84,9 +84,14 @@ struct DelayLine {
     // through it loses nothing however many passes a frozen pad makes (a
     // cubic read shaves the highs a little on every pass). `state` is this
     // read's own memory (the previous output). For slowly moving delays.
+    //
+    // The fraction is kept in [0.5, 1.5): near 0 the coefficient nears 1,
+    // its pole sits by Nyquist, and a moving read excites it: a frozen pad
+    // leaked energy into the top octave (MASSIVE 5.5 % → 11.7 % above 12 kHz
+    // in 5 min). d >= 2.
     float readAllpass(float d, float& state) const
     {
-        const auto  di  = uint32_t(int32_t(d));
+        const auto  di  = uint32_t(int32_t(d - 0.5f));
         const float f   = d - float(di);
         const float eta = (1.0f - f) / (1.0f + f);
         const float a = buf[(pos - di) & mask], b = buf[(pos - di - 1) & mask];
@@ -142,7 +147,7 @@ struct ExactLine {
     // As DelayLine::readAllpass.
     float readAllpass(float d, float& state) const
     {
-        const int32_t di  = int32_t(d);
+        const int32_t di  = int32_t(d - 0.5f);
         const float   f   = d - float(di);
         const float   eta = (1.0f - f) / (1.0f + f);
         const int32_t i   = int32_t(pos) - di;

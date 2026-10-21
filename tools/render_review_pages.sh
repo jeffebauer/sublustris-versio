@@ -1,0 +1,192 @@
+#!/bin/zsh
+# Renders every milestone listening page (renders/m1_hall, m4_massive,
+# m5_plate_freeze, m6_character, m7_duck) with the current build/iv_render,
+# so all pages always reflect the same code. Owner listening: open each
+# renders/<page>/index.html in a browser.
+#
+# Material: the dub skank (test_audio/stimulus/04_skank.wav, from
+# tools/make_stimulus.py) and a sparse vibes phrase built from the CC0 vibes
+# samples in Resilio Versio's test_audio/demo_sources (not in either repo;
+# the vibes page rows are skipped if they're missing). Each gets 12 s of
+# silence appended so tails ring out.
+#
+# Usage: tools/render_review_pages.sh [page ...]   (default: all)
+set -e
+cd "$(dirname "$0")/.."
+R=build/iv_render
+[ -x $R ] || { echo "build/iv_render missing: cmake --build build"; exit 1; }
+SRC=renders/_material
+mkdir -p $SRC
+
+# ---- Material -------------------------------------------------------------------
+if [ ! -f $SRC/skank.wav ]; then
+    [ -f test_audio/stimulus/04_skank.wav ] || python3 tools/make_stimulus.py
+    ffmpeg -v error -y -i test_audio/stimulus/04_skank.wav -af "volume=3dB,apad=pad_dur=12" -c:a pcm_s24le $SRC/skank.wav
+fi
+VIBES=../resilio-versio/test_audio/demo_sources/cc0/vibes_soft
+if [ ! -f $SRC/vibes.wav ] && [ -d $VIBES ]; then
+    notes="A2:0 E5:600 C5:1200 A4:1800 F2:6000 F4:6600 C5:7200 A4:7800 G3:12000 D4:12600 B3:13200 E5:13800"
+    args=(); fil=""; i=0
+    for nt in ${=notes}; do
+        n=${nt%%:*}; d=${nt##*:}
+        args+=(-i $VIBES/Vibes_soft_${n}_v1_rr1_Main.wav)
+        fil="${fil}[${i}:a]aformat=channel_layouts=stereo,aresample=48000,adelay=${d}|${d}[a${i}];"
+        i=$((i+1))
+    done
+    mix=""; for j in $(seq 0 $((i-1))); do mix="${mix}[a${j}]"; done
+    ffmpeg -v error -y "${args[@]}" -filter_complex "${fil}${mix}amix=inputs=${i}:normalize=0,atrim=0:18,volume=16dB,apad=pad_dur=12" \
+        -ac 2 -ar 48000 -c:a pcm_s24le $SRC/vibes.wav
+fi
+MATERIALS=(skank)
+[ -f $SRC/vibes.wav ] && MATERIALS+=(vibes)
+
+# Freeze gestures per material (seconds): [press, release] pairs.
+cat > $SRC/freeze_only_skank.json <<'EOF'
+{ "buttons": [[3.0, 3.1], [18.0, 18.1]] }
+EOF
+cat > $SRC/freeze_only_vibes.json <<'EOF'
+{ "buttons": [[2.4, 2.5], [14.5, 14.6]] }
+EOF
+cat > $SRC/freeze_skank.json <<'EOF'
+{ "buttons": [[3.0, 3.1], [9.0, 12.0], [18.0, 18.1]] }
+EOF
+cat > $SRC/freeze_vibes.json <<'EOF'
+{ "buttons": [[2.4, 2.5], [6.0, 9.5], [14.5, 14.6]] }
+EOF
+
+# r <page> <folder> <tag> <auto prefix or ""> --set ...
+r() {
+    local page=$1 dir=$2 tag=$3 auto=$4; shift 4
+    mkdir -p renders/$page/$dir
+    for m in $MATERIALS; do
+        local a=()
+        [ -n "$auto" ] && a=(--auto $SRC/${auto}_${m}.json)
+        $R $SRC/$m.wav renders/$page/$dir/${m}_${tag}.wav --set mix=0.5 "${a[@]}" "$@" > /dev/null
+    done
+}
+page() { # page title readme
+    rm -rf renders/$1; mkdir -p renders/$1
+}
+finish() {
+    print -r -- "$3" > renders/$1/README.txt
+    python3 tools/review/make_review.py renders/$1 --title "$2" --no-level-match > /dev/null
+    echo "renders/$1/index.html"
+}
+
+want() { [ $# -eq 0 ] || return 0; }
+PAGES=("$@")
+on() { [ ${#PAGES} -eq 0 ] || (( ${PAGES[(Ie)$1]} )); }
+
+if on m1_hall; then
+    page m1_hall
+    for sz in 0:small 0.5:medium 1:large; do
+        for dc in 0.15:A_short 0.45:B_medium 0.7:C_long 0.9:D_infinite; do
+            r m1_hall size_${sz##*:} ${dc##*:} "" --set space=HALL --set era=0 --set time=0 --set size=${sz%%:*} --set decay=${dc%%:*}
+        done
+    done
+    for tc in 0:A_dark 0.5:B_noon 1:C_bright; do
+        r m1_hall tone ${tc##*:} "" --set space=HALL --set era=0 --set time=0 --set size=0.6 --set decay=0.6 --set tone=${tc%%:*}
+    done
+    finish m1_hall "Immensio M1: the Hall" "The HALL tank on its own (ERA clean). SIZE columns with DECAY as versions; TONE dark / noon / bright.
+
+A_short     DECAY 0.15
+B_medium    DECAY 0.45
+C_long      DECAY 0.70
+D_infinite  DECAY 0.90 (infinite)
+A_dark      TONE fully CCW
+B_noon      TONE noon
+C_bright    TONE fully CW"
+fi
+
+if on m4_massive; then
+    page m4_massive
+    for sz in 0:A_echoes 0.5:B_middle 1:C_wash; do
+        r m4_massive massive_size ${sz##*:} "" --set space=MASSIVE --set era=0 --set decay=0.7 --set size=${sz%%:*}
+    done
+    for sp in HALL MASSIVE; do
+        f=attack_${(L)sp}
+        r m4_massive $f A_normal "" --set space=$sp --set era=0 --set attack=NORMAL --set time=0.2 --set decay=0.55 --set size=0.7
+        r m4_massive $f B_bloom_short "" --set space=$sp --set era=0 --set attack=BLOOM --set time=0.3 --set decay=0.55 --set size=0.7
+        r m4_massive $f C_bloom_long "" --set space=$sp --set era=0 --set attack=BLOOM --set time=0.8 --set decay=0.55 --set size=0.7
+        r m4_massive $f D_reverse "" --set space=$sp --set era=0 --set attack=REVERSE --set time=0.4 --set decay=0.45 --set size=0.7
+    done
+    r m4_massive infinite A_hall "" --set space=HALL --set era=0 --set decay=1 --set size=0.7
+    r m4_massive infinite B_massive "" --set space=MASSIVE --set era=0 --set decay=1 --set size=0.7
+    finish m4_massive "Immensio M4: MASSIVE and ATTACK" "MASSIVE's SIZE (echoes to wash), the four ATTACK settings in HALL and MASSIVE, and infinite DECAY (ERA clean). At infinite, DARKEN ducks the tail while you play.
+
+A_echoes       MASSIVE, SIZE fully CCW
+B_middle       MASSIVE, SIZE noon
+C_wash         MASSIVE, SIZE fully CW
+A_normal       ATTACK NORMAL (TIME = short predelay)
+B_bloom_short  ATTACK BLOOM, TIME 0.3
+C_bloom_long   ATTACK BLOOM, TIME 0.8
+D_reverse      ATTACK REVERSE, TIME 0.4
+A_hall         HALL, DECAY infinite
+B_massive      MASSIVE, DECAY infinite"
+fi
+
+if on m5_plate_freeze; then
+    page m5_plate_freeze
+    r m5_plate_freeze plate A_small_short "" --set space=PLATE --set size=0 --set decay=0.3
+    r m5_plate_freeze plate B_medium "" --set space=PLATE --set size=0.5 --set decay=0.5
+    r m5_plate_freeze plate C_large_long "" --set space=PLATE --set size=1 --set decay=0.7
+    r m5_plate_freeze plate D_infinite "" --set space=PLATE --set size=0.7 --set decay=0.95
+    r m5_plate_freeze freeze A_plate_freeze freeze_only --set space=PLATE --set size=0.6 --set decay=0.6
+    r m5_plate_freeze freeze B_hall_freeze freeze_only --set space=HALL --set size=0.7 --set decay=0.6
+    r m5_plate_freeze freeze C_massive_freeze freeze_only --set space=MASSIVE --set size=0.7 --set decay=0.6
+    r m5_plate_freeze paint A_hall_paint freeze --set space=HALL --set size=0.7 --set decay=0.6
+    r m5_plate_freeze paint B_massive_paint freeze --set space=MASSIVE --set size=0.7 --set decay=0.6
+    finish m5_plate_freeze "Immensio M5: PLATE, freeze and paint" "The PLATE; freeze (a tap freezes the tank into a still pad, the rest plays over it through the small companion reverb, a second tap unfreezes); paint (a long hold while frozen blends what's playing into the pad). ERA at its default (a touch of Neve).
+
+A_small_short     PLATE, SIZE CCW, DECAY 0.3
+B_medium          PLATE, SIZE noon, DECAY 0.5
+C_large_long      PLATE, SIZE CW, DECAY 0.7
+D_infinite        PLATE, SIZE 0.7, DECAY infinite
+A_plate_freeze    freeze in PLATE
+B_hall_freeze     freeze in HALL
+C_massive_freeze  freeze in MASSIVE
+A_hall_paint      freeze + paint in HALL
+B_massive_paint   freeze + paint in MASSIVE"
+fi
+
+if on m6_character; then
+    page m6_character
+    for ec in 0:A_clean 0.3:B_neve 0.55:C_cassette 0.8:D_mulaw 1:E_midiverb; do
+        r m6_character era_hall ${ec##*:} "" --set space=HALL --set decay=0.6 --set size=0.6 --set era=${ec%%:*}
+    done
+    for ec in 0:A_clean 0.55:C_cassette 1:E_midiverb; do
+        r m6_character era_massive ${ec##*:} "" --set space=MASSIVE --set decay=0.65 --set size=0.7 --set era=${ec%%:*}
+    done
+    for dc in 0:A_tape 0.5:B_still 1:C_drift; do
+        r m6_character drift ${dc##*:} "" --set space=HALL --set decay=0.65 --set size=0.7 --set drift=${dc%%:*}
+    done
+    for tc in 0:A_dark 0.5:B_noon 1:C_bright; do
+        r m6_character tone ${tc##*:} "" --set space=HALL --set decay=0.6 --set size=0.6 --set tone=${tc%%:*}
+    done
+    finish m6_character "Immensio M6: ERA, DRIFT and TONE" "ERA's five stacked stages (loudness matched), DRIFT both ways, TONE's full range. Starting numbers from the spec, for your ears to tune.
+
+A_clean     ERA 0
+B_neve      ERA 0.3
+C_cassette  ERA 0.55 (hiss while you play)
+D_mulaw     ERA 0.8
+E_midiverb  ERA 1
+A_tape      DRIFT fully left (wow and flutter)
+B_still     DRIFT noon
+C_drift     DRIFT fully right (slow Cathedra drift)
+A_dark      TONE fully CCW
+B_noon      TONE noon
+C_bright    TONE fully CW (highs outlast lows)"
+fi
+
+if on m7_duck; then
+    page m7_duck
+    for dc in 0.8:A_long_no_duck 0.9:B_infinite_duck 1:C_full_duck; do
+        r m7_duck duck_hall ${dc##*:} "" --set space=HALL --set size=0.7 --set decay=${dc%%:*}
+        r m7_duck duck_massive ${dc##*:} "" --set space=MASSIVE --set size=0.7 --set decay=${dc%%:*}
+    done
+    finish m7_duck "Immensio M7: DARKEN" "Ducking is always DARKEN and only from DECAY's infinite stretch up: while you play, the tail darkens and dips so the dry stays clear; when you stop, it brightens back.
+
+A_long_no_duck   DECAY 0.8 (long, finite: no ducking)
+B_infinite_duck  DECAY 0.9 (infinite, ducking)
+C_full_duck      DECAY 1 (infinite, full ducking)"
+fi

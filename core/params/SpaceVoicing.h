@@ -128,6 +128,21 @@ constexpr float kTailSettleSeconds = 10.0f;
 constexpr float kHoldRatePerDb = 0.004f;
 constexpr float kMakeupMaxRate = 0.005f;
 
+// ---- Ducking: always DARKEN (ADR 0014, SPEC §4.9) -------------------------
+// An envelope follower on the input; depth 0 below DECAY 0.85, full at 1.
+// DARKEN is a low-pass on the wet (not in the loop: a loop filter would
+// take the highs for good, and the tail must brighten back when you stop,
+// SPEC v1.0.4), closing to kDuckDarkHz at full depth, plus a kDuckDipDb dip.
+constexpr float kDuckAttackSeconds  = 0.005f;
+constexpr float kDuckReleaseSeconds = 0.4f;
+constexpr float kDuckFromDbfs = -42.0f, kDuckFullDbfs = -24.0f;
+constexpr float kDuckDarkHz = 1500.0f;
+constexpr float kDuckDipDb  = -3.0f;
+
+// ---- Output soft limiter (SPEC §4.10): the wet only, before MIX ------------
+constexpr float kLimitCeiling        = 0.891f; // −1 dBFS
+constexpr float kLimitReleaseSeconds = 0.2f;
+
 // Predelay memory: SIZE's (Massive) + TIME's (NORMAL), SPEC §5.2.
 constexpr float kPredelayMaxSeconds = 0.75f;
 

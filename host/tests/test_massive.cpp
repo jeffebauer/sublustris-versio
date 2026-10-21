@@ -131,34 +131,46 @@ void attackFollowsTime()
     check(h < 0.1, "HALL NORMAL attacks at once: rise " + std::to_string(h) + " s (< 0.1)");
 }
 
-// ADR 0008: fed hard for 20 s at infinite, the tail stays near the floor,
-// then holds for 10 minutes: within ±3 dB, never growing, never silent.
+// ADR 0008: fed hard for 20 s at infinite, the tank sits near the floor
+// (its own level: the wet is ducked by DARKEN while you play, ADR 0014),
+// then the tail holds for 10 minutes: within ±3 dB, not growing past its
+// settled level (the hold makeup may lift a sag back to it), never silent.
 void infiniteHoldsTheFloor()
 {
     std::vector<float> in(size_t(620.0f * kSr), 0.0f);
     for (size_t i = 0; i < size_t(20.0f * kSr); ++i) in[i] = 0.3f * noise();
     for (int space : {1, 2}) {
-        Setting s;
-        s.space = space;
-        s.decay = 1.0f;
-        const Stereo out = render(in, s);
-        const auto e = envelope(out, size_t(10.0f * kSr)); // 10 s windows
-        const double during = 20.0 * std::log10(e[1]);
-        const double first = 20.0 * std::log10(e[6]); // 60-70 s
+        iv::Engine e;
+        e.prepare(kSr, 48);
+        e.setParam(iv::ParamId::Space, iv::switchToNormalised(space));
+        e.setParam(iv::ParamId::Decay, 1.0f);
+        e.setParam(iv::ParamId::Size, 0.5f);
+        e.setParam(iv::ParamId::Mix, 1.0f);
+        e.setParam(iv::ParamId::Era, 0.0f);
+        e.setParam(iv::ParamId::Time, 0.0f);
+        e.reset();
+        Stereo out{std::vector<float>(in.size()), std::vector<float>(in.size())};
+        double fedTank = 0.0;
+        for (size_t pos = 0; pos < in.size(); pos += 48) {
+            e.process(in.data() + pos, in.data() + pos, out.l.data() + pos, out.r.data() + pos, 48);
+            if (pos == size_t(19.0f * kSr)) fedTank = e.tankLevelDb();
+        }
+        const auto env = envelope(out, size_t(10.0f * kSr)); // 10 s windows
+        const double first = 20.0 * std::log10(env[6]);   // 60-70 s
         double lo = first, hi = first;
-        for (size_t i = 6; i < e.size(); ++i) {
-            const double db = 20.0 * std::log10(e[i] + 1e-12);
+        for (size_t i = 6; i < env.size(); ++i) {
+            const double db = 20.0 * std::log10(env[i] + 1e-12);
             lo = std::fmin(lo, db);
             hi = std::fmax(hi, db);
         }
         const std::string name = space == 2 ? "MASSIVE" : "HALL";
         char msg[200];
-        std::snprintf(msg, sizeof msg, "%s infinite, fed hard: %.1f dBFS (floor %.0f, within 3 dB)", name.c_str(), during,
-                      double(iv::voicing::kFloorDbfs));
-        check(finite(out) && std::fabs(during - iv::voicing::kFloorDbfs) < 3.0, msg);
+        std::snprintf(msg, sizeof msg, "%s infinite, fed hard: the tank at %.1f dBFS (floor %.0f, within 3 dB)", name.c_str(),
+                      fedTank, double(iv::voicing::kFloorDbfs));
+        check(finite(out) && std::fabs(fedTank - iv::voicing::kFloorDbfs) < 3.0, msg);
         std::snprintf(msg, sizeof msg, "%s infinite holds 10 min: %.1f .. %.1f dBFS (within 3 dB, no growth, not silent)",
                       name.c_str(), lo, hi);
-        check(hi - lo < 3.0 && hi <= first + 0.5 && lo > -60.0, msg);
+        check(hi - lo < 3.0 && hi <= first + 1.0 && lo > -60.0, msg);
     }
 }
 

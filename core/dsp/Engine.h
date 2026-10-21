@@ -18,6 +18,7 @@
 #include "dsp/Diffuser.h"
 #include "dsp/Fdn.h"
 #include "dsp/Memory.h"
+#include "dsp/Output.h"
 #include "dsp/Plate.h"
 #include "dsp/Reverse.h"
 #include "dsp/Swell.h"
@@ -74,7 +75,8 @@ public:
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.
-    float limiterGain() const { return 1.0f; }
+    float limiterGain() const { return limiter_.gain(); }
+    float duckAmount() const { return duck_; }
     // Bytes of delay memory the Engine uses (firmware serial report).
     size_t memoryBytes() const { return (large_.used + fast_.used) * sizeof(float); }
     // False when the attached memory was too small: the Engine then passes
@@ -127,6 +129,10 @@ private:
     dsp::Reverse      reverse_;
     dsp::MuLawOut     muLaw_;
     float             eraMakeup_ = 1.0f;
+    // Ducking (ADR 0014) and the limiter (SPEC §4.10).
+    dsp::Darken       darken_;
+    dsp::Limiter      limiter_;
+    float             duckEnv_ = 0.0f, duck_ = 0.0f, duckAttack_ = 0.0f, duckRelease_ = 0.0f;
     // ERA's sources into the tank's input (SPEC §4.7): cassette hiss, Midiverb crackle.
     uint32_t          noiseSeed_ = 0xA11CEu;
     float             hissLp_[2] = {}, hissGain_ = 0.0f, crackleChance_ = 0.0f, crackleGain_ = 0.0f;

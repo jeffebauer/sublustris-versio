@@ -75,6 +75,10 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     ready_ &= companion_.prepare(fast_, sampleRate, voicing::kCompanionMaxScale, false, 0xC0A1u);
     ready_ &= reverse_.prepare(large_, sampleRate);
     gesture_.prepare(sampleRate);
+    darken_.prepare(sampleRate);
+    limiter_.prepare(sampleRate);
+    duckAttack_ = 1.0f - std::exp(-1.0f / (voicing::kDuckAttackSeconds * sampleRate));
+    duckRelease_ = 1.0f - std::exp(-1.0f / (voicing::kDuckReleaseSeconds * sampleRate));
     reset();
 }
 
@@ -107,6 +111,9 @@ IV_SIZE_OPT void Engine::reset()
     companion_.reset();
     reverse_.reset();
     muLaw_.reset();
+    darken_.reset();
+    limiter_.reset();
+    duckEnv_ = duck_ = 0.0f;
     hissLp_[0] = hissLp_[1] = 0.0f;
     noiseSeed_ = 0xA11CEu;
     reverseMix_ = reverseTarget_;
@@ -275,6 +282,13 @@ void Engine::applySpace(bool snap)
     }
     muLaw_.set(era);
     eraMakeup_ = era.makeup;
+
+    // Ducking (ADR 0014): how loud the input is, × how far into infinite
+    // DECAY is. Not while frozen (playing over a pad mustn't darken it).
+    const float envDb = 20.0f * std::log10(duckEnv_ + 1e-10f);
+    const float loud = map::clamp01((envDb - voicing::kDuckFromDbfs) / (voicing::kDuckFullDbfs - voicing::kDuckFromDbfs));
+    duck_ = frozen ? 0.0f : loud * map::governorWeight(smoothed(ParamId::Decay));
+    darken_.set(duck_);
     // Hiss follows the input (none in silence, so an infinite tail doesn't
     // fill with noise, ADR 0005); crackle the same.
     const float inDb = 10.0f * std::log10(inputPower_ + 1e-20f);
@@ -408,6 +422,8 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             compIn_ = clamp01(compIn_ + compInStep_);
             const float l = inL[start + i], r = inR[start + i];
             inputPower_ += 0.002f * (0.5f * (l * l + r * r) - inputPower_); // ~10 ms follower
+            const float peak = l > 0.0f ? l : -l;
+            duckEnv_ += (peak > duckEnv_ ? duckAttack_ : duckRelease_) * (peak - duckEnv_);
             predelay_[0].write(l);
             predelay_[1].write(r);
             predelayNow_ += predelayStep_;
@@ -468,6 +484,8 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             wl *= eraMakeup_;
             wr *= eraMakeup_;
             muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)
+            darken_.process(wl, wr);
+            limiter_.process(wl, wr);
             dryNow_ += dryStep_;
             wetNow_ += wetStep_;
             outL[start + i] = dryNow_ * inL[start + i] + wetNow_ * wl;
