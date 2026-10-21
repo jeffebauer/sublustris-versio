@@ -61,7 +61,32 @@ inline float hallMeanSeconds(float v)
     return 0.001f * expLerp(voicing::kHallMeanMinMs, voicing::kHallMeanMaxMs, v);
 }
 
-// TIME (P7) in NORMAL: predelay 0 → 250 ms, ∝ x² (ADR 0015).
+// SIZE (P5) in MASSIVE (ADR 0007, SPEC v1.0.1): from long, near-equal lines
+// with little diffusion (a train of repeating echoes, Large Magellanic
+// Cloud) to long, fanned-out lines with full diffusion (a boundless wash),
+// the predelay growing with it (Andromeda).
+inline float massiveMeanSeconds(float v) { return expLerp(0.35f, 2.0f, v); }
+inline float massiveSpread(float v) { return 0.08f + 0.92f * v; }
+inline float massiveDiffusion(float v) { return 0.15f + 0.85f * v; } // × the input diffusers' coefficients
+inline float massivePredelaySeconds(float v) { return 0.5f * v * v; }
+
+// MASSIVE's mass m(SIZE), 1 → 1.5 (ADR 0007): multiplies its attack.
+inline float massiveMass(float size) { return 1.0f + 0.5f * size; }
+// MASSIVE's built-in attack in NORMAL: A0(DECAY) 0.5 → 0.2 s (log; higher
+// DECAY, faster swell, Sagittarius) × m(SIZE).
+inline float massiveNormalAttackSeconds(float decay, float size) { return expLerp(0.5f, 0.2f, decay) * massiveMass(size); }
+
+// TIME (P7), ADR 0015. NORMAL: predelay 0 → 250 ms, ∝ x². BLOOM: swell
+// 0.1 → 4 s. REVERSE: segment length 0.2 → 2 s. Both exponential.
 inline float normalPredelaySeconds(float v) { return 0.25f * v * v; }
+inline float bloomSeconds(float v) { return expLerp(0.1f, 4.0f, v); }
+inline float reverseSeconds(float v) { return expLerp(0.2f, 2.0f, v); }
+
+// The floor governor's weight across DECAY's crossover (ADR 0008): 0 while
+// the tail is finite, 1 from infinite on.
+inline float governorWeight(float decay)
+{
+    return clamp01((decay - kDecayFiniteTop) / (kDecayInfiniteAt - kDecayFiniteTop));
+}
 
 } // namespace iv::map

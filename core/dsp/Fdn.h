@@ -28,7 +28,8 @@ public:
     // Floats of delay memory prepare() takes from its arena at this rate.
     static constexpr size_t memoryFloats(float sampleRate)
     {
-        return size_t(kN) * nextPow2(size_t(voicing::kFdnMaxLineSeconds * sampleRate) + 4);
+        return size_t(kN) * (nextPow2(size_t(voicing::kFdnMaxLineSeconds * sampleRate) + 4)
+                             + 2 * nextPow2(size_t(voicing::kInLoopMaxSeconds * sampleRate) + 4));
     }
 
     bool prepare(Arena& arena, float sampleRate, uint32_t seed);
@@ -38,9 +39,21 @@ public:
     // length; decayRate: 1/T60 in 1/s (0 = infinite); highT60Ratio: the
     // high end's T60 over the low end's (TONE). snap = jump straight there
     // (at prepare/reset), else SIZE glides (kSizeSlewPerSecond).
-    void setMeanSeconds(float meanSeconds, bool snap = false);
+    // spread: how far the lines' lengths fan out from the mean, 0..1
+    // (Supermassive's Warp: near 0 they're almost equal and the tail is a
+    // train of echoes; at 1 they're kFdnRatios apart, a wash).
+    void setMeanSeconds(float meanSeconds, float spread = 1.0f, bool snap = false);
     void setDecayRate(float rate) { decayRate_ = rate; }
     void setHighT60Ratio(float ratio) { highRatio_ = ratio; }
+    // Floor governor weight, 0..1 (ADR 0008): 1 at infinite DECAY. Above
+    // the floor level the loop loses a little more per pass, so an infinite
+    // tail fed for minutes settles at the floor instead of growing.
+    void setGovernor(float weight) { governorWeight_ = weight; }
+    // In-loop diffusion amount 0..1 (MASSIVE's SIZE); 0 bypasses it.
+    void setInLoopDiffusion(float amount) { inLoopTarget_ = amount; }
+    // Extra output level for a voicing (MASSIVE's loudness match).
+    void setOutputTrim(float trim) { outputTrim_ = trim; }
+    float levelDb() const { return levelDb_; }
 
     // Adds the wet to outL/outR (does not clear them).
     void process(const float* inL, const float* inR, float* outL, float* outR, int n);
@@ -64,6 +77,10 @@ private:
     // Absorbent filters: y = g (1 − b) x + b y.
     float     gain_[kN] = {}, pole_[kN] = {}, absorbY_[kN] = {};
     float     decayRate_ = 0.2f, highRatio_ = voicing::kDampingHighT60Ratio;
+    DelayLine apLine_[kN][2];
+    uint32_t  apLen_[kN][2] = {};
+    float     inLoopTarget_ = 0.0f, inLoopNow_ = 0.0f, outputTrim_ = 1.0f, levelGain_ = 1.0f;
+    float     governorWeight_ = 0.0f, levelPower_ = 0.0f, levelDb_ = -200.0f, blockPower_ = 0.0f;
     bool      ready_ = false;
 };
 

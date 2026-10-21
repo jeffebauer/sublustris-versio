@@ -4,10 +4,10 @@
 // the same way: prepare(), setParam() with Normalised values, button() and
 // gate() edges at a sample offset in the next block, process().
 //
-// M1: the HALL. In → predelay (TIME, NORMAL) → input diffusion → FDN →
-// MIX. Every SPACE position plays the Hall until the Plate (M5) and
-// Massive (M4) land. Button and gate edges are recorded; the gesture reader
-// (ADR 0009–0011) lands at M5.
+// M4: HALL and MASSIVE on the FDN, with ATTACK. In → predelay → input
+// diffusion → swell stage → FDN → (REVERSE) → MIX (SPEC §4.1). PLATE plays
+// the Hall until the Plate lands (M5). Button and gate edges are recorded;
+// the gesture reader (ADR 0009–0011) lands at M5.
 //
 // Memory (SPEC §5.2): the firmware calls attachMemory() with its SDRAM and
 // DTCM arrays before prepare(). Desktop Hosts may skip it: the Engine then
@@ -15,6 +15,8 @@
 #include "dsp/Diffuser.h"
 #include "dsp/Fdn.h"
 #include "dsp/Memory.h"
+#include "dsp/Reverse.h"
+#include "dsp/Swell.h"
 #include "params/ParamSpec.h"
 
 #include <array>
@@ -34,7 +36,8 @@ public:
     // Floats of each memory kind the Engine needs at this sample rate.
     static constexpr size_t largeFloats(float sampleRate)
     {
-        return dsp::Fdn::memoryFloats(sampleRate)
+        return dsp::Fdn::memoryFloats(sampleRate) + dsp::Swell::memoryFloats(sampleRate)
+             + dsp::Reverse::memoryFloats(sampleRate)
              + 2 * dsp::nextPow2(size_t(voicing::kPredelayMaxSeconds * sampleRate) + 4);
     }
     static constexpr size_t fastFloats(float sampleRate)
@@ -78,11 +81,13 @@ public:
 
     // Read-only views for tests.
     const dsp::Fdn& fdn() const { return fdn_; }
+    int activeSpace() const { return activeSpace_; }
 
 private:
     static constexpr int kChunk = dsp::Fdn::kControlBlock;
 
     void controlTick(int n);
+    void applySpace(bool snap);
     float smoothed(ParamId id) const { return smooth_[static_cast<size_t>(id)]; }
 
     float sampleRate_   = 48000.0f;
@@ -101,10 +106,19 @@ private:
     size_t attachedLargeCount_ = 0, attachedFastCount_ = 0;
 
     dsp::DelayLine    predelay_[2];
-    float             predelayNow_ = 0.0f, predelayStep_ = 0.0f; // samples
+    float             predelayNow_ = 0.0f, predelayStep_ = 0.0f, predelayTarget_ = 0.0f; // samples
     dsp::Diffuser<4>  diffuser_[2];
+    dsp::Swell        swell_;
     dsp::Fdn          fdn_;
-    float             lastMean_ = -1.0f;
+    dsp::Reverse      reverse_;
+    float             lastMean_ = -1.0f, lastSpread_ = -1.0f;
+
+    // SPACE flips (ADR 0013): the wet and the tank's input fade out, the
+    // tank restarts in the new voicing, and both fade back in.
+    int   activeSpace_ = 1, flipPhase_ = 0; // 0 steady, 1 fading out, 2 fading in
+    float flipGain_ = 1.0f, flipStep_ = 0.0f;
+    // ATTACK = REVERSE: crossfade between the forward and the reversed wet.
+    float reverseMix_ = 0.0f, reverseTarget_ = 0.0f;
 
     // MIX, ramped per sample across each control chunk.
     float dryNow_ = 1.0f, wetNow_ = 0.0f, dryStep_ = 0.0f, wetStep_ = 0.0f;

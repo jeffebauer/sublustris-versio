@@ -49,9 +49,14 @@ IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed)
     maxLen_ = voicing::kFdnMaxLineSeconds * sampleRate - 4.0f;
     ready_ = true;
     for (auto& l : line_) ready_ &= l.init(arena, size_t(voicing::kFdnMaxLineSeconds * sampleRate));
+    for (int i = 0; i < kN; ++i)
+        for (int k = 0; k < 2; ++k) {
+            apLen_[i][k] = uint32_t(voicing::kInLoopSeconds[i][k] * sampleRate);
+            ready_ &= apLine_[i][k].init(arena, size_t(voicing::kInLoopMaxSeconds * sampleRate));
+        }
     rng_ = seed ? seed : 1u;
     for (auto& t : lenTarget_) t = 0.0f;
-    setMeanSeconds(0.1f, true);
+    setMeanSeconds(0.1f, 1.0f, true);
     reset();
     return ready_;
 }
@@ -60,19 +65,25 @@ IV_SIZE_OPT void Fdn::reset()
 {
     for (int i = 0; i < kN; ++i) {
         line_[i].clear();
+        apLine_[i][0].clear();
+        apLine_[i][1].clear();
         absorbY_[i] = 0.0f;
         floorTarget_[i] = floorA_[i] = floorB_[i] = 0.0f;
         floorCountdown_[i] = 0.0f;
+        levelPower_ = blockPower_ = 0.0f;
+        levelDb_ = -200.0f;
         lenNow_[i] = lenTarget_[i];
         readNow_[i] = lenNow_[i];
+        inLoopNow_ = inLoopTarget_;
         readStep_[i] = 0.0f;
     }
 }
 
-IV_SIZE_OPT void Fdn::setMeanSeconds(float meanSeconds, bool snap)
+IV_SIZE_OPT void Fdn::setMeanSeconds(float meanSeconds, float spread, bool snap)
 {
     for (int i = 0; i < kN; ++i) {
-        float len = voicing::kFdnRatios[i] * meanSeconds * sampleRate_;
+        const float ratio = 1.0f + spread * (voicing::kFdnRatios[i] - 1.0f);
+        float len = ratio * meanSeconds * sampleRate_;
         if (len > maxLen_) len = maxLen_;
         if (len < 8.0f) len = 8.0f;
         lenTarget_[i] = float(primeAtOrAbove(uint32_t(len), lenTarget_, i));
@@ -86,6 +97,20 @@ void Fdn::control(int n)
     const float slew = voicing::kSizeSlewPerSecond * float(n); // samples of length per block
     const float floorDepth = voicing::kFloorDepthSeconds * sampleRate_;
     const float floorCoeff = 1.0f - std::exp(-2.0f * 3.14159265f * 0.3f * dt);
+
+    // Wet level over the last ~1.5 s, and the governor's extra loss.
+    levelPower_ += (1.0f - std::exp(-dt / voicing::kGovernorSeconds)) * (blockPower_ / float(n) - levelPower_);
+    blockPower_ = 0.0f;
+    levelDb_ = 10.0f * std::log10(levelPower_ + 1e-20f);
+    const float over = levelDb_ - voicing::kFloorDbfs;
+    const float governRate = over > 0.0f ? governorWeight_ * voicing::kGovernorRatePerDb * over : 0.0f;
+
+    inLoopNow_ += (1.0f - std::exp(-dt / 0.08f)) * (inLoopTarget_ - inLoopNow_);
+    if (inLoopNow_ < 1e-4f && inLoopTarget_ == 0.0f) inLoopNow_ = 0.0f;
+    float meanLen = 0.0f;
+    for (int i = 0; i < kN; ++i) meanLen += lenNow_[i];
+    meanLen /= float(kN) * sampleRate_;
+    levelGain_ = outputTrim_ * std::sqrt(meanLen / voicing::kFdnLevelRefSeconds);
     for (int i = 0; i < kN; ++i) {
         // SIZE glides toward its target, at most a semitone of bend.
         const float diff = lenTarget_[i] - lenNow_[i];
@@ -108,10 +133,16 @@ void Fdn::control(int n)
         // Loss per pass from this line's own length (Jot): the low end
         // decays at decayRate, the high end at decayRate / highRatio. At
         // infinite (rate 0) the highs still fade, over ~kInfiniteHighT60.
-        const float seconds = lenNow_[i] / sampleRate_;
-        const float lowRate = decayRate_;
-        float highRate = decayRate_ / highRatio_;
-        const float infiniteHigh = (1.0f / highRatio_ - 1.0f) / voicing::kInfiniteHighT60Seconds;
+        const float apSeconds = inLoopNow_ > 0.0f ? float(apLen_[i][0] + apLen_[i][1]) / sampleRate_ : 0.0f;
+        const float seconds = lenNow_[i] / sampleRate_ + apSeconds;
+        const float lowRate = decayRate_ + governRate;
+        float highRate = lowRate / highRatio_;
+        // ...but only while the tail is above its floor: at the floor the
+        // darkening stops and the tail holds (ADR 0008). Weighted by the
+        // governor, so finite tails are unaffected.
+        const float aboveFloor = (levelDb_ - (voicing::kFloorDbfs - 3.0f)) / 6.0f;
+        const float darken = 1.0f - governorWeight_ * (1.0f - (aboveFloor < 0.0f ? 0.0f : (aboveFloor > 1.0f ? 1.0f : aboveFloor)));
+        const float infiniteHigh = darken * (1.0f / highRatio_ - 1.0f) / voicing::kInfiniteHighT60Seconds;
         if (highRate < infiniteHigh) highRate = infiniteHigh;
         const float gLow  = std::pow(10.0f, -3.0f * seconds * lowRate);
         const float gHigh = std::pow(10.0f, -3.0f * seconds * highRate);
@@ -125,15 +156,23 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
 {
     if (!ready_) return;
     constexpr float kNorm = 0.35355339f; // 1 / sqrt(8): keeps the Hadamard mix energy-preserving
-    const float outGain = voicing::kFdnOutputGain * kNorm;
     for (int start = 0; start < n; start += kControlBlock) {
         const int m = (n - start) < kControlBlock ? (n - start) : kControlBlock;
         control(m);
+        const float outGain = voicing::kFdnOutputGain * kNorm * levelGain_;
+        const float apG = voicing::kInLoopCoeff * inLoopNow_;
         for (int s = start; s < start + m; ++s) {
             float y[kN];
             for (int i = 0; i < kN; ++i) {
                 readNow_[i] += readStep_[i];
-                const float x = line_[i].readCubic(readNow_[i]);
+                float x = line_[i].readCubic(readNow_[i]);
+                if (apG > 0.0f)
+                    for (int k = 0; k < 2; ++k) { // in-loop diffusion (MASSIVE)
+                        const float d = apLine_[i][k].read(apLen_[i][k]);
+                        const float v = x + apG * d;
+                        apLine_[i][k].write(v);
+                        x = d - apG * v;
+                    }
                 absorbY_[i] = gain_[i] * x + pole_[i] * absorbY_[i];
                 y[i] = absorbY_[i];
             }
@@ -144,6 +183,7 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
             }
             outL[s] += outGain * l;
             outR[s] += outGain * r;
+            blockPower_ += 0.5f * outGain * outGain * (l * l + r * r);
 
             // Fast Walsh–Hadamard transform: 24 adds for the 8×8 mix.
             for (int span = 1; span < kN; span <<= 1)

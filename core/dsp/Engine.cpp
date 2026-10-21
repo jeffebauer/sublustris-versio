@@ -60,7 +60,9 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
             const float s = voicing::kDiffuserSeconds[k] * (c ? voicing::kDiffuserRightScale : 1.0f);
             ready_ &= diffuser_[c].stage[k].init(fast_, uint32_t(s * sampleRate), voicing::kDiffuserCoeff[k]);
         }
+    ready_ &= swell_.prepare(large_, sampleRate);
     ready_ &= fdn_.prepare(large_, sampleRate, 0x1D5A7u);
+    ready_ &= reverse_.prepare(large_, sampleRate);
     reset();
 }
 
@@ -72,12 +74,15 @@ IV_SIZE_OPT void Engine::reset()
     smooth_ = values_;
     for (auto& p : predelay_) p.clear();
     for (auto& d : diffuser_) d.clear();
-    lastMean_ = map::hallMeanSeconds(smoothed(ParamId::Size));
-    fdn_.setMeanSeconds(lastMean_, true);
-    fdn_.setDecayRate(map::decayRate(smoothed(ParamId::Decay), 1));
-    fdn_.setHighT60Ratio(map::toneHighT60Ratio(smoothed(ParamId::Tone)));
+    activeSpace_ = normalisedToSwitch(values_[static_cast<size_t>(ParamId::Space)]);
+    flipPhase_ = 0;
+    flipGain_ = 1.0f;
+    flipStep_ = 0.0f;
+    applySpace(true);
+    swell_.reset();
     fdn_.reset();
-    predelayNow_ = map::normalPredelaySeconds(smoothed(ParamId::Time)) * sampleRate_;
+    reverse_.reset();
+    reverseTarget_ = reverseMix_ = normalisedToSwitch(smoothed(ParamId::Attack)) == 2 ? 1.0f : 0.0f;
     predelayStep_ = 0.0f;
     const auto g = map::mixGains(smoothed(ParamId::Mix));
     dryNow_ = g.dry;
@@ -92,6 +97,46 @@ void Engine::setParam(ParamId id, float normalised)
     values_[static_cast<size_t>(id)] = normalised;
 }
 
+// Sets every voicing target from the smoothed knobs for the SPACE in use
+// (activeSpace_). snap: jump straight there (reset, a SPACE flip).
+void Engine::applySpace(bool snap)
+{
+    const float size = smoothed(ParamId::Size), decay = smoothed(ParamId::Decay), time = smoothed(ParamId::Time);
+    const int attack = normalisedToSwitch(smoothed(ParamId::Attack));
+    const bool massive = activeSpace_ == 2;
+    const int t60Space = massive ? 2 : 1; // PLATE plays the Hall until M5
+
+    const float mean = massive ? map::massiveMeanSeconds(size) : map::hallMeanSeconds(size);
+    const float spread = massive ? map::massiveSpread(size) : 1.0f;
+    if (snap || std::fabs(mean - lastMean_) > 1e-6f || std::fabs(spread - lastSpread_) > 1e-6f) {
+        lastMean_ = mean;
+        lastSpread_ = spread;
+        fdn_.setMeanSeconds(mean, spread, snap);
+    }
+    fdn_.setDecayRate(map::decayRate(decay, t60Space));
+    fdn_.setHighT60Ratio(map::toneHighT60Ratio(smoothed(ParamId::Tone)));
+    fdn_.setGovernor(map::governorWeight(decay));
+    fdn_.setInLoopDiffusion(massive ? map::massiveDiffusion(size) : 0.0f);
+    fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : 1.0f);
+
+    const float diffusion = massive ? map::massiveDiffusion(size) : 1.0f;
+    for (int c = 0; c < 2; ++c)
+        for (int k = 0; k < 4; ++k) diffuser_[c].stage[k].coeff = voicing::kDiffuserCoeff[k] * diffusion;
+
+    // ATTACK (ADR 0015): what TIME means, and the swell stage's attack.
+    float predelay = massive ? map::massivePredelaySeconds(size) : 0.0f;
+    float attackSeconds = massive ? map::massiveNormalAttackSeconds(decay, size) : 0.0f;
+    if (attack == 0) predelay += map::normalPredelaySeconds(time);
+    if (attack == 1) attackSeconds = map::bloomSeconds(time) * (massive ? map::massiveMass(size) : 1.0f);
+    swell_.setAttackSeconds(attackSeconds, snap);
+    reverse_.setSegmentSeconds(map::reverseSeconds(time));
+    reverseTarget_ = attack == 2 ? 1.0f : 0.0f;
+
+    const float pd = predelay * sampleRate_;
+    if (snap) predelayNow_ = pd;
+    predelayTarget_ = pd;
+}
+
 void Engine::controlTick(int n)
 {
     // Smooth every knob toward its value (ParamSpec tiers, ADR 0012).
@@ -104,18 +149,34 @@ void Engine::controlTick(int n)
         }
     }
 
-    // SIZE: the FDN glides its lines itself; only retarget on a real change.
-    const float mean = map::hallMeanSeconds(smoothed(ParamId::Size));
-    if (std::fabs(mean - lastMean_) > 1e-6f) {
-        lastMean_ = mean;
-        fdn_.setMeanSeconds(mean);
+    // SPACE flip (ADR 0013): fade out over kFlipSeconds, restart the tank in
+    // the new voicing, fade back in.
+    const int space = normalisedToSwitch(smoothed(ParamId::Space));
+    const float flipChunk = float(n) / (voicing::kSpaceFlipSeconds * sampleRate_);
+    if (flipPhase_ == 0 && space != activeSpace_) flipPhase_ = 1;
+    if (flipPhase_ == 1) {
+        flipStep_ = -flipChunk / float(n);
+        if (flipGain_ <= 0.0f) {
+            activeSpace_ = space;
+            fdn_.reset();
+            swell_.reset();
+            reverse_.reset();
+            applySpace(true);
+            flipPhase_ = 2;
+        }
     }
-    fdn_.setDecayRate(map::decayRate(smoothed(ParamId::Decay), 1));
-    fdn_.setHighT60Ratio(map::toneHighT60Ratio(smoothed(ParamId::Tone)));
+    if (flipPhase_ == 2) {
+        flipStep_ = flipChunk / float(n);
+        if (flipGain_ >= 1.0f) {
+            flipPhase_ = 0;
+            flipStep_ = 0.0f;
+        }
+    }
+    if (flipPhase_ == 0) flipStep_ = 0.0f;
 
-    // TIME (NORMAL): predelay, gliding per sample across the chunk.
-    const float pd = map::normalPredelaySeconds(smoothed(ParamId::Time)) * sampleRate_;
-    predelayStep_ = (pd - predelayNow_) / float(n);
+    applySpace(false);
+    swell_.control(n);
+    predelayStep_ = (predelayTarget_ - predelayNow_) / float(n);
 
     const auto g = map::mixGains(smoothed(ParamId::Mix));
     dryStep_ = (g.dry - dryNow_) / float(n);
@@ -131,11 +192,14 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         }
         return;
     }
+    const float reverseStep = 1.0f / (voicing::kAttackFadeSeconds * sampleRate_);
     for (int start = 0; start < numSamples; start += kChunk) {
         const int n = (numSamples - start) < kChunk ? (numSamples - start) : kChunk;
         controlTick(n);
         for (int i = 0; i < n; ++i) {
-            const float l = inL[start + i], r = inR[start + i];
+            flipGain_ += flipStep_;
+            flipGain_ = flipGain_ < 0.0f ? 0.0f : (flipGain_ > 1.0f ? 1.0f : flipGain_);
+            const float l = inL[start + i] * flipGain_, r = inR[start + i] * flipGain_;
             predelay_[0].write(l);
             predelay_[1].write(r);
             predelayNow_ += predelayStep_;
@@ -144,16 +208,26 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                 pl = predelay_[0].readCubic(predelayNow_);
                 pr = predelay_[1].readCubic(predelayNow_);
             }
-            bufL_[i] = diffuser_[0].process(pl);
-            bufR_[i] = diffuser_[1].process(pr);
+            pl = diffuser_[0].process(pl);
+            pr = diffuser_[1].process(pr);
+            swell_.process(pl, pr);
+            bufL_[i] = pl;
+            bufR_[i] = pr;
             wetL_[i] = wetR_[i] = 0.0f;
         }
         fdn_.process(bufL_, bufR_, wetL_, wetR_, n);
         for (int i = 0; i < n; ++i) {
+            // REVERSE: always recording, crossfaded in and out over ~50 ms.
+            float rl = wetL_[i], rr = wetR_[i];
+            reverse_.process(rl, rr);
+            reverseMix_ += reverseMix_ < reverseTarget_ ? reverseStep : (reverseMix_ > reverseTarget_ ? -reverseStep : 0.0f);
+            reverseMix_ = reverseMix_ < 0.0f ? 0.0f : (reverseMix_ > 1.0f ? 1.0f : reverseMix_);
+            const float wl = (wetL_[i] + reverseMix_ * (rl - wetL_[i])) * flipGain_;
+            const float wr = (wetR_[i] + reverseMix_ * (rr - wetR_[i])) * flipGain_;
             dryNow_ += dryStep_;
             wetNow_ += wetStep_;
-            outL[start + i] = dryNow_ * inL[start + i] + wetNow_ * wetL_[i];
-            outR[start + i] = dryNow_ * inR[start + i] + wetNow_ * wetR_[i];
+            outL[start + i] = dryNow_ * inL[start + i] + wetNow_ * wl;
+            outR[start + i] = dryNow_ * inR[start + i] + wetNow_ * wr;
         }
     }
 }

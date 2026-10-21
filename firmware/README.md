@@ -34,8 +34,9 @@ The M0 release figure is the platform's floor before any DSP: libDaisy, the HAL,
 |---|---|---|---|
 | M0 (passthrough) | 53,852 | 52,224 | 82,356 |
 | M1 (Hall: FDN, diffusers, predelay) | 61,484 (46 %) | 62,312 | 82,356 |
+| M4 (MASSIVE, swell, REVERSE, floor governor, in-loop diffusion) | 66,628 (50 %) | 68,248 | 82,356 |
 
-Memory at M1: `gLarge` 8.5 MB in SDRAM (FDN lines + predelay, power-of-two lines sized for MASSIVE), `gFast` 16 KB in DTCM (input diffusers), the Engine object ~1.3 KB in AXI SRAM.
+Memory at M4: `gLarge` 15 MB in SDRAM (FDN lines and in-loop allpasses, swell, REVERSE segments, predelay; power-of-two buffers), `gFast` 16 KB in DTCM (input diffusers), the Engine object in AXI SRAM.
 
 ### Flash-budget techniques in use (from Resilio's flash study, SPEC §5.3)
 

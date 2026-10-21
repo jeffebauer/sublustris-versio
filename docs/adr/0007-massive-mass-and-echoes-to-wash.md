@@ -16,3 +16,8 @@
 - SIZE "just bigger" in Massive (always a wash).
 - Swell set by Decay only, or a fixed swell.
 - Massive keeping its own Decay/Size coupling and ignoring the ATTACK switch.
+
+**Amendment (21 Oct 2026, M4 build; SPEC v1.0.1, for the owner to confirm by ear):**
+- SPEC §3 gave MASSIVE's SIZE a mean line of 60 ms → 2 s, which can't produce "long repeating echoes at low SIZE". Built as **0.35 → 2 s**, with the spread 0.08 → 1 and diffusion 0.15 → 1. Measured: the tail's envelope spikiness (how echo-like it is) falls steadily from 2.9 dB at SIZE 0 to 0.36 dB at SIZE 1, as smooth as HALL (`test_massive`).
+- Long lines alone don't blur into a wash for many seconds, so MASSIVE gets **in-loop diffusion**, two allpasses inside each line, scaled by SIZE (Supermassive's Density does the same job).
+- SIZE moves glide at the one-semitone limit (ADR 0012), so a full SIZE sweep in MASSIVE takes ~40 s (its lines change by up to 2.5 s). Owner question: keep the gentle bend, or allow a faster swoop with more bend in MASSIVE?
