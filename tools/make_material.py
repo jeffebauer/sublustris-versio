@@ -18,6 +18,9 @@ Material (skank and vibes are built by render_review_pages.sh itself):
   keys    electric piano chords, held and lightly rolled (Wurlitzer, CC BY 3.0)
   voice   spoken phrases with gaps: consonants and sibilance (macOS speech)
   voicelow  the same idea in a low male voice (macOS Ralph, ~74 Hz): the "metallic?" test
+  fullmix a dense dub techno track (kick, rim, hats, bass, pad, stabs), 120 bpm, C minor; the
+          reverb gets only fullmix_send.wav (stabs and rims, at their level in the mix), the
+          page's dry is the whole mix: masking changes how loud a reverb seems (item 7)
   piano   a dry, close piano (synthesized: stretched partials, hammer knock, two-stage
           string decay), single notes, repeats and chords: a ring shows on it first
 
@@ -158,19 +161,21 @@ class Mix:
         x = x[: len(self.buf) - i] * gain
         self.buf[i: i + len(x)] += x
 
-    def write(self, name: str, trim_db: float = 0.0):
-        """trim_db: by ear-ish loudness (LUFS) after the RMS match; sustained material reads louder."""
+    def write(self, name: str, trim_db: float = 0.0, gain: float | None = None) -> float:
+        """trim_db: by ear-ish loudness (LUFS) after the RMS match; sustained material reads louder.
+        gain: use this gain instead of matching (a send written at its mix's level). Returns the gain."""
         y = self.buf
         mono = y.mean(axis=1)
         w = int(0.05 * SR)
         win = np.sqrt(np.mean(mono[: len(mono) // w * w].reshape(-1, w) ** 2, axis=1))
         act = win[win > win.max() * db(-30)]
         g = db(-20 + trim_db) / max(1e-9, np.sqrt(np.mean(act ** 2)))
-        g = min(g, db(-3) / max(1e-9, np.abs(y).max()))
+        g = min(g, db(-3) / max(1e-9, np.abs(y).max())) if gain is None else gain
         y = np.concatenate([y * g, np.zeros((int(TAIL * SR), 2))])
         OUT.mkdir(parents=True, exist_ok=True)
         sf.write(str(OUT / f"{name}.wav"), y.astype(np.float32), SR, subtype="PCM_24")
         print(f"wrote renders/_material/{name}.wav: {len(y) / SR:.1f} s (phrase {len(self.buf) / SR:.1f} s), gain {20 * np.log10(g):+.1f} dB")
+        return g
 
 
 def hum(sd_ms: float = 3.0) -> float:
@@ -425,6 +430,52 @@ def voicelow():
                                  "Hold it. Let it ring. Now let it go."])
 
 
+def fullmix():
+    """A dense track the way a reverb meets it in a mix: everything plays dry, and only the
+    stabs and rims go to the send (renders/_material/fullmix_send.wav, written at the mix's own
+    gain, so the send sits at its real level under the full mix)."""
+    vd, rd = CC0 / "virtuosity", CC0 / "rusty"
+    g = lambda d: sorted(d.glob("*.flac"))
+    kit = Kit({"kick": g(vd / "kick"), "rim": g(rd / "rimshot"), "hh": g(rd / "hh_closed")})
+    items = []
+    for p in sorted((CC0 / "bass_babyblue").glob("*.wav")):
+        mm = re.search(r"_([a-g])(b?)(\d)_", p.name)
+        if mm:
+            items.append((12 * (int(mm.group(3)) + 1) + PC[mm.group(1)] - (mm.group(2) == "b") - 12, p))
+    bank = Bank(items)
+    spb, bars = 60 / 120, 8
+    dur = 0.1 + bars * 4 * spb + 0.8
+    full, send = Mix(dur), Mix(dur)
+    T = lambda bar, b: 0.1 + (bar * 4 + b) * spb + hum(2)
+    chord = [midi(n) for n in ("C3", "G3", "Bb3", "Eb4", "D4")]
+    n_stab = int(0.45 * SR)
+    for bar in range(bars):
+        for b in range(4):
+            full.add(kit.hit("kick", vary(0.85)), T(bar, b), db(-1))
+        for b in (0.75, 1.5, 2.75, 3.25) if bar % 2 else (0.75, 2.75):
+            x, t = kit.hit("rim", vary(0.6, 0.2)), T(bar, b)
+            full.add(x, t, db(-8), 0.2)
+            send.add(x, t, db(-8), 0.2)
+        for st in range(16):
+            full.add(kit.hit("hh", vary(0.35 if st % 2 else 0.6, 0.15)), T(bar, st / 4), db(-16 if st % 2 else -13), -0.3)
+        root = ("C1", "C1", "Ab0", "Bb0")[bar % 4]
+        for b, l, off in ((0, 0.75, 0), (1.5, 0.5, 0), (2.5, 0.5, 7), (3.5, 0.4, 12)):
+            full.add(fade(bank.note(midi(root) + off + 12), l * spb, 0.04), T(bar, b), db(-3))
+        open_ = 0.5 - 0.5 * np.cos(2 * np.pi * bar / bars)
+        for b in (0.5, 1.5, 2.5, 3.5):
+            x = sum(detuned(c, n_stab, 3, 9) for c in chord) / len(chord)
+            cut = 350 + (700 + 2600 * open_) * np.exp(-np.arange(n_stab) / (0.08 * SR))
+            y, t = svf_lp(x, cut, 1.1) * adsr(n_stab, 0.003, 0.09, 0.0, 0.05, 0.25), T(bar, b)
+            full.add(y, t, db(-4), 0.1)
+            send.add(y, t, db(-4), 0.1)
+    n_pad = int(bars * 4 * spb * SR)
+    x = sum(detuned(midi(c), n_pad, 4, 12) for c in ("C3", "Eb3", "G3", "Bb3")) / 4
+    pad_ = svf_lp(x, 900 * (1 + 0.2 * np.sin(2 * np.pi * 0.1 * np.arange(n_pad) / SR)), 0.7) * adsr(n_pad, 2.0, 1.0, 1.0, 1.0, n_pad / SR - 1.0)
+    full.add(np.stack([pad_, np.roll(pad_, int(0.009 * SR))], axis=1), 0.1, db(-14))
+    gain = full.write("fullmix")
+    send.write("fullmix_send", gain=gain)
+
+
 def piano_note(m: int, vel: float, hold: float) -> np.ndarray:
     """One dry piano note: inharmonic partials (B rises toward the top, as short stiff
     strings do), struck at 1/7 of the string, each partial a pair 0.4 cents apart (two
@@ -473,7 +524,7 @@ def piano():
 
 
 ALL = {"stabs": stabs, "pad": pad, "lead": lead, "drums": drums, "bass": bass, "keys": keys, "voice": voice,
-       "voicelow": voicelow, "piano": piano}
+       "voicelow": voicelow, "piano": piano, "fullmix": fullmix}
 
 if __name__ == "__main__":
     want = sys.argv[1:] or list(ALL)

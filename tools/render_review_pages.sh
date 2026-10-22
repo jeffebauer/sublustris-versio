@@ -41,8 +41,8 @@ fi
 MATERIALS=(skank)
 [ -f $SRC/vibes.wav ] && MATERIALS+=(vibes)
 # The wider set (tools/make_material.py): pads, stabs, a lead, drums, bass, keys, a voice,
-# a low voice and a dry piano (the last two for "metallic?", testing plan item 6).
-EXTRA=(stabs pad lead drums bass keys voice voicelow piano)
+# a low voice and a dry piano (for "metallic?"), and a full mix (testing plan item 6).
+EXTRA=(stabs pad lead drums bass keys voice voicelow piano fullmix)
 for m in $EXTRA; do
     if [ ! -f $SRC/$m.wav ] && [ -x .venv/bin/python ]; then .venv/bin/python tools/make_material.py $m > /dev/null; fi
 done
@@ -75,7 +75,10 @@ r() {
     for m in $MATERIALS; do
         local a=()
         [ -n "$auto" ] && a=(--auto $SRC/${auto}_${m}.json)
-        $R $SRC/$m.wav renders/$page/$dir/${m}_${tag}.wav --set mix=1 --sidecar "${a[@]}" "$@" > /dev/null
+        # A material with a send (fullmix) feeds the reverb only that; the page's dry is the whole mix.
+        local in=$SRC/$m.wav
+        [ -f $SRC/${m}_send.wav ] && in=$SRC/${m}_send.wav
+        $R $in renders/$page/$dir/${m}_${tag}.wav --set mix=1 --sidecar "${a[@]}" "$@" > /dev/null
     done
 }
 page() { # page title readme
