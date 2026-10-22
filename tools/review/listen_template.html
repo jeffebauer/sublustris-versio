@@ -922,7 +922,21 @@ function results() {
   if (BLEND) lines.push("Listened at MIX " + blendEl.value + " % (moved while listening: notes may cover other balances).");
   if (refEl.value) lines.push("Compared with reference: " + (refById(refEl.value) || {}).name);
   lines.push("");
+  // The hidden twin (make_review.py): a repeated row whose two copies must agree for a pick to count.
+  const pickedItem = (rowId, col) => {
+    const k = rowId + "|" + col.id, p = state.picks[k], panel = DATA.panels[k];
+    return p == null || !panel ? null : panel.variants[p];
+  };
+  const twinVerdict = (row, col) => {
+    const twin = DATA.rows.find(r => r.twinOf === row.id);
+    if (!twin) return "";
+    const a = pickedItem(row.id, col), b = pickedItem(twin.id, col);
+    if (!a || !b) return " (repeated card: pick both copies)";
+    return a.item === b.item ? " (repeated card: same pick both times)"
+                             : ` (repeated card: picked ${b.k || b.n} the other time, so no clear preference)`;
+  };
   if (CHOICES) DATA.rows.forEach(row => {
+    if (row.twinOf) return;
     const inRow = DATA.cols.filter(col => DATA.panels[row.id + "|" + col.id] && DATA.panels[row.id + "|" + col.id].variants.length > 1);
     if (!inRow.length) return;
     const indent = row.name ? "- " : "";
@@ -931,7 +945,7 @@ function results() {
       const k = row.id + "|" + col.id, p = state.picks[k], panel = DATA.panels[k];
       const v = p == null ? null : panel.variants[p];
       const what = v ? [v.k, v.n].filter(Boolean).join(", ") : "no pick";
-      lines.push(`${indent}${col.name ? col.name + ": " : "My pick: "}${what}${v && state.blind[k] ? " (picked blind)" : ""}`);
+      lines.push(`${indent}${col.name ? col.name + ": " : "My pick: "}${what}${v && state.blind[k] ? " (picked blind)" : ""}${twinVerdict(row, col)}`);
     });
   });
   const notes = DATA.cols.map(col => [col, (state.notes[col.id] || "").trim()]).filter(x => x[1]);

@@ -862,6 +862,30 @@ def build_page_data(root, out_path, items, refs, rows=None, columns=None, varian
     }
 
 
+def add_hidden_twin(data):
+    """A pick page's repeated card (testing plan item 4, docs/research/reverb-testing-practices.md):
+    one row with a choice is shown twice, the copy elsewhere on the page. If the two copies get
+    picks for different versions, the page reports "no clear preference" for that question, so a
+    coin flip isn't acted on as a pick. Which row is fixed per page title, so a rebuild keeps it."""
+    rows = data["rows"]
+    choice_rows = [r for r in rows if any(len(data["panels"].get(r["id"] + "|" + c["id"], {}).get("variants", [])) > 1
+                                          for c in data["cols"])]
+    if not choice_rows or len(rows) < 3:   # with two rows the copy would sit next to its original
+        return None
+    seed = sum(ord(ch) * (i + 1) for i, ch in enumerate(data["title"]))
+    orig = choice_rows[seed % len(choice_rows)]
+    twin = dict(orig, id="r{}".format(len(rows)), twinOf=orig["id"])
+    for c in data["cols"]:
+        k = orig["id"] + "|" + c["id"]
+        if k in data["panels"]:
+            data["panels"][twin["id"] + "|" + c["id"]] = json.loads(json.dumps(data["panels"][k]))
+    # Somewhere not next to the original, so the two aren't heard back to back.
+    at = rows.index(orig)
+    spots = [i for i in range(len(rows) + 1) if abs(i - at) > 1 and abs(i - (at + 1)) > 1] or [len(rows)]
+    rows.insert(spots[seed % len(spots)], twin)
+    return twin["id"]
+
+
 # Level-match: each version is moved towards the median loudness of its panel,
 # by at most this much either way.
 LEVEL_MATCH_CAP_DB = 12.0
