@@ -46,6 +46,7 @@ float uniform(uint32_t& s) // −1..1
 IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed, float maxLineSeconds)
 {
     sampleRate_ = sampleRate;
+    lowCoeff_ = 1.0f - std::exp(-6.2831853f * 400.0f / sampleRate);
     shelfK_ = lossShelfK(sampleRate);
     maxLen_ = maxLineSeconds * sampleRate - 4.0f;
     ready_ = true;
@@ -85,6 +86,7 @@ IV_SIZE_OPT void Fdn::reset()
         apLine_[i][1].clear();
         absorbY_[i] = absorbX_[i] = 0.0f;
         interp_[i] = 0.0f;
+        stillInterp_[i] = lpStill_[i] = lpMod_[i] = 0.0f;
         era_[i].reset();
         driftGen_[i].reset();
         floorTarget_[i] = floorA_[i] = floorB_[i] = 0.0f;
@@ -92,6 +94,7 @@ IV_SIZE_OPT void Fdn::reset()
         governor_.reset();
         lenNow_[i] = lenTarget_[i];
         readNow_[i] = lenNow_[i];
+        stillNow_[i] = lenNow_[i];
         inLoopNow_ = inLoopTarget_;
         earlyNow_ = earlyTarget_;
         readStep_[i] = 0.0f;
@@ -149,6 +152,7 @@ void Fdn::control(int n)
         if (target < 4.0f) target = 4.0f;
         if (target > maxLen_) target = maxLen_;
         readStep_[i] = (target - readNow_[i]) / float(n);
+        stillStep_[i] = (lenNow_[i] - stillNow_[i]) / float(n);
 
         // Loss per pass from this line's own length (Jot): the low end
         // decays at decayRate (+ the governor), the high end at that /
@@ -182,6 +186,13 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
             for (int i = 0; i < kN; ++i) {
                 readNow_[i] += readStep_[i];
                 float x = line_[i].readAllpass(readNow_[i], interp_[i]);
+                stillNow_[i] += stillStep_[i];
+                if (stillLows_) { // PROTOTYPE: the lows from the unmodulated read, the rest from the moving one
+                    const float still = line_[i].readAllpass(stillNow_[i], stillInterp_[i]);
+                    lpStill_[i] += lowCoeff_ * (still - lpStill_[i]);
+                    lpMod_[i] += lowCoeff_ * (x - lpMod_[i]);
+                    x += lpStill_[i] - lpMod_[i];
+                }
                 if (apG > 0.0f)
                     for (int k = 0; k < 2; ++k) { // in-loop diffusion (MASSIVE)
                         const float d = apLine_[i][k].read(apLenNow_[i][k]);

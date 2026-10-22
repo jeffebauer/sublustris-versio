@@ -64,6 +64,7 @@ public:
     void setInLoopDiffusion(float amount) { inLoopTarget_ = amount; }
     // PROTOTYPE (renders/small_hall): the in-loop allpasses' lengths × k (1 = MASSIVE's).
     void setInLoopScale(float k) { apScale_ = k; }
+    void setStillLows(bool on) { stillLows_ = on; } // PROTOTYPE (renders/still_lows)
     // ERA's in-loop layers and DRIFT, set at control rate (SPEC §4.6, §4.7).
     void setEra(const EraMix& m)
     {
@@ -104,6 +105,10 @@ private:
     // Per-sample read position for the current control block.
     float     readNow_[kN] = {}, readStep_[kN] = {};
     float     interp_[kN] = {}; // allpass-interpolation state per read
+    // PROTOTYPE (renders/still_lows, the audit's A4): a second, unmodulated read per line for the
+    // band below ~400 Hz (Schlecht: a modulated low end sounds detuned).
+    bool      stillLows_ = false;
+    float     stillNow_[kN] = {}, stillStep_[kN] = {}, stillInterp_[kN] = {}, lpStill_[kN] = {}, lpMod_[kN] = {}, lowCoeff_ = 0.05f;
     // Absorbent filters: y = g (1 − b) x + b y.
     float     gain_[kN] = {}, pole_[kN] = {}, absorbY_[kN] = {};
     float     b1_[kN] = {}, absorbX_[kN] = {}, shelfK_ = 0.0f; // lossShelfK(sampleRate_)

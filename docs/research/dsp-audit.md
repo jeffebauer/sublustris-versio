@@ -63,6 +63,8 @@ Secondary sources (search snippets only, treat as approximate): the Lexicon 224 
 - **What our code does.** The whole signal is modulated, lows included. The floor's step times are already spread (`kFloorStepSeconds × (1 + 0.12 i)`). DRIFT's sine rates are spread per line.
 - **Likely heard.** With DRIFT turned up, sub-bass in the tail wavers in pitch. For dub that may be a Cathedra-like feature or a muddy bass, so it is a listening question.
 
+- **Measured and prototyped (23 Oct 2026):** a held 55 Hz into the tail, peak-to-peak pitch wander (crude FFT peak tracking): HALL DRIFT CW 397 → 23 cents with the lows read unmodulated (`IV_STILL_LOWS`, a second read per line crossed over at 400 Hz); MASSIVE CW 120 → 27; MASSIVE CCW 35 → 17; HALL CCW 84 → 109 (estimator noise). FDN only. Page: `renders/still_lows`.
+
 ---
 
 ## PLATE: `core/dsp/Plate.*` against Dattorro (1997)

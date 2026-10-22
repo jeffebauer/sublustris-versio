@@ -92,6 +92,8 @@ public:
     }
     // PROTOTYPE, the ducking listening test (owner's M1 notes, 23 Oct 2026): × the duck amount (0 = off).
     void  setDuckScale(float k) { duckScale_ = k; }
+    // PROTOTYPE, renders/still_lows (the audit's A4): HALL and MASSIVE keep their lows unmodulated.
+    void  setStillLows(bool on) { fdn_.setStillLows(on); twinFdn_.setStillLows(on); }
     // PROTOTYPE, renders/midiverb (the audit's E1): ERA's last stretch as the real Midiverb
     // (13 bits instead of 12 -> 8, and its one-pole low-pass on every pass).
     void  setMidiverbReal(bool on) { midiverbReal_ = on; }

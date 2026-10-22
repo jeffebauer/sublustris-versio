@@ -525,3 +525,29 @@ B_like_the_unit   as the unit: 13 bits and its dark loop" > renders/midiverb/REA
     python3 tools/review/make_review.py renders/midiverb --title "Immensio: ERA's Midiverb" --level-match --dry $SRC --wet-only > /dev/null
     echo "renders/midiverb/index.html"
 fi
+
+if on still_lows; then
+    # The DSP audit's A4 (Schlecht: keep the band below ~400 Hz unmodulated). Measured 23 Oct 2026, a
+    # held 55 Hz into the tail: HALL with DRIFT CW wanders ~400 cents peak-to-peak, ~23 with still lows.
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in bass pad keys; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page still_lows
+    for v in 0:A_today 1:B_still_lows; do
+        for c in "HALL:0:hall_tape" "HALL:1:hall_cathedra" "MASSIVE:0:massive_tape" "MASSIVE:1:massive_cathedra"; do
+            sp=${c%%:*}; rest=${c#*:}; dr=${rest%%:*}; col=${rest#*:}
+            IV_STILL_LOWS=${v%%:*} r still_lows $col ${v##*:} "" --set space=$sp --set era=0 --set size=0.6 --set decay=0.7 --set drift=$dr
+        done
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "Bass in a moving tail (from the DSP audit; the research keeps the band below about 400 Hz still, because a moving low end sounds detuned). With DRIFT turned up, the whole tail wavers in pitch, sub-bass included: measured on a held 55 Hz note, the bass in a HALL tail with DRIFT fully CW wanders about 4 semitones peak to peak, in MASSIVE over a semitone. B keeps the lows still and lets everything above about 400 Hz move as today (HALL CW: under a quarter-tone). For dub, a wavering bass may be a feature (Cathedra-like) or mud: which do you want? DRIFT fully CCW (tape) and fully CW (Cathedra), SIZE 0.6, DECAY 0.7, ERA clean.
+
+hall_tape          HALL, DRIFT fully CCW (tape)
+hall_cathedra      HALL, DRIFT fully CW (Cathedra)
+massive_tape       MASSIVE, DRIFT fully CCW
+massive_cathedra   MASSIVE, DRIFT fully CW
+
+A_today            the whole tail moves, bass included
+B_still_lows       the lows stay put; above ~400 Hz moves as today" > renders/still_lows/README.txt
+    python3 tools/review/make_review.py renders/still_lows --title "Immensio: bass in a moving tail" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/still_lows/index.html"
+fi
