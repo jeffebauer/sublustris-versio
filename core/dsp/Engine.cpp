@@ -428,8 +428,29 @@ void Engine::applySpace(bool snap)
     }
 }
 
+// PROTOTYPE (setDiffuserIndependent): lengths of their own for the right side, each shorter
+// than the 1.071x copy the buffers were sized for, mutually prime in samples at 48 kHz.
+void Engine::setDiffuserIndependent(bool on)
+{
+    constexpr float kRight[4] = {0.004937f, 0.003437f, 0.013208f, 0.008687f};
+    for (int k = 0; k < 4; ++k) {
+        const float s = on ? kRight[k] : voicing::kDiffuserSeconds[k] * voicing::kDiffuserRightScale;
+        diffuser_[1].stage[k].length = uint32_t(s * sampleRate_);
+        twinDiffuser_[1].stage[k].length = uint32_t(s * sampleRate_);
+    }
+}
+
 void Engine::controlTick(int n)
 {
+    if (diffMotionMs_ > 0.0f) { // PROTOTYPE (setDiffuserMotion)
+        diffMotionPhase_ += 0.4f * float(n) / sampleRate_;
+        if (diffMotionPhase_ >= 1.0f) diffMotionPhase_ -= 1.0f;
+        float depth = diffMotionMs_ * 0.001f * sampleRate_;
+        if (depth > 8.0f) depth = 8.0f; // the buffers' spare room (nextPow2 of the 1.071x lengths)
+        const float m = depth * std::sin(6.2831853f * diffMotionPhase_);
+        diffuser_[0].stage[0].mod = m;
+        diffuser_[1].stage[0].mod = -m;
+    }
     // Smooth every knob toward its value (ParamSpec tiers, ADR 0012).
     for (const auto& p : kParams) {
         const size_t i = static_cast<size_t>(p.id);

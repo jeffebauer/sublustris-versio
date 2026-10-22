@@ -194,7 +194,7 @@ void Plate::process(const float* inL, const float* inR, float* outL, float* outR
         const float k = scaleNow_ * sampleRate_ / kPaperRate;
         const float outGain = kOutputGain * levelGain_;
         for (int s = start; s < start + m; ++s) {
-            const float in[2] = {inL[s], inR[s]};
+            const float in[2] = {swapIn_ ? inR[s] : inL[s], swapIn_ ? inL[s] : inR[s]};
             float next[2];
             for (int b = 0; b < 2; ++b) {
                 Branch& br = b_[b];

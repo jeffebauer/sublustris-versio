@@ -6,6 +6,9 @@
 ## To do
 
 ### Decide
+- [ ] **BLOOM on percussion** (`renders/swell_smear/index.html`, picks; the DSP audit's S1): a hit through a long BLOOM comes back as a rising train of ghost hits (measured: the swell flickers 3–7.5 dB). B smears each of the swell's taps across the gap to the next. A today or B?
+- [ ] **The PLATE's stereo image** (`renders/plate_stereo/index.html`, picks; the audit's P1): play hard left and the plate first answers only on the right. B answers on the side you played. A (a ping-pong) or B?
+- [ ] **Repeated hits in the PLATE** (`renders/diffuser_motion/index.html`, picks; Mutable Instruments idea): identical hits enter the plate identically. B lets the first input allpass wander very slightly. Subtle; A or B?
 - [ ] **Ducking at infinite DECAY** (`renders/ducking/index.html`, picks, not level-matched; your M1 notes): A today (darkens and dips), B none, C/D/E 4:1 compression with no darkening (quick 10 ms / 0.15 s, smooth 30 ms / 0.4 s, slow 50 ms / 1 s), in HALL, MASSIVE and PLATE on the new material. Measured: any ducking makes the tail rise when you stop; E pumps least (2.1–3.5 dB) with the smallest step.
 - [ ] **The small HALL's build-up** (`renders/small_hall/index.html`, picks; your M1 notes): at long and infinite DECAY, A today, B the smallest SIZE raised to 35 ms, C/D in-loop diffusion (a little / more), E both. Measured on noise: B rings least at long DECAY, the diffusion least at infinite. Your M1 TONE note ("sounds good") is logged.
 - [ ] **The held-tail makeup** (`renders/makeup/index.html`, picks, not level-matched): with it, an infinite tail holds where it settled; without it, with tape wobble and the cassette, MASSIVE sags about 3 dB over 10 minutes and HALL about 2.4 dB (frozen pads hold either way). It's the one place the loop may go a hair over 1. Each card is 20 s at minute 1 and at minute 10. Keep it (A) or drop it (B)?
@@ -40,7 +43,7 @@
   - ERA's last stretch (the Midiverb stage) jumps about 20× harder than the rest of the knob, and its first 20 % barely changes anything measurable.
   - PLATE: TONE's first step from fully CCW jumps, and so does SIZE's last.
   - MASSIVE: DECAY's first step jumps; DRIFT is nearly flat from 20–50 %; TIME in NORMAL barely moves anything for its first 30 %.
-- **Modulation ideas from Mutable Instruments** (research doc above) and the DSP audit session's findings: to try together on an A/B page, starting with the PLATE gap.
+- **The rest of the Mutable Instruments ideas and the DSP audit's findings:** MI #2 is on a page; #3 and #4 aren't worth one (`docs/research/mutable-instruments-reverbs.md`); #5 and the audit's remaining findings are still to try.
 
 ## Done
 

@@ -424,3 +424,79 @@ E_both             35 ms minimum and diffusion 0.5" > renders/small_hall/README.
     python3 tools/review/make_review.py renders/small_hall --title "Immensio: the small HALL's build-up" --level-match --dry $SRC --wet-only > /dev/null
     echo "renders/small_hall/index.html"
 fi
+
+# A material panned hard to one side (mono sum), for stereo-image questions.
+panned() { # panned <material> <left|right>
+    local out=$SRC/${2}_$1.wav
+    [ -f $out ] && return
+    if [ $2 = left ]; then ffmpeg -v error -y -i $SRC/$1.wav -af "pan=stereo|c0=0.5*c0+0.5*c1|c1=0*c0" -c:a pcm_s24le $out
+    else ffmpeg -v error -y -i $SRC/$1.wav -af "pan=stereo|c0=0*c0|c1=0.5*c0+0.5*c1" -c:a pcm_s24le $out; fi
+}
+
+if on swell_smear; then
+    # The DSP audit's S1 (measured 23 Oct 2026): BLOOM's 24 taps are 50-300 ms apart, so a hit
+    # through a long BLOOM is a train of ghost hits (its level flickers 3-7.5 dB against ~2 dB in a
+    # normal tail). IV_SWELL_SMEAR: three allpasses per side sized to the tap gap.
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in drums skank stabs hits piano; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page swell_smear
+    for v in 0:A_today 0.5:B_smeared; do
+        for sp in HALL:hall PLATE:plate MASSIVE:massive; do
+            IV_SWELL_SMEAR=${v%%:*} r swell_smear ${sp##*:} ${v##*:} "" --set space=${sp%%:*} --set era=0 --set size=0.5 --set decay=0.6 --set attack=BLOOM --set time=0.75
+        done
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "BLOOM on percussion (found by the DSP audit, measured: a single hit through a long BLOOM flickers 3-7.5 dB as it rises, against about 2 dB in a normal tail, worst in HALL). The swell feeds the tank through 24 taps spread over the BLOOM time, so at 1.6 s they're about 80 ms apart, and each hit comes back as a rising train of ghost hits instead of a smooth swell. B smears each tap across the gap to the next (three allpasses sized to the gap): the flicker drops by a quarter to a third (HALL 7.5 to 5.7 dB; with the HALL in-loop diffusion from the small-HALL page as well, to 4 dB). Does B swell more smoothly, or does A's grain feel like character? BLOOM, TIME 0.75 (about 1.6 s), SIZE noon, DECAY 0.6, ERA clean.
+
+hall       HALL
+plate      PLATE
+massive    MASSIVE
+
+A_today    the 24 taps as today
+B_smeared  each tap smeared across the gap to the next" > renders/swell_smear/README.txt
+    python3 tools/review/make_review.py renders/swell_smear --title "Immensio: BLOOM on percussion" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/swell_smear/index.html"
+fi
+
+if on plate_stereo; then
+    # The DSP audit's P1 (measured 23 Oct 2026): a hard-left sound's first 50 ms of PLATE comes out
+    # only on the right (Dattorro's taps, fed true stereo). IV_PLATE_SWAP feeds L into the other branch.
+    panned skank left; panned drums left; panned stabs right; panned piano left
+    saved=("${MATERIALS[@]}"); MATERIALS=(left_skank left_drums right_stabs left_piano)
+    page plate_stereo
+    for v in 0:A_today 1:B_same_side; do
+        IV_PLATE_SWAP=${v%%:*} r plate_stereo medium ${v##*:} "" --set space=PLATE --set era=0 --set size=0.5 --set decay=0.5 --set time=0
+        IV_PLATE_SWAP=${v%%:*} r plate_stereo large ${v##*:} "" --set space=PLATE --set era=0 --set size=1 --set decay=0.6 --set time=0
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "The PLATE's stereo image (found by the DSP audit, measured): play something hard left and the plate's first 50 ms answers only on the right, then spreads out. HALL and MASSIVE answer on the same side first. B feeds each input into the other half of the plate, so the first reflections come out on the side you played (then spread out the same). Each card plays material panned hard left (stabs hard right). Listen with headphones or speakers apart: does A's answer on the opposite side feel like a swapped image, or a nice ping-pong?
+
+medium       SIZE noon, DECAY 0.5
+large        SIZE fully CW, DECAY 0.6
+
+A_today      today: the first answer comes from the other side
+B_same_side  the first answer comes from the side you played" > renders/plate_stereo/README.txt
+    python3 tools/review/make_review.py renders/plate_stereo --title "Immensio: the PLATE's stereo image" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/plate_stereo/index.html"
+fi
+
+if on diffuser_motion; then
+    # Mutable Instruments idea 2 (measured 23 Oct 2026): repeated hits enter the PLATE identically
+    # (hit-to-hit similarity 0.74); the first input allpass wandering 0.18 ms at 0.4 Hz takes it to 0.51.
+    # HALL and MASSIVE already vary hit to hit, so only the PLATE is asked.
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in drums hits skank stabs; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page diffuser_motion
+    for v in 0:A_today 0.18:B_wandering; do
+        IV_DIFF_MOTION=${v%%:*} r diffuser_motion plate ${v##*:} "" --set space=PLATE --set era=0 --set size=0.5 --set decay=0.5 --set time=0
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "Repeated hits in the PLATE (from Mutable Instruments' Clouds and Beads, which keep their input diffusers moving): today every identical hit enters the plate the same way, so a repeated snare or rim comes back with the same pattern each time (measured: hit-to-hit similarity 0.74). B lets the first input allpass wander very slightly (under a cent, 0.4 Hz, left and right opposite), so each hit enters a little differently (similarity 0.51). Subtle: listen to repeated drums and rims. HALL and MASSIVE already vary hit to hit. SIZE noon, DECAY 0.5, ERA clean.
+
+plate        PLATE
+
+A_today      the input diffusers still, as today
+B_wandering  the first input allpass wanders a little" > renders/diffuser_motion/README.txt
+    python3 tools/review/make_review.py renders/diffuser_motion --title "Immensio: repeated hits in the PLATE" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/diffuser_motion/index.html"
+fi

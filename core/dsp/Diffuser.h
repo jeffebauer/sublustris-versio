@@ -11,6 +11,7 @@ struct Allpass {
     DelayLine line;
     uint32_t  length = 1;
     float     coeff = 0.5f;
+    float     mod = 0.0f; // PROTOTYPE (renders/diffuser_motion, MI idea 2): extra delay in samples, ±
 
     bool init(Arena& arena, uint32_t samples, float g)
     {
@@ -20,7 +21,15 @@ struct Allpass {
     }
     float process(float x)
     {
-        const float d = line.read(length);
+        float d;
+        if (mod != 0.0f) { // a wandering read, linear between samples (the buffer has room)
+            const float dd = float(length) + mod;
+            const auto  di = uint32_t(dd);
+            const float t = dd - float(di);
+            d = line.read(di) + t * (line.read(di + 1) - line.read(di));
+        } else {
+            d = line.read(length);
+        }
         const float v = x + coeff * d;
         line.write(v);
         return d - coeff * v;

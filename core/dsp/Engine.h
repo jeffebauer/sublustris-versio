@@ -92,6 +92,15 @@ public:
     }
     // PROTOTYPE, the ducking listening test (owner's M1 notes, 23 Oct 2026): × the duck amount (0 = off).
     void  setDuckScale(float k) { duckScale_ = k; }
+    // PROTOTYPES, renders/diffuser_motion (Mutable Instruments ideas 2 and 4): the right input
+    // diffuser gets its own lengths instead of a 1.071x copy of the left; the first stage of
+    // each side wanders by depthMs at 0.4 Hz, L and R in opposite phase.
+    void  setDiffuserIndependent(bool on);
+    void  setDiffuserMotion(float depthMs) { diffMotionMs_ = depthMs; }
+    // PROTOTYPE, renders/plate_stereo (the audit's P1).
+    void  setPlateInputSwap(bool on) { plate_.setInputSwap(on); twinPlate_.setInputSwap(on); }
+    // PROTOTYPE, renders/swell_smear (the audit's S1): the swells' taps smeared by allpasses, gain g.
+    void  setSwellSmear(float g) { swell_.setSmear(g); twinSwell_.setSmear(g); }
     // PROTOTYPE, renders/small_hall (owner's M1 notes; the audit's F1/F2, experiment E4): HALL gets
     // in-loop diffusion too, amount 0..1 (× kInLoopCoeff), its allpasses scaled with SIZE.
     void  setHallInLoopDiffusion(float a) { hallInLoop_ = a; }
@@ -183,6 +192,7 @@ private:
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
     float duckScale_ = 1.0f; // PROTOTYPE (setDuckScale)
+    float diffMotionMs_ = 0.0f, diffMotionPhase_ = 0.0f; // PROTOTYPE (setDiffuserMotion)
     float hallInLoop_ = 0.0f; // PROTOTYPE (setHallInLoopDiffusion)
     float compAttackMs_ = 0.0f, compReleaseMs_ = 0.0f, compTargetDb_ = 0.0f, compGrDb_ = 0.0f; // PROTOTYPE (setDuckCompressor)
     float reverseMean_ = -1.0f;

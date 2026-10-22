@@ -74,6 +74,8 @@ Secondary sources (search snippets only, treat as approximate): the Lexicon 224 
 - **What our code does.** True stereo in (ADR 0013): L enters branch 0 and R enters branch 1 (`Plate.cpp`, `in[b]`). But the left output takes 4 of its 7 taps from branch 1, including both strong +1 taps on the 4217 line, and the right output takes 4 of its 7 from branch 0. So a hard-left source's first plate energy comes out mostly on the right. Only after half a lap of the figure 8 does it cross back.
 - **Likely heard.** A hi-hat panned left blooms on the right, as if the image were swapped or ping-ponging. This is a reading of the code. Measure it before deciding anything (experiment E3).
 
+- **Measured (23 Oct 2026):** confirmed. A hard-left burst's first 50 ms of PLATE is entirely on the right (L−R −127 dB at SIZE ½), then balanced. Feeding L into branch 1 and R into branch 0 (`IV_PLATE_SWAP`) puts it on the left first, at every SIZE. Page: `renders/plate_stereo`.
+
 ### P2. Decay diffusion 2 doesn't follow DECAY (low)
 - **Source.** Dattorro, Table 1: decay diffusion 2 = clamp(decay + 0.15, 0.25, 0.50).
 - **What our code does.** It is fixed at 0.50.
@@ -140,6 +142,8 @@ The three early taps per line are our own invention. The closest published idea 
 ### S1. The swell's taps are far too sparse, so long BLOOMs likely pulse (high, drums and skanks) — measure first
 - **What our code does.** 24 taps over 1.25 × A. Tap spacing is 52 ms at A = 1 s, 104 ms at 2 s and 208 ms at 4 s, or 312 ms with MASSIVE's mass. Each tap repeats the input as smeared by the input diffuser, about 30 ms wide. (The diffuser and the taps are both linear, so their order doesn't matter.) That gives 5–10 taps a second against the 600+ that velvet-noise research needs.
 - **Likely heard.** On sustained pads it's fine: the tank fills the gaps. On percussion with a BLOOM above about 1 s, the swell is a train of ghost hits rising in level. This is worst in HALL and PLATE, which have no in-loop diffusion to blur it, and gentlest in MASSIVE. The rule "below 40 ms the taps would bunch into a comb" shows the same structure was already a problem at the other end.
+
+- **Measured (23 Oct 2026):** confirmed. A single hit through BLOOM flickers 3–7.5 dB (10 ms RMS around its smooth rise; HALL 7.5, MASSIVE 6.4, PLATE 4.6) against ~2 dB in a NORMAL tail. Smearing each tap with three allpasses sized to the tap gap (`IV_SWELL_SMEAR` 0.5) takes HALL to 5.7 dB, and with HALL in-loop diffusion 0.5 to 4.0 dB. Page: `renders/swell_smear`.
 
 ### S2. The attack isn't coupled to the tank (low; deliberate)
 Supermassive's slow modes build *inside* the network: the energy grows as the diffusion recirculates. Our swell is feedforward, so it can be steered to an exact attack time (SPEC v1.0.1 chose this over "4 long modulated delays and allpasses" for that reason). Keep it. The fix for S1 is density, not topology.
