@@ -14,7 +14,7 @@
 # Usage: tools/render_review_pages.sh [page ...]   (default: all)
 set -e
 cd "$(dirname "$0")/.."
-R=build/iv_render
+R=${IV_RENDER:-build/iv_render}
 [ -x $R ] || { echo "build/iv_render missing: cmake --build build"; exit 1; }
 SRC=renders/_material
 mkdir -p $SRC
@@ -324,4 +324,23 @@ A_before  the twin as before: no swell
 B_smooth  the twin swells like MASSIVE's tank" > renders/twin_swell/README.txt
     python3 tools/review/make_review.py renders/twin_swell --title "Immensio: playing over a frozen MASSIVE" --level-match --dry $SRC --wet-only > /dev/null
     echo "renders/twin_swell/index.html"
+fi
+
+if on swell_curve; then
+    page swell_curve
+    for v in 0:A_linear 1:B_scurve 2:C_crescendo 3:D_settle; do
+        IV_SWELL_CURVE=${v%%:*} r swell_curve medium ${v##*:} freeze_only --set space=MASSIVE --set size=0.6 --set decay=0.6
+        IV_SWELL_CURVE=${v%%:*} r swell_curve large ${v##*:} freeze_only --set space=MASSIVE --set size=1 --set decay=0.75
+    done
+    print -r -- "How the layer you play over a frozen MASSIVE fades in (the twin's swell, about 0.3-0.75 s). Only the shape of the rise changes; each version arrives at the same level at the same time, and after the first ~0.4 s the tank's own build-up is the same in all four. A tap freezes at 3 s, your playing is the layer over the pad, a tap unfreezes at 16 s.
+
+medium  SIZE 0.6, DECAY 0.6
+large   SIZE fully CW, DECAY 0.75
+
+A_linear     today: an even ramp
+B_scurve     S-curve: eases in, rises through the middle, eases into place (a bowed swell)
+C_crescendo  crescendo: a steady rise in loudness, quiet for longer, then blooms late
+D_settle     arrive and settle: comes in sooner, then eases up to full (like an analog envelope)" > renders/swell_curve/README.txt
+    python3 tools/review/make_review.py renders/swell_curve --title "Immensio: how the frozen MASSIVE layer swells in" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/swell_curve/index.html"
 fi

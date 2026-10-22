@@ -82,6 +82,8 @@ public:
     void  setModulationScale(float k) { modScale_ = k; }
     // PROTOTYPE, renders/twin_swell: false = the twin as before (no swell), for the A/B page.
     void  setTwinSwell(bool on) { twinSwellOn_ = on; }
+    // PROTOTYPE, renders/swell_curve: the twin swell's rise shape (Swell::setCurve).
+    void  setTwinSwellCurve(int curve) { twinSwell_.setCurve(curve); }
     // PROTOTYPE, renders/plate_modulation: the Plate's long delays wander too (both Plates).
     void  setPlateLongDelayMod(float a) { plate_.setLongDelayMod(a); twinPlate_.setLongDelayMod(a); }
     // PROTOTYPE, renders/tone_shelf: every tank's loss as a shelf crossing at hz (0 = today's).

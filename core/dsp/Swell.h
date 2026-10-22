@@ -36,22 +36,38 @@ public:
         bool ok = line_[0].init(arena, size_t(kMaxSeconds * sampleRate)) && line_[1].init(arena, size_t(kMaxSeconds * sampleRate));
         // Fixed jitter and signs from a seeded generator (deterministic).
         uint32_t s = 0x5EE11u;
-        float energy = 0.0f;
         for (int c = 0; c < 2; ++c)
             for (int k = 0; k < kTaps; ++k) {
                 s = s * 1664525u + 1013904223u;
                 const float jitter = float(s >> 8) * (1.0f / 16777216.0f) - 0.5f; // ±half a slot
                 frac_[c][k] = (float(k) + 0.5f + 0.8f * jitter) / float(kTaps);
                 sign_[c][k] = (s & 0x80000000u) ? -1.0f : 1.0f;
-                const float g = (float(k) + 1.0f) / float(kTaps); // rising: the slab builds
+            }
+        setCurve(curve_);
+        reset();
+        return ok;
+    }
+
+    // PROTOTYPE (renders/swell_curve): the shape of the taps' rise, x = 0..1 over the span.
+    // 0 linear (today), 1 S-curve (raised cosine), 2 crescendo (a steady 30 dB rise in dB),
+    // 3 arrive-and-settle (RC charge, 1 - e^-3x).
+    void setCurve(int curve)
+    {
+        curve_ = curve;
+        float energy = 0.0f;
+        for (int c = 0; c < 2; ++c)
+            for (int k = 0; k < kTaps; ++k) {
+                const float x = (float(k) + 1.0f) / float(kTaps);
+                const float g = curve == 1 ? 0.5f - 0.5f * std::cos(3.14159265f * x)
+                              : curve == 2 ? std::pow(10.0f, -1.5f * (1.0f - x))
+                              : curve == 3 ? (1.0f - std::exp(-3.0f * x)) / (1.0f - std::exp(-3.0f))
+                                           : x; // rising: the slab builds
                 gain_[c][k] = g;
                 if (c == 0) energy += g * g;
             }
         const float norm = 1.0f / std::sqrt(energy);
         for (int c = 0; c < 2; ++c)
             for (int k = 0; k < kTaps; ++k) gain_[c][k] *= norm * sign_[c][k];
-        reset();
-        return ok;
     }
 
     void reset()
@@ -108,6 +124,7 @@ private:
     DelayLine line_[2];
     float     frac_[2][kTaps] = {}, sign_[2][kTaps] = {}, gain_[2][kTaps] = {}, tapDelay_[2][kTaps] = {};
     float     attackNow_ = 0.0f, attackTarget_ = 0.0f, tapMix_ = 0.0f;
+    int       curve_ = 0;
 };
 
 } // namespace iv::dsp
