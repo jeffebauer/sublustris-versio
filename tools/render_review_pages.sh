@@ -315,3 +315,54 @@ C_massive_large    SIZE fully CW" > renders/grainy_start/README.txt
     echo "renders/grainy_start/index.html"
 fi
 
+
+if on size_glide; then
+    # TASKS "MASSIVE's SIZE glide": SIZE moves bend at most a semitone (ADR 0012); a faster
+    # swoop in MASSIVE only? IV_SIZE_SLEW = × the semitone glide.
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in pad keys stabs skank; do
+        [ -f $SRC/glide_$m.wav ] || ffmpeg -v error -y -i $SRC/$m.wav -af "apad=whole_dur=45" -c:a pcm_s24le $SRC/glide_$m.wav
+        print -r -- '{ "breakpoints": [ {"t": 0, "key": "size", "value": 0}, {"t": 4.0, "key": "size", "value": 0}, {"t": 4.5, "key": "size", "value": 1}, {"t": 24.0, "key": "size", "value": 1}, {"t": 24.5, "key": "size", "value": 0} ] }' > $SRC/sweep_glide_$m.json
+        MATERIALS+=(glide_$m)
+    done
+    page size_glide
+    for v in 1:A_semitone 3:B_three_semitones 7:C_six_semitones; do
+        IV_SIZE_SLEW=${v%%:*} r size_glide massive ${v##*:} sweep --set space=MASSIVE --set era=0 --set decay=0.6
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "MASSIVE's SIZE glide. At 4 s SIZE is turned quickly from fully CCW to fully CW, at 24 s back. A SIZE move bends pitch like tape, at most a semitone today, so the full sweep glides for ~40 s and never finishes before it's turned back. B and C let MASSIVE swoop faster with more bend (HALL and PLATE stay at a semitone). Which feels right when you turn SIZE in MASSIVE?
+
+massive  MASSIVE, DECAY 0.6, ERA clean
+
+A_semitone          today: at most a semitone of bend, a full sweep takes ~40 s
+B_three_semitones   about 3 semitones of bend, a full sweep in ~13 s
+C_six_semitones     about 6 semitones of bend (a tritone), a full sweep in ~6 s" > renders/size_glide/README.txt
+    python3 tools/review/make_review.py renders/size_glide --title "Immensio: MASSIVE's SIZE glide" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/size_glide/index.html"
+fi
+
+if on makeup; then
+    # TASKS "ADR 0008 amendment": a held infinite tail's capped makeup. 10-minute renders,
+    # cut to 20 s from minute 1 and minute 10 (IV_MAKEUP=0 is without it).
+    [ -f $SRC/pad600.wav ] || ffmpeg -v error -y -i $SRC/pad.wav -af "apad=whole_dur=600" -c:a pcm_s24le $SRC/pad600.wav
+    page makeup
+    mkdir -p renders/makeup/_long
+    for sp in MASSIVE HALL; do
+        for v in 1:A_with_makeup 0:B_without; do
+            out=renders/makeup/_long/${sp}_${v##*:}.wav
+            IV_MAKEUP=${v%%:*} $R $SRC/pad600.wav $out --set mix=1 --set space=$sp --set size=0.6 --set decay=1 --set era=0.6 --set drift=0 > /dev/null
+            mkdir -p renders/makeup/${sp:l}
+            ffmpeg -v error -y -ss 40 -t 20 -i $out -c:a pcm_s24le renders/makeup/${sp:l}/minute1_${v##*:}.wav
+            ffmpeg -v error -y -ss 580 -t 20 -i $out -c:a pcm_s24le renders/makeup/${sp:l}/minute10_${v##*:}.wav
+        done
+    done
+    print -r -- "The held-tail makeup (ADR 0008 amendment). At infinite DECAY a tail holds where it settled, but tape wobble (DRIFT CCW) and the cassette (ERA) lose a little energy each pass. The makeup lifts a sagging held tail back to its own level, never above it, at most 0.3 dB/s: the one place the loop may go a hair over 1. Measured on these settings: without it, MASSIVE sags about 3 dB over 10 minutes and HALL about 2.4 dB; frozen pads don't sag either way. Each card is 20 s of the same tail at minute 1 and at minute 10. Not level-matched (the level is the question). A pad played once, infinite DECAY, ERA cassette, DRIFT fully CCW.
+
+massive         MASSIVE, SIZE 0.6
+hall            HALL, SIZE 0.6
+
+A_with_makeup   with the makeup (today)
+B_without       without it" > renders/makeup/README.txt
+    python3 tools/review/make_review.py renders/makeup --title "Immensio: the held-tail makeup" --no-level-match > /dev/null
+    echo "renders/makeup/index.html"
+fi

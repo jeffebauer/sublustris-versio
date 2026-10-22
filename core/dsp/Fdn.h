@@ -56,6 +56,8 @@ public:
     void setFloorDb(float db) { governor_.floorDb = db; }
     // A held tail's ceiling, on the slow level (0 dBFS = no hold).
     void setHoldDb(float db) { governor_.holdDb = db; }
+    void setMakeup(bool on) { governor_.makeup = on; }        // PROTOTYPE (renders/decisions)
+    void setSizeSlewScale(float k) { slewScale_ = k; }        // PROTOTYPE (renders/decisions): × the semitone glide
     float slowLevelDb() const { return governor_.slowLevelDb; }
     void resyncHoldLevel() { governor_.resyncSlow(); }
     // In-loop diffusion amount 0..1 (MASSIVE's SIZE); 0 bypasses it.
@@ -103,7 +105,7 @@ private:
     // Absorbent filters: y = g (1 − b) x + b y.
     float     gain_[kN] = {}, pole_[kN] = {}, absorbY_[kN] = {};
     float     b1_[kN] = {}, absorbX_[kN] = {}, shelfK_ = 0.0f; // lossShelfK(sampleRate_)
-    float     modDepth_ = 1.0f;
+    float     modDepth_ = 1.0f, slewScale_ = 1.0f;
     float     decayRate_ = 0.2f, highRatio_ = voicing::kDampingHighT60Ratio;
     LoopEra   era_[kN];
     Drift     driftGen_[kN];

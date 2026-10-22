@@ -62,6 +62,7 @@ public:
     void setFloorDb(float db) { governor_.floorDb = db; }
     // A held tail's ceiling, on the slow level (0 dBFS = no hold).
     void setHoldDb(float db) { governor_.holdDb = db; }
+    void setMakeup(bool on) { governor_.makeup = on; } // PROTOTYPE (renders/decisions)
     float slowLevelDb() const { return governor_.slowLevelDb; }
     void resyncHoldLevel() { governor_.resyncSlow(); }
     float levelDb() const { return governor_.levelDb; }

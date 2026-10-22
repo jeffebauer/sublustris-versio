@@ -119,6 +119,8 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
                const std::vector<std::string>& sets, std::string& error)
 {
     engine.prepare(sampleRate, block);
+    if (const char* mk = std::getenv("IV_MAKEUP")) engine.setMakeup(std::atoi(mk) != 0);
+    if (const char* sl = std::getenv("IV_SIZE_SLEW")) engine.setSizeSlewScale(float(std::atof(sl)));
     if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
     if (!presetPath.empty()) {
         iv::json::Value preset;

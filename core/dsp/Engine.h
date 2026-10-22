@@ -81,6 +81,16 @@ public:
     // Test hook: scales the tanks' own modulation (0 = none; DRIFT is separate), to check a
     // structure isn't metallic without it (Costello: tune it to sound good unmodulated).
     void  setModulationScale(float k) { modScale_ = k; }
+    // PROTOTYPES, renders/decisions: no held-tail makeup (ADR 0008 amendment, for the owner to
+    // approve), and MASSIVE's SIZE glide k × faster (k semitones of bend at most).
+    void  setMakeup(bool on)
+    {
+        plate_.setMakeup(on);
+        twinPlate_.setMakeup(on);
+        fdn_.setMakeup(on);
+        twinFdn_.setMakeup(on);
+    }
+    void  setSizeSlewScale(float k) { fdn_.setSizeSlewScale(k); twinFdn_.setSizeSlewScale(k); }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.

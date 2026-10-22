@@ -6,9 +6,9 @@
 ## To do
 
 ### Decide
-- [ ] **Approve or reject (ADR 0008 amendment):** infinite tails and frozen pads get a small, capped "makeup" that lifts a sagging held tail back to its own level (never above, ≤ 0.3 dB/s). Without it, infinite tails with tape wow fade out over ~10 minutes. It's the one place the loop gain may go a hair over 1.
-- [ ] **MASSIVE's SIZE glide:** SIZE moves bend at most a semitone (ADR 0012), so a full SIZE sweep in MASSIVE glides for ~40 s. Keep that gentle bend, or allow a faster swoop with more bend in MASSIVE only?
-- [ ] **Plugin identity** (one-line answers): keep manufacturer code `Rslo` and company name / bundle-ID prefix as Resilio's, with plugin code `ImVs`? (Same developer, so it groups both plugins together in Ableton.)
+- [ ] **The held-tail makeup** (`renders/makeup/index.html`, picks, not level-matched): with it, an infinite tail holds where it settled; without it, with tape wobble and the cassette, MASSIVE sags about 3 dB over 10 minutes and HALL about 2.4 dB (frozen pads hold either way). It's the one place the loop may go a hair over 1. Each card is 20 s at minute 1 and at minute 10. Keep it (A) or drop it (B)?
+- [ ] **MASSIVE's SIZE glide** (`renders/size_glide/index.html`, picks): SIZE turned quickly up, then down. A today (a semitone of bend, a full sweep ~40 s), B about 3 semitones (~13 s), C about 6 (~6 s), MASSIVE only.
+- [ ] **Brand name** for the maker both plugins sit under (decided 23 Oct: Resilio and Immensio stay grouped under one maker; ideas in the session: Sonitus, Spatium, Aerium, Halcyon Audio, Far Field, Echo Atelier, Tank & Spring, Lumen...). Pick a name; its 4-letter maker code follows, settled once (a later change makes Ableton see new plugins). Not "Versio" (Noise Engineering's).
 
 
 
