@@ -94,11 +94,6 @@ constexpr float kHoldSeconds        = 8.0f; // the slow level a held tail's ceil
 constexpr float kSpaceFlipSeconds  = 0.05f;
 constexpr float kAttackFadeSeconds = 0.05f;
 
-// PROTOTYPE (renders/massive_options, version C): MASSIVE's weight and motion.
-constexpr float kProtoMassiveBassMultiply = 1.6f; // lows' T60 × this (below ~250 Hz) *(start)*
-constexpr float kProtoMassiveHighScale    = 0.6f; // highs fade sooner: TONE's high T60 ratio × this *(start)*
-constexpr float kProtoMassiveModDepth     = 4.0f; // the modulation floor × this: Cathedra-style drift *(start)*
-
 // PROTOTYPE (renders/plate_modulation): the Plate's long delays d1 and d2 wander too.
 constexpr float kPlateLongModSeconds = 0.0006f; // depth: ~2 cents at these rates *(start)*
 constexpr float kPlateLongModHz[4]   = {0.23f, 0.31f, 0.19f, 0.37f}; // L d1, L d2, R d1, R d2: none shared with ap1 *(start)*

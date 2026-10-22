@@ -249,9 +249,7 @@ void Engine::applySpace(bool snap)
 
     // Freezing: loss → 0, highs kept (ratio → 1), the governor caps paint.
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
-    float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
-    const bool weighty = massive && massiveProto_ == 2; // PROTOTYPE: weight and motion
-    if (weighty) toneRatio *= voicing::kProtoMassiveHighScale;
+    const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
     const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(size) : 1.0f;
     const float rate = map::decayRate(decay, activeSpace_) / sizeT60 * (1.0f - freezeMix_);
     const float highRatio = toneRatio + freezeMix_ * (1.0f - toneRatio);
@@ -300,9 +298,7 @@ void Engine::applySpace(bool snap)
         fdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : 0.0f);
         fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(size, decay));
         fdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
-        fdn_.setBassMultiply(weighty ? voicing::kProtoMassiveBassMultiply : 1.0f);
-        // Deeper drift, easing back to the floor's depth while frozen (a pad stays steady).
-        fdn_.setModDepth(modScale_ * (weighty ? 1.0f + (voicing::kProtoMassiveModDepth - 1.0f) * (1.0f - freezeMix_) : 1.0f));
+        fdn_.setModDepth(modScale_);
     }
 
     // ERA in the loop and DRIFT (SPEC §4.6, §4.7). Freezing glides the
@@ -356,7 +352,7 @@ void Engine::applySpace(bool snap)
 
     // ATTACK (ADR 0015): what TIME means, and the swell stage's attack.
     float predelay = massive ? map::massivePredelaySeconds(size) : 0.0f;
-    float attackSeconds = massive && massiveProto_ == 0 ? map::massiveNormalAttackSeconds(decay, size) : 0.0f;
+    float attackSeconds = massive ? map::massiveNormalAttackSeconds(decay, size) : 0.0f;
     if (attack == 0) predelay += map::normalPredelaySeconds(time);
     if (attack == 1) attackSeconds = map::bloomSeconds(time) * (massive ? map::massiveMass(size) : 1.0f);
     swell_.setAttackSeconds(attackSeconds, snap);
