@@ -283,6 +283,7 @@ void Engine::applySpace(bool snap)
         plate_.setGovernor(governor);
         plate_.setFloorDb(floorDb);
         plate_.setModDepth(1.0f - freezeMix_ * (1.0f - voicing::kFrozenPlateModDepth));
+        plate_.setLongDelayMod(1.0f - freezeMix_);
         plate_.setModScale(modScale_);
         plate_.setHoldDb(holdDb);
     } else {

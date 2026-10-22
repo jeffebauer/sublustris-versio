@@ -80,8 +80,6 @@ public:
     // Test hook: scales the tanks' own modulation (0 = none; DRIFT is separate), to check a
     // structure isn't metallic without it (Costello: tune it to sound good unmodulated).
     void  setModulationScale(float k) { modScale_ = k; }
-    // PROTOTYPE, renders/plate_modulation: the Plate's long delays wander too (both Plates).
-    void  setPlateLongDelayMod(float a) { plate_.setLongDelayMod(a); twinPlate_.setLongDelayMod(a); }
     // PROTOTYPE, renders/tone_shelf: every tank's loss as a shelf crossing at hz (0 = today's).
     void  setLossShelfHz(float hz)
     {

@@ -94,7 +94,7 @@ constexpr float kHoldSeconds        = 8.0f; // the slow level a held tail's ceil
 constexpr float kSpaceFlipSeconds  = 0.05f;
 constexpr float kAttackFadeSeconds = 0.05f;
 
-// PROTOTYPE (renders/plate_modulation): the Plate's long delays d1 and d2 wander too.
+// The Plate's long delays d1 and d2 wander too (owner's pick on renders/plate_modulation, v1.0.12).
 constexpr float kPlateLongModSeconds = 0.0006f; // depth: ~2 cents at these rates *(start)*
 constexpr float kPlateLongModHz[4]   = {0.23f, 0.31f, 0.19f, 0.37f}; // L d1, L d2, R d1, R d2: none shared with ap1 *(start)*
 

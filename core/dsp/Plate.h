@@ -76,8 +76,9 @@ public:
     // lower on a frozen pad, where a lossless loop piles a few cents a pass
     // into a seasick wobble (owner, M5 listening).
     void setModDepth(float scale) { modDepth_ = scale; }
-    // PROTOTYPE (renders/plate_modulation): also modulate the long delays d1 and d2
-    // (SPEC §2.3 rule 1; Beads modulates both of its long delays). 0 = off.
+    // The long delays d1 and d2 wander too (SPEC §2.3 rule 1; Beads moves both of its long
+    // delays; owner's pick, v1.0.12): 1 normally, 0 on a frozen pad, which stays as still as
+    // before (the frozen cards were a coin flip).
     void setLongDelayMod(float amount) { longMod_ = amount; }
     void setShelfHz(float hz) { shelfHz_ = hz; } // PROTOTYPE (Governor.h absorbent)
     // Test hook: scales every wander in the loop (chorus, floor, long delays); 0 = still.
@@ -100,7 +101,7 @@ private:
         Absorb    loss1{1, 0}, loss2{1, 0};
         float     lfoPhase = 0, lfoRate = 0, floorA = 0, floorB = 0, floorTarget = 0, floorCountdown = 0;
         float     modNow = 0, modStep = 0; // ap1's extra delay, samples
-        // PROTOTYPE (setLongDelayMod): d1 and d2's own slow wander, samples.
+        // d1 and d2's own slow wander (setLongDelayMod), samples.
         float     longPhase[2] = {0, 0}, longFloorA[2] = {}, longFloorB[2] = {}, longTarget[2] = {}, longCountdown[2] = {};
         float     longNow[2] = {0, 0}, longStep[2] = {0, 0};
         float     out = 0;                 // this branch's output (feeds the other)
@@ -115,7 +116,7 @@ private:
     bool     colour_ = true;
     float    modDepth_ = 1.0f;
     float    shelfHz_ = 0.0f, modScale_ = 1.0f;
-    float    longMod_ = 0.0f; // PROTOTYPE: 0 = only ap1 moves (today), 1 = d1 and d2 too
+    float    longMod_ = 1.0f; // d1 and d2 wander; 0 while frozen
     DriftAmounts drift_;
     FloorGovernor governor_;
     bool     ready_ = false;

@@ -281,25 +281,6 @@ B_bloom    BLOOM: swells over TIME, then decays naturally
 C_reverse  REVERSE: swells over TIME, then stops"
 fi
 
-if on plate_modulation; then
-    page plate_modulation
-    for v in 0:A_today 1:B_long_delays_move; do
-        IV_PLATE_LONGMOD=${v%%:*} r plate_modulation small ${v##*:} "" --set space=PLATE --set era=0 --set size=0.3 --set decay=0.6
-        IV_PLATE_LONGMOD=${v%%:*} r plate_modulation large ${v##*:} "" --set space=PLATE --set era=0 --set size=1 --set decay=0.7
-        IV_PLATE_LONGMOD=${v%%:*} r plate_modulation frozen ${v##*:} freeze_only --set space=PLATE --set era=0 --set size=0.6 --set decay=0.6
-    done
-    print -r -- "Found while auditing against Mutable Instruments' reverbs: our PLATE only moves one of the four delays in each half of its loop; the other three read at fixed lengths, though our spec says every delay in the tank moves (it's what keeps a reverb from ringing like metal). Beads moves both of its long delays. B adds a slow wander (about 2 cents, each at its own rate) to the two long delays, easing off while frozen like the rest. On noise bursts it measured a touch less resonant, but no less ringing at the largest SIZE, so it's for your ears: is B smoother, more lush, or just different?
-
-small   SIZE 0.3, DECAY 0.6
-large   SIZE fully CW, DECAY 0.7
-frozen  a tap freezes at 3 s (your playing goes to the twin), a tap unfreezes
-
-A_today             today's PLATE
-B_long_delays_move  the long delays wander too" > renders/plate_modulation/README.txt
-    python3 tools/review/make_review.py renders/plate_modulation --title "Immensio: PLATE, more movement?" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/plate_modulation/index.html"
-fi
-
 if on tone_shelf; then
     page tone_shelf
     for v in 0:A_today 2500:B_shelf; do

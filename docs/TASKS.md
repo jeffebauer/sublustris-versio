@@ -1,16 +1,16 @@
 # Owner tasks
 
-**Last updated:** 22 Oct 2026, session 3 (testing plan chosen; two A/B pages still to pick on: `plate_modulation`, `tone_shelf`; they and every page now have a Tail button, and pick pages repeat one row).
+**Last updated:** 23 Oct 2026, session 3 (PLATE pick acted on; one A/B page left to pick on: `tone_shelf`; a grainy-start page to hear).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
+- [ ] **Playing over a frozen pad, loud enough?** On the frozen PLATE Skank you heard a big drop after the first two repeats: that's the tap. Everything you play after it goes into the twin, which sits 10.5 dB down by design, so chords after the tap come out 6–7 dB quieter than the ones before. Keep the twin that subtle, or bring it up a few dB?
 - [ ] **Approve or reject (ADR 0008 amendment):** infinite tails and frozen pads get a small, capped "makeup" that lifts a sagging held tail back to its own level (never above, ≤ 0.3 dB/s). Without it, infinite tails with tape wow fade out over ~10 minutes. It's the one place the loop gain may go a hair over 1.
 - [ ] **MASSIVE's SIZE glide:** SIZE moves bend at most a semitone (ADR 0012), so a full SIZE sweep in MASSIVE glides for ~40 s. Keep that gentle bend, or allow a faster swoop with more bend in MASSIVE only?
 - [ ] **Plugin identity** (one-line answers): keep manufacturer code `Rslo` and company name / bundle-ID prefix as Resilio's, with plugin code `ImVs`? (Same developer, so it groups both plugins together in Ableton.)
 
-- [ ] **PLATE, more movement?** (`renders/plate_modulation/index.html`, level-matched, picks): our PLATE moves only one of the four delays in each half of its loop, though the spec says every delay moves (found via Mutable Instruments' Beads, which moves both long delays). A today, B the long delays wander too (about 2 cents). The noise-burst measurements were mixed, so it's for your ears.
 - [ ] **TONE, a warmer noon?** (`renders/tone_shelf/index.html`, level-matched, picks): the audit's top finding. At noon the upper mids ring almost as long as the body, a glassy sheen. B lets them fade sooner (3 kHz 2.4 s instead of 3.7 s on a HALL; lows unchanged). Across HALL, PLATE, MASSIVE, and HALL with TONE bright.
 
 
@@ -45,6 +45,7 @@
 
 ## Done
 
+- 23 Oct 2026: **PLATE, more movement: B** (all 9 small cards, 7 of 9 large). The PLATE's long delays now wander too. The frozen cards were a coin flip (4 to 4, and the repeated card disagreed), so a frozen PLATE stays as still as before. Your Skank note (a big drop after the first two repeats) measured as the freeze tap itself: from the tap on, chords go into the quieter twin (−10.5 dB), about 6–7 dB below the two before it, the same in A and B.
 - 22 Oct 2026: **Your testing plan is built.** Pages now have a Tail button (T) with a +12 dB switch, a **Numbers** panel per card (decay per band, how soon the tail turns smooth, clarity, width), a grainy flag, and on pick pages a repeated row that catches coin-flip picks. Three new kinds of material: a low voice, a dry piano and a full mix. Underneath: a grainy test and a safety net that fails the build if an approved sound changes without a changelog line. The wobble meter waits for DRIFT tuning.
 - 22 Oct 2026: **Playing over a frozen MASSIVE: B confirmed** (smooth, on all 18 cards). The twin swells like MASSIVE's tank; the A/B switch and its page are gone.
 - 22 Oct 2026: **The PLATE's full-SIZE ring** (your OK): nothing you could hear. It only showed with the PLATE's movement switched off, at the knob's last notch. Full SIZE is now 0.6 % smaller, which removes it, and the test checks small, medium and full PLATEs.

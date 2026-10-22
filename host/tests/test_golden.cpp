@@ -161,9 +161,12 @@ iv::json::Value fingerprint(const Corner& c)
 }
 
 // How far a fingerprint value may move before it counts as a change: loudness
-// and band balance 0.5 dB, decay 5 %, smoothness 30 ms, clarity 0.5 dB.
+// and band balance 0.5 dB, decay 5 %, smoothness 30 ms, clarity 0.5 dB. A band
+// more than 40 dB under the chord's total (its top octaves) holds nothing to
+// hear and wobbles on any change, so it isn't compared.
 bool close(const std::string& key, double was, double now)
 {
+    if (key == "chord_band_db" && was < -40.0 && now < -40.0) return true;
     if (key == "band_t60_s") return std::fabs(now - was) <= 0.05 * std::fabs(was) + 0.01;
     if (key == "smooth_after_s") return std::fabs(now - was) <= 0.03;
     return std::fabs(now - was) <= 0.5;
