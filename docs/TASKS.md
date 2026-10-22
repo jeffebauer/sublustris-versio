@@ -14,6 +14,8 @@
 - [ ] **TONE, a warmer noon?** (`renders/tone_shelf/index.html`, level-matched, picks): the audit's top finding. At noon the upper mids ring almost as long as the body, a glassy sheen. B lets them fade sooner (3 kHz 2.4 s instead of 3.7 s on a HALL; lows unchanged). Across HALL, PLATE, MASSIVE, and HALL with TONE bright.
 
 
+- [ ] **Grainy starts in big spaces:** the new grainy check says every tail ends up a smooth wash, but in big spaces the first part of the tail stays a little grainy for longer than the 0.3 s target: the PLATE from SIZE ½ (up to 0.7 s), the HALL at full SIZE (0.4–0.5 s), MASSIVE at full SIZE (up to 1.4 s). Real big rooms do take longer to fill in, so it may be fine, or even part of the size. Shall I make a short page (clicks, snare, piano) so you can hear whether the start sounds grainy?
+
 ### Listen (after your notes)
 - [ ] **M1: the Hall** (`renders/m1_hall/index.html`): SIZE now goes from a small room (shorter lines, and shorter tails, as a small room has) to a huge hall. Is small small enough, and has the buzz on long small rooms gone? TONE's ends go further (dark: more lows, fewer highs; bright: the opposite). Too much, too little?
 - [ ] **M4: MASSIVE and ATTACK** (`renders/m4_massive/index.html`): MASSIVE now starts with what you play and swells from there (it was silent for 1.2 s), and SIZE fully CCW is a wash instead of rhythmic echoes. Does MASSIVE feel connected to the source now? Is the smallest SIZE still big enough?
@@ -32,7 +34,6 @@
 
 ## Waiting on Claude
 
-- **The testing plan you chose** (in this order): low voice + dry piano material and a "tail only" button; then the grainy check, decay per band on pages, the hidden twin on pick pages, the full-mix material and the clarity / smoothness / width numbers; the safety net for approved sounds last. The wobble meter waits for DRIFT tuning.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 - **M8 tuning** from your listening notes on the pages above.
 - **M8 findings to confirm by ear first** (`docs/sweetspot.md`, `docs/research/reverb-testing-practices.md`):
@@ -43,6 +44,7 @@
 
 ## Done
 
+- 22 Oct 2026: **Your testing plan is built.** Pages now have a Tail button (T) with a +12 dB switch, a **Numbers** panel per card (decay per band, how soon the tail turns smooth, clarity, width), a grainy flag, and on pick pages a repeated row that catches coin-flip picks. Three new kinds of material: a low voice, a dry piano and a full mix. Underneath: a grainy test and a safety net that fails the build if an approved sound changes without a changelog line. The wobble meter waits for DRIFT tuning.
 - 22 Oct 2026: **Playing over a frozen MASSIVE: B confirmed** (smooth, on all 18 cards). The twin swells like MASSIVE's tank; the A/B switch and its page are gone.
 - 22 Oct 2026: **The PLATE's full-SIZE ring** (your OK): nothing you could hear. It only showed with the PLATE's movement switched off, at the knob's last notch. Full SIZE is now 0.6 % smaller, which removes it, and the test checks small, medium and full PLATEs.
 - 22 Oct 2026: **Testing plan chosen**: yes to the grainy check, the safety net, decay per band, the hidden twin, the tail button and all the lab checks; the wobble meter later; low voice + dry piano and a full mix as new material (no long frozen pad).
