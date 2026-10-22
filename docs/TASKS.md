@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 22 Oct 2026, end of session 2 (three A/B pages to pick on: `twin_swell`, `plate_modulation`, `tone_shelf`; every page plays nine kinds of material; the recording guide for your units is ready).
+**Last updated:** 22 Oct 2026, session 3 (testing plan chosen; three A/B pages still to pick on: `twin_swell`, `plate_modulation`, `tone_shelf`).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
@@ -14,7 +14,6 @@
 - [ ] **PLATE, more movement?** (`renders/plate_modulation/index.html`, level-matched, picks): our PLATE moves only one of the four delays in each half of its loop, though the spec says every delay moves (found via Mutable Instruments' Beads, which moves both long delays). A today, B the long delays wander too (about 2 cents). The noise-burst measurements were mixed, so it's for your ears.
 - [ ] **TONE, a warmer noon?** (`renders/tone_shelf/index.html`, level-matched, picks): the audit's top finding. At noon the upper mids ring almost as long as the body, a glassy sheen. B lets them fade sooner (3 kHz 2.4 s instead of 3.7 s on a HALL; lows unchanged). Across HALL, PLATE, MASSIVE, and HALL with TONE bright.
 
-- [ ] **Testing plan** (`docs/research/reverb-testing-practices.md`, "Planned"): what reverb makers do that we don't yet: an echo-density measure ("grainy"), golden renders so an unintended sound change fails the build, decay per band on pages, and a hidden duplicate on choice pages that shows when a pick is a coin flip. Which of these do you want, and in what order? (The quick wins are already in.)
 
 ### Listen (after your notes)
 - [ ] **M1: the Hall** (`renders/m1_hall/index.html`): SIZE now goes from a small room (shorter lines, and shorter tails, as a small room has) to a huge hall. Is small small enough, and has the buzz on long small rooms gone? TONE's ends go further (dark: more lows, fewer highs; bright: the opposite). Too much, too little?
@@ -34,6 +33,7 @@
 
 ## Waiting on Claude
 
+- **The testing plan you chose** (in this order): a ring check, low voice + dry piano material and a "tail only" button; then the PLATE ring fix and its A/B page; then the grainy check, decay per band on pages, the hidden twin on pick pages, the full-mix material and the clarity / smoothness / width numbers; the safety net for approved sounds last. The wobble meter waits for DRIFT tuning.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 - **M8 tuning** from your listening notes on the pages above.
 - **M8 findings to confirm by ear first** (`docs/sweetspot.md`, `docs/research/reverb-testing-practices.md`):
@@ -45,6 +45,7 @@
 
 ## Done
 
+- 22 Oct 2026: **Testing plan chosen**: yes to the grainy check, the safety net, decay per band, the hidden twin, the tail button and all the lab checks; the wobble meter later; low voice + dry piano and a full mix as new material (no long frozen pad).
 - 22 Oct 2026: **MASSIVE keeps its swell** (A on 15 of 18 cards): without it, plucky sounds get two less-diffuse repeats before the wash; the swell smears them in. Recorded in ADR 0007; the prototype and its page are gone.
 - 22 Oct 2026: **DSP audit merged** into main (`docs/research/dsp-audit.md`).
 - 22 Oct 2026: **Testing practice researched and the quick wins adopted** (`docs/research/reverb-testing-practices.md`): pages level-match by loudness, not RMS; a new test checks HALL, MASSIVE and the small PLATE aren't metallic with their modulation off (Valhalla's rule); the sweet-spot check works again (`docs/sweetspot.md`).

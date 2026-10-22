@@ -36,6 +36,8 @@
 
 ## Planned (ranked; each to agree before doing)
 
+**Owner's choices (22 Oct 2026, session 3):** yes to 1, 2, 3, 4, 7 and 8 (all of 8); 5 (pitch wobble) later, when DRIFT tuning starts; 6 only the low voice + dry piano and the full-mix bed (no long frozen-pad row). Order: the mode-density check (8), the low voice + dry piano (6) and the tail-only button (7) first, so the PLATE full-SIZE ring fix and its A/B page benefit; then echo density (1), decay per band (3), the hidden reference (4), the full-mix bed (6), the rest of 8; golden renders (2) last, once the PLATE fix has landed.
+
 1. **Echo density** (item 8): a normalized-echo-density measure in `host/common/Metrics`. Every SPACE at every SIZE should reach about 1.0 by mid-tail; pages flag "grainy".
 2. **Golden renders** (item 14): metric snapshots of about 10 preset × material corners, so an unintended sound change fails the build. Changing a golden needs a changelog line.
 3. **Decay per band and EDT on pages** (items 11 and 12): "one band hangs" becomes visible, and it's the same measure `tools/ingest_reference.py` uses on your units.
