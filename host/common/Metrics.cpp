@@ -899,7 +899,395 @@ HowlResult howlStats(const std::vector<float>& mono, size_t start, size_t end, f
     return h;
 }
 
+// ---- Room-acoustics measures (reverb-testing-practices.md items 8, 11, 12) ----
+
+// Where the first event's response starts, peaks and has died away.
+//  onset:   ISO 3382-1:2009's start of an impulse response, the first sample
+//           that rises to 20 dB below the segment's peak.
+//  peak:    the loudest 50 ms of the segment (centred mean of five 10 ms
+//           blocks). It stands in for "the input stopped": for a click it is
+//           the click's response, for a burst its end, for a swell its top.
+//  tailEnd: the first point after the peak where that 50 ms envelope is
+//           50 dB down, or the segment's end if it never gets there.
+//  quietEnd: the same at 90 dB down. The band filters stop there: what
+//           follows is far below the -25 dB end of any band's fit (a band
+//           would have to start 65 dB under the loudest to reach it), and
+//           a 40 s render's silent end would otherwise double their FFTs.
+struct TailSpan {
+    size_t onset = 0, peak = 0, tailEnd = 0, quietEnd = 0;
+    bool ok = false;
+};
+
+TailSpan tailSpan(const std::vector<float>& mono, size_t start, size_t end, float sr)
+{
+    TailSpan s;
+    const size_t block = std::max<size_t>(1, size_t(0.010 * double(sr)));
+    if (end > mono.size() || end <= start + 8 * block) return s;
+    double maxAbs = 0.0;
+    for (size_t i = start; i < end; ++i) maxAbs = std::max(maxAbs, std::fabs(double(mono[i])));
+    if (maxAbs <= 0.0) return s;
+    s.onset = start;
+    while (s.onset < end && std::fabs(double(mono[s.onset])) < 0.1 * maxAbs) ++s.onset;
+
+    const std::vector<double> e = blockPowers(mono, start, end, block);
+    std::vector<double> env(e.size());
+    for (size_t b = 0; b < e.size(); ++b) {
+        const size_t lo = b >= 2 ? b - 2 : 0, hi = std::min(e.size(), b + 3);
+        double sum = 0.0;
+        for (size_t k = lo; k < hi; ++k) sum += e[k];
+        env[b] = sum / double(hi - lo);
+    }
+    const size_t pk = size_t(std::max_element(env.begin(), env.end()) - env.begin());
+    s.peak = std::max(s.onset, start + pk * block);
+    s.tailEnd = s.quietEnd = end;
+    for (size_t b = pk; b < env.size(); ++b)
+        if (env[b] <= env[pk] * 1e-5) { s.tailEnd = start + b * block; break; }
+    for (size_t b = pk; b < env.size(); ++b)
+        if (env[b] <= env[pk] * 1e-9) { s.quietEnd = start + b * block; break; }
+    s.ok = s.tailEnd > s.onset;
+    return s;
+}
+
+// Double-precision radix-2 complex FFT with a shared twiddle table. The band
+// filters run over a whole render (2^21 points for 40 s), where single
+// precision's rounding would sit too close to the -25 dB end of the fit.
+struct FftDouble {
+    size_t n = 0;
+    std::vector<double> twr, twi; // stage of length len: entries [len/2, len), e^{-2 pi i k / len}
+    explicit FftDouble(size_t size) : n(size), twr(size), twi(size)
+    {
+        for (size_t half = 1; half < n; half <<= 1)
+            for (size_t k = 0; k < half; ++k) {
+                const double a = M_PI * double(k) / double(half);
+                twr[half + k] = std::cos(a);
+                twi[half + k] = -std::sin(a);
+            }
+    }
+    void run(std::vector<double>& re, std::vector<double>& im, bool inverse) const
+    {
+        for (size_t i = 1, j = 0; i < n; ++i) {
+            size_t bit = n >> 1;
+            for (; j & bit; bit >>= 1) j ^= bit;
+            j ^= bit;
+            if (i < j) { std::swap(re[i], re[j]); std::swap(im[i], im[j]); }
+        }
+        const double sign = inverse ? -1.0 : 1.0;
+        double* xr = re.data();
+        double* xi = im.data();
+        for (size_t half = 1; half < n; half <<= 1) {
+            const double* wr = twr.data() + half;
+            const double* wiT = twi.data() + half;
+            for (size_t i = 0; i < n; i += 2 * half) {
+                double* ar = xr + i; double* ai = xi + i;
+                double* br = ar + half; double* bi = ai + half;
+                for (size_t k = 0; k < half; ++k) {
+                    const double c = wr[k], s = sign * wiT[k];
+                    const double tr = br[k] * c - bi[k] * s, ti = br[k] * s + bi[k] * c;
+                    br[k] = ar[k] - tr; bi[k] = ai[k] - ti;
+                    ar[k] += tr;        ai[k] += ti;
+                }
+            }
+        }
+    }
+};
+
+// One band's decay, exactly as tools/ingest_reference.py's t60() measures
+// the owner's recordings: backward-integrated energy (Schroeder 1965) from
+// the band's loudest sample to the end of the segment; T60 = 3 x the time
+// between the curve's first points below -5 dB and below -25 dB (a T20 read
+// from two crossings, not a regression; NaN if it never gets to -25 dB).
+// EDT is ISO 3382-1's early decay time: the least-squares line through the
+// same curve from 0 to -10 dB, extrapolated to -60 dB.
+void ingestDecay(const std::vector<double>& y, float sr, double& t60, double& edt)
+{
+    t60 = edt = std::nan("");
+    size_t pk = 0;
+    for (size_t i = 1; i < y.size(); ++i)
+        if (std::fabs(y[i]) > std::fabs(y[pk])) pk = i;
+    const size_t len = y.size() - pk;
+    if (len < 8) return;
+    std::vector<double> edc(len);
+    double acc = 0.0;
+    for (size_t i = len; i-- > 0;) { acc += y[pk + i] * y[pk + i]; edc[i] = acc; }
+    if (edc[0] <= 0.0) return;
+    auto d = [&](size_t i) { return 10.0 * std::log10(edc[i] / edc[0] + 1e-30); };
+    // Crossings compared in power (no log per sample): d < x <=> ratio < 10^(x/10).
+    const double r5 = std::pow(10.0, -0.5) - 1e-30, r10 = 0.1 - 1e-30, r25 = std::pow(10.0, -2.5) - 1e-30;
+    long a = -1, b = -1, n10 = -1;
+    for (size_t i = 0; i < len; ++i) {
+        const double v = edc[i] / edc[0];
+        if (n10 < 0 && v < r10) n10 = long(i);
+        if (a < 0 && v < r5) a = long(i);
+        if (v < r25) { b = long(i); break; }
+    }
+    if (a >= 0 && b > a) t60 = 3.0 * double(b - a) / double(sr);
+    if (n10 > 1) {
+        double sumT = 0, sumD = 0, sumTT = 0, sumTD = 0;
+        for (long i = 0; i <= n10; ++i) {
+            const double t = double(i) / double(sr), v = d(size_t(i));
+            sumT += t; sumD += v; sumTT += t * t; sumTD += t * v;
+        }
+        const double cnt = double(n10 + 1);
+        const double denom = cnt * sumTT - sumT * sumT;
+        const double slope = std::fabs(denom) > 0.0 ? (cnt * sumTD - sumT * sumD) / denom : 0.0;
+        if (slope < -1e-9) edt = -60.0 / slope;
+    }
+}
+
+// Octave bands as tools/ingest_reference.py's octave(): a zero-phase FFT
+// filter whose gain is a Gaussian in log-frequency (sigma 0.42 octave)
+// around each centre, with the segment padded by a second of silence on
+// each side so the filter's ringing can't wrap round the ends and floor the
+// decay curve (HANDOFF "Will bite"). The FFT here is a power of two at least
+// that long; the extra zeros only add padding.
+// Two real bands share each inverse FFT (one in the real part, one in the
+// imaginary part). Beyond 8.5 sigma (gain < 1e-15) the gain is taken as 0.
+void bandDecays(const std::vector<float>& mono, size_t start, size_t end, float sr, Metrics& m)
+{
+    if (end > mono.size() || end <= start + size_t(0.1 * double(sr))) return;
+    const size_t len = end - start, pad = size_t(std::lround(double(sr)));
+    size_t n = 1;
+    while (n < len + 2 * pad) n <<= 1;
+    std::vector<double> re(n, 0.0), im(n, 0.0);
+    for (size_t i = 0; i < len; ++i) re[pad + i] = double(mono[start + i]);
+    const FftDouble fftN(n);
+    fftN.run(re, im, false);
+
+    constexpr double kSigmaOct = 0.42, kCutSigma = 8.5;
+    std::vector<double> log2f(n / 2 + 1); // log2 of each bin's frequency
+    for (size_t k = 0; k <= n / 2; ++k) log2f[k] = std::log2(std::max(double(k) * double(sr) / double(n), 1e-3));
+    auto weight = [&](size_t bin, int band) {
+        const double o = (log2f[bin] - std::log2(Metrics::bandHz[band])) / kSigmaOct;
+        return std::fabs(o) > kCutSigma ? 0.0 : std::exp(-0.5 * o * o);
+    };
+    std::vector<double> yr(n), yi(n), band(len);
+    for (int b = 0; b < Metrics::kNumBands; b += 2) {
+        const bool two = b + 1 < Metrics::kNumBands;
+        for (size_t k = 0; k < n; ++k) {
+            const size_t bin = k <= n / 2 ? k : n - k; // negative frequencies mirror
+            const double w1 = weight(bin, b), w2 = two ? weight(bin, b + 1) : 0.0;
+            yr[k] = re[k] * w1 - im[k] * w2;
+            yi[k] = im[k] * w1 + re[k] * w2;
+        }
+        fftN.run(yr, yi, true);
+        for (size_t i = 0; i < len; ++i) band[i] = yr[pad + i] / double(n);
+        ingestDecay(band, sr, m.bandT60S[b], m.bandEdtS[b]);
+        if (two) {
+            for (size_t i = 0; i < len; ++i) band[i] = yi[pad + i] / double(n);
+            ingestDecay(band, sr, m.bandT60S[b + 1], m.bandEdtS[b + 1]);
+        }
+    }
+}
+
+// Interaural cross-correlation coefficient, ISO 3382-1:2009 (binaural
+// measures): IACF(tau) = sum L(t) R(t + tau) / sqrt(sum L^2 * sum R^2) over
+// [a, b), IACC = max |IACF| for |tau| <= 1 ms. ISO means a dummy head's two
+// ears; on our L/R outputs it reads as "how alike are the two sides".
+double iacc(const std::vector<float>& L, const std::vector<float>& R, size_t a, size_t b, float sr)
+{
+    const size_t frames = std::min(L.size(), R.size());
+    b = std::min(b, frames);
+    if (b <= a + 8) return std::nan("");
+    double eL = 0.0, eR = 0.0;
+    for (size_t t = a; t < b; ++t) { eL += double(L[t]) * L[t]; eR += double(R[t]) * R[t]; }
+    if (eL <= 0.0 || eR <= 0.0) return std::nan("");
+    // Long spans (a late part of many seconds) are sampled every `stride`
+    // samples, at least 240 000 products per lag: the coefficient's estimate
+    // is then within ~0.002 of the full sum, at a fraction of 97 full passes.
+    const long stride = std::max<long>(1, long(b - a) / 240000);
+    if (stride > 1) {
+        eL = eR = 0.0;
+        for (size_t t = a; t < b; t += size_t(stride)) { eL += double(L[t]) * L[t]; eR += double(R[t]) * R[t]; }
+        if (eL <= 0.0 || eR <= 0.0) return std::nan("");
+    }
+    const long maxLag = std::lround(0.001 * double(sr));
+    double best = 0.0;
+    for (long tau = -maxLag; tau <= maxLag; ++tau) {
+        long lo = std::max(long(a), -tau);
+        lo += (stride - (lo - long(a)) % stride) % stride; // stay on the energy sums' grid
+        const long hi = std::min(long(b), long(frames) - tau);
+        double s = 0.0;
+        for (long t = lo; t < hi; t += stride) s += double(L[size_t(t)]) * double(R[size_t(t + tau)]);
+        best = std::max(best, std::fabs(s));
+    }
+    return best / std::sqrt(eL * eR);
+}
+
+// Late-tail flatness: the broadband Schroeder curve from the loudest sample
+// to the segment's end, its least-squares line between -5 and -35 dB (the
+// T30 range of ISO 3382-1), and the RMS of the curve's deviation from that
+// line, in dB. A clean exponential tail is a straight line (~0 dB); a tail
+// that pumps, beats or has a double slope bends away from it. The decay
+// curve itself is what ISO's "curvature" (T30/T20) also looks at.
+double tailFlatnessDb(const std::vector<float>& mono, size_t start, size_t end, float sr)
+{
+    if (end > mono.size() || end <= start + 8) return std::nan("");
+    size_t pk = start;
+    for (size_t i = start; i < end; ++i)
+        if (std::fabs(mono[i]) > std::fabs(mono[pk])) pk = i;
+    const size_t len = end - pk;
+    std::vector<double> edc(len);
+    double acc = 0.0;
+    for (size_t i = len; i-- > 0;) { acc += double(mono[pk + i]) * double(mono[pk + i]); edc[i] = acc; }
+    if (len < 8 || edc[0] <= 0.0) return std::nan("");
+    auto d = [&](size_t i) { return 10.0 * std::log10(edc[i] / edc[0] + 1e-300); };
+    long n5 = -1, n35 = -1;
+    const double r5 = std::pow(10.0, -0.5) * edc[0], r35 = std::pow(10.0, -3.5) * edc[0];
+    for (size_t i = 0; i < len; ++i) {
+        if (n5 < 0 && edc[i] <= r5) n5 = long(i);
+        if (edc[i] <= r35) { n35 = long(i); break; }
+    }
+    if (n5 < 0 || n35 <= n5 + 8) return std::nan("");
+    double sumT = 0, sumD = 0, sumTT = 0, sumTD = 0;
+    for (long i = n5; i <= n35; ++i) {
+        const double t = double(i) / double(sr), v = d(size_t(i));
+        sumT += t; sumD += v; sumTT += t * t; sumTD += t * v;
+    }
+    const double cnt = double(n35 - n5 + 1);
+    const double denom = cnt * sumTT - sumT * sumT;
+    if (std::fabs(denom) <= 0.0) return std::nan("");
+    const double slope = (cnt * sumTD - sumT * sumD) / denom, icept = (sumD - slope * sumT) / cnt;
+    double sq = 0.0;
+    for (long i = n5; i <= n35; ++i) {
+        const double r = d(size_t(i)) - (icept + slope * double(i) / double(sr));
+        sq += r * r;
+    }
+    return std::sqrt(sq / cnt);
+}
+
+// echoDensityTimeS and echoDensityLate for one channel (see roomMeasures).
+void echoDensityOf(const std::vector<float>& x, const TailSpan& span, float sr, double& timeS, double& late)
+{
+    timeS = late = std::nan("");
+    const size_t hop = std::max<size_t>(1, size_t(std::lround(0.001 * double(sr))));
+    // The time search reads the profile every 1 ms, first over the 4 s after
+    // the onset (where every SPACE so far gets dense), the whole tail only if
+    // it hasn't by then.
+    const size_t firstEnd = std::min(span.tailEnd, span.onset + size_t(4.0 * double(sr)));
+    std::vector<double> ned = echoDensityProfile(x, span.onset, firstEnd, sr, hop);
+    for (int pass = 0; pass < 2; ++pass) {
+        if (pass == 1) {
+            if (!std::isnan(timeS) || firstEnd >= span.tailEnd) break;
+            ned = echoDensityProfile(x, span.onset, span.tailEnd, sr, hop);
+        }
+    // The raw profile of Gaussian noise itself dips below 0.9 now and then
+    // (3-10 % of the time with a 20 ms window, more the darker the noise:
+    // one-pole low-passed noise at ~150 Hz took 0.77 s to "hold" 100 ms
+    // >= 0.9), so the hold is judged on the profile's centred 100 ms mean,
+    // which Gaussian noise keeps >= 0.9 (tested in test_density).
+        const size_t hold = size_t(std::lround(kEchoDensityHoldS * double(sr) / double(hop)));
+        const size_t h = hold / 2;
+        std::vector<double> prefix(ned.size() + 1, 0.0);
+        for (size_t k = 0; k < ned.size(); ++k) prefix[k + 1] = prefix[k] + ned[k];
+        size_t run = 0;
+        for (size_t k = 0; k < ned.size(); ++k) {
+            const size_t lo = k >= h ? k - h : 0, hi = std::min(ned.size(), k + h + 1);
+            const double smooth = (prefix[hi] - prefix[lo]) / double(hi - lo);
+            run = smooth >= kEchoDensityTarget ? run + 1 : 0;
+            if (run > hold) { timeS = double((k - hold) * hop) / double(sr); break; }
+        }
+    }
+    // The late mean only needs a fair sample of the profile: every 5 ms.
+    const size_t lateFrom = std::max(span.onset, span.peak + size_t(0.3 * double(sr)));
+    const std::vector<double> lateNed = echoDensityProfile(x, lateFrom, span.tailEnd, sr, 5 * hop);
+    double sum = 0.0;
+    for (double v : lateNed) sum += v;
+    if (!lateNed.empty()) late = sum / double(lateNed.size());
+}
+
+// All of the room-acoustics measures on the first event's segment.
+//  - Echo density (item 8): on each of the first two analysis channels
+//    (the mono downmix of decorrelated sides would read denser than either
+//    ear hears), keeping the worse: the later echoDensityTimeS, the lower
+//    echoDensityLate. The 0.9 / 100 ms rule for "dense" is ours (Abel and
+//    Huang read the mixing time where the profile reaches ~1; Lindau et al.
+//    2012 do the same with their window), judged on the profile's 100 ms
+//    mean (echoDensityOf). The late span starts 0.3 s after the input
+//    stopped (TailSpan.peak).
+//  - Band T60 / EDT (item 11, 12): bandDecays, from the first event to
+//    TailSpan.quietEnd.
+//  - C80 (ISO 3382-1): 10 log10(energy onset..+80 ms / energy +80 ms..end),
+//    on the mono downmix.
+//  - IACC early (onset..+80 ms) and late (+80 ms..tail end), stereo only.
+//  - Tail flatness: tailFlatnessDb.
+void roomMeasures(const std::vector<std::vector<float>>& channels, const std::vector<float>& mono,
+                  const std::vector<std::vector<float>>& stereoCh, size_t segStart, size_t segEnd,
+                  float sr, Metrics& m)
+{
+    m.tailFlatnessDb = tailFlatnessDb(mono, segStart, segEnd, sr);
+    const TailSpan span = tailSpan(mono, segStart, segEnd, sr);
+    bandDecays(mono, segStart, span.ok ? span.quietEnd : segEnd, sr, m);
+    if (!span.ok) return;
+
+    const size_t numCh = std::min<size_t>(2, channels.size());
+    for (size_t c = 0; c < std::max<size_t>(1, numCh); ++c) {
+        double t = 0.0, l = 0.0;
+        echoDensityOf(numCh >= 2 ? channels[c] : mono, span, sr, t, l);
+        if (c == 0) { m.echoDensityTimeS = t; m.echoDensityLate = l; continue; }
+        m.echoDensityTimeS = (std::isnan(t) || std::isnan(m.echoDensityTimeS)) ? std::nan("")
+                                                                              : std::max(t, m.echoDensityTimeS);
+        m.echoDensityLate = (std::isnan(l) || std::isnan(m.echoDensityLate)) ? std::nan("")
+                                                                            : std::min(l, m.echoDensityLate);
+    }
+
+    const size_t split = span.onset + size_t(std::lround(0.080 * double(sr)));
+    if (split < segEnd) {
+        double early = 0.0, after = 0.0;
+        for (size_t i = span.onset; i < split; ++i) early += double(mono[i]) * double(mono[i]);
+        for (size_t i = split; i < segEnd; ++i) after += double(mono[i]) * double(mono[i]);
+        if (early > 0.0 && after > 0.0) m.c80Db = 10.0 * std::log10(early / after);
+    }
+    if (stereoCh.size() >= 2 && split < span.tailEnd) {
+        m.iaccEarly = iacc(stereoCh[0], stereoCh[1], span.onset, split, sr);
+        m.iaccLate = iacc(stereoCh[0], stereoCh[1], split, span.tailEnd, sr);
+    }
+}
+
 } // namespace
+
+// Normalized echo density profile (Abel and Huang 2006, "A simple, robust
+// measure of reverberation echo density", AES 121st Convention):
+//   eta(t) = 1/erfc(1/sqrt 2) * sum_tau w(tau) 1{|h(t + tau)| > sigma(t)},
+//   sigma(t) = sqrt(sum_tau w(tau) h^2(t + tau)),
+// with w a Hann window (20 ms here, as in the paper) normalised to sum 1.
+// erfc(1/sqrt 2) = 0.3173 is the share of Gaussian samples outside one
+// standard deviation, so Gaussian noise reads 1 and sparse echoes read near
+// 0. (github.com/microsoft/echodensity, the repo our research notes point
+// at, implements a later measure of the same thing, Tukuljac et al.'s
+// Sorted Center Time, ICASSP 2019; it is cited for its onset handling and
+// noise normalisation, not copied.) Near the ends of `x` the window is cut
+// and renormalised.
+std::vector<double> echoDensityProfile(const std::vector<float>& x, size_t start, size_t end, float sampleRate,
+                                       size_t hop, double windowS)
+{
+    std::vector<double> out;
+    end = std::min(end, x.size());
+    if (hop == 0 || end <= start) return out;
+    size_t L = size_t(std::lround(windowS * double(sampleRate)));
+    if (L % 2 == 0) ++L;
+    const size_t half = L / 2;
+    std::vector<double> w(L);
+    for (size_t k = 0; k < L; ++k) w[k] = 0.5 - 0.5 * std::cos(2.0 * M_PI * double(k + 1) / double(L + 1));
+    const double norm = 1.0 / std::erfc(1.0 / std::sqrt(2.0));
+    out.reserve((end - start) / hop + 1);
+    for (size_t p = start; p < end; p += hop) {
+        const size_t lo = p >= half ? p - half : 0, hi = std::min(x.size(), p + half + 1);
+        const size_t w0 = lo + half - p; // window index of sample lo
+        double wsum = 0.0, s2 = 0.0;
+        for (size_t i = lo; i < hi; ++i) {
+            const double wi = w[w0 + i - lo];
+            wsum += wi;
+            s2 += wi * double(x[i]) * double(x[i]);
+        }
+        if (s2 <= 0.0 || wsum <= 0.0) { out.push_back(0.0); continue; }
+        const double sigma = std::sqrt(s2 / wsum);
+        double outside = 0.0;
+        for (size_t i = lo; i < hi; ++i)
+            if (std::fabs(double(x[i])) > sigma) outside += w[w0 + i - lo];
+        out.push_back(norm * outside / wsum);
+    }
+    return out;
+}
 
 Metrics compute(const std::vector<std::vector<float>>& channels, float sampleRate,
                  const std::vector<std::vector<float>>* stereoSource)
@@ -978,6 +1366,13 @@ Metrics compute(const std::vector<std::vector<float>>& channels, float sampleRat
     m.maxStepDb100ms = maxStepDb100ms(mono, sampleRate, events);
 
     const auto& stereoCh = stereoSource ? *stereoSource : channels;
+    // Echo density, band decay, C80, IACC, tail flatness: over the same
+    // span as T60 (first event to before the next one's build-up).
+    {
+        static const std::vector<std::vector<float>> kNoStereo;
+        const bool stereoOk = stereoCh.size() >= 2 && stereoCh[0].size() >= frames && stereoCh[1].size() >= frames;
+        roomMeasures(channels, mono, stereoOk ? stereoCh : kNoStereo, segStart, t60End, sampleRate, m);
+    }
     if (stereoCh.size() >= 2 && !stereoCh[0].empty() && !stereoCh[1].empty()) {
         const auto& L = stereoCh[0];
         const auto& R = stereoCh[1];
@@ -1015,7 +1410,19 @@ std::string summaryLine(const Metrics& m)
         m.peakDbfs, m.rmsDbfs, t60Buf, resBuf,
         m.steadyTone ? "true" : "false", m.nanInfCount, m.clipCount, m.clickCount,
         corrBuf, lossBuf, notchBuf, stepBuf, ringBuf, m.ringing ? "(RINGING)" : "", howlBuf);
-    return std::string(buf);
+    // Room-acoustics measures, appended (the band arrays live in the sidecar).
+    auto fmt = [](double x, const char* f, const char* nullText) {
+        char b[32];
+        if (std::isnan(x)) std::snprintf(b, sizeof b, "%s", nullText);
+        else std::snprintf(b, sizeof b, f, x);
+        return std::string(b);
+    };
+    std::string line(buf);
+    line += " density=" + fmt(m.echoDensityTimeS, "%.2fs", "null") + "/" + fmt(m.echoDensityLate, "%.2f", "null");
+    line += " c80=" + fmt(m.c80Db, "%.1fdB", "null");
+    line += " iacc=" + fmt(m.iaccEarly, "%.2f", "mono") + "/" + fmt(m.iaccLate, "%.2f", "mono");
+    line += " flat=" + fmt(m.tailFlatnessDb, "%.2fdB", "null");
+    return line;
 }
 
 } // namespace iv::metrics

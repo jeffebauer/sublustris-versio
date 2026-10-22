@@ -165,8 +165,8 @@ void Plate::control(int n)
         }
         br.modStep = (target - br.modNow) / float(n);
 
-        // PROTOTYPE: d1 and d2 wander too, each at its own rate (a sine plus the floor's random
-        // walk), about 2 cents; eased with modDepth_ while frozen like ap1.
+        // d1 and d2 wander too, each at its own rate (a sine plus the floor's random walk),
+        // about 2 cents; still on a frozen pad (longMod_ 0).
         const float longDepth = longMod_ * modDepth_ * modScale_ * voicing::kPlateLongModSeconds * sampleRate_;
         for (int j = 0; j < 2; ++j) {
             br.longPhase[j] += voicing::kPlateLongModHz[2 * b + j] * dt;

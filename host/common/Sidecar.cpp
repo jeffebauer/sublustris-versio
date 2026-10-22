@@ -32,6 +32,22 @@ json::Value metricsToJson(const metrics::Metrics& m)
     v.set("howl_move_pct", num(m.howlMovePct));
     v.set("howl_move_db", num(m.howlMoveDb));
     v.set("howl_ok", json::Value::makeBool(m.howlOk));
+    // Room-acoustics measures (reverb-testing-practices.md items 8, 11, 12).
+    v.set("echo_density_time_s", num(m.echoDensityTimeS));
+    v.set("echo_density_late", num(m.echoDensityLate));
+    json::Value hz = json::Value::makeArray(), t60 = json::Value::makeArray(), edt = json::Value::makeArray();
+    for (int b = 0; b < metrics::Metrics::kNumBands; ++b) {
+        hz.push(json::Value::makeNumber(metrics::Metrics::bandHz[b]));
+        t60.push(num(m.bandT60S[b]));
+        edt.push(num(m.bandEdtS[b]));
+    }
+    v.set("band_hz", hz);
+    v.set("band_t60_s", t60);
+    v.set("band_edt_s", edt);
+    v.set("c80_db", num(m.c80Db));
+    v.set("iacc_early", num(m.iaccEarly));
+    v.set("iacc_late", num(m.iaccLate));
+    v.set("tail_flatness_db", num(m.tailFlatnessDb));
     return v;
 }
 
@@ -72,6 +88,21 @@ metrics::Metrics jsonToMetrics(const json::Value& v)
     m.howlMovePct  = num("howl_move_pct");
     m.howlMoveDb   = num("howl_move_db");
     m.howlOk       = v.get("howl_ok", false);
+    m.echoDensityTimeS = num("echo_density_time_s");
+    m.echoDensityLate  = num("echo_density_late");
+    auto bands = [&v](const char* key, double* out) {
+        const json::Value* a = v.find(key);
+        for (int b = 0; b < metrics::Metrics::kNumBands; ++b) {
+            const bool ok = a && a->isArray() && size_t(b) < a->items().size() && !a->items()[size_t(b)].isNull();
+            out[b] = ok ? a->items()[size_t(b)].numberValue() : std::nan("");
+        }
+    };
+    bands("band_t60_s", m.bandT60S);
+    bands("band_edt_s", m.bandEdtS);
+    m.c80Db          = num("c80_db");
+    m.iaccEarly      = num("iacc_early");
+    m.iaccLate       = num("iacc_late");
+    m.tailFlatnessDb = num("tail_flatness_db");
     return m;
 }
 

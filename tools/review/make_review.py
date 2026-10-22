@@ -17,6 +17,9 @@ The default page is laid out like the SPLASH voicings page the owner approved
   - "My pick" per panel (not with --showcase: a page that shows settings
     rather than asks for a decision), notes per column plus overall notes, and
     "Copy results for Claude" (plain text) / "Download results";
+  - on pick pages, a hidden twin: one row of cards is repeated elsewhere, and
+    the results say "no clear preference" where its two copies got different
+    picks (--no-hidden-twin leaves it out);
   - level-matched playback: every version is moved towards the median
     loudness of its panel (at most +/-12 dB), shown per version. On by default
     for lettered versions / prototypes (A/B/C, before/after), off for knob
@@ -358,6 +361,8 @@ def write_listen(out_dir, out_path, args):
     except listen.LayoutError as e:
         die(str(e))
     data["choices"] = not args.showcase
+    if data["choices"] and not args.no_hidden_twin:
+        listen.add_hidden_twin(data)
     data["wetOnly"] = bool(args.wet_only)
     if not args.no_audio_files:
         written, total = listen.write_audio_sidecars(data, out_path.parent)
@@ -397,6 +402,9 @@ def main():
     parser.add_argument("--showcase", action="store_true",
                         help="A page that shows settings rather than asks for a decision: no 'My pick', no blind mode; "
                              "notes only (Copy notes for Claude)")
+    parser.add_argument("--no-hidden-twin", action="store_true",
+                        help="Pick pages repeat one card elsewhere (a hidden twin): if its two copies get different "
+                             "picks, the results say 'no clear preference' for it. This leaves it out")
     parser.add_argument("--classic", action="store_true", help="Write the older metrics page (template.html) instead")
     args = parser.parse_args()
 

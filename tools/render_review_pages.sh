@@ -38,11 +38,16 @@ if [ ! -f $SRC/vibes.wav ] && [ -d $VIBES ]; then
     ffmpeg -v error -y "${args[@]}" -filter_complex "${fil}${mix}amix=inputs=${i}:normalize=0,atrim=0:18,volume=16dB,apad=pad_dur=12" \
         -ac 2 -ar 48000 -c:a pcm_s24le $SRC/vibes.wav
 fi
+# The measuring click: one click, then 40 s for the longest finite tails to decay.
+[ -f $SRC/_click.wav ] || ffmpeg -v error -y -i test_audio/stimulus/07_click_single.wav -af "apad=whole_dur=40" -ar 48000 -c:a pcm_s24le $SRC/_click.wav
 MATERIALS=(skank)
 [ -f $SRC/vibes.wav ] && MATERIALS+=(vibes)
-# The wider set (tools/make_material.py): pads, stabs, a lead, drums, bass, keys, a voice.
-EXTRA=(stabs pad lead drums bass keys voice)
-if [ ! -f $SRC/voice.wav ] && [ -x .venv/bin/python ]; then .venv/bin/python tools/make_material.py > /dev/null; fi
+# The wider set (tools/make_material.py): pads, stabs, a lead, drums, bass, keys, a voice,
+# a low voice and a dry piano (for "metallic?"), and a full mix (testing plan item 6).
+EXTRA=(stabs pad lead drums bass keys voice voicelow piano fullmix)
+for m in $EXTRA; do
+    if [ ! -f $SRC/$m.wav ] && [ -x .venv/bin/python ]; then .venv/bin/python tools/make_material.py $m > /dev/null; fi
+done
 for m in $EXTRA; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
 
 # Freeze gestures per material (seconds): [press, release] pairs.
@@ -72,8 +77,15 @@ r() {
     for m in $MATERIALS; do
         local a=()
         [ -n "$auto" ] && a=(--auto $SRC/${auto}_${m}.json)
-        $R $SRC/$m.wav renders/$page/$dir/${m}_${tag}.wav --set mix=1 --sidecar "${a[@]}" "$@" > /dev/null
+        # A material with a send (fullmix) feeds the reverb only that; the page's dry is the whole mix.
+        local in=$SRC/$m.wav
+        [ -f $SRC/${m}_send.wav ] && in=$SRC/${m}_send.wav
+        $R $in renders/$page/$dir/${m}_${tag}.wav --set mix=1 --sidecar "${a[@]}" "$@" > /dev/null
     done
+    # One click through the same settings (no gestures): the card's Numbers (decay per band,
+    # grainy, clarity, width) come from this, since music never leaves a clean decay.
+    mkdir -p renders/$page/_measure/$dir
+    $R $SRC/_click.wav renders/$page/_measure/$dir/${tag}.wav --set mix=1 --sidecar "$@" > /dev/null
 }
 page() { # page title readme
     rm -rf renders/$1; mkdir -p renders/$1
@@ -269,25 +281,6 @@ B_bloom    BLOOM: swells over TIME, then decays naturally
 C_reverse  REVERSE: swells over TIME, then stops"
 fi
 
-if on plate_modulation; then
-    page plate_modulation
-    for v in 0:A_today 1:B_long_delays_move; do
-        IV_PLATE_LONGMOD=${v%%:*} r plate_modulation small ${v##*:} "" --set space=PLATE --set era=0 --set size=0.3 --set decay=0.6
-        IV_PLATE_LONGMOD=${v%%:*} r plate_modulation large ${v##*:} "" --set space=PLATE --set era=0 --set size=1 --set decay=0.7
-        IV_PLATE_LONGMOD=${v%%:*} r plate_modulation frozen ${v##*:} freeze_only --set space=PLATE --set era=0 --set size=0.6 --set decay=0.6
-    done
-    print -r -- "Found while auditing against Mutable Instruments' reverbs: our PLATE only moves one of the four delays in each half of its loop; the other three read at fixed lengths, though our spec says every delay in the tank moves (it's what keeps a reverb from ringing like metal). Beads moves both of its long delays. B adds a slow wander (about 2 cents, each at its own rate) to the two long delays, easing off while frozen like the rest. On noise bursts it measured a touch less resonant, but no less ringing at the largest SIZE, so it's for your ears: is B smoother, more lush, or just different?
-
-small   SIZE 0.3, DECAY 0.6
-large   SIZE fully CW, DECAY 0.7
-frozen  a tap freezes at 3 s (your playing goes to the twin), a tap unfreezes
-
-A_today             today's PLATE
-B_long_delays_move  the long delays wander too" > renders/plate_modulation/README.txt
-    python3 tools/review/make_review.py renders/plate_modulation --title "Immensio: PLATE, more movement?" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/plate_modulation/index.html"
-fi
-
 if on tone_shelf; then
     page tone_shelf
     for v in 0:A_today 2500:B_shelf; do
@@ -309,19 +302,37 @@ B_shelf   a shelf at 2.5 kHz: the upper mids fade sooner" > renders/tone_shelf/R
     echo "renders/tone_shelf/index.html"
 fi
 
-if on twin_swell; then
-    page twin_swell
-    for v in 0:A_before 1:B_smooth; do
-        IV_TWIN_SWELL=${v%%:*} r twin_swell medium ${v##*:} freeze_only --set space=MASSIVE --set size=0.6 --set decay=0.6
-        IV_TWIN_SWELL=${v%%:*} r twin_swell large ${v##*:} freeze_only --set space=MASSIVE --set size=1 --set decay=0.75
-    done
-    print -r -- "After your MASSIVE pick (the swell stays, because without it plucky sounds get two less-diffuse repeats): playing over a frozen MASSIVE goes into its twin, which had no swell, so it had the same repeats (measured on a click: spikes at 0.12, 0.3 and 0.8 s). B gives the twin MASSIVE's own swell: no spikes, and it arrives 0.2-0.33 s after you play, like the tank (and ~1 dB quieter, still a subtle layer). A tap freezes at 3 s, your playing is the layer over the pad, a tap unfreezes at 16 s.
 
-medium  SIZE 0.6, DECAY 0.6
-large   SIZE fully CW, DECAY 0.75
+if on grainy_start; then
+    # The grainy check's slow starts (docs/research/reverb-testing-practices.md, session 3):
+    # each SPACE's quick-to-smooth setting beside its slow ones, on material that shows grain.
+    [ -f $SRC/clicks.wav ] || ffmpeg -v error -y -i test_audio/stimulus/01_clicks.wav -af "atrim=0:20,apad=pad_dur=12" -ac 2 -ar 48000 -c:a pcm_s24le $SRC/clicks.wav
+    [ -f $SRC/hits.wav ] || ffmpeg -v error -y -i test_audio/stimulus/02_hits.wav -af "apad=pad_dur=8" -ac 2 -ar 48000 -c:a pcm_s24le $SRC/hits.wav
+    saved=("${MATERIALS[@]}"); MATERIALS=(clicks hits piano)
+    page grainy_start
+    r grainy_start plate A_small "" --set space=PLATE --set era=0 --set size=0 --set decay=0.4
+    r grainy_start plate B_medium "" --set space=PLATE --set era=0 --set size=0.5 --set decay=0.4
+    r grainy_start plate C_large "" --set space=PLATE --set era=0 --set size=1 --set decay=0.4
+    r grainy_start hall A_hall_medium "" --set space=HALL --set era=0 --set size=0.5 --set decay=0.4
+    r grainy_start hall B_hall_large "" --set space=HALL --set era=0 --set size=1 --set decay=0.4
+    r grainy_start massive A_massive_medium "" --set space=MASSIVE --set era=0 --set size=0.5 --set decay=0.4
+    r grainy_start massive B_massive_small "" --set space=MASSIVE --set era=0 --set size=0 --set decay=0.4
+    r grainy_start massive C_massive_large "" --set space=MASSIVE --set era=0 --set size=1 --set decay=0.4
+    MATERIALS=("${saved[@]}")
+    print -r -- "The new grainy check: every tail ends up a smooth wash, but in big spaces the first part of the tail may stay a little grainy (separate reflections you can almost count, a sandy flutter) for longer than the 0.3 s target. Real big rooms do take longer to fill in, so this may be fine or even part of the size. A in each column is a setting that fills in quickly, for comparison. Listen to the first half-second after each click or hit: smooth, or sandy? Tail (T) and Loop help. DECAY 0.4 everywhere, ERA clean. The Numbers under each card give 'smooth after', but treat it as rough: MASSIVE sits right at the line from the start, so its reading jumps between 0.1 and 1.5 s on tiny changes.
 
-A_before  the twin as before: no swell
-B_smooth  the twin swells like MASSIVE's tank" > renders/twin_swell/README.txt
-    python3 tools/review/make_review.py renders/twin_swell --title "Immensio: playing over a frozen MASSIVE" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/twin_swell/index.html"
+plate     PLATE
+hall      HALL
+massive   MASSIVE
+
+A_small            SIZE fully CCW (fills in fast)
+B_medium           SIZE noon
+C_large            SIZE fully CW (slowest PLATE)
+A_hall_medium      SIZE noon (fills in fast)
+B_hall_large       SIZE fully CW
+A_massive_medium   SIZE noon
+B_massive_small    SIZE fully CCW
+C_massive_large    SIZE fully CW" > renders/grainy_start/README.txt
+    python3 tools/review/make_review.py renders/grainy_start --title "Immensio: do big spaces start grainy?" --level-match --showcase --dry $SRC --wet-only > /dev/null
+    echo "renders/grainy_start/index.html"
 fi

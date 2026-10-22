@@ -185,8 +185,8 @@ def try_json(path):
         return None
 
 
-def wav_rms_dbfs(path, max_frames=300000):
-    """RMS of a PCM/float WAV (all channels), sampled with a stride so big files stay quick."""
+def wav_pcm(path):
+    """(tag, channels, sample rate, frame bytes, sample bytes, data) of a PCM/float WAV, or None."""
     try:
         with open(path, "rb") as f:
             data = f.read()
@@ -207,32 +207,65 @@ def wav_rms_dbfs(path, max_frames=300000):
         pos += 8 + size + (size & 1)
     if not fmt or raw is None:
         return None
-    tag, ch, _sr, _br, align, bits = fmt
+    tag, ch, sr, _br, align, bits = fmt
     width = bits // 8
     if align <= 0 or width not in (2, 3, 4):
         return None
-    frames = len(raw) // align
+    return tag, ch, sr, align, width, raw
+
+
+def pcm_sample(pcm, frame, c):
+    tag, _ch, _sr, align, width, raw = pcm
+    o = frame * align + c * width
+    if tag == 3 and width == 4:
+        return struct.unpack_from("<f", raw, o)[0]
+    if width == 2:
+        return struct.unpack_from("<h", raw, o)[0] / 32768.0
+    if width == 3:
+        return int.from_bytes(raw[o:o + 3], "little", signed=True) / 8388608.0
+    return struct.unpack_from("<i", raw, o)[0] / 2147483648.0
+
+
+def wav_rms_dbfs(path, max_frames=300000):
+    """RMS of a PCM/float WAV (all channels), sampled with a stride so big files stay quick."""
+    pcm = wav_pcm(path)
+    if pcm is None:
+        return None
+    ch, align = pcm[1], pcm[3]
+    frames = len(pcm[5]) // align
     if frames == 0:
         return None
     stride = max(1, frames // max_frames)
     acc, n = 0.0, 0
     for fi in range(0, frames, stride):
-        base = fi * align
         for c in range(ch):
-            o = base + c * width
-            if tag == 3 and width == 4:
-                x = struct.unpack_from("<f", raw, o)[0]
-            elif width == 2:
-                x = struct.unpack_from("<h", raw, o)[0] / 32768.0
-            elif width == 3:
-                x = int.from_bytes(raw[o:o + 3], "little", signed=True) / 8388608.0
-            else:
-                x = struct.unpack_from("<i", raw, o)[0] / 2147483648.0
+            x = pcm_sample(pcm, fi, c)
             acc += x * x
             n += 1
     if n == 0 or acc <= 0:
         return -200.0
     return 10 * math.log10(acc / n)
+
+
+def wav_last_sound_s(path, below_peak_db=40.0):
+    """Where the playing stops: the end of the last 10 ms stretch within below_peak_db of the
+    file's peak (every 4th sample, all channels). The page's Tail button starts there."""
+    pcm = wav_pcm(path)
+    if pcm is None:
+        return None
+    ch, sr, align = pcm[1], pcm[2], pcm[3]
+    frames = len(pcm[5]) // align
+    win = max(1, sr // 100)
+    peaks = []
+    for start in range(0, frames, win):
+        peaks.append(max((abs(pcm_sample(pcm, fi, c)) for fi in range(start, min(frames, start + win), 4)
+                          for c in range(ch)), default=0.0))
+    top = max(peaks, default=0.0)
+    if top <= 0:
+        return None
+    floor = top * 10 ** (-below_peak_db / 20)
+    last = max(i for i, p in enumerate(peaks) if p >= floor)
+    return round((last + 1) * win / sr, 2)
 
 
 def small_spectrogram(spec):
@@ -290,6 +323,20 @@ def flag_reasons(metrics, ignore=frozenset()):
     if num("max_step_db_100ms") and m["max_step_db_100ms"] > 3:
         r.append("level jump")
     return r
+
+
+def acoustics(metrics):
+    """The room-acoustics numbers a page shows under a card (Metrics.h; reverb-testing-practices
+    items 8, 11, 12), or None for an older sidecar without them. Only meaningful on a click
+    render (music never leaves a clean decay): render_review_pages.sh writes one per version
+    as _measure/<folders>/<version>.wav, and measure_sidecar() finds it."""
+    if not isinstance(metrics, dict) or not isinstance(metrics.get("band_t60_s"), list):
+        return None
+    r = lambda v, d=2: round(float(v), d) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+    return {"hz": metrics.get("band_hz") or [], "t60": [r(v) for v in metrics["band_t60_s"]],
+            "edt": [r(v) for v in metrics.get("band_edt_s") or []], "dense": r(metrics.get("echo_density_time_s")),
+            "late": r(metrics.get("echo_density_late")), "c80": r(metrics.get("c80_db"), 1),
+            "iacc": r(metrics.get("iacc_late")), "flat": r(metrics.get("tail_flatness_db"), 1)}
 
 
 # ---------------------------------------------------------------- items
@@ -415,7 +462,8 @@ def collect_from_wavs(root, with_spec):
     """A/B prototype folders: no manifest, meaning lives in the file and folder names."""
     wavs = []
     for dirpath, dirnames, filenames in os.walk(str(root)):
-        dirnames[:] = sorted(d for d in dirnames if not d.startswith("."))
+        # "_measure" holds the click renders behind a card's numbers; "_audio" the page's audio.
+        dirnames[:] = sorted(d for d in dirnames if not d.startswith((".", "_")))
         rel_depth = len(Path(dirpath).relative_to(root).parts)
         if rel_depth > 3:
             dirnames[:] = []
@@ -766,6 +814,13 @@ def build_page_data(root, out_path, items, refs, rows=None, columns=None, varian
                 vchips = [chip(p, it.params[p]) for p in varying_here if p in it.params and p not in shown_keys]
                 vs.append({"k": k, "n": n, "d": d, "item": iid, "chips": vchips})
                 items_out[iid] = item_json(it, rel)
+                ac = acoustics(measure_metrics(root, it))
+                items_out[iid]["ac"] = ac
+                # The grainy check (host/tests/test_density.cpp): a smooth wash within 0.3 s, and stays one.
+                if ac and ac["dense"] is not None and ac["dense"] > 0.3:
+                    items_out[iid]["flags"].append("grainy start {:.2f} s".format(ac["dense"]))
+                if ac and ac["late"] is not None and ac["late"] < 0.9:
+                    items_out[iid]["flags"].append("grainy tail")
             rms = [items_out[v["item"]]["rms"] for v in vs]
             for v, off in zip(vs, level_offsets(rms)):
                 v["lm"] = off
@@ -789,6 +844,7 @@ def build_page_data(root, out_path, items, refs, rows=None, columns=None, varian
                 iid = "i{}".format(len(items_out))
                 items_out[iid] = dict(item_json(it, rel), flags=[])
                 row["dry"] = iid
+                row["tail"] = wav_last_sound_s(dry)
 
     refs_out = []
     for i, r in enumerate(refs):
@@ -826,6 +882,30 @@ def build_page_data(root, out_path, items, refs, rows=None, columns=None, varian
         "levelMatch": default_level_match(var_key) if level_match is None else bool(level_match),
         "levelMatchCapDb": LEVEL_MATCH_CAP_DB,
     }
+
+
+def add_hidden_twin(data):
+    """A pick page's repeated card (testing plan item 4, docs/research/reverb-testing-practices.md):
+    one row with a choice is shown twice, the copy elsewhere on the page. If the two copies get
+    picks for different versions, the page reports "no clear preference" for that question, so a
+    coin flip isn't acted on as a pick. Which row is fixed per page title, so a rebuild keeps it."""
+    rows = data["rows"]
+    choice_rows = [r for r in rows if any(len(data["panels"].get(r["id"] + "|" + c["id"], {}).get("variants", [])) > 1
+                                          for c in data["cols"])]
+    if not choice_rows or len(rows) < 3:   # with two rows the copy would sit next to its original
+        return None
+    seed = sum(ord(ch) * (i + 1) for i, ch in enumerate(data["title"]))
+    orig = choice_rows[seed % len(choice_rows)]
+    twin = dict(orig, id="r{}".format(len(rows)), twinOf=orig["id"])
+    for c in data["cols"]:
+        k = orig["id"] + "|" + c["id"]
+        if k in data["panels"]:
+            data["panels"][twin["id"] + "|" + c["id"]] = json.loads(json.dumps(data["panels"][k]))
+    # Somewhere not next to the original, so the two aren't heard back to back.
+    at = rows.index(orig)
+    spots = [i for i in range(len(rows) + 1) if abs(i - at) > 1 and abs(i - (at + 1)) > 1] or [len(rows)]
+    rows.insert(spots[seed % len(spots)], twin)
+    return twin["id"]
 
 
 # Level-match: each version is moved towards the median loudness of its panel,
@@ -917,6 +997,20 @@ def item_json(it, rel):
         "flags": flag_reasons(it.metrics, it.ignore),
         "spec": it.spec,
     }
+
+
+def measure_metrics(root, it):
+    """The metrics of a version's click render: <root>/_measure/<its folders>/<its version>.json."""
+    variant = it.dims.get("variant")
+    if not variant:
+        return None
+    try:
+        folders = it.wav.parent.relative_to(root)
+    except ValueError:
+        return None
+    path = Path(root) / "_measure" / folders / "{}.json".format(variant)
+    sc = try_json(path) if path.exists() else None
+    return sc.get("metrics") if isinstance(sc, dict) else None
 
 
 def collect(root, with_spec=True):

@@ -35,6 +35,17 @@
 - **Sweet-spot check restored:** the old `tools/sweetspot.py` pointed at Resilio's renderer and couldn't run. The new one sweeps every knob in every SPACE and writes `docs/sweetspot.md`. Its findings are on the M8 list.
 - **No separate Dry version where the MIX fader is**; page audio is stored as FLAC.
 
+## Done (22 Oct 2026, session 3: the owner's plan)
+
+- **Echo density, the grainy check** (item 8): `Metrics` measures Abel and Huang's normalized echo density per side (`echo_density_time_s`, `echo_density_late`). `test_density` requires every SPACE at SIZE 0 / ½ / 1, DECAY 0.4 / 0.7 to be a smooth wash (NED ≥ 0.9) within 0.3 s and to stay one. **Finding:** every late tail passes, but nine settings take longer than 0.3 s to turn smooth at the start: the PLATE from SIZE ½ (0.34–0.68 s), the HALL at full SIZE (0.37–0.51 s), MASSIVE at SIZE 0 / DECAY 0.4 (0.80 s) and at full SIZE (0.38–1.42 s). They're listed as known misses with their numbers (each fails if it gets 25 % + 20 ms slower); the musical question is the owner's (`renders/grainy_start`). **Caveat (23 Oct 2026):** the reading is a threshold crossing, and MASSIVE's density hovers at 0.85–0.95 from the start, so a one-sample change in the click moves its "smooth after" from 1.67 s to 0.06 s; PLATE and HALL readings move 0.1–0.2 s with the click and settings. Make it steadier before acting on the numbers.
+- **Decay per band and EDT** (items 11, 12): octave bands 125 Hz–8 kHz, exactly `tools/ingest_reference.py`'s method (its T60 is 3 × the −5 to −25 dB time), so renders and the owner's units compare (C++ and Python agree to 0.003 %). Pages show them in a card's **Numbers**, measured on one click per version (`_measure/`), since music never leaves a clean decay; a band ringing 30 % longer than the mids is bold.
+- **C80, IACC, late-tail flatness** (item 12), in the sidecar and the Numbers.
+- **Hidden reference** (item 6): pick pages with three or more rows repeat one row away from its original; the results say "no clear preference" where the copies got different picks.
+- **Material** (items 1, 7): a low male voice, a synthesized dry close piano, and a full dub-techno mix whose stabs and rims alone go to the reverb (`fullmix_send.wav`, 13 dB under the mix), the page's dry being the whole mix.
+- **Tail only** (item 3): a Tail button (key T) loops from where the playing stops; "Tails +12 dB" lifts only a looped tail.
+- **Golden renders** (item 14): `test_golden` fingerprints ten corners (each SPACE's SIZE ends, TONE dark and bright, ERA's Midiverb, REVERSE) on a click and a chord: chord loudness and band balance (±0.5 dB), decay per band (±5 %), smooth-after (±30 ms), C80 (±0.5 dB), in `host/tests/golden/fingerprints.json`. To change a sound on purpose, add the SPEC changelog line, then `IV_GOLDEN_UPDATE="why" build/iv_test_golden`; it refuses without a newer changelog version.
+- **Later:** pitch wobble on pages (item 5 of the plan), when DRIFT tuning starts.
+
 ## Planned (ranked; each to agree before doing)
 
 **Owner's choices (22 Oct 2026, session 3):** yes to 1, 2, 3, 4, 7 and 8 (all of 8); 5 (pitch wobble) later, when DRIFT tuning starts; 6 only the low voice + dry piano and the full-mix bed (no long frozen-pad row). Order: the mode-density check (8), the low voice + dry piano (6) and the tail-only button (7) first, so the PLATE full-SIZE ring fix and its A/B page benefit; then echo density (1), decay per band (3), the hidden reference (4), the full-mix bed (6), the rest of 8; golden renders (2) last, once the PLATE fix has landed.

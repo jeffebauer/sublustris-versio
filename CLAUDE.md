@@ -36,6 +36,7 @@ python3 tools/make_stimulus.py                              # test_audio/stimulu
 build/iv_render --sweep presets/sweeps/<name>.json --out-dir renders/<name>
 python3 tools/review/make_review.py renders/<name>
 .venv/bin/python tools/sweetspot.py                        # dead zones / cliffs per knob -> docs/sweetspot.md
+IV_GOLDEN_UPDATE="why" build/iv_test_golden                # after a deliberate sound change + its SPEC changelog line
 .venv/bin/python tools/make_material.py                     # listening material (python3 -m venv .venv; pip install numpy soundfile)
 .venv/bin/python tools/make_reference_kit.py                # the kit for the owner's reference units; tools/ingest_reference.py reads them back
 tools/install_plugin.sh <commit>                            # put a build in Ableton

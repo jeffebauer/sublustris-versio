@@ -62,7 +62,36 @@ struct Metrics {
     double howlMovePct       = std::nan("");
     double howlMoveDb        = std::nan("");
     bool   howlOk            = false;        // floor and movement both pass
+
+    // ---- Room-acoustics measures (docs/research/reverb-testing-practices.md
+    // items 8, 11, 12). All are measured on the first event's segment (its
+    // onset to the next event, or to the end of the file), like t60S.
+    // "Onset" is ISO 3382-1:2009's start of the impulse response: the first
+    // sample of the mono downmix that rises to 20 dB below the segment's
+    // peak. "Tail end" is where the 50 ms envelope has fallen
+    // 50 dB below its loudest point (or the segment's end). Metrics.cpp has
+    // the step-by-step definitions and sources. NaN = not measurable.
+    //
+    // Normalized echo density (Abel and Huang 2006): 1 = Gaussian-noise-like
+    // ("a smooth wash"), well below 1 = separate echoes ("grainy").
+    double echoDensityTimeS  = std::nan(""); // onset -> NED (100 ms mean) first >= 0.9 and holds 100 ms; worse side
+    double echoDensityLate   = std::nan(""); // mean NED from 0.3 s after the input stops to the tail end; worse side
+    // Decay per octave band, 125 Hz-8 kHz (bandHz), with the same octave
+    // filters and decay fit as tools/ingest_reference.py, so renders and
+    // the owner's recordings of reference units compare like for like.
+    static constexpr int kNumBands = 7;
+    static constexpr double bandHz[kNumBands] = {125, 250, 500, 1000, 2000, 4000, 8000};
+    double bandT60S[kNumBands] = {NAN, NAN, NAN, NAN, NAN, NAN, NAN}; // ingest_reference.py's t60()
+    double bandEdtS[kNumBands] = {NAN, NAN, NAN, NAN, NAN, NAN, NAN}; // ISO 3382-1 EDT (0 to -10 dB fit, x6)
+    double c80Db             = std::nan(""); // ISO 3382-1 clarity: energy 0-80 ms vs after, dB (mono)
+    double iaccEarly         = std::nan(""); // ISO 3382-1 IACC over 0-80 ms (max |IACF|, +-1 ms); null for mono
+    double iaccLate          = std::nan(""); // ... over 80 ms to the tail end; null for mono
+    double tailFlatnessDb    = std::nan(""); // RMS dB deviation of the Schroeder curve from its -5..-35 dB line fit
 };
+
+// Echo-density thresholds for echoDensityTimeS (the "grainy" check).
+constexpr double kEchoDensityTarget = 0.9;
+constexpr double kEchoDensityHoldS  = 0.1;
 
 // Calibrated thresholds (docs/m6-metric-calibration.md).
 constexpr double kRingingGrowthDb        = 15.0;
@@ -95,6 +124,12 @@ constexpr double kHowlMoveDb             = 3.0;
 // while still measuring the file's real stereo image.
 Metrics compute(const std::vector<std::vector<float>>& channels, float sampleRate,
                  const std::vector<std::vector<float>>* stereoSource = nullptr);
+
+// The echo density profile itself (exposed for tests): normalized echo
+// density of `x` with a `windowS` Hann window centred every `hop` samples
+// over [start, end). Element k is centred at start + k * hop.
+std::vector<double> echoDensityProfile(const std::vector<float>& x, size_t start, size_t end, float sampleRate,
+                                       size_t hop, double windowS = 0.020);
 
 // One-line human summary printed to stdout per render.
 std::string summaryLine(const Metrics& m);

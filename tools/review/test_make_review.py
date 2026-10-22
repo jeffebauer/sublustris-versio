@@ -158,6 +158,25 @@ class ListenPageTest(unittest.TestCase):
         self.assertNotEqual(bad.returncode, 0)
         self.assertIn("choose from", bad.stderr)
 
+    def test_hidden_twin_on_pick_pages(self):
+        d = self.root / "twin_page"
+        for stim in ("01_clicks", "02_hits", "04_skank", "06_noise_bursts"):
+            for v in ("A_before", "B_after"):
+                write_wav(d / "{}_{}.wav".format(stim, v))
+        run(d)
+        data = self.assertAudioResolves(d / "index.html")
+        twins = [r for r in data["rows"] if r.get("twinOf")]
+        self.assertEqual(len(twins), 1)
+        ids = [r["id"] for r in data["rows"]]
+        orig = ids.index(twins[0]["twinOf"])
+        self.assertGreater(abs(ids.index(twins[0]["id"]) - orig), 1)   # not next to its original
+        self.assertEqual(data["panels"][twins[0]["id"] + "|c0"]["variants"],
+                         data["panels"][twins[0]["twinOf"] + "|c0"]["variants"])
+        run(d, "--showcase")
+        self.assertFalse(any(r.get("twinOf") for r in self.assertAudioResolves(d / "index.html")["rows"]))
+        run(d, "--no-hidden-twin")
+        self.assertFalse(any(r.get("twinOf") for r in self.assertAudioResolves(d / "index.html")["rows"]))
+
     def test_prototype_wavs_with_readme(self):
         d = self.root / "splash_voicings"
         for att in ("clean", "driven", "kicked"):

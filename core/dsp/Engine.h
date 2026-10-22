@@ -80,10 +80,6 @@ public:
     // Test hook: scales the tanks' own modulation (0 = none; DRIFT is separate), to check a
     // structure isn't metallic without it (Costello: tune it to sound good unmodulated).
     void  setModulationScale(float k) { modScale_ = k; }
-    // PROTOTYPE, renders/twin_swell: false = the twin as before (no swell), for the A/B page.
-    void  setTwinSwell(bool on) { twinSwellOn_ = on; }
-    // PROTOTYPE, renders/plate_modulation: the Plate's long delays wander too (both Plates).
-    void  setPlateLongDelayMod(float a) { plate_.setLongDelayMod(a); twinPlate_.setLongDelayMod(a); }
     // PROTOTYPE, renders/tone_shelf: every tank's loss as a shelf crossing at hz (0 = today's).
     void  setLossShelfHz(float hz)
     {
@@ -176,7 +172,6 @@ private:
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f;
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
-    bool  twinSwellOn_ = true; // PROTOTYPE (setTwinSwell)
     float reverseMean_ = -1.0f;
 
     // Freeze (ADR 0009–0011). Button and gate edges this block, by offset.

@@ -208,7 +208,7 @@ void Engine::onGesture(GestureReader::Event e)
             twinFdn_.reset();
             twinPlate_.reset();
             for (auto& d : twinDiffuser_) d.clear();
-            twinSwell_.setAttackSeconds(activeSpace_ == 2 && twinSwellOn_
+            twinSwell_.setAttackSeconds(activeSpace_ == 2
                                             ? map::massiveNormalAttackSeconds(smoothed(ParamId::Decay), smoothed(ParamId::Size)) : 0.0f,
                                         true);
             twinSwell_.reset();
@@ -284,6 +284,7 @@ void Engine::applySpace(bool snap)
         plate_.setGovernor(governor);
         plate_.setFloorDb(floorDb);
         plate_.setModDepth(1.0f - freezeMix_ * (1.0f - voicing::kFrozenPlateModDepth));
+        plate_.setLongDelayMod(1.0f - freezeMix_);
         plate_.setModScale(modScale_);
         plate_.setHoldDb(holdDb);
     } else {
@@ -385,7 +386,7 @@ void Engine::applySpace(bool snap)
     // pad's twin); it always fades within kTwinMaxT60. Full in-loop diffusion in MASSIVE, like the pad.
     if (twinActive_) {
         const float tSize = smoothed(ParamId::Size), tDecay = smoothed(ParamId::Decay);
-        twinSwell_.setAttackSeconds(massive && twinSwellOn_ ? map::massiveNormalAttackSeconds(tDecay, tSize) : 0.0f, snap);
+        twinSwell_.setAttackSeconds(massive ? map::massiveNormalAttackSeconds(tDecay, tSize) : 0.0f, snap);
         const float tT60 = activeSpace_ == 1 ? map::hallT60Scale(tSize) : 1.0f;
         const float tRate = std::fmax(map::decayRate(tDecay, activeSpace_) / tT60, 1.0f / voicing::kTwinMaxT60);
         dsp::EraMix tEra = era;
