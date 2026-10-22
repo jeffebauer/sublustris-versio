@@ -90,6 +90,14 @@ public:
         fdn_.setMakeup(on);
         twinFdn_.setMakeup(on);
     }
+    // PROTOTYPE, the ducking listening test (owner's M1 notes, 23 Oct 2026): × the duck amount (0 = off).
+    void  setDuckScale(float k) { duckScale_ = k; }
+    // PROTOTYPE, renders/small_hall (owner's M1 notes; the audit's F1/F2, experiment E4): HALL gets
+    // in-loop diffusion too, amount 0..1 (× kInLoopCoeff), its allpasses scaled with SIZE.
+    void  setHallInLoopDiffusion(float a) { hallInLoop_ = a; }
+    // PROTOTYPE, the same test: duck by 4:1 compression of the wet, keyed by the input, instead
+    // of DARKEN (no darkening); attack and release of the gain reduction in ms (0 = off).
+    void  setDuckCompressor(float attackMs, float releaseMs) { compAttackMs_ = attackMs; compReleaseMs_ = releaseMs; }
     void  setSizeSlewScale(float k) { fdn_.setSizeSlewScale(k); twinFdn_.setSizeSlewScale(k); }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
@@ -174,6 +182,9 @@ private:
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f;
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
+    float duckScale_ = 1.0f; // PROTOTYPE (setDuckScale)
+    float hallInLoop_ = 0.0f; // PROTOTYPE (setHallInLoopDiffusion)
+    float compAttackMs_ = 0.0f, compReleaseMs_ = 0.0f, compTargetDb_ = 0.0f, compGrDb_ = 0.0f; // PROTOTYPE (setDuckCompressor)
     float reverseMean_ = -1.0f;
 
     // Freeze (ADR 0009–0011). Button and gate edges this block, by offset.

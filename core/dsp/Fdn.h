@@ -62,6 +62,8 @@ public:
     void resyncHoldLevel() { governor_.resyncSlow(); }
     // In-loop diffusion amount 0..1 (MASSIVE's SIZE); 0 bypasses it.
     void setInLoopDiffusion(float amount) { inLoopTarget_ = amount; }
+    // PROTOTYPE (renders/small_hall): the in-loop allpasses' lengths × k (1 = MASSIVE's).
+    void setInLoopScale(float k) { apScale_ = k; }
     // ERA's in-loop layers and DRIFT, set at control rate (SPEC §4.6, §4.7).
     void setEra(const EraMix& m)
     {
@@ -113,6 +115,8 @@ private:
     float     extraRate_ = 0.0f;
     DelayLine apLine_[kN][2];
     uint32_t  apLen_[kN][2] = {};
+    uint32_t  apLenNow_[kN][2] = {}; // apLen_ × apScale_ (PROTOTYPE: HALL scales its allpasses with SIZE)
+    float     apScale_ = 1.0f;
     static constexpr int kEarlyTaps = voicing::kEarlyTaps;
     float     earlyFrac_[kN][kEarlyTaps] = {}, earlyGain_[kN][kEarlyTaps] = {};
     float     earlyTarget_ = 0.0f, earlyNow_ = 0.0f;

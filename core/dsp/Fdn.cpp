@@ -154,7 +154,11 @@ void Fdn::control(int n)
         // decays at decayRate (+ the governor), the high end at that /
         // highRatio; at infinite the highs fade until the tail reaches its
         // floor, then it holds (ADR 0008).
-        const float apSeconds = inLoopNow_ > 0.0f ? float(apLen_[i][0] + apLen_[i][1]) / sampleRate_ : 0.0f;
+        for (int k = 0; k < 2; ++k) {
+            const float len = float(apLen_[i][k]) * apScale_;
+            apLenNow_[i][k] = len < 1.0f ? 1u : uint32_t(len);
+        }
+        const float apSeconds = inLoopNow_ > 0.0f ? float(apLenNow_[i][0] + apLenNow_[i][1]) / sampleRate_ : 0.0f;
         const Absorb a = absorbent(lenNow_[i] / sampleRate_ + apSeconds, decayRate_ + governRate + extraRate_, highRatio_,
                                    governor_.darken, shelfK_);
         b1_[i] = a.b1;
@@ -180,7 +184,7 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                 float x = line_[i].readAllpass(readNow_[i], interp_[i]);
                 if (apG > 0.0f)
                     for (int k = 0; k < 2; ++k) { // in-loop diffusion (MASSIVE)
-                        const float d = apLine_[i][k].read(apLen_[i][k]);
+                        const float d = apLine_[i][k].read(apLenNow_[i][k]);
                         const float v = x + apG * d;
                         apLine_[i][k].write(v);
                         x = d - apG * v;

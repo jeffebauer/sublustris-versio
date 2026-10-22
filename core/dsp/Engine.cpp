@@ -138,6 +138,7 @@ IV_SIZE_OPT void Engine::reset()
     darken_.reset();
     limiter_.reset();
     duckEnv_ = duck_ = 0.0f;
+    compTargetDb_ = compGrDb_ = 0.0f;
     hissLp_[0] = hissLp_[1] = 0.0f;
     noiseSeed_ = 0xA11CEu;
     reverseMix_ = reverseTarget_;
@@ -303,7 +304,10 @@ void Engine::applySpace(bool snap)
         // A frozen MASSIVE goes to full in-loop diffusion: its long lines otherwise replay painted
         // material as audible repeats (owner, M5 listening).
         const float diff = massive ? map::massiveDiffusion(size) : 0.0f;
-        fdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : 0.0f);
+        fdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallInLoop_);
+        // PROTOTYPE (setHallInLoopDiffusion): HALL's allpasses scale with its mean line, so a small
+        // room stays small (MASSIVE's lengths at a 0.2 s mean and up).
+        fdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(size) / 0.2f));
         fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(size, decay));
         fdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
         fdn_.setModDepth(modScale_);
@@ -343,7 +347,13 @@ void Engine::applySpace(bool snap)
     const float envDb = 20.0f * std::log10(duckEnv_ + 1e-10f);
     const float loud = map::clamp01((envDb - voicing::kDuckFromDbfs) / (voicing::kDuckFullDbfs - voicing::kDuckFromDbfs));
     // Fades out with the freeze glide (set to 0 in one sample, DARKEN's filter and dip jumped: a click).
-    duck_ = loud * map::governorWeight(smoothed(ParamId::Decay)) * (1.0f - freezeMix_);
+    duck_ = duckScale_ * loud * map::governorWeight(smoothed(ParamId::Decay)) * (1.0f - freezeMix_);
+    if (compAttackMs_ > 0.0f) { // PROTOTYPE (setDuckCompressor): 4:1 above -24 dBFS of input, no darkening
+        const float levelDb = 10.0f * std::log10(inputPower_ + 1e-12f);
+        const float over = levelDb + 24.0f;
+        compTargetDb_ = (over > 0.0f ? 0.75f * over : 0.0f) * map::governorWeight(smoothed(ParamId::Decay)) * (1.0f - freezeMix_);
+        duck_ = 0.0f;
+    }
     tilt_.set(smoothed(ParamId::Tone));
     darken_.set(duck_);
     // Hiss follows the input (none in silence, so an infinite tail doesn't
@@ -608,6 +618,13 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)
             tilt_.process(wl, wr);
             darken_.process(wl, wr);
+            if (compAttackMs_ > 0.0f) { // PROTOTYPE (setDuckCompressor)
+                const float ms = compTargetDb_ > compGrDb_ ? compAttackMs_ : compReleaseMs_;
+                compGrDb_ += (1.0f - std::exp(-1000.0f / (ms * sampleRate_))) * (compTargetDb_ - compGrDb_);
+                const float g = std::pow(10.0f, -compGrDb_ / 20.0f);
+                wl *= g;
+                wr *= g;
+            }
             limiter_.process(wl, wr);
             dryNow_ += dryStep_;
             wetNow_ += wetStep_;

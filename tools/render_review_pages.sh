@@ -366,3 +366,61 @@ B_without       without it" > renders/makeup/README.txt
     python3 tools/review/make_review.py renders/makeup --title "Immensio: the held-tail makeup" --no-level-match > /dev/null
     echo "renders/makeup/index.html"
 fi
+
+if on ducking; then
+    # Owner's M1 notes (23 Oct 2026): infinite's ducking is too extreme, holds too long, and the
+    # held tail jumps when you stop; "closer to 4:1 compression than extreme ducking". A today's
+    # DARKEN (ADR 0014), B none, C-E 4:1 compression of the wet keyed by the input (IV_DUCK_COMP).
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in skank stabs drums voice piano fullmix; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page ducking
+    for v in "A_today:" "B_none:IV_DUCK=0" "C_quick:IV_DUCK_COMP=10,150" "D_smooth:IV_DUCK_COMP=30,400" "E_slow:IV_DUCK_COMP=50,1000"; do
+        tag=${v%%:*}; envs=(${v#*:})
+        for sp in HALL:hall MASSIVE:massive PLATE:plate; do
+            if [ ${#envs} -gt 0 ]; then export ${envs[@]}; fi
+            r ducking ${sp##*:} $tag "" --set space=${sp%%:*} --set era=0 --set size=0.5 --set decay=0.9
+            unset IV_DUCK IV_DUCK_COMP
+        done
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "Ducking at infinite DECAY, again (your M1 notes: too extreme, holds too long, the held tail jumps up when you stop; 'closer to 4:1 compression'). While you play, the tail steps back so the dry stays clear; when you stop it comes back up. Any ducking makes that rise, so the question is how it moves. A is today: it darkens (a low-pass closing to 1.5 kHz) and dips 3 dB, letting go in 0.15 s. B doesn't duck. C, D and E compress the tail 4:1 when you play above -24 dBFS (about 3 dB of reduction, no darkening), with different attack and release: C quick (10 ms / 0.15 s, measured the most pumping), D smooth (30 ms / 0.4 s), E slow (50 ms / 1 s, the least pumping and the smallest step when you stop; it comes back over a second or two). Not level-matched: how far each steps back is part of the question. SIZE noon, ERA clean.
+
+hall      HALL
+massive   MASSIVE
+plate     PLATE
+
+A_today   today: darkens and dips (ADR 0014)
+B_none    no ducking
+C_quick   4:1 compression, attack 10 ms, release 0.15 s
+D_smooth  4:1 compression, attack 30 ms, release 0.4 s
+E_slow    4:1 compression, attack 50 ms, release 1 s" > renders/ducking/README.txt
+    python3 tools/review/make_review.py renders/ducking --title "Immensio: ducking at infinite DECAY" --no-level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/ducking/index.html"
+fi
+
+if on small_hall; then
+    # Owner's M1 notes (23 Oct 2026): the small HALL's long DECAYs build "slightly metallic yet
+    # dampened resonances". The audit's F1/F2 (8 short combs; no in-loop diffusion), experiment E4.
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in vibes keys pad piano voicelow; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page small_hall
+    for dc in 0.7:long 0.9:infinite; do
+        for v in "A_today:0:0" "B_bigger_minimum:0.218:0" "C_diffusion:0:0.4" "D_more_diffusion:0:0.7" "E_both:0.218:0.5"; do
+            tag=${v%%:*}; rest=${v#*:}; sz=${rest%%:*}; hd=${rest#*:}
+            IV_HALL_DIFFUSION=$hd r small_hall ${dc##*:} $tag "" --set space=HALL --set era=0 --set time=0 --set size=$sz --set decay=${dc%%:*}
+        done
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "The small HALL's build-up (your M1 notes: 'slightly metallic yet dampened resonances building up', on the long DECAYs). Two established fixes. Raise the smallest SIZE (its 8 lines are very short, so they ring like combs): B makes the minimum 35 ms instead of 20 (SIZE 0.22 on today's knob; tails get a little longer, as a bigger room's would). Or give the HALL the in-loop diffusion every published hall design has (the DSP audit's top HALL finding): C a little, D more, scaled to the room so it stays small. E does both. Measured on noise: B rings least at long DECAY, the diffusion least at infinite. ERA clean.
+
+long       DECAY 0.7
+infinite   DECAY 0.9
+
+A_today            SIZE fully CCW, as today
+B_bigger_minimum   the smallest SIZE raised to 35 ms
+C_diffusion        in-loop diffusion 0.4
+D_more_diffusion   in-loop diffusion 0.7
+E_both             35 ms minimum and diffusion 0.5" > renders/small_hall/README.txt
+    python3 tools/review/make_review.py renders/small_hall --title "Immensio: the small HALL's build-up" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/small_hall/index.html"
+fi
