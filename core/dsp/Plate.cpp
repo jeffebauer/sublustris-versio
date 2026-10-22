@@ -75,9 +75,10 @@ IV_SIZE_OPT bool Plate::prepare(Arena& arena, float sampleRate, float maxScale, 
         ready_ &= br.ap1.init(arena, size_t(kAp1[b] * k + 2.0f * kExcursion * sampleRate / kPaperRate + 2.0f * room) + 4);
         br.era.prepare(sampleRate);
         br.drift.prepare(sampleRate, (seed + 1u) * 2246822519u + uint32_t(b) * 3266489917u, float(b));
-        ready_ &= br.d1.init(arena, size_t(kD1[b] * k) + 4);
+        const float longRoom = 2.0f * voicing::kPlateLongModSeconds * sampleRate;
+        ready_ &= br.d1.init(arena, size_t(kD1[b] * k + longRoom) + 4);
         ready_ &= br.ap2.init(arena, size_t(kAp2[b] * k) + 4);
-        ready_ &= br.d2.init(arena, size_t(kD2[b] * k) + 4);
+        ready_ &= br.d2.init(arena, size_t(kD2[b] * k + longRoom) + 4);
         br.lfoRate = kLfoHz[b];
     }
     rng_ = seed ? seed : 1u;
@@ -94,13 +95,18 @@ IV_SIZE_OPT void Plate::reset()
         br.d1.clear();
         br.ap2.clear();
         br.d2.clear();
-        br.y1 = br.y2 = br.out = 0.0f;
+        br.y1 = br.y2 = br.x1 = br.x2 = br.out = 0.0f;
         br.i1 = br.i2 = br.i3 = br.i4 = 0.0f;
         br.era.reset();
         br.drift.reset();
         br.lfoPhase = 0.5f * float(b);
         br.floorA = br.floorB = br.floorTarget = br.floorCountdown = 0.0f;
         br.modNow = br.modStep = 0.0f;
+        for (int j = 0; j < 2; ++j) {
+            br.longPhase[j] = 0.25f * float(2 * b + j);
+            br.longFloorA[j] = br.longFloorB[j] = br.longTarget[j] = br.longCountdown[j] = 0.0f;
+            br.longNow[j] = br.longStep[j] = 0.0f;
+        }
     }
     scaleNow_ = scaleTarget_;
     governor_.reset();
@@ -134,8 +140,8 @@ void Plate::control(int n)
         br.d1Len = kD1[b] * k;
         br.ap2Len = kAp2[b] * k;
         br.d2Len = kD2[b] * k;
-        br.loss1 = absorbent((br.ap1Len + br.d1Len) / sampleRate_, lowRate, highRatio_, governor_.darken);
-        br.loss2 = absorbent((br.ap2Len + br.d2Len) / sampleRate_, lowRate, highRatio_, governor_.darken);
+        br.loss1 = absorbent((br.ap1Len + br.d1Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfHz_, sampleRate_);
+        br.loss2 = absorbent((br.ap2Len + br.d2Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfHz_, sampleRate_);
 
         // The modulated allpass: Dattorro's slow sine, plus the modulation
         // floor's slow random wander (as every tank's, SPEC §2.3 rule 1).
@@ -158,6 +164,23 @@ void Plate::control(int n)
             target += br.drift.control(dt, drift_, cap);
         }
         br.modStep = (target - br.modNow) / float(n);
+
+        // PROTOTYPE: d1 and d2 wander too, each at its own rate (a sine plus the floor's random
+        // walk), about 2 cents; eased with modDepth_ while frozen like ap1.
+        const float longDepth = longMod_ * modDepth_ * voicing::kPlateLongModSeconds * sampleRate_;
+        for (int j = 0; j < 2; ++j) {
+            br.longPhase[j] += voicing::kPlateLongModHz[2 * b + j] * dt;
+            if (br.longPhase[j] >= 1.0f) br.longPhase[j] -= 1.0f;
+            br.longCountdown[j] -= dt;
+            if (br.longCountdown[j] <= 0.0f) {
+                br.longTarget[j] = uniform(rng_);
+                br.longCountdown[j] = 2.3f * (0.8f + 0.2f * uniform(rng_)) * (1.0f + 0.2f * float(2 * b + j));
+            }
+            br.longFloorA[j] += floorCoeff * (br.longTarget[j] - br.longFloorA[j]);
+            br.longFloorB[j] += floorCoeff * (br.longFloorA[j] - br.longFloorB[j]);
+            const float t = longDepth * (1.0f + 0.6f * std::sin(6.2831853f * br.longPhase[j]) + 0.4f * br.longFloorB[j]);
+            br.longStep[j] = (t - br.longNow[j]) / float(n);
+        }
     }
 }
 
@@ -184,8 +207,10 @@ void Plate::process(const float* inL, const float* inR, float* outL, float* outR
                 x = d1 + kDecayDiffusion1 * v1;
                 // Delay, then loss (DECAY + TONE, Jot).
                 br.d1.write(x);
-                x = br.d1.readAllpass(br.d1Len, br.i2);
-                br.y1 = br.loss1.gain * x + br.loss1.pole * br.y1;
+                br.longNow[0] += br.longStep[0];
+                x = br.d1.readAllpass(br.d1Len + br.longNow[0], br.i2);
+                br.y1 = br.loss1.gain * x + br.loss1.b1 * br.x1 + br.loss1.pole * br.y1;
+                br.x1 = x;
                 x = br.y1;
                 // Allpass, decay diffusion 2.
                 const float d2 = br.ap2.readAllpass(br.ap2Len, br.i3);
@@ -194,8 +219,10 @@ void Plate::process(const float* inL, const float* inR, float* outL, float* outR
                 x = d2 - kDecayDiffusion2 * v2;
                 // Delay, then loss.
                 br.d2.write(x);
-                x = br.d2.readAllpass(br.d2Len, br.i4);
-                br.y2 = br.loss2.gain * x + br.loss2.pole * br.y2;
+                br.longNow[1] += br.longStep[1];
+                x = br.d2.readAllpass(br.d2Len + br.longNow[1], br.i4);
+                br.y2 = br.loss2.gain * x + br.loss2.b1 * br.x2 + br.loss2.pole * br.y2;
+                br.x2 = x;
                 next[b] = colour_ ? br.era.process(br.y2) : br.y2;
             }
             b_[0].out = next[0];

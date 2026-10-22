@@ -46,7 +46,8 @@ public:
         size_t n = 0;
         for (int b = 0; b < 2; ++b)
             n += size_t(plate::kAp1[b] * k + 2.0f * plate::kExcursion * sampleRate / plate::kPaperRate + 2.0f * room)
-               + size_t(plate::kD1[b] * k) + size_t(plate::kAp2[b] * k) + size_t(plate::kD2[b] * k) + 4 * 8;
+               + size_t(plate::kD1[b] * k + 2.0f * voicing::kPlateLongModSeconds * sampleRate) + size_t(plate::kAp2[b] * k)
+               + size_t(plate::kD2[b] * k + 2.0f * voicing::kPlateLongModSeconds * sampleRate) + 4 * 8;
         return n;
     }
 
@@ -75,6 +76,10 @@ public:
     // lower on a frozen pad, where a lossless loop piles a few cents a pass
     // into a seasick wobble (owner, M5 listening).
     void setModDepth(float scale) { modDepth_ = scale; }
+    // PROTOTYPE (renders/plate_modulation): also modulate the long delays d1 and d2
+    // (SPEC §2.3 rule 1; Beads modulates both of its long delays). 0 = off.
+    void setLongDelayMod(float amount) { longMod_ = amount; }
+    void setShelfHz(float hz) { shelfHz_ = hz; } // PROTOTYPE (Governor.h absorbent)
 
     // Adds the wet to outL/outR (does not clear them).
     void process(const float* inL, const float* inR, float* outL, float* outR, int n);
@@ -88,11 +93,14 @@ private:
     struct Branch {
         ExactLine ap1, d1, ap2, d2; // modulated allpass, delay, allpass, delay
         float     ap1Len = 0, d1Len = 0, ap2Len = 0, d2Len = 0; // samples, at the current scale
-        float     y1 = 0, y2 = 0;                               // absorbent filter states
+        float     y1 = 0, y2 = 0, x1 = 0, x2 = 0;               // absorbent filter states
         float     i1 = 0, i2 = 0, i3 = 0, i4 = 0;               // allpass-interpolation states
         Absorb    loss1{1, 0}, loss2{1, 0};
         float     lfoPhase = 0, lfoRate = 0, floorA = 0, floorB = 0, floorTarget = 0, floorCountdown = 0;
         float     modNow = 0, modStep = 0; // ap1's extra delay, samples
+        // PROTOTYPE (setLongDelayMod): d1 and d2's own slow wander, samples.
+        float     longPhase[2] = {0, 0}, longFloorA[2] = {}, longFloorB[2] = {}, longTarget[2] = {}, longCountdown[2] = {};
+        float     longNow[2] = {0, 0}, longStep[2] = {0, 0};
         float     out = 0;                 // this branch's output (feeds the other)
         LoopEra   era;
         Drift     drift;
@@ -104,6 +112,8 @@ private:
     float    decayRate_ = 0.2f, highRatio_ = 0.45f, levelGain_ = 1.0f, extraRate_ = 0.0f;
     bool     colour_ = true;
     float    modDepth_ = 1.0f;
+    float    shelfHz_ = 0.0f;
+    float    longMod_ = 0.0f; // PROTOTYPE: 0 = only ap1 moves (today), 1 = d1 and d2 too
     DriftAmounts drift_;
     FloorGovernor governor_;
     bool     ready_ = false;

@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 22 Oct 2026 (MASSIVE without its swell on `renders/massive_options`; REVERSE rebuilt the hardware way, on `renders/reverse`; every page now plays nine kinds of material. Every page is rendered from the same build by `tools/render_review_pages.sh`).
+**Last updated:** 22 Oct 2026 (three A/B pages to pick on: `massive_options`, `plate_modulation`, `tone_shelf`; REVERSE rebuilt the hardware way, on `renders/reverse`; every page now plays nine kinds of material. Every page is rendered from the same build by `tools/render_review_pages.sh`).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
@@ -12,10 +12,13 @@
 
 - [ ] **MASSIVE without its swell** (`renders/massive_options/index.html`, level-matched, picks): your idea, so ATTACK alone sets the attack in every space. A today, B no swell, C no swell plus weight (the lows ring longer, the highs fade sooner) and motion (a little more pitch drift), D HALL for reference. Does B or C still feel massive, and distinct from HALL? If B or C wins, it amends ADR 0007 (your earlier "built-in mass" choices).
 
+- [ ] **PLATE, more movement?** (`renders/plate_modulation/index.html`, level-matched, picks): our PLATE moves only one of the four delays in each half of its loop, though the spec says every delay moves (found via Mutable Instruments' Beads, which moves both long delays). A today, B the long delays wander too (about 2 cents). The noise-burst measurements were mixed, so it's for your ears.
+- [ ] **TONE, a warmer noon?** (`renders/tone_shelf/index.html`, level-matched, picks): the audit's top finding. At noon the upper mids ring almost as long as the body, a glassy sheen. B lets them fade sooner (3 kHz 2.4 s instead of 3.7 s on a HALL; lows unchanged). Across HALL, PLATE, MASSIVE, and HALL with TONE bright.
+
 ### Listen (after your notes)
 - [ ] **M1: the Hall** (`renders/m1_hall/index.html`): SIZE now goes from a small room (shorter lines, and shorter tails, as a small room has) to a huge hall. Is small small enough, and has the buzz on long small rooms gone? TONE's ends go further (dark: more lows, fewer highs; bright: the opposite). Too much, too little?
 - [ ] **M4: MASSIVE and ATTACK** (`renders/m4_massive/index.html`): MASSIVE now starts with what you play and swells from there (it was silent for 1.2 s), and SIZE fully CCW is a wash instead of rhythmic echoes. Does MASSIVE feel connected to the source now? Is the smallest SIZE still big enough?
-- [ ] **M5: PLATE, freeze and paint** (`renders/m5_plate_freeze/index.html`): does the PLATE sound like ours, not a stock Dattorro? Is your playing over a frozen pad a subtle layer that fades back out (the twin)? Does paint now add just a little?
+- [ ] **M5: PLATE, freeze and paint** (`renders/m5_plate_freeze/index.html`): also, do you still hear an upper harmonic building in a frozen MASSIVE, or two repeats on the skank into a frozen PLATE? Neither measures in the current build (both notes came from the page before the twin), so tell me where if you do. does the PLATE sound like ours, not a stock Dattorro? Is your playing over a frozen pad a subtle layer that fades back out (the twin)? Does paint now add just a little?
 
 ### Listen (first time)
 - [ ] **M6: ERA, DRIFT** (`renders/m6_character/index.html`): does ERA feel like going back in time, stage by stage? Are DRIFT's tape side and Cathedra side what you hear in your head? All numbers are starting guesses for you to tune.
@@ -35,13 +38,14 @@
 
 ## Waiting on Claude
 
-- **Frozen MASSIVE resonance and the PLATE's early repeats** (your freeze_options notes: an upper harmonic building in a frozen MASSIVE; two audible repeats on skank in PLATE before it diffuses): to measure and fix next.
 - **REVERSE tuning**, only if you have notes on `renders/reverse` (shape, stop, grain).
 - **M8 tuning** from your listening notes on the pages above.
 - **Modulation ideas from Mutable Instruments** (research doc above) and the DSP audit session's findings: to try together on an A/B page, starting with the PLATE gap.
 
 ## Done
 
+- 22 Oct 2026: **Your freeze notes measured** (an upper harmonic building in a frozen MASSIVE; two repeats on the skank into a frozen PLATE): neither shows in the current build. A frozen pad's spectrum doesn't get peakier over a minute, and the PLATE's twin has no distinct echoes. Both notes predate the twin; re-listen on M5.
+- 22 Oct 2026: **SPEC's stale "cubic interpolation" lines fixed** (it's been allpass interpolation since v1.0.2).
 - 22 Oct 2026: **REVERSE confirmed**: "Reverse, the hardware way sounds much better."
 - 22 Oct 2026: **More material on every page**: dub techno stabs, an ambient pad, a synth lead, a drum groove, a dub bassline, electric piano and a spoken voice, beside the skank and vibes (`tools/make_material.py`).
 - 22 Oct 2026: **Mutable Instruments' Clouds and Beads reverbs analysed** (`docs/research/mutable-instruments-reverbs.md`): four ideas worth trying (more modulation in PLATE, the input diffusers and MASSIVE's loop; independent stereo diffusers). One is a gap in our own spec: the PLATE's long delays aren't modulated.

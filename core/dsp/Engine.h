@@ -80,6 +80,17 @@ public:
     // PROTOTYPE, renders/massive_options: 0 MASSIVE today, 1 no built-in swell in NORMAL,
     // 2 no swell plus weight (lows ring longer, highs fade sooner) and motion (deeper drift).
     void  setMassivePrototype(int v) { massiveProto_ = v; }
+    // PROTOTYPE, renders/plate_modulation: the Plate's long delays wander too (both Plates).
+    void  setPlateLongDelayMod(float a) { plate_.setLongDelayMod(a); twinPlate_.setLongDelayMod(a); }
+    // PROTOTYPE, renders/tone_shelf: every tank's loss as a shelf crossing at hz (0 = today's).
+    void  setLossShelfHz(float hz)
+    {
+        plate_.setShelfHz(hz);
+        twinPlate_.setShelfHz(hz);
+        fdn_.setShelfHz(hz);
+        twinFdn_.setShelfHz(hz);
+        reverseFdn_.setShelfHz(hz);
+    }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.

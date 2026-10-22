@@ -82,7 +82,7 @@ IV_SIZE_OPT void Fdn::reset()
         line_[i].clear();
         apLine_[i][0].clear();
         apLine_[i][1].clear();
-        absorbY_[i] = shelfY_[i] = 0.0f;
+        absorbY_[i] = shelfY_[i] = absorbX_[i] = 0.0f;
         interp_[i] = 0.0f;
         era_[i].reset();
         driftGen_[i].reset();
@@ -156,7 +156,8 @@ void Fdn::control(int n)
         // floor, then it holds (ADR 0008).
         const float apSeconds = inLoopNow_ > 0.0f ? float(apLen_[i][0] + apLen_[i][1]) / sampleRate_ : 0.0f;
         const Absorb a = absorbent(lenNow_[i] / sampleRate_ + apSeconds, decayRate_ + governRate + extraRate_, highRatio_,
-                                   governor_.darken);
+                                   governor_.darken, shelfHz_, sampleRate_);
+        b1_[i] = a.b1;
         gain_[i] = a.gain;
         pole_[i] = a.pole;
         // Bass multiply: below ~250 Hz the loss is DECAY's rate / bassMult_ (DC gain gLow <= 1).
@@ -187,7 +188,8 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                         apLine_[i][k].write(v);
                         x = d - apG * v;
                     }
-                absorbY_[i] = gain_[i] * x + pole_[i] * absorbY_[i];
+                absorbY_[i] = gain_[i] * x + b1_[i] * absorbX_[i] + pole_[i] * absorbY_[i];
+                absorbX_[i] = x;
                 float ab = absorbY_[i];
                 if (shelf_[i] > 0.0f) {
                     shelfY_[i] += shelfCoeff_ * (ab - shelfY_[i]);

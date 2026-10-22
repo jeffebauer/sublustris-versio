@@ -99,6 +99,10 @@ constexpr float kProtoMassiveBassMultiply = 1.6f; // lows' T60 × this (below ~2
 constexpr float kProtoMassiveHighScale    = 0.6f; // highs fade sooner: TONE's high T60 ratio × this *(start)*
 constexpr float kProtoMassiveModDepth     = 4.0f; // the modulation floor × this: Cathedra-style drift *(start)*
 
+// PROTOTYPE (renders/plate_modulation): the Plate's long delays d1 and d2 wander too.
+constexpr float kPlateLongModSeconds = 0.0006f; // depth: ~2 cents at these rates *(start)*
+constexpr float kPlateLongModHz[4]   = {0.23f, 0.31f, 0.19f, 0.37f}; // L d1, L d2, R d1, R d2: none shared with ap1 *(start)*
+
 // ---- REVERSE (SPEC §4.11, ADR 0015 amendment 22 Oct 2026) ------------------------
 // Rising taps over TIME into a short reverb of its own (Reverse.h). Tuned
 // together: tap spacing (TIME / kReverseTaps) against the short reverb's

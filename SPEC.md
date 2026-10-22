@@ -141,7 +141,7 @@ Level meters as Resilio (ADR 0031): LED 1–2 In L / In R, LED 3–4 Out L / Out
 
 ### 4.3 FDN engine (Hall and Massive)
 - **8 lines** *(start; 16 is a stretch goal, decided at M3)*. Mixed feedforward + feedback as Costello describes. Householder or Hadamard feedback matrix (fast 8-point Walsh transform, 24 add/sub).
-- Delay lengths are mutually prime, spread by a Warp-style ratio control (Size in Massive). Each line has a modulated read: cubic interpolation, floor modulation plus DRIFT.
+- Delay lengths are mutually prime, spread by a Warp-style ratio control (Size in Massive). Each line has a modulated read: allpass interpolation (v1.0.2), floor modulation plus DRIFT.
 - Per-line loop gain is set from T60 and the line length (Jot), so Decay doesn't retune.
 - **Size moves:** each line's length target is slew-limited (≤ 6 %/s, about ±1 semitone of bend), so the tail swoops like tape. The read interpolates; no crossfade.
 - **Hall voicing:** mean delay 40–180 ms, moderate input diffusion, no built-in mass (BLOOM still applies), predelay 0–60 ms (TIME's predelay adds in NORMAL).
@@ -203,7 +203,7 @@ Era's μ-law layer (wet only) → soft limiter (ceiling −1 dBFS, Resilio-style
 | Predelay + input diffusion (8 allpasses, stereo) | ~120 | diffusers in DTCM |
 | Swell stage (BLOOM / Massive, 4 stages × 2 ch) | ~250 | SDRAM reads, sequential per line |
 | REVERSE segmenter (stereo write + reversed read + edge fades) | ~40 | SDRAM |
-| FDN 8 lines: modulated cubic reads | ~350 | SDRAM; cost dominated by cache misses (to measure) |
+| FDN 8 lines: modulated allpass-interpolated reads | ~350 | SDRAM; cost dominated by cache misses (to measure) |
 | FDN matrix (8-pt Walsh) | ~30 | |
 | Loop chain × 8 (tilt, damping, saturation) | ~250 | cheap soft clip, `Select.h` VSEL |
 | ERA in loop (Neve/Cassette cheap; Midiverb box × 8) | ~350 | worst case, Era at full |

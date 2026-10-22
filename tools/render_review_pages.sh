@@ -291,3 +291,43 @@ D_hall           HALL at the same settings, for reference: a room, defined and i
     python3 tools/review/make_review.py renders/massive_options --title "Immensio: MASSIVE without its swell" --level-match --dry $SRC --wet-only > /dev/null
     echo "renders/massive_options/index.html"
 fi
+
+if on plate_modulation; then
+    page plate_modulation
+    for v in 0:A_today 1:B_long_delays_move; do
+        IV_PLATE_LONGMOD=${v%%:*} r plate_modulation small ${v##*:} "" --set space=PLATE --set era=0 --set size=0.3 --set decay=0.6
+        IV_PLATE_LONGMOD=${v%%:*} r plate_modulation large ${v##*:} "" --set space=PLATE --set era=0 --set size=1 --set decay=0.7
+        IV_PLATE_LONGMOD=${v%%:*} r plate_modulation frozen ${v##*:} freeze_only --set space=PLATE --set era=0 --set size=0.6 --set decay=0.6
+    done
+    print -r -- "Found while auditing against Mutable Instruments' reverbs: our PLATE only moves one of the four delays in each half of its loop; the other three read at fixed lengths, though our spec says every delay in the tank moves (it's what keeps a reverb from ringing like metal). Beads moves both of its long delays. B adds a slow wander (about 2 cents, each at its own rate) to the two long delays, easing off while frozen like the rest. On noise bursts it measured a touch less resonant, but no less ringing at the largest SIZE, so it's for your ears: is B smoother, more lush, or just different?
+
+small   SIZE 0.3, DECAY 0.6
+large   SIZE fully CW, DECAY 0.7
+frozen  a tap freezes at 3 s (your playing goes to the twin), a tap unfreezes
+
+A_today             today's PLATE
+B_long_delays_move  the long delays wander too" > renders/plate_modulation/README.txt
+    python3 tools/review/make_review.py renders/plate_modulation --title "Immensio: PLATE, more movement?" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/plate_modulation/index.html"
+fi
+
+if on tone_shelf; then
+    page tone_shelf
+    for v in 0:A_today 2500:B_shelf; do
+        IV_TONE_SHELF=${v%%:*} r tone_shelf hall_noon ${v##*:} "" --set space=HALL --set era=0 --set size=0.6 --set decay=0.6 --set tone=0.5
+        IV_TONE_SHELF=${v%%:*} r tone_shelf plate_noon ${v##*:} "" --set space=PLATE --set era=0 --set size=0.6 --set decay=0.6 --set tone=0.5
+        IV_TONE_SHELF=${v%%:*} r tone_shelf massive_noon ${v##*:} "" --set space=MASSIVE --set era=0 --set size=0.6 --set decay=0.6 --set tone=0.5
+        IV_TONE_SHELF=${v%%:*} r tone_shelf hall_bright ${v##*:} "" --set space=HALL --set era=0 --set size=0.6 --set decay=0.6 --set tone=1
+    done
+    print -r -- "From the DSP audit (its top finding): at TONE noon the upper mids (2-6 kHz, vocal edge, hi-hat, snare crack) ring almost as long as the body, so long tails get a glassy sheen instead of a hall's warm fade. The loss in the loop only darkens the very top. B makes it a shelf crossing at 2.5 kHz, as Jot and Zita-Rev1 do: lows and the very top decay as before, the upper mids fade sooner. Measured on a HALL at noon: 3 kHz rings 2.4 s instead of 3.7 s, 6 kHz 2.0 s instead of 3.5 s, the lows unchanged (3.4 s). TONE fully CCW is about as dark as today; fully CW gets a little brighter still.
+
+hall_noon     HALL, TONE noon
+plate_noon    PLATE, TONE noon
+massive_noon  MASSIVE, TONE noon
+hall_bright   HALL, TONE fully CW
+
+A_today   today's loss
+B_shelf   a shelf at 2.5 kHz: the upper mids fade sooner" > renders/tone_shelf/README.txt
+    python3 tools/review/make_review.py renders/tone_shelf --title "Immensio: TONE, a warmer noon?" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/tone_shelf/index.html"
+fi
