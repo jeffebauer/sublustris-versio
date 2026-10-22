@@ -500,3 +500,28 @@ B_wandering  the first input allpass wanders a little" > renders/diffuser_motion
     python3 tools/review/make_review.py renders/diffuser_motion --title "Immensio: repeated hits in the PLATE" --level-match --dry $SRC --wet-only > /dev/null
     echo "renders/diffuser_motion/index.html"
 fi
+
+if on midiverb; then
+    # The DSP audit's E1: ERA's Midiverb stage is a bitcrusher (12 -> 8 bits in every line, every
+    # pass), brighter than the real unit (13 bits, a ½ one-pole low-pass every pass, emeb/MIDIVerb_RE).
+    # Measured 23 Oct 2026: a HALL tail's share above 4 kHz -6.6 dB today, -35.7 dB as the unit.
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in keys vibes drums voice skank; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page midiverb
+    for v in 0:A_today 1:B_like_the_unit; do
+        for sp in HALL:hall PLATE:plate MASSIVE:massive; do
+            IV_MIDIVERB_REAL=${v%%:*} r midiverb ${sp##*:} ${v##*:} "" --set space=${sp%%:*} --set era=1 --set size=0.4 --set decay=0.6 --set time=0
+        done
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "ERA fully CW, the Midiverb stage (found by the DSP audit). Today it cuts the tail to 8 bits inside the reverb on every pass, which sounds like a bitcrusher: a bright, gritty hash (measured on a HALL: the top above 4 kHz only 6.6 dB under the rest). The real 1986 Midiverb used 13 bits; its sound comes from a dark loop (a simple low-pass every pass), short loops and fine grain as the tail fades. B rebuilds it that way: much darker (the top 36 dB under), smoother, a little longer. Which feels more like going back in time to the Midiverb? ERA fully CW, SIZE 0.4, DECAY 0.6.
+
+hall              HALL
+plate             PLATE
+massive           MASSIVE
+
+A_today           today: 12 to 8 bits, bright grit
+B_like_the_unit   as the unit: 13 bits and its dark loop" > renders/midiverb/README.txt
+    python3 tools/review/make_review.py renders/midiverb --title "Immensio: ERA's Midiverb" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/midiverb/index.html"
+fi

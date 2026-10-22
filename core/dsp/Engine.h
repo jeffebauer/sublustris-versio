@@ -92,6 +92,9 @@ public:
     }
     // PROTOTYPE, the ducking listening test (owner's M1 notes, 23 Oct 2026): × the duck amount (0 = off).
     void  setDuckScale(float k) { duckScale_ = k; }
+    // PROTOTYPE, renders/midiverb (the audit's E1): ERA's last stretch as the real Midiverb
+    // (13 bits instead of 12 -> 8, and its one-pole low-pass on every pass).
+    void  setMidiverbReal(bool on) { midiverbReal_ = on; }
     // PROTOTYPES, renders/diffuser_motion (Mutable Instruments ideas 2 and 4): the right input
     // diffuser gets its own lengths instead of a 1.071x copy of the left; the first stage of
     // each side wanders by depthMs at 0.4 Hz, L and R in opposite phase.
@@ -192,6 +195,7 @@ private:
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
     float duckScale_ = 1.0f; // PROTOTYPE (setDuckScale)
+    bool  midiverbReal_ = false; // PROTOTYPE (setMidiverbReal)
     float diffMotionMs_ = 0.0f, diffMotionPhase_ = 0.0f; // PROTOTYPE (setDiffuserMotion)
     float hallInLoop_ = 0.0f; // PROTOTYPE (setHallInLoopDiffusion)
     float compAttackMs_ = 0.0f, compReleaseMs_ = 0.0f, compTargetDb_ = 0.0f, compGrDb_ = 0.0f; // PROTOTYPE (setDuckCompressor)

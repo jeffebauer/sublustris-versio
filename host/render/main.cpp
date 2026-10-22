@@ -128,6 +128,7 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* ps = std::getenv("IV_PLATE_SWAP")) engine.setPlateInputSwap(std::atoi(ps) != 0);
     if (const char* di = std::getenv("IV_DIFF_INDEPENDENT")) engine.setDiffuserIndependent(std::atoi(di) != 0);
     if (const char* dm = std::getenv("IV_DIFF_MOTION")) engine.setDiffuserMotion(float(std::atof(dm)));
+    if (const char* mr = std::getenv("IV_MIDIVERB_REAL")) engine.setMidiverbReal(std::atoi(mr) != 0);
     if (const char* dk = std::getenv("IV_DUCK")) engine.setDuckScale(float(std::atof(dk)));
     if (const char* mk = std::getenv("IV_MAKEUP")) engine.setMakeup(std::atoi(mk) != 0);
     if (const char* sl = std::getenv("IV_SIZE_SLEW")) engine.setSizeSlewScale(float(std::atof(sl)));

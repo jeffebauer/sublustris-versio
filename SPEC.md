@@ -175,7 +175,7 @@ Stacking: each stage's layer fades in across its stretch of the knob and then st
 | + Neve (10–35 %) | loop LP 20 → 16 kHz; +1.5 dB shelf at 80 Hz | float | even-harmonic, asymmetric; 2nd harmonic ~−30 dB at nominal | none | none | in loop |
 | + Cassette (35–65 %) | 16 → 9 kHz; head bump +2 dB at ~70 Hz | float; slow 2:1 soft compression above −18 dBFS (gain at control rate) | tape curve on top | hiss into the tank input, up to ~−66 dBFS, ducked by input level (ADR 0005) | wow 0.3–0.8 Hz up to ±4 cents, flutter 6–8 Hz up to ±1 cent, added to DRIFT | in loop (hiss at tank input) |
 | + μ-law (65–85 %) | unchanged | 24 kHz / 12-bit μ-law → 10-bit at 85 % | – | – | – | wet output (ADR 0004) |
-| + Midiverb (85–100 %) | ~10 kHz ceiling via a 48 → 24 → 48 kHz box | 12 → 8-bit, truncation toward zero, TPDF dither | – | sparse crackle, growing to the end | – | in loop (ADR 0004) |
+| + Midiverb (85–100 %) | ~10 kHz ceiling via a 48 → 24 → 48 kHz box | 12 → 8-bit, truncation toward zero (rounding at infinite; no dither since v1.0.3) | – | sparse crackle, growing to the end | – | in loop (ADR 0004) |
 
 - The Midiverb box uses polyphase IIR halfbands (Resilio `Oversampler`). Its images are deliberately not fully removed, for a little aliasing grit *(start: stopband −40 dB)*. It **saves no CPU**: the tank stays at 48 kHz, because a live tail's tank rate can't crossfade cleanly (ADR 0004).
 - Midiverb character only (rate, bits, halving accumulator maths); no ROM microcode. emeb/MIDIVerb_RE is MIT and may inform it; thement/midiverb_emulator is GPL-3.0, reference only.

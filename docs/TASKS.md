@@ -6,6 +6,7 @@
 ## To do
 
 ### Decide
+- [ ] **ERA's Midiverb** (`renders/midiverb/index.html`, picks; the DSP audit's E1): ERA fully CW today is a bitcrusher on the tail (8 bits, bright grit). B rebuilds it as the real 1986 unit (13 bits and a dark loop): much darker and smoother. Which feels more like the Midiverb?
 - [ ] **BLOOM on percussion** (`renders/swell_smear/index.html`, picks; the DSP audit's S1): a hit through a long BLOOM comes back as a rising train of ghost hits (measured: the swell flickers 3–7.5 dB). B smears each of the swell's taps across the gap to the next. A today or B?
 - [ ] **The PLATE's stereo image** (`renders/plate_stereo/index.html`, picks; the audit's P1): play hard left and the plate first answers only on the right. B answers on the side you played. A (a ping-pong) or B?
 - [ ] **Repeated hits in the PLATE** (`renders/diffuser_motion/index.html`, picks; Mutable Instruments idea): identical hits enter the plate identically. B lets the first input allpass wander very slightly. Subtle; A or B?

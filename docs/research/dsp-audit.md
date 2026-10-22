@@ -164,6 +164,8 @@ Supermassive's slow modes build *inside* the network: the energy grows as the di
   - What makes the real sound is mostly elsewhere: a dark loop (a heavy one-pole lowpass every pass), short loops, no modulation (so a slightly metallic ring), the presence-lifted 10 kHz input filter, and fine grain at the 13-bit level as the tail fades.
 - **Docs.** SPEC §4.7 and ADR 0004 still say "TPDF dither", which changelog v1.0.3 removed. Fix the stale lines.
 
+- **Measured and prototyped (23 Oct 2026):** at ERA fully CW, a HALL tail's share above 4 kHz is −6.6 dB today (the 8-bit grain is broadband) and −35.7 dB with 13 bits and the unit's ½ one-pole every pass (`IV_MIDIVERB_REAL`). Page: `renders/midiverb`. The stale "TPDF dither" lines in SPEC §4.7 and ADR 0004 are fixed.
+
 ### E2. The box is a filter in the loop (medium, measure)
 - **What our code does.** The Midiverb box's halfband pair runs inside every line, on every pass. v1.0.3 moved ERA's darkening out of the loop for exactly this reason: a filter in the loop takes its loss on every pass. A brickwall ceiling is the same at any line length. But any passband ripple or droop below 10 kHz compounds: at 0.1 dB, 50 passes a second makes 5 dB a second.
 - **Likely heard.** Short HALL lines may lose their upper mids faster than long MASSIVE lines under ERA's last stretch. Measure the box's passband (E7).
