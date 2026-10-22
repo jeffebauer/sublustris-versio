@@ -46,6 +46,7 @@ float uniform(uint32_t& s) // −1..1
 IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed, float maxLineSeconds)
 {
     sampleRate_ = sampleRate;
+    shelfK_ = lossShelfK(sampleRate);
     maxLen_ = maxLineSeconds * sampleRate - 4.0f;
     ready_ = true;
     for (auto& l : line_) ready_ &= l.init(arena, size_t(maxLineSeconds * sampleRate));
@@ -155,7 +156,7 @@ void Fdn::control(int n)
         // floor, then it holds (ADR 0008).
         const float apSeconds = inLoopNow_ > 0.0f ? float(apLen_[i][0] + apLen_[i][1]) / sampleRate_ : 0.0f;
         const Absorb a = absorbent(lenNow_[i] / sampleRate_ + apSeconds, decayRate_ + governRate + extraRate_, highRatio_,
-                                   governor_.darken, shelfHz_, sampleRate_);
+                                   governor_.darken, shelfK_);
         b1_[i] = a.b1;
         gain_[i] = a.gain;
         pole_[i] = a.pole;

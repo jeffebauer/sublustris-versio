@@ -44,6 +44,10 @@ constexpr float kDampingHighT60Ratio = 0.45f;
 // At infinite DECAY the lows hold but the highs still fade, over about this
 // long at TONE noon, so an infinite tail darkens toward its floor (ADR 0008)
 // instead of ringing bright forever.
+// Every tank's loss is a shelf crossing here (Governor.h absorbent): the upper
+// mids fade with the highs (owner's pick on renders/tone_shelf, v1.0.15).
+constexpr float kLossShelfHz = 2500.0f;
+
 constexpr float kInfiniteHighT60Seconds = 30.0f;
 
 // Input diffusion (SPEC §4.1): Dattorro's four input allpasses, his lengths

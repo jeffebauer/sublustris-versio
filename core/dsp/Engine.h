@@ -81,15 +81,6 @@ public:
     // Test hook: scales the tanks' own modulation (0 = none; DRIFT is separate), to check a
     // structure isn't metallic without it (Costello: tune it to sound good unmodulated).
     void  setModulationScale(float k) { modScale_ = k; }
-    // PROTOTYPE, renders/tone_shelf: every tank's loss as a shelf crossing at hz (0 = today's).
-    void  setLossShelfHz(float hz)
-    {
-        plate_.setShelfHz(hz);
-        twinPlate_.setShelfHz(hz);
-        fdn_.setShelfHz(hz);
-        twinFdn_.setShelfHz(hz);
-        reverseFdn_.setShelfHz(hz);
-    }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.

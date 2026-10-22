@@ -80,7 +80,6 @@ public:
     // delays; owner's pick, v1.0.12): 1 normally, 0 on a frozen pad, which stays as still as
     // before (the frozen cards were a coin flip).
     void setLongDelayMod(float amount) { longMod_ = amount; }
-    void setShelfHz(float hz) { shelfHz_ = hz; } // PROTOTYPE (Governor.h absorbent)
     // Test hook: scales every wander in the loop (chorus, floor, long delays); 0 = still.
     void setModScale(float k) { modScale_ = k; }
 
@@ -115,7 +114,7 @@ private:
     float    decayRate_ = 0.2f, highRatio_ = 0.45f, levelGain_ = 1.0f, extraRate_ = 0.0f;
     bool     colour_ = true;
     float    modDepth_ = 1.0f;
-    float    shelfHz_ = 0.0f, modScale_ = 1.0f;
+    float    shelfK_ = 0.0f, modScale_ = 1.0f; // lossShelfK(sampleRate_)
     float    longMod_ = 1.0f; // d1 and d2 wander; 0 while frozen
     DriftAmounts drift_;
     FloorGovernor governor_;

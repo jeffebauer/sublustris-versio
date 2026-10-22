@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 23 Oct 2026, session 3 (PLATE pick acted on; one A/B page left to pick on: `tone_shelf`; a grainy-start page to hear).
+**Last updated:** 23 Oct 2026, session 3 (every A/B pick acted on; nothing waiting for a pick).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
@@ -10,10 +10,8 @@
 - [ ] **MASSIVE's SIZE glide:** SIZE moves bend at most a semitone (ADR 0012), so a full SIZE sweep in MASSIVE glides for ~40 s. Keep that gentle bend, or allow a faster swoop with more bend in MASSIVE only?
 - [ ] **Plugin identity** (one-line answers): keep manufacturer code `Rslo` and company name / bundle-ID prefix as Resilio's, with plugin code `ImVs`? (Same developer, so it groups both plugins together in Ableton.)
 
-- [ ] **TONE, a warmer noon?** (`renders/tone_shelf/index.html`, level-matched, picks): the audit's top finding. At noon the upper mids ring almost as long as the body, a glassy sheen. B lets them fade sooner (3 kHz 2.4 s instead of 3.7 s on a HALL; lows unchanged). Across HALL, PLATE, MASSIVE, and HALL with TONE bright.
 
 
-- [ ] **Do big spaces start grainy?** (`renders/grainy_start/index.html`, notes only): the new grainy check says every tail ends up a smooth wash, but big PLATEs and HALLs (and maybe MASSIVE) take longer than 0.3 s to fill in at the start. Listen to the first half-second after each click or hit: smooth, or sandy? Real big rooms fill in slower, so "it's part of the size" is a fine answer.
 
 ### Listen (after your notes)
 - [ ] **M1: the Hall** (`renders/m1_hall/index.html`): SIZE now goes from a small room (shorter lines, and shorter tails, as a small room has) to a huge hall. Is small small enough, and has the buzz on long small rooms gone? TONE's ends go further (dark: more lows, fewer highs; bright: the opposite). Too much, too little?
@@ -35,7 +33,7 @@
 
 - **Make the grainy reading steadier:** MASSIVE's density sits right at the 0.9 line from the start, so its "smooth after" jumps between 0.06 and 1.67 s on a one-sample change in the click; the PLATE and HALL readings move by 0.1–0.2 s. Research how others report it (a lower bar, a time average, or a mixing-time estimate) before trusting the known-misses list.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
-- **M8 tuning** from your listening notes on the pages above.
+- **M8 tuning** from your listening notes on the pages above, including MASSIVE medium and large sounding a little uneven on Hits (grainy_start).
 - **M8 findings to confirm by ear first** (`docs/sweetspot.md`, `docs/research/reverb-testing-practices.md`):
   - ERA's last stretch (the Midiverb stage) jumps about 20× harder than the rest of the knob, and its first 20 % barely changes anything measurable.
   - PLATE: TONE's first step from fully CCW jumps, and so does SIZE's last.
@@ -44,6 +42,8 @@
 
 ## Done
 
+- 23 Oct 2026: **TONE, a warmer noon: B** (all 36 cards, the repeated row agreeing). Every tank's loss is now a shelf at 2.5 kHz, so the upper mids fade with the highs (ADR 0012 amendment). It also freed 4.4 KB of flash (release 92,948 B).
+- 23 Oct 2026: **Big spaces don't start too grainy** (your listen on `grainy_start`): "overall it sounds good", apart from a couple of MASSIVE medium and large cards that sound a little uneven on Hits (kept for M8 tuning).
 - 23 Oct 2026: **Playing over a frozen pad is louder** (C on all 24 cards; "the sweet spot is between plus3 and plus6"): the twin now sits 6 dB under the pad (+4.4 dB on before). The switch and its page are gone.
 - 23 Oct 2026: **The main reverb's swell stays an even ramp** (A on 21 of 27 cards; MASSIVE 8 of 9). Only the frozen layer gets the S-curve. The page is deleted.
 - 22 Oct 2026: **The layer over a frozen MASSIVE swells in on an S-curve** (B on all 18 cards): it eases in and settles into place instead of rising in an even ramp. The page is deleted.

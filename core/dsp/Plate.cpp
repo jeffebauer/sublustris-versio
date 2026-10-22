@@ -63,6 +63,7 @@ float lerpRead(const ExactLine& l, float d)
 IV_SIZE_OPT bool Plate::prepare(Arena& arena, float sampleRate, float maxScale, bool colour, uint32_t seed)
 {
     sampleRate_ = sampleRate;
+    shelfK_ = lossShelfK(sampleRate);
     maxScale_ = maxScale;
     colour_ = colour;
     const float room = colour ? voicing::kDriftMaxSeconds * sampleRate : 0.0f;
@@ -140,8 +141,8 @@ void Plate::control(int n)
         br.d1Len = kD1[b] * k;
         br.ap2Len = kAp2[b] * k;
         br.d2Len = kD2[b] * k;
-        br.loss1 = absorbent((br.ap1Len + br.d1Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfHz_, sampleRate_);
-        br.loss2 = absorbent((br.ap2Len + br.d2Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfHz_, sampleRate_);
+        br.loss1 = absorbent((br.ap1Len + br.d1Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfK_);
+        br.loss2 = absorbent((br.ap2Len + br.d2Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfK_);
 
         // The modulated allpass: Dattorro's slow sine, plus the modulation
         // floor's slow random wander (as every tank's, SPEC §2.3 rule 1).

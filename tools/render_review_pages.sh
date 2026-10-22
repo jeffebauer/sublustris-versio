@@ -281,28 +281,6 @@ B_bloom    BLOOM: swells over TIME, then decays naturally
 C_reverse  REVERSE: swells over TIME, then stops"
 fi
 
-if on tone_shelf; then
-    page tone_shelf
-    for v in 0:A_today 2500:B_shelf; do
-        IV_TONE_SHELF=${v%%:*} r tone_shelf hall_noon ${v##*:} "" --set space=HALL --set era=0 --set size=0.6 --set decay=0.6 --set tone=0.5
-        IV_TONE_SHELF=${v%%:*} r tone_shelf plate_noon ${v##*:} "" --set space=PLATE --set era=0 --set size=0.6 --set decay=0.6 --set tone=0.5
-        IV_TONE_SHELF=${v%%:*} r tone_shelf massive_noon ${v##*:} "" --set space=MASSIVE --set era=0 --set size=0.6 --set decay=0.6 --set tone=0.5
-        IV_TONE_SHELF=${v%%:*} r tone_shelf hall_bright ${v##*:} "" --set space=HALL --set era=0 --set size=0.6 --set decay=0.6 --set tone=1
-    done
-    print -r -- "From the DSP audit (its top finding): at TONE noon the upper mids (2-6 kHz, vocal edge, hi-hat, snare crack) ring almost as long as the body, so long tails get a glassy sheen instead of a hall's warm fade. The loss in the loop only darkens the very top. B makes it a shelf crossing at 2.5 kHz, as Jot and Zita-Rev1 do: lows and the very top decay as before, the upper mids fade sooner. Measured on a HALL at noon: 3 kHz rings 2.4 s instead of 3.7 s, 6 kHz 2.0 s instead of 3.5 s, the lows unchanged (3.4 s). TONE fully CCW is about as dark as today; fully CW gets a little brighter still.
-
-hall_noon     HALL, TONE noon
-plate_noon    PLATE, TONE noon
-massive_noon  MASSIVE, TONE noon
-hall_bright   HALL, TONE fully CW
-
-A_today   today's loss
-B_shelf   a shelf at 2.5 kHz: the upper mids fade sooner" > renders/tone_shelf/README.txt
-    python3 tools/review/make_review.py renders/tone_shelf --title "Immensio: TONE, a warmer noon?" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/tone_shelf/index.html"
-fi
-
-
 if on grainy_start; then
     # The grainy check's slow starts (docs/research/reverb-testing-practices.md, session 3):
     # each SPACE's quick-to-smooth setting beside its slow ones, on material that shows grain.

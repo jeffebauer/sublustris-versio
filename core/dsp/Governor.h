@@ -73,31 +73,35 @@ private:
     float power_ = 0.0f, slow_ = 0.0f, block_ = 0.0f;
 };
 
-// A tank segment's absorbent filter (Jot): y = gain·x + pole·y. Its DC gain
-// is the low end's loss for `seconds` of delay at `lowRate` (1/T60), its
-// Nyquist gain the high end's at lowRate / highRatio. At infinite (lowRate
-// 0) the highs still fade over kInfiniteHighT60Seconds, scaled by darken.
-// PROTOTYPE (renders/tone_shelf, the audit's A1): shelfHz > 0 makes it a
-// first-order shelf with that crossover instead (same DC and Nyquist gains),
-// so the upper mids fade too: y = gain·x + b1·x' + pole·y.
+// A tank segment's absorbent filter (Jot): a first-order shelf crossing at
+// kLossShelfHz, y = gain·x + b1·x' + pole·y. Its DC gain is the low end's loss
+// for `seconds` of delay at `lowRate` (1/T60), its Nyquist gain the high end's
+// at lowRate / highRatio, so the upper mids fade with the highs, not the body
+// (the audit's A1; owner's pick on renders/tone_shelf, v1.0.15; Jot and
+// Zita-Rev1 do the same). At infinite (lowRate 0) the highs still fade over
+// kInfiniteHighT60Seconds, scaled by darken. shelfK: lossShelfK(sampleRate).
 struct Absorb {
     float gain, pole, b1 = 0.0f;
 };
-inline Absorb absorbent(float seconds, float lowRate, float highRatio, float darken, float shelfHz = 0.0f,
-                        float sampleRate = 48000.0f)
+
+// The bilinear shelf's K = tan(π·kLossShelfHz / sampleRate), once per prepare.
+// A Taylor series rather than std::tan (~5.8 KB of flash): the angle is under
+// 0.2 rad from 44.1 kHz up, where three terms are within 1e-6.
+inline float lossShelfK(float sampleRate)
+{
+    const float x = 3.14159265f * voicing::kLossShelfHz / sampleRate, x2 = x * x;
+    return x * (1.0f + x2 * (1.0f / 3.0f + x2 * (2.0f / 15.0f)));
+}
+
+inline Absorb absorbent(float seconds, float lowRate, float highRatio, float darken, float shelfK)
 {
     float highRate = lowRate / highRatio;
     const float infiniteHigh = darken * (1.0f / highRatio - 1.0f) / voicing::kInfiniteHighT60Seconds;
     if (highRate < infiniteHigh) highRate = infiniteHigh;
     const float gLow  = std::pow(10.0f, -3.0f * seconds * lowRate);
     const float gHigh = std::pow(10.0f, -3.0f * seconds * highRate);
-    if (shelfHz > 0.0f) { // bilinear first-order shelf: DC gLow, Nyquist gHigh, corner shelfHz
-        const float K = std::tan(3.14159265f * shelfHz / sampleRate);
-        return {(gHigh + gLow * K) / (1.0f + K), (1.0f - K) / (1.0f + K), (gLow * K - gHigh) / (1.0f + K)};
-    }
-    const float q = gHigh / gLow; // Nyquist gain over DC gain, <= 1
-    const float pole = (1.0f - q) / (1.0f + q);
-    return {gLow * (1.0f - pole), pole};
+    const float K = shelfK;
+    return {(gHigh + gLow * K) / (1.0f + K), (1.0f - K) / (1.0f + K), (gLow * K - gHigh) / (1.0f + K)};
 }
 
 } // namespace iv::dsp
