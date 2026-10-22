@@ -325,3 +325,22 @@ B_smooth  the twin swells like MASSIVE's tank" > renders/twin_swell/README.txt
     python3 tools/review/make_review.py renders/twin_swell --title "Immensio: playing over a frozen MASSIVE" --level-match --dry $SRC --wet-only > /dev/null
     echo "renders/twin_swell/index.html"
 fi
+
+if on tank_scurve; then
+    page tank_scurve
+    for v in 0:A_linear 1:B_scurve; do
+        IV_TANK_SCURVE=${v%%:*} r tank_scurve massive ${v##*:} "" --set space=MASSIVE --set size=0.6 --set decay=0.6
+        IV_TANK_SCURVE=${v%%:*} r tank_scurve bloom_hall ${v##*:} "" --set space=HALL --set size=0.6 --set decay=0.6 --set attack=BLOOM --set time=0.5
+        IV_TANK_SCURVE=${v%%:*} r tank_scurve bloom_long ${v##*:} "" --set space=PLATE --set size=0.6 --set decay=0.7 --set attack=BLOOM --set time=1
+    done
+    print -r -- "After your S-curve pick for the frozen layer: the same shape for the main reverb's swell. It shapes MASSIVE's built-in swell and BLOOM in every space. Only the shape of the rise changes; each version arrives at the same level at the same time.
+
+massive     MASSIVE, SIZE 0.6, DECAY 0.6 (its built-in swell, ~0.5 s)
+bloom_hall  HALL with BLOOM, TIME noon (~0.6 s swell)
+bloom_long  PLATE with BLOOM, TIME fully CW (4 s swell)
+
+A_linear  today: an even ramp
+B_scurve  the S-curve you picked for the frozen layer" > renders/tank_scurve/README.txt
+    python3 tools/review/make_review.py renders/tank_scurve --title "Immensio: the S-curve for the main swell" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/tank_scurve/index.html"
+fi
