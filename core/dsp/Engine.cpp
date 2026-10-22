@@ -600,8 +600,8 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             // REVERSE: the swell replaces the forward wet, crossfaded over ~50 ms.
             const float rl = voicing::kReverseLevel * revL_[i], rr = voicing::kReverseLevel * revR_[i];
             reverseMix_ = approach(reverseMix_, reverseTarget_, reverseStep);
-            float wl = (wetL_[i] + reverseMix_ * (rl - wetL_[i])) * flipGain_ + voicing::kTwinLevel * twinL_[i];
-            float wr = (wetR_[i] + reverseMix_ * (rr - wetR_[i])) * flipGain_ + voicing::kTwinLevel * twinR_[i];
+            float wl = (wetL_[i] + reverseMix_ * (rl - wetL_[i])) * flipGain_ + twinLevel_ * twinL_[i];
+            float wr = (wetR_[i] + reverseMix_ * (rr - wetR_[i])) * flipGain_ + twinLevel_ * twinR_[i];
             wl *= eraMakeup_;
             wr *= eraMakeup_;
             muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)

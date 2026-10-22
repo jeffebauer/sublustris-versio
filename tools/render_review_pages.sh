@@ -336,3 +336,28 @@ C_massive_large    SIZE fully CW" > renders/grainy_start/README.txt
     python3 tools/review/make_review.py renders/grainy_start --title "Immensio: do big spaces start grainy?" --level-match --showcase --dry $SRC --wet-only > /dev/null
     echo "renders/grainy_start/index.html"
 fi
+
+if on twin_level; then
+    # Owner, 23 Oct 2026: "Bring the twin up a few dB so playing over a frozen pad is louder."
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in skank vibes stabs lead keys drums voice piano; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page twin_level
+    for v in 0:A_today 3:B_plus3 6:C_plus6 9:D_plus9; do
+        IV_TWIN_DB=${v%%:*} r twin_level plate ${v##*:} freeze_only --set space=PLATE --set era=0 --set size=0.6 --set decay=0.6
+        IV_TWIN_DB=${v%%:*} r twin_level hall ${v##*:} freeze_only --set space=HALL --set era=0 --set size=0.7 --set decay=0.6
+        IV_TWIN_DB=${v%%:*} r twin_level massive ${v##*:} freeze_only --set space=MASSIVE --set era=0 --set size=0.7 --set decay=0.6
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "Playing over a frozen pad, louder? A tap at 3 s freezes; from then on what you play goes into the twin, a layer over the pad, which fades back out when you stop; a tap at 16-18 s unfreezes. Today the twin sits 10.5 dB under the pad, so on the PLATE Skank the chords after the tap come out about 6.7 dB quieter than the two before it. B, C and D bring it up: the step at the tap shrinks to about 5.4, 3.5 and 1.3 dB. Not level-matched (the level is the question). Which balance feels right while you play over a pad?
+
+plate     PLATE, SIZE 0.6, DECAY 0.6
+hall      HALL, SIZE 0.7, DECAY 0.6
+massive   MASSIVE, SIZE 0.7, DECAY 0.6
+
+A_today   the twin as today: 10.5 dB under the pad
+B_plus3   +3 dB: 7.5 dB under the pad
+C_plus6   +6 dB: 4.5 dB under the pad
+D_plus9   +9 dB: 1.5 dB under the pad, nearly as loud" > renders/twin_level/README.txt
+    python3 tools/review/make_review.py renders/twin_level --title "Immensio: playing over a frozen pad, louder?" --no-level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/twin_level/index.html"
+fi

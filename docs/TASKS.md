@@ -6,7 +6,7 @@
 ## To do
 
 ### Decide
-- [ ] **Playing over a frozen pad, loud enough?** On the frozen PLATE Skank you heard a big drop after the first two repeats: that's the tap. Everything you play after it goes into the twin, which sits 10.5 dB down by design, so chords after the tap come out 6–7 dB quieter than the ones before. Keep the twin that subtle, or bring it up a few dB?
+- [ ] **Playing over a frozen pad, louder?** (`renders/twin_level/index.html`, picks, not level-matched): what you play after the freeze tap goes into the twin, today 10.5 dB under the pad (on the PLATE Skank the chords drop 6.7 dB at the tap). B +3, C +6, D +9 dB (the step shrinks to 5.4 / 3.5 / 1.3 dB). Which balance feels right, in PLATE, HALL and MASSIVE?
 - [ ] **Approve or reject (ADR 0008 amendment):** infinite tails and frozen pads get a small, capped "makeup" that lifts a sagging held tail back to its own level (never above, ≤ 0.3 dB/s). Without it, infinite tails with tape wow fade out over ~10 minutes. It's the one place the loop gain may go a hair over 1.
 - [ ] **MASSIVE's SIZE glide:** SIZE moves bend at most a semitone (ADR 0012), so a full SIZE sweep in MASSIVE glides for ~40 s. Keep that gentle bend, or allow a faster swoop with more bend in MASSIVE only?
 - [ ] **Plugin identity** (one-line answers): keep manufacturer code `Rslo` and company name / bundle-ID prefix as Resilio's, with plugin code `ImVs`? (Same developer, so it groups both plugins together in Ableton.)
