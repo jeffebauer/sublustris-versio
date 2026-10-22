@@ -14,7 +14,7 @@
 - [ ] **TONE, a warmer noon?** (`renders/tone_shelf/index.html`, level-matched, picks): the audit's top finding. At noon the upper mids ring almost as long as the body, a glassy sheen. B lets them fade sooner (3 kHz 2.4 s instead of 3.7 s on a HALL; lows unchanged). Across HALL, PLATE, MASSIVE, and HALL with TONE bright.
 
 
-- [ ] **Grainy starts in big spaces:** the new grainy check says every tail ends up a smooth wash, but in big spaces the first part of the tail stays a little grainy for longer than the 0.3 s target: the PLATE from SIZE ½ (up to 0.7 s), the HALL at full SIZE (0.4–0.5 s), MASSIVE at full SIZE (up to 1.4 s). Real big rooms do take longer to fill in, so it may be fine, or even part of the size. Shall I make a short page (clicks, snare, piano) so you can hear whether the start sounds grainy?
+- [ ] **Do big spaces start grainy?** (`renders/grainy_start/index.html`, notes only): the new grainy check says every tail ends up a smooth wash, but big PLATEs and HALLs (and maybe MASSIVE) take longer than 0.3 s to fill in at the start. Listen to the first half-second after each click or hit: smooth, or sandy? Real big rooms fill in slower, so "it's part of the size" is a fine answer.
 
 ### Listen (after your notes)
 - [ ] **M1: the Hall** (`renders/m1_hall/index.html`): SIZE now goes from a small room (shorter lines, and shorter tails, as a small room has) to a huge hall. Is small small enough, and has the buzz on long small rooms gone? TONE's ends go further (dark: more lows, fewer highs; bright: the opposite). Too much, too little?
@@ -34,6 +34,7 @@
 
 ## Waiting on Claude
 
+- **Make the grainy reading steadier:** MASSIVE's density sits right at the 0.9 line from the start, so its "smooth after" jumps between 0.06 and 1.67 s on a one-sample change in the click; the PLATE and HALL readings move by 0.1–0.2 s. Research how others report it (a lower bar, a time average, or a mixing-time estimate) before trusting the known-misses list.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 - **M8 tuning** from your listening notes on the pages above.
 - **M8 findings to confirm by ear first** (`docs/sweetspot.md`, `docs/research/reverb-testing-practices.md`):

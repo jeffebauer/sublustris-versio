@@ -321,3 +321,37 @@ B_shelf   a shelf at 2.5 kHz: the upper mids fade sooner" > renders/tone_shelf/R
     echo "renders/tone_shelf/index.html"
 fi
 
+
+if on grainy_start; then
+    # The grainy check's slow starts (docs/research/reverb-testing-practices.md, session 3):
+    # each SPACE's quick-to-smooth setting beside its slow ones, on material that shows grain.
+    [ -f $SRC/clicks.wav ] || ffmpeg -v error -y -i test_audio/stimulus/01_clicks.wav -af "atrim=0:20,apad=pad_dur=12" -ac 2 -ar 48000 -c:a pcm_s24le $SRC/clicks.wav
+    [ -f $SRC/hits.wav ] || ffmpeg -v error -y -i test_audio/stimulus/02_hits.wav -af "apad=pad_dur=8" -ac 2 -ar 48000 -c:a pcm_s24le $SRC/hits.wav
+    saved=("${MATERIALS[@]}"); MATERIALS=(clicks hits piano)
+    page grainy_start
+    r grainy_start plate A_small "" --set space=PLATE --set era=0 --set size=0 --set decay=0.4
+    r grainy_start plate B_medium "" --set space=PLATE --set era=0 --set size=0.5 --set decay=0.4
+    r grainy_start plate C_large "" --set space=PLATE --set era=0 --set size=1 --set decay=0.4
+    r grainy_start hall A_hall_medium "" --set space=HALL --set era=0 --set size=0.5 --set decay=0.4
+    r grainy_start hall B_hall_large "" --set space=HALL --set era=0 --set size=1 --set decay=0.4
+    r grainy_start massive A_massive_medium "" --set space=MASSIVE --set era=0 --set size=0.5 --set decay=0.4
+    r grainy_start massive B_massive_small "" --set space=MASSIVE --set era=0 --set size=0 --set decay=0.4
+    r grainy_start massive C_massive_large "" --set space=MASSIVE --set era=0 --set size=1 --set decay=0.4
+    MATERIALS=("${saved[@]}")
+    print -r -- "The new grainy check: every tail ends up a smooth wash, but in big spaces the first part of the tail may stay a little grainy (separate reflections you can almost count, a sandy flutter) for longer than the 0.3 s target. Real big rooms do take longer to fill in, so this may be fine or even part of the size. A in each column is a setting that fills in quickly, for comparison. Listen to the first half-second after each click or hit: smooth, or sandy? Tail (T) and Loop help. DECAY 0.4 everywhere, ERA clean. The Numbers under each card give 'smooth after', but treat it as rough: MASSIVE sits right at the line from the start, so its reading jumps between 0.1 and 1.5 s on tiny changes.
+
+plate     PLATE
+hall      HALL
+massive   MASSIVE
+
+A_small            SIZE fully CCW (fills in fast)
+B_medium           SIZE noon
+C_large            SIZE fully CW (slowest PLATE)
+A_hall_medium      SIZE noon (fills in fast)
+B_hall_large       SIZE fully CW
+A_massive_medium   SIZE noon
+B_massive_small    SIZE fully CCW
+C_massive_large    SIZE fully CW" > renders/grainy_start/README.txt
+    python3 tools/review/make_review.py renders/grainy_start --title "Immensio: do big spaces start grainy?" --level-match --showcase --dry $SRC --wet-only > /dev/null
+    echo "renders/grainy_start/index.html"
+fi
