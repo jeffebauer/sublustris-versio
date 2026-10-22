@@ -92,7 +92,7 @@ inline float reverseSeconds(float v) { return expLerp(0.2f, 2.0f, v); }
 inline float reverseMeanSeconds(float v) { return expLerp(voicing::kReverseMeanMinSeconds, voicing::kReverseMeanMaxSeconds, v); }
 inline float reverseTailSeconds(float v) { return expLerp(voicing::kReverseTailMinSeconds, voicing::kReverseTailMaxSeconds, v); }
 
-// SIZE (P5) in PLATE: the tank's scale, 0.5 → 1.6 of Dattorro's (SPEC §3).
+// SIZE (P5) in PLATE: the tank's scale, 0.5 → 1.59 of Dattorro's (SPEC §3).
 inline float plateScale(float v) { return expLerp(voicing::kPlateMinScale, voicing::kPlateMaxScale, v); }
 
 // DRIFT (P6), bipolar (ADR 0012) + ERA's cassette wow/flutter (SPEC §4.7).

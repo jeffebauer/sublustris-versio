@@ -112,12 +112,12 @@ constexpr float kReverseTailMaxSeconds  = 1.0f;   // at DECAY's top: a softer st
 constexpr float kReverseLevel           = 6.0f;   // +15.5 dB: loudness matches the forward wet (skank, vibes; every space)
 
 // ---- Plate (SPEC §4.2) -----------------------------------------------------
-constexpr float kPlateMaxScale     = 1.6f;  // SIZE fully CW
+constexpr float kPlateMaxScale     = 1.59f; // SIZE fully CW (1.6 lined a 9.8 kHz mode up, v1.0.11)
 constexpr float kPlateMinScale     = 0.5f;  // SIZE fully CCW
 // The Plate's tails measured ~9 % longer than DECAY's mapping (low-band
 // T60, test_plate_freeze), so its loss rate is scaled up by this. At the
 // very short end with SIZE up, one pass round the figure 8 (~0.55 s at
-// scale 1.6) is longer than the T60 asked for, so those tails stay longer
+// full SIZE) is longer than the T60 asked for, so those tails stay longer
 // than the mapping: a big plate can't ring for only 0.4 s.
 constexpr float kPlateRateCalibration = 1.09f;
 constexpr float kPlateOutputTrim   = 0.41f; // −7.8 dB: PLATE matches HALL's loudness (test_plate_freeze)

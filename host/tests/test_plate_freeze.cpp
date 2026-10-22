@@ -367,16 +367,16 @@ void reverseRestsWhileFrozen()
 
 // Costello (Valhalla): a reverb should sound good with its modulation off; modulation is
 // seasoning, and it can hide a ringing structure. With every tank's own wander off (ERA clean,
-// DRIFT centred), noise bursts must not ring. Measured 22 Oct 2026: HALL and MASSIVE pass at
-// every SIZE; the PLATE passes at SIZE 0 but rings at full SIZE (15 dB at 9.8 kHz), an M8
-// finding (docs/TASKS.md), so it's checked at SIZE 0 only until that's fixed.
+// DRIFT centred), noise bursts must not ring. At a scale of exactly 1.6 the PLATE lined up one
+// 9.8 kHz mode (15 dB, only at the knob's last notch; 8 dB at 99 %), so full SIZE is 1.59 (v1.0.11).
 void notMetallicUnmodulated()
 {
     std::vector<float> hits(size_t(10.0f * kSr), 0.0f);
     for (int h = 0; h < 3; ++h)
         for (size_t i = 0; i < 1200; ++i) hits[size_t(h) * 24000 + i] = 0.6f * noise() * std::exp(-float(i) / 200.0f);
     struct Case { int space; float size; };
-    for (const Case c : {Case{1, 0.0f}, Case{1, 1.0f}, Case{2, 0.0f}, Case{2, 1.0f}, Case{0, 0.0f}}) {
+    for (const Case c : {Case{1, 0.0f}, Case{1, 1.0f}, Case{2, 0.0f}, Case{2, 1.0f}, Case{0, 0.0f}, Case{0, 0.5f},
+                         Case{0, 1.0f}}) {
         Setting s;
         s.space = c.space;
         s.size = c.size;
@@ -386,7 +386,7 @@ void notMetallicUnmodulated()
         const Stereo out = render(hits, s);
         const auto m = iv::metrics::compute({out.l, out.r}, kSr);
         char msg[180];
-        std::snprintf(msg, sizeof msg, "%s at SIZE %.0f not metallic with its modulation off: ringing %.1f dB",
+        std::snprintf(msg, sizeof msg, "%s at SIZE %g not metallic with its modulation off: ringing %.1f dB",
                       c.space == 0 ? "PLATE" : (c.space == 1 ? "HALL" : "MASSIVE"), c.size,
                       std::isfinite(m.ringingDb) ? m.ringingDb : 0.0);
         check(finite(out) && !m.ringing, msg);

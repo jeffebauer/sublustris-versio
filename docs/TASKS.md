@@ -33,18 +33,18 @@
 
 ## Waiting on Claude
 
-- **The testing plan you chose** (in this order): a ring check, low voice + dry piano material and a "tail only" button; then the PLATE ring fix and its A/B page; then the grainy check, decay per band on pages, the hidden twin on pick pages, the full-mix material and the clarity / smoothness / width numbers; the safety net for approved sounds last. The wobble meter waits for DRIFT tuning.
+- **The testing plan you chose** (in this order): low voice + dry piano material and a "tail only" button; then the grainy check, decay per band on pages, the hidden twin on pick pages, the full-mix material and the clarity / smoothness / width numbers; the safety net for approved sounds last. The wobble meter waits for DRIFT tuning.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 - **M8 tuning** from your listening notes on the pages above.
 - **M8 findings to confirm by ear first** (`docs/sweetspot.md`, `docs/research/reverb-testing-practices.md`):
   - ERA's last stretch (the Midiverb stage) jumps about 20× harder than the rest of the knob, and its first 20 % barely changes anything measurable.
   - PLATE: TONE's first step from fully CCW jumps, and so does SIZE's last.
   - MASSIVE: DECAY's first step jumps; DRIFT is nearly flat from 20–50 %; TIME in NORMAL barely moves anything for its first 30 %.
-  - The PLATE at full SIZE rings once its modulation is off: the modulation is hiding a resonance.
 - **Modulation ideas from Mutable Instruments** (research doc above) and the DSP audit session's findings: to try together on an A/B page, starting with the PLATE gap.
 
 ## Done
 
+- 22 Oct 2026: **The PLATE's full-SIZE ring** (your OK): nothing you could hear. It only showed with the PLATE's movement switched off, at the knob's last notch. Full SIZE is now 0.6 % smaller, which removes it, and the test checks small, medium and full PLATEs.
 - 22 Oct 2026: **Testing plan chosen**: yes to the grainy check, the safety net, decay per band, the hidden twin, the tail button and all the lab checks; the wobble meter later; low voice + dry piano and a full mix as new material (no long frozen pad).
 - 22 Oct 2026: **MASSIVE keeps its swell** (A on 15 of 18 cards): without it, plucky sounds get two less-diffuse repeats before the wash; the swell smears them in. Recorded in ADR 0007; the prototype and its page are gone.
 - 22 Oct 2026: **DSP audit merged** into main (`docs/research/dsp-audit.md`).
