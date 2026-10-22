@@ -308,3 +308,20 @@ B_shelf   a shelf at 2.5 kHz: the upper mids fade sooner" > renders/tone_shelf/R
     python3 tools/review/make_review.py renders/tone_shelf --title "Immensio: TONE, a warmer noon?" --level-match --dry $SRC --wet-only > /dev/null
     echo "renders/tone_shelf/index.html"
 fi
+
+if on twin_swell; then
+    page twin_swell
+    for v in 0:A_before 1:B_smooth; do
+        IV_TWIN_SWELL=${v%%:*} r twin_swell medium ${v##*:} freeze_only --set space=MASSIVE --set size=0.6 --set decay=0.6
+        IV_TWIN_SWELL=${v%%:*} r twin_swell large ${v##*:} freeze_only --set space=MASSIVE --set size=1 --set decay=0.75
+    done
+    print -r -- "After your MASSIVE pick (the swell stays, because without it plucky sounds get two less-diffuse repeats): playing over a frozen MASSIVE goes into its twin, which had no swell, so it had the same repeats (measured on a click: spikes at 0.12, 0.3 and 0.8 s). B gives the twin MASSIVE's own swell: no spikes, and it arrives 0.2-0.33 s after you play, like the tank (and ~1 dB quieter, still a subtle layer). A tap freezes at 3 s, your playing is the layer over the pad, a tap unfreezes at 16 s.
+
+medium  SIZE 0.6, DECAY 0.6
+large   SIZE fully CW, DECAY 0.75
+
+A_before  the twin as before: no swell
+B_smooth  the twin swells like MASSIVE's tank" > renders/twin_swell/README.txt
+    python3 tools/review/make_review.py renders/twin_swell --title "Immensio: playing over a frozen MASSIVE" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/twin_swell/index.html"
+fi

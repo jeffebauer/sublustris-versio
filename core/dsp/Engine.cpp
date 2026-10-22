@@ -70,6 +70,7 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
             ready_ &= diffuser_[c].stage[k].init(fast_, uint32_t(s * sampleRate), voicing::kDiffuserCoeff[k]);
         }
     ready_ &= swell_.prepare(large_, sampleRate);
+    ready_ &= twinSwell_.prepare(large_, sampleRate);
     ready_ &= fdn_.prepare(large_, sampleRate, 0x1D5A7u);
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
     ready_ &= reverse_.prepare(large_, sampleRate);
@@ -110,6 +111,7 @@ IV_SIZE_OPT void Engine::reset()
     twinMean_ = twinSpread_ = -1.0f;
     twinFdn_.reset();
     twinPlate_.reset();
+    twinSwell_.reset();
     for (auto& d : twinDiffuser_) d.clear();
     inputPower_ = 0.0f;
     quietSince_ = 0;
@@ -205,6 +207,10 @@ void Engine::onGesture(GestureReader::Event e)
             twinFdn_.reset();
             twinPlate_.reset();
             for (auto& d : twinDiffuser_) d.clear();
+            twinSwell_.setAttackSeconds(activeSpace_ == 2 && twinSwellOn_
+                                            ? map::massiveNormalAttackSeconds(smoothed(ParamId::Decay), smoothed(ParamId::Size)) : 0.0f,
+                                        true);
+            twinSwell_.reset();
             twinMean_ = twinSpread_ = -1.0f;
             twinActive_ = true;
         }
@@ -378,6 +384,7 @@ void Engine::applySpace(bool snap)
     // pad's twin); it always fades within kTwinMaxT60. Full in-loop diffusion in MASSIVE, like the pad.
     if (twinActive_) {
         const float tSize = smoothed(ParamId::Size), tDecay = smoothed(ParamId::Decay);
+        twinSwell_.setAttackSeconds(massive && twinSwellOn_ ? map::massiveNormalAttackSeconds(tDecay, tSize) : 0.0f, snap);
         const float tT60 = activeSpace_ == 1 ? map::hallT60Scale(tSize) : 1.0f;
         const float tRate = std::fmax(map::decayRate(tDecay, activeSpace_) / tT60, 1.0f / voicing::kTwinMaxT60);
         dsp::EraMix tEra = era;
@@ -483,6 +490,7 @@ void Engine::controlTick(int n)
 
     applySpace(false);
     swell_.control(n);
+    twinSwell_.control(n);
     reverse_.control(n);
     predelayStep_ = (predelayTarget_ - predelayNow_) / float(n);
 
@@ -536,10 +544,13 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             revInL_[i] = pl;
             revInR_[i] = pr;
             reverse_.process(revInL_[i], revInR_[i], reverseOn);
-            // The twin hears the input itself, through its own diffusion: no predelay, no swell.
+            // The twin hears the input itself, through its own diffusion: no predelay; in MASSIVE, its own swell.
             twinIn_ = clamp01(twinIn_ + twinInStep_);
             twinInL_[i] = twinDiffuser_[0].process(twinIn_ * l);
             twinInR_[i] = twinDiffuser_[1].process(twinIn_ * r);
+            // MASSIVE's twin swells as its tank does, so what you play over a frozen MASSIVE
+            // arrives as a wash, not two distinct repeats first (owner, 22 Oct 2026).
+            twinSwell_.process(twinInL_[i], twinInR_[i]);
             twinL_[i] = twinR_[i] = 0.0f;
             swell_.process(pl, pr);
             if (hissGain_ > 0.0f || crackleChance_ > 0.0f) {

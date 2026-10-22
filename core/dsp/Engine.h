@@ -44,7 +44,7 @@ public:
     // Floats of each memory kind the Engine needs at this sample rate.
     static constexpr size_t largeFloats(float sampleRate)
     {
-        return dsp::Fdn::memoryFloats(sampleRate) + dsp::Swell::memoryFloats(sampleRate)
+        return dsp::Fdn::memoryFloats(sampleRate) + 2 * dsp::Swell::memoryFloats(sampleRate) // the tank's swell and the twin's
              + dsp::Reverse::memoryFloats(sampleRate) + 2 * dsp::Plate::memoryFloats(sampleRate, voicing::kPlateMaxScale, true)
              + dsp::Fdn::memoryFloats(sampleRate) // the freeze twin
              + dsp::Fdn::memoryFloats(sampleRate, voicing::kReverseMaxLineSeconds) // REVERSE's short reverb
@@ -80,6 +80,8 @@ public:
     // Test hook: scales the tanks' own modulation (0 = none; DRIFT is separate), to check a
     // structure isn't metallic without it (Costello: tune it to sound good unmodulated).
     void  setModulationScale(float k) { modScale_ = k; }
+    // PROTOTYPE, renders/twin_swell: false = the twin as before (no swell), for the A/B page.
+    void  setTwinSwell(bool on) { twinSwellOn_ = on; }
     // PROTOTYPE, renders/plate_modulation: the Plate's long delays wander too (both Plates).
     void  setPlateLongDelayMod(float a) { plate_.setLongDelayMod(a); twinPlate_.setLongDelayMod(a); }
     // PROTOTYPE, renders/tone_shelf: every tank's loss as a shelf crossing at hz (0 = today's).
@@ -142,6 +144,7 @@ private:
     float             predelayNow_ = 0.0f, predelayStep_ = 0.0f, predelayTarget_ = 0.0f; // samples
     dsp::Diffuser<4>  diffuser_[2];
     dsp::Swell        swell_;
+    dsp::Swell        twinSwell_; // MASSIVE's twin swells like its tank (owner: no repeats over a frozen MASSIVE)
     dsp::Fdn          fdn_;
     dsp::Plate        plate_;
     // The freeze twin: the frozen tank's space, with its own decay.
@@ -173,6 +176,7 @@ private:
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f;
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
+    bool  twinSwellOn_ = true; // PROTOTYPE (setTwinSwell)
     float reverseMean_ = -1.0f;
 
     // Freeze (ADR 0009–0011). Button and gate edges this block, by offset.

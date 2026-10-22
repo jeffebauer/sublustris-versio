@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 22 Oct 2026 (two A/B pages to pick on: `plate_modulation`, `tone_shelf`; REVERSE rebuilt the hardware way, on `renders/reverse`; every page now plays nine kinds of material. Every page is rendered from the same build by `tools/render_review_pages.sh`).
+**Last updated:** 22 Oct 2026 (three A/B pages to pick on: `twin_swell`, `plate_modulation`, `tone_shelf`; REVERSE rebuilt the hardware way, on `renders/reverse`; every page now plays nine kinds of material. Every page is rendered from the same build by `tools/render_review_pages.sh`).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
@@ -10,6 +10,7 @@
 - [ ] **MASSIVE's SIZE glide:** SIZE moves bend at most a semitone (ADR 0012), so a full SIZE sweep in MASSIVE glides for ~40 s. Keep that gentle bend, or allow a faster swoop with more bend in MASSIVE only?
 - [ ] **Plugin identity** (one-line answers): keep manufacturer code `Rslo` and company name / bundle-ID prefix as Resilio's, with plugin code `ImVs`? (Same developer, so it groups both plugins together in Ableton.)
 
+- [ ] **Playing over a frozen MASSIVE** (`renders/twin_swell/index.html`, level-matched, picks): after your MASSIVE pick, the layer you play over a frozen MASSIVE (the twin) gets MASSIVE's swell too, so plucks don't make two repeats first. A before, B smooth. Confirm B.
 - [ ] **PLATE, more movement?** (`renders/plate_modulation/index.html`, level-matched, picks): our PLATE moves only one of the four delays in each half of its loop, though the spec says every delay moves (found via Mutable Instruments' Beads, which moves both long delays). A today, B the long delays wander too (about 2 cents). The noise-burst measurements were mixed, so it's for your ears.
 - [ ] **TONE, a warmer noon?** (`renders/tone_shelf/index.html`, level-matched, picks): the audit's top finding. At noon the upper mids ring almost as long as the body, a glassy sheen. B lets them fade sooner (3 kHz 2.4 s instead of 3.7 s on a HALL; lows unchanged). Across HALL, PLATE, MASSIVE, and HALL with TONE bright.
 
