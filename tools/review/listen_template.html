@@ -227,7 +227,9 @@ const howto = [
 ];
 const BLEND = !!DATA.wetOnly && anyDry;   // versions are 100 % wet: the page mixes in the dry
 if (BLEND) howto.push("<b>MIX</b> in the top bar sets dry/wet for every card, live, as the module's knob does (equal-power: 50 % is an even blend). Try a few balances: a tail can work at 30 % and swamp at 70 %.");
-if (anyDry) howto.push("<b>Dry</b> (<kbd>0</kbd>) is the input alone, no reverb, for reference.");
+// With MIX, the fader already takes you to the dry (fully left), so there is no separate Dry version.
+const SHOW_DRY = anyDry && !BLEND;
+if (SHOW_DRY) howto.push("<b>Dry</b> (<kbd>0</kbd>) is the input alone, no reverb, for reference.");
 howto.push("Cards in a row share one position: switch to another column and it carries on from the same moment.");
 howto.push((DATA.rows.some(r => r.marks.length) ? "The bar under each picture is in chapters (hover for names): click one to jump there. " : "") +
   "<b>Drag across a picture</b> to loop just that stretch, in every card of the row; <kbd>Esc</kbd> stops looping.");
@@ -654,7 +656,7 @@ function makeGroup(row, col, panel, key) {
   g.render = () => {
     voicesEl.innerHTML = "";
     const entries = g.order.map((vi, pos) => ({ vi, pos }));
-    if (dry) entries.push({ vi: DRY, pos: DRY });
+    if (dry && SHOW_DRY) entries.push({ vi: DRY, pos: DRY });
     if (g.ref) entries.push({ vi: REF, pos: REF });
     const srcs = g.sources();
     g.buttons = entries.map(({ vi, pos }) => {
@@ -868,14 +870,14 @@ function renderGlobal() {
   labels.forEach((lab, i) => add(blindEl.checked ? "#" + (i + 1) : lab, VC(i),
     blindEl.checked ? "position " + (i + 1) + " in every card" : (DATA.legend && DATA.legend[i].n) || "version " + lab + " in every card",
     g => { if (i < g.order.length) g.select(blindEl.checked ? g.order[i] : i); }));
-  if (anyDry) add("Dry", "var(--dry)", "the dry input in every card", g => g.select(g.panel.variants.length));
+  if (SHOW_DRY) add("Dry", "var(--dry)", "the dry input in every card", g => g.select(g.panel.variants.length));
   if (DATA.references.length) {
     const b = add("R", "var(--ref)", "the reference in every card", g => { if (g.ref) g.select(g.panel.variants.length + 1); });
     b.hidden = !refEl.value;
   }
 }
 renderGlobal();
-if (maxVariants < 2 && !DATA.references.length && !anyDry) globalEl.parentElement.querySelector(".tlabel").hidden = globalEl.hidden = true;
+if (maxVariants < 2 && !DATA.references.length && !SHOW_DRY) globalEl.parentElement.querySelector(".tlabel").hidden = globalEl.hidden = true;
 
 /* ---------- notes ---------- */
 const notesEl = $("notes");
@@ -968,7 +970,7 @@ window.addEventListener("resize", () => groups.forEach(g => g.drawSpec()));
 /* ---------- keys ---------- */
 const nk = Math.min(9, maxVariants);
 $("keys").innerHTML = `Keys, on the card you last touched: ${nk > 1 ? `<kbd>1</kbd>–<kbd>${nk}</kbd> switch version · ` : ""}` +
-  `${anyDry ? "<kbd>0</kbd> dry · " : ""}${DATA.references.length ? "<kbd>R</kbd> the reference · " : ""}<kbd>Space</kbd> play/pause · ` +
+  `${SHOW_DRY ? "<kbd>0</kbd> dry · " : ""}${DATA.references.length ? "<kbd>R</kbd> the reference · " : ""}<kbd>Space</kbd> play/pause · ` +
   `<kbd>←</kbd> <kbd>→</kbd> 2 s back/forward · ${BLEND ? "<kbd>[</kbd> <kbd>]</kbd> MIX −/+ 5 % · " : ""}` +
   `${DATA.rows.some(r => r.loud.length) ? " · <kbd>L</kbd> next loud moment" : ""} · <kbd>Esc</kbd> stop looping · <kbd>Tab</kbd> between buttons.`;
 document.addEventListener("keydown", e => {
@@ -978,7 +980,7 @@ document.addEventListener("keydown", e => {
   if (e.key >= "1" && e.key <= "9") {
     const pos = +e.key - 1;
     if (pos < g.order.length) { g.select(g.order[pos]); e.preventDefault(); }
-  } else if (e.key === "0" && g.row.dry) { g.select(n); e.preventDefault(); }
+  } else if (e.key === "0" && g.row.dry && SHOW_DRY) { g.select(n); e.preventDefault(); }
   else if ((e.key === "r" || e.key === "R") && g.ref) { g.select(n + 1); e.preventDefault(); }
   else if (e.key === " ") { g.playing ? g.pause() : g.play(); e.preventDefault(); }
   else if (e.key === "ArrowLeft") { g.seek(g.position() - 2); e.preventDefault(); }

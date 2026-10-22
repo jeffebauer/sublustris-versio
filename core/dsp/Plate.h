@@ -80,6 +80,8 @@ public:
     // (SPEC §2.3 rule 1; Beads modulates both of its long delays). 0 = off.
     void setLongDelayMod(float amount) { longMod_ = amount; }
     void setShelfHz(float hz) { shelfHz_ = hz; } // PROTOTYPE (Governor.h absorbent)
+    // Test hook: scales every wander in the loop (chorus, floor, long delays); 0 = still.
+    void setModScale(float k) { modScale_ = k; }
 
     // Adds the wet to outL/outR (does not clear them).
     void process(const float* inL, const float* inR, float* outL, float* outR, int n);
@@ -112,7 +114,7 @@ private:
     float    decayRate_ = 0.2f, highRatio_ = 0.45f, levelGain_ = 1.0f, extraRate_ = 0.0f;
     bool     colour_ = true;
     float    modDepth_ = 1.0f;
-    float    shelfHz_ = 0.0f;
+    float    shelfHz_ = 0.0f, modScale_ = 1.0f;
     float    longMod_ = 0.0f; // PROTOTYPE: 0 = only ap1 moves (today), 1 = d1 and d2 too
     DriftAmounts drift_;
     FloorGovernor governor_;

@@ -30,7 +30,7 @@ Picks and notes persist in the browser (localStorage) where it allows.
 Playback is Web Audio: a card's versions play sample-locked and switching
 crossfades (no clicks). Pages opened from Finder can't read WAVs into Web
 Audio, so each WAV is also written next to the page as _audio/<name>.js
-(base64, ~1.33x the WAV) and the page decodes that.
+(FLAC in base64, about 0.7x the WAV) and the page decodes that.
 
 What it reads from <dir> (first that applies):
   1. <dir>/manifest.json (rv_render --sweep, docs/m1-contracts.md) + sidecars.

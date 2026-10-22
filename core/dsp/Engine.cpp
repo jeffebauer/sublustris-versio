@@ -279,6 +279,7 @@ void Engine::applySpace(bool snap)
         plate_.setGovernor(governor);
         plate_.setFloorDb(floorDb);
         plate_.setModDepth(1.0f - freezeMix_ * (1.0f - voicing::kFrozenPlateModDepth));
+        plate_.setModScale(modScale_);
         plate_.setHoldDb(holdDb);
     } else {
         const float mean = massive ? map::massiveMeanSeconds(size) : map::hallMeanSeconds(size);
@@ -301,7 +302,7 @@ void Engine::applySpace(bool snap)
         fdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
         fdn_.setBassMultiply(weighty ? voicing::kProtoMassiveBassMultiply : 1.0f);
         // Deeper drift, easing back to the floor's depth while frozen (a pad stays steady).
-        fdn_.setModDepth(weighty ? 1.0f + (voicing::kProtoMassiveModDepth - 1.0f) * (1.0f - freezeMix_) : 1.0f);
+        fdn_.setModDepth(modScale_ * (weighty ? 1.0f + (voicing::kProtoMassiveModDepth - 1.0f) * (1.0f - freezeMix_) : 1.0f));
     }
 
     // ERA in the loop and DRIFT (SPEC §4.6, §4.7). Freezing glides the

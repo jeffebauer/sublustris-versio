@@ -34,7 +34,9 @@ make -C firmware all-variants                               # release / m0test /
 python3 tools/make_stimulus.py                              # test_audio/stimulus (WAVs are not in git)
 build/iv_render --sweep presets/sweeps/<name>.json --out-dir renders/<name>
 python3 tools/review/make_review.py renders/<name>
-python3 tools/sweetspot.py                                  # dead zones / cliffs per knob
+.venv/bin/python tools/sweetspot.py                        # dead zones / cliffs per knob -> docs/sweetspot.md
+.venv/bin/python tools/make_material.py                     # listening material (python3 -m venv .venv; pip install numpy soundfile)
+.venv/bin/python tools/make_reference_kit.py                # the kit for the owner's reference units; tools/ingest_reference.py reads them back
 tools/install_plugin.sh <commit>                            # put a build in Ableton
 ```
 

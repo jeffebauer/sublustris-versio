@@ -15,6 +15,8 @@
 - [ ] **PLATE, more movement?** (`renders/plate_modulation/index.html`, level-matched, picks): our PLATE moves only one of the four delays in each half of its loop, though the spec says every delay moves (found via Mutable Instruments' Beads, which moves both long delays). A today, B the long delays wander too (about 2 cents). The noise-burst measurements were mixed, so it's for your ears.
 - [ ] **TONE, a warmer noon?** (`renders/tone_shelf/index.html`, level-matched, picks): the audit's top finding. At noon the upper mids ring almost as long as the body, a glassy sheen. B lets them fade sooner (3 kHz 2.4 s instead of 3.7 s on a HALL; lows unchanged). Across HALL, PLATE, MASSIVE, and HALL with TONE bright.
 
+- [ ] **Testing plan** (`docs/research/reverb-testing-practices.md`, "Planned"): what reverb makers do that we don't yet: an echo-density measure ("grainy"), golden renders so an unintended sound change fails the build, decay per band on pages, and a hidden duplicate on choice pages that shows when a pick is a coin flip. Which of these do you want, and in what order? (The quick wins are already in.)
+
 ### Listen (after your notes)
 - [ ] **M1: the Hall** (`renders/m1_hall/index.html`): SIZE now goes from a small room (shorter lines, and shorter tails, as a small room has) to a huge hall. Is small small enough, and has the buzz on long small rooms gone? TONE's ends go further (dark: more lows, fewer highs; bright: the opposite). Too much, too little?
 - [ ] **M4: MASSIVE and ATTACK** (`renders/m4_massive/index.html`): MASSIVE now starts with what you play and swells from there (it was silent for 1.2 s), and SIZE fully CCW is a wash instead of rhythmic echoes. Does MASSIVE feel connected to the source now? Is the smallest SIZE still big enough?
@@ -29,21 +31,24 @@
 - [ ] **M3 CPU check** (after M0): flash `firmware/build/immensio_versio_profile.bin` and send Claude the serial CPU report, so the CPU budget is measured, not estimated. Include a frozen MASSIVE: the twin and MASSIVE's early taps are the heaviest case.
 
 ### When convenient
-- [ ] **Reference recordings** (yes, useful: they let each page carry a "Compare with" version R). Play the dry material in `renders/_material/` (skank, vibes, stabs, pad, lead, drums, bass, keys, voice; each already has 12 s of silence for the tail) through each unit, **100 % wet**, record at 48 kHz / 24-bit, and save as `test_audio/reference/<unit>_<algorithm>/<material>.wav` with a `settings.txt` beside it (knob positions in words). Never committed. In order of use:
-  1. **Eventide H9 *Reverse*** (and Blackhole with Gravity negative): the yardstick for our new REVERSE.
-  2. **Valhalla Supermassive** Sagittarius, Andromeda and Large Magellanic Cloud: for MASSIVE.
-  3. **Meris Mercury7 Cathedra**: for HALL and DRIFT.
-  4. **Valhalla Plate** and **VintageVerb** (an 80s mode): for PLATE and ERA.
-  5. **Vongon Ultrasheer**, **Intellijel Swells**, **Valhalla Room**, **H9 Blackhole**: as you have time (ERA's vintage end, BLOOM, small HALLs, infinite tails).
+- [ ] **Reference recordings** (when convenient): the step-by-step is in `docs/reference-recording-guide.md`. Play the kit (`test_audio/reference_kit/`: calibrate, measure, music) through each unit, 100 % wet, at matched decays (about 2 / 5 / 15 s, plus infinite). Knob-only units get one 2-minute calibration take first; I'll tell you the positions. Start with the **H9 Reverse** (the yardstick for REVERSE), then Supermassive, Mercury7 Cathedra, Valhalla Plate and VintageVerb.
 
 ## Waiting on Claude
 
 - **REVERSE tuning**, only if you have notes on `renders/reverse` (shape, stop, grain).
 - **M8 tuning** from your listening notes on the pages above.
+- **M8 findings to confirm by ear first** (`docs/sweetspot.md`, `docs/research/reverb-testing-practices.md`):
+  - ERA's last stretch (the Midiverb stage) jumps about 20× harder than the rest of the knob, and its first 20 % barely changes anything measurable.
+  - PLATE: TONE's first step from fully CCW jumps, and so does SIZE's last.
+  - MASSIVE: DECAY's first step jumps; DRIFT is nearly flat from 20–50 %; TIME in NORMAL barely moves anything for its first 30 %.
+  - The PLATE at full SIZE rings once its modulation is off: the modulation is hiding a resonance.
 - **Modulation ideas from Mutable Instruments** (research doc above) and the DSP audit session's findings: to try together on an A/B page, starting with the PLATE gap.
 
 ## Done
 
+- 22 Oct 2026: **Testing practice researched and the quick wins adopted** (`docs/research/reverb-testing-practices.md`): pages level-match by loudness, not RMS; a new test checks HALL, MASSIVE and the small PLATE aren't metallic with their modulation off (Valhalla's rule); the sweet-spot check works again (`docs/sweetspot.md`).
+- 22 Oct 2026: **Listening pages tidied**: the separate Dry version is gone where the MIX fader is (MIX fully left is the dry); the p7_sw1_demos and REVERSE pages deleted (decided); page audio stored as lossless FLAC (pages ~40 % smaller).
+- 22 Oct 2026: **Reference recording kit and guide** (`docs/reference-recording-guide.md`): settings for all ten of your units, researched from their manuals (`docs/research/reference-devices.md`); the kit and the tool that measures and splits your recordings are tested on our own HALL.
 - 22 Oct 2026: **Your freeze notes measured** (an upper harmonic building in a frozen MASSIVE; two repeats on the skank into a frozen PLATE): neither shows in the current build. A frozen pad's spectrum doesn't get peakier over a minute, and the PLATE's twin has no distinct echoes. Both notes predate the twin; re-listen on M5.
 - 22 Oct 2026: **SPEC's stale "cubic interpolation" lines fixed** (it's been allpass interpolation since v1.0.2).
 - 22 Oct 2026: **REVERSE confirmed**: "Reverse, the hardware way sounds much better."

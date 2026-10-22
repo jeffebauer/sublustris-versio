@@ -20,3 +20,5 @@ __pycache__/
 build-*/
 build-config.log
 .venv/
+/test_audio/reference_kit/
+/test_audio/reference/

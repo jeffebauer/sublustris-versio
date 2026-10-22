@@ -49,6 +49,8 @@ struct Press {
 struct Setting {
     int   space = 1, attack = 0;
     float decay = 0.5f, size = 0.5f, mix = 1.0f, time = 0.0f;
+    float mod = 1.0f;  // the tanks' own modulation (Engine::setModulationScale)
+    float era = -1.0f; // < 0: ERA's default
 };
 
 // knobAt: optional {seconds, SIZE, DECAY} change while running.
@@ -68,6 +70,8 @@ Stereo render(const std::vector<float>& in, const Setting& s, const std::vector<
     e.setParam(iv::ParamId::Size, s.size);
     e.setParam(iv::ParamId::Mix, s.mix);
     e.setParam(iv::ParamId::Time, s.time);
+    if (s.era >= 0.0f) e.setParam(iv::ParamId::Era, s.era);
+    e.setModulationScale(s.mod);
     e.reset();
     Stereo out{std::vector<float>(in.size()), std::vector<float>(in.size())};
     size_t pi = 0, mi = 0;
@@ -361,6 +365,34 @@ void reverseRestsWhileFrozen()
 
 } // namespace
 
+// Costello (Valhalla): a reverb should sound good with its modulation off; modulation is
+// seasoning, and it can hide a ringing structure. With every tank's own wander off (ERA clean,
+// DRIFT centred), noise bursts must not ring. Measured 22 Oct 2026: HALL and MASSIVE pass at
+// every SIZE; the PLATE passes at SIZE 0 but rings at full SIZE (15 dB at 9.8 kHz), an M8
+// finding (docs/TASKS.md), so it's checked at SIZE 0 only until that's fixed.
+void notMetallicUnmodulated()
+{
+    std::vector<float> hits(size_t(10.0f * kSr), 0.0f);
+    for (int h = 0; h < 3; ++h)
+        for (size_t i = 0; i < 1200; ++i) hits[size_t(h) * 24000 + i] = 0.6f * noise() * std::exp(-float(i) / 200.0f);
+    struct Case { int space; float size; };
+    for (const Case c : {Case{1, 0.0f}, Case{1, 1.0f}, Case{2, 0.0f}, Case{2, 1.0f}, Case{0, 0.0f}}) {
+        Setting s;
+        s.space = c.space;
+        s.size = c.size;
+        s.decay = 0.6f;
+        s.mod = 0.0f;
+        s.era = 0.0f;
+        const Stereo out = render(hits, s);
+        const auto m = iv::metrics::compute({out.l, out.r}, kSr);
+        char msg[180];
+        std::snprintf(msg, sizeof msg, "%s at SIZE %.0f not metallic with its modulation off: ringing %.1f dB",
+                      c.space == 0 ? "PLATE" : (c.space == 1 ? "HALL" : "MASSIVE"), c.size,
+                      std::isfinite(m.ringingDb) ? m.ringingDb : 0.0);
+        check(finite(out) && !m.ringing, msg);
+    }
+}
+
 int main()
 {
     gestures();
@@ -371,6 +403,7 @@ int main()
     paint();
     clickFree();
     reverseRestsWhileFrozen();
+    notMetallicUnmodulated();
     std::printf("%d failure(s)\n", failures);
     return failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }

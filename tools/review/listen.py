@@ -25,6 +25,7 @@ import json
 import math
 import os
 import re
+import subprocess
 import struct
 import sys
 from pathlib import Path
@@ -888,8 +889,25 @@ def variant_title(var_key, items):
     return param_name(var_key)
 
 
+def wav_loudness_lufs(path):
+    """Integrated loudness (ITU-R BS.1770, gated) via ffmpeg's ebur128: the gate leaves out the
+    silence after the tail, so a longer tail doesn't read as quieter, and K-weighting tracks what
+    the ear calls loud better than plain RMS (level-matching should land within ~0.5 dB, or the
+    louder version tends to win). None without ffmpeg."""
+    try:
+        err = subprocess.run(["ffmpeg", "-nostats", "-i", str(path), "-af", "ebur128", "-f", "null", "-"],
+                             capture_output=True, text=True, check=True).stderr
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    m = re.findall(r"I:\s+(-?[\d.]+) LUFS", err)
+    v = float(m[-1]) if m else None
+    return v if v is not None and v > -69.9 else None  # -70: all below the gate (silence)
+
+
 def item_json(it, rel):
-    rms = it.metrics.get("rms_dbfs") if isinstance(it.metrics, dict) else None
+    rms = wav_loudness_lufs(it.wav)
+    if rms is None:
+        rms = it.metrics.get("rms_dbfs") if isinstance(it.metrics, dict) else None
     if not isinstance(rms, (int, float)) or isinstance(rms, bool):
         rms = wav_rms_dbfs(it.wav)
     return {
@@ -921,6 +939,19 @@ def collect(root, with_spec=True):
     return collect_from_wavs(root, with_spec), "wavs", None
 
 
+def audio_bytes(wav):
+    """The WAV as lossless FLAC when ffmpeg is there (about half the size; every current
+    browser's decodeAudioData reads it, sample for sample), else the WAV itself."""
+    try:
+        out = subprocess.run(["ffmpeg", "-v", "error", "-i", str(wav), "-c:a", "flac", "-compression_level", "8",
+                              "-f", "flac", "pipe:1"], capture_output=True, check=True).stdout
+        if out:
+            return out
+    except (OSError, subprocess.CalledProcessError):
+        pass
+    return wav.read_bytes()
+
+
 def write_audio_sidecars(data, out_dir):
     """Writes every WAV on the page as _audio/<name>.js next to the page.
 
@@ -941,7 +972,7 @@ def write_audio_sidecars(data, out_dir):
         src["audioJs"] = "_audio/" + name
         if js.exists() and wav.exists() and js.stat().st_mtime >= wav.stat().st_mtime:
             continue
-        b64 = base64.b64encode(wav.read_bytes()).decode("ascii")
+        b64 = base64.b64encode(audio_bytes(wav)).decode("ascii")
         js.write_text("__rvAudio({}, \"{}\");\n".format(json.dumps(src["wav"]), b64), encoding="ascii")
         written += 1
     return written, len(srcs)

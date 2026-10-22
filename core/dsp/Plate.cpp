@@ -154,7 +154,7 @@ void Plate::control(int n)
         }
         br.floorA += floorCoeff * (br.floorTarget - br.floorA);
         br.floorB += floorCoeff * (br.floorA - br.floorB);
-        float target = excursion * (1.0f + modDepth_ * 0.7f * std::sin(6.2831853f * br.lfoPhase) + 0.3f * br.floorB);
+        float target = excursion * (1.0f + modScale_ * (modDepth_ * 0.7f * std::sin(6.2831853f * br.lfoPhase) + 0.3f * br.floorB));
         if (colour_) {
             // DRIFT swings the modulated allpass's length (the buffer has
             // room for the longest swing).
@@ -167,7 +167,7 @@ void Plate::control(int n)
 
         // PROTOTYPE: d1 and d2 wander too, each at its own rate (a sine plus the floor's random
         // walk), about 2 cents; eased with modDepth_ while frozen like ap1.
-        const float longDepth = longMod_ * modDepth_ * voicing::kPlateLongModSeconds * sampleRate_;
+        const float longDepth = longMod_ * modDepth_ * modScale_ * voicing::kPlateLongModSeconds * sampleRate_;
         for (int j = 0; j < 2; ++j) {
             br.longPhase[j] += voicing::kPlateLongModHz[2 * b + j] * dt;
             if (br.longPhase[j] >= 1.0f) br.longPhase[j] -= 1.0f;

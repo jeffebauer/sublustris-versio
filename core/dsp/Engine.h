@@ -80,6 +80,9 @@ public:
     // PROTOTYPE, renders/massive_options: 0 MASSIVE today, 1 no built-in swell in NORMAL,
     // 2 no swell plus weight (lows ring longer, highs fade sooner) and motion (deeper drift).
     void  setMassivePrototype(int v) { massiveProto_ = v; }
+    // Test hook: scales the tanks' own modulation (0 = none; DRIFT is separate), to check a
+    // structure isn't metallic without it (Costello: tune it to sound good unmodulated).
+    void  setModulationScale(float k) { modScale_ = k; }
     // PROTOTYPE, renders/plate_modulation: the Plate's long delays wander too (both Plates).
     void  setPlateLongDelayMod(float a) { plate_.setLongDelayMod(a); twinPlate_.setLongDelayMod(a); }
     // PROTOTYPE, renders/tone_shelf: every tank's loss as a shelf crossing at hz (0 = today's).
@@ -173,6 +176,7 @@ private:
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f;
     bool  reverseRunning_ = false;
     int   massiveProto_ = 0; // PROTOTYPE (setMassivePrototype)
+    float modScale_ = 1.0f;  // test hook (setModulationScale)
     float reverseMean_ = -1.0f;
 
     // Freeze (ADR 0009–0011). Button and gate edges this block, by offset.

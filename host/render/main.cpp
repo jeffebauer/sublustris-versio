@@ -121,6 +121,7 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     engine.prepare(sampleRate, block);
     // Prototype, desktop only: IV_MASSIVE_PROTO picks the MASSIVE on trial (Engine::setMassivePrototype).
     if (const char* mp = std::getenv("IV_MASSIVE_PROTO")) engine.setMassivePrototype(std::atoi(mp));
+    if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
     if (const char* ts = std::getenv("IV_TONE_SHELF")) engine.setLossShelfHz(float(std::atof(ts)));
     if (const char* pl = std::getenv("IV_PLATE_LONGMOD")) engine.setPlateLongDelayMod(float(std::atof(pl)));
     if (!presetPath.empty()) {
