@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 22 Oct 2026, session 3 (testing plan chosen; three A/B pages still to pick on: `twin_swell`, `plate_modulation`, `tone_shelf`).
+**Last updated:** 22 Oct 2026, session 3 (testing plan chosen; two A/B pages still to pick on: `plate_modulation`, `tone_shelf`; they and every page now have a Tail button, and pick pages repeat one row).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
@@ -10,7 +10,6 @@
 - [ ] **MASSIVE's SIZE glide:** SIZE moves bend at most a semitone (ADR 0012), so a full SIZE sweep in MASSIVE glides for ~40 s. Keep that gentle bend, or allow a faster swoop with more bend in MASSIVE only?
 - [ ] **Plugin identity** (one-line answers): keep manufacturer code `Rslo` and company name / bundle-ID prefix as Resilio's, with plugin code `ImVs`? (Same developer, so it groups both plugins together in Ableton.)
 
-- [ ] **Playing over a frozen MASSIVE** (`renders/twin_swell/index.html`, level-matched, picks): after your MASSIVE pick, the layer you play over a frozen MASSIVE (the twin) gets MASSIVE's swell too, so plucks don't make two repeats first. A before, B smooth. Confirm B.
 - [ ] **PLATE, more movement?** (`renders/plate_modulation/index.html`, level-matched, picks): our PLATE moves only one of the four delays in each half of its loop, though the spec says every delay moves (found via Mutable Instruments' Beads, which moves both long delays). A today, B the long delays wander too (about 2 cents). The noise-burst measurements were mixed, so it's for your ears.
 - [ ] **TONE, a warmer noon?** (`renders/tone_shelf/index.html`, level-matched, picks): the audit's top finding. At noon the upper mids ring almost as long as the body, a glassy sheen. B lets them fade sooner (3 kHz 2.4 s instead of 3.7 s on a HALL; lows unchanged). Across HALL, PLATE, MASSIVE, and HALL with TONE bright.
 
@@ -44,6 +43,7 @@
 
 ## Done
 
+- 22 Oct 2026: **Playing over a frozen MASSIVE: B confirmed** (smooth, on all 18 cards). The twin swells like MASSIVE's tank; the A/B switch and its page are gone.
 - 22 Oct 2026: **The PLATE's full-SIZE ring** (your OK): nothing you could hear. It only showed with the PLATE's movement switched off, at the knob's last notch. Full SIZE is now 0.6 % smaller, which removes it, and the test checks small, medium and full PLATEs.
 - 22 Oct 2026: **Testing plan chosen**: yes to the grainy check, the safety net, decay per band, the hidden twin, the tail button and all the lab checks; the wobble meter later; low voice + dry piano and a full mix as new material (no long frozen pad).
 - 22 Oct 2026: **MASSIVE keeps its swell** (A on 15 of 18 cards): without it, plucky sounds get two less-diffuse repeats before the wash; the swell smears them in. Recorded in ADR 0007; the prototype and its page are gone.
