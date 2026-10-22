@@ -43,25 +43,22 @@ public:
                 frac_[c][k] = (float(k) + 0.5f + 0.8f * jitter) / float(kTaps);
                 sign_[c][k] = (s & 0x80000000u) ? -1.0f : 1.0f;
             }
-        setCurve(curve_);
+        setSCurve(sCurve_);
         reset();
         return ok;
     }
 
-    // PROTOTYPE (renders/swell_curve): the shape of the taps' rise, x = 0..1 over the span.
-    // 0 linear (today), 1 S-curve (raised cosine), 2 crescendo (a steady 30 dB rise in dB),
-    // 3 arrive-and-settle (RC charge, 1 - e^-3x).
-    void setCurve(int curve)
+    // The shape of the taps' rise, x = 0..1 over the span: linear (the tank's), or an
+    // S-curve (raised cosine) that eases in and settles into place, MASSIVE's twin
+    // (owner, renders/swell_curve: B on all 18 cards over linear, crescendo, RC).
+    void setSCurve(bool on)
     {
-        curve_ = curve;
+        sCurve_ = on;
         float energy = 0.0f;
         for (int c = 0; c < 2; ++c)
             for (int k = 0; k < kTaps; ++k) {
                 const float x = (float(k) + 1.0f) / float(kTaps);
-                const float g = curve == 1 ? 0.5f - 0.5f * std::cos(3.14159265f * x)
-                              : curve == 2 ? std::pow(10.0f, -1.5f * (1.0f - x))
-                              : curve == 3 ? (1.0f - std::exp(-3.0f * x)) / (1.0f - std::exp(-3.0f))
-                                           : x; // rising: the slab builds
+                const float g = sCurve_ ? 0.5f - 0.5f * std::cos(3.14159265f * x) : x; // rising: the slab builds
                 gain_[c][k] = g;
                 if (c == 0) energy += g * g;
             }
@@ -124,7 +121,7 @@ private:
     DelayLine line_[2];
     float     frac_[2][kTaps] = {}, sign_[2][kTaps] = {}, gain_[2][kTaps] = {}, tapDelay_[2][kTaps] = {};
     float     attackNow_ = 0.0f, attackTarget_ = 0.0f, tapMix_ = 0.0f;
-    int       curve_ = 0;
+    bool      sCurve_ = false;
 };
 
 } // namespace iv::dsp
