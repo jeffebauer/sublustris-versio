@@ -14,7 +14,7 @@
 # Usage: tools/render_review_pages.sh [page ...]   (default: all)
 set -e
 cd "$(dirname "$0")/.."
-R=build/iv_render
+R=${IV_RENDER:-build/iv_render}
 [ -x $R ] || { echo "build/iv_render missing: cmake --build build"; exit 1; }
 SRC=renders/_material
 mkdir -p $SRC

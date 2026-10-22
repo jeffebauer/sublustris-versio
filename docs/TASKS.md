@@ -45,6 +45,8 @@
 
 ## Done
 
+- 23 Oct 2026: **The main reverb's swell stays an even ramp** (A on 21 of 27 cards; MASSIVE 8 of 9). Only the frozen layer gets the S-curve. The page is deleted.
+- 22 Oct 2026: **The layer over a frozen MASSIVE swells in on an S-curve** (B on all 18 cards): it eases in and settles into place instead of rising in an even ramp. The page is deleted.
 - 23 Oct 2026: **PLATE, more movement: B** (all 9 small cards, 7 of 9 large). The PLATE's long delays now wander too. The frozen cards were a coin flip (4 to 4, and the repeated card disagreed), so a frozen PLATE stays as still as before. Your Skank note (a big drop after the first two repeats) measured as the freeze tap itself: from the tap on, chords go into the quieter twin (−10.5 dB), about 6–7 dB below the two before it, the same in A and B.
 - 22 Oct 2026: **Your testing plan is built.** Pages now have a Tail button (T) with a +12 dB switch, a **Numbers** panel per card (decay per band, how soon the tail turns smooth, clarity, width), a grainy flag, and on pick pages a repeated row that catches coin-flip picks. Three new kinds of material: a low voice, a dry piano and a full mix. Underneath: a grainy test and a safety net that fails the build if an approved sound changes without a changelog line. The wobble meter waits for DRIFT tuning.
 - 22 Oct 2026: **Playing over a frozen MASSIVE: B confirmed** (smooth, on all 18 cards). The twin swells like MASSIVE's tank; the A/B switch and its page are gone.

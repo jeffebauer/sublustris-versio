@@ -71,6 +71,7 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
         }
     ready_ &= swell_.prepare(large_, sampleRate);
     ready_ &= twinSwell_.prepare(large_, sampleRate);
+    twinSwell_.setSCurve(true); // eases in, then settles (owner, renders/swell_curve)
     ready_ &= fdn_.prepare(large_, sampleRate, 0x1D5A7u);
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
     ready_ &= reverse_.prepare(large_, sampleRate);
