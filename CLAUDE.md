@@ -19,7 +19,7 @@ A senior designer, new to DSP and embedded C++. Brings the ears and musical goal
 - **Git:** stage explicit paths; never `git commit -a` / `-am`. `git apply --3way` also stages, so check `git status --short` for pre-staged files before any commit. Keep the main checkout on `main`; do branch work in a worktree. Commit after each meaningful step. End messages with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - **Gate on ctest's summary line, not its exit code:** a pipe (`| tail`) reports 0 even when suites fail. Log to a file and check `100% tests passed`.
 - **Never delete or recreate `build/`**: agents and tools share `build/iv_render`. Experiments use a scratch build dir or a worktree.
-- **Audio system:** never run `auval -a`, kill `AudioComponentRegistrar` or `coreaudiod`, or reset AU caches (it once froze CoreAudio and Ableton for Resilio). Validate only our AU (`auval -v aumf ImVs Rslo`), and only with Ableton closed.
+- **Audio system:** never run `auval -a`, kill `AudioComponentRegistrar` or `coreaudiod`, or reset AU caches (it once froze CoreAudio and Ableton for Resilio). Validate only our AU (`auval -v aumf ImVs Ombr`), and only with Ableton closed.
 - **Plugin in Ableton changes only on purpose:** dev builds don't install (`IV_INSTALL_PLUGIN` off). Install a milestone with `tools/install_plugin.sh <commit>`, then update the "Plugin installed" line in `docs/TASKS.md`.
 - **Agent briefs** state: owned files, "don't commit" (or commit in its worktree branch with explicit paths), never delete `build/`, never run system-wide AU commands, and musical targets in the owner's words. Review every agent's diff and re-run the gates yourself before committing.
 - Never connect USB and rack power at once.

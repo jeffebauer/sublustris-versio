@@ -8,7 +8,6 @@
 ### Decide
 - [ ] **The held-tail makeup** (`renders/makeup/index.html`, picks, not level-matched): with it, an infinite tail holds where it settled; without it, with tape wobble and the cassette, MASSIVE sags about 3 dB over 10 minutes and HALL about 2.4 dB (frozen pads hold either way). It's the one place the loop may go a hair over 1. Each card is 20 s at minute 1 and at minute 10. Keep it (A) or drop it (B)?
 - [ ] **MASSIVE's SIZE glide** (`renders/size_glide/index.html`, picks): SIZE turned quickly up, then down. A today (a semitone of bend, a full sweep ~40 s), B about 3 semitones (~13 s), C about 6 (~6 s), MASSIVE only.
-- [ ] **Brand name** for the maker both plugins sit under (decided 23 Oct: Resilio and Immensio stay grouped under one maker). Direction: space and air, plus diffusion, change over time, time, decay, vastness. **Shortlist:** Ombra and Penumbra (searched 23 Oct: no audio maker, plugin, pedal or module by either name; Ombra is also a Polyend Tracker drum-pack title; Umbra is taken by two plugins). Also Stillwater Audio (caveat: close to Stillwater Designs and Audio, maker of KICKER car audio, and to Stillwell Audio plugins). Before committing: trademark registers (USPTO, EUIPO, UK IPO) and the web address. Ruled out as taken: Halcyon (Halcyon Modular makes Eurorack; Halcyon Digital, Origin Effects pedals, SoundSpot plugin), Far Field (Farfield Audio). Its 4-letter maker code follows, settled once (a later change makes Ableton see new plugins). Not "Versio" (Noise Engineering's).
 
 
 
@@ -31,6 +30,11 @@
 
 ## Waiting on Claude
 
+- **M1 notes (23 Oct)**, to measure first, then demo:
+  - Small HALL: "slightly metallic yet dampened resonances building up, particularly on LARGE". Reduce them in the reverb, or raise the smallest SIZE.
+  - Infinite: unexpected peaks and drops. The ducking is too extreme and holds too long, then the held tail jumps up when you stop. Revisit "ducking is always DARKEN" (ADR 0014): a new listening test with the new material and today's reverb, with attack/release options, "closer to 4:1 compression than extreme ducking, so it feels cohesive".
+  - TONE: "sounds good".
+- **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
 - **Make the grainy reading steadier:** MASSIVE's density sits right at the 0.9 line from the start, so its "smooth after" jumps between 0.06 and 1.67 s on a one-sample change in the click; the PLATE and HALL readings move by 0.1–0.2 s. Research how others report it (a lower bar, a time average, or a mixing-time estimate) before trusting the known-misses list.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 - **M8 tuning** from your listening notes on the pages above, including MASSIVE medium and large sounding a little uneven on Hits (grainy_start).
@@ -42,6 +46,7 @@
 
 ## Done
 
+- 23 Oct 2026: **Brand: Ombra Audio.** Immensio's plugin now shows as "Ombra Audio: Immensio Versio" (maker code Ombr, plugin code ImVs, bundle com.OmbraAudio.ImmensioVersio). Fixed on the way: the install and release scripts still used Resilio's plugin code (RsVs) and linked Resilio's GitHub. Resilio moves to Ombra Audio in its own repo.
 - 23 Oct 2026: **TONE, a warmer noon: B** (all 36 cards, the repeated row agreeing). Every tank's loss is now a shelf at 2.5 kHz, so the upper mids fade with the highs (ADR 0012 amendment). It also freed 4.4 KB of flash (release 92,948 B).
 - 23 Oct 2026: **Big spaces don't start too grainy** (your listen on `grainy_start`): "overall it sounds good", apart from a couple of MASSIVE medium and large cards that sound a little uneven on Hits (kept for M8 tuning).
 - 23 Oct 2026: **Playing over a frozen pad is louder** (C on all 24 cards; "the sweet spot is between plus3 and plus6"): the twin now sits 6 dB under the pad (+4.4 dB on before). The switch and its page are gone.
