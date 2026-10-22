@@ -325,6 +325,20 @@ def flag_reasons(metrics, ignore=frozenset()):
     return r
 
 
+def acoustics(metrics):
+    """The room-acoustics numbers a page shows under a card (Metrics.h; reverb-testing-practices
+    items 8, 11, 12), or None for an older sidecar without them. Only meaningful on a click
+    render (music never leaves a clean decay): render_review_pages.sh writes one per version
+    as _measure/<folders>/<version>.wav, and measure_sidecar() finds it."""
+    if not isinstance(metrics, dict) or not isinstance(metrics.get("band_t60_s"), list):
+        return None
+    r = lambda v, d=2: round(float(v), d) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+    return {"hz": metrics.get("band_hz") or [], "t60": [r(v) for v in metrics["band_t60_s"]],
+            "edt": [r(v) for v in metrics.get("band_edt_s") or []], "dense": r(metrics.get("echo_density_time_s")),
+            "late": r(metrics.get("echo_density_late")), "c80": r(metrics.get("c80_db"), 1),
+            "iacc": r(metrics.get("iacc_late")), "flat": r(metrics.get("tail_flatness_db"), 1)}
+
+
 # ---------------------------------------------------------------- items
 
 class Item(object):
@@ -448,7 +462,8 @@ def collect_from_wavs(root, with_spec):
     """A/B prototype folders: no manifest, meaning lives in the file and folder names."""
     wavs = []
     for dirpath, dirnames, filenames in os.walk(str(root)):
-        dirnames[:] = sorted(d for d in dirnames if not d.startswith("."))
+        # "_measure" holds the click renders behind a card's numbers; "_audio" the page's audio.
+        dirnames[:] = sorted(d for d in dirnames if not d.startswith((".", "_")))
         rel_depth = len(Path(dirpath).relative_to(root).parts)
         if rel_depth > 3:
             dirnames[:] = []
@@ -799,6 +814,13 @@ def build_page_data(root, out_path, items, refs, rows=None, columns=None, varian
                 vchips = [chip(p, it.params[p]) for p in varying_here if p in it.params and p not in shown_keys]
                 vs.append({"k": k, "n": n, "d": d, "item": iid, "chips": vchips})
                 items_out[iid] = item_json(it, rel)
+                ac = acoustics(measure_metrics(root, it))
+                items_out[iid]["ac"] = ac
+                # The grainy check (host/tests/test_density.cpp): a smooth wash within 0.3 s, and stays one.
+                if ac and ac["dense"] is not None and ac["dense"] > 0.3:
+                    items_out[iid]["flags"].append("grainy start {:.2f} s".format(ac["dense"]))
+                if ac and ac["late"] is not None and ac["late"] < 0.9:
+                    items_out[iid]["flags"].append("grainy tail")
             rms = [items_out[v["item"]]["rms"] for v in vs]
             for v, off in zip(vs, level_offsets(rms)):
                 v["lm"] = off
@@ -975,6 +997,20 @@ def item_json(it, rel):
         "flags": flag_reasons(it.metrics, it.ignore),
         "spec": it.spec,
     }
+
+
+def measure_metrics(root, it):
+    """The metrics of a version's click render: <root>/_measure/<its folders>/<its version>.json."""
+    variant = it.dims.get("variant")
+    if not variant:
+        return None
+    try:
+        folders = it.wav.parent.relative_to(root)
+    except ValueError:
+        return None
+    path = Path(root) / "_measure" / folders / "{}.json".format(variant)
+    sc = try_json(path) if path.exists() else None
+    return sc.get("metrics") if isinstance(sc, dict) else None
 
 
 def collect(root, with_spec=True):

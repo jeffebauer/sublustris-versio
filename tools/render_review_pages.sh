@@ -38,6 +38,8 @@ if [ ! -f $SRC/vibes.wav ] && [ -d $VIBES ]; then
     ffmpeg -v error -y "${args[@]}" -filter_complex "${fil}${mix}amix=inputs=${i}:normalize=0,atrim=0:18,volume=16dB,apad=pad_dur=12" \
         -ac 2 -ar 48000 -c:a pcm_s24le $SRC/vibes.wav
 fi
+# The measuring click: one click, then 40 s for the longest finite tails to decay.
+[ -f $SRC/_click.wav ] || ffmpeg -v error -y -i test_audio/stimulus/07_click_single.wav -af "apad=whole_dur=40" -ar 48000 -c:a pcm_s24le $SRC/_click.wav
 MATERIALS=(skank)
 [ -f $SRC/vibes.wav ] && MATERIALS+=(vibes)
 # The wider set (tools/make_material.py): pads, stabs, a lead, drums, bass, keys, a voice,
@@ -80,6 +82,10 @@ r() {
         [ -f $SRC/${m}_send.wav ] && in=$SRC/${m}_send.wav
         $R $in renders/$page/$dir/${m}_${tag}.wav --set mix=1 --sidecar "${a[@]}" "$@" > /dev/null
     done
+    # One click through the same settings (no gestures): the card's Numbers (decay per band,
+    # grainy, clarity, width) come from this, since music never leaves a clean decay.
+    mkdir -p renders/$page/_measure/$dir
+    $R $SRC/_click.wav renders/$page/_measure/$dir/${tag}.wav --set mix=1 --sidecar "$@" > /dev/null
 }
 page() { # page title readme
     rm -rf renders/$1; mkdir -p renders/$1
