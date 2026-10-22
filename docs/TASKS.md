@@ -6,7 +6,6 @@
 ## To do
 
 ### Decide
-- [ ] **Playing over a frozen pad, louder?** (`renders/twin_level/index.html`, picks, not level-matched): what you play after the freeze tap goes into the twin, today 10.5 dB under the pad (on the PLATE Skank the chords drop 6.7 dB at the tap). B +3, C +6, D +9 dB (the step shrinks to 5.4 / 3.5 / 1.3 dB). Which balance feels right, in PLATE, HALL and MASSIVE?
 - [ ] **Approve or reject (ADR 0008 amendment):** infinite tails and frozen pads get a small, capped "makeup" that lifts a sagging held tail back to its own level (never above, ≤ 0.3 dB/s). Without it, infinite tails with tape wow fade out over ~10 minutes. It's the one place the loop gain may go a hair over 1.
 - [ ] **MASSIVE's SIZE glide:** SIZE moves bend at most a semitone (ADR 0012), so a full SIZE sweep in MASSIVE glides for ~40 s. Keep that gentle bend, or allow a faster swoop with more bend in MASSIVE only?
 - [ ] **Plugin identity** (one-line answers): keep manufacturer code `Rslo` and company name / bundle-ID prefix as Resilio's, with plugin code `ImVs`? (Same developer, so it groups both plugins together in Ableton.)
@@ -45,6 +44,7 @@
 
 ## Done
 
+- 23 Oct 2026: **Playing over a frozen pad is louder** (C on all 24 cards; "the sweet spot is between plus3 and plus6"): the twin now sits 6 dB under the pad (+4.4 dB on before). The switch and its page are gone.
 - 23 Oct 2026: **The main reverb's swell stays an even ramp** (A on 21 of 27 cards; MASSIVE 8 of 9). Only the frozen layer gets the S-curve. The page is deleted.
 - 22 Oct 2026: **The layer over a frozen MASSIVE swells in on an S-curve** (B on all 18 cards): it eases in and settles into place instead of rising in an even ramp. The page is deleted.
 - 23 Oct 2026: **PLATE, more movement: B** (all 9 small cards, 7 of 9 large). The PLATE's long delays now wander too. The frozen cards were a coin flip (4 to 4, and the repeated card disagreed), so a frozen PLATE stays as still as before. Your Skank note (a big drop after the first two repeats) measured as the freeze tap itself: from the tap on, chords go into the quieter twin (−10.5 dB), about 6–7 dB below the two before it, the same in A and B.

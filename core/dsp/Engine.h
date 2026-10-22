@@ -81,8 +81,6 @@ public:
     // Test hook: scales the tanks' own modulation (0 = none; DRIFT is separate), to check a
     // structure isn't metallic without it (Costello: tune it to sound good unmodulated).
     void  setModulationScale(float k) { modScale_ = k; }
-    // PROTOTYPE, renders/twin_level: the twin's level over a frozen pad, dB above kTwinLevel.
-    void  setTwinLevelDb(float db) { twinLevel_ = voicing::kTwinLevel * std::pow(10.0f, db / 20.0f); }
     // PROTOTYPE, renders/tone_shelf: every tank's loss as a shelf crossing at hz (0 = today's).
     void  setLossShelfHz(float hz)
     {
@@ -175,7 +173,6 @@ private:
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f;
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
-    float twinLevel_ = voicing::kTwinLevel; // PROTOTYPE (setTwinLevelDb)
     float reverseMean_ = -1.0f;
 
     // Freeze (ADR 0009–0011). Button and gate edges this block, by offset.

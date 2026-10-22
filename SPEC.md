@@ -6,6 +6,7 @@
 **Status:** Spec **v1.0 (frozen)**, 21 Oct 2026. Input: `IMMENSIO_BRIEF.md`. Vocabulary: `CONTEXT.md`. Decisions: `docs/adr/` (0001–0017; index in `docs/adr/README.md`). Session record: `docs/spec-session.md`. Changes after freeze: new ADR + changelog entry. Numbers marked *(start)* are starting guesses; tuned numbers replace them as milestones confirm them.
 
 ### Changelog
+- v1.0.14 — owner's pick (23 Oct 2026, `renders/twin_level`): **the twin sits 6 dB under the pad** (level 0.5, was 0.3 / −10.5 dB), so playing over a frozen pad is no longer a 6–7 dB drop at the tap. C (+6 dB) on all 24 cards, the repeated row agreeing; "the sweet spot is between plus3 and plus6", so +4.4 dB.
 - v1.0.13 — owner's picks (22–23 Oct 2026, `renders/swell_curve`, B on all 18 cards): **MASSIVE's twin swells in on an S-curve** (raised cosine: eases in, rises through the middle, settles into place) instead of an even ramp; picked over a crescendo and an analog-style arrive-and-settle. The tank's own swell (BLOOM, MASSIVE's mass) stays linear (`renders/tank_scurve`: A on 21 of 27 cards). +544 B flash.
 - v1.0.12 — owner's PLATE pick (23 Oct 2026, `renders/plate_modulation`): **the PLATE's long delays wander too** (§2.3 rule 1: every delay in the tank moves), about 2 cents each at its own rate, as Beads moves both of its long delays. B on all 9 small cards and 7 of 9 large; the frozen cards were a coin flip (4–4, the repeated card disagreed), so **a frozen PLATE keeps today's stillness** (the long wander fades out with the freeze). The twin wanders like an unfrozen PLATE.
 - v1.0.11 — PLATE full SIZE (22 Oct 2026, owner's OK): the tank's largest scale is **1.59**, not 1.6. At exactly 1.6 one 9.8 kHz mode lined up and outlasted its neighbours with the modulation off (15 dB; 8 dB at 99 % SIZE; nothing with the modulation on or on a frozen pad). 0.6 % shorter lines, far below hearing; `test_plate_freeze` now checks the unmodulated PLATE at SIZE 0, ½ and 1.
@@ -133,7 +134,7 @@ Level meters as Resilio (ADR 0031): LED 1–2 In L / In R, LED 3–4 Out L / Out
          │                                   │
          └─frozen──► TWIN tank (same space) ─(paint, a little)─┘ (into the frozen pad)
                           │
-   tank out + twin out (−10.5 dB) ─► ERA output layer (μ-law 24 kHz / 12→10-bit)
+   tank out + twin out (−6 dB, v1.0.14) ─► ERA output layer (μ-law 24 kHz / 12→10-bit)
                           ─► output limiter ─► MIX (equal-power) ◄── dry
                           ─► Out L/R
 ```

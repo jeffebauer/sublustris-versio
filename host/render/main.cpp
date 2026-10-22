@@ -119,7 +119,6 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
                const std::vector<std::string>& sets, std::string& error)
 {
     engine.prepare(sampleRate, block);
-    if (const char* tl = std::getenv("IV_TWIN_DB")) engine.setTwinLevelDb(float(std::atof(tl)));
     if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
     if (const char* ts = std::getenv("IV_TONE_SHELF")) engine.setLossShelfHz(float(std::atof(ts)));
     if (!presetPath.empty()) {

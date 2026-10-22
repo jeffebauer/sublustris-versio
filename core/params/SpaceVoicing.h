@@ -138,7 +138,7 @@ constexpr float kFrozenPlateModDepth = 0.15f;
 // the untouched pad, fading back out within kTwinMaxT60 so the pad returns
 // to what it was. No predelay or swell on its input ("too much
 // predelay... disjointed"). (start)
-constexpr float kTwinLevel     = 0.3f;  // −10.5 dB against the pad: "a more subtle layer... not the main focus"
+constexpr float kTwinLevel     = 0.5f;  // −6 dB against the pad (was 0.3, −10.5 dB): "the sweet spot is between plus3 and plus6" (owner, renders/twin_level, v1.0.14)
 constexpr float kTwinMaxT60    = 8.0f;  // it always fades, even when DECAY is infinite
 constexpr float kTwinFadeSeconds = 0.02f; // its input opens / closes at freeze / unfreeze
 constexpr float kPaintHeadroomDb     = 1.5f;  // a painted pad may grow this far above its frozen level (or the floor)
