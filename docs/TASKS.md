@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 22 Oct 2026 (three A/B pages to pick on: `twin_swell`, `plate_modulation`, `tone_shelf`; REVERSE rebuilt the hardware way, on `renders/reverse`; every page now plays nine kinds of material. Every page is rendered from the same build by `tools/render_review_pages.sh`).
+**Last updated:** 22 Oct 2026, end of session 2 (three A/B pages to pick on: `twin_swell`, `plate_modulation`, `tone_shelf`; every page plays nine kinds of material; the recording guide for your units is ready).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
@@ -34,7 +34,7 @@
 
 ## Waiting on Claude
 
-- **REVERSE tuning**, only if you have notes on `renders/reverse` (shape, stop, grain).
+- **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 - **M8 tuning** from your listening notes on the pages above.
 - **M8 findings to confirm by ear first** (`docs/sweetspot.md`, `docs/research/reverb-testing-practices.md`):
   - ERA's last stretch (the Midiverb stage) jumps about 20× harder than the rest of the knob, and its first 20 % barely changes anything measurable.

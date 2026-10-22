@@ -6,6 +6,7 @@ A huge, warm, lush reverb firmware for the Noise Engineering Versio (Daisy Seed,
 
 ## Read first
 - `SPEC.md`: the spec (frozen v1.0; changes via ADR + changelog line). `CONTEXT.md`: the glossary (use its terms in code, comments and chat). `docs/adr/`: every decision (index `docs/adr/README.md`). `docs/TASKS.md`: the owner's to-do list.
+- `docs/research/`: sourced research (the DSP audit, Mutable Instruments' reverbs, testing practice, the owner's reference units). **Research how established units and papers do a thing before designing it** (REVERSE failed twice when improvised, 22 Oct 2026).
 - `IMMENSIO_BRIEF.md` is the original brief; `docs/spec-session.md` the session that turned it into the spec. Both are history: the spec and ADRs win.
 
 ## The owner
