@@ -17,6 +17,9 @@ Material (skank and vibes are built by render_review_pages.sh itself):
   bass    a dub bassline, low and round (CC0 Baby Blue bass)
   keys    electric piano chords, held and lightly rolled (Wurlitzer, CC BY 3.0)
   voice   spoken phrases with gaps: consonants and sibilance (macOS speech)
+  voicelow  the same idea in a low male voice (macOS Ralph, ~74 Hz): the "metallic?" test
+  piano   a dry, close piano (synthesized: stretched partials, hammer knock, two-stage
+          string decay), single notes, repeats and chords: a ring shows on it first
 
 Samples come from Resilio Versio's test_audio/demo_sources/cc0 (never in either
 repo): Virtuosity Drums and Rusty Drums (Karoryfer, CC0), Karoryfer Baby Blue bass
@@ -394,25 +397,83 @@ def keys():
     m.write("keys")
 
 
-def voice():
-    """Spoken phrases with gaps (macOS speech): consonants and sibilance are where a
-    reverb's diffusion and highs show."""
-    lines = ["Dub.", "Deep in the night, the sound system plays.", "Echo... and space.",
-             "Listen. It sustains, it shimmers, it fades away."]
+def spoken(name: str, speaker: str, lines: list[str]):
     m = Mix(16.0)
     t = 0.1
     with tempfile.TemporaryDirectory() as d:
         for k, text in enumerate(lines):
             p = Path(d) / f"{k}.aiff"
-            subprocess.run(["say", "-v", "Daniel", "-r", "150", "-o", str(p), text], check=True)
+            subprocess.run(["say", "-v", speaker, "-r", "150", "-o", str(p), text], check=True)
             x = load(p)
             m.add(x / np.abs(x).max(), t, 1.0, (-0.1, 0.1)[k % 2])
             t += len(x) / SR + (1.2 if k % 2 else 0.8)
     m.buf = m.buf[: int((t + 0.5) * SR)]
-    m.write("voice")
+    m.write(name)
 
 
-ALL = {"stabs": stabs, "pad": pad, "lead": lead, "drums": drums, "bass": bass, "keys": keys, "voice": voice}
+def voice():
+    """Spoken phrases with gaps (macOS speech): consonants and sibilance are where a
+    reverb's diffusion and highs show."""
+    spoken("voice", "Daniel", ["Dub.", "Deep in the night, the sound system plays.", "Echo... and space.",
+                               "Listen. It sustains, it shimmers, it fades away."])
+
+
+def voicelow():
+    """A low male voice: its dense low harmonics are where a tank's metallic ring shows
+    (reverb-testing-practices item 1, Costello)."""
+    spoken("voicelow", "Ralph", ["Low.", "Down in the basement, the bass rolls on.", "Room... and tone.",
+                                 "Hold it. Let it ring. Now let it go."])
+
+
+def piano_note(m: int, vel: float, hold: float) -> np.ndarray:
+    """One dry piano note: inharmonic partials (B rises toward the top, as short stiff
+    strings do), struck at 1/7 of the string, each partial a pair 0.4 cents apart (two
+    strings beating: the fast-then-slow decay), a short hammer knock, a damper at release."""
+    f0 = hz(m)
+    b = 0.0002 * 2 ** ((m - 48) / 18)
+    t60 = 14.0 * 2 ** (-(m - 36) / 20)          # low strings ring longer
+    n = int((hold + 0.12) * SR)
+    t = np.arange(n) / SR
+    x = np.zeros(n)
+    bright = 0.6 + 0.6 * vel
+    for k in range(1, 40):
+        fk = k * f0 * np.sqrt(1 + b * k * k)
+        if fk > 14000:
+            break
+        a = abs(np.sin(np.pi * k / 7)) / k ** (1.6 - 0.5 * bright)
+        tk = t60 / (1 + 0.25 * k * (fk / 1000) ** 0.5)
+        for det, share, slow in ((1.0, 0.6, 1.0), (2 ** (0.4 / 1200), 0.4, 3.0)):
+            x += a * share * np.exp(-6.91 * t / (tk * slow)) * np.sin(2 * np.pi * fk * det * t + nrng.uniform(0, 6.28))
+    knock = nrng.standard_normal(int(0.006 * SR)) * np.exp(-np.arange(int(0.006 * SR)) / (0.0012 * SR))
+    x[: len(knock)] += 0.15 * vel * np.cumsum(knock) / 40
+    x[: int(0.002 * SR)] *= np.linspace(0, 1, int(0.002 * SR))
+    rel = int(0.12 * SR)
+    x[-rel:] *= np.exp(-np.linspace(0, 6.91, rel))  # the damper: ~0.12 s
+    return x * vel
+
+
+def piano():
+    """A dry, close piano (no room): single notes high and low, a repeated note, a few
+    chords, staccato against held. Pitched partials with sharp attacks are what make a
+    metallic or ringing tank obvious."""
+    spb = 60 / 76
+    events = [  # beat, beats held, notes, velocity
+        (0, 1, ("C5",), 0.8), (1, 1, ("G4",), 0.6), (2, 2, ("E5",), 0.7),
+        (4, 0.25, ("A3",), 0.9), (4.5, 0.25, ("A3",), 0.8), (5, 0.25, ("A3",), 0.85), (5.5, 1.5, ("A3",), 0.7),
+        (8, 3, ("C3", "G3", "E4", "B4"), 0.7), (11, 0.5, ("D6",), 0.6), (11.5, 0.5, ("B5",), 0.55),
+        (12, 3, ("F2", "C3", "A3", "E4"), 0.75), (15, 0.25, ("G5", "B5", "D6"), 0.9),
+        (16, 4, ("A1", "E2", "C4", "G4", "B4"), 0.8),
+    ]
+    m = Mix(0.1 + 20 * spb + 0.5)
+    for beat, l, notes, v in events:
+        for k, nm in enumerate(notes):
+            m.add(piano_note(midi(nm), vary(v, 0.05), l * spb), 0.1 + beat * spb + k * 0.006 + hum(1.5), 1.0,
+                  0.5 * (midi(nm) - 60) / 30)
+    m.write("piano")
+
+
+ALL = {"stabs": stabs, "pad": pad, "lead": lead, "drums": drums, "bass": bass, "keys": keys, "voice": voice,
+       "voicelow": voicelow, "piano": piano}
 
 if __name__ == "__main__":
     want = sys.argv[1:] or list(ALL)

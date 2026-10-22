@@ -40,9 +40,12 @@ if [ ! -f $SRC/vibes.wav ] && [ -d $VIBES ]; then
 fi
 MATERIALS=(skank)
 [ -f $SRC/vibes.wav ] && MATERIALS+=(vibes)
-# The wider set (tools/make_material.py): pads, stabs, a lead, drums, bass, keys, a voice.
-EXTRA=(stabs pad lead drums bass keys voice)
-if [ ! -f $SRC/voice.wav ] && [ -x .venv/bin/python ]; then .venv/bin/python tools/make_material.py > /dev/null; fi
+# The wider set (tools/make_material.py): pads, stabs, a lead, drums, bass, keys, a voice,
+# a low voice and a dry piano (the last two for "metallic?", testing plan item 6).
+EXTRA=(stabs pad lead drums bass keys voice voicelow piano)
+for m in $EXTRA; do
+    if [ ! -f $SRC/$m.wav ] && [ -x .venv/bin/python ]; then .venv/bin/python tools/make_material.py $m > /dev/null; fi
+done
 for m in $EXTRA; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
 
 # Freeze gestures per material (seconds): [press, release] pairs.

@@ -127,6 +127,7 @@ select.ctl { padding: 6px 8px; }
   font: inherit; font-size: 13px; cursor: pointer; }
 .ctl.play { background: var(--ink); color: var(--panel); border-color: var(--ink); min-width: 84px; font-weight: 650; }
 .ctl.loopchip { background: var(--loop); border-color: transparent; }
+.ctl.tailbtn[aria-pressed="true"] { background: var(--loop); border-color: transparent; }
 .time { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; margin-left: auto; }
 /* Chapters, like a chaptered video: the progress bar in segments, one per passage of the music. */
 .chapters { display: flex; gap: 3px; align-items: center; height: 14px; cursor: pointer; touch-action: none; }
@@ -177,6 +178,7 @@ kbd { background: var(--chip); border: 1px solid var(--line); border-radius: 4px
     <label class="toggle" id="lmwrap"><input type="checkbox" id="levelmatch"> Level-match</label>
     <label class="toggle" id="blindwrap"><input type="checkbox" id="blind"> Blind (hide and shuffle)</label>
     <label class="toggle" title="Loop the whole clip (drag across a picture to loop just a passage)"><input type="checkbox" id="loop"> Loop</label>
+    <label class="toggle" id="tailboostwrap" hidden title="While a card loops its tail (its Tail button, or T), play it 12 dB louder: rings and grain hide in the quiet end of a tail"><input type="checkbox" id="tailboost"> Tails +12 dB</label>
     <label class="toggle" id="refwrap" hidden>Compare with <select class="ctl" id="ref"><option value="">no reference</option></select></label>
     <button class="ctl primary" type="button" id="copy">Copy results for Claude</button>
     <button class="ctl" type="button" id="download">Download results</button>
@@ -249,7 +251,7 @@ $("layout").textContent = ax.length ? ax.join(" · ") : "";
 if (DATA.readme) { $("readme").hidden = false; $("readme").querySelector("pre").textContent = DATA.readme; }
 if (DATA.fixed.length) $("fixed").innerHTML = `<span class="lab">Same for every file</span>` + DATA.fixed.map(chipHtml).join("");
 
-const lmEl = $("levelmatch"), blindEl = $("blind"), loopEl = $("loop"), refEl = $("ref");
+const lmEl = $("levelmatch"), blindEl = $("blind"), loopEl = $("loop"), refEl = $("ref"), tailBoostEl = $("tailboost");
 const hasRms = Object.values(DATA.items).some(it => it.rms != null);
 if (!hasRms) $("lmwrap").hidden = true;
 lmEl.checked = !!state.levelMatch && hasRms;
@@ -383,9 +385,11 @@ function makeGroup(row, col, panel, key) {
               ref: null, nodes: null, prev: null, bufs: null };
   // Every card in a row plays the same music, so the row shares one position and one loop: moving
   // to another column carries on from the same moment, and every playhead in the row moves together.
-  const S = row.sync || (row.sync = { pos: 0, region: null });
+  const S = row.sync || (row.sync = { pos: 0, region: null, tail: false });
   Object.defineProperty(g, "pos", { get: () => S.pos, set: v => { S.pos = v; } });
   Object.defineProperty(g, "region", { get: () => S.region, set: v => { S.region = v; } });
+  // Tail mode: the row loops from where the playing stops (row.tail, from the dry input) to the end.
+  Object.defineProperty(g, "tailMode", { get: () => S.tail, set: v => { S.tail = v; } });
   const rowPeers = () => groups.filter(o => o.row === row);
   const rowPlaying = () => rowPeers().find(o => o.playing && o.nodes);
   const n = panel.variants.length;
@@ -418,6 +422,7 @@ function makeGroup(row, col, panel, key) {
         <div class="transport">
           <button class="ctl play" type="button">Play</button>
           <span class="chname"></span>
+          ${row.tail != null ? `<button class="ctl tailbtn" type="button" title="Jump to where the playing stops and loop just the tail (key T)">Tail</button>` : ""}
           <button class="ctl loopchip" type="button" hidden title="Stop looping this passage"></button>
           <span class="time">0:00.0</span>
         </div>
@@ -429,7 +434,7 @@ function makeGroup(row, col, panel, key) {
   const voicesEl = cell.querySelector(".voices"), timeEl = cell.querySelector(".time"), loopChip = cell.querySelector(".loopchip");
   const chapEl = cell.querySelector(".chapters"), chapSegs = [...cell.querySelectorAll(".chap")], chname = cell.querySelector(".chname");
   const playBtn = cell.querySelector(".play"), revealEl = cell.querySelector(".reveal");
-  const pickEl = cell.querySelector(".pick"), canvas = cell.querySelector(".spec");
+  const pickEl = cell.querySelector(".pick"), canvas = cell.querySelector(".spec"), tailBtn = cell.querySelector(".tailbtn");
   g.pick = state.picks[key] != null && state.picks[key] < n ? state.picks[key] : null;
 
   // Every playable source of the card, by voice index: versions, then Dry, then the reference.
@@ -523,12 +528,13 @@ function makeGroup(row, col, panel, key) {
       s.start(t0, offset(g.bufs[DRY]));
       extra.push(s);
     }
+    const level = g.tailMode && tailBoostEl.checked ? 4 : 1;   // +12 dB on a looped tail
     master.gain.setValueAtTime(0, t0);
-    master.gain.linearRampToValueAtTime(1, t0 + EDGE);
+    master.gain.linearRampToValueAtTime(level, t0 + EDGE);
     const nodes = { master, srcs, gains, lms, extra, wetBus, dryBlend, startCtx: t0, startPos: pos, timer: 0 };
     if (looping && pos < b) {
       const tEnd = t0 + (b - pos);
-      master.gain.setValueAtTime(1, Math.max(t0 + EDGE, tEnd - EDGE));
+      master.gain.setValueAtTime(level, Math.max(t0 + EDGE, tEnd - EDGE));
       master.gain.linearRampToValueAtTime(0, tEnd);
       srcs.concat(extra).forEach(src => { if (src) src.stop(tEnd + 0.02); });
       nodes.timer = setTimeout(() => {
@@ -614,16 +620,26 @@ function makeGroup(row, col, panel, key) {
     g.render();
     if (was) g.play();
   };
-  g.setRegion = r => {
+  g.setRegion = (r, tail) => {
     g.region = r && r[1] - r[0] >= 0.05 ? r : null;
+    g.tailMode = !!(tail && g.region);
     rowPeers().forEach(o => { o.showLoop(); o.drawSpec(); });
     const p = rowPlaying();
     if (p) { const at = g.region ? g.region[0] : p.position(); p.restartAt(at); }
   };
   g.showLoop = () => {
     loopChip.hidden = !g.region;
-    if (g.region) loopChip.textContent = `Looping ${fmt(g.region[0])}–${fmt(g.region[1])} ✕`;
+    if (g.region) loopChip.textContent = g.tailMode ? "Looping the tail ✕" : `Looping ${fmt(g.region[0])}–${fmt(g.region[1])} ✕`;
+    if (tailBtn) tailBtn.setAttribute("aria-pressed", g.tailMode ? "true" : "false");
   };
+  g.toggleTail = async () => {
+    if (row.tail == null) return;
+    if (g.tailMode) { g.setRegion(null); return; }
+    if (!(await g.ensureLoaded())) return;
+    g.setRegion([Math.max(0, row.tail - 0.1), g.duration()], true);
+    if (!g.playing) g.play();
+  };
+  if (tailBtn) tailBtn.addEventListener("click", () => g.toggleTail());
   g.restartAt = at => { if (g.playing) { stopNodes(); startAt(at); } };
   loopChip.addEventListener("click", () => g.setRegion(null));
   // Never disabled: a preload starts on focus (mouse-down), and a disabled button would swallow
@@ -948,6 +964,14 @@ blindEl.addEventListener("change", () => {
 });
 lmEl.addEventListener("change", () => { state.levelMatch = lmEl.checked; save(); groups.forEach(g => g.render()); });
 loopEl.addEventListener("change", () => groups.forEach(g => g.restart()));
+if (DATA.rows.some(r => r.tail != null)) {
+  $("tailboostwrap").hidden = false;
+  tailBoostEl.checked = !!state.tailBoost;
+  tailBoostEl.addEventListener("change", () => {
+    state.tailBoost = tailBoostEl.checked; save();
+    groups.forEach(g => { if (g.tailMode) g.restart(); });
+  });
+}
 function showBlend() { blendVal.textContent = blendEl.value + " %"; }
 if (BLEND) {
   $("blendwrap").hidden = false;
@@ -972,7 +996,8 @@ const nk = Math.min(9, maxVariants);
 $("keys").innerHTML = `Keys, on the card you last touched: ${nk > 1 ? `<kbd>1</kbd>–<kbd>${nk}</kbd> switch version · ` : ""}` +
   `${SHOW_DRY ? "<kbd>0</kbd> dry · " : ""}${DATA.references.length ? "<kbd>R</kbd> the reference · " : ""}<kbd>Space</kbd> play/pause · ` +
   `<kbd>←</kbd> <kbd>→</kbd> 2 s back/forward · ${BLEND ? "<kbd>[</kbd> <kbd>]</kbd> MIX −/+ 5 % · " : ""}` +
-  `${DATA.rows.some(r => r.loud.length) ? " · <kbd>L</kbd> next loud moment" : ""} · <kbd>Esc</kbd> stop looping · <kbd>Tab</kbd> between buttons.`;
+  `${DATA.rows.some(r => r.loud.length) ? "<kbd>L</kbd> next loud moment · " : ""}` +
+  `${DATA.rows.some(r => r.tail != null) ? "<kbd>T</kbd> loop the tail · " : ""}<kbd>Esc</kbd> stop looping · <kbd>Tab</kbd> between buttons.`;
 document.addEventListener("keydown", e => {
   const tag = (e.target && e.target.tagName || "").toLowerCase();
   if (!current || tag === "input" || tag === "textarea" || tag === "select" || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -986,6 +1011,7 @@ document.addEventListener("keydown", e => {
   else if (e.key === "ArrowLeft") { g.seek(g.position() - 2); e.preventDefault(); }
   else if (e.key === "ArrowRight") { g.seek(g.position() + 2); e.preventDefault(); }
   else if (e.key === "Escape") g.setRegion(null);
+  else if ((e.key === "t" || e.key === "T") && g.row.tail != null) { g.toggleTail(); e.preventDefault(); }
   else if (BLEND && (e.key === "[" || e.key === "]")) {
     blendEl.value = Math.max(0, Math.min(100, +blendEl.value + (e.key === "]" ? 5 : -5)));
     showBlend(); groups.forEach(o => o.applyBlend()); state.blend = +blendEl.value; save(); e.preventDefault();

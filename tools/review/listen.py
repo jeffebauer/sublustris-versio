@@ -185,8 +185,8 @@ def try_json(path):
         return None
 
 
-def wav_rms_dbfs(path, max_frames=300000):
-    """RMS of a PCM/float WAV (all channels), sampled with a stride so big files stay quick."""
+def wav_pcm(path):
+    """(tag, channels, sample rate, frame bytes, sample bytes, data) of a PCM/float WAV, or None."""
     try:
         with open(path, "rb") as f:
             data = f.read()
@@ -207,32 +207,65 @@ def wav_rms_dbfs(path, max_frames=300000):
         pos += 8 + size + (size & 1)
     if not fmt or raw is None:
         return None
-    tag, ch, _sr, _br, align, bits = fmt
+    tag, ch, sr, _br, align, bits = fmt
     width = bits // 8
     if align <= 0 or width not in (2, 3, 4):
         return None
-    frames = len(raw) // align
+    return tag, ch, sr, align, width, raw
+
+
+def pcm_sample(pcm, frame, c):
+    tag, _ch, _sr, align, width, raw = pcm
+    o = frame * align + c * width
+    if tag == 3 and width == 4:
+        return struct.unpack_from("<f", raw, o)[0]
+    if width == 2:
+        return struct.unpack_from("<h", raw, o)[0] / 32768.0
+    if width == 3:
+        return int.from_bytes(raw[o:o + 3], "little", signed=True) / 8388608.0
+    return struct.unpack_from("<i", raw, o)[0] / 2147483648.0
+
+
+def wav_rms_dbfs(path, max_frames=300000):
+    """RMS of a PCM/float WAV (all channels), sampled with a stride so big files stay quick."""
+    pcm = wav_pcm(path)
+    if pcm is None:
+        return None
+    ch, align = pcm[1], pcm[3]
+    frames = len(pcm[5]) // align
     if frames == 0:
         return None
     stride = max(1, frames // max_frames)
     acc, n = 0.0, 0
     for fi in range(0, frames, stride):
-        base = fi * align
         for c in range(ch):
-            o = base + c * width
-            if tag == 3 and width == 4:
-                x = struct.unpack_from("<f", raw, o)[0]
-            elif width == 2:
-                x = struct.unpack_from("<h", raw, o)[0] / 32768.0
-            elif width == 3:
-                x = int.from_bytes(raw[o:o + 3], "little", signed=True) / 8388608.0
-            else:
-                x = struct.unpack_from("<i", raw, o)[0] / 2147483648.0
+            x = pcm_sample(pcm, fi, c)
             acc += x * x
             n += 1
     if n == 0 or acc <= 0:
         return -200.0
     return 10 * math.log10(acc / n)
+
+
+def wav_last_sound_s(path, below_peak_db=40.0):
+    """Where the playing stops: the end of the last 10 ms stretch within below_peak_db of the
+    file's peak (every 4th sample, all channels). The page's Tail button starts there."""
+    pcm = wav_pcm(path)
+    if pcm is None:
+        return None
+    ch, sr, align = pcm[1], pcm[2], pcm[3]
+    frames = len(pcm[5]) // align
+    win = max(1, sr // 100)
+    peaks = []
+    for start in range(0, frames, win):
+        peaks.append(max((abs(pcm_sample(pcm, fi, c)) for fi in range(start, min(frames, start + win), 4)
+                          for c in range(ch)), default=0.0))
+    top = max(peaks, default=0.0)
+    if top <= 0:
+        return None
+    floor = top * 10 ** (-below_peak_db / 20)
+    last = max(i for i, p in enumerate(peaks) if p >= floor)
+    return round((last + 1) * win / sr, 2)
 
 
 def small_spectrogram(spec):
@@ -789,6 +822,7 @@ def build_page_data(root, out_path, items, refs, rows=None, columns=None, varian
                 iid = "i{}".format(len(items_out))
                 items_out[iid] = dict(item_json(it, rel), flags=[])
                 row["dry"] = iid
+                row["tail"] = wav_last_sound_s(dry)
 
     refs_out = []
     for i, r in enumerate(refs):
