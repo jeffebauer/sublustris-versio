@@ -33,7 +33,9 @@ json::Value metricsToJson(const metrics::Metrics& m)
     v.set("howl_move_db", num(m.howlMoveDb));
     v.set("howl_ok", json::Value::makeBool(m.howlOk));
     // Room-acoustics measures (reverb-testing-practices.md items 8, 11, 12).
-    v.set("echo_density_time_s", num(m.echoDensityTimeS));
+    // echo_density_grain_s replaced echo_density_time_s (a threshold crossing
+    // that jumped with trivial input changes; Metrics.h), 23 Oct 2026.
+    v.set("echo_density_grain_s", num(m.echoDensityGrainS));
     v.set("echo_density_late", num(m.echoDensityLate));
     json::Value hz = json::Value::makeArray(), t60 = json::Value::makeArray(), edt = json::Value::makeArray();
     for (int b = 0; b < metrics::Metrics::kNumBands; ++b) {
@@ -88,7 +90,7 @@ metrics::Metrics jsonToMetrics(const json::Value& v)
     m.howlMovePct  = num("howl_move_pct");
     m.howlMoveDb   = num("howl_move_db");
     m.howlOk       = v.get("howl_ok", false);
-    m.echoDensityTimeS = num("echo_density_time_s");
+    m.echoDensityGrainS = num("echo_density_grain_s");
     m.echoDensityLate  = num("echo_density_late");
     auto bands = [&v](const char* key, double* out) {
         const json::Value* a = v.find(key);

@@ -74,7 +74,24 @@ struct Metrics {
     //
     // Normalized echo density (Abel and Huang 2006): 1 = Gaussian-noise-like
     // ("a smooth wash"), well below 1 = separate echoes ("grainy").
-    double echoDensityTimeS  = std::nan(""); // onset -> NED (100 ms mean) first >= 0.9 and holds 100 ms; worse side
+    //
+    // echoDensityGrainS, "how grainy is the start", in seconds: the density
+    // the first 4 s after the onset miss below the 0.9 bar, as the length of
+    // an all-separate-echoes start (NED 0) that would miss the same amount.
+    // A start that is separate echoes for 0.2 s and then a wash reads 0.2 s;
+    // one that hovers just under the bar for seconds reads a few ms. It is
+    // an area, not a threshold crossing, so it moves smoothly with the
+    // signal (the crossing time below jumped 1.4 s -> 0.06 s on a one-sample
+    // change of the input click). Mean of the two sides (Lindau et al. 2012).
+    // Sidecar key echo_density_grain_s; the grainy gate is kEchoGrainMaxS.
+    double echoDensityGrainS = std::nan("");
+    // DEPRECATED, kept only for host/tests/test_golden.cpp's stored
+    // fingerprints ("smooth_after_s") until they are next rewritten: onset ->
+    // NED (100 ms mean) first >= 0.9 and holds 100 ms; worse side. A
+    // threshold crossing on a profile that can hover at the bar, so a trivial
+    // change of the input moves it by up to 1.6 s. Don't gate on it; not in
+    // the sidecar any more.
+    double echoDensityTimeS  = std::nan("");
     double echoDensityLate   = std::nan(""); // mean NED from 0.3 s after the input stops to the tail end; worse side
     // Decay per octave band, 125 Hz-8 kHz (bandHz), with the same octave
     // filters and decay fit as tools/ingest_reference.py, so renders and
@@ -89,9 +106,16 @@ struct Metrics {
     double tailFlatnessDb    = std::nan(""); // RMS dB deviation of the Schroeder curve from its -5..-35 dB line fit
 };
 
-// Echo-density thresholds for echoDensityTimeS (the "grainy" check).
+// Echo density. kEchoDensityTarget is the bar for "a smooth wash" (the
+// profile's 100 ms mean, which Gaussian noise, even dark noise, keeps above
+// it); kEchoDensityHoldS is that mean's length and the deprecated crossing's
+// hold. echoDensityGrainS reads the first kEchoGrainSpanS after the onset.
+// kEchoGrainMaxS is the grainy gate (test_density, the review pages' flag):
+// a start that misses no more density than 0.1 s of separate echoes.
 constexpr double kEchoDensityTarget = 0.9;
 constexpr double kEchoDensityHoldS  = 0.1;
+constexpr double kEchoGrainSpanS    = 4.0;
+constexpr double kEchoGrainMaxS     = 0.1;
 
 // Calibrated thresholds (docs/m6-metric-calibration.md).
 constexpr double kRingingGrowthDb        = 15.0;

@@ -2,10 +2,11 @@
 // reverb-testing-practices.md items 8, 11 and 12): normalized echo density
 // (Abel and Huang 2006), decay per octave band and EDT (the same method as
 // tools/ingest_reference.py), C80, IACC and late-tail flatness (ISO 3382-1).
-// First on synthetic signals with known answers, then the grainy gate: a
-// click through every SPACE at SIZE 0 / 0.5 / 1 and DECAY 0.4 / 0.7 must turn
-// from separate echoes into a smooth wash within about a quarter-second
-// (echoDensityTimeS <= 0.3 s) and stay a wash (echoDensityLate >= 0.9).
+// First on synthetic signals with known answers, then the grain figure's
+// steadiness against trivial changes of the input click, then the grainy
+// gate: a click through every SPACE at SIZE 0 / 0.5 / 1 and DECAY 0.4 / 0.7
+// must start with no more grain than 0.1 s of separate echoes
+// (echoDensityGrainS <= kEchoGrainMaxS) and stay a wash (echoDensityLate >= 0.9).
 
 #include "Metrics.h"
 #include "Sidecar.h"
@@ -55,9 +56,9 @@ void densityOfNoiseAndSparseEchoes()
     const auto noise = decayingNoise(2.0, 0.2, 4.0, 1);
     const auto m = iv::metrics::compute({noise}, kSr);
     char buf[160];
-    std::snprintf(buf, sizeof buf, "density: decaying white noise is a wash at once (time %.3f s <= 0.03, late %.3f in 0.95..1.05)",
-                  m.echoDensityTimeS, m.echoDensityLate);
-    check(m.echoDensityTimeS <= 0.03 && std::fabs(m.echoDensityLate - 1.0) <= 0.05, buf);
+    std::snprintf(buf, sizeof buf, "density: decaying white noise is a wash at once (grain %.3f s <= 0.005, late %.3f in 0.95..1.05)",
+                  m.echoDensityGrainS, m.echoDensityLate);
+    check(m.echoDensityGrainS <= 0.005 && std::fabs(m.echoDensityLate - 1.0) <= 0.05, buf);
 
     // The profile itself: mean over 1 s of stationary noise ~ 1.
     std::vector<float> flat(size_t(2 * kSr));
@@ -76,13 +77,28 @@ void densityOfNoiseAndSparseEchoes()
     for (size_t i = size_t(0.1 * kSr), n = 0; i < train.size(); i += 480, ++n)
         train[i] = float(0.8 * std::exp(-double(n) * 0.01) * (n % 2 ? -1.0 : 1.0));
     const auto ms = iv::metrics::compute({train}, kSr);
-    std::snprintf(buf, sizeof buf, "density: a sparse echo train stays grainy (late %.3f < 0.3, time %s)",
-                  ms.echoDensityLate, std::isnan(ms.echoDensityTimeS) ? "never" : "reached");
-    check(ms.echoDensityLate < 0.3 && std::isnan(ms.echoDensityTimeS), buf);
+    // Its grain is most of the 2.9 s it lasts (NED ~0.1-0.2 -> 0.8 s missed per second).
+    std::snprintf(buf, sizeof buf, "density: a sparse echo train stays grainy (late %.3f < 0.3, grain %.3f s >= 2)",
+                  ms.echoDensityLate, ms.echoDensityGrainS);
+    check(ms.echoDensityLate < 0.3 && ms.echoDensityGrainS >= 2.0, buf);
+
+    // The grain figure's scale: separate echoes (one every 10 ms) for 0.2 s,
+    // then Gaussian noise, reads ~0.2 s, as an all-echoes start of 0.2 s
+    // should (less the echoes' own small density, plus the 100 ms mean's
+    // ramp across the join; within 0.03 s).
+    for (double T : {0.2, 0.5}) {
+        auto step = decayingNoise(2.0, 0.1 + T, 4.0, 31, 0.05);
+        for (size_t i = size_t(0.1 * kSr); i < size_t((0.1 + T) * kSr); i += 480) step[i] = 0.3f;
+        const auto mt = iv::metrics::compute({step}, kSr);
+        std::snprintf(buf, sizeof buf, "density: %.1f s of separate echoes, then a wash, reads grain %.3f s (%.2f..%.2f)",
+                      T, mt.echoDensityGrainS, T - 0.03, T + 0.03);
+        check(std::fabs(mt.echoDensityGrainS - T) <= 0.03, buf);
+    }
 
     // Echoes thickening over time: each sample is an echo with probability
     // 0.002 x e^{t / 0.1 s} (one per ~10 ms at first, every sample from
-    // 0.62 s on). NED rises, and reaches 0.9 inside the thickening.
+    // 0.62 s on). NED rises through the thickening, so the start misses
+    // density, but less than a 0.62 s all-echoes start would.
     std::vector<float> grow(size_t(3 * kSr), 0.0f);
     std::mt19937 r2(3);
     std::uniform_real_distribution<double> u(0.0, 1.0);
@@ -92,20 +108,20 @@ void densityOfNoiseAndSparseEchoes()
             grow[i] = float(0.3 * g(rng) * std::exp(-t * 1.5));
     }
     const auto mg = iv::metrics::compute({grow}, kSr);
-    std::snprintf(buf, sizeof buf, "density: thickening echoes become dense part-way (time %.3f s in 0.25..0.65)", mg.echoDensityTimeS);
-    check(mg.echoDensityTimeS > 0.25 && mg.echoDensityTimeS < 0.65, buf);
+    std::snprintf(buf, sizeof buf, "density: thickening echoes miss density at the start (grain %.3f s in 0.1..0.5)", mg.echoDensityGrainS);
+    check(mg.echoDensityGrainS > 0.1 && mg.echoDensityGrainS < 0.5, buf);
 
     // Dark noise is still noise: one-pole low-passed Gaussian noise (~150 Hz)
     // must read dense at once. The raw 20 ms profile dips below 0.9 in places
-    // here, which is why the hold is judged on its 100 ms mean.
+    // here, which is why the grain is judged on its 100 ms mean.
     for (double pole : {0.9, 0.98}) {
         auto dark = decayingNoise(2.0, 0.2, 4.0, 17);
         double y = 0.0;
         for (auto& v : dark) { y = pole * y + (1.0 - pole) * double(v); v = float(y * 10.0); }
         const auto md = iv::metrics::compute({dark}, kSr);
-        std::snprintf(buf, sizeof buf, "density: low-passed noise (pole %.2f) is a wash at once (time %.3f s <= 0.12, late %.3f)",
-                      pole, md.echoDensityTimeS, md.echoDensityLate);
-        check(md.echoDensityTimeS <= 0.12 && std::fabs(md.echoDensityLate - 1.0) <= 0.05, buf);
+        std::snprintf(buf, sizeof buf, "density: low-passed noise (pole %.2f) is a wash at once (grain %.3f s <= 0.01, late %.3f)",
+                      pole, md.echoDensityGrainS, md.echoDensityLate);
+        check(md.echoDensityGrainS <= 0.01 && std::fabs(md.echoDensityLate - 1.0) <= 0.05, buf);
     }
 }
 
@@ -223,24 +239,27 @@ void iaccOnKnownPairs()
 void sidecarRoundTrip()
 {
     iv::metrics::Metrics m;
-    m.echoDensityTimeS = 0.12; m.echoDensityLate = 0.98; m.c80Db = -4.5;
+    m.echoDensityGrainS = 0.12; m.echoDensityLate = 0.98; m.c80Db = -4.5;
     m.iaccEarly = 0.3; m.iaccLate = 0.05; m.tailFlatnessDb = 0.4;
     for (int b = 0; b < iv::metrics::Metrics::kNumBands; ++b) { m.bandT60S[b] = 2.0 + b; m.bandEdtS[b] = 1.0 + b; }
     m.bandT60S[6] = std::nan("");
     const auto back = iv::sidecar::jsonToMetrics(iv::sidecar::metricsToJson(m));
-    bool ok = back.echoDensityTimeS == m.echoDensityTimeS && back.echoDensityLate == m.echoDensityLate
+    bool ok = back.echoDensityGrainS == m.echoDensityGrainS && back.echoDensityLate == m.echoDensityLate
            && back.c80Db == m.c80Db && back.iaccEarly == m.iaccEarly && back.iaccLate == m.iaccLate
            && back.tailFlatnessDb == m.tailFlatnessDb && std::isnan(back.bandT60S[6]);
     for (int b = 0; b < 6; ++b) ok &= back.bandT60S[b] == m.bandT60S[b] && back.bandEdtS[b] == m.bandEdtS[b];
     check(ok, "sidecar: echo density, band T60/EDT (null kept), C80, IACC, flatness round-trip");
     const auto legacy = iv::sidecar::jsonToMetrics(iv::json::Value::makeObject());
-    check(std::isnan(legacy.echoDensityTimeS) && std::isnan(legacy.bandT60S[0]) && std::isnan(legacy.c80Db),
+    check(std::isnan(legacy.echoDensityGrainS) && std::isnan(legacy.bandT60S[0]) && std::isnan(legacy.c80Db),
           "sidecar: older JSON without the new keys reads as not measured");
 }
 
-// ---- The grainy gate: the Engine itself --------------------------------------
+// ---- The Engine itself ----------------------------------------------------------
 
-Channels renderClick(int space, float size, float decay, double seconds)
+// The input variants for the steadiness check; Full is the gate's own click.
+enum class Click { Full, Half, Inverted, Late, Offset, TwoSample };
+
+Channels renderClick(int space, float size, float decay, double seconds, Click kind = Click::Full)
 {
     iv::Engine e;
     e.prepare(kSr, 48);
@@ -252,7 +271,15 @@ Channels renderClick(int space, float size, float decay, double seconds)
     e.setParam(iv::ParamId::Time, 0.0f);  // no predelay
     e.reset();
     std::vector<float> in(size_t(seconds * kSr), 0.0f);
-    in[size_t(0.1 * kSr)] = 0.9f;
+    const size_t at = size_t(0.1 * kSr);
+    switch (kind) {
+    case Click::Full:      in[at] = 0.9f; break;
+    case Click::Half:      in[at] = 0.5f; break;
+    case Click::Inverted:  in[at] = -0.9f; break;
+    case Click::Late:      in[size_t(1.0 * kSr)] = 0.9f; break;
+    case Click::Offset:    in[at + 7] = 0.9f; break; // another place in the 48-sample block
+    case Click::TwoSample: in[at] = 0.5f; in[at + 1] = 0.5f; break;
+    }
     Channels out(2, std::vector<float>(in.size()));
     for (size_t pos = 0; pos < in.size(); pos += 48) {
         const int n = int(std::min<size_t>(48, in.size() - pos));
@@ -261,35 +288,67 @@ Channels renderClick(int space, float size, float decay, double seconds)
     return out;
 }
 
-// Settings that miss the gate today (measured 22 Oct 2026, unchanged DSP).
+// ---- The grain figure is steady ----------------------------------------------
+
+// Two settings where the old crossing time jumped most (23 Oct 2026):
+// MASSIVE at SIZE 1 / DECAY 0.4, whose profile hovers at 0.85-0.95 for
+// seconds (1.42 s for the gate's click, 1.67 s for the same click 0.9 s
+// later, 0.06 s for a two-sample click), and MASSIVE at SIZE 0 / DECAY 0.7,
+// whose first detected event moved with the click's level (0.24 s at 0.9,
+// 0.68 s at 0.5). Single-sample clicks of any level, polarity, time or place
+// in the block are the same impulse response (bar the Engine's own
+// level-dependent saturation), so the grain figure must agree within 10 ms
+// across them. A two-sample click is a duller excitation: each echo is two
+// samples wide and the echo density counts samples, so it reads smoother,
+// by up to 0.045 s across the 18 gate settings and never rougher; it must
+// read no more grain and at most 0.05 s less. (A short noise burst reads a
+// wash from the start in every setting, old figure and new: the excitation
+// is itself noise.)
+void grainIsSteady()
+{
+    struct Setting { float size, decay; };
+    for (Setting st : {Setting{1.0f, 0.4f}, Setting{0.0f, 0.7f}}) {
+        const auto base = iv::metrics::compute(renderClick(2, st.size, st.decay, 12.0), kSr);
+        double lo = base.echoDensityGrainS, hi = lo, oldLo = base.echoDensityTimeS, oldHi = oldLo;
+        for (Click k : {Click::Half, Click::Inverted, Click::Late, Click::Offset}) {
+            const auto m = iv::metrics::compute(renderClick(2, st.size, st.decay, 12.0, k), kSr);
+            lo = std::min(lo, m.echoDensityGrainS); hi = std::max(hi, m.echoDensityGrainS);
+            oldLo = std::min(oldLo, m.echoDensityTimeS); oldHi = std::max(oldHi, m.echoDensityTimeS);
+        }
+        char buf[256];
+        std::snprintf(buf, sizeof buf, "grain steady: MASSIVE SIZE %.0f DECAY %.1f, five single-sample clicks read %.3f..%.3f s (spread <= 0.010; the old crossing %.3f..%.3f s)",
+                      st.size, st.decay, lo, hi, oldLo, oldHi);
+        check(hi - lo <= 0.010, buf);
+        const auto two = iv::metrics::compute(renderClick(2, st.size, st.decay, 12.0, Click::TwoSample), kSr);
+        std::snprintf(buf, sizeof buf, "grain steady: MASSIVE SIZE %.0f DECAY %.1f, a two-sample click reads %.3f s, no more than the single click's %.3f s and at most 0.05 s less",
+                      st.size, st.decay, two.echoDensityGrainS, base.echoDensityGrainS);
+        check(two.echoDensityGrainS <= base.echoDensityGrainS + 0.005 && two.echoDensityGrainS >= base.echoDensityGrainS - 0.05, buf);
+    }
+}
+
+// ---- The grainy gate ----------------------------------------------------------
+
+// Settings that miss the gate today (measured 23 Oct 2026, unchanged DSP).
 // Each is a finding for the owner, not a loosened gate: it is measured and
 // printed as KNOWN with its numbers, it must not get worse than measured
-// (+25 % / +20 ms on the time; late density still >= 0.9), and it says so
+// (+20 % / +10 ms on the grain; late density still >= 0.9), and it says so
 // when it starts meeting the gate, so it can come off this list. Every
 // other setting must meet the gate itself.
-// What the profiles show (NED in 50 ms steps after the onset): the misses
-// are not separate echoes throughout but a first stretch that sits at
-// 0.6-0.9 (HALL SIZE 1: 0.41, 0.67, 0.66, 0.70, 0.80, 0.84, 0.82, 0.93 ...;
-// PLATE SIZE 0.5: 0.32, 0.53, 0.69, 0.85, 0.85, 0.84, 0.93 ...). MASSIVE at
-// SIZE 1 / DECAY 0.4 hovers at 0.83-0.93 for ~2.5 s (its first pass through
-// 2 s lines, through the swell and early taps) before it reads 1.0; it is
-// not exempted as "the swell", since MASSIVE at SIZE 0.5 and SIZE 1 /
-// DECAY 0.7 (same swell) are much quicker.
+// What the profiles show: PLATE at SIZE 1 builds up slowly from separate
+// echoes (mean NED ~0.55 over its first 0.3 s); MASSIVE at SIZE 0 sits at
+// ~0.73 over its first 0.3 s and reaches the bar at ~0.75 s. The settings
+// that were on the old list for hovering just under 0.9 (MASSIVE SIZE 1,
+// HALL SIZE 1, PLATE SIZE 0.5) miss little density: 0.007-0.09 s.
 struct Known {
     int space;
     float size, decay;
-    double measuredS; // echoDensityTimeS when listed
+    double grainS; // echoDensityGrainS when listed
 };
 const Known kKnown[] = {
-    {0, 0.5f, 0.4f, 0.341},
-    {0, 0.5f, 0.7f, 0.407},
-    {0, 1.0f, 0.4f, 0.552},
-    {0, 1.0f, 0.7f, 0.678},
-    {1, 1.0f, 0.4f, 0.371},
-    {1, 1.0f, 0.7f, 0.505},
-    {2, 0.0f, 0.4f, 0.802},
-    {2, 1.0f, 0.4f, 1.415},
-    {2, 1.0f, 0.7f, 0.378},
+    {0, 1.0f, 0.4f, 0.124},
+    {0, 1.0f, 0.7f, 0.146},
+    {2, 0.0f, 0.4f, 0.132},
+    {2, 0.0f, 0.7f, 0.116},
 };
 
 const Known* known(int space, float size, float decay)
@@ -307,18 +366,17 @@ void grainyGate()
             for (float decay : {0.4f, 0.7f}) {
                 const auto out = renderClick(space, size, decay, 12.0);
                 const auto m = iv::metrics::compute(out, kSr);
-                const bool pass = m.echoDensityTimeS <= 0.3 && m.echoDensityLate >= 0.9;
+                const double maxG = iv::metrics::kEchoGrainMaxS;
+                const bool pass = m.echoDensityGrainS <= maxG && m.echoDensityLate >= 0.9;
                 char buf[256];
-                std::snprintf(buf, sizeof buf, "grainy gate: %-7s SIZE %.1f DECAY %.1f  dense after %s s (<= 0.3), late density %.3f (>= 0.9)",
-                              names[space], size, decay,
-                              std::isnan(m.echoDensityTimeS) ? "never" : std::to_string(m.echoDensityTimeS).substr(0, 5).c_str(),
-                              m.echoDensityLate);
+                std::snprintf(buf, sizeof buf, "grainy gate: %-7s SIZE %.1f DECAY %.1f  grain %.3f s (<= %.2f), late density %.3f (>= 0.9)",
+                              names[space], size, decay, m.echoDensityGrainS, maxG, m.echoDensityLate);
                 if (const Known* k = known(space, size, decay)) {
                     std::printf("KNOWN %s%s\n", buf, pass ? "  -- now meets the gate: drop it from kKnown" : "");
                     char nb[160];
                     std::snprintf(nb, sizeof nb, "grainy gate: that known miss is no worse than listed (%.3f s <= %.3f s, late >= 0.9)",
-                                  m.echoDensityTimeS, k->measuredS * 1.25 + 0.02);
-                    check(m.echoDensityTimeS <= k->measuredS * 1.25 + 0.02 && m.echoDensityLate >= 0.9, nb);
+                                  m.echoDensityGrainS, k->grainS * 1.2 + 0.01);
+                    check(m.echoDensityGrainS <= k->grainS * 1.2 + 0.01 && m.echoDensityLate >= 0.9, nb);
                 } else {
                     check(pass, buf);
                 }
@@ -336,6 +394,7 @@ int main()
     c80AndFlatness();
     iaccOnKnownPairs();
     sidecarRoundTrip();
+    grainIsSteady();
     grainyGate();
     std::printf("%d failure(s)\n", failures);
     return failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
