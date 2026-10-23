@@ -21,6 +21,7 @@
 #include "dsp/Fdn.h"
 #include "dsp/Memory.h"
 #include "dsp/Output.h"
+#include "dsp/Oversampler.h"
 #include "dsp/Plate.h"
 #include "dsp/Reverse.h"
 #include "dsp/Swell.h"
@@ -192,6 +193,9 @@ private:
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f;
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
+    dsp::Oversampler tapeOs_[2], tapeOs2_[2];        // tape out (v1.0.22): 2x inside 2x = 4x for the saturator
+    float tapeDc_[2] = {}, tapeDrive_ = 0.0f;
+    void  tapeOut(float& l, float& r);
     float diffMotionNow_ = 0.0f, diffMotionPhase_ = 0.0f; // the PLATE's wandering input allpass, samples
     float hallInLoop_ = voicing::kHallInLoopDiffusion; // setHallInLoopDiffusion overrides it (renders/hall_diffusion)
     float reverseMean_ = -1.0f;

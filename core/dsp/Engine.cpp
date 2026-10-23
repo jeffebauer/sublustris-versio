@@ -154,6 +154,7 @@ IV_SIZE_OPT void Engine::reset()
     tilt_.set(smoothed(ParamId::Tone));
     tilt_.snap();
     limiter_.reset();
+    for (int c = 0; c < 2; ++c) { tapeOs_[c].reset(); tapeOs2_[c].reset(); tapeDc_[c] = 0.0f; }
     duck_ = duckGrDb_ = duckGainStep_ = 0.0f;
     duckGain_ = 1.0f;
     hissLp_[0] = hissLp_[1] = 0.0f;
@@ -310,7 +311,9 @@ void Engine::applySpace(bool snap)
         plate_.setFloorDb(floorDb);
         plate_.setModDepth(1.0f - freezeMix_ * (1.0f - voicing::kFrozenPlateModDepth));
         plate_.setLongDelayMod(1.0f - freezeMix_);
-        plate_.setModScale(modScale_);
+        // A frozen PLATE's chorus and floor glide out too, so a held chord stays pure (v1.0.22, the
+        // DSP audit's A3; it kept 0.15 of the chorus and slowly shimmered out of tune).
+        plate_.setModScale(modScale_ * (1.0f - freezeMix_));
         plate_.setHoldDb(holdDb);
     } else {
         const float mean = massive ? map::massiveMeanSeconds(size) : map::hallMeanSeconds(size);
@@ -340,7 +343,8 @@ void Engine::applySpace(bool snap)
         fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decay, size)
                                    : map::hallSizeLevelTrim(size, decay));
         fdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
-        fdn_.setModDepth(modScale_);
+        // The floor glides out with the freeze (v1.0.22, A3; Costello: mod depth to 0 for a freeze).
+        fdn_.setModDepth(modScale_ * (1.0f - freezeMix_));
         // Still lows: the low tank follows, unmodulated.
         lowFdn_.setDecayRate(rate);
         lowFdn_.setHighT60Ratio(highRatio);
@@ -386,6 +390,8 @@ void Engine::applySpace(bool snap)
     }
     muLaw_.set(era);
     eraMakeup_ = era.makeup;
+    tapeDrive_ = era.cassette; // tape out (v1.0.22, E5)
+    if (!plate) fdn_.setVintage(era.mu * keep); // vintage reads (v1.0.22, E4; ADR 0019): in-loop colour, out while frozen
 
     tilt_.set(smoothed(ParamId::Tone));
     // Hiss follows the input (none in silence, so an infinite tail doesn't
@@ -697,6 +703,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             wl *= eraMakeup_;
             wr *= eraMakeup_;
             muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)
+            if (tapeDrive_ > 0.0f) tapeOut(wl, wr);
             tilt_.process(wl, wr);
             duckGain_ += duckGainStep_; // ducking (ADR 0014)
             wl *= duckGain_;
@@ -711,6 +718,31 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
     }
     // Edges beyond this block's length (a host's bad offset) apply next block.
     for (int i = 0; i < edgeCount_; ++i) edges_[i].offset -= numSamples;
+}
+
+// Tape out (v1.0.22, the DSP audit's E5; owner's pick): the cassette saturates the wet on its way out,
+// outside the loop (the in-loop drive never reaches its knee on music, measured). An asymmetric tanh
+// (even and odd harmonics, as tape's), unity gain for small signals, at 4x (2x was short of room:
+// a hot 7 kHz tone folded back to -35 dB below 5 kHz, test_era allows -40), then a 5 Hz DC blocker.
+void Engine::tapeOut(float& l, float& r)
+{
+    const float d = 1.0f + 2.0f * tapeDrive_, b = 0.15f * tapeDrive_;
+    auto th = [](float x) { // rational tanh, exact enough for a saturator, no std::tanh in flash
+        if (x > 3.0f) return 1.0f;
+        if (x < -3.0f) return -1.0f;
+        const float x2 = x * x;
+        return x * (27.0f + x2) / (27.0f + 9.0f * x2);
+    };
+    const float tb = th(d * b), norm = 1.0f / (d * (1.0f - tb * tb));
+    auto sat = [&](float x) { return (th(d * (x + b)) - tb) * norm; };
+    float* ch[2] = {&l, &r};
+    const float dcCoeff = 6.2831853f * 5.0f / sampleRate_;
+    for (int c = 0; c < 2; ++c) {
+        dsp::Oversampler& inner = tapeOs2_[c];
+        const float y = tapeOs_[c].process(*ch[c], [&](float u) { return inner.process(u, sat); });
+        tapeDc_[c] += dcCoeff * (y - tapeDc_[c]);
+        *ch[c] = y - tapeDc_[c];
+    }
 }
 
 // Still lows: split the tank's input (Butterworth), the highs through fdn_, the lows

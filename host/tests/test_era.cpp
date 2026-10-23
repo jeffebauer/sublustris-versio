@@ -47,10 +47,10 @@ struct Setting {
     float era = 0.0f, drift = 0.5f, decay = 0.5f, size = 0.5f, mix = 1.0f, tone = 0.5f;
 };
 
-Stereo render(const std::vector<float>& in, const Setting& s)
+Stereo render(const std::vector<float>& in, const Setting& s, float sr = kSr)
 {
     iv::Engine e;
-    e.prepare(kSr, 48);
+    e.prepare(sr, 48);
     e.setParam(iv::ParamId::Space, iv::switchToNormalised(s.space));
     e.setParam(iv::ParamId::Era, s.era);
     e.setParam(iv::ParamId::Drift, s.drift);
@@ -317,26 +317,38 @@ void drift()
 
 // SPEC §7 M6: the saturation hit hard doesn't alias badly. A loud 7 kHz
 // tone's 3rd/5th harmonics fold to 27 → 21 kHz and 35 → 13 kHz: check the
-// band below 5 kHz (where nothing harmonic belongs) stays far down.
-void notAliasing()
+// band below 5 kHz, where nothing harmonic belongs. Tape out's asymmetry
+// (v1.0.22, even harmonics as tape's) puts real difference tones there too, so
+// the same tone is also rendered at 96 kHz, where little folds: aliasing is
+// what 48 kHz adds over that (or the band simply stays 40 dB down).
+double lowBandDb(float sr)
 {
-    std::vector<float> in(size_t(3.0f * kSr));
-    for (size_t i = 0; i < in.size(); ++i) in[i] = 0.9f * std::sin(2.0f * 3.14159265f * 7000.0f * float(i) / kSr);
+    std::vector<float> in(size_t(3.0f * sr));
+    for (size_t i = 0; i < in.size(); ++i) in[i] = 0.9f * std::sin(2.0f * 3.14159265f * 7000.0f * float(i) / sr);
     Setting s;
     s.era = 0.6f; // cassette drive
     s.decay = 0.0f;
-    const Stereo out = render(in, s);
-    const size_t n = 32768, start = size_t(2.0f * kSr);
+    const Stereo out = render(in, s, sr);
+    if (!finite(out)) return 999.0;
+    const size_t n = sr > 50000.0f ? 65536 : 32768, start = size_t(2.0f * sr) - (sr > 50000.0f ? 65536 - 32768 : 0);
     const auto spec = iv::fft::magnitudeSpectrum(out.l.data() + start, n, n);
     double lowBand = 0.0, total = 0.0;
     for (size_t k = 1; k < spec.size(); ++k) {
         const double p = double(spec[k]) * spec[k];
+        const float f = float(k) * sr / float(n);
+        if (f > 24000.0f) continue; // the 96 kHz render: compare the same audio band
         total += p;
-        if (float(k) * kSr / float(n) < 5000.0f) lowBand += p;
+        if (f < 5000.0f) lowBand += p;
     }
-    const double db = 10.0 * std::log10(lowBand / total + 1e-30);
-    check(finite(out) && db < -40.0, "hot 7 kHz tone at the cassette stage: energy below 5 kHz " + std::to_string(int(db)) +
-                                         " dB re total (< −40)");
+    return 10.0 * std::log10(lowBand / total + 1e-30);
+}
+
+void notAliasing()
+{
+    const double at48 = lowBandDb(kSr), at96 = lowBandDb(96000.0f);
+    check(at48 < -40.0 || at48 - at96 < 2.0,
+          "hot 7 kHz tone at the cassette stage: energy below 5 kHz " + std::to_string(int(at48)) + " dB re total at 48 kHz, " +
+              std::to_string(int(at96)) + " at 96 kHz (< −40, or aliasing adds < 2 dB)");
 }
 
 } // namespace

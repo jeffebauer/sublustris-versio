@@ -58,7 +58,15 @@
 - **#2, a wandering input diffuser:** the first allpass on each side wanders 0.18 ms at 0.4 Hz, opposite phase (the buffers' spare room caps it under a cent). Measured hit-to-hit similarity of the first 80 ms: PLATE 0.74 → 0.51; HALL and MASSIVE already low (0.01–0.12), so only the PLATE is asked (`renders/diffuser_motion`, `IV_DIFF_MOTION`).
 - **#3, a modulated MASSIVE in-loop allpass:** not built. Its motive, the owner's "upper harmonic building in a frozen MASSIVE", didn't reproduce when measured (22 Oct). Revisit if the owner hears it again.
 - **#4, independent right diffuser lengths:** built (`IV_DIFF_INDEPENDENT`), no measurable gain: onset L/R correlation stays 0.00–0.30 either way, since the tanks already decorrelate. Not put to the owner.
-- **#5:** not yet.
+- **#5, input trim with DECAY (Beads): measured (24 Oct 2026), not built.**
+  - **What Beads does** (`beads/dsp/fx/reverb.h`): `input_gain = 0.2f * (1.0f - 0.333f * reverb_time_)` and `output_gain = 0.4f / input_gain`. The level inside its tank stays put across decay, so its 12/16-bit storage and its saturation always see the same signal.
+  - **Ours** (the pad at ERA 0.55, SIZE 0.6): from DECAY 0.2 to 0.75 the wet rises 13 dB in HALL (−36.9 → −23.9 dBFS RMS), 13 dB in MASSIVE and 6 dB in the PLATE. The infinite tail sits at the floor (−25 dBFS) whatever the feed.
+  - **Why it doesn't matter.** Nothing nonlinear in our loop reacts to that level on music:
+    - the soft clip renders bit-identically with it bypassed, at every DECAY (dsp-audit.md, E5);
+    - the Midiverb's 13 bits only act in a tail's last 20–40 dB (E2);
+    - the cassette's compression is meant to follow the level.
+  - **Why not build it anyway.** A trim with makeup would leave the linear sound identical, and it would fight the floor governor, which holds the tank's own level at −24 dBFS.
+  - **Dropped:** nothing for the owner to hear.
 
 ## Deliberately not copied
 

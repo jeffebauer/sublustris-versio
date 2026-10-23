@@ -68,6 +68,11 @@ constexpr float kMidiEngagePower = 2.0f;
 constexpr float kCrackleDbfs = -48.0f;
 constexpr float kCracklePerSecond = 4.0f;
 
+// Vintage reads (v1.0.22, ADR 0019): from the μ-law stretch on (Fdn::setVintage). The 32 steps follow
+// Costello on the 224; the jitter's size is ours, tuned on the measured noise halo (docs/research/dsp-audit.md E4).
+constexpr float kVintageSteps = 32.0f;          // fraction steps per sample (Costello: "32 or 64 chunks")
+constexpr float kVintageJitterSamples = 0.15f;   // the noisy modulation's random offset per control block
+
 // Loudness makeup per layer (dB on the wet), so ERA's loudness on music stays
 // within ±1 dB across the knob (SPEC §7 M6, v1.0.19), summed as the layers stack.
 // Measured on music (LUFS over the twelve page materials, HALL and MASSIVE): the
