@@ -83,7 +83,9 @@ public:
     // structure isn't metallic without it (Costello: tune it to sound good unmodulated).
     void  setModulationScale(float k) { modScale_ = k; }
     // PROTOTYPE (docs/research/drift-cathedra-side.md): DRIFT's clockwise half as 0 today's sine drift,
-    // 1 Halo (vibrato on the tank's input), 2 Orbit (the feedback mix rotates), 3 Wander (quick random).
+    // 1 Halo (vibrato on the tank's input), 2 Orbit (the feedback mix rotates), 3 Wander (quick random);
+    // round 2: 4 Orbit stronger, 5 Orbit stronger + pan, 6 Wander ×2, 7 Wander ×3, 8 Jet (phaser on the
+    // wet), 9 Dweller (swept allpasses with delay on the tank's input, mixed with it), 10 Tide (in-loop allpasses).
     void  setDriftCwMode(int mode) { driftCw_ = mode; }
     // Test hook: false = one tank, the lows moving too (before v1.0.18), for demos.
     void  setStillLows(bool on)
@@ -165,6 +167,7 @@ private:
     int               driftCw_ = 0;
     float             haloAmt_ = 0.0f, haloPhase_[2] = {0.0f, 0.37f};
     float             haloBuf_[2][1024] = {};
+    float             dwell_ = 0.0f, dwellPhase_[4] = {}, dwellG_[4] = {}, dwellBuf_[2][4][1024] = {};
     int               haloPos_ = 0;
     bool              lowTank_ = true;
     static constexpr float kLowAntiAliasHz = 2000.0f;

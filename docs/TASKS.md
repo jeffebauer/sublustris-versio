@@ -6,7 +6,7 @@
 ## To do
 
 ### Decide
-- [ ] **DRIFT's clockwise side** (`renders/drift_cw/index.html`, pick per card): today's slow drift (A) against the three characters you chose: Halo (a shimmering vibrato on what goes in; the tail stays in tune), Orbit (the tail circles around you, in space, not pitch) and Wander (quicker, small random movement). E is the tape side, only for comparison. All three are checked safe (nothing builds up, 10-minute holds pass). Measured wobble at full, HALL: today 64 cents, Halo 20, Orbit 4, Wander 10 (tape 21). Orbit only works in HALL and MASSIVE; a PLATE version would need its own design.
+- [ ] **DRIFT's clockwise side, round 2** (`renders/drift_cw/index.html`, pick per card): your round 1 asked for stronger Orbit and Wander and a phaser instead of Halo. A is round 1's Orbit; then Orbit stronger, Orbit + pan (the tail drifts between the speakers, bass centred), Wander ×2 and ×3, and three phasers: Jet (a whoosh over the tail), Dweller (a phasey smear on what goes in) and Tide (the tail's resonances swirl). All checked safe.
 
 ### Listen (after your notes)
 - Nothing open.
@@ -34,6 +34,7 @@
 
 ## Done
 
+- 23 Oct 2026: **DRIFT clockwise, round 1 listened**: "My preference is for Orbit, but I'd like to hear a stronger version as it's quite subtle. Wander is also quite subtle… Replace Halo with a phaser exploration." No card picks; round 2 follows.
 - 23 Oct 2026: **ERA keeps its loudness on music** (your note: the Midiverb could sound louder; SPEC v1.0.19): measured, music got 4–6 LU louder across ERA, because each stage's level boost had been set on a noise-burst test that music doesn't behave like. The boosts are now set on music: ERA fully CW is within 0.5 LU of clean in HALL and MASSIVE, every stage in between too, and the test now listens to the dub skank.
 - 23 Oct 2026: **M6 listened** (ERA, DRIFT, TONE): "Tone sounds great"; tape and still "sound great". DRIFT fully CW is too seasick and the Midiverb can sound louder than the other stages (both measured, now on Claude's list).
 - 23 Oct 2026: **Still lows shipped** (B on all 25 cards, the repeated cards agreeing; SPEC v1.0.18, ADR 0012 amendment): in HALL and MASSIVE the bass below ~300 Hz rings in its own still reverb, so it never wavers, whatever DRIFT does; everything above moves as before. Two side effects, both small: with ERA at the Midiverb end, short tails end 10–20 % sooner (its make-up went up 0.3 dB to keep the level), and the layer over a frozen pad (the twin) still moves its lows. The page is deleted.
