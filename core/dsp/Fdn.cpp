@@ -117,44 +117,6 @@ void Fdn::control(int n)
     const float floorDepth = voicing::kFloorDepthSeconds * sampleRate_ * modDepth_;
     const float floorCoeff = 1.0f - std::exp(-2.0f * 3.14159265f * 0.3f * dt);
 
-    // PROTOTYPE Orbit: each pair's angle swings at its own rate (spread ±50 %, Schlecht), 0.1 → 0.8 Hz.
-    // Style 1 (stronger): two stages, up to ±180°, 0.1 → 1 Hz.
-    for (int k = 0; k < kN; ++k) {
-        constexpr float kSpread[kN] = {0.5f, 0.83f, 1.17f, 1.5f, 0.62f, 0.95f, 1.29f, 1.41f};
-        const bool strong = orbitStyle_ == 1;
-        orbitPhase_[k] += (0.1f + (strong ? 0.9f : 0.7f) * orbit_) * kSpread[k] * dt;
-        orbitPhase_[k] -= float(int(orbitPhase_[k]));
-        const float range = strong ? 3.14159265f : 0.785398f;
-        const float angle = (k < kN / 2 || strong) ? orbit_ * range * std::sin(6.2831853f * (orbitPhase_[k] + (k < kN / 2 ? 0.25f : 0.125f) * float(k))) : 0.0f;
-        orbitC_[k] = std::cos(angle);
-        orbitS_[k] = std::sin(angle);
-    }
-    // PROTOTYPE Jet: the notches sweep 200 Hz → 4 kHz (log), 0.05 → 0.8 Hz, L and R 90° apart.
-    jetPhase_ += (0.05f + 0.75f * jet_) * dt;
-    jetPhase_ -= float(int(jetPhase_));
-    for (int c = 0; c < 2; ++c) {
-        const float u = 0.5f + 0.5f * std::sin(6.2831853f * (jetPhase_ + 0.25f * float(c)));
-        const float k = bilinearK(200.0f * std::pow(20.0f, u), sampleRate_ * 4.0f) * 4.0f; // tan, beyond the series' 0.2 rad: × 4 at 4 × fs
-        jetA_[c] = (k - 1.0f) / (k + 1.0f);
-    }
-    // PROTOTYPE Tide: each line's allpass coefficient swings at its own rate, 0.03 → 0.5 Hz.
-    for (int i = 0; i < kN; ++i) {
-        tidePhase_[i] += (0.03f + 0.47f * tide_) * (0.6f + 0.1f * float(i)) * dt;
-        tidePhase_[i] -= float(int(tidePhase_[i]));
-        const float g = tide_ * 0.75f * std::sin(6.2831853f * (tidePhase_[i] + 0.13f * float(i)));
-        tideG_[i] = g;
-        tideC_[i] = std::sqrt(1.0f - g * g);
-    }
-    spinPhase_ += (0.05f + 0.25f * spin_) * dt;
-    spinPhase_ -= float(int(spinPhase_));
-    {
-        // A constant-power pan (gL² + gR² = 2), up to ±0.8: the tail drifts from side to side. (A rotation
-        // of L and R did nothing audible: the tank's two outputs are uncorrelated, so each keeps its level.)
-        const float p = 0.8f * spin_ * std::sin(6.2831853f * spinPhase_);
-        spinC_ = std::sqrt(1.0f + p);
-        spinS_ = std::sqrt(1.0f - p);
-    }
-
     // The floor governor's extra loss (ADR 0008).
     governor_.control(n, sampleRate_);
     const FloorGovernor& gov = leader_ ? leader_->governor_ : governor_; // a low tank follows its leader
@@ -221,13 +183,6 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
             for (int i = 0; i < kN; ++i) {
                 readNow_[i] += readStep_[i];
                 float x = line_[i].readAllpass(readNow_[i], interp_[i]);
-                if (tide_ > 0.0f)
-                    for (int k = 0; k < 4; ++k) { // PROTOTYPE Tide: a rotation per stage, (g + z⁻¹)/(1 + g z⁻¹)
-                        const float st = tideS_[i][k];
-                        const float out = tideG_[i] * x + tideC_[i] * st;
-                        tideS_[i][k] = tideC_[i] * x - tideG_[i] * st;
-                        x = out;
-                    }
                 if (apG > 0.0f)
                     for (int k = 0; k < 2; ++k) { // in-loop diffusion (MASSIVE)
                         const float d = apLine_[i][k].read(apLenNow_[i][k]);
@@ -260,24 +215,6 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                     l += earlyG * kOutL[j] * e;
                     r += earlyG * kOutR[j] * e;
                 }
-            if (jet_ > 0.0f) { // PROTOTYPE Jet: 6 first-order stages, feedback up to 0.5, mixed up to 50/50
-                float* io[2] = {&l, &r};
-                for (int c = 0; c < 2; ++c) {
-                    float v = *io[c] + 0.5f * jet_ * jetFb_[c];
-                    for (int k = 0; k < 6; ++k) {
-                        const float a = jetA_[c] * v + jetX_[c][k] - jetA_[c] * jetY_[c][k];
-                        jetX_[c][k] = v;
-                        jetY_[c][k] = a;
-                        v = a;
-                    }
-                    jetFb_[c] = v;
-                    *io[c] += 0.5f * jet_ * (v - *io[c]);
-                }
-            }
-            if (spin_ > 0.0f) { // PROTOTYPE Orbit + pan: the tail drifts L <-> R
-                l *= spinC_;
-                r *= spinS_;
-            }
             outL[s] += outGain * l;
             outR[s] += outGain * r;
 
@@ -289,21 +226,6 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                         y[j] = a + b;
                         y[j + span] = a - b;
                     }
-            if (orbit_ > 0.0f)
-            {
-                for (int k = 0; k < kN / 2; ++k) { // PROTOTYPE Orbit: rotate pairs (orthogonal)
-                    const float a = y[2 * k], b = y[2 * k + 1];
-                    y[2 * k] = orbitC_[k] * a - orbitS_[k] * b;
-                    y[2 * k + 1] = orbitS_[k] * a + orbitC_[k] * b;
-                }
-                if (orbitStyle_ == 1)
-                    for (int k = 0; k < kN / 2; ++k) { // stage 2: other pairs (0,2) (1,3) (4,6) (5,7)
-                        const int i = (k & 1) + 4 * (k >> 1), j = i + 2;
-                        const float a = y[i], b = y[j];
-                        y[i] = orbitC_[4 + k] * a - orbitS_[4 + k] * b;
-                        y[j] = orbitS_[4 + k] * a + orbitC_[4 + k] * b;
-                    }
-            }
             const float xl = inL[s] * kNorm, xr = inR[s] * kNorm;
             for (int i = 0; i < kN; ++i) line_[i].write(y[i] * kNorm + kInL[i] * xl + kInR[i] * xr);
         }

@@ -108,8 +108,9 @@ inline dsp::DriftAmounts driftAmounts(float drift, float cassette)
         a.flutterHz = kFlutterHzMin + (kFlutterHzMax - kFlutterHzMin) * t;
     } else if (drift > kDriftDeadHi) {
         const float t = (drift - kDriftDeadHi) / (1.0f - kDriftDeadHi);
-        a.driftCents = kDriftCents * t;
-        a.driftHz = kDriftHzMin + (kDriftHzMax - kDriftHzMin) * t;
+        a.wowCents = kWanderCents * t; // Wander: the same random generator, quicker, lines fanned out
+        a.wowHz = kWanderHzMin + (kWanderHzMax - kWanderHzMin) * t;
+        a.rateSpread = kWanderRateSpread;
     }
     // The cassette's own wow and flutter add on top (rates blended by depth).
     if (cassette > 0.0f) {

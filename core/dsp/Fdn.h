@@ -76,27 +76,6 @@ public:
     // "too much delay before the reverb starts swelling") and every pass is
     // denser. Output only: the loop itself is unchanged.
     void setEarlyTaps(float amount) { earlyTarget_ = amount; }
-    // PROTOTYPE (DRIFT CW "Orbit", docs/research/drift-cathedra-side.md; Schlecht & Habets 2015): the
-    // feedback mix rotates, pairs of lines through slowly swinging angles. Every rotation is
-    // orthogonal, so the loop stays energy-preserving; the tail moves in space, not in pitch. 0 = off.
-    // style 0: one stage of pairs swinging ±45° (round 1); 1: two stages swinging up to ±180°, faster
-    // (owner, round 2: "a stronger version"). outputSpin 0..1: the tail pans slowly L ↔ R (constant
-    // power, outside the loop; the low tank's still bass stays centred).
-    void setOrbit(float amount, int style = 0, float outputSpin = 0.0f)
-    {
-        orbit_ = amount;
-        orbitStyle_ = style;
-        spin_ = outputSpin;
-    }
-    // PROTOTYPE phasers (DRIFT CW round 2, owner: "a phaser exploration"; docs/research/drift-cathedra-side.md).
-    // jet 0..1: a 6-stage phaser on this tank's output (Chroma Console / H90 order: after the reverb);
-    // tide 0..1: a 4-stage first-order allpass per line inside the loop, each stage a rotation (Bilbao
-    // 2005, Werner DAFx-20), so it stays energy-preserving however it sweeps.
-    void setPhasers(float jet, float tide)
-    {
-        jet_ = jet;
-        tide_ = tide;
-    }
     // The modulation floor's depth × modDepth (Engine::setModulationScale, a test hook).
     void setModDepth(float k) { modDepth_ = k; }
     // Extra output level for a voicing (MASSIVE's loudness match).
@@ -146,11 +125,6 @@ private:
     float     earlyTarget_ = 0.0f, earlyNow_ = 0.0f;
     float     inLoopTarget_ = 0.0f, inLoopNow_ = 0.0f, outputTrim_ = 1.0f, levelGain_ = 1.0f;
     FloorGovernor governor_;
-    float     orbit_ = 0.0f, orbitPhase_[kN] = {}, orbitC_[kN] = {}, orbitS_[kN] = {}; // [0..3] stage 1, [4..7] stage 2
-    int       orbitStyle_ = 0;
-    float     jet_ = 0.0f, jetPhase_ = 0.0f, jetA_[2] = {}, jetX_[2][6] = {}, jetY_[2][6] = {}, jetFb_[2] = {};
-    float     tide_ = 0.0f, tidePhase_[kN] = {}, tideG_[kN] = {}, tideC_[kN] = {}, tideS_[kN][4] = {};
-    float     spin_ = 0.0f, spinPhase_ = 0.0f, spinC_ = 1.0f, spinS_ = 0.0f;
     const Fdn* leader_ = nullptr;
     float     externalPower_ = 0.0f;
     bool      ready_ = false;

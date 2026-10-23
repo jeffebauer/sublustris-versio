@@ -364,36 +364,3 @@ C_massive_large    SIZE fully CW" > renders/grainy_start/README.txt
     python3 tools/review/make_review.py renders/grainy_start --title "Immensio: do big spaces start grainy?" --level-match --showcase --dry $SRC --wet-only > /dev/null
     echo "renders/grainy_start/index.html"
 fi
-
-if on drift_cw; then
-    # DRIFT's clockwise half, round 2 (owner, round 1: "My preference is for Orbit, but I'd like to hear a stronger
-    # version… Wander is also quite subtle… Replace Halo with a phaser exploration"; docs/research/drift-cathedra-side.md).
-    # IV_DRIFT_CW: 2 Orbit (round 1), 4 Orbit stronger, 5 + pan, 6 Wander x2, 7 Wander x3, 8 Jet, 9 Dweller, 10 Tide.
-    saved=("${MATERIALS[@]}"); MATERIALS=()
-    for m in pad keys piano vibes skank fullmix; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
-    page drift_cw
-    for c in "HALL:0.75:hall_three_quarters" "HALL:1:hall_full" "MASSIVE:0.75:massive_three_quarters" "MASSIVE:1:massive_full"; do
-        sp=${c%%:*}; rest=${c#*:}; dr=${rest%%:*}; col=${rest#*:}
-        for v in 2:A_orbit_round1 4:B_orbit_stronger 5:C_orbit_pan 6:D_wander_stronger 7:E_wander_strongest 8:F_phaser_jet 9:G_phaser_dweller 10:H_phaser_tide; do
-            IV_DRIFT_CW=${v%%:*} r drift_cw $col ${v##*:} "" --set space=$sp --set era=0 --set decay=0.65 --set size=0.7 --set drift=$dr
-        done
-    done
-    MATERIALS=("${saved[@]}")
-    print -r -- "DRIFT's clockwise side, round 2. You preferred Orbit but found it, and Wander, too subtle, and asked for a phaser instead of Halo. A is round 1's Orbit, for reference. Orbit stronger (B): the feedback mix swings much further and faster, so the tail churns more (it also adds some pitch shimmer, about as much as the tape side). Orbit + pan (C): B, plus the tail drifting slowly from speaker to speaker while the bass stays centred. Wander at twice (D) and three times (E) round 1's depth. Three phasers, each placed the way established gear does it: Jet (F), a classic whoosh swept over the tail (phaser after the reverb, like the Chroma Console or H90); Dweller (G), swept delayed allpasses on what goes into the reverb (Old Blood Noise's Dweller), a phasey smear that blurs into the tail; Tide (H), allpasses inside the reverb so its resonances swirl (no notches; closer to a slow churn). All checked safe: nothing builds up inside the reverb and every 10-minute hold passes, except that Jet, being a phaser on the held tail, lets its level drift by up to about 1.7 dB as the notches sweep. Which one, at which strength? Settings: DECAY 0.65, SIZE 0.7, ERA clean; DRIFT at three quarters and fully CW.
-
-hall_three_quarters      HALL, DRIFT at 3/4
-hall_full                HALL, DRIFT fully CW
-massive_three_quarters   MASSIVE, DRIFT at 3/4
-massive_full             MASSIVE, DRIFT fully CW
-
-A_orbit_round1       Orbit as in round 1 (reference)
-B_orbit_stronger     Orbit, stronger: the tail churns
-C_orbit_pan          Orbit stronger + the tail drifts between the speakers
-D_wander_stronger    Wander, twice as deep
-E_wander_strongest   Wander, three times as deep
-F_phaser_jet         Phaser on the tail: a classic whoosh
-G_phaser_dweller     Phaser on what goes in: a phasey smear
-H_phaser_tide        Phaser inside the reverb: the tail swirls" > renders/drift_cw/README.txt
-    python3 tools/review/make_review.py renders/drift_cw --title "Immensio: DRIFT's clockwise side, round 2" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/drift_cw/index.html"
-fi

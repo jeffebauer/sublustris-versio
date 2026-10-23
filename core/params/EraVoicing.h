@@ -10,8 +10,11 @@ constexpr float kDriftDeadLo = 0.47f, kDriftDeadHi = 0.53f; // noon: only the mo
 // Left: tape wow (random, 0.2 → 1 Hz) and flutter (5 → 9 Hz), cents at full.
 constexpr float kWowCents = 15.0f, kWowHzMin = 0.2f, kWowHzMax = 1.0f;
 constexpr float kFlutterCents = 3.0f, kFlutterHzMin = 5.0f, kFlutterHzMax = 9.0f;
-// Right: smooth Cathedra-style drift, a slow sine per line, 0.05 → 0.3 Hz.
-constexpr float kDriftCents = 35.0f, kDriftHzMin = 0.05f, kDriftHzMax = 0.3f;
+// Right: Wander (v1.0.20, owner's pick on renders/drift_cw; docs/research/drift-cathedra-side.md):
+// quick, small random movement, as Lexicon's Random Hall and Valhalla's Random Space do, the
+// lines' rates fanned out ±50 % so they never sway together; 1 → 2.25 Hz, cents at full.
+// (Until v1.0.20: a slow sine per line, 0.05 → 0.3 Hz, ±35 cents: "too seasick".)
+constexpr float kWanderCents = 20.0f, kWanderHzMin = 1.0f, kWanderHzMax = 2.25f, kWanderRateSpread = 1.0f;
 // A line's drift excursion never exceeds this share of its own length (a
 // 24 ms HALL line can't swing by 65 ms), nor kDriftMaxSeconds.
 constexpr float kDriftMaxShareOfLine = 0.35f;

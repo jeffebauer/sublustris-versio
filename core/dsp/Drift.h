@@ -1,8 +1,9 @@
 #pragma once
 // DRIFT (P6, bipolar, ADR 0012), one generator per tank line: how far that
 // line's read wanders, in samples, updated at control rate. Left of noon:
-// tape wow (smooth random) and flutter; right of noon: a slow, smooth
-// Cathedra-style sine drift, each line at its own rate and phase. ERA's
+// tape wow (smooth random) and flutter; right of noon: Wander, the same
+// smooth random movement but quicker, each line's rate fanned out ±50 %
+// (v1.0.20). ERA's
 // cassette stage adds its own wow and flutter on top (SPEC §4.7). Noon is
 // still (the tank's modulation floor still runs).
 //
@@ -18,8 +19,7 @@ namespace iv::dsp {
 struct DriftAmounts {
     float wowCents = 0, wowHz = 0.5f;
     float flutterCents = 0, flutterHz = 7.0f;
-    float driftCents = 0, driftHz = 0.1f;
-    float rateSpread = 0.3f; // how far the lines' rates fan out (0.3: 0.85-1.15; PROTOTYPE Wander: 1, 0.5-1.5)
+    float rateSpread = 0.3f; // how far the lines' rates fan out: 0.85-1.15 (tape), 0.5-1.5 (Wander)
 };
 
 class Drift {
@@ -36,7 +36,6 @@ public:
         wowA_ = wowB_ = wowTarget_ = 0.0f;
         wowCountdown_ = 0.0f;
         flutterPhase_ = 0.37f * spread_;
-        driftPhase_ = 0.61f * spread_;
         value_ = 0.0f;
     }
 
@@ -56,12 +55,9 @@ public:
         wowB_ += wc * (wowA_ - wowB_);
         flutterPhase_ += a.flutterHz * rateSkew * dt;
         flutterPhase_ -= float(int(flutterPhase_));
-        driftPhase_ += a.driftHz * rateSkew * dt;
-        driftPhase_ -= float(int(driftPhase_));
 
         float v = samplesFor(a.wowCents, a.wowHz) * wowB_
-                + samplesFor(a.flutterCents, a.flutterHz) * std::sin(6.2831853f * flutterPhase_)
-                + samplesFor(a.driftCents, a.driftHz) * std::sin(6.2831853f * driftPhase_);
+                + samplesFor(a.flutterCents, a.flutterHz) * std::sin(6.2831853f * flutterPhase_);
         if (v > maxSamples) v = maxSamples;
         if (v < -maxSamples) v = -maxSamples;
         value_ = v;
@@ -83,7 +79,7 @@ private:
 
     float    sampleRate_ = 48000.0f, spread_ = 0.0f, value_ = 0.0f;
     uint32_t rng_ = 1;
-    float    wowA_ = 0, wowB_ = 0, wowTarget_ = 0, wowCountdown_ = 0, flutterPhase_ = 0, driftPhase_ = 0;
+    float    wowA_ = 0, wowB_ = 0, wowTarget_ = 0, wowCountdown_ = 0, flutterPhase_ = 0;
 };
 
 } // namespace iv::dsp

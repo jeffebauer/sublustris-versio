@@ -1,5 +1,7 @@
 # DRIFT's clockwise side (23 Oct 2026)
 
+**Decided (SPEC v1.0.20):** Wander at 2.5× round 1's depth: ±20 cents, 1 → 2.25 Hz, rates fanned ±50 %. Owner, round 2: "Wander strongest is the winner. I prefer wander stronger, but it's still quite a subtle effect, so I'd rather the maximum value to be obvious, so maybe a half-way point between stronger and strongest." Also: "orbit stronger is too intense and creates pitch-y swirling." Every other prototype is removed from the code.
+
 Owner, M6: "Tape and still sound great, but drift at 1 is too extreme and sounds too seasick. How can we better tune this side of the potentiometer? Does drift make the most sense? Are there other ways we can modulate the sound to make it distinct from tape?"
 
 Tags: **[S]** a source says it; **[M]** we measured it; **[I]** our inference.
