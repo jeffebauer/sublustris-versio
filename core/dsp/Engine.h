@@ -82,6 +82,9 @@ public:
     // Test hook: scales the tanks' own modulation (0 = none; DRIFT is separate), to check a
     // structure isn't metallic without it (Costello: tune it to sound good unmodulated).
     void  setModulationScale(float k) { modScale_ = k; }
+    // PROTOTYPE (docs/research/drift-cathedra-side.md): DRIFT's clockwise half as 0 today's sine drift,
+    // 1 Halo (vibrato on the tank's input), 2 Orbit (the feedback mix rotates), 3 Wander (quick random).
+    void  setDriftCwMode(int mode) { driftCw_ = mode; }
     // Test hook: false = one tank, the lows moving too (before v1.0.18), for demos.
     void  setStillLows(bool on)
     {
@@ -158,6 +161,11 @@ private:
     // (the established two-tank design: Keith Barr's dual-band reverb, Eventide's H90 Hall).
     void              processTwoTanks(int n);
     dsp::Fdn          lowFdn_;
+    // PROTOTYPE DRIFT CW modes.
+    int               driftCw_ = 0;
+    float             haloAmt_ = 0.0f, haloPhase_[2] = {0.0f, 0.37f};
+    float             haloBuf_[2][1024] = {};
+    int               haloPos_ = 0;
     bool              lowTank_ = true;
     static constexpr float kLowAntiAliasHz = 2000.0f;
     float             xoL_[5] = {}, xoH_[5] = {}, aaL_[5] = {}; // biquads b0 b1 b2 a1 a2: crossover LP/HP, 2 kHz LP

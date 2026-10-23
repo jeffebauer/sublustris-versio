@@ -1,6 +1,6 @@
 // M6: the loop's character (SPEC §4.6, §4.7, §7 M6; ADR 0003, 0004, 0005,
-// 0008, 0012). ERA darkens the tail more with each stage; its loudness stays
-// within ±2 dB across the knob; the μ-law output layer adds grain on the
+// 0008, 0012). ERA darkens the tail more with each stage; its loudness on music
+// stays within ±1 dB across the knob; the μ-law output layer adds grain on the
 // wet only; the Midiverb box lets a finite tail reach true silence (no stuck
 // buzz) and an infinite one hold; cassette hiss follows the input (none in
 // silence); infinite tails hold at every ERA stage; DRIFT's dead zone is
@@ -9,6 +9,7 @@
 
 #include "Fft.h"
 #include "Metrics.h"
+#include "Wav.h"
 #include "dsp/Engine.h"
 #include "params/Mappings.h"
 
@@ -128,26 +129,60 @@ void eraDarkens()
     check(falling, "ERA darkens the tail stage by stage (high/low T60:" + detail + ")");
 }
 
-// SPEC §7 M6: loudness across ERA within ±2 dB.
+// SPEC §7 M6 (v1.0.19): ERA's loudness on music stays within ±1 dB across the
+// knob, measured on the dub skank (test_audio/stimulus/04_skank.wav, from
+// tools/make_stimulus.py) with BS.1770's K-weighting at 48 kHz, over the whole
+// render. Until v1.0.19 this measured noise bursts' tails, where ERA's darkening
+// costs level, and the make-up set from it made music 4-6 LU louder at the
+// Midiverb end (owner, M6). Synthetic chords didn't track music either way
+// (sparse ones read 3.5 dB down, sustained sines +2.3 up in MASSIVE).
+double kWeightedDb(const Stereo& s)
+{
+    double sum = 0.0;
+    for (const auto* ch : {&s.l, &s.r}) {
+        double a1 = 0, a2 = 0, b1 = 0, b2 = 0; // two direct-form-II states
+        for (float x : *ch) {
+            const double w = x + 1.69065929318241 * a1 - 0.73248077421585 * a2; // the head's shelf
+            const double y = 1.53512485958697 * w - 2.69169618940638 * a1 + 1.19839281085285 * a2;
+            a2 = a1; a1 = w;
+            const double v = y + 1.99004745483398 * b1 - 0.99007225036621 * b2; // the RLB high-pass
+            const double k = v - 2.0 * b1 + b2;
+            b2 = b1; b1 = v;
+            sum += k * k;
+        }
+    }
+    return 10.0 * std::log10(sum / double(2 * s.l.size()) + 1e-30) - 0.691;
+}
+
 void eraLoudness()
 {
-    std::vector<float> in(size_t(12.0f * kSr), 0.0f);
-    for (int k = 0; k < 4; ++k)
-        for (size_t i = 0; i < 12000; ++i) in[size_t(k) * 96000 + i] = 0.3f * noise();
-    double lo = 1e9, hi = -1e9;
-    std::string detail;
-    for (float era : {0.0f, 0.25f, 0.5f, 0.75f, 1.0f}) {
-        Setting s;
-        s.era = era;
-        const Stereo out = render(in, s);
-        const double db = rmsDb(out.l, 0.0, 12.0);
-        lo = std::fmin(lo, db);
-        hi = std::fmax(hi, db);
-        char buf[48];
-        std::snprintf(buf, sizeof buf, " %.2f: %.1f", era, db);
-        detail += buf;
+    iv::wav::Audio a;
+    std::string error;
+    bool read = false;
+    for (const char* prefix : {"../test_audio/stimulus/", "test_audio/stimulus/"})
+        if (!read) read = iv::wav::read(std::string(prefix) + "04_skank.wav", a, error);
+    if (!read) { check(false, "ERA loudness: test_audio/stimulus/04_skank.wav (python3 tools/make_stimulus.py)"); return; }
+    std::vector<float> in(a.channels[0]);
+    in.resize(in.size() + size_t(6.0f * kSr), 0.0f);
+    struct Space { int space; float decay, size; const char* name; };
+    for (const Space& sp : {Space{1, 0.6f, 0.6f, "HALL"}, Space{2, 0.65f, 0.7f, "MASSIVE"}}) {
+        double lo = 1e9, hi = -1e9;
+        std::string detail;
+        for (float era : {0.0f, 0.3f, 0.55f, 0.8f, 1.0f}) {
+            Setting s;
+            s.space = sp.space;
+            s.decay = sp.decay;
+            s.size = sp.size;
+            s.era = era;
+            const double db = kWeightedDb(render(in, s));
+            lo = std::fmin(lo, db);
+            hi = std::fmax(hi, db);
+            char buf[48];
+            std::snprintf(buf, sizeof buf, " %.2f: %.1f", era, db);
+            detail += buf;
+        }
+        check(hi - lo <= 2.0, std::string(sp.name) + ": ERA's loudness on music (LUFS) within ±1 dB across the knob:" + detail);
     }
-    check(hi - lo <= 4.0, "ERA loudness within ±2 dB across the knob:" + detail);
 }
 
 // The μ-law layer, measured on its own: a −20 dBFS tone through it keeps a

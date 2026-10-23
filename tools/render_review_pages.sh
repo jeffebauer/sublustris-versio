@@ -314,3 +314,33 @@ C_massive_large    SIZE fully CW" > renders/grainy_start/README.txt
     python3 tools/review/make_review.py renders/grainy_start --title "Immensio: do big spaces start grainy?" --level-match --showcase --dry $SRC --wet-only > /dev/null
     echo "renders/grainy_start/index.html"
 fi
+
+if on drift_cw; then
+    # DRIFT's clockwise half, rethought (owner, M6: "too extreme… too seasick"; docs/research/drift-cathedra-side.md).
+    # IV_DRIFT_CW: 0 today's slow sine drift, 1 Halo, 2 Orbit, 3 Wander. Energy-checked before this page.
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in pad keys piano vibes skank fullmix; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page drift_cw
+    for c in "HALL:0.75:hall_three_quarters" "HALL:1:hall_full" "MASSIVE:0.75:massive_three_quarters" "MASSIVE:1:massive_full"; do
+        sp=${c%%:*}; rest=${c#*:}; dr=${rest%%:*}; col=${rest#*:}
+        for v in 0:A_today 1:B_halo 2:C_orbit 3:D_wander; do
+            IV_DRIFT_CW=${v%%:*} r drift_cw $col ${v##*:} "" --set space=$sp --set era=0 --set decay=0.65 --set size=0.7 --set drift=$dr
+        done
+        r drift_cw $col E_tape_reference "" --set space=$sp --set era=0 --set decay=0.65 --set size=0.7 --set drift=0
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "DRIFT's clockwise side, rethought. You found it \"too extreme… too seasick\" at full. Measured, it bends the tail about three times as far as the tape side, and in HALL the whole chord sways out of tune and back together (±25 cents, once every three seconds). The research found that units like the Mercury7 put their big movement outside the reverb loop (a vibrato on what goes in), so it can't pile up. Three characters you chose, each meant to sound clearly different from tape. A is today; E is DRIFT fully CCW (tape), only for comparison. Which clockwise side do you want, or none of them yet? Settings: DECAY 0.65, SIZE 0.7, ERA clean; DRIFT at three quarters and fully CW.
+
+hall_three_quarters      HALL, DRIFT at 3/4
+hall_full                HALL, DRIFT fully CW
+massive_three_quarters   MASSIVE, DRIFT at 3/4
+massive_full             MASSIVE, DRIFT fully CW
+
+A_today            today: a slow, deep pitch drift
+B_halo             Halo: a shimmering vibrato on what goes in; the tail stays in tune
+C_orbit            Orbit: the tail circles around you; it moves in space, not pitch
+D_wander           Wander: quicker, small random movement; the room breathes
+E_tape_reference   DRIFT fully CCW (tape), for comparison" > renders/drift_cw/README.txt
+    python3 tools/review/make_review.py renders/drift_cw --title "Immensio: DRIFT's clockwise side" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/drift_cw/index.html"
+fi

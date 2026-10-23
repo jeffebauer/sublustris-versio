@@ -333,7 +333,7 @@ void Engine::applySpace(bool snap)
         fdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(size) / 0.2f));
         fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(size, decay));
         fdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
-        fdn_.setModDepth(modScale_);
+        fdn_.setModDepth(modScale_ * (1.0f + 2.0f * haloAmt_)); // PROTOTYPE Halo: a little more random movement in the tank
         // Still lows: the low tank follows, unmodulated.
         lowFdn_.setDecayRate(rate);
         lowFdn_.setHighT60Ratio(highRatio);
@@ -360,7 +360,21 @@ void Engine::applySpace(bool snap)
     loopEra.even *= keep * (1.0f - map::governorWeight(decay));
     loopEra.drive = 1.0f + keep * (era.drive - 1.0f);
     loopEra.midiEngage *= keep;
-    const dsp::DriftAmounts drift = map::driftAmounts(smoothed(ParamId::Drift), era.cassette);
+    dsp::DriftAmounts drift = map::driftAmounts(smoothed(ParamId::Drift), era.cassette);
+    // PROTOTYPE DRIFT CW modes: t = how far clockwise of the dead zone (0..1).
+    const float cwT = drift.driftCents / voicing::kDriftCents;
+    haloAmt_ = 0.0f;
+    float orbit = 0.0f;
+    if (driftCw_ != 0) drift.driftCents = 0.0f;
+    if (driftCw_ == 1) haloAmt_ = cwT;
+    if (driftCw_ == 2) orbit = cwT;
+    if (driftCw_ == 3) {
+        drift.wowCents += 8.0f * cwT; // quick, small, random; rates fanned out ±50 %
+        drift.wowHz = 1.0f + 1.0f * cwT;
+        drift.rateSpread = 1.0f;
+    }
+    fdn_.setOrbit(orbit);
+    twinFdn_.setOrbit(orbit);
     // The cassette's slow 2:1 compression: more loss above −18 dBFS.
     const float over = tankLevelDb() - voicing::kCompressThresholdDb;
     const float compress = over > 0.0f ? keep * era.cassette * voicing::kCompressRatePerDb * over : 0.0f;
@@ -649,6 +663,22 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                     pl += (noiseSeed_ & 1u) ? a : -a;
                     pr += (noiseSeed_ & 2u) ? a : -a;
                 }
+            }
+            if (haloAmt_ > 0.0f) { // PROTOTYPE Halo: vibrato on the tank's input, 4 → 6 Hz, up to ±12 cents
+                const float hz[2] = {4.0f + 2.0f * haloAmt_, 4.6f + 2.2f * haloAmt_};
+                float* io[2] = {&pl, &pr};
+                for (int c = 0; c < 2; ++c) {
+                    haloBuf_[c][haloPos_] = *io[c];
+                    haloPhase_[c] += hz[c] / sampleRate_;
+                    haloPhase_[c] -= float(int(haloPhase_[c]));
+                    const float depth = (std::exp2(12.0f * haloAmt_ / 1200.0f) - 1.0f) * sampleRate_ / (6.2831853f * hz[c]);
+                    const float d = 2.0f + depth * (1.0f + std::sin(6.2831853f * haloPhase_[c]));
+                    const int di = int(d);
+                    const float fr = d - float(di);
+                    const float a = haloBuf_[c][(haloPos_ - di) & 1023], b = haloBuf_[c][(haloPos_ - di - 1) & 1023];
+                    *io[c] = a + fr * (b - a);
+                }
+                haloPos_ = (haloPos_ + 1) & 1023;
             }
             const float g = tankIn_ * flipGain_;
             bufL_[i] = g * pl;
