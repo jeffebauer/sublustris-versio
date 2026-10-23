@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 23 Oct 2026, session 4 (still lows shipped as v1.0.18; M6 re-rendered with it).
+**Last updated:** 23 Oct 2026, session 4 (still lows shipped as v1.0.18; your M6 notes measured).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
@@ -12,7 +12,7 @@
 - Nothing open.
 
 ### Listen (first time)
-- [ ] **M6: ERA, DRIFT and TONE** (`renders/m6_character/index.html`, notes only): re-rendered 23 Oct from today's reverb with all twelve kinds of music, so it carries your picks since (the Midiverb rebuilt as the real unit, the warmer TONE noon, the new small HALL, and still lows: DRIFT now moves everything but the bass). Does ERA feel like going back in time, stage by stage? Are DRIFT's tape side and Cathedra side what you hear in your head? All numbers are starting guesses for you to tune.
+- Nothing open.
 
 ### At the rack
 - [ ] **M0 hardware check** (`docs/m0-hardware-check.md`): flash `firmware/build/immensio_versio_m0test.bin`, check the boot pattern, switches, button (USB session), then knobs, gate and a quick passthrough listen (rack session). Tell Claude the results.
@@ -23,6 +23,8 @@
 
 ## Waiting on Claude
 
+- **DRIFT's clockwise side** (your M6 note: "too extreme… too seasick"; `docs/research/drift-cathedra-side.md`): measured, at full it bends the tail about 3× as far as the tape side, and HALL and PLATE sway together, ±25 cents at 0.3 Hz (the whole chord going out of tune and back). Research found four other characters (Halo, Wander, Orbit, a tamed drift); demos of the ones you choose, energy-checked, then a page.
+- **ERA's loudness on music** (your M6 note: the Midiverb can sound louder): measured, across ERA music gets 4–5 LU louder in HALL (up to 6.5 in MASSIVE), against the spec's ±0.5 dB. The per-stage make-up was tuned on a noise-burst tail and overshoots on music. Retune on music loudness, then a re-listen.
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 - **M8 tuning** from your listening notes on the pages above, including MASSIVE medium and large sounding a little uneven on Hits (grainy_start; the new grain figure says it's smooth there, so measure the level of the swell and taps).
@@ -34,6 +36,7 @@
 
 ## Done
 
+- 23 Oct 2026: **M6 listened** (ERA, DRIFT, TONE): "Tone sounds great"; tape and still "sound great". DRIFT fully CW is too seasick and the Midiverb can sound louder than the other stages (both measured, now on Claude's list).
 - 23 Oct 2026: **Still lows shipped** (B on all 25 cards, the repeated cards agreeing; SPEC v1.0.18, ADR 0012 amendment): in HALL and MASSIVE the bass below ~300 Hz rings in its own still reverb, so it never wavers, whatever DRIFT does; everything above moves as before. Two side effects, both small: with ERA at the Midiverb end, short tails end 10–20 % sooner (its make-up went up 0.3 dB to keep the level), and the layer over a frozen pad (the twin) still moves its lows. The page is deleted.
 - 23 Oct 2026: **Still lows rebuilt safely, for your re-listen** (`docs/research/still-lows.md`). Splitting each line in two inside the loop can't be made safe: the steadier splits stop the build-up but let infinite holds drain and the band around the split die early. The lows get their own still reverb instead (two tanks), which measures like today in every band, holds 10 minutes everywhere and keeps a 55 Hz bass within ~10 cents (HALL with DRIFT CW: 190 today).
 - 23 Oct 2026: **MASSIVE's SIZE glide stays a semitone** (A on all 4: "the most smooth and cohesive"; 3 semitones made "odd stepped harmonies", 6 "staticky brick walls").
