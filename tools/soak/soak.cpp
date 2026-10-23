@@ -378,8 +378,11 @@ struct Soak {
     {
         const float* in[2] = {inL, inR};
         const float* out[2] = {outL, outR};
+        // Not where clicks are the design: ERA's Midiverb crackle (ERA past 0.85, SPEC §4.7), and the
+        // limiter's instant attack on a pad loud enough to reach its ceiling (SPEC §4.10).
+        const bool designedClicks = eng->param(ParamId::Era) > 0.85f || eng->limiterGain() < 0.98f;
         const bool clickOk = clickArmed && src.smooth() && !src.switching && t - lastImpulsive > int64_t(8.0f * fs)
-                          && t - lastKnobJump > int64_t(0.5f * fs);
+                          && t - lastKnobJump > int64_t(0.5f * fs) && !designedClicks;
         for (int i = 0; i < n; ++i) {
             const int64_t at = t + i;
             double p = 0.0;
