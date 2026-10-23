@@ -60,14 +60,15 @@ IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed, flo
         era_[i].prepare(sampleRate);
         driftGen_[i].prepare(sampleRate, seed * 2654435761u + uint32_t(i) * 40503u + 1u, float(i) / float(kN - 1));
     }
-    // Early taps: fixed, staggered points along each line (seeded, so every
-    // build is the same), louder the later they sit, so the first sound is
-    // quiet and the tank swells from there.
+    // Early taps: fixed points along each line, louder the later they sit, so the first sound is
+    // quiet and the tank swells from there. The 8 lines' taps interleave (each line offset by its
+    // own share of a slot, shorter lines first) instead of bunching (v1.0.21; the seeded jitter
+    // they replace still draws, so every build's signs are the same).
     uint32_t es = 0xEA51u;
     for (int i = 0; i < kN; ++i)
         for (int k = 0; k < kEarlyTaps; ++k) {
-            const float u = 0.5f + 0.35f * uniform(es); // 0.15..0.85 of a slot
-            earlyFrac_[i][k] = (float(k) + u) / float(kEarlyTaps);
+            (void)uniform(es);
+            earlyFrac_[i][k] = (float(k) + (float(i) + 0.5f) / float(kN)) / float(kEarlyTaps);
             earlyGain_[i][k] = voicing::kEarlyTapLow + (1.0f - voicing::kEarlyTapLow) * earlyFrac_[i][k];
             if (uniform(es) < 0.0f) earlyGain_[i][k] = -earlyGain_[i][k];
         }
