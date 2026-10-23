@@ -95,7 +95,13 @@ IV_SIZE_OPT void Fdn::reset()
         inLoopNow_ = inLoopTarget_;
         earlyNow_ = earlyTarget_;
         readStep_[i] = 0.0f;
+        for (int k = 0; k < 2; ++k) {
+            apLenNow_[i][k] = apTargetLength(i, k);
+            apLenGlide_[i][k] = float(apLenNow_[i][k]);
+            apLenStep_[i][k] = 0.0f;
+        }
     }
+    outputTrimNow_ = outputTrim_;
 }
 
 IV_SIZE_OPT void Fdn::setMeanSeconds(float meanSeconds, float spread, bool snap)
@@ -110,6 +116,15 @@ IV_SIZE_OPT void Fdn::setMeanSeconds(float meanSeconds, float spread, bool snap)
     }
 }
 
+// Where an in-loop allpass's length is going: its own length × the scale, or nothing when the
+// diffusion is going out.
+uint32_t Fdn::apTargetLength(int i, int k) const
+{
+    if (inLoopTarget_ <= 0.0f) return 0u;
+    const float len = float(apLen_[i][k]) * apScale_;
+    return len < 1.0f ? 1u : uint32_t(len);
+}
+
 void Fdn::control(int n)
 {
     const float dt = float(n) / sampleRate_;
@@ -122,14 +137,25 @@ void Fdn::control(int n)
     const FloorGovernor& gov = leader_ ? leader_->governor_ : governor_; // a low tank follows its leader
     const float governRate = gov.extraRate;
 
+    // In-loop diffusion in and out (HALL's small rooms, v1.0.17): the allpasses join the loop at no
+    // length at all and grow from there (SIZE's glide); going out, they shrink back to nothing before
+    // they're bypassed. Switched in or out at full length, the lines' lengths jumped and the bypassed
+    // allpasses replayed stale sound: a click and a dropout whenever SIZE crossed noon in a HALL tail
+    // (soak audit).
+    const bool wasBypassed = inLoopNow_ == 0.0f;
     inLoopNow_ += (1.0f - std::exp(-dt / 0.08f)) * (inLoopTarget_ - inLoopNow_);
-    if (inLoopNow_ < 1e-4f && inLoopTarget_ == 0.0f) inLoopNow_ = 0.0f;
+    bool shrunk = true;
+    for (int i = 0; i < kN; ++i) shrunk &= apLenGlide_[i][0] <= 0.0f && apLenGlide_[i][1] <= 0.0f;
+    if (inLoopNow_ < 1e-4f && inLoopTarget_ == 0.0f && shrunk) inLoopNow_ = 0.0f;
+    const bool joining = wasBypassed && inLoopNow_ > 0.0f;
     earlyNow_ += (1.0f - std::exp(-dt / 0.08f)) * (earlyTarget_ - earlyNow_);
     if (earlyNow_ < 1e-4f && earlyTarget_ == 0.0f) earlyNow_ = 0.0f;
     float meanLen = 0.0f;
     for (int i = 0; i < kN; ++i) meanLen += lenNow_[i];
     meanLen /= float(kN) * sampleRate_;
-    levelGain_ = outputTrim_ * std::sqrt(meanLen / voicing::kFdnLevelRefSeconds);
+    outputTrimNow_ += (1.0f - std::exp(-dt / 0.05f)) * (outputTrim_ - outputTrimNow_);
+    if (std::fabs(outputTrim_ - outputTrimNow_) < 1e-6f) outputTrimNow_ = outputTrim_;
+    levelGain_ = outputTrimNow_ * std::sqrt(meanLen / voicing::kFdnLevelRefSeconds);
     for (int i = 0; i < kN; ++i) {
         // SIZE glides toward its target, at most a semitone of bend.
         const float diff = lenTarget_[i] - lenNow_[i];
@@ -156,10 +182,19 @@ void Fdn::control(int n)
         // highRatio; at infinite the highs fade until the tail reaches its
         // floor, then it holds (ADR 0008).
         for (int k = 0; k < 2; ++k) {
-            const float len = float(apLen_[i][k]) * apScale_;
-            apLenNow_[i][k] = len < 1.0f ? 1u : uint32_t(len);
+            apLenNow_[i][k] = apTargetLength(i, k);
+            float& glide = apLenGlide_[i][k];
+            if (joining) glide = 0.0f;
+            const float d = float(apLenNow_[i][k]) - glide;
+            if (std::fabs(d) < 1e-3f) { // there: the exact integer read again
+                glide = float(apLenNow_[i][k]);
+                apLenStep_[i][k] = 0.0f;
+            } else {
+                apLenStep_[i][k] = (d > slew ? slew : (d < -slew ? -slew : d)) / float(n);
+            }
+            if (joining) glide = -apLenStep_[i][k]; // the first sample reads no delay: the buffer holds nothing fresh yet
         }
-        const float apSeconds = inLoopNow_ > 0.0f ? float(apLenNow_[i][0] + apLenNow_[i][1]) / sampleRate_ : 0.0f;
+        const float apSeconds = inLoopNow_ > 0.0f ? (apLenGlide_[i][0] + apLenGlide_[i][1]) / sampleRate_ : 0.0f;
         const Absorb a = absorbent(lenNow_[i] / sampleRate_ + apSeconds, decayRate_ + governRate + extraRate_, highRatio_,
                                    gov.darken, shelfK_);
         b1_[i] = a.b1;
@@ -184,8 +219,18 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                 readNow_[i] += readStep_[i];
                 float x = line_[i].readAllpass(readNow_[i], interp_[i]);
                 if (apG > 0.0f)
-                    for (int k = 0; k < 2; ++k) { // in-loop diffusion (MASSIVE)
-                        const float d = apLine_[i][k].read(apLenNow_[i][k]);
+                    for (int k = 0; k < 2; ++k) { // in-loop diffusion (MASSIVE, a small HALL)
+                        float d;
+                        const float glide = (apLenGlide_[i][k] += apLenStep_[i][k]);
+                        if (glide == float(apLenNow_[i][k]) && glide >= 1.0f) d = apLine_[i][k].read(apLenNow_[i][k]);
+                        else if (glide < 1.0f) { // joining or leaving the loop: between no delay (the input) and one sample
+                            d = glide > 0.0f ? x + glide * (apLine_[i][k].read(1) - x) : x;
+                        } else { // gliding: linear between samples (the buffer has room for the longest)
+                            const auto  di = uint32_t(glide);
+                            const float t = glide - float(di);
+                            const float a0 = apLine_[i][k].read(di), a1 = apLine_[i][k].read(di + 1);
+                            d = a0 + t * (a1 - a0);
+                        }
                         const float v = x + apG * d;
                         apLine_[i][k].write(v);
                         x = d - apG * v;

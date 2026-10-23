@@ -124,7 +124,7 @@ private:
     void handleEdges(int chunkStart, int chunkEnd);
     void onGesture(GestureReader::Event e);
     void controlTick(int n);
-    void applySpace(bool snap);
+    void applySpace(bool snap, int n = kChunk);
     float smoothed(ParamId id) const { return smooth_[static_cast<size_t>(id)]; }
 
     float sampleRate_   = 48000.0f;
@@ -182,6 +182,7 @@ private:
     uint32_t          noiseSeed_ = 0xA11CEu;
     float             hissLp_[2] = {}, hissGain_ = 0.0f, crackleChance_ = 0.0f, crackleGain_ = 0.0f;
     float             lastMean_ = -1.0f, lastSpread_ = -1.0f;
+    float             hallSize_ = 0.5f; // HALL's SIZE for its gains, glided (applySpace)
 
     // SPACE flips (ADR 0013): the wet and the tank's input fade out, the
     // tank restarts in the new voicing, and both fade back in.

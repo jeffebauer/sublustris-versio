@@ -224,6 +224,7 @@ void Engine::onGesture(GestureReader::Event e)
         tankInTarget_ = 0.0f;
         tankInStep_ = tankStep;
         if (!twinActive_) {
+            twinFdn_.setInLoopDiffusion(activeSpace_ == 2 ? 1.0f : 0.0f); // before the reset, so it starts there
             twinFdn_.reset();
             twinPlate_.reset();
             for (auto& d : twinDiffuser_) d.clear();
@@ -264,10 +265,18 @@ void Engine::onGesture(GestureReader::Event e)
 // frozen, the big tank keeps the SIZE and DECAY it froze with and its loss
 // glides to none (freezeMix_); the knobs play the twin. snap: jump
 // straight there (reset, a SPACE flip).
-void Engine::applySpace(bool snap)
+void Engine::applySpace(bool snap, int n)
 {
     const bool frozen = gesture_.frozen();
     const float size = frozen ? heldSize_ : smoothed(ParamId::Size);
+    // HALL's SIZE also sets its T60 scale, output trim and in-loop diffusion, which act at once (the
+    // lines' lengths glide on their own): they follow a ~80 ms glide of SIZE, so a SIZE jump (CV, or an
+    // unfreeze after SIZE moved) doesn't step the loop's gains (soak audit).
+    if (snap) hallSize_ = size;
+    else {
+        hallSize_ += (1.0f - std::exp(-float(n) / (0.08f * sampleRate_))) * (size - hallSize_);
+        if (std::fabs(size - hallSize_) < 1e-6f) hallSize_ = size;
+    }
     const float decay = frozen ? heldDecay_ : smoothed(ParamId::Decay);
     const float time = smoothed(ParamId::Time), tone = smoothed(ParamId::Tone);
     const int attack = normalisedToSwitch(smoothed(ParamId::Attack));
@@ -276,7 +285,7 @@ void Engine::applySpace(bool snap)
     // Freezing: loss → 0, highs kept (ratio → 1), the governor caps paint.
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
     const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
-    const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(size) : 1.0f;
+    const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(hallSize_) : 1.0f;
     const float rate = map::decayRate(decay, activeSpace_) / sizeT60 * (1.0f - freezeMix_);
     const float highRatio = toneRatio + freezeMix_ * (1.0f - toneRatio);
     // Frozen: full weight (only the pad's own hold acts, there's no floor). Not frozen: DECAY's own
@@ -326,12 +335,12 @@ void Engine::applySpace(bool snap)
         // HALL's in-loop diffusion is for the small rooms (v1.0.17): full at SIZE fully CCW, gone by
         // noon, so medium and large HALLs stay as they were (with it they measured ~2 dB quieter at
         // full SIZE and no less grainy).
-        const float hallDiff = hallInLoop_ * std::fmax(0.0f, 1.0f - size / voicing::kHallInLoopUntilSize);
+        const float hallDiff = hallInLoop_ * std::fmax(0.0f, 1.0f - hallSize_ / voicing::kHallInLoopUntilSize);
         fdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallDiff);
         // HALL's allpasses scale with its mean line, so a small
         // room stays small (MASSIVE's lengths at a 0.2 s mean and up).
-        fdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(size) / 0.2f));
-        fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(size, decay));
+        fdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(hallSize_) / 0.2f));
+        fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(hallSize_, decay));
         fdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
         fdn_.setModDepth(modScale_);
         // Still lows: the low tank follows, unmodulated.
@@ -341,8 +350,8 @@ void Engine::applySpace(bool snap)
         lowFdn_.setFloorDb(floorDb);
         lowFdn_.setHoldDb(holdDb);
         lowFdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallDiff);
-        lowFdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(size) / 0.2f));
-        lowFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(size, decay));
+        lowFdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(hallSize_) / 0.2f));
+        lowFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(hallSize_, decay));
         lowFdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
         lowFdn_.setModDepth(0.0f);
     }
@@ -550,15 +559,30 @@ void Engine::controlTick(int n)
     if (flipPhase_ == 0 && space != activeSpace_ && !gesture_.frozen() && freezeMix_ == 0.0f) flipPhase_ = 1;
     if (flipPhase_ == 1) {
         flipStep_ = -flipChunk / float(n);
-        if (flipGain_ <= 0.0f) {
+        if (gesture_.frozen()) {
+            // A freeze inside the fade-out keeps the old space: it fades back in as the pad, and the
+            // flip waits for the unfreeze like any other (soak audit: the tank used to restart under
+            // the freeze, so the pad came out silent).
+            flipPhase_ = 2;
+        } else if (flipGain_ <= 0.0f) {
             activeSpace_ = space;
+            applySpace(true); // targets first, so the resets below land on them (the FDN's output trim)
             fdn_.reset();
             lowFdn_.reset();
             plate_.reset();
             swell_.reset();
             reverse_.reset();
             reverseFdn_.reset();
-            applySpace(true);
+            // A twin still fading after an unfreeze belongs to the old space: it has faded out with
+            // the wet, so it stops here and the new space's twin starts clean at the next freeze
+            // (soak audit: it was cut off mid-sound, a click, and the other twin replayed stale sound).
+            twinActive_ = false;
+            twinIn_ = twinInStep_ = 0.0f;
+            twinFdn_.reset();
+            twinPlate_.reset();
+            twinSwell_.reset();
+            for (auto& d : twinDiffuser_) d.clear();
+            twinMean_ = twinSpread_ = -1.0f;
             flipPhase_ = 2;
         }
     }
@@ -571,7 +595,7 @@ void Engine::controlTick(int n)
     }
     if (flipPhase_ == 0) flipStep_ = 0.0f;
 
-    applySpace(false);
+    applySpace(false, n);
     swell_.control(n);
     twinSwell_.control(n);
     reverse_.control(n);
@@ -681,8 +705,9 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             // REVERSE: the swell replaces the forward wet, crossfaded over ~50 ms.
             const float rl = voicing::kReverseLevel * revL_[i], rr = voicing::kReverseLevel * revR_[i];
             reverseMix_ = approach(reverseMix_, reverseTarget_, reverseStep);
-            float wl = (wetL_[i] + reverseMix_ * (rl - wetL_[i])) * flipGain_ + voicing::kTwinLevel * twinL_[i];
-            float wr = (wetR_[i] + reverseMix_ * (rr - wetR_[i])) * flipGain_ + voicing::kTwinLevel * twinR_[i];
+            // The twin fades with a SPACE flip too (it stops at the flip's silent point).
+            float wl = (wetL_[i] + reverseMix_ * (rl - wetL_[i]) + voicing::kTwinLevel * twinL_[i]) * flipGain_;
+            float wr = (wetR_[i] + reverseMix_ * (rr - wetR_[i]) + voicing::kTwinLevel * twinR_[i]) * flipGain_;
             wl *= eraMakeup_;
             wr *= eraMakeup_;
             muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)
