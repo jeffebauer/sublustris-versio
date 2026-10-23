@@ -65,6 +65,11 @@ constexpr float kMidiBitsStart = 13.0f, kMidiBitsEnd = 13.0f;
 // The box engages across the Midiverb's whole stretch as (share)² (v1.0.21, knob_feel: it switched on
 // within 2 % at 0.85 and a tail got ~5× shorter in one notch, then the last 13 % did nothing).
 constexpr float kMidiEngagePower = 2.0f;
+// At infinite DECAY the box keeps only this share of its dark loop (v1.0.23, owner's pick on
+// renders/midiverb_hold round 2, "brighter fading" on all 16 cards): the whole loop turned a held tail
+// into a low drone (a held 1 kHz tone gone within a minute); none let ERA's per-pass grain pile up in the
+// highs (+18 dB of hiss above 5 kHz in a minute). A quarter: brighter, a held tone fades ~0.25 dB/s.
+constexpr float kMidiDarkAtInfinite = 0.25f;
 constexpr float kCrackleDbfs = -48.0f;
 constexpr float kCracklePerSecond = 4.0f;
 
