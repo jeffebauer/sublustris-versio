@@ -1155,35 +1155,72 @@ double tailFlatnessDb(const std::vector<float>& mono, size_t start, size_t end, 
     return std::sqrt(sq / cnt);
 }
 
-// echoDensityTimeS and echoDensityLate for one channel (see roomMeasures).
-void echoDensityOf(const std::vector<float>& x, const TailSpan& span, float sr, double& timeS, double& late)
+// echoDensityGrainS, echoDensityTimeS and echoDensityLate for one channel
+// (see roomMeasures).
+void echoDensityOf(const std::vector<float>& x, const TailSpan& span, size_t grainOnset, float sr, double& grainS,
+                   double& timeS, double& late)
 {
-    timeS = late = std::nan("");
+    grainS = timeS = late = std::nan("");
     const size_t hop = std::max<size_t>(1, size_t(std::lround(0.001 * double(sr))));
-    // The time search reads the profile every 1 ms, first over the 4 s after
-    // the onset (where every SPACE so far gets dense), the whole tail only if
-    // it hasn't by then.
+    // The profile every 1 ms over the first kEchoGrainSpanS after the onset
+    // (the start of the tail; every SPACE's profile has settled by then).
+    const size_t grainEnd = std::min(span.tailEnd, grainOnset + size_t(kEchoGrainSpanS * double(sr)));
     const size_t firstEnd = std::min(span.tailEnd, span.onset + size_t(4.0 * double(sr)));
-    std::vector<double> ned = echoDensityProfile(x, span.onset, firstEnd, sr, hop);
-    for (int pass = 0; pass < 2; ++pass) {
-        if (pass == 1) {
-            if (!std::isnan(timeS) || firstEnd >= span.tailEnd) break;
-            ned = echoDensityProfile(x, span.onset, span.tailEnd, sr, hop);
-        }
     // The raw profile of Gaussian noise itself dips below 0.9 now and then
     // (3-10 % of the time with a 20 ms window, more the darker the noise:
     // one-pole low-passed noise at ~150 Hz took 0.77 s to "hold" 100 ms
-    // >= 0.9), so the hold is judged on the profile's centred 100 ms mean,
+    // >= 0.9), so both figures read the profile's centred 100 ms mean,
     // which Gaussian noise keeps >= 0.9 (tested in test_density).
-        const size_t hold = size_t(std::lround(kEchoDensityHoldS * double(sr) / double(hop)));
+    const size_t hold = size_t(std::lround(kEchoDensityHoldS * double(sr) / double(hop)));
+    auto smoothed = [&](const std::vector<double>& p) {
         const size_t h = hold / 2;
-        std::vector<double> prefix(ned.size() + 1, 0.0);
-        for (size_t k = 0; k < ned.size(); ++k) prefix[k + 1] = prefix[k] + ned[k];
+        std::vector<double> prefix(p.size() + 1, 0.0), s(p.size());
+        for (size_t k = 0; k < p.size(); ++k) prefix[k + 1] = prefix[k] + p[k];
+        for (size_t k = 0; k < p.size(); ++k) {
+            const size_t lo = k >= h ? k - h : 0, hi = std::min(p.size(), k + h + 1);
+            s[k] = (prefix[hi] - prefix[lo]) / double(hi - lo);
+        }
+        return s;
+    };
+    // Grain: the density missing below the bar, integrated over the span and
+    // scaled so that NED 0 counts one second per second,
+    //   grain = integral of max(0, 0.9 - mean100(t)) / 0.9 dt.
+    // Abel and Huang (2006, sec. 4.1) read the start of the late field where
+    // the profile first reaches 1, or comes within its late-field standard
+    // deviation of 1 to allow for the profile's own fluctuation; Lindau,
+    // Kosanke and Weinzierl (JAES 60(11), 2012) found that first-reaches-1
+    // time (their criterion I, mean of both ears) the best signal-based
+    // predictor of the perceptual mixing time. Both are first crossings,
+    // which jump whenever a profile hovers near the bar (MASSIVE's sits at
+    // 0.85-0.95 for seconds; its crossing read 0.06 s to 1.67 s, and
+    // criterion I 0.14 s to 2.57 s, across one-sample changes of the input
+    // click). The area keeps a bar and our smoothing but sums how far below
+    // it the profile sits and for how long, so it moves smoothly with the
+    // signal: across single-sample clicks of other levels, polarity, time
+    // and block position it moved by <= 0.011 s in all 18 grainy-gate
+    // settings (the crossing by up to 0.68 s). A profile that steps from 0
+    // to 1 at T reads T, as the crossing would. The bar is 0.9 rather than 1
+    // so the late field's own fluctuation adds nothing (Abel and Huang's
+    // reason for criterion II); Gaussian and low-passed noise read 0.
+    // Known dependence: echo density counts samples, so a duller excitation
+    // reads smoother (a two-sample click: up to 0.045 s less grain).
+    if (grainEnd > grainOnset) {
+        const std::vector<double> g = smoothed(echoDensityProfile(x, grainOnset, grainEnd, sr, hop));
+        double missing = 0.0;
+        for (double v : g) missing += std::max(0.0, kEchoDensityTarget - v) / kEchoDensityTarget;
+        grainS = missing * double(hop) / double(sr);
+    }
+    // The deprecated crossing (Metrics.h), unchanged: from span.onset, over
+    // its first 4 s, then the whole tail if it isn't reached by then.
+    std::vector<double> s = smoothed(echoDensityProfile(x, span.onset, firstEnd, sr, hop));
+    for (int pass = 0; pass < 2; ++pass) {
+        if (pass == 1) {
+            if (!std::isnan(timeS) || firstEnd >= span.tailEnd) break;
+            s = smoothed(echoDensityProfile(x, span.onset, span.tailEnd, sr, hop));
+        }
         size_t run = 0;
-        for (size_t k = 0; k < ned.size(); ++k) {
-            const size_t lo = k >= h ? k - h : 0, hi = std::min(ned.size(), k + h + 1);
-            const double smooth = (prefix[hi] - prefix[lo]) / double(hi - lo);
-            run = smooth >= kEchoDensityTarget ? run + 1 : 0;
+        for (size_t k = 0; k < s.size(); ++k) {
+            run = s[k] >= kEchoDensityTarget ? run + 1 : 0;
             if (run > hold) { timeS = double((k - hold) * hop) / double(sr); break; }
         }
     }
@@ -1198,12 +1235,13 @@ void echoDensityOf(const std::vector<float>& x, const TailSpan& span, float sr, 
 // All of the room-acoustics measures on the first event's segment.
 //  - Echo density (item 8): on each of the first two analysis channels
 //    (the mono downmix of decorrelated sides would read denser than either
-//    ear hears), keeping the worse: the later echoDensityTimeS, the lower
-//    echoDensityLate. The 0.9 / 100 ms rule for "dense" is ours (Abel and
-//    Huang read the mixing time where the profile reaches ~1; Lindau et al.
-//    2012 do the same with their window), judged on the profile's 100 ms
-//    mean (echoDensityOf). The late span starts 0.3 s after the input
-//    stopped (TailSpan.peak).
+//    ear hears). echoDensityGrainS is the mean of the two sides, as Lindau
+//    et al. 2012 average both ears' mixing times (neither ear predicted
+//    better than the other); echoDensityLate keeps the lower side, the
+//    deprecated echoDensityTimeS the later. The 0.9 bar on the profile's
+//    100 ms mean is ours (Abel and Huang read the mixing time where the
+//    profile reaches ~1; see echoDensityOf). The late span starts 0.3 s
+//    after the input stopped (TailSpan.peak).
 //  - Band T60 / EDT (item 11, 12): bandDecays, from the first event to
 //    TailSpan.quietEnd.
 //  - C80 (ISO 3382-1): 10 log10(energy onset..+80 ms / energy +80 ms..end),
@@ -1219,11 +1257,28 @@ void roomMeasures(const std::vector<std::vector<float>>& channels, const std::ve
     bandDecays(mono, segStart, span.ok ? span.quietEnd : segEnd, sr, m);
     if (!span.ok) return;
 
+    // The grain starts at the same ISO onset rule (20 dB below the segment's
+    // peak), searched from the start of the file instead of from the first
+    // detected event: findEvents can place a reverb's first event late, on
+    // the swell rather than the quiet taps before it, and where it lands
+    // moves with trivial input changes (MASSIVE SIZE 0 / DECAY 0.7: 0.34 s
+    // for a click at 0.5, 0.78 s at 0.9), cutting off part of the grainy
+    // start. Searched from 0, the onset held still for every click variant.
+    // (The other room measures, and the deprecated crossing, keep span.onset.)
+    size_t grainOnset = span.onset;
+    {
+        double maxAbs = 0.0;
+        for (size_t i = segStart; i < segEnd; ++i) maxAbs = std::max(maxAbs, std::fabs(double(mono[i])));
+        for (size_t i = 0; i < span.onset; ++i)
+            if (std::fabs(double(mono[i])) >= 0.1 * maxAbs) { grainOnset = i; break; }
+    }
+
     const size_t numCh = std::min<size_t>(2, channels.size());
     for (size_t c = 0; c < std::max<size_t>(1, numCh); ++c) {
-        double t = 0.0, l = 0.0;
-        echoDensityOf(numCh >= 2 ? channels[c] : mono, span, sr, t, l);
-        if (c == 0) { m.echoDensityTimeS = t; m.echoDensityLate = l; continue; }
+        double g = 0.0, t = 0.0, l = 0.0;
+        echoDensityOf(numCh >= 2 ? channels[c] : mono, span, grainOnset, sr, g, t, l);
+        if (c == 0) { m.echoDensityGrainS = g; m.echoDensityTimeS = t; m.echoDensityLate = l; continue; }
+        m.echoDensityGrainS = 0.5 * (m.echoDensityGrainS + g); // NaN stays NaN
         m.echoDensityTimeS = (std::isnan(t) || std::isnan(m.echoDensityTimeS)) ? std::nan("")
                                                                               : std::max(t, m.echoDensityTimeS);
         m.echoDensityLate = (std::isnan(l) || std::isnan(m.echoDensityLate)) ? std::nan("")
@@ -1418,7 +1473,7 @@ std::string summaryLine(const Metrics& m)
         return std::string(b);
     };
     std::string line(buf);
-    line += " density=" + fmt(m.echoDensityTimeS, "%.2fs", "null") + "/" + fmt(m.echoDensityLate, "%.2f", "null");
+    line += " grain=" + fmt(m.echoDensityGrainS, "%.3fs", "null") + " late_density=" + fmt(m.echoDensityLate, "%.2f", "null");
     line += " c80=" + fmt(m.c80Db, "%.1fdB", "null");
     line += " iacc=" + fmt(m.iaccEarly, "%.2f", "mono") + "/" + fmt(m.iaccLate, "%.2f", "mono");
     line += " flat=" + fmt(m.tailFlatnessDb, "%.2fdB", "null");
