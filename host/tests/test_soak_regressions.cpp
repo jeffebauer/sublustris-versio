@@ -240,7 +240,8 @@ void smallHallSizeJumpsDontClick()
 // stopped, had its hold level taken while the tail was rising. Now the floor judges a falling tail
 // on a 50 ms level too (first only once the input was quiet, which missed an input fading out over
 // seconds: a decaying hit still plunged 64 dB), and the hold waits for the tank's own input to go
-// quiet. A tail now settles at the floor within a couple of dB and holds there.
+// quiet. ERA's cassette compression, judged on the same lagging level, did the same (fixed alike).
+// A tail now settles at the floor within a couple of dB and holds there.
 void infiniteTailDoesntPlungeWhenTheInputStops()
 {
     struct Case {
@@ -396,6 +397,31 @@ void padFrozenFromADyingTailHolds()
     }
 }
 
+// The same plunge from ERA's cassette compression, which also judged the tail on the 1.5 s level:
+// an infinite PLATE in the cassette range, a loud tone, then silence (soak seed 225's settings).
+void cassetteCompressionDoesntPlunge()
+{
+    Rig r(44100.0f, 64);
+    r.e.setParam(ParamId::Space, iv::switchToNormalised(0));
+    r.e.setParam(ParamId::Size, 0.8127f);
+    r.e.setParam(ParamId::Decay, 1.0f);
+    r.e.setParam(ParamId::Era, 0.82f);
+    r.e.setParam(ParamId::Tone, 0.37f);
+    r.e.setParam(ParamId::Drift, 0.947f);
+    r.e.setParam(ParamId::Time, 0.49f);
+    r.e.setParam(ParamId::Mix, 1.0f);
+    r.e.reset();
+    r.run(4.0, 0.582f, 1000.0f);
+    std::vector<double> levels;
+    for (int s = 0; s < 60; ++s) levels.push_back(db(r.run(1.0, 0.0f)));
+    const double lowest = *std::min_element(levels.begin(), levels.begin() + 30);
+    const double end = 0.5 * (levels[58] + levels[59]);
+    char what[160];
+    std::snprintf(what, sizeof what, "PLATE infinite, ERA's cassette: no plunge when a loud tone stops (lowest %.1f dB, %.1f under where it holds)",
+                  lowest, end - lowest);
+    check(end - lowest < 4.0, what);
+}
+
 } // namespace
 
 int main()
@@ -409,6 +435,7 @@ int main()
     reverseComingInDoesntClick();
     paintReleaseDoesntBurst();
     padFrozenFromADyingTailHolds();
+    cassetteCompressionDoesntPlunge();
     std::printf("%s\n", failures ? "SOME TESTS FAILED" : "ALL TESTS PASSED");
     return failures ? 1 : 0;
 }

@@ -372,7 +372,11 @@ void Engine::applySpace(bool snap, int n, bool snapDiffusers)
     loopEra.midiEngage *= keep;
     const dsp::DriftAmounts drift = map::driftAmounts(smoothed(ParamId::Drift), era.cassette);
     // The cassette's slow 2:1 compression: more loss above −18 dBFS.
-    const float over = tankLevelDb() - voicing::kCompressThresholdDb;
+    // Judged like the floor (the lower of its 1.5 s and 50 ms levels): on the 1.5 s level alone it
+    // kept compressing for seconds after a loud input stopped, and an infinite tail plunged 20+ dB
+    // under the floor (soak audit). A steady tail measures the same.
+    const float tankNowDb = activeSpace_ == 0 ? plate_.fastLevelDb() : fdn_.fastLevelDb();
+    const float over = std::fmin(tankLevelDb(), tankNowDb) - voicing::kCompressThresholdDb;
     const float compress = over > 0.0f ? keep * era.cassette * voicing::kCompressRatePerDb * over : 0.0f;
     if (plate) {
         plate_.setEra(loopEra);
