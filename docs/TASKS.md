@@ -1,15 +1,16 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, session 4 (knob feel v1.0.21 and the DSP audit's three ideas v1.0.22 shipped; the soak and Valhalla branches wait on you).
+**Last updated:** 24 Oct 2026, session 4 (three pages to hear: held Midiverb tail, tape out stronger, infinite tails when you stop).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- [ ] **ERA's Midiverb end at infinite DECAY** (found by the overnight tests): the Midiverb's dark loop eats the mids and highs of an infinite tail, a chord drops 25–46 dB within 30 s, then slowly comes back up as a dark drone. Should a held Midiverb tail stay bright and hold, or darken to a drone and hold?
+- [ ] **A held Midiverb tail: drone or bright?** (`renders/midiverb_hold/index.html`, pick per card): with ERA at the Midiverb end and DECAY infinite, today's held tail darkens to a low drone (A); B keeps its colour and holds. 75 s renders: listen after the music stops.
+- [ ] **Tape out, stronger** (`renders/tape_out/index.html`, pick per card): your "very subtle" note. B a little stronger, C much stronger (the highs pushed into the tape first, as tape machines do), D and E add tape hysteresis to C (D light and cheap, E the full physical model, maybe too heavy for the module). Which strength, and does hysteresis add something you want?
 
 ### Listen (after your notes)
-- [ ] **Infinite tails when you stop playing** (overnight soak fix, changes the sound): today an infinite PLATE drops up to 27 dB (HALL 10 dB) when a loud input stops or fades, then creeps back over 1–3 minutes. The fix keeps every dip within about 2 dB. A before/after page comes once you're happy to merge the overnight branches.
+- [ ] **Infinite tails when you stop playing** (`renders/infinite_stop/index.html`, pick per card): today (A) an infinite PLATE fed a loud input plunges 27 dB when the music stops and creeps back over a minute or more; the overnight fix (B) holds it within half a decibel. HALL improves a little, MASSIVE is the same either way; at normal levels they sound alike, so the music here is 12 dB hot (a loud Eurorack level). 80 s renders.
 
 ### Listen (first time)
 - [ ] **Immensio beside Valhalla** (`renders/valhalla_compare/index.html`, notes only): your Room, Plate and Supermassive takes in the same cards as our HALL, PLATE and MASSIVE, each column at a matched decay (2, 5, 15 s). What do they do that we don't, and the other way round? The Compare with menu now plays each card's own piece of music from the take you choose, so it works on any page.
