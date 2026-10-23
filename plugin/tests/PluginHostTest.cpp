@@ -152,6 +152,11 @@ struct Render { std::vector<float> outL, outR; };
 Render renderEngine(const std::vector<float>& in, const std::vector<int>& blocks, float mix, int gateOn = -1,
                     int gateOff = -1)
 {
+    // The plugin's processBlock flushes denormals (juce::ScopedNoDenormals, as every host
+    // expects), so the direct render runs under the same floating-point mode. Without it the
+    // two differ at about -180 dB wherever a read lands on subnormal tank memory (first seen
+    // with MASSIVE's interleaved early taps, v1.0.21), which is no difference in the plugin.
+    juce::ScopedNoDenormals noDenormals;
     iv::Engine engine;
     engine.prepare(48000.0f, 512);
     setPresetOnEngine(engine, mix);

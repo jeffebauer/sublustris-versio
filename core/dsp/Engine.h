@@ -134,6 +134,7 @@ private:
     void onGesture(GestureReader::Event e);
     void controlTick(int n);
     void applySpace(bool snap);
+    float decayRate(float decay, float size) const;
     float smoothed(ParamId id) const { return smooth_[static_cast<size_t>(id)]; }
 
     float sampleRate_   = 48000.0f;

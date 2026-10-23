@@ -12,3 +12,5 @@
 **Rejected:**
 - **Morph:** more distinct colours, but crossfade spots in the middle that sound like two things at half strength.
 - **Equal fifths** or **weighted to lo-fi** travel.
+
+**Amendment (24 Oct 2026, owner's pick on `renders/knob_feel`; SPEC v1.0.21):** the layers keep their places, but Neve's share now grows in straight steps from 3 % (Clean only below it), and the Midiverb box fades in across its whole stretch (85–100 %, as the share squared) instead of within 2 %, so every notch of ERA changes something and none jumps. B on 5 of 6 ERA cards (the one A: 95 % on the skank). The Midiverb stretch still changes the tail most per notch; giving it more of the knob is the next step if that's heard as uneven.

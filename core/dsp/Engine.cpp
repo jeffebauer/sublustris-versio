@@ -261,6 +261,12 @@ void Engine::onGesture(GestureReader::Event e)
 
 // ---- Voicing -------------------------------------------------------------------
 
+// DECAY's loss rate for the SPACE in use (MASSIVE's shortest tail follows SIZE, v1.0.21).
+float Engine::decayRate(float decay, float size) const
+{
+    return activeSpace_ == 2 ? map::massiveDecayRate(decay, size) : map::decayRate(decay, activeSpace_);
+}
+
 // Sets every voicing target for the SPACE in use (activeSpace_). While
 // frozen, the big tank keeps the SIZE and DECAY it froze with and its loss
 // glides to none (freezeMix_); the knobs play the twin. snap: jump
@@ -278,7 +284,7 @@ void Engine::applySpace(bool snap)
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
     const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
     const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(size) : 1.0f;
-    const float rate = map::decayRate(decay, activeSpace_) / sizeT60 * (1.0f - freezeMix_);
+    const float rate = decayRate(decay, size) / sizeT60 * (1.0f - freezeMix_);
     const float highRatio = toneRatio + freezeMix_ * (1.0f - toneRatio);
     // Frozen: full weight (only the pad's own hold acts, there's no floor). Not frozen: DECAY's own
     // weight at once, not glided with freezeMix_: gliding it pulled a fed pad (above the floor) down
@@ -333,7 +339,8 @@ void Engine::applySpace(bool snap)
         // HALL's allpasses scale with its mean line, so a small
         // room stays small (MASSIVE's lengths at a 0.2 s mean and up).
         fdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(size) / 0.2f));
-        fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(size, decay));
+        fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decay, size)
+                                   : map::hallSizeLevelTrim(size, decay));
         fdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
         // A3 prototype (hooks_.freezeStill): the floor glides out with the freeze (Costello: mod depth 0 to freeze).
         fdn_.setModDepth(hooks_.freezeStill ? modScale_ * (1.0f - freezeMix_) : modScale_);
@@ -345,7 +352,8 @@ void Engine::applySpace(bool snap)
         lowFdn_.setHoldDb(holdDb);
         lowFdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallDiff);
         lowFdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(size) / 0.2f));
-        lowFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(size, decay));
+        lowFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decay, size)
+                                      : map::hallSizeLevelTrim(size, decay));
         lowFdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
         lowFdn_.setModDepth(0.0f);
     }
@@ -400,8 +408,10 @@ void Engine::applySpace(bool snap)
     // ATTACK (ADR 0015): what TIME means, and the swell stage's attack.
     float predelay = massive ? map::massivePredelaySeconds(size) : 0.0f;
     float attackSeconds = massive ? map::massiveNormalAttackSeconds(decay, size) : 0.0f;
-    if (attack == 0) predelay += map::normalPredelaySeconds(time);
-    if (attack == 1) attackSeconds = map::bloomSeconds(time) * (massive ? map::massiveMass(size) : 1.0f);
+    if (attack == 0)
+        predelay += massive ? map::massiveNormalPredelaySeconds(time) : map::normalPredelaySeconds(time);
+    if (attack == 1)
+        attackSeconds = map::bloomSeconds(time) * (massive ? map::massiveMass(size) : 1.0f);
     swell_.setAttackSeconds(attackSeconds, snap);
     swell_.setSmear(attack == 1); // BLOOM only (owner, renders/swell_smear)
     // REVERSE: rising taps over TIME into the short reverb; DECAY sets how sudden the stop is.
@@ -428,7 +438,7 @@ void Engine::applySpace(bool snap)
         const float tSize = smoothed(ParamId::Size), tDecay = smoothed(ParamId::Decay);
         twinSwell_.setAttackSeconds(massive ? map::massiveNormalAttackSeconds(tDecay, tSize) : 0.0f, snap);
         const float tT60 = activeSpace_ == 1 ? map::hallT60Scale(tSize) : 1.0f;
-        const float tRate = std::fmax(map::decayRate(tDecay, activeSpace_) / tT60, 1.0f / voicing::kTwinMaxT60);
+        const float tRate = std::fmax(decayRate(tDecay, tSize) / tT60, 1.0f / voicing::kTwinMaxT60);
         dsp::EraMix tEra = era;
         tEra.even *= 1.0f - map::governorWeight(tDecay);
         if (plate) {
@@ -450,7 +460,8 @@ void Engine::applySpace(bool snap)
             twinFdn_.setHighT60Ratio(toneRatio);
             twinFdn_.setGovernor(0.0f);
             twinFdn_.setInLoopDiffusion(massive ? 1.0f : 0.0f);
-            twinFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(tSize, tDecay));
+            twinFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(tDecay, tSize)
+                                           : map::hallSizeLevelTrim(tSize, tDecay));
             twinFdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
             twinFdn_.setEra(tEra);
             twinFdn_.setDrift(drift);
