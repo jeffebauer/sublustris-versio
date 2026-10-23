@@ -375,6 +375,7 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
     dsp::EraMix loopEra = era;
     const float keep = 1.0f - freezeMix_;
     loopEra.midiRound = map::governorWeight(decay) >= 1.0f; // infinite: no systematic loss
+    loopEra.midiDark = 1.0f - map::governorWeight(decay) * (1.0f - voicing::kMidiDarkAtInfinite); // v1.0.23
     // Neve's even harmonics add energy in proportion to the level: harmless
     // while DECAY loses energy, a runaway in a lossless loop (measured: the
     // tail jumping 2-3 dB, then the governor overshooting into dips). So

@@ -1,26 +1,27 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, session 4 (knob feel v1.0.21 and the DSP audit's three ideas v1.0.22 shipped; the soak and Valhalla branches wait on you).
+**Last updated:** 24 Oct 2026, session 4 (five pages to hear: Valhalla round 2, held Midiverb round 2, tape out stronger, the full mix's send, infinite tails when you stop).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- [ ] **ERA's Midiverb end at infinite DECAY** (found by the overnight tests): the Midiverb's dark loop eats the mids and highs of an infinite tail, a chord drops 25–46 dB within 30 s, then slowly comes back up as a dark drone. Should a held Midiverb tail stay bright and hold, or darken to a drone and hold?
+- [ ] **A held Midiverb tail, round 2** (`renders/midiverb_hold/index.html`, pick per card): between the drone and the bright, as you asked. The rise-and-drop you saw was noise piling up once the dark loop was gone; keeping part of it stops that. A today's drone, B brighter with the highs fading slowly (a quarter of the loop kept), C brighter still, barely fading (a tenth).
+- [ ] **Immensio beside Valhalla, round 2** (`renders/valhalla_round2/index.html`, pick per card): a fix for each of your notes, beside the same Valhalla takes. HALL without the slap-back gap (early echoes) and with highs fading like air; the long HALL's resonances smoothed (more gentle movement); the PLATE's lows centred (they were partly out of phase, as you suspected); the long PLATE's top end tamed; MASSIVE with half the swell.
+- [ ] **The full mix's send** (`renders/fullmix_send/index.html`, pick per card; your note that the full mix sounds quieter with less tape): the reverb only hears the mix's send, 12 dB under the single instruments. A today, B the send 12 dB hotter, C tape that hears a steady level (more tape character, same wet level), D both. Not level-matched: keep one MIX setting for all four.
+- [ ] **Tape out, round 2** (`renders/tape_out/index.html`, pick per card): hysteresis on gentler tape, as you asked. A today, B a little stronger, C and D today plus light and full hysteresis, E and F a little stronger plus light and full. Light is cheap enough for the module; full is the physical tape model (may be too heavy for it) and also changes the tone noticeably. Does hysteresis add something you want, and on which strength?
 
 ### Listen (after your notes)
-- [ ] **Infinite tails when you stop playing** (overnight soak fix, changes the sound): today an infinite PLATE drops up to 27 dB (HALL 10 dB) when a loud input stops or fades, then creeps back over 1–3 minutes. The fix keeps every dip within about 2 dB. A before/after page comes once you're happy to merge the overnight branches.
+- [ ] **Infinite tails when you stop playing** (`renders/infinite_stop/index.html`, pick per card): today (A) an infinite PLATE fed a loud input plunges 27 dB when the music stops and creeps back over a minute or more; the overnight fix (B) holds it within half a decibel. HALL improves a little, MASSIVE is the same either way; at normal levels they sound alike, so the music here is 12 dB hot (a loud Eurorack level). 80 s renders.
 
 ### Listen (first time)
-- [ ] **Immensio beside Valhalla** (`renders/valhalla_compare/index.html`, notes only): your Room, Plate and Supermassive takes in the same cards as our HALL, PLATE and MASSIVE, each column at a matched decay (2, 5, 15 s). What do they do that we don't, and the other way round? The Compare with menu now plays each card's own piece of music from the take you choose, so it works on any page.
-- Nothing open.
 
 ### At the rack
 - [ ] **M0 hardware check** (`docs/m0-hardware-check.md`): flash `firmware/build/immensio_versio_m0test.bin`, check the boot pattern, switches, button (USB session), then knobs, gate and a quick passthrough listen (rack session). Tell Claude the results.
 - [ ] **M3 CPU check** (after M0): flash `firmware/build/immensio_versio_profile.bin` and send Claude the serial CPU report, so the CPU budget is measured, not estimated. Include a frozen MASSIVE with ERA full, DRIFT fully CW and BLOOM (the heaviest case on the desktop: 4.5× a plain HALL), and leave it ringing out into a long silence too: the tank memory fills with vanishingly small numbers, which some processors handle slowly (the plugin flushes them; the firmware doesn't yet).
 
 ### When convenient
-- [ ] **Re-export three clipped Valhalla takes about 6 dB lower**: Plate Chrome 15 s, Plate Lithium 15 s and Supermassive Andromeda 100 % (measure and music). Also check Supermassive's DELAY: its first sound came at different times between takes (Sagittarius 421 / 38 / 3 ms, Andromeda 1.1 / 0.7 / 0.65 s).
+- [ ] **Re-record Supermassive's short settings at a feedback that sounds like a reverb** (your note: at 0 % and 12 % it's separate delays): about 5 % for Andromeda's 2 s, or skip 2 s and record the longer settings you like (15 s, 30 s, infinite). Also **re-export three clipped Valhalla takes about 6 dB lower**: Plate Chrome 15 s, Plate Lithium 15 s and Supermassive Andromeda 100 % (measure and music). Also check Supermassive's DELAY: its first sound came at different times between takes (Sagittarius 421 / 38 / 3 ms, Andromeda 1.1 / 0.7 / 0.65 s).
 - [ ] **Reference recordings** (when convenient; `docs/reference-recording-guide.md`): Valhalla Room, Plate and Supermassive are in (I read them straight from your Ableton set; no need to export). Still to record: the **H9 Reverse** (the yardstick for REVERSE), Mercury7 Cathedra, VintageVerb, then the rest. For Supermassive, Andromeda at 0 % feedback rang only 0.5 s; about 5 % should give the 2 s target. LMC can't go short: even at 20 % it rings 26 s.
 
 ## Waiting on Claude
@@ -38,6 +39,8 @@
 
 ## Done
 
+- 24 Oct 2026: **Your Valhalla notes measured** (`docs/research/valhalla-notes.md`): the HALL's slap-back is a real 80 ms gap; the long HALL rings more resonantly than Room; the PLATE's lows were partly out of phase between left and right (Valhalla's aren't); our long PLATE has more top end (8 kHz rings 7.7 s against 2.9-6.3). Fixes are on the round-2 page.
+- 24 Oct 2026: **Held Midiverb, round 1 listened**: bright on most cards, drone on the vibes, "a balance between drone and bright would be ideal". The vibes' resonance is any infinite tail ringing a very pure note (it rings even more with ERA clean).
 - 24 Oct 2026: **The DSP audit's three ideas shipped** (B on every card; SPEC v1.0.22, ADR 0019): a frozen pad holds still instead of slowly shimmering out of tune; across ERA's μ-law stretch the HALL and MASSIVE tails read the old-Lexicon way (a little grain and noise, like a 224 or PCM70); the cassette stage now warms the wet like tape (it had no audible saturation before). The page is deleted. M6's ERA row was rendered before these and v1.0.21.
 - 24 Oct 2026: **Knob feel shipped** (B on 22 of 23 cards; SPEC v1.0.21): ERA does something from its first notch and the Midiverb fades in gradually; MASSIVE's DECAY grows evenly from fully CCW (its shortest tail is a little longer at big SIZEs, 6 s at full SIZE, with its loudness kept the same); MASSIVE's TIME moves the start from the first notch; BLOOM's first notch no longer jumps; MASSIVE's swell no longer dips before its peak on hits. The one A you gave (ERA at 95 % on the skank) is noted: the Midiverb stretch still changes the most per notch, so say if it still feels uneven. The page is deleted; M6's ERA row needs a re-render to carry it.
 - 24 Oct 2026: **Overnight audits** (four background helpers, each on its own branch, all tests re-run and passing, default sound unchanged): a 341-hour stress test found and fixed ten bugs (freeze taps mid-block turning into paints that never unfroze, clicks on SPACE flips, small-HALL SIZE jumps and REVERSE switching, a frozen pad swelling 20–55 dB, and more; no NaN, no limiter breach, no stuck tail anywhere), and measured desktop CPU (the heaviest case: a frozen MASSIVE with its twin, ERA full, DRIFT CW and BLOOM, 4.5× a plain HALL). The knob, DSP-audit and Valhalla results are in Decide and Waiting on Claude above.
