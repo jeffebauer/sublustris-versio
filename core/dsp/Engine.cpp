@@ -536,6 +536,17 @@ void Engine::controlTick(int n)
     // after the freeze), so it can't creep up afterwards.
     if (gesture_.frozen() && !gesture_.painting() && !padCaptured_ && freezeMix_ >= 1.0f && tankIn_ <= 0.0f
         && clock_ - frozeAt_ > uint64_t(voicing::kPadSettleSeconds * sampleRate_)) {
+        // Judged on the 8 s level, which averages a MASSIVE pad's early swings; unless that's still
+        // well above the pad's level now (50 ms), as when a fast-dying tail (a short DECAY) was frozen:
+        // the slower levels still remember the tail before the freeze (it can fall 130 dB in a second),
+        // and the makeup swelled the pad up towards it for minutes, 25-55 dB, even a finished tail from
+        // -260 dBFS (soak audit). Then the 8 s level starts over from now (the hold judges on it).
+        const float nowDb = activeSpace_ == 0 ? plate_.fastLevelDb() : fdn_.fastLevelDb();
+        if (tankSlowLevelDb() > nowDb + 3.0f) {
+            fdn_.resyncHoldLevelToFast();
+            lowFdn_.resyncHoldLevelToFast();
+            plate_.resyncHoldLevelToFast();
+        }
         padFloorDb_ = tankSlowLevelDb() + voicing::kPadCeilingDb;
         padCaptured_ = true;
     }

@@ -36,6 +36,14 @@ struct FloorGovernor {
         slow_ = power_;
         slowLevelDb = levelDb;
     }
+    // The level over the last ~50 ms, and the slow level starting over from it (a pad frozen from a
+    // fast-dying tail: both slower levels still remember the tail, soak audit).
+    float fastLevelDb() const { return 10.0f * std::log10(fast_ + 1e-20f); }
+    void resyncSlowToFast()
+    {
+        slow_ = fast_;
+        slowLevelDb = fastLevelDb();
+    }
     // One output sample's power (mean of the channels' squares).
     void add(float power) { block_ += power; }
 

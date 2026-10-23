@@ -60,6 +60,8 @@ public:
     void setInputQuiet(bool quiet) { governor_.quiet = quiet; }
     float slowLevelDb() const { return governor_.slowLevelDb; }
     void resyncHoldLevel() { governor_.resyncSlow(); }
+    void resyncHoldLevelToFast() { governor_.resyncSlowToFast(); }
+    float fastLevelDb() const { return governor_.fastLevelDb(); }
     // In-loop diffusion amount 0..1 (MASSIVE's SIZE); 0 bypasses it.
     void setInLoopDiffusion(float amount) { inLoopTarget_ = amount; }
     // The in-loop allpasses' lengths × k (1 = MASSIVE's; HALL scales them with its room, v1.0.17).

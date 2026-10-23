@@ -359,6 +359,38 @@ void paintReleaseDoesntBurst()
     }
 }
 
+// Soak finding 9: freezing a tail that was dying fast (a short DECAY, the input just stopped) gave
+// a pad that swelled for minutes, 25-55 dB: its ceiling was taken from the 8 s level, which still
+// remembered the tail from before the freeze, and the makeup lifted the pad up towards it. The
+// ceiling is now taken from the pad's own level when the 8 s level is still well above it.
+void padFrozenFromADyingTailHolds()
+{
+    struct Case {
+        int space;
+        double wait;
+    };
+    const Case cases[] = {{0, 0.5}, {0, 1.0}, {1, 1.0}, {0, 0.3}, {1, 0.3}};
+    for (const Case& c : cases) {
+        Rig r(48000.0f, 48);
+        r.e.setParam(ParamId::Space, iv::switchToNormalised(c.space));
+        r.e.setParam(ParamId::Decay, c.wait < 0.4 ? 0.15f : 0.0f); // the 0.3 s cases: a slightly longer tail, frozen at -50..-70 dB
+        r.e.setParam(ParamId::Size, 0.0f);
+        r.e.setParam(ParamId::Mix, 1.0f);
+        r.e.reset();
+        r.run(4.0, 0.3f);
+        r.run(c.wait, 0.0f);
+        r.tap();
+        r.run(28.0, 0.0f);
+        const double early = db(r.run(4.0, 0.0f));
+        r.run(120.0, 0.0f);
+        const double late = db(r.run(4.0, 0.0f));
+        char what[160];
+        std::snprintf(what, sizeof what, "space %d: a pad frozen %.1f s after a short tail holds (%.1f dB at 30 s, %.1f dB at 2.5 min)", c.space, c.wait,
+                      early, late);
+        check(std::fabs(late - early) < 2.0, what);
+    }
+}
+
 } // namespace
 
 int main()
@@ -371,6 +403,7 @@ int main()
     reverseFlipWhilePlayingDoesntClickLater();
     reverseComingInDoesntClick();
     paintReleaseDoesntBurst();
+    padFrozenFromADyingTailHolds();
     std::printf("%s\n", failures ? "SOME TESTS FAILED" : "ALL TESTS PASSED");
     return failures ? 1 : 0;
 }
