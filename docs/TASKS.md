@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, session 4 (four pages to hear: Valhalla round 2, held Midiverb round 2, tape out stronger, infinite tails when you stop).
+**Last updated:** 24 Oct 2026, session 4 (five pages to hear: Valhalla round 2, held Midiverb round 2, tape out stronger, the full mix's send, infinite tails when you stop).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
@@ -8,6 +8,7 @@
 ### Decide
 - [ ] **A held Midiverb tail, round 2** (`renders/midiverb_hold/index.html`, pick per card): between the drone and the bright, as you asked. The rise-and-drop you saw was noise piling up once the dark loop was gone; keeping part of it stops that. A today's drone, B brighter with the highs fading slowly (a quarter of the loop kept), C brighter still, barely fading (a tenth).
 - [ ] **Immensio beside Valhalla, round 2** (`renders/valhalla_round2/index.html`, pick per card): a fix for each of your notes, beside the same Valhalla takes. HALL without the slap-back gap (early echoes) and with highs fading like air; the long HALL's resonances smoothed (more gentle movement); the PLATE's lows centred (they were partly out of phase, as you suspected); the long PLATE's top end tamed; MASSIVE with half the swell.
+- [ ] **The full mix's send** (`renders/fullmix_send/index.html`, pick per card; your note that the full mix sounds quieter with less tape): the reverb only hears the mix's send, 12 dB under the single instruments. A today, B the send 12 dB hotter, C tape that hears a steady level (more tape character, same wet level), D both. Not level-matched: keep one MIX setting for all four.
 - [ ] **Tape out, stronger** (`renders/tape_out/index.html`, pick per card): your "very subtle" note. B a little stronger, C much stronger (the highs pushed into the tape first, as tape machines do), D and E add tape hysteresis to C (D light and cheap, E the full physical model, maybe too heavy for the module). Which strength, and does hysteresis add something you want?
 
 ### Listen (after your notes)
