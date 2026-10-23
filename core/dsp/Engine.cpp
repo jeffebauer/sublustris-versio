@@ -307,7 +307,6 @@ void Engine::applySpace(bool snap)
         plate_.setLongDelayMod(1.0f - freezeMix_);
         // A3 prototype: a frozen PLATE's chorus and floor glide out too (today it keeps 0.15 of the chorus).
         plate_.setModScale(hooks_.freezeStill ? modScale_ * (1.0f - freezeMix_) : modScale_);
-        plate_.setDattorroDiffusion2(hooks_.plateDd2);
         plate_.setHoldDb(holdDb);
     } else {
         const float mean = massive ? map::massiveMeanSeconds(size) : map::hallMeanSeconds(size);
@@ -364,9 +363,6 @@ void Engine::applySpace(bool snap)
     loopEra.even *= keep * (1.0f - map::governorWeight(decay));
     loopEra.drive = 1.0f + keep * (era.drive - 1.0f);
     loopEra.midiEngage *= keep;
-    loopEra.satBypass = hooks_.satBypass;
-    loopEra.midiPart = hooks_.midiPart;
-    loopEra.midiKeep = hooks_.midiKeep;
     const dsp::DriftAmounts drift = map::driftAmounts(smoothed(ParamId::Drift), era.cassette);
     // The cassette's slow 2:1 compression: more loss above −18 dBFS.
     const float over = tankLevelDb() - voicing::kCompressThresholdDb;
@@ -383,13 +379,10 @@ void Engine::applySpace(bool snap)
         lowFdn_.setDrift(dsp::DriftAmounts{}); // still: no wow, flutter or Wander
         lowFdn_.setExtraRate(compress);
     }
-    dsp::EraMix outEra = era;
-    outEra.muMode = hooks_.muMode;
-    muLaw_.set(outEra);
+    muLaw_.set(era);
     eraMakeup_ = era.makeup;
     tapeDrive_ = hooks_.tapeOut ? era.cassette : 0.0f;
-    tapeLinear_ = hooks_.tapeOut == 2;
-    if (!plate) fdn_.setVintage(hooks_.vintageMod ? era.mu : 0.0f);
+    if (!plate) fdn_.setVintage(hooks_.vintageMod ? era.mu * keep : 0.0f); // in-loop colour: out while frozen
 
     tilt_.set(smoothed(ParamId::Tone));
     // Hiss follows the input (none in silence, so an infinite tail doesn't
@@ -728,7 +721,7 @@ void Engine::tapeOut(float& l, float& r)
         return x * (27.0f + x2) / (27.0f + 9.0f * x2);
     };
     const float tb = th(d * b), norm = 1.0f / (d * (1.0f - tb * tb));
-    auto sat = [&](float x) { return tapeLinear_ ? x : (th(d * (x + b)) - tb) * norm; };
+    auto sat = [&](float x) { return (th(d * (x + b)) - tb) * norm; };
     float* ch[2] = {&l, &r};
     const float dcCoeff = 6.2831853f * 5.0f / sampleRate_;
     for (int c = 0; c < 2; ++c) {

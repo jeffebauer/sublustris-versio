@@ -143,12 +143,6 @@ void Plate::control(int n)
         br.d2Len = kD2[b] * k;
         br.loss1 = absorbent((br.ap1Len + br.d1Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfK_);
         br.loss2 = absorbent((br.ap2Len + br.d2Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfK_);
-        br.dd2 = kDecayDiffusion2;
-        if (dd2Follows_) {
-            // Dattorro's "decay" is the gain per half-branch: here the low end's loss over ap2 + d2.
-            const float g = std::pow(10.0f, -3.0f * (br.ap2Len + br.d2Len) / sampleRate_ * lowRate);
-            br.dd2 = g + 0.15f < 0.25f ? 0.25f : (g + 0.15f > 0.5f ? 0.5f : g + 0.15f);
-        }
 
         // The modulated allpass: Dattorro's slow sine, plus the modulation
         // floor's slow random wander (as every tank's, SPEC §2.3 rule 1).
@@ -221,9 +215,9 @@ void Plate::process(const float* inL, const float* inR, float* outL, float* outR
                 x = br.y1;
                 // Allpass, decay diffusion 2.
                 const float d2 = br.ap2.readAllpass(br.ap2Len, br.i3);
-                const float v2 = x + br.dd2 * d2;
+                const float v2 = x + kDecayDiffusion2 * d2;
                 br.ap2.write(v2);
-                x = d2 - br.dd2 * v2;
+                x = d2 - kDecayDiffusion2 * v2;
                 // Delay, then loss.
                 br.d2.write(x);
                 br.longNow[1] += br.longStep[1];

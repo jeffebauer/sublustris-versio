@@ -37,11 +37,6 @@ struct EraMix {
     float midiBits = 16.0f, midiEngage = 0.0f;           // in-loop box
     bool  midiRound = false;                             // at infinite: round (no systematic loss) instead of truncate
     float makeup = 1.0f;                                 // wet gain keeping ERA's loudness level
-    // DSP audit hooks (Engine::AuditHooks), off by default.
-    bool  satBypass = false;                             // measurement: no soft clip
-    int   midiPart = 0;                                  // measurement: 1 no truncation, 2 no dark loop
-    bool  midiKeep = false;                              // E2 prototype: round above 16 steps, truncate below
-    int   muMode = 0;                                    // E3: 1 off, 3 band limit only (measurements); 2 gain-ranging
 };
 
 // The loop's soft clip: exactly linear below the knee (so a tail at a normal
@@ -103,7 +98,7 @@ public:
             evenMean_ += evenCoeff_ * (sq - evenMean_);
             even = mix_.even * (sq - evenMean_);
         }
-        float y = mix_.satBypass ? (d * x + even) / d : softClip(d * x + even, voicing::kSatCeiling) / d;
+        float y = softClip(d * x + even, voicing::kSatCeiling) / d;
         // Midiverb box.
         if (mix_.midiEngage > 0.0f) {
             const float boxed = box(y);
@@ -119,7 +114,7 @@ private:
     {
         // Still lows' low tank (12 kHz, v1.0.18): below ~300 Hz the box's halfbands and dark loop are
         // flat, and at this rate they'd darken the lows every pass; only the 13 bits stay.
-        if (sampleRate_ < 30000.0f) return mix_.midiPart == 1 ? x : quantise(x);
+        if (sampleRate_ < 30000.0f) return mix_.midiRound ? roundBits(x, midiStep_) : truncateBits(x, midiStep_);
         if (phase_ == 0) {
             pairFirst_ = x;
             phase_ = 1;
@@ -129,22 +124,12 @@ private:
         float in = down_.down(pairFirst_, x);
         // The Midiverb's loop low-pass: y = ½x + ½y' at its rate (about -3 dB at 2.7 kHz).
         darkLp_ += 0.5f * (in - darkLp_);
-        if (mix_.midiPart != 2) in = darkLp_;
-        const float low = mix_.midiPart == 1 ? in : quantise(in);
+        in = darkLp_;
+        const float low = mix_.midiRound ? roundBits(in, midiStep_) : truncateBits(in, midiStep_);
         float a, b;
         up_.up(low, a, b);
         held_ = b;
         return a;
-    }
-
-    // At infinite, round (no systematic loss); else truncate toward zero. E2 prototype (midiKeep): round
-    // while the line is above kKeepSteps steps, so only the tail's last ~24 dB pays the truncation's loss
-    // (the classic cure for limit cycles is truncation near zero: the small-signal end is where they live).
-    float quantise(float x) const
-    {
-        constexpr float kKeepSteps = 16.0f;
-        if (mix_.midiRound || (mix_.midiKeep && std::fabs(x) > kKeepSteps * midiStep_)) return roundBits(x, midiStep_);
-        return truncateBits(x, midiStep_);
     }
 
     float    sampleRate_ = 48000.0f;
@@ -168,10 +153,8 @@ public:
     }
     void set(const EraMix& m)
     {
-        engage_ = m.muMode == 1 ? 0.0f : m.muEngage;
+        engage_ = m.muEngage;
         levels_ = std::exp2(m.muBits - 1.0f); // codes per polarity
-        ranging_ = m.muMode == 2;
-        unquantised_ = m.muMode == 3;
     }
     void process(float& l, float& r)
     {
@@ -201,8 +184,6 @@ private:
     // μ-law encode, quantise to the code count, decode.
     float companded(float x) const
     {
-        if (unquantised_) return x; // measurement: the layer's band limit only
-        if (ranging_) return gainRanged(x);
         const float fs = voicing::kMuFullScale, mu = voicing::kMuLaw;
         float a = std::fabs(x) / fs;
         if (a > 1.0f) a = 1.0f;
@@ -212,26 +193,10 @@ private:
         return (x < 0.0f ? -dec : dec) * fs;
     }
 
-    // E3 PROTOTYPE (DSP audit, 24 Oct 2026): a gain-ranging converter as the Lexicon 224X's (a 12-bit
-    // mantissa and a 2-bit exponent: four 6 dB ranges), at the same bits as the mu-law layer. Each
-    // sample takes the smallest range it fits, so the noise steps with the level in 6 dB bands.
-    float gainRanged(float x) const
-    {
-        const float a = std::fabs(x);
-        float range = voicing::kMuFullScale;
-        for (int e = 0; e < 3 && a < 0.5f * range; ++e) range *= 0.5f;
-        const float step = range / levels_;
-        float q = std::round(x / step) * step;
-        if (q > voicing::kMuFullScale) q = voicing::kMuFullScale;
-        if (q < -voicing::kMuFullScale) q = -voicing::kMuFullScale;
-        return q;
-    }
-
     Halfband down_[2], up_[2];
     int      phase_ = 0;
     float    held_[2] = {}, first_[2] = {};
     float    engage_ = 0.0f, levels_ = 2048.0f;
-    bool     ranging_ = false, unquantised_ = false;
 };
 
 } // namespace iv::dsp

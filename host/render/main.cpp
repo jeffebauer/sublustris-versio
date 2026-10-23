@@ -123,17 +123,12 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* di = std::getenv("IV_DIFF_INDEPENDENT")) engine.setDiffuserIndependent(std::atoi(di) != 0);
     if (const char* sl = std::getenv("IV_STILL_LOWS")) engine.setStillLows(std::atoi(sl) != 0);
     if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
-    { // The DSP audit's prototypes and measurement hooks (docs/research/dsp-audit.md, 24 Oct 2026): all off by default.
+    { // The DSP audit's prototypes (docs/research/dsp-audit.md, 24 Oct 2026): all off by default.
         auto env = [](const char* k) { const char* v = std::getenv(k); return v ? std::atoi(v) : 0; };
         iv::Engine::AuditHooks h;
         h.freezeStill = env("IV_FREEZE_STILL") != 0;
-        h.plateDd2 = env("IV_PLATE_DD2") != 0;
-        h.satBypass = env("IV_SAT_BYPASS") != 0;
-        h.midiPart = env("IV_MIDI_PART");
-        h.muMode = env("IV_MU_MODE");
-        h.tapeOut = env("IV_TAPE_OUT");
-        h.midiKeep = env("IV_MIDI_KEEP") != 0;
         h.vintageMod = env("IV_VINTAGE_MOD") != 0;
+        h.tapeOut = env("IV_TAPE_OUT") != 0;
         engine.setAuditHooks(h);
     }
     if (!presetPath.empty()) {
