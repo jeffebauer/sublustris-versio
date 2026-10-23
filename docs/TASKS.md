@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 23 Oct 2026, session 3 (four picks acted on; pages left: ducking, small_hall, makeup, size_glide). Previously: 23 Oct 2026, session 3 (every A/B pick acted on; nothing waiting for a pick).
+**Last updated:** 23 Oct 2026, session 3 (four picks acted on; pages left to hear: ducking, small_hall, makeup, size_glide).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
