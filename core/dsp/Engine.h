@@ -21,6 +21,7 @@
 #include "dsp/Fdn.h"
 #include "dsp/Memory.h"
 #include "dsp/Output.h"
+#include "dsp/Oversampler.h"
 #include "dsp/Plate.h"
 #include "dsp/Reverse.h"
 #include "dsp/Swell.h"
@@ -94,6 +95,19 @@ public:
     // Test/demo override of HALL's in-loop diffusion amount (default kHallInLoopDiffusion, v1.0.17;
     // 0..1 × kInLoopCoeff, fading out by SIZE noon).
     void  setHallInLoopDiffusion(float a) { hallInLoop_ = a; }
+    // PROTOTYPES and measurement hooks for the DSP audit (docs/research/dsp-audit.md, 24 Oct 2026),
+    // set from the Renderer's IV_* env vars; all off by default (the default sound is bit-identical).
+    struct AuditHooks {
+        bool  freezeStill = false;  // A3: a frozen HALL / MASSIVE's modulation floor glides to 0 (Costello)
+        bool  plateDd2 = false;     // P2: decay diffusion 2 follows DECAY (Dattorro, Table 1)
+        bool  satBypass = false;    // measurement: the loop's soft clip off
+        int   midiPart = 0;         // measurement: 1 = the Midiverb box without truncation, 2 = without its dark loop
+        int   muMode = 0;           // E3: 1 = the mu-law layer off (measurement), 2 = 12-bit gain-ranging instead
+        int   tapeOut = 0;          // E5: 1 = the cassette saturates the wet on its way out (outside the loop); 2 = linear (measurement)
+        bool  midiKeep = false;     // E2: the Midiverb box rounds while the line is above 16 steps (the tail keeps its length)
+        bool  vintageMod = false;   // E4: from ERA's mu-law stretch on, the FDN reads Lexicon-style (quantised linear, noisy)
+    };
+    void  setAuditHooks(const AuditHooks& h) { hooks_ = h; }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.
@@ -191,6 +205,11 @@ private:
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f;
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
+    AuditHooks hooks_;
+    dsp::Oversampler tapeOs_[2];                     // E5 prototype (hooks_.tapeOut)
+    float tapeDc_[2] = {}, tapeDrive_ = 0.0f;
+    bool  tapeLinear_ = false;
+    void  tapeOut(float& l, float& r);
     float diffMotionNow_ = 0.0f, diffMotionPhase_ = 0.0f; // the PLATE's wandering input allpass, samples
     float hallInLoop_ = voicing::kHallInLoopDiffusion; // setHallInLoopDiffusion overrides it (renders/hall_diffusion)
     float reverseMean_ = -1.0f;

@@ -147,6 +147,12 @@ void Fdn::control(int n)
         float driftRoom = voicing::kDriftMaxShareOfLine * lenNow_[i];
         if (driftRoom > voicing::kDriftMaxSeconds * sampleRate_) driftRoom = voicing::kDriftMaxSeconds * sampleRate_;
         float target = lenNow_[i] + floorDepth * floorB_[i] + driftGen_[i].control(dt, drift_, driftRoom);
+        if (vintage_ > 0.0f) {
+            // E4: the modulation is noisy (Costello: the PCM70's "noisy as all get out"): a fresh random
+            // offset each control block, smoothed once (a coarse, steppy read wander).
+            jitter_[i] += 0.5f * (voicing::kVintageJitterSamples * uniform(rng_) - jitter_[i]);
+            target += vintage_ * jitter_[i];
+        }
         if (target < 4.0f) target = 4.0f;
         if (target > maxLen_) target = maxLen_;
         readStep_[i] = (target - readNow_[i]) / float(n);
@@ -183,6 +189,14 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
             for (int i = 0; i < kN; ++i) {
                 readNow_[i] += readStep_[i];
                 float x = line_[i].readAllpass(readNow_[i], interp_[i]);
+                if (vintage_ > 0.0f) {
+                    // E4: linear interpolation with the fraction quantised (the 224's multiplier: 32 or 64 steps).
+                    const float d = readNow_[i];
+                    const auto di = uint32_t(d);
+                    const float f = float(int32_t((d - float(di)) * voicing::kVintageSteps)) * (1.0f / voicing::kVintageSteps);
+                    const float a0 = line_[i].read(di), a1 = line_[i].read(di + 1);
+                    x += vintage_ * (a0 + f * (a1 - a0) - x);
+                }
                 if (apG > 0.0f)
                     for (int k = 0; k < 2; ++k) { // in-loop diffusion (MASSIVE)
                         const float d = apLine_[i][k].read(apLenNow_[i][k]);

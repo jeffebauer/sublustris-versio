@@ -82,6 +82,9 @@ public:
     void setLongDelayMod(float amount) { longMod_ = amount; }
     // Test hook: scales every wander in the loop (chorus, floor, long delays); 0 = still.
     void setModScale(float k) { modScale_ = k; }
+    // P2 PROTOTYPE (DSP audit, 24 Oct 2026): decay diffusion 2 = clamp(g + 0.15, 0.25, 0.5), g the
+    // branch's decay gain per pass (Dattorro, Table 1); off = his fixed default 0.5.
+    void setDattorroDiffusion2(bool on) { dd2Follows_ = on; }
 
     // Adds the wet to outL/outR (does not clear them).
     void process(const float* inL, const float* inR, float* outL, float* outR, int n);
@@ -104,6 +107,7 @@ private:
         float     longPhase[2] = {0, 0}, longFloorA[2] = {}, longFloorB[2] = {}, longTarget[2] = {}, longCountdown[2] = {};
         float     longNow[2] = {0, 0}, longStep[2] = {0, 0};
         float     out = 0;                 // this branch's output (feeds the other)
+        float     dd2 = 0.5f;              // decay diffusion 2 (setDattorroDiffusion2)
         LoopEra   era;
         Drift     drift;
     };
@@ -112,7 +116,7 @@ private:
     Branch   b_[2];
     uint32_t rng_ = 1;
     float    decayRate_ = 0.2f, highRatio_ = 0.45f, levelGain_ = 1.0f, extraRate_ = 0.0f;
-    bool     colour_ = true;
+    bool     colour_ = true, dd2Follows_ = false;
     float    modDepth_ = 1.0f;
     float    shelfK_ = 0.0f, modScale_ = 1.0f; // lossShelfK(sampleRate_)
     float    longMod_ = 1.0f; // d1 and d2 wander; 0 while frozen

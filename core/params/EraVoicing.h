@@ -63,6 +63,10 @@ constexpr float kMidiEngageSpan = 0.02f;
 constexpr float kCrackleDbfs = -48.0f;
 constexpr float kCracklePerSecond = 4.0f;
 
+// E4 PROTOTYPE (DSP audit, 24 Oct 2026): the vintage read from the mu-law stretch on (Fdn::setVintage).
+constexpr float kVintageSteps = 32.0f;          // fraction steps per sample (Costello: "32 or 64 chunks")
+constexpr float kVintageJitterSamples = 0.15f;   // the noisy modulation's random offset per control block
+
 // Loudness makeup per layer (dB on the wet), so ERA's loudness on music stays
 // within ±1 dB across the knob (SPEC §7 M6, v1.0.19), summed as the layers stack.
 // Measured on music (LUFS over the twelve page materials, HALL and MASSIVE): the
