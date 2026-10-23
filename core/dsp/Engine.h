@@ -81,17 +81,7 @@ public:
     // Test hook: scales the tanks' own modulation (0 = none; DRIFT is separate), to check a
     // structure isn't metallic without it (Costello: tune it to sound good unmodulated).
     void  setModulationScale(float k) { modScale_ = k; }
-    // PROTOTYPES, renders/decisions: no held-tail makeup (ADR 0008 amendment, for the owner to
-    // approve), and MASSIVE's SIZE glide k × faster (k semitones of bend at most).
-    void  setMakeup(bool on)
-    {
-        plate_.setMakeup(on);
-        twinPlate_.setMakeup(on);
-        fdn_.setMakeup(on);
-        twinFdn_.setMakeup(on);
-    }
-    // PROTOTYPE, the ducking listening test (owner's M1 notes, 23 Oct 2026): × the duck amount (0 = off).
-    void  setDuckScale(float k) { duckScale_ = k; }
+    // PROTOTYPE, renders/size_glide: MASSIVE's SIZE glide k × faster (k semitones of bend at most).
     // PROTOTYPE, renders/still_lows (the audit's A4): HALL and MASSIVE keep their lows unmodulated.
     void  setStillLows(bool on) { fdn_.setStillLows(on); twinFdn_.setStillLows(on); }
     // PROTOTYPE (Mutable Instruments idea 4, no measurable gain; kept for a later listen): the
@@ -100,9 +90,6 @@ public:
     // PROTOTYPE, renders/small_hall (owner's M1 notes; the audit's F1/F2, experiment E4): HALL gets
     // in-loop diffusion too, amount 0..1 (× kInLoopCoeff), its allpasses scaled with SIZE.
     void  setHallInLoopDiffusion(float a) { hallInLoop_ = a; }
-    // PROTOTYPE, the same test: duck by 4:1 compression of the wet, keyed by the input, instead
-    // of DARKEN (no darkening); attack and release of the gain reduction in ms (0 = off).
-    void  setDuckCompressor(float attackMs, float releaseMs) { compAttackMs_ = attackMs; compReleaseMs_ = releaseMs; }
     void  setSizeSlewScale(float k) { fdn_.setSizeSlewScale(k); twinFdn_.setSizeSlewScale(k); }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
@@ -171,9 +158,8 @@ private:
     float             eraMakeup_ = 1.0f;
     // Ducking (ADR 0014) and the limiter (SPEC §4.10).
     dsp::Tilt         tilt_;
-    dsp::Darken       darken_;
     dsp::Limiter      limiter_;
-    float             duckEnv_ = 0.0f, duck_ = 0.0f, duckAttack_ = 0.0f, duckRelease_ = 0.0f;
+    float             duck_ = 0.0f, duckGrDb_ = 0.0f, duckGain_ = 1.0f, duckGainStep_ = 0.0f; // ducking: LEDs 0..1, reduction dB, wet gain
     // ERA's sources into the tank's input (SPEC §4.7): cassette hiss, Midiverb crackle.
     uint32_t          noiseSeed_ = 0xA11CEu;
     float             hissLp_[2] = {}, hissGain_ = 0.0f, crackleChance_ = 0.0f, crackleGain_ = 0.0f;
@@ -187,10 +173,8 @@ private:
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f;
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
-    float duckScale_ = 1.0f; // PROTOTYPE (setDuckScale)
     float diffMotionNow_ = 0.0f, diffMotionPhase_ = 0.0f; // the PLATE's wandering input allpass, samples
-    float hallInLoop_ = 0.0f; // PROTOTYPE (setHallInLoopDiffusion)
-    float compAttackMs_ = 0.0f, compReleaseMs_ = 0.0f, compTargetDb_ = 0.0f, compGrDb_ = 0.0f; // PROTOTYPE (setDuckCompressor)
+    float hallInLoop_ = voicing::kHallInLoopDiffusion; // setHallInLoopDiffusion overrides it (renders/hall_diffusion)
     float reverseMean_ = -1.0f;
 
     // Freeze (ADR 0009–0011). Button and gate edges this block, by offset.

@@ -13,3 +13,6 @@
 **Rejected (heard in the demos):** PUSH BACK (more smear, narrower image), LEVEL (plain dip), and a switch to choose between them; a duck depth fixed once infinite.
 
 **Amendment (21 Oct 2026, M7 build; SPEC v1.0.4):** DARKEN's low-pass sits on the wet output, not inside the loop. A filter in the loop removes the highs from the tail for good, so the tail could never "brighten back when you stop"; on the output it does (measured: highs above 4 kHz 4 % of the wet while playing at infinite, 31 % a second after). There's no ducking while frozen: playing over a pad mustn't darken the pad.
+
+**Amendment (23 Oct 2026, owner's M1 notes and pick on `renders/ducking`; SPEC v1.0.17):** ducking is now **4:1 compression of the wet**, not DARKEN. The owner heard DARKEN as "too extreme", holding "too long", with the held tail jumping up when the input stopped, and asked for something "closer to 4:1 compression rather than extreme ducking, so it feels cohesive" (the usual studio practice: a compressor on the reverb return keyed by the dry). Five versions were compared at infinite DECAY on six materials in all three SPACEs; D (attack 30 ms, release 0.4 s, 4:1 above −24 dBFS of input, no darkening) won all 18 cards. Still no switch, still only from Decay 0.85 up and not while frozen. The title stands for the history; the decision is the amendment.
+

@@ -170,7 +170,7 @@ void attackFollowsTime()
 }
 
 // ADR 0008: fed hard for 20 s at infinite, the tank sits near the floor
-// (its own level: the wet is ducked by DARKEN while you play, ADR 0014),
+// (its own level: the wet is ducked while you play, ADR 0014),
 // then the tail holds for 10 minutes: within ±3 dB, not growing past its
 // settled level (the hold makeup may lift a sag back to it), never silent.
 void infiniteHoldsTheFloor()

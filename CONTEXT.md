@@ -17,12 +17,12 @@ Shared vocabulary for this project. Use these terms exactly in code, comments an
 | **Floor** | The warm level an infinite tail settles at and holds (loop governor + soft saturation). Not used while frozen. |
 | **Infinite** | Decay 0.85–1: loop gain 1 at the floor; ducking grows across this stretch. |
 | **Modulation floor** | The always-on faint random movement of every tank delay (±1–2 cents) that kills metallic ringing. What remains at DRIFT noon. |
-| **Loop chain** | Everything inside each line per pass: modulated read → TONE tilt + damping → soft saturation → ERA in-loop layers → DARKEN duck. |
+| **Loop chain** | Everything inside each line per pass: modulated read → TONE tilt + damping → soft saturation → ERA in-loop layers. |
 | **Era stage / layer** | One of Clean, Neve, Cassette, μ-law, Midiverb. Layers **stack**: each fades in across its stretch of the knob and stays. |
 | **μ-law layer** | Era 65–85 %: 24 kHz / 12 → 10-bit μ-law on the wet output (gritty peaks, smooth quiet tail). |
 | **Midiverb box** | Era 85–100 %: an in-loop 48 → 24 → 48 kHz box with 12 → 8-bit truncation toward zero; the tail gets grainier as it fades. |
 | **Hiss** | Cassette-stage noise fed into the tank input, ducked by the input level. |
-| **Duck** | Tail ducking from the input envelope, only at infinite Decay. Always DARKEN: a loop low-pass closes while you play, plus a ~3 dB dip. |
+| **Duck** | Tail ducking from the input level, only at infinite Decay: 4:1 compression of the wet (attack 30 ms, release 0.4 s), about 3 dB while you play, no darkening (v1.0.17; it was DARKEN). |
 | **ATTACK** | SW1: NORMAL / BLOOM / REVERSE. Sets the attack in every space. |
 | **TIME** | P7: NORMAL predelay, BLOOM swell time, or REVERSE swell length. |
 | **Bloom** | The tail swells in over TIME (the swell stage, in every space). |

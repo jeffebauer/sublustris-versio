@@ -17,3 +17,6 @@
 - **Makeup (an exception to SPEC §2.3 rule 2, loop gain ≤ 1):** a held tail that sags below its ceiling is raised back toward it, never above it, at most ~0.3 dB/s. Moving allpass-interpolated reads (fast DRIFT, the cassette's wow and flutter) lose a little energy, and without makeup an infinite tail at the cassette stage faded ~0.1 dB/s (60 dB in 10 minutes). The exception is bounded: only a held tail, only up to its own level, slowly.
 - **Measured:** infinite tails hold within 0.5 dB for 10 minutes at every ERA stage (`test_era`), pads within 1 dB for 5 minutes in every SPACE (`test_plate_freeze`), and the levels stay put across random seeds.
 - **Rejected:** a one-sided or symmetric-capped correction (it overshot into dips of several dB while Neve's even harmonics were still in the loop at infinite); keeping Neve's even harmonics at infinite (they made the tail jump 2-3 dB by themselves).
+
+**Approved (23 Oct 2026, owner's pick on `renders/makeup`, A on all 4 cards; SPEC v1.0.17):** the held-tail makeup stays. Measured then: without it an infinite MASSIVE with tape wobble and the cassette sagged about 3 dB over 10 minutes and a HALL about 2.4 dB; frozen pads held either way.
+

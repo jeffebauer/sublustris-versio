@@ -1,6 +1,6 @@
 #pragma once
-// The wet's last stages before MIX (SPEC §4.9, §4.10): TONE's tilt, DARKEN,
-// the duck (ADR 0014), and the soft limiter. Both act on the wet only, so MIX fully
+// The wet's last stages before MIX (SPEC §4.9, §4.10): TONE's tilt and the
+// soft limiter (the ducking is a gain in Engine, ADR 0014). Both act on the wet only, so MIX fully
 // CCW stays a clean passthrough.
 #include "params/SpaceVoicing.h"
 
@@ -42,41 +42,6 @@ public:
 private:
     static constexpr float kGlide = 0.002f; // ~10 ms at 48 kHz
     float coeff_ = 0.1f, low_ = 1.0f, high_ = 1.0f, lowTarget_ = 1.0f, highTarget_ = 1.0f, lp_[2] = {};
-};
-
-// DARKEN: a two-pole low-pass on the wet whose cutoff closes with the duck
-// amount (log steps from the top of the band to kDuckDarkHz), plus a dip.
-class Darken {
-public:
-    void prepare(float sampleRate) { sampleRate_ = sampleRate; reset(); }
-    void reset()
-    {
-        for (auto& v : z_) v = 0.0f;
-        coeff_ = 1.0f;
-        gain_ = 1.0f;
-    }
-    // amount 0..1, once per control chunk. At 0 the filter is exactly open
-    // (coefficient 1, gain 1), so the wet passes bit for bit.
-    void set(float amount)
-    {
-        amount_ = amount;
-        const float hz = 20000.0f * std::pow(voicing::kDuckDarkHz / 20000.0f, amount);
-        coeff_ = amount <= 0.0f || hz >= 0.45f * sampleRate_ ? 1.0f : 1.0f - std::exp(-6.2831853f * hz / sampleRate_);
-        gain_ = std::pow(10.0f, voicing::kDuckDipDb * amount / 20.0f);
-    }
-    void process(float& l, float& r)
-    {
-        z_[0] += coeff_ * (l - z_[0]);
-        z_[1] += coeff_ * (z_[0] - z_[1]);
-        z_[2] += coeff_ * (r - z_[2]);
-        z_[3] += coeff_ * (z_[2] - z_[3]);
-        l = gain_ * z_[1];
-        r = gain_ * z_[3];
-    }
-
-private:
-    float sampleRate_ = 48000.0f, coeff_ = 1.0f, gain_ = 1.0f, amount_ = 0.0f;
-    float z_[4] = {};
 };
 
 // The soft limiter: instant attack on the peak, kLimitReleaseSeconds release,

@@ -1,6 +1,7 @@
 // M7: ducking and the output stage (SPEC §4.9, §4.10, §7 M7; ADR 0014).
-// DARKEN only from DECAY 0.85 up, deepening to full at 1; the wet darkens
-// and dips while you play and brightens back after; no duck while frozen;
+// Ducking (4:1 compression of the wet since v1.0.17) only from DECAY 0.85 up,
+// deepening to full at 1; the wet steps back while you play, without
+// darkening, and comes back after; no duck while frozen;
 // the soft limiter keeps the wet under −1 dBFS and reports its gain; MIX 0
 // stays a clean passthrough. Then the integration sweep: random settings of
 // every control with freezes, paints and SPACE / ATTACK flips: finite,
@@ -58,7 +59,7 @@ float duckWhilePlaying(float decay, bool frozen)
         if (frozen && b == 10) e->button(true, 0);
         if (frozen && b == 12) e->button(false, 0);
         e->process(in.data(), in.data(), l.data(), r.data(), 48);
-        if (b > 400) mx = std::fmax(mx, e->duckAmount()); // after the freeze's 0.2 s glide (the duck fades out with it)
+        if (b > 400) mx = std::fmax(mx, e->duckAmount()); // after the freeze's 0.2 s glide (a freeze lets the duck go in 50 ms)
     }
     delete e;
     return mx;
@@ -68,15 +69,15 @@ void duckDepth()
 {
     const float d80 = duckWhilePlaying(0.8f, false), d90 = duckWhilePlaying(0.9f, false), d100 = duckWhilePlaying(1.0f, false);
     char msg[200];
-    std::snprintf(msg, sizeof msg, "DARKEN depth: %.2f at DECAY 0.80, %.2f at 0.90, %.2f at 1.0 (0 below 0.85, rising to full)",
+    std::snprintf(msg, sizeof msg, "ducking depth: %.2f at DECAY 0.80, %.2f at 0.90, %.2f at 1.0 (0 below 0.85, rising)",
                   d80, d90, d100);
-    check(d80 == 0.0f && d90 > 0.9f && d100 > 0.9f, msg);
-    std::snprintf(msg, sizeof msg, "no duck while frozen (playing over a pad mustn't darken it): %.2f", duckWhilePlaying(1.0f, true));
+    check(d80 == 0.0f && d90 > 0.0f && d100 >= d90 && d100 > 0.5f, msg);
+    std::snprintf(msg, sizeof msg, "no duck while frozen (playing over a pad mustn't duck it): %.2f", duckWhilePlaying(1.0f, true));
     check(duckWhilePlaying(1.0f, true) == 0.0f, msg);
 }
 
-// While playing at infinite the wet is darker and lower; it brightens back
-// within a second of stopping.
+// While playing at infinite the wet steps back (4:1), with no darkening, and
+// it lets go within about a second of stopping (release 0.4 s).
 double highShare(const std::vector<float>& x, size_t a, size_t b)
 {
     const float c = std::exp(-2.0f * 3.14159265f * 4000.0f / kSr);
@@ -91,20 +92,27 @@ double highShare(const std::vector<float>& x, size_t a, size_t b)
     return hi / (all + 1e-30);
 }
 
-void darkensAndBrightensBack()
+void ducksAndComesBack()
 {
     iv::Engine* e = makeEngine(1.0f);
     const size_t n = size_t(12.0f * kSr);
     std::vector<float> in(n, 0.0f), l(n), r(n);
     for (size_t i = 0; i < size_t(8.0f * kSr); ++i) in[i] = 0.3f * noise();
-    for (size_t pos = 0; pos < n; pos += 48) e->process(in.data() + pos, in.data() + pos, l.data() + pos, r.data() + pos, 48);
+    float during = 0.0f, after = 1.0f;
+    for (size_t pos = 0; pos < n; pos += 48) {
+        e->process(in.data() + pos, in.data() + pos, l.data() + pos, r.data() + pos, 48);
+        if (pos > size_t(6.0f * kSr) && pos < size_t(8.0f * kSr)) during = std::fmax(during, e->duckAmount());
+        if (pos > size_t(9.5f * kSr)) after = std::fmin(after, e->duckAmount());
+    }
     delete e;
-    const double playing = highShare(l, size_t(6.0f * kSr), size_t(8.0f * kSr));
-    const double after = highShare(l, size_t(9.5f * kSr), size_t(11.5f * kSr));
-    char msg[200];
-    std::snprintf(msg, sizeof msg, "DARKEN: the wet's highs (> 4 kHz) %.1f%% while playing, %.1f%% after (brightens back)",
-                  100.0 * playing, 100.0 * after);
-    check(after > 3.0 * playing, msg);
+    const double hiPlaying = highShare(l, size_t(6.0f * kSr), size_t(8.0f * kSr));
+    const double hiAfter = highShare(l, size_t(9.5f * kSr), size_t(11.5f * kSr));
+    char msg[220];
+    std::snprintf(msg, sizeof msg, "ducking: %.2f while playing, %.2f 1.5 s after stopping (lets go)", during, after);
+    check(during > 0.5f && after < 0.05f, msg);
+    std::snprintf(msg, sizeof msg, "ducking doesn't darken: the wet's highs (> 4 kHz) %.1f%% while playing, %.1f%% after",
+                  100.0 * hiPlaying, 100.0 * hiAfter);
+    check(hiPlaying > 0.5 * hiAfter, msg);
 }
 
 // Driven hot: a full-scale input into a long, bright PLATE at ERA's top
@@ -191,7 +199,7 @@ void integrationSweep()
 int main()
 {
     duckDepth();
-    darkensAndBrightensBack();
+    ducksAndComesBack();
     limiter();
     integrationSweep();
     std::printf("%d failure(s)\n", failures);

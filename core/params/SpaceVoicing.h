@@ -17,13 +17,19 @@ constexpr float kFdnRatios[kFdnLines] = {0.60f, 0.69f, 0.79f, 0.90f, 1.01f, 1.13
 constexpr float kFdnMaxLineSeconds = 2.05f * 1.41f + 0.01f + 0.07f; // + DRIFT's room (EraVoicing.h kDriftMaxSeconds)
 
 // Hall's mean line delay across SIZE (SPEC §3: 40 → 180 ms, exponential).
-constexpr float kHallMeanMinMs = 20.0f;  // M1 notes: "small doesn't read as small" (was 40 → 180 ms)
+constexpr float kHallMeanMinMs = 35.0f;  // owner's pick on renders/small_hall (v1.0.17): 20 ms built up "slightly metallic" resonances (was 40, then 20)
 constexpr float kHallMeanMaxMs = 260.0f;
 // A small HALL's finite tails are shorter (× this at SIZE fully CCW, × 1 at
 // CW): a small room can't ring for 16 s, and a long, sparse small-room tail
 // let pitched notes build into a buzz (owner, M1 vibes). Infinite stays
 // infinite. (start)
-constexpr float kHallSmallT60Scale = 0.4f;
+constexpr float kHallSmallT60Scale = 0.49f; // v1.0.17: the small end the owner picked (old knob 0.22) had 0.49
+
+// HALL's in-loop diffusion (the audit's F1/F2; owner's pick on renders/small_hall, v1.0.17): two
+// allpasses per line at this × kInLoopCoeff, their lengths scaled with the mean line (MASSIVE's at
+// 0.2 s and up), so a small room gains modes without sounding bigger.
+constexpr float kHallInLoopDiffusion = 0.5f;
+constexpr float kHallInLoopUntilSize = 0.5f; // fades to 0 by SIZE noon (the owner heard it at the small end)
 
 // SIZE moves glide: a line's length changes by at most this fraction of a
 // second per second, which is at most a semitone of bend (2^(1/12) − 1).
@@ -179,16 +185,18 @@ constexpr float kToneDarkHighDb   = -9.0f;
 constexpr float kToneBrightLowDb  = -4.0f; // TONE fully CW
 constexpr float kToneBrightHighDb = 6.0f;
 
-// ---- Ducking: always DARKEN (ADR 0014, SPEC §4.9) -------------------------
-// An envelope follower on the input; depth 0 below DECAY 0.85, full at 1.
-// DARKEN is a low-pass on the wet (not in the loop: a loop filter would
-// take the highs for good, and the tail must brighten back when you stop,
-// SPEC v1.0.4), closing to kDuckDarkHz at full depth, plus a kDuckDipDb dip.
-constexpr float kDuckAttackSeconds  = 0.005f;
-constexpr float kDuckReleaseSeconds = 0.15f; // 0.4 s dwelt between skanks (owner, M5 listening)
-constexpr float kDuckFromDbfs = -42.0f, kDuckFullDbfs = -24.0f;
-constexpr float kDuckDarkHz = 1500.0f;
-constexpr float kDuckDipDb  = -3.0f;
+// ---- Ducking: 4:1 compression of the wet (ADR 0014 amended, SPEC v1.0.17) --
+// The wet is compressed 4:1 above kDuckThresholdDbfs of input (its ~10 ms
+// power), with this attack and release, scaled by how far into infinite
+// DECAY is (0 below 0.85, full at 1) and off while frozen. No darkening: the
+// owner picked it over DARKEN on renders/ducking ("closer to 4:1 compression
+// than extreme ducking, so it feels cohesive"; D on all 18 cards). About 3 dB
+// of reduction while playing at the materials' level.
+constexpr float kDuckThresholdDbfs  = -24.0f;
+constexpr float kDuckRatio          = 4.0f;
+constexpr float kDuckAttackSeconds  = 0.03f;
+constexpr float kDuckReleaseSeconds = 0.4f;
+constexpr float kDuckFullDb         = 6.0f; // reduction the LEDs show as full ducking
 
 // ---- Output soft limiter (SPEC §4.10): the wet only, before MIX ------------
 constexpr float kLimitCeiling        = 0.891f; // −1 dBFS

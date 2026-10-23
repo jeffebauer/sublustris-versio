@@ -87,10 +87,7 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
         }
     gesture_.prepare(sampleRate);
     tilt_.prepare(sampleRate);
-    darken_.prepare(sampleRate);
     limiter_.prepare(sampleRate);
-    duckAttack_ = 1.0f - std::exp(-1.0f / (voicing::kDuckAttackSeconds * sampleRate));
-    duckRelease_ = 1.0f - std::exp(-1.0f / (voicing::kDuckReleaseSeconds * sampleRate));
     reset();
 }
 
@@ -135,10 +132,9 @@ IV_SIZE_OPT void Engine::reset()
     tilt_.reset();
     tilt_.set(smoothed(ParamId::Tone));
     tilt_.snap();
-    darken_.reset();
     limiter_.reset();
-    duckEnv_ = duck_ = 0.0f;
-    compTargetDb_ = compGrDb_ = 0.0f;
+    duck_ = duckGrDb_ = duckGainStep_ = 0.0f;
+    duckGain_ = 1.0f;
     hissLp_[0] = hissLp_[1] = 0.0f;
     noiseSeed_ = 0xA11CEu;
     reverseMix_ = reverseTarget_;
@@ -304,7 +300,11 @@ void Engine::applySpace(bool snap)
         // A frozen MASSIVE goes to full in-loop diffusion: its long lines otherwise replay painted
         // material as audible repeats (owner, M5 listening).
         const float diff = massive ? map::massiveDiffusion(size) : 0.0f;
-        fdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallInLoop_);
+        // HALL's in-loop diffusion is for the small rooms (v1.0.17): full at SIZE fully CCW, gone by
+        // noon, so medium and large HALLs stay as they were (with it they measured ~2 dB quieter at
+        // full SIZE and no less grainy).
+        const float hallDiff = hallInLoop_ * std::fmax(0.0f, 1.0f - size / voicing::kHallInLoopUntilSize);
+        fdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallDiff);
         // PROTOTYPE (setHallInLoopDiffusion): HALL's allpasses scale with its mean line, so a small
         // room stays small (MASSIVE's lengths at a 0.2 s mean and up).
         fdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(size) / 0.2f));
@@ -342,20 +342,7 @@ void Engine::applySpace(bool snap)
     muLaw_.set(era);
     eraMakeup_ = era.makeup;
 
-    // Ducking (ADR 0014): how loud the input is, × how far into infinite
-    // DECAY is. Not while frozen (playing over a pad mustn't darken it).
-    const float envDb = 20.0f * std::log10(duckEnv_ + 1e-10f);
-    const float loud = map::clamp01((envDb - voicing::kDuckFromDbfs) / (voicing::kDuckFullDbfs - voicing::kDuckFromDbfs));
-    // Fades out with the freeze glide (set to 0 in one sample, DARKEN's filter and dip jumped: a click).
-    duck_ = duckScale_ * loud * map::governorWeight(smoothed(ParamId::Decay)) * (1.0f - freezeMix_);
-    if (compAttackMs_ > 0.0f) { // PROTOTYPE (setDuckCompressor): 4:1 above -24 dBFS of input, no darkening
-        const float levelDb = 10.0f * std::log10(inputPower_ + 1e-12f);
-        const float over = levelDb + 24.0f;
-        compTargetDb_ = (over > 0.0f ? 0.75f * over : 0.0f) * map::governorWeight(smoothed(ParamId::Decay)) * (1.0f - freezeMix_);
-        duck_ = 0.0f;
-    }
     tilt_.set(smoothed(ParamId::Tone));
-    darken_.set(duck_);
     // Hiss follows the input (none in silence, so an infinite tail doesn't
     // fill with noise, ADR 0005); crackle the same.
     const float inDb = 10.0f * std::log10(inputPower_ + 1e-20f);
@@ -443,6 +430,23 @@ void Engine::setDiffuserIndependent(bool on)
 
 void Engine::controlTick(int n)
 {
+    // Ducking (ADR 0014, amended v1.0.17): 4:1 compression of the wet, keyed by the input's
+    // ~10 ms power, × how far into infinite DECAY is; not while frozen (playing over a pad
+    // mustn't duck it; fades with the freeze glide). The reduction moves with its own attack
+    // and release once per control block; the wet gain ramps across the block.
+    {
+        const float levelDb = 10.0f * std::log10(inputPower_ + 1e-12f);
+        const float over = levelDb - voicing::kDuckThresholdDbfs;
+        const float target = (over > 0.0f ? (1.0f - 1.0f / voicing::kDuckRatio) * over : 0.0f)
+                           * map::governorWeight(smoothed(ParamId::Decay)) * (1.0f - freezeMix_);
+        // A freeze lets go quickly (50 ms), so a fresh pad doesn't swell up over the release.
+        const float secs = target > duckGrDb_ ? voicing::kDuckAttackSeconds
+                         : (freezeMix_ > 0.0f ? 0.05f : voicing::kDuckReleaseSeconds);
+        duckGrDb_ += (1.0f - std::exp(-float(n) / (secs * sampleRate_))) * (target - duckGrDb_);
+        if (target == 0.0f && duckGrDb_ < 0.05f) duckGrDb_ = 0.0f; // fully let go (and exact unity)
+        duckGainStep_ = (std::pow(10.0f, -duckGrDb_ / 20.0f) - duckGain_) / float(n);
+        duck_ = map::clamp01(duckGrDb_ / voicing::kDuckFullDb);
+    }
     // The PLATE's first input allpass wanders (Mutable Instruments' Clouds and Beads; owner's pick
     // on renders/diffuser_motion, v1.0.16), so repeated hits don't enter the tank identically.
     // Its depth glides in and out with SPACE, so a flip never jumps the read.
@@ -569,8 +573,6 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                                               : std::fmax(tankInTarget_, tankIn_ - tankInStep_);
             const float l = inL[start + i], r = inR[start + i];
             inputPower_ += 0.002f * (0.5f * (l * l + r * r) - inputPower_); // ~10 ms follower
-            const float peak = l > 0.0f ? l : -l;
-            duckEnv_ += (peak > duckEnv_ ? duckAttack_ : duckRelease_) * (peak - duckEnv_);
             predelay_[0].write(l);
             predelay_[1].write(r);
             predelayNow_ += predelayStep_;
@@ -646,14 +648,9 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             wr *= eraMakeup_;
             muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)
             tilt_.process(wl, wr);
-            darken_.process(wl, wr);
-            if (compAttackMs_ > 0.0f) { // PROTOTYPE (setDuckCompressor)
-                const float ms = compTargetDb_ > compGrDb_ ? compAttackMs_ : compReleaseMs_;
-                compGrDb_ += (1.0f - std::exp(-1000.0f / (ms * sampleRate_))) * (compTargetDb_ - compGrDb_);
-                const float g = std::pow(10.0f, -compGrDb_ / 20.0f);
-                wl *= g;
-                wr *= g;
-            }
+            duckGain_ += duckGainStep_; // ducking (ADR 0014)
+            wl *= duckGain_;
+            wr *= duckGain_;
             limiter_.process(wl, wr);
             dryNow_ += dryStep_;
             wetNow_ += wetStep_;

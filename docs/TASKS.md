@@ -1,14 +1,11 @@
 # Owner tasks
 
-**Last updated:** 23 Oct 2026, session 3 (four picks acted on; pages left to hear: ducking, small_hall, makeup, size_glide).
+**Last updated:** 23 Oct 2026, session 3 (ducking, small HALL and makeup picks acted on; one page left to hear: size_glide).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- [ ] **Ducking at infinite DECAY** (`renders/ducking/index.html`, picks, not level-matched; your M1 notes): A today (darkens and dips), B none, C/D/E 4:1 compression with no darkening (quick 10 ms / 0.15 s, smooth 30 ms / 0.4 s, slow 50 ms / 1 s), in HALL, MASSIVE and PLATE on the new material. Measured: any ducking makes the tail rise when you stop; E pumps least (2.1–3.5 dB) with the smallest step.
-- [ ] **The small HALL's build-up** (`renders/small_hall/index.html`, picks; your M1 notes): at long and infinite DECAY, A today, B the smallest SIZE raised to 35 ms, C/D in-loop diffusion (a little / more), E both. Measured on noise: B rings least at long DECAY, the diffusion least at infinite. Your M1 TONE note ("sounds good") is logged.
-- [ ] **The held-tail makeup** (`renders/makeup/index.html`, picks, not level-matched): with it, an infinite tail holds where it settled; without it, with tape wobble and the cassette, MASSIVE sags about 3 dB over 10 minutes and HALL about 2.4 dB (frozen pads hold either way). It's the one place the loop may go a hair over 1. Each card is 20 s at minute 1 and at minute 10. Keep it (A) or drop it (B)?
 - [ ] **MASSIVE's SIZE glide** (`renders/size_glide/index.html`, picks): SIZE turned quickly up, then down. A today (a semitone of bend, a full sweep ~40 s), B about 3 semitones (~13 s), C about 6 (~6 s), MASSIVE only.
 
 
@@ -45,6 +42,9 @@
 
 ## Done
 
+- 23 Oct 2026: **Ducking is now 4:1 compression** (D on all 18; ADR 0014 amended): attack 30 ms, release 0.4 s, about 3 dB while you play at infinite DECAY, no darkening; DARKEN is gone. A freeze lets it go in 50 ms, so a fresh pad doesn't swell up.
+- 23 Oct 2026: **The small HALL** (E on all 10): smallest SIZE 35 ms with in-loop diffusion at the small end; its ringing at long DECAYs dropped (12.7 → 7.3 dB, infinite 10.2 → 0). Raising the minimum squeezes HALL's whole range, so SIZE noon is now a slightly bigger room (where 0.61 was: 95 ms instead of 72, tails ~10 % longer). Worth a listen on the next HALL page.
+- 23 Oct 2026: **The held-tail makeup approved** (A on all 4; ADR 0008).
 - 23 Oct 2026: **ERA's Midiverb rebuilt as the real unit** (B on all 15): 13 bits and its dark loop instead of an 8-bit bitcrusher; level across ERA's last stretch kept within about 1.4 dB (make-up 1.2 → 1.0 dB).
 - 23 Oct 2026: **BLOOM smears its taps** (B on all 15): no more ghost hits. Your note "the attack is a little slower" measured true (the smear adds delay); the taps now close up so the swell still peaks on time, but its very start (first 10 %) still arrives 0.06–0.4 s later. Worth a re-listen on the next BLOOM page. BLOOM only, not MASSIVE's mass.
 - 23 Oct 2026: **PLATE's repeated hits** (B on all 4): its first input allpass wanders very slightly, so identical hits don't enter the plate identically.

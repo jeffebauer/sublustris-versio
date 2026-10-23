@@ -119,15 +119,9 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
                const std::vector<std::string>& sets, std::string& error)
 {
     engine.prepare(sampleRate, block);
-    if (const char* dc = std::getenv("IV_DUCK_COMP")) { // "attack_ms,release_ms"
-        float a = 0.0f, r = 0.0f;
-        if (std::sscanf(dc, "%f,%f", &a, &r) == 2) engine.setDuckCompressor(a, r);
-    }
     if (const char* hd = std::getenv("IV_HALL_DIFFUSION")) engine.setHallInLoopDiffusion(float(std::atof(hd)));
     if (const char* di = std::getenv("IV_DIFF_INDEPENDENT")) engine.setDiffuserIndependent(std::atoi(di) != 0);
     if (const char* sl = std::getenv("IV_STILL_LOWS")) engine.setStillLows(std::atoi(sl) != 0);
-    if (const char* dk = std::getenv("IV_DUCK")) engine.setDuckScale(float(std::atof(dk)));
-    if (const char* mk = std::getenv("IV_MAKEUP")) engine.setMakeup(std::atoi(mk) != 0);
     if (const char* sl = std::getenv("IV_SIZE_SLEW")) engine.setSizeSlewScale(float(std::atof(sl)));
     if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
     if (!presetPath.empty()) {

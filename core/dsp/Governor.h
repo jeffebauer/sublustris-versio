@@ -15,7 +15,6 @@ namespace iv::dsp {
 struct FloorGovernor {
     float weight = 0.0f;                 // 0 finite DECAY .. 1 infinite
     float floorDb = voicing::kFloorDbfs;   // the level an infinite tail settles at (darkening stops there)
-    bool  makeup = true;                 // PROTOTYPE (renders/decisions): false = no makeup, for the demo
     float holdDb = 0.0f;                   // a held tail's ceiling (a pad, or infinite after the input), on the slow level
     float slowLevelDb = -200.0f;           // the level over ~kHoldSeconds (an echoey MASSIVE tail swings for seconds)
     float levelDb = -200.0f;
@@ -59,7 +58,7 @@ struct FloorGovernor {
         if (holdDb < 0.0f) {
             const float off = slowLevelDb - holdDb;
             if (off > 0.0f) extraRate += weight * voicing::kGovernorRatePerDb * off;
-            else if (makeup) {
+            else {
                 float up = -voicing::kHoldRatePerDb * off;
                 if (up > voicing::kMakeupMaxRate) up = voicing::kMakeupMaxRate;
                 extraRate -= weight * up;

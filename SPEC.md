@@ -6,6 +6,7 @@
 **Status:** Spec **v1.0 (frozen)**, 21 Oct 2026. Input: `IMMENSIO_BRIEF.md`. Vocabulary: `CONTEXT.md`. Decisions: `docs/adr/` (0001–0017; index in `docs/adr/README.md`). Session record: `docs/spec-session.md`. Changes after freeze: new ADR + changelog entry. Numbers marked *(start)* are starting guesses; tuned numbers replace them as milestones confirm them.
 
 ### Changelog
+- v1.0.17 — owner's picks (23 Oct 2026): **ducking is 4:1 compression of the wet** (`renders/ducking`, D on all 18 cards; ADR 0014 amendment; from the M1 notes: DARKEN was "too extreme", held too long and made the held tail jump when you stopped): above −24 dBFS of input, attack 30 ms, release 0.4 s (a freeze lets go in 50 ms), about 3 dB of reduction while playing, no darkening; still only from DECAY 0.85 up and never while frozen. DARKEN is gone. **The small HALL:** the smallest SIZE is 35 ms of mean line (was 20) with the small end's tails × 0.49 (was 0.4), matching the version picked, and HALL gains in-loop diffusion (0.5, allpasses scaled with the room) at the small end, fading out by SIZE noon (`renders/small_hall`, E on all 10; the audit's F1/F2): ringing at SIZE fully CCW 12.7 / 11.0 / 10.2 → 7.3 / 8.6 / 0 dB at DECAY 0.45 / 0.7 / infinite. **The held-tail makeup is approved** (`renders/makeup`, A on all 4; ADR 0008 amendment; without it an infinite MASSIVE sagged ~3 dB in 10 minutes).
 - v1.0.16 — owner's picks (23 Oct 2026): **ERA's Midiverb is rebuilt as the real unit** (`renders/midiverb`, B on all 15 cards; ADR 0004 amendment): the loop box keeps 13 bits (was 12 → 8, a bitcrusher) and adds the unit's ½ one-pole low-pass every pass, so the stage darkens instead of turning to grit (a HALL tail's share above 4 kHz −6.6 → −35.7 dB); its make-up 1.2 → 1.0 dB. **BLOOM smears its taps** (`renders/swell_smear`, B on all 15; the audit's S1): three allpasses per side sized to the gap between taps, so a hit through a long BLOOM swells instead of returning as ghost hits (flicker 3–7.5 → 2.7–6.1 dB); the taps close up by 5 % so the swell still peaks on time (the owner heard "the attack is a little slower"; its first 10 % still comes 0.06–0.4 s later); BLOOM only, not MASSIVE's mass or the twin. **In PLATE the first input allpass wanders** (`renders/diffuser_motion`, B on all 4; Mutable Instruments' Clouds/Beads): 0.18 ms at 0.4 Hz, L and R opposite, so repeated hits don't enter the plate identically. Kept as they were: the PLATE's stereo image (`renders/plate_stereo`, A on all 8: "more cohesive"; answering on the same side "creates a sonic gap"), and the still lows (liked, but not energy-safe; Claude's list).
 - v1.0.15 — owner's TONE pick (23 Oct 2026, `renders/tone_shelf`; ADR 0012 amendment): **every tank's loss is a shelf crossing at 2.5 kHz**, so at TONE noon the upper mids fade with the highs instead of ringing as long as the body (a warmer noon; the DSP audit's A1). B on all 36 cards.
 - v1.0.14 — owner's pick (23 Oct 2026, `renders/twin_level`): **the twin sits 6 dB under the pad** (level 0.5, was 0.3 / −10.5 dB), so playing over a frozen pad is no longer a 6–7 dB drop at the tap. C (+6 dB) on all 24 cards, the repeated row agreeing; "the sweet spot is between plus3 and plus6", so +4.4 dB.
@@ -79,7 +80,7 @@ Pots are named by panel position P1–P7, in reading order, as in Resilio ADR 00
 | P2 | **DECAY** | Tail length; past ~3 o'clock, infinite plus ducking (ADR 0008, 0014); in Massive NORMAL it also shortens the built-in mass (ADR 0007) | 0–0.80: T60 exponential. Plate 0.4 → 12 s, Hall 0.8 → 25 s, Massive 2 → 120 s. 0.80–0.85: crossover to infinite. 0.85–1: infinite (loop gain 1 at the floor), duck depth grows 0 → full (§4.9) | gliding 80 ms |
 | P3 | **TONE** | Tilt EQ in the loop: the tail darkens or brightens with each pass, plus a matching tilt on the wet (v1.0.8: CCW +4 dB lows / −9 dB highs, CW −4 / +6 dB round 600 Hz). Noon is flat (ADR 0012) | Pivot ~800 Hz. Per pass, gain at 10 kHz relative to 100 Hz: −6 dB (CCW) → 0 (noon) → +2 dB (CW). The loop gain is renormalised so that "bright" never exceeds 1 at any frequency. Noon dead zone ±2 % | snappy 5 ms |
 | P4 | **ERA** | Clean → Neve → Cassette → μ-law → Midiverb, stacking (ADR 0003, 0004, 0005) | Travel weighted to the middle: 0–10 / 10–35 / 35–65 / 65–85 / 85–100 %. Each layer fades in across its stretch, then stays. §4.7 | gliding 60 ms (rate changes crossfade) |
-| P5 | **SIZE** | The space. Plate / Hall: scale. Massive: long wash → boundless wash, predelay grows a little (ADR 0007, v1.0.6). Moves bend pitch like tape (ADR 0012). While frozen it plays the companion | Plate: tank scale 0.5 → 1.59 (v1.0.11). Hall: mean line delay 20 → 260 ms, finite T60 × 0.4 → 1 (v1.0.8). Massive: mean line delay 0.35 → 2 s, exponential; delay-ratio spread (Warp) 0.4 → 1; in-loop and input diffusion 0.45 → 1 (×); predelay 0 → 100 ms (∝ x²) (v1.0.6). Slew-limited to ≤ ±1 semitone of bend (≤ 6 % delay change per second); a fast move becomes a swoop over up to ~1.5 s | slew-limited (§4.3) |
+| P5 | **SIZE** | The space. Plate / Hall: scale. Massive: long wash → boundless wash, predelay grows a little (ADR 0007, v1.0.6). Moves bend pitch like tape (ADR 0012). While frozen it plays the companion | Plate: tank scale 0.5 → 1.59 (v1.0.11). Hall: mean line delay 35 → 260 ms, finite T60 × 0.49 → 1 (v1.0.8, v1.0.17). Massive: mean line delay 0.35 → 2 s, exponential; delay-ratio spread (Warp) 0.4 → 1; in-loop and input diffusion 0.45 → 1 (×); predelay 0 → 100 ms (∝ x²) (v1.0.6). Slew-limited to ≤ ±1 semitone of bend (≤ 6 % delay change per second); a fast move becomes a swoop over up to ~1.5 s | slew-limited (§4.3) |
 | P6 | **DRIFT** | Bipolar pitch movement in the tank (ADR 0012) | Dead zone 0.47–0.53, which leaves only the anti-metallic floor (±1–2 cents per line, slow random). Left: tape wow 0.2–1 Hz up to ±15 cents, flutter 5–9 Hz up to ±3 cents, random and never repeating. Right: smooth Cathedra drift, 0.05–0.3 Hz up to ±35 cents at full, different rate and phase per line | gliding 80 ms |
 | P7 | **TIME** | The attack's timing, per ATTACK (ADR 0015). NORMAL: predelay. BLOOM: swell time. REVERSE: reverse length | NORMAL: predelay 0 → 250 ms (∝ x²) *(start)*. BLOOM: swell time 0.1 → 4 s, exponential (shorter keeps a swell from clashing with the harmony coming in). REVERSE: segment length 0.2 → 2 s, exponential | gliding 80 ms (REVERSE length changes at the next segment) |
 
@@ -92,7 +93,7 @@ Pots are named by panel position P1–P7, in reading order, as in Resilio ADR 00
 
 Which toggle is SW0 and which is SW1 follows the printed panel (confirmed at M0).
 Switch changes: SPACE crossfades ~100 ms; the old tail fades out while the new space takes the input, and only one big tank ever runs (ADR 0013). ATTACK crossfades ~50 ms on the wet; into or out of REVERSE, the forward and reversed wet crossfade over 50 ms.
-Ducking has no switch: it is always DARKEN (ADR 0014, from the demos).
+Ducking has no switch: it is 4:1 compression of the wet at infinite DECAY (ADR 0014, amended v1.0.17).
 
 ### Audio I/O
 True stereo in (ADR 0013): L and R enter the tank at different points. Mono on L reaches both sides via the hardware normal. Outputs are not normalled.
@@ -130,7 +131,7 @@ Level meters as Resilio (ADR 0031): LED 1–2 In L / In R, LED 3–4 Out L / Out
          │                             loop soft saturation (always on)   │
          │                             ERA in-loop layers (Neve, Cassette,│
          │                               Midiverb 24 kHz box + bits)      │
-         │                             DARKEN duck (from follower) ◄──────┘
+         │                             (ducking: 4:1 on the wet, §4.9) ◄──┘
          │                                   │
          │    diffused input ─► REVERSE: rising taps → short FDN (replaces the tank's wet, §4.11)
          │                                   │
@@ -184,9 +185,8 @@ Stacking: each stage's layer fades in across its stretch of the knob and then st
 ### 4.8 (removed) Desk
 Removed before the freeze, after the owner's demo listening: the knob became TIME (ADR 0015).
 
-### 4.9 Ducking: always DARKEN (ADR 0014)
-- An envelope follower on the input (attack 5 ms, release 400 ms; −42 dBFS → no duck, −24 dBFS → full *(start, from the demos)*, control rate) drives the duck. The depth is 0 below Decay 0.85, then grows to full at Decay 1.
-- **DARKEN:** a two-pole low-pass on the wet (after ERA's μ-law layer, before the limiter; v1.0.4, not in the loop) closes, down to ~1.5 kHz at full depth, and the tail dips ~3 dB. Not while frozen. While you play the tail gets out of the way, and it brightens back when you stop.
+### 4.9 Ducking: 4:1 compression of the wet (ADR 0014, amended v1.0.17)
+- The input's ~10 ms power keys a 4:1 compressor on the wet (after ERA's μ-law layer and TONE's tilt, before the limiter): above −24 dBFS, attack 30 ms, release 0.4 s, at control rate with the gain ramped per sample. Its depth is 0 below Decay 0.85, then grows to full at Decay 1. Not while frozen (a freeze lets it go in 50 ms). No darkening. While you play the tail steps back about 3 dB, and it comes back over about a second when you stop. (Until v1.0.17 it was DARKEN, a low-pass closing to ~1.5 kHz plus a 3 dB dip.)
 
 ### 4.10 Output stage
 Era's μ-law layer (wet only) → soft limiter (ceiling −1 dBFS, Resilio-style) → MIX. The dry path is untouched.
@@ -306,7 +306,7 @@ immensio-versio/
 - [L] Era travel feels like going back in time. Blind pick of each stage at its centre.
 
 ### M7 — Ducking + integration
-- [A] Duck depth is 0 below Decay 0.85, then rises monotonically; DARKEN's low-pass reaches ~1.5 kHz at full and recovers after the input stops.
+- [A] Duck depth is 0 below Decay 0.85, then rises monotonically; the wet steps back while playing without darkening and recovers after the input stops (v1.0.17).
 - [A] Every knob at every corner: clicks, NaN, clip, CPU (on hardware).
 - [H] Full CPU corner run ≤ 75 % peak; flash ≤ 110 KB release; click check by ear.
 

@@ -17,7 +17,7 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0011](0011-gate-mirrors-the-button.md) | The gate mirrors the button: one gesture reader | 12, 13 |
 | [0012](0012-mix-size-tone-drift.md) | MIX, SIZE, TONE and DRIFT | 14, 15, 18, 20 |
 | [0013](0013-space-crossfade-and-true-stereo-in.md) | SPACE flips crossfade; true stereo in | 17, 23 |
-| [0014](0014-ducking-is-always-darken.md) | Ducking is always DARKEN, growing with DECAY | 16, 24, 27 |
+| [0014](0014-ducking-is-always-darken.md) | Ducking is always DARKEN, growing with DECAY (amended v1.0.17: 4:1 compression of the wet) | 16, 24, 27 |
 | [0015](0015-time-and-attack.md) | P7 is TIME, SW1 is ATTACK (NORMAL / BLOOM / REVERSE) | 27, 28, 29, 30 (supersedes 19) |
 | [0016](0016-leds-meters-and-freeze-state.md) | LEDs: level meters plus the freeze state | 21 |
 | [0017](0017-panel-layout.md) | Panel layout: P1–P7 mirror Resilio's positions | owner approval of v1.0 |
