@@ -112,7 +112,7 @@ private:
     // (one sample late: pairs are formed on the odd samples).
     float box(float x)
     {
-        // PROTOTYPE (still lows' low tank, 12 kHz): below ~300 Hz the box's halfbands and dark loop are
+        // Still lows' low tank (12 kHz, v1.0.18): below ~300 Hz the box's halfbands and dark loop are
         // flat, and at this rate they'd darken the lows every pass; only the 13 bits stay.
         if (sampleRate_ < 30000.0f) return mix_.midiRound ? roundBits(x, midiStep_) : truncateBits(x, midiStep_);
         if (phase_ == 0) {

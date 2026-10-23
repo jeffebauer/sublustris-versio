@@ -78,10 +78,21 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     ready_ &= twinFdn_.prepare(large_, sampleRate, 0x7A1Eu);
     ready_ &= lowFdn_.prepare(large_, sampleRate / float(kLowDecimate), 0x10F7u);
     lowFdn_.setGovernorLeader(&fdn_);
-#ifndef IV_STILL_LOWS_DEFAULT
-#define IV_STILL_LOWS_DEFAULT 0 // PROTOTYPE: a scratch build can run every test with a mode on
-#endif
-    setStillLows(IV_STILL_LOWS_DEFAULT, 300.0f);
+    {
+        // The split: a 2nd-order Butterworth pair (bilinear). The two tanks' outputs are uncorrelated,
+        // so they add in power, and a Butterworth pair is power complementary (|L|² + |H|² = 1).
+        auto butter = [this](float f, float* lp, float* hp) {
+            const float k = dsp::bilinearK(f, sampleRate_);
+            const float nrm = 1.0f / (1.0f + 1.41421356f * k + k * k);
+            lp[0] = k * k * nrm; lp[1] = 2.0f * lp[0]; lp[2] = lp[0];
+            hp[0] = nrm; hp[1] = -2.0f * nrm; hp[2] = nrm;
+            lp[3] = hp[3] = 2.0f * (k * k - 1.0f) * nrm;
+            lp[4] = hp[4] = (1.0f - 1.41421356f * k + k * k) * nrm;
+        };
+        float unused[5];
+        butter(voicing::kStillLowsHz, xoL_, xoH_);
+        butter(kLowAntiAliasHz, aaL_, unused); // flat below the split; with it, −70 dB at 6 kHz
+    }
     // REVERSE's short reverb: short lines, no in-loop diffusion or early taps, never infinite.
     ready_ &= reverseFdn_.prepare(large_, sampleRate, 0x2E7Eu, voicing::kReverseMaxLineSeconds);
     reverseFdn_.setMeanSeconds(map::reverseMeanSeconds(0.5f), 1.0f, true);
@@ -95,27 +106,6 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     tilt_.prepare(sampleRate);
     limiter_.prepare(sampleRate);
     reset();
-}
-
-void Engine::setStillLows(int mode, float hz)
-{
-    lowTank_ = mode == 4;
-    fdn_.setStillLows(lowTank_ ? 0 : mode, hz);
-    twinFdn_.setStillLows(lowTank_ ? 0 : mode, hz);
-    fdn_.setExternalPower(0.0f);
-    // The crossover: a 2nd-order Butterworth pair (bilinear). The two tanks' outputs are uncorrelated,
-    // so they add in power, and a Butterworth pair is power complementary (|L|² + |H|² = 1).
-    auto butter = [this](float f, float* lp, float* hp) {
-        const float k = dsp::bilinearK(f, sampleRate_);
-        const float nrm = 1.0f / (1.0f + 1.41421356f * k + k * k);
-        lp[0] = k * k * nrm; lp[1] = 2.0f * lp[0]; lp[2] = lp[0];
-        hp[0] = nrm; hp[1] = -2.0f * nrm; hp[2] = nrm;
-        lp[3] = hp[3] = 2.0f * (k * k - 1.0f) * nrm;
-        lp[4] = hp[4] = (1.0f - 1.41421356f * k + k * k) * nrm;
-    };
-    float unused[5];
-    butter(hz, xoL_, xoH_);
-    butter(kLowAntiAliasHz, aaL_, unused); // flat below the crossover; with it, −70 dB at 6 kHz
 }
 
 IV_SIZE_OPT void Engine::reset()
@@ -344,7 +334,7 @@ void Engine::applySpace(bool snap)
         fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(size, decay));
         fdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
         fdn_.setModDepth(modScale_);
-        // PROTOTYPE (still lows): the low tank follows, unmodulated.
+        // Still lows: the low tank follows, unmodulated.
         lowFdn_.setDecayRate(rate);
         lowFdn_.setHighT60Ratio(highRatio);
         lowFdn_.setGovernor(governor);
@@ -682,7 +672,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         }
 
         if (activeSpace_ == 0) plate_.process(bufL_, bufR_, wetL_, wetR_, n);
-        else if (!lowTank_) fdn_.process(bufL_, bufR_, wetL_, wetR_, n);
+        else if (!lowTank_) fdn_.process(bufL_, bufR_, wetL_, wetR_, n); // the test hook's one tank
         else processTwoTanks(n);
         for (int i = 0; i < n; ++i) revL_[i] = revR_[i] = 0.0f;
         if (reverseOn) reverseFdn_.process(revInL_, revInR_, revL_, revR_, n);
@@ -712,7 +702,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
     for (int i = 0; i < edgeCount_; ++i) edges_[i].offset -= numSamples;
 }
 
-// PROTOTYPE (still lows, mode 4): split the tank's input (Butterworth), the highs through fdn_, the lows
+// Still lows: split the tank's input (Butterworth), the highs through fdn_, the lows
 // decimated through lowFdn_ (anti-aliased by the crossover's lowpass and a 2 kHz one), then linearly
 // interpolated back up and through the 2 kHz lowpass again (anti-image).
 void Engine::processTwoTanks(int n)

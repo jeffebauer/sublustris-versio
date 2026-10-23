@@ -41,6 +41,9 @@ constexpr float kSizeSlewPerSecond = 0.0595f;
 // is ~±1.5 cents at the ~0.3 Hz rate below); a new random target every
 // kFloorStepSeconds × (1 + line spread).
 constexpr float kFloorDepthSeconds = 0.00046f;
+// Still lows (v1.0.18, docs/research/still-lows.md): below this the HALL / MASSIVE tank's input goes to
+// a second, unmodulated tank (Butterworth split), so the bass never wavers; above it moves as before.
+constexpr float kStillLowsHz = 300.0f;
 constexpr float kFloorStepSeconds  = 1.7f;
 
 // Fixed damping (SPEC §4.6): the high end's T60 as a share of the low

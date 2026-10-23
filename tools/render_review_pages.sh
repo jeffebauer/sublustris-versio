@@ -314,34 +314,3 @@ C_massive_large    SIZE fully CW" > renders/grainy_start/README.txt
     python3 tools/review/make_review.py renders/grainy_start --title "Immensio: do big spaces start grainy?" --level-match --showcase --dry $SRC --wet-only > /dev/null
     echo "renders/grainy_start/index.html"
 fi
-
-
-
-if on still_lows; then
-    # Still lows, done safely (docs/research/still-lows.md): the lows in their own unmodulated tank
-    # (IV_STILL_LOWS=4, crossover 300 Hz), the established two-tank design (Barr II, Eventide H90 Hall).
-    # Energy-checked first: no build-up anywhere in the SPACE × SIZE × DECAY × DRIFT sweep, every
-    # 10-minute infinite hold passes, decay per band within a few % of today.
-    saved=("${MATERIALS[@]}"); MATERIALS=()
-    for m in bass skank pad keys fullmix; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
-    page still_lows
-    for v in 0:A_today 4:B_still_lows; do
-        for c in "HALL:0:hall_tape" "HALL:1:hall_cathedra" "MASSIVE:0:massive_tape" "MASSIVE:0.5:massive_noon" "MASSIVE:1:massive_cathedra"; do
-            sp=${c%%:*}; rest=${c#*:}; dr=${rest%%:*}; col=${rest#*:}
-            IV_STILL_LOWS=${v%%:*} IV_STILL_HZ=300 r still_lows $col ${v##*:} "" --set space=$sp --set era=0 --set size=0.6 --set decay=0.7 --set drift=$dr
-        done
-    done
-    MATERIALS=("${saved[@]}")
-    print -r -- "Bass in a moving tail, round 2. You liked B last time (\"the frequency response feels more even and balanced\"), but that version built up energy in the loop (the \"waves of built-up distortion\" you heard on HALL tape), so it couldn't ship, and some of what you liked may have been that build-up. This B is built the established way (Keith Barr's dual-band reverb, Eventide's H90 Hall): the lows below about 300 Hz get their own reverb that never moves, and everything above moves as today. It's checked safe: nothing builds up anywhere, infinite holds stay put for 10 minutes, and every band rings as long as today's. Measured on a held 55 Hz note, the bass in a HALL with DRIFT fully CW wobbles about 190 cents today and about 5 with B; MASSIVE 51 to 13. Does the steadier bass sound better, or do you miss the movement down there? SIZE 0.6, DECAY 0.7, ERA clean; MASSIVE also at DRIFT noon, where only the gentle background wander moves the tail.
-
-hall_tape          HALL, DRIFT fully CCW (tape)
-hall_cathedra      HALL, DRIFT fully CW (Cathedra)
-massive_tape       MASSIVE, DRIFT fully CCW
-massive_noon       MASSIVE, DRIFT noon
-massive_cathedra   MASSIVE, DRIFT fully CW
-
-A_today            the whole tail moves, bass included
-B_still_lows       below ~300 Hz stays still; above moves as today" > renders/still_lows/README.txt
-    python3 tools/review/make_review.py renders/still_lows --title "Immensio: bass in a moving tail, round 2" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/still_lows/index.html"
-fi

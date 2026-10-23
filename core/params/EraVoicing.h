@@ -63,6 +63,6 @@ constexpr float kCracklePerSecond = 4.0f;
 // Loudness makeup per layer (dB on the wet), so ERA stays within ±2 dB
 // across the knob (SPEC §7 M6): darker, compressed, bit-reduced tails read
 // quieter. Measured on noise bursts (test_era), summed as the layers stack.
-constexpr float kMakeupNeveDb = 0.6f, kMakeupCassetteDb = 1.4f, kMakeupMuDb = 2.4f, kMakeupMidiverbDb = 1.0f; // 1.2 for the 8-bit box; at 1.0 music rises 0.2-1.4 dB across the stage and test_era's broadband check stays in its window (v1.0.16)
+constexpr float kMakeupNeveDb = 0.6f, kMakeupCassetteDb = 1.4f, kMakeupMuDb = 2.4f, kMakeupMidiverbDb = 1.3f; // 1.2 for the 8-bit box; 1.0 for the unit (v1.0.16); 1.3 with still lows (v1.0.18: the highs-only main tank loses a little more to the 13-bit truncation; music still rises no more across the stage than at v1.0.16)
 
 } // namespace iv::voicing

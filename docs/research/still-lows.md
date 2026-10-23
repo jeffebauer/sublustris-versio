@@ -1,5 +1,7 @@
 # Still lows, done safely (23 Oct 2026)
 
+**Shipped as SPEC v1.0.18** (owner: B on all 25 cards of `renders/still_lows` round 2): mode 4, two tanks, now the default; the other modes are gone from the code. `IV_STILL_LOWS=0` (desktop) brings back one tank for demos.
+
 The owner picked "still lows" on every MASSIVE card and on HALL Cathedra (23 Oct, B: "the frequency response feels more even and balanced"). The bass in a moving tail stays put; above it, the tail moves as before. The first prototype wasn't energy-safe (dsp-audit.md, A4). This note covers how established designs handle the problem, why the first prototype failed, and the candidates, each measured.
 
 Tags: **[S]** a source says it; **[M]** we measured it; **[I]** our inference.

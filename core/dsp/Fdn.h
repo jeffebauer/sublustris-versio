@@ -62,7 +62,6 @@ public:
     void setInLoopDiffusion(float amount) { inLoopTarget_ = amount; }
     // The in-loop allpasses' lengths × k (1 = MASSIVE's; HALL scales them with its room, v1.0.17).
     void setInLoopScale(float k) { apScale_ = k; }
-    void setStillLows(int mode, float hz = 400.0f); // PROTOTYPE: 0 off, 1 one-pole split, 2 LR2, 3 LR4 split
     // ERA's in-loop layers and DRIFT, set at control rate (SPEC §4.6, §4.7).
     void setEra(const EraMix& m)
     {
@@ -82,8 +81,9 @@ public:
     // Extra output level for a voicing (MASSIVE's loudness match).
     void setOutputTrim(float trim) { outputTrim_ = trim; }
     float levelDb() const { return governor_.levelDb; }
-    // PROTOTYPE (still lows' two tanks): a follower takes its leader's governor loss and darkening, and the
-    // leader's governor also hears the follower's level (mean power per sample, the last block's).
+    // Still lows (v1.0.18): the low tank follows its leader's governor (its loss and darkening), and
+    // the leader's governor hears the low tank's level too (mean power per sample, the last block's),
+    // so the two together hold one floor, as one tank did.
     void setGovernorLeader(const Fdn* leader) { leader_ = leader; }
     void setExternalPower(float meanPower) { externalPower_ = meanPower; }
 
@@ -107,20 +107,6 @@ private:
     // Per-sample read position for the current control block.
     float     readNow_[kN] = {}, readStep_[kN] = {};
     float     interp_[kN] = {}; // allpass-interpolation state per read
-    // PROTOTYPE (renders/still_lows, the audit's A4): a second, unmodulated read per line for the
-    // band below ~400 Hz (Schlecht: a modulated low end sounds detuned).
-    // Mode 2: a 2nd-order Linkwitz-Riley split (Butterworth LP² and −HP², from one first-order
-    // allpass each: LP = (1 + A)/2, HP = (1 − A)/2). Its bands' magnitudes add to exactly 1, so
-    // however far apart the two reads drift, a pass can't gain (|LP|·|S| + |HP|·|M| ≤ |X|).
-    int       stillLows_ = 0;
-    float     stillNow_[kN] = {}, stillStep_[kN] = {}, stillInterp_[kN] = {}, lpStill_[kN] = {}, lpMod_[kN] = {}, lowCoeff_ = 0.05f;
-    float     lrA_ = 0.0f;                         // the first-order allpass coefficient at the crossover
-    float     lrX_[kN][4] = {}, lrY_[kN][4] = {};  // allpass states: still ×2 sections, moving ×2
-    // Mode 3: LR4 (Butterworth biquads squared: LP² + HP², |LP| + |HP| = 1 too, but 24 dB/oct, so
-    // far less of the band where the two reads can cancel).
-    float     bqL_[5] = {}, bqH_[5] = {};          // b0 b1 b2 a1 a2
-    float     bqZ_[kN][4][2] = {};                 // TDF-II states: still LP ×2, moving HP ×2
-    float     stillHz_ = 400.0f;
     // Absorbent filters: y = g (1 − b) x + b y.
     float     gain_[kN] = {}, pole_[kN] = {}, absorbY_[kN] = {};
     float     b1_[kN] = {}, absorbX_[kN] = {}, shelfK_ = 0.0f; // lossShelfK(sampleRate_)
