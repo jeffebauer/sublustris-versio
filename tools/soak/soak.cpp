@@ -620,6 +620,7 @@ struct Soak {
         clickArmed = true;
         jumpArmed = false;
         pendingJumps.clear();
+        lastKnobJump = t; // each episode sets its knobs at once
     }
     void setKnob(ParamId id, float v, bool glide = false)
     {
@@ -919,7 +920,10 @@ struct Soak {
         const int64_t total = int64_t(minutes * 60.0 * fs);
         int kinds[5] = {};
         while (t < total) {
-            if (rng.chance(0.03f)) eng->reset(); // a host's reset in the middle of things
+            if (rng.chance(0.03f)) { // a host's reset in the middle of things (the wet stops at once: not a click to report)
+                eng->reset();
+                lastKnobJump = t;
+            }
             const float r = rng.uni();
             if (r < 0.30f) { chaos(); ++kinds[0]; }
             else if (r < 0.50f) { hold(); ++kinds[1]; }
