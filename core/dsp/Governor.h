@@ -84,14 +84,15 @@ struct Absorb {
     float gain, pole, b1 = 0.0f;
 };
 
-// The bilinear shelf's K = tan(π·kLossShelfHz / sampleRate), once per prepare.
-// A Taylor series rather than std::tan (~5.8 KB of flash): the angle is under
-// 0.2 rad from 44.1 kHz up, where three terms are within 1e-6.
-inline float lossShelfK(float sampleRate)
+// A bilinear filter's K = tan(π·hz / sampleRate), once per prepare. A Taylor
+// series rather than std::tan (~5.8 KB of flash): fine for angles under ~0.2
+// rad (the loss shelf from 44.1 kHz up), where three terms are within 1e-6.
+inline float bilinearK(float hz, float sampleRate)
 {
-    const float x = 3.14159265f * voicing::kLossShelfHz / sampleRate, x2 = x * x;
+    const float x = 3.14159265f * hz / sampleRate, x2 = x * x;
     return x * (1.0f + x2 * (1.0f / 3.0f + x2 * (2.0f / 15.0f)));
 }
+inline float lossShelfK(float sampleRate) { return bilinearK(voicing::kLossShelfHz, sampleRate); }
 
 inline Absorb absorbent(float seconds, float lowRate, float highRatio, float darken, float shelfK)
 {
