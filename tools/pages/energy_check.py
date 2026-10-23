@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Energy check for a knob-feel prototype that reaches inside a tank's loop
-(docs/research/knob-feel-audit.md; the rule from docs/research/still-lows.md).
+"""Energy check for a prototype that reaches inside a tank's loop (the rule from
+docs/research/still-lows.md; first used for the knob-feel audit, docs/research/knob-feel-audit.md).
+The prototype is a renderer env hook, given as --hook NAME=VALUE (e.g. IV_STILL_LOWS=4).
 
-1. Levels with and without the prototype (IV_KNOB_FEEL=<feel>) across every SPACE x
+1. Levels with and without the prototype across every SPACE x
    SIZE 0 / 0.6 / 1 x DECAY 0.5 / 0.75 / 0.95 x DRIFT 0 / 0.25 / 0.5 / 0.75 / 1, at each
    --set given (e.g. era=0.9): 2 s of noise, then 28 s of tail, the wet's RMS per window.
    Fails if B is ever more than 0.5 dB louder than A in a window (A: the louder of today at
@@ -14,7 +15,7 @@
    windows from 60 s on, max - min < 3 dB, never above the 60-70 s window + 1 dB,
    never below -60 dBFS.
 
-Usage: .venv/bin/python tools/pages/energy_check.py --feel era --set era=0.9 [--set era=0.95] [--ref era=0.85]
+Usage: .venv/bin/python tools/pages/energy_check.py --hook IV_SOMETHING=1 --set era=0.9 [--set era=0.95] [--ref era=0.85]
        [--bin ...] [--no-holds]
 """
 import argparse
@@ -31,9 +32,11 @@ SR = 48000
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def render(bin_, stim, out, sets, feel):
+def render(bin_, stim, out, sets, hook):
     env = dict(os.environ)
-    env["IV_KNOB_FEEL"] = feel
+    if hook:  # NAME=VALUE: the prototype's renderer env hook ("" = today)
+        name, value = hook.split("=", 1)
+        env[name] = value
     cmd = [bin_, str(stim), str(out), "--set", "mix=1"]
     for kv in sets:
         cmd += ["--set", kv]
@@ -50,7 +53,7 @@ def windows_db(y, edges):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--bin", default=os.environ.get("IV_RENDER", str(ROOT / "build" / "iv_render")))
-    ap.add_argument("--feel", required=True)
+    ap.add_argument("--hook", required=True, help="the prototype's renderer env hook, NAME=VALUE")
     ap.add_argument("--set", action="append", default=[], help="k=v, one grid per value (repeatable)")
     ap.add_argument("--ref", help="k=v: A is also rendered with this, and the louder A counts")
     ap.add_argument("--no-holds", action="store_true")
@@ -78,7 +81,7 @@ def main():
             if args.ref:
                 r = windows_db(render(args.bin, stim, tmp / f"r{k}.wav", sets[:4] + [args.ref], ""), edges)
                 la = [max(u, v) for u, v in zip(la, r)]
-            b = render(args.bin, stim, tmp / f"b{k}.wav", sets, args.feel)
+            b = render(args.bin, stim, tmp / f"b{k}.wav", sets, args.hook)
             return g, la, windows_db(b, edges), bool(np.isfinite(b).all())
 
         worst, n = -99.0, 0
@@ -104,7 +107,7 @@ def main():
             def hjob(c, k):
                 sp, extra = c
                 sets = [f"space={sp}", "decay=1", "size=0.5", "time=0"] + ([extra] if extra else [])
-                y = render(args.bin, hold, tmp / f"h{k}.wav", sets, args.feel)
+                y = render(args.bin, hold, tmp / f"h{k}.wav", sets, args.hook)
                 w = [20 * np.log10(np.sqrt(np.mean(y[i: i + 10 * SR] ** 2)) + 1e-12) for i in range(0, len(y) - 10 * SR + 1, 10 * SR)]
                 return c, w[6], min(w[6:]), max(w[6:]), bool(np.isfinite(y).all())
 

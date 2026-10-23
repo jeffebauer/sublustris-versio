@@ -1,6 +1,8 @@
 # The M8 knob-feel audit (24 Oct 2026)
 
-**Status:** prototypes only, every one off by default; the owner's pick page is `renders/knob_feel` (built by `tools/pages/knob_feel.sh`). Nothing in the default sound changed. 27 default renders across SPACE × ATTACK × ERA / SIZE / DECAY corners are bit-identical to main's build (02af9fa), and `iv_test_golden` passes unchanged.
+**Shipped as SPEC v1.0.21** (24 Oct 2026; owner: B on 22 of 23 cards of `renders/knob_feel`, the one A being ERA at 95 % on the skank). All five B curves are the defaults now; `IV_KNOB_FEEL` and its tuning hooks are gone, with `tools/pages/knob_feel.sh` and `knob_feel_measure.py`. On the way: MASSIVE's longer shortest tails made it up to 1.8 dB louder at full SIZE, so `map::massiveDecayLevelTrim` takes that off again (each setting keeps its loudness, as `hallSizeLevelTrim` does for HALL's SIZE). Release firmware 99,748 B.
+
+**Status during the audit (before it shipped):** prototypes only, every one off by default; the owner's pick page is `renders/knob_feel` (built by `tools/pages/knob_feel.sh`). Nothing in the default sound changed. 27 default renders across SPACE × ATTACK × ERA / SIZE / DECAY corners are bit-identical to main's build (02af9fa), and `iv_test_golden` passes unchanged.
 
 **The goal** (SPEC §2.3, `docs/TASKS.md` M8): every knob should change the sound evenly across its travel, with no stretch that does nothing (a **dead zone**) and no notch that jumps (a **cliff**). It was measured after today's changes: v1.0.16 Midiverb rebuilt, v1.0.17 HALL SIZE squeezed, v1.0.18 still lows, v1.0.19 ERA make-up, v1.0.20 DRIFT CW = Wander.
 

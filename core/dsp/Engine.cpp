@@ -260,17 +260,10 @@ void Engine::onGesture(GestureReader::Event e)
 
 // ---- Voicing -------------------------------------------------------------------
 
-// DECAY's loss rate for the SPACE in use (the knob-feel prototype's MASSIVE curve when its bit is set).
+// DECAY's loss rate for the SPACE in use (MASSIVE's shortest tail follows SIZE, v1.0.21).
 float Engine::decayRate(float decay, float size) const
 {
-    if (activeSpace_ == 2 && (feel_ & map::feel::kDecay)) return map::massiveDecayRateFeel(decay, size);
-    return map::decayRate(decay, activeSpace_);
-}
-
-// MASSIVE's early taps (the knob-feel prototype scales them when its bit is set).
-float Engine::earlyTaps() const
-{
-    return (feel_ & map::feel::kHits) ? map::feel::tuning().earlyTapScale : 1.0f;
+    return activeSpace_ == 2 ? map::massiveDecayRate(decay, size) : map::decayRate(decay, activeSpace_);
 }
 
 // Sets every voicing target for the SPACE in use (activeSpace_). While
@@ -288,7 +281,7 @@ void Engine::applySpace(bool snap)
 
     // Freezing: loss → 0, highs kept (ratio → 1), the governor caps paint.
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
-    const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era), (feel_ & map::feel::kEra) != 0).highRatioScale;
+    const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
     const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(size) : 1.0f;
     const float rate = decayRate(decay, size) / sizeT60 * (1.0f - freezeMix_);
     const float highRatio = toneRatio + freezeMix_ * (1.0f - toneRatio);
@@ -344,19 +337,9 @@ void Engine::applySpace(bool snap)
         // HALL's allpasses scale with its mean line, so a small
         // room stays small (MASSIVE's lengths at a 0.2 s mean and up).
         fdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(size) / 0.2f));
-        fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(size, decay));
-        fdn_.setEarlyTaps(massive ? earlyTaps() : 0.0f);
-        if (massive) {
-            const bool on = (feel_ & map::feel::kHits) != 0;
-            const int taps = on ? map::feel::tuning().earlyTapCount : voicing::kEarlyTaps;
-            const float power = on ? map::feel::tuning().earlyTapPower : 1.0f;
-            const int even = on ? map::feel::tuning().earlyTapEven : 0;
-            if (fdn_.earlyLayout() != taps || fdn_.earlyPower() != power || fdn_.earlyEven() != even) {
-                fdn_.setEarlyLayout(taps, power, even);
-                lowFdn_.setEarlyLayout(taps, power, even);
-                twinFdn_.setEarlyLayout(taps, power, even);
-            }
-        }
+        fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decay, size)
+                                   : map::hallSizeLevelTrim(size, decay));
+        fdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
         fdn_.setModDepth(modScale_);
         // Still lows: the low tank follows, unmodulated.
         lowFdn_.setDecayRate(rate);
@@ -366,14 +349,15 @@ void Engine::applySpace(bool snap)
         lowFdn_.setHoldDb(holdDb);
         lowFdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallDiff);
         lowFdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(size) / 0.2f));
-        lowFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(size, decay));
-        lowFdn_.setEarlyTaps(massive ? earlyTaps() : 0.0f);
+        lowFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decay, size)
+                                      : map::hallSizeLevelTrim(size, decay));
+        lowFdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
         lowFdn_.setModDepth(0.0f);
     }
 
     // ERA in the loop and DRIFT (SPEC §4.6, §4.7). Freezing glides the
     // in-loop colour out (the pad holds still, ADR 0009); DRIFT stays.
-    const dsp::EraMix era = map::eraMix(smoothed(ParamId::Era), (feel_ & map::feel::kEra) != 0);
+    const dsp::EraMix era = map::eraMix(smoothed(ParamId::Era));
     dsp::EraMix loopEra = era;
     const float keep = 1.0f - freezeMix_;
     loopEra.midiRound = map::governorWeight(decay) >= 1.0f; // infinite: no systematic loss
@@ -420,10 +404,9 @@ void Engine::applySpace(bool snap)
     float predelay = massive ? map::massivePredelaySeconds(size) : 0.0f;
     float attackSeconds = massive ? map::massiveNormalAttackSeconds(decay, size) : 0.0f;
     if (attack == 0)
-        predelay += massive && (feel_ & map::feel::kTime) ? map::massiveNormalPredelayFeel(time) : map::normalPredelaySeconds(time);
+        predelay += massive ? map::massiveNormalPredelaySeconds(time) : map::normalPredelaySeconds(time);
     if (attack == 1)
-        attackSeconds = ((feel_ & map::feel::kBloom) ? map::bloomSecondsFeel(time) : map::bloomSeconds(time))
-                      * (massive ? map::massiveMass(size) : 1.0f);
+        attackSeconds = map::bloomSeconds(time) * (massive ? map::massiveMass(size) : 1.0f);
     swell_.setAttackSeconds(attackSeconds, snap);
     swell_.setSmear(attack == 1); // BLOOM only (owner, renders/swell_smear)
     // REVERSE: rising taps over TIME into the short reverb; DECAY sets how sudden the stop is.
@@ -472,7 +455,8 @@ void Engine::applySpace(bool snap)
             twinFdn_.setHighT60Ratio(toneRatio);
             twinFdn_.setGovernor(0.0f);
             twinFdn_.setInLoopDiffusion(massive ? 1.0f : 0.0f);
-            twinFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(tSize, tDecay));
+            twinFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(tDecay, tSize)
+                                           : map::hallSizeLevelTrim(tSize, tDecay));
             twinFdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
             twinFdn_.setEra(tEra);
             twinFdn_.setDrift(drift);

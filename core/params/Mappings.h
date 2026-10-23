@@ -85,7 +85,12 @@ inline float massiveNormalAttackSeconds(float decay, float size) { return expLer
 // TIME (P7), ADR 0015. NORMAL: predelay 0 → 250 ms, ∝ x². BLOOM: swell
 // 0.1 → 4 s. REVERSE: segment length 0.2 → 2 s. Both exponential.
 inline float normalPredelaySeconds(float v) { return 0.25f * v * v; }
-inline float bloomSeconds(float v) { return expLerp(0.1f, 4.0f, v); }
+// MASSIVE in NORMAL: 0 → 250 ms in straight steps (v1.0.21, knob_feel). Its wet already arrives
+// 0.3–0.6 s after a hit (the swell, the SIZE predelay), so x² added under 10 ms over the first 20 %.
+inline float massiveNormalPredelaySeconds(float v) { return 0.25f * v; }
+// BLOOM: 0.12 → 4 s (v1.0.21, knob_feel: below 0.12 s the swell stage crossfades to the direct path,
+// Swell.h, so a 0.1 s start made the first notch jump 3-6×).
+inline float bloomSeconds(float v) { return expLerp(0.12f, 4.0f, v); }
 inline float reverseSeconds(float v) { return expLerp(0.2f, 2.0f, v); }
 // DECAY in REVERSE: the short reverb's T60, how sudden the stop is.
 // SIZE in REVERSE: the short reverb's mean line, the swell's grain.
@@ -130,15 +135,11 @@ inline float layer(float v, float from, float to)
     const float t = clamp01((v - from) / (to - from));
     return t * t * (3.0f - 2.0f * t);
 }
-inline float midiEngageFeel(float v);
-inline float eraKnobFeel(float v);
-// feelEra: the knob-feel audit's ERA prototype (feel::kEra, below); false = today.
-inline dsp::EraMix eraMix(float v, bool feelEra = false)
+inline dsp::EraMix eraMix(float v)
 {
     using namespace voicing;
-    if (feelEra) v = eraKnobFeel(v);
     dsp::EraMix m;
-    m.neve = layer(v, kEraNeveFrom, kEraCassetteFrom);
+    m.neve = clamp01((v - kEraCleanTop) / (kEraCassetteFrom - kEraCleanTop)); // straight steps (v1.0.21)
     m.cassette = layer(v, kEraCassetteFrom, kEraMuFrom);
     m.mu = layer(v, kEraMuFrom, kEraMidiverbFrom);
     m.midiverb = layer(v, kEraMidiverbFrom, 1.0f);
@@ -149,7 +150,10 @@ inline dsp::EraMix eraMix(float v, bool feelEra = false)
     m.drive = 1.0f + (kCassetteDrive - 1.0f) * m.cassette;
     m.muEngage = clamp01((v - kEraMuFrom) / kMuEngageSpan);
     m.muBits = kMuBitsStart + (kMuBitsEnd - kMuBitsStart) * clamp01((v - kEraMuFrom) / (kEraMidiverbFrom - kEraMuFrom));
-    m.midiEngage = feelEra ? midiEngageFeel(v) : clamp01((v - kEraMidiverbFrom) / kMidiEngageSpan);
+    {
+        const float t = clamp01((v - kEraMidiverbFrom) / (1.0f - kEraMidiverbFrom));
+        m.midiEngage = kMidiEngagePower == 2.0f ? t * t : std::pow(t, kMidiEngagePower); // across its stretch (v1.0.21)
+    }
     m.midiBits = kMidiBitsStart + (kMidiBitsEnd - kMidiBitsStart) * clamp01((v - kEraMidiverbFrom) / (1.0f - kEraMidiverbFrom));
     const float makeupDb = kMakeupNeveDb * m.neve + kMakeupCassetteDb * m.cassette + kMakeupMuDb * m.mu + kMakeupMidiverbDb * m.midiverb;
     m.makeup = std::pow(10.0f, makeupDb / 20.0f);
@@ -163,75 +167,24 @@ inline float governorWeight(float decay)
     return clamp01((decay - kDecayFiniteTop) / (kDecayInfiniteAt - kDecayFiniteTop));
 }
 
-// ---- PROTOTYPES: the M8 knob-feel audit (docs/research/knob-feel-audit.md) ------------------
-// Smoother curves for the owner's pick page (renders/knob_feel), each off unless its bit is set
-// (Engine::setKnobFeel; IV_KNOB_FEEL in the Renderer). With no bit set nothing here is called.
-namespace feel {
-constexpr unsigned kDecay = 1u;  // MASSIVE's shortest DECAY lasts a few passes of its lines
-constexpr unsigned kEra   = 2u;  // ERA: Clean only at the very end; the Midiverb fades in across its stretch
-constexpr unsigned kTime  = 4u;  // TIME in MASSIVE NORMAL: predelay in even steps
-constexpr unsigned kBloom = 8u;  // TIME in BLOOM: starts where the swell is all taps
-constexpr unsigned kHits  = 16u; // MASSIVE's early taps build evenly into the first pass
-// Tuning, set by the Renderer for the audit's trials (defaults are the page's B).
-struct Tuning {
-    float massivePasses = 3.0f;  // kDecay: the shortest T60 is at least this many mean lines
-    float eraCleanTop   = 0.03f; // kEra: Clean below this, Neve from here (today 0.10)
-    float midiPower     = 2.0f;  // kEra: the Midiverb box's engage = (share of its stretch)^this
-    float bloomMin      = 0.12f; // kBloom: BLOOM's shortest swell, s (today 0.1)
-    float earlyTapScale = 0.71f; // kHits: MASSIVE's early taps × this (twice the taps, the same energy)
-    int   earlyTapCount = 6;     // kHits: early taps per line (today 3)
-    float earlyTapPower = 1.0f;  // kHits: their gains rise with their place to this power (today 1)
-    int   earlyTapEven  = 1;     // kHits: 1 = the lines' taps interleaved, shorter lines first (Fdn::setEarlyLayout); 0 = seeded jitter (today)
-};
-inline Tuning& tuning()
+// MASSIVE's DECAY: as decayRate(v, 2), but its shortest T60 is at least kMassiveMinPasses mean
+// lines (v1.0.21, knob_feel): 2 s at SIZE 0 (as before), ~2.5 s at noon, ~6 s at full SIZE.
+inline float massiveDecayRate(float v, float size)
 {
-    static Tuning t;
-    return t;
-}
-} // namespace feel
-
-// kDecay: MASSIVE's DECAY from max(2 s, passes × the mean line) to 120 s. With a 0.84 s mean
-// line (SIZE noon) and a 2 s T60, one pass loses 25 dB, so the tail is the build and one
-// echo, and the first notch (3.3 s) jumped to a real tail; a few passes is the shortest a
-// big space can ring (as the PLATE's comment says of a big plate). Crossover unchanged.
-inline float massiveDecayRateFeel(float v, float size)
-{
-    const float lo = std::fmax(kT60Massive.minS, feel::tuning().massivePasses * massiveMeanSeconds(size));
+    const float lo = std::fmax(kT60Massive.minS, voicing::kMassiveMinPasses * massiveMeanSeconds(size));
     if (v <= kDecayFiniteTop) return 1.0f / expLerp(lo, kT60Massive.maxS, v / kDecayFiniteTop);
     if (v >= kDecayInfiniteAt) return 0.0f;
     return (kDecayInfiniteAt - v) / (kDecayInfiniteAt - kDecayFiniteTop) / kT60Massive.maxS;
 }
 
-// kEra: the knob read so Clean ends at eraCleanTop instead of 0.10 and Neve's share grows in
-// straight steps (the layers above keep their places), and the Midiverb box engages across
-// its whole stretch (0.85 → 1, as the share squared, which spreads the tail's shortening
-// most evenly) instead of within 2 % of it. A share of the box in the loop: |a·H + (1 − a)| ≤ 1 when |H| ≤ 1.
-inline float eraKnobFeel(float v)
+// MASSIVE: the level a finite tail gains by ringing longer than decayRate(v, 2) would make it
+// (massiveDecayRate's longer shortest tails at big SIZEs), taken off again so each setting keeps
+// its loudness (energy goes with T60, as hallSizeLevelTrim); 1 where the two curves agree.
+inline float massiveDecayLevelTrim(float v, float size)
 {
-    const float c = feel::tuning().eraCleanTop, n = voicing::kEraNeveFrom;
-    if (v >= voicing::kEraCassetteFrom || c <= 0.0f) return v;
-    if (v <= c) return v * (n / c); // still Clean (below kEraNeveFrom)
-    // Read through the inverse of layer()'s smoothstep, so Neve's share grows in straight steps
-    // from the first notch instead of starting flat.
-    const float t = (v - c) / (voicing::kEraCassetteFrom - c);
-    const float straight = 0.5f - std::sin(std::asin(1.0f - 2.0f * t) / 3.0f);
-    return n + straight * (voicing::kEraCassetteFrom - n);
+    const float now = massiveDecayRate(v, size), was = decayRate(v, 2);
+    return now > 0.0f && was > 0.0f ? std::sqrt(now / was) : 1.0f;
 }
-inline float midiEngageFeel(float v)
-{
-    const float t = clamp01((v - voicing::kEraMidiverbFrom) / (1.0f - voicing::kEraMidiverbFrom));
-    return std::pow(t, feel::tuning().midiPower);
-}
-
-// kTime: MASSIVE's NORMAL predelay 0 → 250 ms in straight steps. Its wet already arrives
-// 0.3–0.6 s after a hit (the swell, the SIZE predelay), so x² added under 10 ms over the
-// first 20 %; heard as a share of that arrival, straight steps are even.
-inline float massiveNormalPredelayFeel(float v) { return 0.25f * v; }
-
-// kBloom: BLOOM's swell bloomMin → 4 s. Below 0.12 s the swell stage crossfades to the
-// direct path (Swell.h), so BLOOM's first notch (0.1 → 0.145 s) crossed the last of that
-// crossfade and the wet's arrival jumped 3-4×.
-inline float bloomSecondsFeel(float v) { return expLerp(feel::tuning().bloomMin, 4.0f, v); }
 
 // HALL: The level a finite tail loses by being shorter (its energy goes with its
 // T60), made up on the output; none at infinite, where nothing is shorter.

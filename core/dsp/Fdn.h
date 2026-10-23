@@ -76,12 +76,6 @@ public:
     // "too much delay before the reverb starts swelling") and every pass is
     // denser. Output only: the loop itself is unchanged.
     void setEarlyTaps(float amount) { earlyTarget_ = amount; }
-    // PROTOTYPE (knob-feel audit, feel::kHits): this many early taps per line (default kEarlyTaps).
-    // power: their gains rise with their place to this power (today 1).
-    void  setEarlyLayout(int count, float power = 1.0f, int even = 0);
-    int   earlyLayout() const { return earlyCount_; }
-    float earlyPower() const { return earlyPower_; }
-    int   earlyEven() const { return earlyEven_; }
     // The modulation floor's depth × modDepth (Engine::setModulationScale, a test hook).
     void setModDepth(float k) { modDepth_ = k; }
     // Extra output level for a voicing (MASSIVE's loudness match).
@@ -127,11 +121,7 @@ private:
     uint32_t  apLenNow_[kN][2] = {}; // apLen_ × apScale_ (HALL scales its allpasses with SIZE)
     float     apScale_ = 1.0f;
     static constexpr int kEarlyTaps = voicing::kEarlyTaps;
-    static constexpr int kEarlyTapsMax = 2 * kEarlyTaps; // the prototype's room
-    int       earlyCount_ = kEarlyTaps;
-    float     earlyPower_ = 1.0f;
-    int       earlyEven_ = 0;
-    float     earlyFrac_[kN][kEarlyTapsMax] = {}, earlyGain_[kN][kEarlyTapsMax] = {};
+    float     earlyFrac_[kN][kEarlyTaps] = {}, earlyGain_[kN][kEarlyTaps] = {};
     float     earlyTarget_ = 0.0f, earlyNow_ = 0.0f;
     float     inLoopTarget_ = 0.0f, inLoopNow_ = 0.0f, outputTrim_ = 1.0f, levelGain_ = 1.0f;
     FloorGovernor governor_;
