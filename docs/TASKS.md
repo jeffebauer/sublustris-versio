@@ -6,7 +6,6 @@
 ## To do
 
 ### Decide
-- [ ] **Bass in a moving tail** (`renders/still_lows/index.html`, picks; the DSP audit's A4): with DRIFT up, the whole tail wavers, sub-bass included (HALL with DRIFT fully CW: about 4 semitones on a held 55 Hz). B keeps the lows below ~400 Hz still. Feature or mud?
 - [ ] **ERA's Midiverb** (`renders/midiverb/index.html`, picks; the DSP audit's E1): ERA fully CW today is a bitcrusher on the tail (8 bits, bright grit). B rebuilds it as the real 1986 unit (13 bits and a dark loop): much darker and smoother. Which feels more like the Midiverb?
 - [ ] **BLOOM on percussion** (`renders/swell_smear/index.html`, picks; the DSP audit's S1): a hit through a long BLOOM comes back as a rising train of ghost hits (measured: the swell flickers 3–7.5 dB). B smears each of the swell's taps across the gap to the next. A today or B?
 - [ ] **The PLATE's stereo image** (`renders/plate_stereo/index.html`, picks; the audit's P1): play hard left and the plate first answers only on the right. B answers on the side you played. A (a ping-pong) or B?
@@ -37,6 +36,7 @@
 
 ## Waiting on Claude
 
+- **Still lows, done safely** (your B on MASSIVE): the two-read crossover isn't energy-preserving. Research says modulating the feedback matrix is stable where modulated delays aren't (Schlecht & Habets 2015, 2020); find an established way to keep the bass steady, then a new page.
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
 - **Make the grainy reading steadier:** MASSIVE's density sits right at the 0.9 line from the start, so its "smooth after" jumps between 0.06 and 1.67 s on a one-sample change in the click; the PLATE and HALL readings move by 0.1–0.2 s. Research how others report it (a lower bar, a time average, or a mixing-time estimate) before trusting the known-misses list.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
@@ -49,6 +49,7 @@
 
 ## Done
 
+- 23 Oct 2026: **Bass in a moving tail: you liked B ("the frequency response feels more even and balanced"), but it isn't safe yet, so nothing changed.** Your HALL tape note ("waves of built-up distortion") measured as energy building in the loop: the still and moving reads add up to +3 dB a pass where they cross (~400 Hz), up to +12.7 dB in a small HALL. Made MASSIVE's default, it broke the 10-minute infinite hold and shortened MASSIVE's 1 kHz decay (22 → 17 s), so it's reverted. Part of the "even balance" you heard may have been that side effect. A stable design is on Claude's list.
 - 23 Oct 2026: **Steadier grainy reading merged** (your OK): the new "grain" figure moves by at most ~0.01 s where the old one swung 1.6 s. Only the PLATE at full SIZE and MASSIVE at its smallest SIZE start a little grainy (0.12–0.15 s); the MASSIVE Hits unevenness you heard measures as level, not grain. Pages show "grain" in the Numbers and flag it above 0.1 s.
 - 23 Oct 2026: **Brand: Ombra Audio.** Immensio's plugin now shows as "Ombra Audio: Immensio Versio" (maker code Ombr, plugin code ImVs, bundle com.OmbraAudio.ImmensioVersio). Fixed on the way: the install and release scripts still used Resilio's plugin code (RsVs) and linked Resilio's GitHub. Resilio moves to Ombra Audio in its own repo.
 - 23 Oct 2026: **TONE, a warmer noon: B** (all 36 cards, the repeated row agreeing). Every tank's loss is now a shelf at 2.5 kHz, so the upper mids fade with the highs (ADR 0012 amendment). It also freed 4.4 KB of flash (release 92,948 B).
