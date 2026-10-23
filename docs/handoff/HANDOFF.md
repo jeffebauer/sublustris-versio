@@ -1,99 +1,100 @@
 # Handoff
 
-**Written:** 22 Oct 2026, end of session 2. Start the next session with `/immensio-start`.
+**Written:** 23 Oct 2026, end of session 3. Start the next session with `/immensio-start`.
 
-**Nothing running:** no agents, clean tree, `main` pushed to `origin` (https://github.com/jeffebauer/immensio-versio).
+**Nothing running:** no agents, clean tree, `main` pushed to `origin` (https://github.com/jeffebauer/immensio-versio) with this handoff.
 
-**One worktree left:** `.claude/worktrees/serene-snyder-30d3a2` (branch `claude/serene-snyder-30d3a2`). It belongs to the app-managed DSP audit session. Its single commit is **merged** into main, so the worktree can go whenever the app cleans it up. Don't do work there.
+**Worktrees left (not ours, both merged):** `.claude/worktrees/serene-snyder-30d3a2` (the DSP audit session) and `.claude/worktrees/swell-curve` (the session that built MASSIVE's twin S-curve swell, merged as v1.0.13). The app cleans them up; don't work there.
 
 ## State
 
 | Milestone | State |
 |---|---|
-| Spec | v1.0 frozen, plus build amendments **v1.0.1–v1.0.10** (SPEC changelog). This session: v1.0.9 (REVERSE rebuilt) and v1.0.10 (MASSIVE's twin swell) |
+| Spec | v1.0 frozen, plus build amendments **v1.0.1–v1.0.17** (SPEC changelog). This session: v1.0.11–v1.0.17 (below) |
 | M0 desktop / firmware | Built |
 | M0 hardware | **Owner check pending** (`docs/m0-hardware-check.md`) |
-| M1 Hall | Built. Owner re-listen pending (M1 page, now with nine materials) |
-| M4 MASSIVE + ATTACK | Built. **REVERSE settled** (the hardware way, confirmed). **MASSIVE keeps its built-in swell** (owner pick, ADR 0007 note) |
-| M5 PLATE + freeze | Built. The owner's two freeze notes (an upper harmonic in a frozen MASSIVE; PLATE repeats on the skank) **don't reproduce** in the current build: measured, re-listen asked. **MASSIVE's twin now swells**, awaiting the owner's confirmation on `twin_swell` |
-| M6 character, M7 duck | Built. Owner hasn't listened |
-| M2 | Criteria pass. **Not installed** in Ableton |
+| M1 Hall | Built; owner re-listened: "sounding much better", TONE "sounds good". Small HALL reworked (v1.0.17) |
+| M2 | Criteria pass. **Not installed** in Ableton. Plugin now branded Ombra Audio (ADR 0018) |
 | M3 | Needs the owner at the rack |
-| M8 | Inputs gathering: the sweet-spot findings, the audit, the A/B picks below |
+| M4 MASSIVE + ATTACK | Built; owner: "much better". BLOOM smear (v1.0.16) |
+| M5 PLATE + freeze | Built; owner: "excellent". Twin 6 dB under the pad (v1.0.14) |
+| M6 character | Built; **first listen pending** on `renders/m6_character` (re-rendered from today's code, 12 materials) |
+| M7 duck | **Redesigned**: 4:1 compression replaces DARKEN (v1.0.17, ADR 0014 amendment) |
+| M8 | Inputs gathering (TASKS "Waiting on Claude") |
 | M9 | Not started |
 
-- **`main` HEAD:** `435468a`; this handoff's commit follows.
+Spec changes this session (each with a SPEC changelog line; ADRs 0004, 0008, 0009, 0012, 0014, 0015 amended, 0018 new):
+- v1.0.11 PLATE max scale 1.59 (1.6 lined up a 9.8 kHz mode, modulation off).
+- v1.0.12 PLATE long delays wander (frozen: still).
+- v1.0.13 MASSIVE's twin swells on an S-curve (merged from the swell-curve session).
+- v1.0.14 the twin 6 dB under the pad (level 0.5).
+- v1.0.15 every tank's loss is a 2.5 kHz shelf (warmer TONE noon); K by a series, not `std::tan` (−4.4 KB flash).
+- v1.0.16 ERA's Midiverb as the real unit (13 bits + ½ one-pole every pass; make-up 1.0 dB); BLOOM smear (BLOOM only); the PLATE's first input allpass wanders (0.18 ms, 0.4 Hz).
+- v1.0.17 ducking = 4:1 compression of the wet (−24 dBFS, 30 ms / 0.4 s, 50 ms on a freeze, no darkening; DARKEN removed); HALL SIZE from 35 ms, small-end tails × 0.49, in-loop diffusion 0.5 at the small end fading out by noon; the held-tail makeup approved.
+
+- **`main` HEAD:** this handoff's commit (code last changed at `a1c86dd`'s parent chain; gates run on it).
 - **Plugin in Ableton:** none installed.
-- **Gates** (at `435468a`, nothing changed since): ctest **"100% tests passed out of 12"**.
+- **Gates:** ctest **"100% tests passed out of 14"** (`test_golden` and `test_density` are new this session).
 - **Firmware:**
 
   | Variant | Bytes | % of 128 KB |
   |---|---|---|
-  | release | 96,836 | 74 % |
-  | profile | 97,824 | 75 % |
-  | m0test | 82,356 | 63 % |
+  | release | 97,692 | 74 % |
+  | profile | 98,648 | 75 % |
+  | m0test | 82,356 | 62 % |
 
-  That leaves ~13 KB to the 110 KB release budget. About 5.8 KB of it is the TONE shelf prototype's `std::tan` (below), so reclaim that whatever the owner picks.
-- **Listening pages** (`renders/`, 8.6 GB, gitignored): m1_hall, m4_massive, m5_plate_freeze, m6_character, m7_duck, plate_modulation, tone_shelf, twin_swell. All play nine materials and come from current code, except m1/m4–m7, which were rendered before the twin swell (v1.0.10) and the PLATE/TONE prototype hooks (off by default, so their sound is unchanged apart from the twin in M5's MASSIVE cards). Audio sidecars are FLAC.
+  ~12.3 KB left to the 110 KB release budget. It includes the remaining prototype hooks below (small).
+- **Listening pages** (`renders/`, 2.5 GB): only `m6_character` and `_material`. Every decided page was deleted.
 
-## In flight (prototypes behind desktop-only hooks, waiting on owner picks)
+## New this session (testing; owner's plan in `docs/research/reverb-testing-practices.md`)
 
-- **`IV_TWIN_SWELL`** (`Engine::setTwinSwell`, default **on**, the new behaviour). Page `renders/twin_swell`.
-  - **If B (smooth) is confirmed:** remove the setter, `twinSwellOn_` and the hook; delete the page.
-  - **If A:** the twin swell goes.
-- **`IV_PLATE_LONGMOD`** (`Plate::setLongDelayMod`, default 0). The Plate's d1/d2 wander about 2 cents (`kPlateLongModSeconds`, `kPlateLongModHz`). Page `renders/plate_modulation`.
-  - **If B:** make it the default (amount 1), drop the setter, and re-check `test_plate_freeze`'s pad-steadiness tests across seeds.
-  - **If A:** remove it, including the extra memory in `Plate::memoryFloats` and `prepare`.
-- **`IV_TONE_SHELF`** (`Engine::setLossShelfHz`, default 0): every tank's loss as a first-order shelf at 2.5 kHz (`absorbent(…, shelfHz)` in `Governor.h`; `b1_`/`absorbX_` in Fdn, `x1`/`x2` in Plate). Page `renders/tone_shelf`.
-  - **If B:** make it the default. **Replace `std::tan`** with a precomputed K, since it's a per-control-tick call and the ~5.8 KB flash cost. Re-run T60 / TONE tests (`test_fdn` lowBandT60 measures below 500 Hz, so it should hold). Write an ADR 0012 amendment, as TONE's noon changes.
-  - **If A:** remove it all.
-- **Test hook `Engine::setModulationScale` / `IV_MOD_SCALE`** is permanent (used by `notMetallicUnmodulated` in `test_plate_freeze`).
+- **Material:** low voice (macOS Ralph), synthesized dry piano, full dub-techno mix fed to the reverb only through `fullmix_send.wav` (`tools/make_material.py`). Pages render 12 materials.
+- **Pages:** a Tail button (T) with "Tails +12 dB"; a **Numbers** panel per card (decay per band, early decay, grain, clarity, width) measured on one click per version (`renders/<page>/_measure/`, written by `render_review_pages.sh`'s `r()`); a "grainy start" flag above 0.1 s; pick pages with ≥ 3 rows repeat one row (the hidden twin) and Copy-results reports disagreeing picks as "no clear preference".
+- **Metrics** (`host/common/Metrics.*`): echo-density **grain** (`echo_density_grain_s`, an area below NED 0.9 over 4 s; steady to ~0.01 s), late density, band T60/EDT (exactly `tools/ingest_reference.py`'s method), C80, IACC, tail flatness. `echoDensityTimeS` (the old crossing) is deprecated, kept only for `test_golden`'s stored `smooth_after_s`.
+- **Gates:** `test_density` (grainy gate, known misses: PLATE full SIZE, MASSIVE SIZE 0) and `test_golden` (10 corners' fingerprints in `host/tests/golden/fingerprints.json`; update with `IV_GOLDEN_UPDATE="why" build/iv_test_golden`, which refuses without a newer SPEC changelog version).
+
+## In flight
+
+- **Prototype hooks still in the Core, off by default** (desktop only, via `host/render/main.cpp` env vars):
+  - `IV_STILL_LOWS` (`Fdn::setStillLows`, `Engine::setStillLows`): the owner liked it (B on MASSIVE) but it **isn't energy-safe** (HALL builds up to +12.7 dB; as MASSIVE's default the 10-min infinite hold failed). Needs a stable design, then a page. Remove the hook if abandoned.
+  - `IV_DIFF_INDEPENDENT` (`Engine::setDiffuserIndependent`): MI idea 4, no measurable gain. Remove when convenient.
+  - `IV_HALL_DIFFUSION` (`Engine::setHallInLoopDiffusion`): an override of the now-default HALL diffusion, for demos.
+  - `IV_MOD_SCALE`: permanent test hook.
+- **Resilio → Ombra Audio** (its own repo): not started; its plugin is installed in Ableton under `Rslo`, so check the owner's sets first.
 
 ## Next steps
 
-1. **Act on the three A/B picks** above when the owner sends them (memory [[measure-owner-notes-first]] for any notes).
-2. **M8 findings, confirm by ear before changing anything** (`docs/sweetspot.md`, `docs/TASKS.md` "Waiting on Claude"):
-   - **ERA:** the Midiverb stage (80–100 %) jumps about 20× harder than the rest of the knob, and 0–20 % barely changes anything measurable.
-   - **PLATE:** TONE's first step from fully CCW and SIZE's last step jump.
-   - **MASSIVE:** DECAY's first step jumps; DRIFT is flat 20–50 % (pitch not measured); TIME in NORMAL is weak 0–30 %.
-   - **The PLATE at full SIZE rings with modulation off** (15 dB at 9.8 kHz): `notMetallicUnmodulated` checks only SIZE 0 until this is fixed. Look at the Plate's scaled lengths at `kPlateMaxScale` 1.6: Dattorro's ratios at a larger scale lower the mode density.
-3. **The DSP audit's other findings** (`docs/research/dsp-audit.md`): HALL has no in-loop diffusion; freeze keeps the modulation floor; ERA and the governor are our own inventions. Also the MI ideas still untried (`docs/research/mutable-instruments-reverbs.md` #2–#5: modulated input diffusers, a modulated MASSIVE in-loop allpass, independent R diffuser lengths, a decay-dependent input trim). Each one gets an A/B page.
-4. **The testing plan:** the owner picks which and in what order (`docs/research/reverb-testing-practices.md`, "Planned": echo density, golden renders, per-band decay on pages, a hidden reference).
-5. **The owner's reference recordings**, when they arrive in `test_audio/reference/incoming/`. Read them with `.venv/bin/python tools/ingest_reference.py <wav> calibrate|measure|music <unit_algo[_target]>`.
-   - For calibration takes, tell the owner which knob positions give 2 / 5 / 15 s.
-   - Music goes to pages with `make_review.py --reference test_audio/reference/<name>`.
-   - Never commit them.
-6. **Owner at the rack:** M0, then M3. A frozen MASSIVE is now the pad, the twin FDN and the twin's swell (24 more SDRAM reads a sample per side), plus REVERSE's 32 taps and short FDN when not frozen. Profile both.
+1. **M6 notes** when the owner sends them (memory [[measure-owner-notes-first]]).
+2. **Still lows, done safely:** research a stable way to keep MASSIVE's bass steady under DRIFT (Schlecht & Habets: time-varying unitary feedback matrices are stable where delay modulation isn't; or a steep, delay-matched split). Energy-check it (memory [[energy-check-prototypes]]) before a page.
+3. **M8 findings** (TASKS "Waiting on Claude"): re-run `.venv/bin/python tools/sweetspot.py` (ERA's Midiverb stretch changed), then the DECAY/TONE/SIZE/TIME jumps; the MASSIVE "uneven on Hits" note (measure the swell/taps level, not grain).
+4. **Remaining research ideas:** MI #5 (input trim with DECAY); the audit's A3 (freeze keeps modulating), P2–P5, E2–E6, R1–R2. Each measured first, then an A/B page.
+5. **Owner at the rack:** M0, then M3 (profile a frozen MASSIVE: the twin and its swell; and BLOOM, whose smear adds 6 allpasses).
 
 ## Waiting on the owner (all in `docs/TASKS.md`)
 
-- **Picks:** twin_swell, plate_modulation, tone_shelf. Also choose the testing plan.
-- **Decisions still open:** the ADR 0008 makeup, MASSIVE's SIZE glide, the plugin identity.
-- **Listening:** M1, M4, M5 again (plus re-checking the two freeze notes); M6 and M7 for the first time.
+- **Listen:** M6 (first time).
 - **At the rack:** M0, then M3.
 - **Recordings:** per `docs/reference-recording-guide.md`, starting with the H9 Reverse.
+- No open picks or decisions.
 
 ## Will bite
 
-- **Python tools need `.venv`** (numpy and soundfile: `python3 -m venv .venv && .venv/bin/pip install numpy soundfile`): `make_material.py`, `make_reference_kit.py`, `ingest_reference.py`, `sweetspot.py`. `render_review_pages.sh` builds the material automatically only if `.venv` exists.
-- **Rendering takes a while now.** Every page renders nine materials: a full `tools/render_review_pages.sh` is ~11 GB before FLAC and takes a long time. Render single pages (`tools/render_review_pages.sh <page>`), and delete a page once its question is decided.
-- **`make_review.py` now shells out to ffmpeg twice per file:** FLAC sidecars, and `ebur128` loudness for level-matching. Silent files (−70 LUFS) fall back to RMS. Re-running it on a page whose `_audio` is current only regenerates the HTML.
-- **There's no Dry version on pages with the MIX fader** (`SHOW_DRY` in `listen_template.html`), by the owner's request.
-- **REVERSE has its own reverb.** It is rising taps (`Reverse.h`, 32 per side) into `reverseFdn_`, a short FDN with its own memory sizing (`Fdn::prepare(…, maxLineSeconds)`; `Engine::largeFloats` counts it).
-  - It replaces the tank's wet. It doesn't change with SPACE except for MASSIVE's predelay.
-  - SIZE sets its line length and DECAY its stop.
-  - `kReverseLevel` 6.0 (+15.5 dB) is a measured loudness match.
-- **The twin's swell is set at freeze time** (`onGesture` Freeze) and each control tick while active. Anything that changes the swell's attack must also reach `twinSwell_`.
-- **Earlier traps still apply:** freeze glides, painted pads, HALL's SIZE-scaled T60, allpass-read fractions, and chaotic tanks (judge across seeds).
-- **`ingest_reference.py`'s octave bands are zero-phase FFT windows padded with a second of silence.** Without the padding, the filter's pre-ringing wraps round and floors the decay curve (it read 63 s for a 5 s reverb).
-- **iv_render's sidecar doesn't record the `IV_*` environment hooks.** When a page's versions differ only by a hook, check by md5 that they really differ (memory [[verify-voicing-labels]]).
-- **The reference-device research has guesses** for knob-only units: calibrate, don't trust the guessed positions.
+- **Don't rebuild `build/` while a page renders in the background:** `render_review_pages.sh` calls `build/iv_render` per file, so later files come from the new binary. Default sound must be unchanged (check with `iv_test_golden`) or re-render.
+- **`render_review_pages.sh` recipes of decided pages were removed** (their hooks are gone). `reverse`, `grainy_start`, `m5`, `m6`, `m7_duck` remain; `m7_duck` now describes compression.
+- **The safety net (`test_golden`) fails on any deliberate sound change** until updated, and the update needs a new SPEC changelog version first. Chord bands > 40 dB under the total aren't compared.
+- **HALL's SIZE range was squeezed (v1.0.17):** noon is now old 0.61 (95 ms). The owner hasn't heard a medium HALL since; say so on the next HALL page.
+- **BLOOM smear:** the swell's first 10 % arrives 0.06–0.4 s later than unsmeared (the owner noticed "a little slower"); the span is × 0.95 to keep the peak on time (0.9 broke `test_massive`'s BLOOM-rise check).
+- **Ducking** releases in 50 ms on a freeze (`freezeMix_ > 0`); `test_output` checks no duck 0.4 s after a freeze.
+- **Diffuser wander depth is capped at 8 samples** (the buffers' nextPow2 spare room); raising it needs bigger diffuser buffers (fast memory).
+- **The local page server** (`.claude/launch.json` "review-pages", port 8765) stops between sessions; restart it with the browser pane's preview_start.
+- **Picks relayed by other sessions** need the owner's confirmation (memory [[relayed-picks-need-owner]]).
+- Earlier traps still apply: freeze glides, painted pads, allpass-read fractions, chaotic tanks (judge across seeds; `notMetallicUnmodulated` uses the median of three bursts), `ingest_reference.py`'s padding, iv_render sidecars don't record `IV_*` hooks (check md5s).
 
 ## Where to look
 
 - `docs/TASKS.md`
-- `docs/research/dsp-audit.md`
-- `docs/sweetspot.md`
-- `core/dsp/Engine.cpp` (applySpace, the twin, REVERSE)
-- `core/dsp/Plate.cpp` and `core/dsp/Governor.h` (the two prototypes)
+- `docs/research/dsp-audit.md` and `docs/research/mutable-instruments-reverbs.md` (what's tried, what's left)
+- `docs/research/reverb-testing-practices.md` (the testing tools)
+- `core/dsp/Engine.cpp` (ducking in `controlTick`, HALL diffusion in `applySpace`)
+- `core/dsp/Fdn.cpp` (still-lows prototype) and `core/dsp/Swell.h` (BLOOM smear)
 - `tools/render_review_pages.sh`

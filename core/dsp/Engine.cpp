@@ -305,7 +305,7 @@ void Engine::applySpace(bool snap)
         // full SIZE and no less grainy).
         const float hallDiff = hallInLoop_ * std::fmax(0.0f, 1.0f - size / voicing::kHallInLoopUntilSize);
         fdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallDiff);
-        // PROTOTYPE (setHallInLoopDiffusion): HALL's allpasses scale with its mean line, so a small
+        // HALL's allpasses scale with its mean line, so a small
         // room stays small (MASSIVE's lengths at a 0.2 s mean and up).
         fdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(size) / 0.2f));
         fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(size, decay));

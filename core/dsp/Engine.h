@@ -86,8 +86,8 @@ public:
     // PROTOTYPE (Mutable Instruments idea 4, no measurable gain; kept for a later listen): the
     // right input diffuser gets its own lengths instead of a 1.071x copy of the left.
     void  setDiffuserIndependent(bool on);
-    // PROTOTYPE, renders/small_hall (owner's M1 notes; the audit's F1/F2, experiment E4): HALL gets
-    // in-loop diffusion too, amount 0..1 (× kInLoopCoeff), its allpasses scaled with SIZE.
+    // Test/demo override of HALL's in-loop diffusion amount (default kHallInLoopDiffusion, v1.0.17;
+    // 0..1 × kInLoopCoeff, fading out by SIZE noon).
     void  setHallInLoopDiffusion(float a) { hallInLoop_ = a; }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }

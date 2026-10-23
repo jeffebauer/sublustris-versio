@@ -11,7 +11,7 @@ struct Allpass {
     DelayLine line;
     uint32_t  length = 1;
     float     coeff = 0.5f;
-    float     mod = 0.0f; // PROTOTYPE (renders/diffuser_motion, MI idea 2): extra delay in samples, ±
+    float     mod = 0.0f; // the PLATE's wandering first stage (v1.0.16, MI idea 2): extra delay in samples, ±
 
     bool init(Arena& arena, uint32_t samples, float g)
     {

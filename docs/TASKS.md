@@ -6,11 +6,10 @@
 ## To do
 
 ### Decide
-
-
-
+- Nothing open: every pick so far is acted on.
 
 ### Listen (after your notes)
+- Nothing open.
 
 ### Listen (first time)
 - [ ] **M6: ERA, DRIFT and TONE** (`renders/m6_character/index.html`, notes only): re-rendered 23 Oct from today's reverb with all twelve kinds of music, so it carries your picks since (the Midiverb rebuilt as the real unit, the warmer TONE noon, the new small HALL). Does ERA feel like going back in time, stage by stage? Are DRIFT's tape side and Cathedra side what you hear in your head? All numbers are starting guesses for you to tune.
@@ -26,14 +25,13 @@
 
 - **Still lows, done safely** (your B on MASSIVE): the two-read crossover isn't energy-preserving. Research says modulating the feedback matrix is stable where modulated delays aren't (Schlecht & Habets 2015, 2020); find an established way to keep the bass steady, then a new page.
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
-- **Make the grainy reading steadier:** MASSIVE's density sits right at the 0.9 line from the start, so its "smooth after" jumps between 0.06 and 1.67 s on a one-sample change in the click; the PLATE and HALL readings move by 0.1–0.2 s. Research how others report it (a lower bar, a time average, or a mixing-time estimate) before trusting the known-misses list.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
-- **M8 tuning** from your listening notes on the pages above, including MASSIVE medium and large sounding a little uneven on Hits (grainy_start).
+- **M8 tuning** from your listening notes on the pages above, including MASSIVE medium and large sounding a little uneven on Hits (grainy_start; the new grain figure says it's smooth there, so measure the level of the swell and taps).
 - **M8 findings to confirm by ear first** (`docs/sweetspot.md`, `docs/research/reverb-testing-practices.md`):
-  - ERA's last stretch (the Midiverb stage) jumps about 20× harder than the rest of the knob, and its first 20 % barely changes anything measurable.
+  - ERA: its first 20 % barely changes anything measurable; the Midiverb stretch jumped 20× harder than the rest, measured before its rebuild (v1.0.16), so re-measure with `.venv/bin/python tools/sweetspot.py`.
   - PLATE: TONE's first step from fully CCW jumps, and so does SIZE's last.
   - MASSIVE: DECAY's first step jumps; DRIFT is nearly flat from 20–50 %; TIME in NORMAL barely moves anything for its first 30 %.
-- **The rest of the Mutable Instruments ideas and the DSP audit's findings:** MI #2 is on a page; #3 and #4 aren't worth one (`docs/research/mutable-instruments-reverbs.md`); #5 and the audit's remaining findings are still to try.
+- **The rest of the Mutable Instruments ideas and the DSP audit's findings:** MI #1 and #2 are in, #3 and #4 aren't worth a page (`docs/research/mutable-instruments-reverbs.md`); still to try: MI #5 (input trim with DECAY), and the audit's A3 (freeze keeps modulating), P2–P5, E2–E6, R1–R2 (`docs/research/dsp-audit.md`).
 
 ## Done
 
