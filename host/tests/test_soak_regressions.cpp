@@ -422,6 +422,39 @@ void cassetteCompressionDoesntPlunge()
     check(end - lowest < 4.0, what);
 }
 
+// ...and with TIME and SIZE still gliding when the flip reaches its silent point: the flip snapped
+// REVERSE's taps and short reverb to their targets, a jump now that REVERSE runs on (a click
+// 20-35 ms into the fade back in; confirmation soak). Now they glide on, as without a flip.
+void reverseFlipWhileTimeGlidesDoesntClick()
+{
+    auto sharpest = [](int from, bool flip) {
+        Rig r(48000.0f, 48);
+        r.e.setParam(ParamId::Space, iv::switchToNormalised(from));
+        r.e.setParam(ParamId::Decay, 0.7f);
+        r.e.setParam(ParamId::Time, 0.4f);
+        r.e.setParam(ParamId::Size, 0.3f);
+        r.e.setParam(ParamId::Attack, iv::switchToNormalised(2));
+        r.e.setParam(ParamId::Mix, 1.0f);
+        r.e.reset();
+        r.run(4.0, 0.3f, -330.0f);
+        if (flip) r.e.setParam(ParamId::Space, iv::switchToNormalised((from + 1) % 3));
+        r.e.setParam(ParamId::Time, 0.5f); // both glide on past the flip's silent point (~50 ms)
+        r.e.setParam(ParamId::Size, 0.5f);
+        r.run(0.045, 0.3f, -330.0f);
+        r.clearWatch();
+        r.run(0.2, 0.3f, -330.0f);
+        return r.maxD2;
+    };
+    for (int from = 0; from < 3; ++from) {
+        const float withFlip = sharpest(from, true), without = sharpest(from, false);
+        char what[180];
+        std::snprintf(what, sizeof what,
+                      "REVERSE: a flip %d->%d while TIME and SIZE glide adds no click (sharpest step x%.1f the same glide's without a flip)",
+                      from, (from + 1) % 3, withFlip / without);
+        check(withFlip < 1.5f * without, what);
+    }
+}
+
 } // namespace
 
 int main()
@@ -436,6 +469,7 @@ int main()
     paintReleaseDoesntBurst();
     padFrozenFromADyingTailHolds();
     cassetteCompressionDoesntPlunge();
+    reverseFlipWhileTimeGlidesDoesntClick();
     std::printf("%s\n", failures ? "SOME TESTS FAILED" : "ALL TESTS PASSED");
     return failures ? 1 : 0;
 }

@@ -266,7 +266,7 @@ void Engine::onGesture(GestureReader::Event e)
 // frozen, the big tank keeps the SIZE and DECAY it froze with and its loss
 // glides to none (freezeMix_); the knobs play the twin. snap: jump
 // straight there (reset, a SPACE flip).
-void Engine::applySpace(bool snap, int n, bool snapDiffusers)
+void Engine::applySpace(bool snap, int n, bool snapInput)
 {
     const bool frozen = gesture_.frozen();
     const float size = frozen ? heldSize_ : smoothed(ParamId::Size);
@@ -405,7 +405,7 @@ void Engine::applySpace(bool snap, int n, bool snapDiffusers)
     // The input diffusers' amount glides (~50 ms): it changes with a SPACE flip and with MASSIVE's SIZE,
     // and a jump stepped the input into the tank and REVERSE's line (soak audit).
     const float diffusion = massive ? map::massiveDiffusion(size) : 1.0f;
-    const float glide = snap && snapDiffusers ? 1.0f : 1.0f - std::exp(-float(n) / (0.05f * sampleRate_));
+    const float glide = snap && snapInput ? 1.0f : 1.0f - std::exp(-float(n) / (0.05f * sampleRate_));
     for (int c = 0; c < 2; ++c)
         for (int k = 0; k < 4; ++k) {
             float& g = diffuser_[c].stage[k].coeff;
@@ -422,11 +422,11 @@ void Engine::applySpace(bool snap, int n, bool snapDiffusers)
     swell_.setAttackSeconds(attackSeconds, snap);
     swell_.setSmear(attack == 1); // BLOOM only (owner, renders/swell_smear)
     // REVERSE: rising taps over TIME into the short reverb; DECAY sets how sudden the stop is.
-    reverse_.setSeconds(map::reverseSeconds(time), snap);
+    reverse_.setSeconds(map::reverseSeconds(time), snap && snapInput); // REVERSE runs on through a flip: it glides there
     reverseFdn_.setDecayRate(1.0f / map::reverseTailSeconds(smoothed(ParamId::Decay)));
     const float revMean = map::reverseMeanSeconds(smoothed(ParamId::Size));
     if (snap || std::fabs(revMean - reverseMean_) > 1e-6f) {
-        reverseFdn_.setMeanSeconds(revMean, 1.0f, snap);
+        reverseFdn_.setMeanSeconds(revMean, 1.0f, snap && snapInput);
         reverseMean_ = revMean;
     }
     reverseFdn_.setHighT60Ratio(toneRatio);

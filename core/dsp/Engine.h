@@ -124,9 +124,9 @@ private:
     void handleEdges(int chunkStart, int chunkEnd);
     void onGesture(GestureReader::Event e);
     void controlTick(int n);
-    // snap: jump to the targets (reset, a SPACE flip); snapDiffusers: the input diffusers' amount too
-    // (not on a flip, where it glides).
-    void applySpace(bool snap, int n = kChunk, bool snapDiffusers = true);
+    // snap: jump to the targets (reset, a SPACE flip); snapInput: the input diffusers' amount and
+    // REVERSE too (not on a flip, where they keep running and glide).
+    void applySpace(bool snap, int n = kChunk, bool snapInput = true);
     static constexpr float kPredelayMaxSpeed = 0.5f; // samples per sample
     float smoothed(ParamId id) const { return smooth_[static_cast<size_t>(id)]; }
 
