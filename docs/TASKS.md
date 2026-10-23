@@ -19,10 +19,11 @@
 - [ ] **M3 CPU check** (after M0): flash `firmware/build/immensio_versio_profile.bin` and send Claude the serial CPU report, so the CPU budget is measured, not estimated. Include a frozen MASSIVE: the twin and MASSIVE's early taps are the heaviest case.
 
 ### When convenient
-- [ ] **Reference recordings** (when convenient): the step-by-step is in `docs/reference-recording-guide.md`. Play the kit (`test_audio/reference_kit/`: calibrate, measure, music) through each unit, 100 % wet, at matched decays (about 2 / 5 / 15 s, plus infinite). Knob-only units get one 2-minute calibration take first; I'll tell you the positions. Start with the **H9 Reverse** (the yardstick for REVERSE), then Supermassive, Mercury7 Cathedra, Valhalla Plate and VintageVerb.
+- [ ] **Reference recordings** (when convenient; `docs/reference-recording-guide.md`): Valhalla Room, Plate and Supermassive are in (I read them straight from your Ableton set; no need to export). Still to record: the **H9 Reverse** (the yardstick for REVERSE), Mercury7 Cathedra, VintageVerb, then the rest. For Supermassive, Andromeda at 0 % feedback rang only 0.5 s; about 5 % should give the 2 s target. LMC can't go short: even at 20 % it rings 26 s.
 
 ## Waiting on Claude
 
+- **Use your Valhalla recordings on the pages**: 20 music takes and 8 measured Supermassive takes are split and measured in `test_audio/reference/` (never committed). Next: a "Compare with" version on the HALL, PLATE and MASSIVE pages, and our decay per band set beside theirs.
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 - **M8 tuning** from your listening notes on the pages above, including MASSIVE medium and large sounding a little uneven on Hits (grainy_start; the new grain figure says it's smooth there, so measure the level of the swell and taps).
@@ -34,6 +35,7 @@
 
 ## Done
 
+- 23 Oct 2026: **Your Valhalla recordings read from the Ableton set** (`Immersio Versio Testing.als`): the 28 named takes (Room: Large Room and Dark Chamber; Plate: Chrome and Lithium; each at 2 / 5 / 15 s; Supermassive Sagittarius and Andromeda, measure and music at four feedbacks) plus your four calibration exports. Supermassive's feedback hit the targets closely: Sagittarius 7 / 30 / 73 / 100 % rang 2 / 5 / 15 / 52 s, Andromeda 12 / 54 / 100 % rang 5 / 15 / 45 s. The six unnamed "ValhallaSuperMassive" clips were left out (they look like earlier tries).
 - 23 Oct 2026: **ERA keeps its loudness on music** (your note: the Midiverb could sound louder; SPEC v1.0.19): measured, music got 4–6 LU louder across ERA, because each stage's level boost had been set on a noise-burst test that music doesn't behave like. The boosts are now set on music: ERA fully CW is within 0.5 LU of clean in HALL and MASSIVE, every stage in between too, and the test now listens to the dub skank.
 - 23 Oct 2026: **M6 listened** (ERA, DRIFT, TONE): "Tone sounds great"; tape and still "sound great". DRIFT fully CW is too seasick and the Midiverb can sound louder than the other stages (both measured, now on Claude's list).
 - 23 Oct 2026: **Still lows shipped** (B on all 25 cards, the repeated cards agreeing; SPEC v1.0.18, ADR 0012 amendment): in HALL and MASSIVE the bass below ~300 Hz rings in its own still reverb, so it never wavers, whatever DRIFT does; everything above moves as before. Two side effects, both small: with ERA at the Midiverb end, short tails end 10–20 % sooner (its make-up went up 0.3 dB to keep the level), and the layer over a frozen pad (the twin) still moves its lows. The page is deleted.
