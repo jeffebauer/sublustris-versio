@@ -81,10 +81,17 @@ constexpr float kMassiveOutputTrim  = 0.60f; // −3.3 dB: MASSIVE matches HALL'
 
 // Early taps (MASSIVE, M4 notes; Fdn::setEarlyTaps): kEarlyTaps reads
 // partway along each line, rising from kEarlyTapLow to 1 with their place,
-// at kEarlyTapLevel against the lines' ends. (start)
-constexpr int   kEarlyTaps     = 3;
+// at kEarlyTapLevel against the lines' ends. Six per line, the 8 lines' taps
+// interleaved, at the same total energy as the three they replace (v1.0.21,
+// owner's pick on renders/knob_feel: the swell no longer dips before its peak,
+// "uneven on Hits"; it dipped 5.8 dB at large SIZE, now 3.5).
+constexpr int   kEarlyTaps     = 6;
 constexpr float kEarlyTapLow   = 0.3f;
-constexpr float kEarlyTapLevel = 0.5f;
+constexpr float kEarlyTapLevel = 0.5f * 0.71f;
+// MASSIVE's shortest DECAY rings at least this many passes of its mean line
+// (v1.0.21, knob_feel): at 2 s and a 0.84 s line one pass lost 25 dB, so DECAY's
+// first notch jumped from "the build and one echo" to a real tail.
+constexpr float kMassiveMinPasses = 3.0f;
 
 // In-loop diffusion (MASSIVE, ADR 0007): two allpasses inside each line,
 // coefficient kInLoopCoeff × SIZE's diffusion, so long lines blur into a

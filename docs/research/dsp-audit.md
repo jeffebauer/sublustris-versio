@@ -1,5 +1,7 @@
 # DSP audit: the engines against the published sources
 
+**Shipped (SPEC v1.0.22, 24 Oct 2026; owner: B on every card of `renders/dsp_audit`):** A3 (a frozen pad holds still), E4 (vintage reads, ADR 0019) and E5 (tape out, ADR 0019, now at 4×) are the defaults; their `IV_FREEZE_STILL` / `IV_VINTAGE_MOD` / `IV_TAPE_OUT` hooks and the page's scripts are gone. Every other item below is measured and closed.
+
 *22 Oct 2026. Docs only: no DSP was changed. This compares the code in `core/dsp/` with the sources named in `IMMENSIO_BRIEF.md` §8, read at the source, not from memory. It answers the owner's question: were the reverbs built from the research, or from reasoning alone?*
 
 **The short answer.**
@@ -8,6 +10,11 @@
 - **The swell stage (BLOOM and MASSIVE's mass), REVERSE, the floor governor and most of ERA** are our own inventions with no published basis. They are also where most of the listening problems have come from.
 
 How to read it: each finding gives the source, what our code does, and what you'd likely hear. Findings are ranked by likely audible impact within each engine, and the experiments at the end are ranked across engines. "Likely" means it hasn't been measured or heard yet. Per the house rule (measure the cause against a control before fixing), each finding comes with an experiment rather than a fix.
+
+**24 Oct 2026: every remaining item measured** (A3, P2–P5, E2–E6, R1–R2; MI #5 in `mutable-instruments-reverbs.md`). Each has a dated "Measured" line below. Three showed a real, audible difference and passed the energy check: A3 (a still freeze), E4 (noisy vintage reads) and E5 (tape saturating the wet). They're asked on one pick page, `renders/dsp_audit` (`tools/pages/dsp_audit.sh`). The rest were dropped or need nothing.
+- **Cost of the three prototypes:** release firmware 99,180 → 101,308 B (+2.1 KB, under the 110 KB budget); +1–3 % of a desktop render each. Firmware CPU is unmeasured.
+- **How it was measured:** the energy harness is `tools/pages/dsp_audit_energy.py`; the per-item measurements are in `tools/pages/dsp_audit_measure.py`, `dsp_audit_a3.py` and `dsp_audit_cpu.py`.
+- **Side findings** (not fixed) are listed before the experiments at the end.
 
 ---
 
@@ -58,6 +65,8 @@ Secondary sources (search snippets only, treat as approximate): the Lexicon 224 
 - **What our code does.** While frozen, PLATE drops Dattorro's chorus to 0.15 of its depth (`kFrozenPlateModDepth`): same conclusion, reached by ear (M5). But both tanks keep the modulation floor running, and DRIFT too (ADR 0009 keeps "only the modulation floor and Drift"). The FDN's floor never drops.
 - **Likely heard.** Over minutes, a frozen chord's pitch smears into a shimmer of beating partials. That may be the life we want, or it may be the "seasick" note coming back slowly on FDN pads. The owner should decide by ear.
 
+- **Measured (24 Oct 2026):** shows, most in HALL. A six-note chord frozen for 5 minutes (DRIFT noon, ERA clean; `tools/pages/dsp_audit_a3.py`); "focus" is the share of the 150–900 Hz energy within ±1.5 Hz of the chord's notes. HALL 0.88 at 10 s → 0.81 at 1 min → 0.66 at 5 min, smearing steadily; MASSIVE 0.96 → 0.89; PLATE wanders between 0.48 and 0.62 (its 0.15 chorus and its floor). With the tanks' own modulation off while frozen, it stays put for the whole 5 minutes: HALL 0.93, MASSIVE 0.97, PLATE 0.53. **Prototyped:** `IV_FREEZE_STILL`: the FDN's floor and the PLATE's chorus and floor glide to 0 with the freeze and back on unfreeze; DRIFT is untouched (ADR 0009), and the low tank was already still. Source: Costello, "Tips and Tricks: Infinite Supermassive" (mod depth to zero for a freeze, or the pitch dissolves into "a cluster of sidebands"); I found no manual that says whether other units' freezes keep modulating. **Energy:** freeze holds as in `padHolds`, 3/3 pass (5 min within 0.12 dB in each SPACE, as today); unfrozen renders are bit-identical (md5), so the sweep doesn't apply. Without its movement a frozen MASSIVE beats a little more in 5 s windows (2.4 against 1.7 dB of swing, same mean). Cost: nothing measurable. **On the page** (`renders/dsp_audit`, the freeze cards).
+
 ### A4. Modulating the lows (medium, dub bass in the tail)
 - **Source.** Schlecht (thesis, chapter 6): keep the band below about 400 Hz unmodulated (split each line with a one-pole), because a modulated low end sounds detuned or drifting. Spread the lines' rates by ±50 % so they don't beat together.
 - **What our code does.** The whole signal is modulated, lows included. The floor's step times are already spread (`kFloorStepSeconds × (1 + 0.12 i)`). DRIFT's sine rates are spread per line.
@@ -83,18 +92,26 @@ Secondary sources (search snippets only, treat as approximate): the Lexicon 224 
 - **What our code does.** It is fixed at 0.50.
 - **Likely heard.** Short plate decays smear a little more than Dattorro's would. Hardly audible.
 
+- **Measured (24 Oct 2026):** confirmed in the paper (Table 1: "decay diffusion 2 = decay + 0.15, floor = 0.25, ceiling = 0.50"), and tiny in the sound. With Dattorro's rule (`IV_PLATE_DD2`, his "decay" taken as the branch's low-end gain over ap2 + d2), only PLATE tails under ~1.7 s change at all: B − A sits 28.5 to 57 dB below A, the band T60s are at most ~10 % shorter, and most settings render bit-identically. **Dropped**, not paged: too small for a listen to pick out. The hook comes out after commit 5ea65e8, which still has it.
+
 ### P3. Modulation depth and rate (low)
 - **Source.** Dattorro: an excursion of 16 samples at most and about 8 typical (at 29.8 kHz), at about 1 Hz, ideally on every tank delay at different rates.
 - **What our code does.** ±11 samples (×1.61 for 48 kHz) round a +16 offset, at 0.71 and 0.93 Hz, plus the slow random floor, on the first allpass only.
 - **Likely heard.** Fine. This is within his range.
+
+- **Measured (24 Oct 2026):** checked against the code; no experiment needed. The chorus uses his EXCURSION of 16 (paper samples, scaled to 48 kHz): ±11.2 of sine at 0.71 and 0.93 Hz plus ±4.8 of floor, so it peaks at his maximum of 16. Since v1.0.12, d1 and d2 wander too, each at its own rate, which is his "ideally on every tank delay". Nothing to fix.
 
 ### P4. Mode density at small SIZE (low; Costello: "accept the metal and call it a plate")
 - **Source.** Jot: the total delay in the loop should be at least a quarter of T60 (Σ ≥ T60/4).
 - **What our code does.** The plate's total is 0.73 s × SIZE scale, which is 0.36 s at fully CCW. That covers T60 up to about 1.5 s, but PLATE's DECAY goes to 12 s and to infinite.
 - **Likely heard.** A small plate with a long decay rings with a few audible tones. That is part of a plate's character. The modulation masks some of it.
 
+- **Measured (24 Oct 2026):** doesn't show as a problem. The renderer's ringing score on the vibes (`dsp_audit_measure.py p4`), at DECAY 0.75: PLATE SIZE 0 (T60 7.9 s) 33 dB, PLATE SIZE noon 30 dB, HALL SIZE 0 42 dB, HALL SIZE 1 51 dB. The vibes' own notes count towards the score, so compare rows, not absolute values. The small plate rings no more than the medium one, and its T60 holds at every SIZE (P5). No prototype: Costello's "accept the metal and call it a plate", and the owner called the PLATE "excellent" on M5.
+
 ### P5. Beyond Dattorro, deliberately
 These are ours, and none of them is in the paper: a Jot loss on both elements of each branch (Dattorro has one fixed damping filter plus a decay gain), the SIZE scale with its glide, ERA and DRIFT inside the loop, the floor governor, and the twin.
+
+- **Measured (24 Oct 2026):** the one checkable claim holds: the Jot loss gives DECAY's T60 at every SIZE. Target (DECAY's 0.4 → 12 s scale) against measured, at 250–500 Hz: DECAY 0.2, 0.94 s → 0.96–1.24 s; 0.5, 3.36 s → 3.14–3.54 s; 0.75, 9.7 s → 8.9–9.9 s, at SIZE 0, noon and full alike. The rest is ours by design; no experiment.
 
 ---
 
@@ -172,6 +189,13 @@ Supermassive's slow modes build *inside* the network: the energy grows as the di
 - **What our code does.** The Midiverb box's halfband pair runs inside every line, on every pass. v1.0.3 moved ERA's darkening out of the loop for exactly this reason: a filter in the loop takes its loss on every pass. A brickwall ceiling is the same at any line length. But any passband ripple or droop below 10 kHz compounds: at 0.1 dB, 50 passes a second makes 5 dB a second.
 - **Likely heard.** Short HALL lines may lose their upper mids faster than long MASSIVE lines under ERA's last stretch. Measure the box's passband (E7).
 
+- **Measured (24 Oct 2026):** the passband doesn't show; two other things do.
+  1. **The halfbands are flat.** The 48 → 24 → 48 kHz halfband pair, simulated sample by sample from `Oversampler.h`, is flat within 0.0002 dB up to 11 kHz (−3 dB at 12 kHz). No droop compounds.
+  2. **The dark loop compounds with line length.** Since v1.0.16 the box also has the Midiverb's ½ one-pole on every pass, and that does compound with line length, as it does in the real unit (one low-pass per loop; the loop must fit the unit's 0.7 s of memory, per emeb/MIDIVerb_RE). With truncation off (`IV_MIDI_PART=1`), ERA 1 shortens the 4 kHz T60 to 0.23× in HALL SIZE 0, 0.28× at noon and 0.42× in MASSIVE SIZE 1.
+  3. **The truncation is level-dependent.** On a quiet click the 13-bit truncation shortens every band (to 0.2–0.3× in the FDN, 0.55× in the PLATE). On music at page level, the tails at ERA 1 fall at DECAY's rate until about −55 to −75 dBFS, then truncate to silence: 40 dB down 0–2 s sooner than without truncation. That is the design ("grainier as it fades, true silence").
+  4. **The prototype changed nothing.** One that rounds while above 16 steps (`IV_MIDI_KEEP`) made no difference at music level.
+  **Dropped**, not paged; the owner chose this Midiverb on `renders/midiverb`.
+
 ### E3. μ-law is telephony; the vintage reverbs used gain-ranging (low; naming and flavour)
 - **Source.**
   - The Lexicon 224 ran at 20 kHz with 12-bit gain-ranging converters (about 24 dB of ranging). The EMT 250 ran at 24 kHz with 12 bits, filtered at ~11 kHz.
@@ -180,18 +204,55 @@ Supermassive's slow modes build *inside* the network: the energy grows as the di
 - **What our code does.** It uses μ-law at 24 kHz, 12 → 10 bits, on the wet output. It's the same family: the noise follows the signal level. But gain-ranging steps its noise in 6 dB bands, while μ-law's noise floor slides smoothly with the level.
 - **Likely heard.** The difference is subtle. It's worth a listen if ERA's μ-law stretch sounds like "telephone" rather than "1980s rack".
 
+- **Measured (24 Oct 2026):** subtle, as predicted.
+  - **Sources.** The 224X service manual gives "14-bit floating point" converters: a 12-bit mantissa and a 2-bit exponent. The original 224's 20 kHz, 12 bits and ~24 dB of ranging come only from secondary sources.
+  - **Prototype.** `IV_MU_MODE=2`: a gain-ranging converter with four 6 dB ranges, at the μ-law layer's own bits and rate.
+  - **Noise.** Measured against the layer's band limit alone, HALL ERA 0.8, on music. μ-law sits at −52.6 dB re the signal, steady. Gain-ranging sits at −59 to −61 dB while the music is loud, rising to −31 dB as the tail fades past −55 dBFS.
+  - **What that means.** While the music is loud, both are 50–60 dB under it. In the fading tail, the difference sits below −80 dBFS.
+  - **Dropped**, not paged: the owner hasn't heard "telephone" in M6. The hook comes out after commit 5ea65e8.
+
 ### E4. The vintage feel Costello says mattered most is missing: noisy, quantised modulation (medium, idea)
 - **Source.** Costello ("Algorithmic Reverbs, Distortion, and Noise", 2013 edit) says the noisy modulation source mattered most. The 224's multiplier quantised linear interpolation to about 32–64 steps, which put a "halo" of noise round the tail. Linear interpolation gives a less "glassy" top. VintageVerb's 1970s and 1980s modes rely on this.
 - **What our code does.** It has none of it: ERA changes bits, rate and saturation, not the modulation or the interpolation.
 - **Likely heard.** ERA's middle (μ-law) could gain that "old rack" halo cheaply with coarse interpolation steps plus noise on the modulation. This would be new work, so it needs an ADR.
+
+- **Measured (24 Oct 2026):** shows: today has almost no halo. Through HALL, a held 1 kHz tone's energy off the tone (0.2–10 kHz, re the tone) is −39 dB at ERA 0.65 and 0.8, and −29 dB at ERA 1 (the Midiverb's grain).
+  - **Sources.** Costello, "Algorithmic Reverbs, Distortion, and Noise", read through the Wayback Machine:
+    - The 224's multiplier quantised its linear interpolation: "I think it was 32 or 64 chunks per sample" (his guess). That put a halo of noise round the tail.
+    - His 2013 edit says the noisy modulation source mattered more ("The modulation in my PCM70 is noisy as all get out").
+    - VintageVerb's 1970s and 1980s colour modes use it.
+  - **Prototyped.** `IV_VINTAGE_MOD`, FDN only, weighted by the μ-law layer, so it runs from ERA ~0.65 to the end of the knob.
+    - The reads crossfade to linear interpolation with the fraction quantised to 32 steps.
+    - Each line's read gets a fresh random offset every control block (0.15 samples, smoothed once).
+    - The 32 steps follow Costello. The jitter's size is ours, tuned on this measurement: 0.5 samples gave −20 dB (too much), and the quantised steps alone barely register (−37 dB).
+  - **Result at ERA 0.8.** Halo: HALL −39 → −30 dB; MASSIVE −42 → −39 dB (long lines, so fewer passes). Band T60s stay within 3 %, except 8 kHz in HALL at −14 %: linear interpolation's dulling, which Costello also describes.
+  - **Energy.** Sweep at ERA 0.8 (135 settings):
+    - Build-up: none, except a small HALL at infinite DECAY, up to +5 dB re today in its first seconds, before both settle within 1.6 dB of each other.
+    - Finite decay slopes: within −0.9 … +3 % (MASSIVE lows −4 %).
+    - Holds: 6/6 pass in the FDN at ERA 0.8 and 1. The PLATE isn't touched (see the side findings).
+  - **Cost.** +1.8–2.6 % of a desktop render. It glides out while frozen, with the rest of the loop's colour.
+  - **On the page** (the vintage cards). If picked, it would need an ADR (new ERA content).
 
 ### E5. Cassette: memoryless saturation, and taped on every pass (medium)
 - **Source.** ChowTape and Chowdhury (DAFx 2019) credit hysteresis for most of tape's warmth. Hysteresis is a saturation with level-dependent memory. The other ingredients are a head bump, speed-dependent high-frequency loss, wow below ~4 Hz, flutter at 4–20 Hz, and hiss. Costello's VintageVerb "chaotic" modes do put tape-like saturation and wow inside the loop, and they found that it *reduced* ringing. So in-loop tape has a precedent.
 - **What our code does.** A memoryless rational soft clip, drive ×1.4, inside the loop. Darkening through the T60 share, not a filter. Wow at 0.3–0.8 Hz, flutter at 6–8 Hz. Hiss into the tank. No head bump, because a boost in the loop breaks rule 2.
 - **Likely heard.** Clean and controlled, but closer to a soft limiter than to tape's thick, smeared warmth. The head bump could live on the wet output, outside the loop, where rule 2 doesn't apply.
 
+- **Measured (24 Oct 2026):** stronger than the audit guessed: the in-loop drive does nothing on music.
+  - **The soft clip never engages.** Today minus the same render with the soft clip bypassed (`IV_SAT_BYPASS`) is bit-identical on the pad, the drums and the full mix: every SPACE, ERA 0 and 0.55, DECAY 0.4, 0.75 and 0.95. Only a 1 s burst of −10 dBFS RMS noise at DECAY 0.75 reaches the knee (a −39 dB share). So the tape stage is darkening, wow and flutter, hiss and compression, with no saturation.
+  - **Head bump: not built.** Chowdhury's DAFx-19 paper and the ChowTape manual give no frequency. Every tape loss scales with speed (k = 2πf/v), so a bump near 50–100 Hz at 7.5–15 ips moves two to three octaves down at cassette speed, to the bottom of the audio band or below it [inference].
+  - **Prototyped instead:** `IV_TAPE_OUT`, the cassette saturating the wet on its way out, outside the loop, so there is no energy risk.
+    - An asymmetric tanh (even and odd harmonics, unity small-signal gain), its drive rising 1 → 3 with the cassette layer.
+    - Run at 2× oversampling, then a 5 Hz DC blocker.
+    - Precedent: dub's tape send and return, and ChowTape used as an insert. The curve and the amounts are ours.
+  - **Result at ERA 0.55.** Distortion share, measured against the same 2× path left linear: −24 to −26 dB re the wet on the pad, bass and drums, −35 dB on the quieter full-mix send. Level within 0.2 dB.
+  - **Cost.** +1.2 % of a desktop render.
+  - **On the page** (the tape cards).
+
 ### E6. Neve in the loop: ours
 Even harmonics inside a reverb loop have no published reverb basis. It's the dub desk's send/return, recirculated. Its DC and runaway handling (v1.0.3) is sound engineering. There is nothing to compare it with.
+
+- **Measured (24 Oct 2026):** no experiment: it's ours, with no reference to compare it against, and the tests already cover its stability (`test_era`: infinite holds at every ERA). One note from E5's measurement: Neve's even term goes in ahead of the soft clip and is proportional to the level, so unlike the clip it does act at normal levels. It fades out at infinite DECAY by design.
 
 ---
 
@@ -207,9 +268,13 @@ Even harmonics inside a reverb loop have no published reverb basis. It's the dub
 - **What our code does.** C reuses the 24-tap swell (S1): the tank's tail rises over TIME and then lets go with a 0.3 s T60. The structure matches the hardware. Its density doesn't: at TIME 2 s the taps are 104 ms apart.
 - **Likely heard.** A reverse swell that steps up in pulses rather than sucking in smoothly. Fixing S1 should fix C as well.
 
+- **Measured (24 Oct 2026):** resolved by the rebuild. REVERSE is now the hardware recipe (32 jittered rising taps per side into a short reverb of its own; ADR 0015 amended), not the 24-tap swell. Measured on a single hit: the 10 ms envelope's deviation around its own 150 ms smoothing, from onset to peak. REVERSE gives 0.6 dB at TIME 0.6 and 1.4–1.5 dB at TIME 1 (2 s), in every SPACE. For comparison, a NORMAL tail gives 0.4–0.7 dB and the smeared BLOOM 0.3–0.4 dB. No pulses to fix.
+
 ### R2. Prototype D (the input reversed into the tank) is like reverse tape (medium)
 - **What our code does.** D reverses the input and sends it into the tank, which is closer to a reverse-tape effect than to a reverse reverb.
 - **Likely heard.** It still chops the input at TIME boundaries, so phrases get cut mid-note. That makes it more of an effect than a "reverse swell".
+
+- **Measured (24 Oct 2026):** obsolete: prototype D is gone from the code (REVERSE is the rebuilt hardware recipe, R1). Nothing to measure.
 
 ---
 
@@ -225,6 +290,18 @@ Even harmonics inside a reverb loop have no published reverb basis. It's the dub
 - REVERSE prototypes A, B and D.
 
 None of this is wrong because it's unpublished. But these are the parts with no outside reference to check them against, and so far they're where most listening notes have landed.
+
+---
+
+## Side findings from the 24 Oct 2026 measurements (not fixed; worth a look)
+
+- **A hot feed can make an infinite PLATE sag, then climb back.**
+  - **What happened.** Fed 20 s of Gaussian noise at −10.5 dBFS RMS (peaks past full scale) at DECAY 1, today's PLATE dropped to between −34 and −48 dBFS by 60–70 s. The hold makeup then lifted it back to about −25 dBFS over the 10 minutes (+8 to +24 dB). HALL at SIZE 0 and noon did the same, by +2 to +4 dB.
+  - **With the tests' feed** (uniform noise, 0.3 peak), every SPACE passes.
+  - **Why it matters.** A Versio input driven hard could give a tail that fades, then swells back over minutes.
+  - **Next.** Measure before fixing; the likely cause is the duck or the tail capture ratcheting during the loud feed.
+- **PLATE SIZE 1 at ERA 1 fails the 10-minute hold**, even with the tests' own feed: −29.8 dBFS at 60–70 s, then up to −27.1 (+2.7 dB; the test allows +1). `test_era` only checks the default SPACE (HALL), so the test doesn't catch it.
+- **The loop's soft clip never engages on music** (E5 above): the cassette's drive is inaudible. That also removes MI #5's reason (`mutable-instruments-reverbs.md`).
 
 ---
 

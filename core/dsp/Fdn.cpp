@@ -60,14 +60,15 @@ IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed, flo
         era_[i].prepare(sampleRate);
         driftGen_[i].prepare(sampleRate, seed * 2654435761u + uint32_t(i) * 40503u + 1u, float(i) / float(kN - 1));
     }
-    // Early taps: fixed, staggered points along each line (seeded, so every
-    // build is the same), louder the later they sit, so the first sound is
-    // quiet and the tank swells from there.
+    // Early taps: fixed points along each line, louder the later they sit, so the first sound is
+    // quiet and the tank swells from there. The 8 lines' taps interleave (each line offset by its
+    // own share of a slot, shorter lines first) instead of bunching (v1.0.21; the seeded jitter
+    // they replace still draws, so every build's signs are the same).
     uint32_t es = 0xEA51u;
     for (int i = 0; i < kN; ++i)
         for (int k = 0; k < kEarlyTaps; ++k) {
-            const float u = 0.5f + 0.35f * uniform(es); // 0.15..0.85 of a slot
-            earlyFrac_[i][k] = (float(k) + u) / float(kEarlyTaps);
+            (void)uniform(es);
+            earlyFrac_[i][k] = (float(k) + (float(i) + 0.5f) / float(kN)) / float(kEarlyTaps);
             earlyGain_[i][k] = voicing::kEarlyTapLow + (1.0f - voicing::kEarlyTapLow) * earlyFrac_[i][k];
             if (uniform(es) < 0.0f) earlyGain_[i][k] = -earlyGain_[i][k];
         }
@@ -193,6 +194,12 @@ void Fdn::control(int n)
         float driftRoom = voicing::kDriftMaxShareOfLine * lenNow_[i];
         if (driftRoom > voicing::kDriftMaxSeconds * sampleRate_) driftRoom = voicing::kDriftMaxSeconds * sampleRate_;
         float target = lenNow_[i] + floorDepth * floorB_[i] + driftGen_[i].control(dt, drift_, driftRoom);
+        if (vintage_ > 0.0f) {
+            // E4: the modulation is noisy (Costello: the PCM70's "noisy as all get out"): a fresh random
+            // offset each control block, smoothed once (a coarse, steppy read wander).
+            jitter_[i] += 0.5f * (voicing::kVintageJitterSamples * uniform(rng_) - jitter_[i]);
+            target += vintage_ * jitter_[i];
+        }
         if (target < 4.0f) target = 4.0f;
         if (target > maxLen_) target = maxLen_;
         readStep_[i] = (target - readNow_[i]) / float(n);
@@ -225,6 +232,14 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
             for (int i = 0; i < kN; ++i) {
                 readNow_[i] += readStep_[i];
                 float x = line_[i].readAllpass(readNow_[i], interp_[i]);
+                if (vintage_ > 0.0f) {
+                    // E4: linear interpolation with the fraction quantised (the 224's multiplier: 32 or 64 steps).
+                    const float d = readNow_[i];
+                    const auto di = uint32_t(d);
+                    const float f = float(int32_t((d - float(di)) * voicing::kVintageSteps)) * (1.0f / voicing::kVintageSteps);
+                    const float a0 = line_[i].read(di), a1 = line_[i].read(di + 1);
+                    x += vintage_ * (a0 + f * (a1 - a0) - x);
+                }
                 if (apG > 0.0f)
                     for (int k = 0; k < 2; ++k) { // in-loop diffusion (MASSIVE, a small HALL)
                         float d;

@@ -155,6 +155,7 @@ IV_SIZE_OPT void Engine::reset()
     tilt_.set(smoothed(ParamId::Tone));
     tilt_.snap();
     limiter_.reset();
+    for (int c = 0; c < 2; ++c) { tapeOs_[c].reset(); tapeOs2_[c].reset(); tapeDc_[c] = 0.0f; }
     duck_ = duckGrDb_ = duckGainStep_ = 0.0f;
     duckGain_ = 1.0f;
     hissLp_[0] = hissLp_[1] = 0.0f;
@@ -262,6 +263,12 @@ void Engine::onGesture(GestureReader::Event e)
 
 // ---- Voicing -------------------------------------------------------------------
 
+// DECAY's loss rate for the SPACE in use (MASSIVE's shortest tail follows SIZE, v1.0.21).
+float Engine::decayRate(float decay, float size) const
+{
+    return activeSpace_ == 2 ? map::massiveDecayRate(decay, size) : map::decayRate(decay, activeSpace_);
+}
+
 // Sets every voicing target for the SPACE in use (activeSpace_). While
 // frozen, the big tank keeps the SIZE and DECAY it froze with and its loss
 // glides to none (freezeMix_); the knobs play the twin. snap: jump
@@ -287,7 +294,7 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
     const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
     const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(hallSize_) : 1.0f;
-    const float rate = map::decayRate(decay, activeSpace_) / sizeT60 * (1.0f - freezeMix_);
+    const float rate = decayRate(decay, size) / sizeT60 * (1.0f - freezeMix_);
     const float highRatio = toneRatio + freezeMix_ * (1.0f - toneRatio);
     // Frozen: full weight (only the pad's own hold acts, there's no floor). Not frozen: DECAY's own
     // weight at once, not glided with freezeMix_: gliding it pulled a fed pad (above the floor) down
@@ -314,7 +321,9 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
         plate_.setFloorDb(floorDb);
         plate_.setModDepth(1.0f - freezeMix_ * (1.0f - voicing::kFrozenPlateModDepth));
         plate_.setLongDelayMod(1.0f - freezeMix_);
-        plate_.setModScale(modScale_);
+        // A frozen PLATE's chorus and floor glide out too, so a held chord stays pure (v1.0.22, the
+        // DSP audit's A3; it kept 0.15 of the chorus and slowly shimmered out of tune).
+        plate_.setModScale(modScale_ * (1.0f - freezeMix_));
         plate_.setHoldDb(holdDb);
     } else {
         const float mean = massive ? map::massiveMeanSeconds(size) : map::hallMeanSeconds(size);
@@ -341,9 +350,11 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
         // HALL's allpasses scale with its mean line, so a small
         // room stays small (MASSIVE's lengths at a 0.2 s mean and up).
         fdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(hallSize_) / 0.2f));
-        fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(hallSize_, decay));
+        fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decay, size)
+                                   : map::hallSizeLevelTrim(hallSize_, decay));
         fdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
-        fdn_.setModDepth(modScale_);
+        // The floor glides out with the freeze (v1.0.22, A3; Costello: mod depth to 0 for a freeze).
+        fdn_.setModDepth(modScale_ * (1.0f - freezeMix_));
         // Still lows: the low tank follows, unmodulated.
         lowFdn_.setDecayRate(rate);
         lowFdn_.setHighT60Ratio(highRatio);
@@ -352,7 +363,8 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
         lowFdn_.setHoldDb(holdDb);
         lowFdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallDiff);
         lowFdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(hallSize_) / 0.2f));
-        lowFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(hallSize_, decay));
+        lowFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decay, size)
+                                      : map::hallSizeLevelTrim(hallSize_, decay));
         lowFdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
         lowFdn_.setModDepth(0.0f);
     }
@@ -392,6 +404,8 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
     }
     muLaw_.set(era);
     eraMakeup_ = era.makeup;
+    tapeDrive_ = era.cassette; // tape out (v1.0.22, E5)
+    if (!plate) fdn_.setVintage(era.mu * keep); // vintage reads (v1.0.22, E4; ADR 0019): in-loop colour, out while frozen
 
     tilt_.set(smoothed(ParamId::Tone));
     // Hiss follows the input (none in silence, so an infinite tail doesn't
@@ -417,8 +431,10 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
     // ATTACK (ADR 0015): what TIME means, and the swell stage's attack.
     float predelay = massive ? map::massivePredelaySeconds(size) : 0.0f;
     float attackSeconds = massive ? map::massiveNormalAttackSeconds(decay, size) : 0.0f;
-    if (attack == 0) predelay += map::normalPredelaySeconds(time);
-    if (attack == 1) attackSeconds = map::bloomSeconds(time) * (massive ? map::massiveMass(size) : 1.0f);
+    if (attack == 0)
+        predelay += massive ? map::massiveNormalPredelaySeconds(time) : map::normalPredelaySeconds(time);
+    if (attack == 1)
+        attackSeconds = map::bloomSeconds(time) * (massive ? map::massiveMass(size) : 1.0f);
     swell_.setAttackSeconds(attackSeconds, snap);
     swell_.setSmear(attack == 1); // BLOOM only (owner, renders/swell_smear)
     // REVERSE: rising taps over TIME into the short reverb; DECAY sets how sudden the stop is.
@@ -445,7 +461,7 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
         const float tSize = smoothed(ParamId::Size), tDecay = smoothed(ParamId::Decay);
         twinSwell_.setAttackSeconds(massive ? map::massiveNormalAttackSeconds(tDecay, tSize) : 0.0f, snap);
         const float tT60 = activeSpace_ == 1 ? map::hallT60Scale(tSize) : 1.0f;
-        const float tRate = std::fmax(map::decayRate(tDecay, activeSpace_) / tT60, 1.0f / voicing::kTwinMaxT60);
+        const float tRate = std::fmax(decayRate(tDecay, tSize) / tT60, 1.0f / voicing::kTwinMaxT60);
         dsp::EraMix tEra = era;
         tEra.even *= 1.0f - map::governorWeight(tDecay);
         if (plate) {
@@ -467,7 +483,8 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
             twinFdn_.setHighT60Ratio(toneRatio);
             twinFdn_.setGovernor(0.0f);
             twinFdn_.setInLoopDiffusion(massive ? 1.0f : 0.0f);
-            twinFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(tSize, tDecay));
+            twinFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(tDecay, tSize)
+                                           : map::hallSizeLevelTrim(tSize, tDecay));
             twinFdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
             twinFdn_.setEra(tEra);
             twinFdn_.setDrift(drift);
@@ -766,6 +783,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             wl *= eraMakeup_;
             wr *= eraMakeup_;
             muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)
+            if (tapeDrive_ > 0.0f) tapeOut(wl, wr);
             tilt_.process(wl, wr);
             duckGain_ += duckGainStep_; // ducking (ADR 0014)
             wl *= duckGain_;
@@ -780,6 +798,31 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
     }
     // Edges beyond this block's length (a host's bad offset) apply next block.
     for (int i = 0; i < edgeCount_; ++i) edges_[i].offset -= numSamples;
+}
+
+// Tape out (v1.0.22, the DSP audit's E5; owner's pick): the cassette saturates the wet on its way out,
+// outside the loop (the in-loop drive never reaches its knee on music, measured). An asymmetric tanh
+// (even and odd harmonics, as tape's), unity gain for small signals, at 4x (2x was short of room:
+// a hot 7 kHz tone folded back to -35 dB below 5 kHz, test_era allows -40), then a 5 Hz DC blocker.
+void Engine::tapeOut(float& l, float& r)
+{
+    const float d = 1.0f + 2.0f * tapeDrive_, b = 0.15f * tapeDrive_;
+    auto th = [](float x) { // rational tanh, exact enough for a saturator, no std::tanh in flash
+        if (x > 3.0f) return 1.0f;
+        if (x < -3.0f) return -1.0f;
+        const float x2 = x * x;
+        return x * (27.0f + x2) / (27.0f + 9.0f * x2);
+    };
+    const float tb = th(d * b), norm = 1.0f / (d * (1.0f - tb * tb));
+    auto sat = [&](float x) { return (th(d * (x + b)) - tb) * norm; };
+    float* ch[2] = {&l, &r};
+    const float dcCoeff = 6.2831853f * 5.0f / sampleRate_;
+    for (int c = 0; c < 2; ++c) {
+        dsp::Oversampler& inner = tapeOs2_[c];
+        const float y = tapeOs_[c].process(*ch[c], [&](float u) { return inner.process(u, sat); });
+        tapeDc_[c] += dcCoeff * (y - tapeDc_[c]);
+        *ch[c] = y - tapeDc_[c];
+    }
 }
 
 // Still lows: split the tank's input (Butterworth), the highs through fdn_, the lows

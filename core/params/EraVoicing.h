@@ -28,6 +28,9 @@ constexpr float kSatKnee    = 0.7f; // a held tail's peaks (crest ~4-5) stay und
 
 // ---- ERA (P4): where each stacked layer comes in (ADR 0003) ----------------
 constexpr float kEraNeveFrom = 0.10f, kEraCassetteFrom = 0.35f, kEraMuFrom = 0.65f, kEraMidiverbFrom = 0.85f;
+// Neve's share grows in straight steps from kEraCleanTop to kEraCassetteFrom (v1.0.21, owner's pick on
+// renders/knob_feel: ERA's first 20 % changed nothing measurable; Clean was 0 → 0.10, then a smoothstep).
+constexpr float kEraCleanTop = 0.03f;
 
 // Neve (SPEC §4.7): a little darker (16 kHz in the table, here a shorter
 // high-end T60); gentle asymmetric, even harmonics.
@@ -59,9 +62,16 @@ constexpr float kMuEngageSpan = 0.03f; // its crossfade in, on the ERA knob
 // 12 → 8 bits, a bitcrusher: owner's pick on renders/midiverb); sparse crackle
 // into the tank's input, following the input level.
 constexpr float kMidiBitsStart = 13.0f, kMidiBitsEnd = 13.0f;
-constexpr float kMidiEngageSpan = 0.02f;
+// The box engages across the Midiverb's whole stretch as (share)² (v1.0.21, knob_feel: it switched on
+// within 2 % at 0.85 and a tail got ~5× shorter in one notch, then the last 13 % did nothing).
+constexpr float kMidiEngagePower = 2.0f;
 constexpr float kCrackleDbfs = -48.0f;
 constexpr float kCracklePerSecond = 4.0f;
+
+// Vintage reads (v1.0.22, ADR 0019): from the μ-law stretch on (Fdn::setVintage). The 32 steps follow
+// Costello on the 224; the jitter's size is ours, tuned on the measured noise halo (docs/research/dsp-audit.md E4).
+constexpr float kVintageSteps = 32.0f;          // fraction steps per sample (Costello: "32 or 64 chunks")
+constexpr float kVintageJitterSamples = 0.15f;   // the noisy modulation's random offset per control block
 
 // Loudness makeup per layer (dB on the wet), so ERA's loudness on music stays
 // within ±1 dB across the knob (SPEC §7 M6, v1.0.19), summed as the layers stack.
