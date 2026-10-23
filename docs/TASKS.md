@@ -1,15 +1,17 @@
 # Owner tasks
 
-**Last updated:** 23 Oct 2026, session 4 (DRIFT's clockwise side is Wander, v1.0.20; Valhalla comparison page ready).
+**Last updated:** 24 Oct 2026, session 4 overnight (four audits back: two pick pages, a soak report, the Valhalla numbers; branches not merged yet).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- Nothing open: every pick so far is acted on.
+- [ ] **Knob feel** (`renders/knob_feel/index.html`, pick per card): five knobs where a notch jumps or a stretch does nothing, A today and B smoother. ERA (the first 20 % did nothing, then the Midiverb switched on within 2 % and cut tails about 5× shorter; B fades it in across 85–100 %), MASSIVE DECAY's first notch (B: its shortest tail is a little longer at big SIZEs, 6 s at full SIZE: still short enough?), MASSIVE TIME in NORMAL (dead for its first quarter), BLOOM's first notch, and your "uneven on Hits" (the MASSIVE swell dips before its peak; B spreads the early echoes out).
+- [ ] **Three ideas from the DSP audit** (`renders/dsp_audit/index.html`, pick per card): a frozen pad that holds still instead of slowly shimmering out of tune (mostly HALL), "vintage reads" (Lexicon-style old-rack grain in ERA's μ-law stretch), and tape warmth on the wet at ERA's cassette stage. Everything else in the audit was measured and either fine or not worth hearing.
+- [ ] **ERA's Midiverb end at infinite DECAY** (found by the overnight tests): the Midiverb's dark loop eats the mids and highs of an infinite tail, a chord drops 25–46 dB within 30 s, then slowly comes back up as a dark drone. Should a held Midiverb tail stay bright and hold, or darken to a drone and hold?
 
 ### Listen (after your notes)
-- Nothing open.
+- [ ] **Infinite tails when you stop playing** (overnight soak fix, changes the sound): today an infinite PLATE drops up to 27 dB (HALL 10 dB) when a loud input stops or fades, then creeps back over 1–3 minutes. The fix keeps every dip within about 2 dB. A before/after page comes once you're happy to merge the overnight branches.
 
 ### Listen (first time)
 - [ ] **Immensio beside Valhalla** (`renders/valhalla_compare/index.html`, notes only): your Room, Plate and Supermassive takes in the same cards as our HALL, PLATE and MASSIVE, each column at a matched decay (2, 5, 15 s). What do they do that we don't, and the other way round? The Compare with menu now plays each card's own piece of music from the take you choose, so it works on any page.
@@ -20,10 +22,13 @@
 - [ ] **M3 CPU check** (after M0): flash `firmware/build/immensio_versio_profile.bin` and send Claude the serial CPU report, so the CPU budget is measured, not estimated. Include a frozen MASSIVE: the twin and MASSIVE's early taps are the heaviest case.
 
 ### When convenient
+- [ ] **Re-export three clipped Valhalla takes about 6 dB lower**: Plate Chrome 15 s, Plate Lithium 15 s and Supermassive Andromeda 100 % (measure and music). Also check Supermassive's DELAY: its first sound came at different times between takes (Sagittarius 421 / 38 / 3 ms, Andromeda 1.1 / 0.7 / 0.65 s).
 - [ ] **Reference recordings** (when convenient; `docs/reference-recording-guide.md`): Valhalla Room, Plate and Supermassive are in (I read them straight from your Ableton set; no need to export). Still to record: the **H9 Reverse** (the yardstick for REVERSE), Mercury7 Cathedra, VintageVerb, then the rest. For Supermassive, Andromeda at 0 % feedback rang only 0.5 s; about 5 % should give the 2 s target. LMC can't go short: even at 20 % it rings 26 s.
 
 ## Waiting on Claude
 
+- **Merge the overnight branches** (your OK): soak fixes (ten bugs, sound unchanged, plus three held sound changes), knob-feel prototypes, DSP-audit prototypes and the Valhalla report. Prototypes stay off until you pick.
+- **Valhalla numbers** (`docs/research/valhalla-comparison.md`, on its branch): the biggest differences are that our HALL's highs darken much faster in short tails, our HALL starts later (first sound at 80 ms against Room's 9–32 ms), MASSIVE's highs die earlier than Supermassive's, our wet gets quieter as DECAY shortens (HALL 10 dB from 15 s to 2 s), and the PLATE builds more slowly. Each is a page to make once you want it.
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 - **M8 tuning** from your listening notes on the pages above, including MASSIVE medium and large sounding a little uneven on Hits (grainy_start; the new grain figure says it's smooth there, so measure the level of the swell and taps).
@@ -35,6 +40,7 @@
 
 ## Done
 
+- 24 Oct 2026: **Overnight audits** (four background helpers, each on its own branch, all tests re-run and passing, default sound unchanged): a 341-hour stress test found and fixed ten bugs (freeze taps mid-block turning into paints that never unfroze, clicks on SPACE flips, small-HALL SIZE jumps and REVERSE switching, a frozen pad swelling 20–55 dB, and more; no NaN, no limiter breach, no stuck tail anywhere), and measured desktop CPU (the heaviest case: a frozen MASSIVE with its twin, ERA full, DRIFT CW and BLOOM, 4.5× a plain HALL). The knob, DSP-audit and Valhalla results are in Decide and Waiting on Claude above.
 - 23 Oct 2026: **DRIFT's clockwise side is Wander** (round 2: "Wander strongest is the winner… maybe a half-way point between stronger and strongest"; SPEC v1.0.20): quick, small random movement, halfway between round 2's D and E at full (±20 cents, up to 2.25 Hz), the lines never swaying together. Orbit stronger was "too intense… pitch-y swirling"; Halo, Orbit and the phasers are gone from the code. The page is deleted; M6's DRIFT row is re-rendered with it.
 - 23 Oct 2026: **Your Valhalla takes are on a page** (`renders/valhalla_compare`), at matched decays. Our DECAY for 2 / 5 / 15 s: HALL 0.30 / 0.51 / 0.77 (SIZE 0.6), PLATE 0.40 / 0.62 / 0.82 (SIZE 0.6), MASSIVE 0.07 / 0.20 / 0.41 (SIZE 0.7; its shortest is 2.2 s).
 - 23 Oct 2026: **Your Valhalla recordings read from the Ableton set** (`Immersio Versio Testing.als`): the 28 named takes (Room: Large Room and Dark Chamber; Plate: Chrome and Lithium; each at 2 / 5 / 15 s; Supermassive Sagittarius and Andromeda, measure and music at four feedbacks) plus your four calibration exports. Supermassive's feedback hit the targets closely: Sagittarius 7 / 30 / 73 / 100 % rang 2 / 5 / 15 / 52 s, Andromeda 12 / 54 / 100 % rang 5 / 15 / 45 s. The six unnamed "ValhallaSuperMassive" clips were left out (they look like earlier tries).
