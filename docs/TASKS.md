@@ -14,7 +14,6 @@
 
 ### Listen (first time)
 - [ ] **Immensio beside Valhalla** (`renders/valhalla_compare/index.html`, notes only): your Room, Plate and Supermassive takes in the same cards as our HALL, PLATE and MASSIVE, each column at a matched decay (2, 5, 15 s). What do they do that we don't, and the other way round? The Compare with menu now plays each card's own piece of music from the take you choose, so it works on any page.
-- Nothing open.
 
 ### At the rack
 - [ ] **M0 hardware check** (`docs/m0-hardware-check.md`): flash `firmware/build/immensio_versio_m0test.bin`, check the boot pattern, switches, button (USB session), then knobs, gate and a quick passthrough listen (rack session). Tell Claude the results.
