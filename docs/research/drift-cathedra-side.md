@@ -1,5 +1,7 @@
 # DRIFT's clockwise side (23 Oct 2026)
 
+**Decided (SPEC v1.0.20):** Wander at 2.5× round 1's depth: ±20 cents, 1 → 2.25 Hz, rates fanned ±50 %. Owner, round 2: "Wander strongest is the winner. I prefer wander stronger, but it's still quite a subtle effect, so I'd rather the maximum value to be obvious, so maybe a half-way point between stronger and strongest." Also: "orbit stronger is too intense and creates pitch-y swirling." Every other prototype is removed from the code.
+
 Owner, M6: "Tape and still sound great, but drift at 1 is too extreme and sounds too seasick. How can we better tune this side of the potentiometer? Does drift make the most sense? Are there other ways we can modulate the sound to make it distinct from tape?"
 
 Tags: **[S]** a source says it; **[M]** we measured it; **[I]** our inference.
@@ -84,3 +86,46 @@ The recipes are ours [I], following the sources named.
 | tape (CCW, full) | 21 | 11 | 20 |
 
 Page: `renders/drift_cw` (HALL and MASSIVE at 3/4 and full; E = tape for comparison).
+
+## Round 2 (23 Oct 2026)
+
+Owner, round 1 (no card picks): "My preference is for Orbit, but I'd like to hear a stronger version as it's quite subtle. Wander is also quite subtle, so I'd like to hear a stronger version of that too. Replace Halo with a phaser exploration."
+
+**Phaser sources** (research agent):
+- **Placement.** [S] Established gear puts the phaser before or after the reverb: Eventide H90 (two algorithms in series), Hologram Chroma Console (Movement then Diffusion, re-orderable), Cymatics Space (on the wet). Meris MercuryX has no phaser element; its "Feedback" slot is the pre-delay's loop.
+- **Old Blood Noise Dweller.** [S] Puts a delay inside each phaser stage: "like putting a delay inside of a phaser". 4 or 8 stages, with Regen.
+- **In-loop stability.** [S] Dattorro (1997, part 2): analogue phasers are cascades of time-varying allpasses, and "global feedback enhances the effect". [S] A direct-form allpass doesn't preserve energy as its coefficient moves. Bilbao (IEEE SPL 2005) and Werner (DAFx-20) give an orthogonal-rotation form that does.
+- **No notches in the loop.** [I] An allpass chain alone is flat; notches come from summing it with an unphased copy. So a phaser *inside* the loop swirls the tail's resonances rather than making notches.
+
+**Prototypes** (`IV_DRIFT_CW`):
+
+| Mode | What it does |
+|---|---|
+| 4 Orbit stronger | Two stages of pair rotations, up to ±180°, 0.1 → 1 Hz |
+| 5 Orbit + pan | Mode 4, plus a constant-power pan of the tank's output (up to ±0.8, 0.05 → 0.3 Hz). A rotation of L/R did nothing: the outputs are uncorrelated. Balance swing 1.5 → 2.6 dB sd, range 13 dB. The low tank stays centred |
+| 6 Wander ×2 | 16 cents, 1 → 2 Hz |
+| 7 Wander ×3 | 24 cents, 1 → 2.5 Hz |
+| 8 Jet | 6 first-order stages on the tank's output, swept 200 Hz → 4 kHz, 0.05 → 0.8 Hz, feedback up to 0.5, mixed up to 50/50 |
+| 9 Dweller | 4 swept Schroeder allpasses (1.3–11.3 ms, g 0.4 ± 0.3, 0.1 → 2 Hz) on the tank's input, mixed up to 50/50 |
+| 10 Tide | 4 rotation-form first-order allpasses per FDN line in the loop, g up to ±0.75, 0.03 → 0.5 Hz, per-line rates |
+
+[M] Energy:
+- Holds pass for modes 4–7 (72/72) and modes 9 and 10 (36/36).
+- Jet passes 13/18. Its output level drifts up to ~1.7 dB over 10 min as the notches sweep over a held tail. It sits outside the loop, and the tank's own level holds.
+- No build-up in any sweep.
+
+[M] Held 1 kHz at full, p95 cents, HALL / MASSIVE:
+
+| Mode | HALL | MASSIVE |
+|---|---|---|
+| Orbit stronger | 22 | 15 |
+| + pan | 23 | 13 |
+| Wander ×2 | 18 | 10 |
+| Wander ×3 | 20 | 16 |
+| Jet | 13 | 12 |
+| Dweller | 5 | 5 |
+| Tide | 8 | 6 |
+
+The stronger Orbit's fast, wide swings add pitch shimmer comparable to the tape side (21 cents).
+
+Cost: release 106,724 B with every DRIFT prototype compiled in (+5.7 KB). The modes not picked get removed.

@@ -117,16 +117,6 @@ void Fdn::control(int n)
     const float floorDepth = voicing::kFloorDepthSeconds * sampleRate_ * modDepth_;
     const float floorCoeff = 1.0f - std::exp(-2.0f * 3.14159265f * 0.3f * dt);
 
-    // PROTOTYPE Orbit: each pair's angle swings at its own rate (spread ±50 %, Schlecht), 0.1 → 0.8 Hz.
-    for (int k = 0; k < kN / 2; ++k) {
-        constexpr float kSpread[kN / 2] = {0.5f, 0.83f, 1.17f, 1.5f};
-        orbitPhase_[k] += (0.1f + 0.7f * orbit_) * kSpread[k] * dt;
-        orbitPhase_[k] -= float(int(orbitPhase_[k]));
-        const float angle = orbit_ * 0.785398f * std::sin(6.2831853f * (orbitPhase_[k] + 0.25f * float(k)));
-        orbitC_[k] = std::cos(angle);
-        orbitS_[k] = std::sin(angle);
-    }
-
     // The floor governor's extra loss (ADR 0008).
     governor_.control(n, sampleRate_);
     const FloorGovernor& gov = leader_ ? leader_->governor_ : governor_; // a low tank follows its leader
@@ -236,12 +226,6 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                         y[j] = a + b;
                         y[j + span] = a - b;
                     }
-            if (orbit_ > 0.0f)
-                for (int k = 0; k < kN / 2; ++k) { // PROTOTYPE Orbit: rotate pairs (orthogonal)
-                    const float a = y[2 * k], b = y[2 * k + 1];
-                    y[2 * k] = orbitC_[k] * a - orbitS_[k] * b;
-                    y[2 * k + 1] = orbitS_[k] * a + orbitC_[k] * b;
-                }
             const float xl = inL[s] * kNorm, xr = inR[s] * kNorm;
             for (int i = 0; i < kN; ++i) line_[i].write(y[i] * kNorm + kInL[i] * xl + kInR[i] * xr);
         }

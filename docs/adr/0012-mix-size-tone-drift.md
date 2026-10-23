@@ -32,3 +32,11 @@
 - **DRIFT moves everything above ~300 Hz; the bass stays still.** HALL and MASSIVE ring their lows in a second, unmodulated tank (the input split at 300 Hz, Butterworth), so a dub bassline in the tail never wavers in pitch, whatever DRIFT or the cassette does. B on all 25 cards (HALL tape and Cathedra, MASSIVE tape, noon and Cathedra; bass, skank, pad, keys, full mix), the repeated cards agreeing.
 - Why two tanks, not a split inside one loop (the first prototype, which the owner also liked, 23 Oct): two reads of one line recombined in the loop either gain up to +3 dB a pass (a one-pole split, Schlecht's thesis: +83 dB in a small HALL) or, with a split whose bands sum to one (Linkwitz-Riley), cancel near the crossover every pass so that band dies early and infinite holds drain. Measured in `docs/research/still-lows.md`.
 - Not covered: the freeze twin and REVERSE's short reverb still move their lows (a second low tank each; a listen first).
+
+**Amendment (23 Oct 2026, owner's pick on `renders/drift_cw`, two rounds; SPEC v1.0.20):**
+- **DRIFT's right side is Wander:** quick, small random movement, up to ±20 cents at 1 → 2.25 Hz, each line's rate fanned out ±50 % (Lexicon's Random Hall and Valhalla's Random Space randomise delays the same way). The slow Cathedra sine was "too extreme… too seasick": it bent the whole tail out of tune and back together.
+- **Rejected after listening:**
+  - Halo (vibrato on the input, the Mercury7's way).
+  - Orbit, a rotating feedback mix after Schlecht & Habets: "quite subtle" at first, then "too intense and creates pitch-y swirling" when stronger.
+  - Three phasers: Jet on the wet, Dweller on the input, Tide in the loop.
+- **Tape (left) is unchanged.** Wander uses the same random generator, but quicker, with no flutter and the lines spread wider, so the two sides stay distinct.

@@ -17,6 +17,7 @@ Shared vocabulary for this project. Use these terms exactly in code, comments an
 | **Floor** | The warm level an infinite tail settles at and holds (loop governor + soft saturation). Not used while frozen. |
 | **Infinite** | Decay 0.85–1: loop gain 1 at the floor; ducking grows across this stretch. |
 | **Modulation floor** | The always-on faint random movement of every tank delay (±1–2 cents) that kills metallic ringing. What remains at DRIFT noon. |
+| **Wander** | DRIFT's clockwise side: quick, small random movement of every tank line (up to ±20 cents, 1–2.25 Hz, the lines' rates fanned out so they never sway together). The tape side is the slower wow plus flutter (v1.0.20). |
 | **Still lows** | Below ~300 Hz the HALL / MASSIVE tail rings in its own unmodulated tank, so the bass never wavers; DRIFT and the modulation floor move only what's above (v1.0.18). |
 | **Loop chain** | Everything inside each line per pass: modulated read → TONE tilt + damping → soft saturation → ERA in-loop layers. |
 | **Era stage / layer** | One of Clean, Neve, Cassette, μ-law, Midiverb. Layers **stack**: each fades in across its stretch of the knob and stays. |

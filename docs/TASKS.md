@@ -1,12 +1,12 @@
 # Owner tasks
 
-**Last updated:** 23 Oct 2026, session 4 (DRIFT clockwise page ready; ERA's level fixed on music, v1.0.19).
+**Last updated:** 23 Oct 2026, session 4 (DRIFT's clockwise side is Wander, v1.0.20; Valhalla comparison page ready).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- [ ] **DRIFT's clockwise side** (`renders/drift_cw/index.html`, pick per card): today's slow drift (A) against the three characters you chose: Halo (a shimmering vibrato on what goes in; the tail stays in tune), Orbit (the tail circles around you, in space, not pitch) and Wander (quicker, small random movement). E is the tape side, only for comparison. All three are checked safe (nothing builds up, 10-minute holds pass). Measured wobble at full, HALL: today 64 cents, Halo 20, Orbit 4, Wander 10 (tape 21). Orbit only works in HALL and MASSIVE; a PLATE version would need its own design.
+- Nothing open: every pick so far is acted on.
 
 ### Listen (after your notes)
 - Nothing open.
@@ -35,8 +35,10 @@
 
 ## Done
 
+- 23 Oct 2026: **DRIFT's clockwise side is Wander** (round 2: "Wander strongest is the winner… maybe a half-way point between stronger and strongest"; SPEC v1.0.20): quick, small random movement, halfway between round 2's D and E at full (±20 cents, up to 2.25 Hz), the lines never swaying together. Orbit stronger was "too intense… pitch-y swirling"; Halo, Orbit and the phasers are gone from the code. The page is deleted; M6's DRIFT row is re-rendered with it.
 - 23 Oct 2026: **Your Valhalla takes are on a page** (`renders/valhalla_compare`), at matched decays. Our DECAY for 2 / 5 / 15 s: HALL 0.30 / 0.51 / 0.77 (SIZE 0.6), PLATE 0.40 / 0.62 / 0.82 (SIZE 0.6), MASSIVE 0.07 / 0.20 / 0.41 (SIZE 0.7; its shortest is 2.2 s).
 - 23 Oct 2026: **Your Valhalla recordings read from the Ableton set** (`Immersio Versio Testing.als`): the 28 named takes (Room: Large Room and Dark Chamber; Plate: Chrome and Lithium; each at 2 / 5 / 15 s; Supermassive Sagittarius and Andromeda, measure and music at four feedbacks) plus your four calibration exports. Supermassive's feedback hit the targets closely: Sagittarius 7 / 30 / 73 / 100 % rang 2 / 5 / 15 / 52 s, Andromeda 12 / 54 / 100 % rang 5 / 15 / 45 s. The six unnamed "ValhallaSuperMassive" clips were left out (they look like earlier tries).
+- 23 Oct 2026: **DRIFT clockwise, round 1 listened**: "My preference is for Orbit, but I'd like to hear a stronger version as it's quite subtle. Wander is also quite subtle… Replace Halo with a phaser exploration." No card picks; round 2 follows.
 - 23 Oct 2026: **ERA keeps its loudness on music** (your note: the Midiverb could sound louder; SPEC v1.0.19): measured, music got 4–6 LU louder across ERA, because each stage's level boost had been set on a noise-burst test that music doesn't behave like. The boosts are now set on music: ERA fully CW is within 0.5 LU of clean in HALL and MASSIVE, every stage in between too, and the test now listens to the dub skank.
 - 23 Oct 2026: **M6 listened** (ERA, DRIFT, TONE): "Tone sounds great"; tape and still "sound great". DRIFT fully CW is too seasick and the Midiverb can sound louder than the other stages (both measured, now on Claude's list).
 - 23 Oct 2026: **Still lows shipped** (B on all 25 cards, the repeated cards agreeing; SPEC v1.0.18, ADR 0012 amendment): in HALL and MASSIVE the bass below ~300 Hz rings in its own still reverb, so it never wavers, whatever DRIFT does; everything above moves as before. Two side effects, both small: with ERA at the Midiverb end, short tails end 10–20 % sooner (its make-up went up 0.3 dB to keep the level), and the layer over a frozen pad (the twin) still moves its lows. The page is deleted.

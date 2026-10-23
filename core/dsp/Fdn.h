@@ -76,10 +76,6 @@ public:
     // "too much delay before the reverb starts swelling") and every pass is
     // denser. Output only: the loop itself is unchanged.
     void setEarlyTaps(float amount) { earlyTarget_ = amount; }
-    // PROTOTYPE (DRIFT CW "Orbit", docs/research/drift-cathedra-side.md; Schlecht & Habets 2015): the
-    // feedback mix rotates, pairs of lines through slowly swinging angles. Every rotation is
-    // orthogonal, so the loop stays energy-preserving; the tail moves in space, not in pitch. 0 = off.
-    void setOrbit(float amount) { orbit_ = amount; }
     // The modulation floor's depth × modDepth (Engine::setModulationScale, a test hook).
     void setModDepth(float k) { modDepth_ = k; }
     // Extra output level for a voicing (MASSIVE's loudness match).
@@ -129,7 +125,6 @@ private:
     float     earlyTarget_ = 0.0f, earlyNow_ = 0.0f;
     float     inLoopTarget_ = 0.0f, inLoopNow_ = 0.0f, outputTrim_ = 1.0f, levelGain_ = 1.0f;
     FloorGovernor governor_;
-    float     orbit_ = 0.0f, orbitPhase_[kN / 2] = {}, orbitC_[kN / 2] = {}, orbitS_[kN / 2] = {};
     const Fdn* leader_ = nullptr;
     float     externalPower_ = 0.0f;
     bool      ready_ = false;
