@@ -258,6 +258,16 @@ $("layout").textContent = ax.length ? ax.join(" · ") : "";
 if (DATA.readme) { $("readme").hidden = false; $("readme").querySelector("pre").textContent = DATA.readme; }
 if (DATA.fixed.length) $("fixed").innerHTML = `<span class="lab">Same for every file</span>` + DATA.fixed.map(chipHtml).join("");
 
+// A reference set: one recording (plays on every card), or a unit's take split per material
+// (tools/ingest_reference.py), where each card plays the piece that matches its own row's music.
+const REF_SETS = [];
+DATA.references.forEach(r => { const id = r.set || r.id; if (!REF_SETS.some(s => s.id === id)) REF_SETS.push({ id, name: r.setName || r.name }); });
+const refSetById = id => REF_SETS.find(s => s.id === id) || null;
+const refFor = (id, g) => {
+  const c = DATA.references.filter(r => (r.set || r.id) === id);
+  if (c.length === 1 && !c[0].material) return c[0];
+  return c.find(r => r.material && r.material === g.row.material) || null;
+};
 const lmEl = $("levelmatch"), blindEl = $("blind"), loopEl = $("loop"), refEl = $("ref"), tailBoostEl = $("tailboost");
 const hasRms = Object.values(DATA.items).some(it => it.rms != null);
 if (!hasRms) $("lmwrap").hidden = true;
@@ -266,10 +276,9 @@ lmEl.parentElement.title = "Moves every version in a card towards the card's med
   " dB), so none sounds better just by being louder. Off on pages where the loudness change is part of the setting.";
 if (DATA.references.length) {
   $("refwrap").hidden = false;
-  DATA.references.forEach(r => { const o = document.createElement("option"); o.value = r.id; o.textContent = r.name; refEl.appendChild(o); });
-  if (DATA.references.some(r => r.id === state.ref)) refEl.value = state.ref;
+  REF_SETS.forEach(s => { const o = document.createElement("option"); o.value = s.id; o.textContent = s.name; refEl.appendChild(o); });
+  if (REF_SETS.some(s => s.id === state.ref)) refEl.value = state.ref;
 }
-const refById = id => DATA.references.find(r => r.id === id) || null;
 // MIX: Immensio's law (core/params/Mappings.h mixGains, ADR 0012): dry cos, wet sin of v·π/2.
 const blendEl = $("blend"), blendVal = $("blendval");
 const blendGains = () => { const v = blendEl.value / 100; return { dry: Math.cos(v * Math.PI / 2), wet: Math.sin(v * Math.PI / 2) }; };
@@ -952,7 +961,7 @@ function results() {
   if (ax.length) lines.push("Layout: " + ax.join(" · "));
   if (lmEl.checked) lines.push("Listened level-matched.");
   if (BLEND) lines.push("Listened at MIX " + blendEl.value + " % (moved while listening: notes may cover other balances).");
-  if (refEl.value) lines.push("Compared with reference: " + (refById(refEl.value) || {}).name);
+  if (refEl.value) lines.push("Compared with reference: " + (refSetById(refEl.value) || {}).name);
   lines.push("");
   // The hidden twin (make_review.py): a repeated row whose two copies must agree for a pick to count.
   const pickedItem = (rowId, col) => {
@@ -1028,11 +1037,10 @@ if (BLEND) {
 }
 refEl.addEventListener("change", () => {
   state.ref = refEl.value; save();
-  const r = refById(refEl.value);
-  groups.forEach(g => g.setRef(r));
+  groups.forEach(g => g.setRef(refEl.value ? refFor(refEl.value, g) : null));
   renderGlobal();
 });
-if (refEl.value) groups.forEach(g => g.setRef(refById(refEl.value)));
+if (refEl.value) groups.forEach(g => g.setRef(refFor(refEl.value, g)));
 (function frame() { groups.forEach(g => g.tick()); requestAnimationFrame(frame); })();
 window.__rvReview = { groups, audioContext: () => actx }; // for tools/review tests and debugging
 window.addEventListener("resize", () => groups.forEach(g => g.drawSpec()));

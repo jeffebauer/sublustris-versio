@@ -245,6 +245,56 @@ fi
 
 # ---- Decision pages (built WITHOUT --showcase: they ask the owner to pick) -------------------
 
+if on valhalla_compare; then
+    # Immensio beside the owner's Valhalla recordings (docs/reference-recording-guide.md; read from their
+    # Ableton set and split by tools/ingest_reference.py into test_audio/reference/, never committed).
+    # Our DECAY set so the tail rings 2 / 5 / 15 s (T60 at 500 Hz-1 kHz, measured 23 Oct 2026, v1.0.19).
+    REF=test_audio/reference
+    [ -d $REF/valhallaroom_largeroom_medium ] || { echo "valhalla_compare: no recordings in $REF"; exit 1; }
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in skank vibes stabs pad lead drums bass keys voice; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page valhalla_compare
+    refcopy() { # refcopy <col> <tag> <reference set>: the set's piece per material, as a version in the card
+        for m in $MATERIALS; do [ -f $REF/$3/$3_$m.wav ] && cp $REF/$3/$3_$m.wav renders/valhalla_compare/$1/${m}_$2.wav; done
+    }
+    for t in "2:short:0.296:0.398:0.068:007:000" "5:medium:0.509:0.624:0.198:030:012" "15:long:0.772:0.816:0.406:073:054"; do
+        IFS=: read s tgt dh dp dm fs fa <<< "$t"
+        s=$(printf %02d $s) # columns sort as text: 02s, 05s, 15s
+        r valhalla_compare hall_${s}s A_immensio "" --set space=HALL --set era=0 --set size=0.6 --set decay=$dh
+        refcopy hall_${s}s B_valhalla_room_large_room valhallaroom_largeroom_$tgt
+        refcopy hall_${s}s C_valhalla_room_dark_chamber valhallaroom_darkchamber_$tgt
+        r valhalla_compare plate_${s}s A_immensio "" --set space=PLATE --set era=0 --set size=0.6 --set decay=$dp
+        refcopy plate_${s}s B_valhalla_plate_chrome valhallaplate_chrome_$tgt
+        refcopy plate_${s}s C_valhalla_plate_lithium valhallaplate_lithium_$tgt
+        r valhalla_compare massive_${s}s A_immensio "" --set space=MASSIVE --set era=0 --set size=0.7 --set decay=$dm
+        refcopy massive_${s}s B_supermassive_sagittarius supermassive_sagittarius_fb$fs
+        refcopy massive_${s}s C_supermassive_andromeda supermassive_andromeda_fb$fa
+    done
+    MATERIALS=("${saved[@]}")
+    refs=(); for d in $REF/*(/N); do [ -f $d/${d:t}_skank.wav ] && refs+=(--reference $d); done
+    print -r -- "Immensio beside your Valhalla recordings, at matched decays: each column rings for about 2, 5 or 15 seconds (our DECAY set to match; ERA clean, DRIFT noon). In each card, A is Immensio and B and C are the Valhalla takes from your Ableton set: HALL against Room (Large Room, Dark Chamber), PLATE against Plate (Chrome, Lithium), MASSIVE against Supermassive (Sagittarius, Andromeda). The Andromeda in the 2 s column is its 0 % feedback take, which rings only about half a second. The Compare with menu adds any of your takes to every card as R. Notes only: what do they do that we don't, and the other way round?
+
+hall_02s      HALL, about 2 s (DECAY 0.30, SIZE 0.6)
+hall_05s      HALL, about 5 s (DECAY 0.51)
+hall_15s      HALL, about 15 s (DECAY 0.77)
+plate_02s     PLATE, about 2 s (DECAY 0.40, SIZE 0.6)
+plate_05s     PLATE, about 5 s (DECAY 0.62)
+plate_15s     PLATE, about 15 s (DECAY 0.82)
+massive_02s   MASSIVE, about 2 s (DECAY 0.07, SIZE 0.7: its shortest is 2.2 s)
+massive_05s   MASSIVE, about 5 s (DECAY 0.20)
+massive_15s   MASSIVE, about 15 s (DECAY 0.41)
+
+A_immensio                    Immensio
+B_valhalla_room_large_room    Valhalla Room, Large Room
+C_valhalla_room_dark_chamber  Valhalla Room, Dark Chamber
+B_valhalla_plate_chrome       Valhalla Plate, Chrome
+C_valhalla_plate_lithium      Valhalla Plate, Lithium
+B_supermassive_sagittarius    Valhalla Supermassive, Sagittarius
+C_supermassive_andromeda      Valhalla Supermassive, Andromeda" > renders/valhalla_compare/README.txt
+    python3 tools/review/make_review.py renders/valhalla_compare --title "Immensio beside Valhalla" --level-match --showcase --dry $SRC --wet-only "${refs[@]}" > /dev/null
+    echo "renders/valhalla_compare/index.html"
+fi
+
 if on reverse; then
     page reverse
     RV=(--set era=0 --set attack=REVERSE)
