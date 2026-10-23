@@ -129,6 +129,7 @@ IV_SIZE_OPT void Engine::reset()
     twinSwell_.reset();
     for (auto& d : twinDiffuser_) d.clear();
     inputPower_ = 0.0f;
+    tankInPower_ = 0.0f;
     quietSince_ = 0;
     tailCaptured_ = false;
     smooth_ = values_;
@@ -530,8 +531,16 @@ void Engine::controlTick(int n)
         padFloorDb_ = tankSlowLevelDb() + voicing::kPadCeilingDb;
         padCaptured_ = true;
     }
-    // An infinite tail holds where it settled once the input goes quiet.
-    if (10.0f * std::log10(inputPower_ + 1e-20f) > voicing::kQuietDbfs) {
+    // An infinite tail holds where it settled once the input goes quiet: the big tank's own input,
+    // after the swell, so a long BLOOM (which feeds the tank for seconds after the input stops)
+    // isn't judged while it's still rising (soak audit: its ceiling was taken too low and the tail
+    // was pulled 5-6 dB under it).
+    // The floor's faster judgement of a falling tail starts as soon as the Engine's input is quiet.
+    const bool inputQuiet = 10.0f * std::log10(inputPower_ + 1e-20f) <= voicing::kQuietDbfs;
+    const bool tankQuiet = 10.0f * std::log10(tankInPower_ + 1e-20f) <= voicing::kQuietDbfs;
+    fdn_.setInputQuiet(inputQuiet);
+    plate_.setInputQuiet(inputQuiet);
+    if (!tankQuiet) {
         quietSince_ = clock_;
         tailCaptured_ = false;
     } else if (map::governorWeight(smoothed(ParamId::Decay)) >= 1.0f
@@ -677,6 +686,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             const float g = tankIn_ * flipGain_;
             bufL_[i] = g * pl;
             bufR_[i] = g * pr;
+            tankInPower_ += 0.002f * (0.5f * (bufL_[i] * bufL_[i] + bufR_[i] * bufR_[i]) - tankInPower_);
             wetL_[i] = wetR_[i] = 0.0f;
         }
 

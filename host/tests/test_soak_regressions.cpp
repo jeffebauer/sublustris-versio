@@ -225,6 +225,41 @@ void smallHallSizeJumpsDontClick()
     check(db(r.minMs) > db(before) - 10.0 && r.worstClick < 8.0f, what);
 }
 
+// Soak finding 5 (a sound change, for the owner): an infinite tail fed loud enough to sit above
+// the floor plunged when the input stopped (PLATE 27 dB, HALL 10 dB; in BLOOM also MASSIVE 5 dB)
+// and the hold's makeup took a minute or two to bring it back. The floor judged it on its 1.5 s
+// level, which lagged the falling tail; and a long BLOOM, still feeding the tank after the input
+// stopped, had its hold level taken while the tail was rising. Now, once the input is quiet, the
+// floor judges a falling tail on a 50 ms level, and the hold waits for the tank's own input to go
+// quiet. A tail now settles at the floor within a couple of dB and holds there.
+void infiniteTailDoesntPlungeWhenTheInputStops()
+{
+    struct Case {
+        int space;
+        float attack;
+        const char* name;
+    };
+    const Case cases[] = {{0, 0.0f, "PLATE"}, {1, 0.0f, "HALL"}, {0, 0.5f, "PLATE BLOOM"}, {2, 0.5f, "MASSIVE BLOOM"}};
+    for (const Case& c : cases) {
+        Rig r(48000.0f, 48);
+        r.e.setParam(ParamId::Space, iv::switchToNormalised(c.space));
+        r.e.setParam(ParamId::Size, 0.18f);
+        r.e.setParam(ParamId::Decay, 1.0f);
+        r.e.setParam(ParamId::Time, 1.0f);
+        r.e.setParam(ParamId::Attack, c.attack);
+        r.e.setParam(ParamId::Mix, 1.0f);
+        r.e.reset();
+        r.run(5.0, 0.7f);
+        std::vector<double> levels;
+        for (int s = 0; s < 45; ++s) levels.push_back(db(r.run(1.0, 0.0f)));
+        const double lowest = *std::min_element(levels.begin(), levels.begin() + 30), end = levels.back();
+        char what[160];
+        std::snprintf(what, sizeof what, "%s infinite: no plunge when a loud input stops (lowest %.1f dB, %.1f under where it holds)", c.name,
+                      lowest, end - lowest);
+        check(end - lowest < 4.0, what);
+    }
+}
+
 } // namespace
 
 int main()
@@ -233,6 +268,7 @@ int main()
     flipAfterUnfreezeFadesTheTwin();
     freezeInsideAFlipKeepsThePad();
     smallHallSizeJumpsDontClick();
+    infiniteTailDoesntPlungeWhenTheInputStops();
     std::printf("%s\n", failures ? "SOME TESTS FAILED" : "ALL TESTS PASSED");
     return failures ? 1 : 0;
 }

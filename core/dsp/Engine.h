@@ -214,6 +214,7 @@ private:
     uint64_t frozeAt_ = 0;
     // Input quiet detector for holding an infinite tail where it settled.
     float    inputPower_ = 0.0f;
+    float    tankInPower_ = 0.0f; // the big tank's input (after the swell), for the quiet detector
     uint64_t quietSince_ = 0;
     bool     tailCaptured_ = false;
     float    tailCeilingDb_ = -24.0f;
