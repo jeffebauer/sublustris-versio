@@ -192,7 +192,7 @@ private:
     int   activeSpace_ = 1, flipPhase_ = 0; // 0 steady, 1 fading out, 2 fading in
     float flipGain_ = 1.0f, flipStep_ = 0.0f;
     // ATTACK = REVERSE: crossfade between the forward wet and the reverse swell.
-    float reverseMix_ = 0.0f, reverseTarget_ = 0.0f;
+    float reverseMix_ = 0.0f, reverseTarget_ = 0.0f, reverseFeed_ = 0.0f; // reverseFeed_: the taps into the short reverb
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
     float diffMotionNow_ = 0.0f, diffMotionPhase_ = 0.0f; // the PLATE's wandering input allpass, samples

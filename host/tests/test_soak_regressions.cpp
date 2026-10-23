@@ -297,6 +297,68 @@ void reverseFlipWhilePlayingDoesntClickLater()
     }
 }
 
+// Soak finding 7: REVERSE coming in while playing (an ATTACK switch, or the unfreeze that ends
+// REVERSE's rest) fed its freshly restarted short reverb the whole swell at once, which clicked
+// when it first came round the reverb's lines, 25-80 ms later (x18-46). The taps now fade in.
+void reverseComingInDoesntClick()
+{
+    for (int sp = 0; sp < 3; ++sp)
+        for (int how = 0; how < 2; ++how) {
+            Rig r(48000.0f, 48);
+            r.e.setParam(ParamId::Space, iv::switchToNormalised(sp));
+            r.e.setParam(ParamId::Decay, 0.6f);
+            r.e.setParam(ParamId::Time, 0.6f);
+            r.e.setParam(ParamId::Mix, 1.0f);
+            r.e.setParam(ParamId::Attack, iv::switchToNormalised(how == 0 ? 2 : 0));
+            r.e.reset();
+            r.run(3.0, 0.3f, -330.0f);
+            if (how == 0) { // freeze (REVERSE rests), then unfreeze
+                r.e.button(true, 0);
+                r.run(0.05, 0.3f, -330.0f);
+                r.e.button(false, 0);
+                r.run(2.0, 0.3f, -330.0f);
+            }
+            r.clearWatch();
+            if (how == 0) {
+                r.e.button(true, 0);
+                r.run(0.05, 0.3f, -330.0f);
+                r.e.button(false, 0);
+            } else {
+                r.e.setParam(ParamId::Attack, iv::switchToNormalised(2));
+            }
+            r.run(0.5, 0.3f, -330.0f);
+            char what[160];
+            std::snprintf(what, sizeof what, "space %d: REVERSE coming in (%s) while playing doesn't click (worst x%.1f)", sp,
+                          how == 0 ? "unfreeze" : "ATTACK switch", r.worstClick);
+            check(r.worstClick < 6.0f, what);
+        }
+}
+
+// Soak finding 8: letting go after painting lifted the pad's ceiling, and the paint's "room left"
+// jumped to full while the paint was still fading: a burst of the twin into the pad. The room now
+// only moves while painting.
+void paintReleaseDoesntBurst()
+{
+    for (int sp = 0; sp < 3; ++sp) {
+        Rig r(48000.0f, 48);
+        r.e.setParam(ParamId::Space, iv::switchToNormalised(sp));
+        r.e.setParam(ParamId::Decay, 0.6f);
+        r.e.setParam(ParamId::Mix, 1.0f);
+        r.e.reset();
+        r.run(3.0, 0.3f, -220.0f);
+        r.tap();                    // freeze
+        r.run(30.0, 0.3f, -330.0f); // the pad settles, the twin plays
+        r.e.button(true, 0);
+        r.run(4.0, 0.3f, -330.0f);  // paint
+        r.clearWatch();
+        r.e.button(false, 0);       // let go
+        r.run(0.3, 0.3f, -330.0f);
+        char what[160];
+        std::snprintf(what, sizeof what, "space %d: letting go after painting doesn't burst (worst x%.1f)", sp, r.worstClick);
+        check(r.worstClick < 4.0f, what);
+    }
+}
+
 } // namespace
 
 int main()
@@ -307,6 +369,8 @@ int main()
     smallHallSizeJumpsDontClick();
     infiniteTailDoesntPlungeWhenTheInputStops();
     reverseFlipWhilePlayingDoesntClickLater();
+    reverseComingInDoesntClick();
+    paintReleaseDoesntBurst();
     std::printf("%s\n", failures ? "SOME TESTS FAILED" : "ALL TESTS PASSED");
     return failures ? 1 : 0;
 }

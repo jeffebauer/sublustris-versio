@@ -254,6 +254,17 @@ struct Soak {
     int64_t lastImpulsive = -1000000000;
     int64_t lastKnobJump = -1000000000;
     int64_t lastStimChange = -1000000000;
+    int64_t lastEdge = -1000000000, lastFlip = -1000000000, lastFreezeChange = -1000000000;
+    int     lastSpaceSeen = -1;
+    // How long since each kind of event, for triaging a finding (ms).
+    std::string context(int64_t at) const
+    {
+        char b[160];
+        auto ms = [&](int64_t since) { return since < -100000000 ? -1.0 : 1000.0 * double(at - since) / fs; };
+        std::snprintf(b, sizeof b, "since edge %.0f ms, flip %.0f ms, freeze/unfreeze %.0f ms, input change %.0f ms, knob jump %.0f ms", ms(lastEdge),
+                      ms(lastFlip), ms(lastFreezeChange), ms(lastStimChange), ms(lastKnobJump));
+        return b;
+    }
     float y1[2] = {}, y2[2] = {}, x1[2] = {}, x2[2] = {}, dp[2] = {};
     float dpCoeff = 0.0f;
     int64_t subnormalOut = 0;
@@ -394,7 +405,7 @@ struct Soak {
                         char d[128];
                         std::snprintf(d, sizeof d, "jump %.5f vs local %.5f (x%.1f), %s", std::fabs(d2), local, std::fabs(d2) / (local + 1e-9f),
                                       c ? "right" : "left");
-                        report("click", at, std::fabs(d2) / (local + 1e-9f), d);
+                        report("click", at, std::fabs(d2) / (local + 1e-9f), std::string(d) + "; " + context(at));
                     }
                 }
                 dp[c] += dpCoeff * (d2 * d2 - dp[c]);
@@ -467,6 +478,7 @@ struct Soak {
                 const EdgeEv& e = edges[edgeNext++];
                 const int off = int(std::max<int64_t>(0, e.at - t));
                 if (++edgesThis <= 16) {
+                    lastEdge = e.at;
                     if (e.isButton) eng->button(e.level, off);
                     else eng->gate(e.level, off);
                 }
@@ -554,6 +566,8 @@ struct Soak {
     void gestureWatch(int n)
     {
         const bool fr = eng->frozen(), pa = eng->painting();
+        if (fr != lastFrozen) lastFreezeChange = t;
+        if (eng->activeSpace() != lastSpaceSeen) { lastFlip = t; lastSpaceSeen = eng->activeSpace(); }
         if (jumpArmed && (fr != lastFrozen || pa != lastPainting) && t - lastStimChange > int64_t(0.2f * fs)) {
             const char* what = fr != lastFrozen ? (fr ? "freeze" : "unfreeze") : (pa ? "paint start" : "paint stop");
             // The event happened somewhere in this block: compare 10 ms before the block with 10 ms after it.

@@ -159,7 +159,7 @@ IV_SIZE_OPT void Engine::reset()
     duckGain_ = 1.0f;
     hissLp_[0] = hissLp_[1] = 0.0f;
     noiseSeed_ = 0xA11CEu;
-    reverseMix_ = reverseTarget_;
+    reverseMix_ = reverseFeed_ = reverseTarget_;
     predelayStep_ = 0.0f;
     const auto g = map::mixGains(smoothed(ParamId::Mix));
     dryNow_ = g.dry;
@@ -567,7 +567,9 @@ void Engine::controlTick(int n)
                                  : approach(paint_, 0.0f, dt / voicing::kPaintReleaseSeconds);
     // Painting adds less and less as the pad nears its ceiling, so the pad's own layers stay on top
     // (owner: once painted "it becomes dominant"; the slow ceiling let a pad grow 7 dB).
-    paintRoom_ = clamp01((padFloorDb_ - tankLevelDb()) / voicing::kPaintFadeDb);
+    // Only while painting: at the release the pad's ceiling is lifted (PaintStop), and the room jumped
+    // to full while the paint was still letting go, a burst of the twin into the pad (soak audit).
+    if (gesture_.painting()) paintRoom_ = clamp01((padFloorDb_ - tankLevelDb()) / voicing::kPaintFadeDb);
 
     // SPACE flip (ADR 0013): fade out, restart the tank in the new voicing,
     // fade back in. Not while frozen: the pad waits for the unfreeze.
@@ -683,6 +685,12 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             revInL_[i] = flipGain_ * pl;
             revInR_[i] = flipGain_ * pr;
             reverse_.process(revInL_[i], revInR_[i], reverseOn);
+            // The taps fade into the short reverb as REVERSE comes in (an ATTACK switch, an unfreeze):
+            // a restarted reverb fed the full swell at once clicked when it first came round its lines,
+            // 25-80 ms later, through the crossfade (soak audit).
+            reverseFeed_ = approach(reverseFeed_, reverseTarget_, reverseStep);
+            revInL_[i] *= reverseFeed_;
+            revInR_[i] *= reverseFeed_;
             // The twin hears the input itself, through its own diffusion: no predelay; in MASSIVE, its own swell.
             twinIn_ = clamp01(twinIn_ + twinInStep_);
             twinInL_[i] = twinDiffuser_[0].process(twinIn_ * l);
