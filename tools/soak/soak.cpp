@@ -680,7 +680,11 @@ struct Soak {
                     nextKnob[i] = t + int64_t(rng.range(0.5f, 20.0f) * fs);
                 } else {
                     if (rng.chance(0.3f)) setKnob(ParamId(i), rng.knob());
-                    else knobs[i].glide(rng.knob(), int64_t(rng.range(0.005f, 8.0f) * fs));
+                    else {
+                        const float secs = rng.range(0.005f, 8.0f);
+                        knobs[i].glide(rng.knob(), int64_t(secs * fs));
+                        if (secs < 0.1f) lastKnobJump = t; // as good as a jump: not a click to report
+                    }
                     nextKnob[i] = t + int64_t(rng.range(0.1f, 10.0f) * fs);
                 }
             }
