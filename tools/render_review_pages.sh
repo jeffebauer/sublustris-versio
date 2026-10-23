@@ -207,7 +207,7 @@ if on m6_character; then
     for tc in 0:A_dark 0.5:B_noon 1:C_bright; do
         r m6_character tone ${tc##*:} "" --set space=HALL --set decay=0.6 --set size=0.6 --set tone=${tc%%:*}
     done
-    finish m6_character "Immensio M6: ERA, DRIFT and TONE" "ERA's five stacked stages (loudness matched), DRIFT both ways, TONE's full range. Starting numbers from the spec, for your ears to tune.
+    finish m6_character "Immensio M6: ERA, DRIFT and TONE" "ERA's five stacked stages (loudness matched), DRIFT both ways, TONE's full range, rendered from today's reverb (23 Oct 2026). Since this page was first made: ERA's last stage is rebuilt as the real 1986 Midiverb (13 bits and its dark loop, so ERA fully CW darkens instead of turning to grit; your pick); TONE's noon is warmer (every tank's loss is a shelf at 2.5 kHz, so the upper mids fade with the highs; your pick); and the HALL's SIZE now starts at 35 ms with in-loop diffusion at the small end, so noon is a slightly bigger room (your pick). Does ERA feel like going back in time, stage by stage? Are DRIFT's tape side and Cathedra side what you hear in your head? Numbers are starting guesses for your ears to tune.
 
 era_hall     ERA's five stages in HALL (DECAY 0.6, SIZE 0.6)
 era_massive  three ERA stages in MASSIVE (DECAY 0.65, SIZE 0.7)

@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 23 Oct 2026, session 3 (ducking, small HALL and makeup picks acted on; one page left to hear: size_glide).
+**Last updated:** 23 Oct 2026, session 3 (every pick acted on; M6 re-rendered for its first listen).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
@@ -13,7 +13,7 @@
 ### Listen (after your notes)
 
 ### Listen (first time)
-- [ ] **M6: ERA, DRIFT** (`renders/m6_character/index.html`): does ERA feel like going back in time, stage by stage? Are DRIFT's tape side and Cathedra side what you hear in your head? All numbers are starting guesses for you to tune.
+- [ ] **M6: ERA, DRIFT and TONE** (`renders/m6_character/index.html`, notes only): re-rendered 23 Oct from today's reverb with all twelve kinds of music, so it carries your picks since (the Midiverb rebuilt as the real unit, the warmer TONE noon, the new small HALL). Does ERA feel like going back in time, stage by stage? Are DRIFT's tape side and Cathedra side what you hear in your head? All numbers are starting guesses for you to tune.
 
 ### At the rack
 - [ ] **M0 hardware check** (`docs/m0-hardware-check.md`): flash `firmware/build/immensio_versio_m0test.bin`, check the boot pattern, switches, button (USB session), then knobs, gate and a quick passthrough listen (rack session). Tell Claude the results.
