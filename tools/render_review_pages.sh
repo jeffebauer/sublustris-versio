@@ -233,10 +233,10 @@ if on m7_duck; then
         r m7_duck duck_hall ${dc##*:} "" --set space=HALL --set size=0.7 --set decay=${dc%%:*}
         r m7_duck duck_massive ${dc##*:} "" --set space=MASSIVE --set size=0.7 --set decay=${dc%%:*}
     done
-    finish m7_duck "Immensio M7: DARKEN" "Ducking is always DARKEN and only from DECAY's infinite stretch up: while you play, the tail darkens and dips so the dry stays clear; when you stop, it brightens back.
+    finish m7_duck "Immensio M7: ducking" "Ducking at infinite DECAY (ADR 0014, amended v1.0.17): while you play, the tail is compressed 4:1 (attack 30 ms, release 0.4 s, about 3 dB) so the dry stays clear, without darkening; when you stop, it comes back over about a second.
 
-duck_hall      DARKEN in HALL (SIZE 0.7)
-duck_massive   DARKEN in MASSIVE (SIZE 0.7)
+duck_hall      ducking in HALL (SIZE 0.7)
+duck_massive   ducking in MASSIVE (SIZE 0.7)
 
 A_long_no_duck   DECAY 0.8 (long, finite: no ducking)
 B_infinite_duck  DECAY 0.9 (infinite, ducking)

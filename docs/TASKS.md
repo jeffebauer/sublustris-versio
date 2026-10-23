@@ -18,7 +18,6 @@
 
 ### Listen (first time)
 - [ ] **M6: ERA, DRIFT** (`renders/m6_character/index.html`): does ERA feel like going back in time, stage by stage? Are DRIFT's tape side and Cathedra side what you hear in your head? All numbers are starting guesses for you to tune.
-- [ ] **M7: DARKEN** (`renders/m7_duck/index.html`): at infinite DECAY the tail darkens and dips while you play and brightens back when you stop (it now lets go after 0.15 s). Too much, too little, too slow?
 
 ### At the rack
 - [ ] **M0 hardware check** (`docs/m0-hardware-check.md`): flash `firmware/build/immensio_versio_m0test.bin`, check the boot pattern, switches, button (USB session), then knobs, gate and a quick passthrough listen (rack session). Tell Claude the results.
