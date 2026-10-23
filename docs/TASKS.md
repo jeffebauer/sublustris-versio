@@ -6,6 +6,7 @@
 ## To do
 
 ### Decide
+- [ ] **OK to merge the steadier grainy reading?** (branch `worktree-agent-a788f688061ed29ab`, reviewed and re-tested): a one-sample change in a click used to swing MASSIVE's reading from 0.06 s to 1.67 s; the new "grain" figure moves by at most 0.01 s. By it, only the PLATE at full SIZE and MASSIVE at its smallest SIZE start a little grainy; it also suggests the MASSIVE Hits unevenness you heard is level, not grain. It only measures; no sound changes.
 - [ ] **Bass in a moving tail** (`renders/still_lows/index.html`, picks; the DSP audit's A4): with DRIFT up, the whole tail wavers, sub-bass included (HALL with DRIFT fully CW: about 4 semitones on a held 55 Hz). B keeps the lows below ~400 Hz still. Feature or mud?
 - [ ] **ERA's Midiverb** (`renders/midiverb/index.html`, picks; the DSP audit's E1): ERA fully CW today is a bitcrusher on the tail (8 bits, bright grit). B rebuilds it as the real 1986 unit (13 bits and a dark loop): much darker and smoother. Which feels more like the Midiverb?
 - [ ] **BLOOM on percussion** (`renders/swell_smear/index.html`, picks; the DSP audit's S1): a hit through a long BLOOM comes back as a rising train of ghost hits (measured: the swell flickers 3–7.5 dB). B smears each of the swell's taps across the gap to the next. A today or B?
