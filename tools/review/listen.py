@@ -535,7 +535,11 @@ def load_references(out_path, reference_dirs, with_spec):
         d = Path(d)
         if not d.is_dir():
             raise LayoutError("--reference directory not found: {}".format(d))
-        for w in sorted(d.glob("*.wav")):
+        wavs = sorted(d.glob("*.wav"))
+        # A take split per material (<dir>/<dir>_<material>.wav): only those pieces, not the
+        # folder's other files (ingest_reference.py's measured ir.wav).
+        pieces = [w for w in wavs if w.stem.startswith(d.name + "_")]
+        for w in (pieces or wavs):
             it = Item(w, w.stem)
             sc = w.with_suffix(".json")
             it.read_sidecar(sc if sc.exists() else None, with_spec)
@@ -849,7 +853,13 @@ def build_page_data(root, out_path, items, refs, rows=None, columns=None, varian
     refs_out = []
     for i, r in enumerate(refs):
         # No flags on references: they are recordings of real units, not renders to fix.
-        refs_out.append(dict(item_json(r, rel), id="ref{}".format(i), name=r.label, flags=[]))
+        # A folder of one take split per material (<set>/<set>_<material>.wav, tools/ingest_reference.py)
+        # is one set in the page's menu; each card then plays the piece matching its row's material.
+        d = dict(item_json(r, rel), id="ref{}".format(i), name=r.label, flags=[])
+        set_id = r.wav.parent.name
+        if r.wav.stem.startswith(set_id + "_"):
+            d.update(set=set_id, setName=reference_set_name(set_id), material=r.wav.stem[len(set_id) + 1:])
+        refs_out.append(d)
 
     lede_lines = []
     if readme:
@@ -982,6 +992,30 @@ def wav_loudness_lufs(path):
     m = re.findall(r"I:\s+(-?[\d.]+) LUFS", err)
     v = float(m[-1]) if m else None
     return v if v is not None and v > -69.9 else None  # -70: all below the gate (silence)
+
+
+REF_UNITS = {"valhallaroom": "Valhalla Room", "valhallaplate": "Valhalla Plate", "supermassive": "Valhalla Supermassive",
+             "valhallavintageverb": "Valhalla VintageVerb", "valhallafutureverb": "Valhalla FutureVerb", "mercury7": "Mercury7",
+             "h9": "H9", "ultrasheer": "Ultrasheer", "swells": "Swells"}
+REF_PRESETS = {"largeroom": "Large Room", "darkchamber": "Dark Chamber", "chrome": "Chrome", "lithium": "Lithium",
+               "sagittarius": "Sagittarius", "andromeda": "Andromeda", "largemagellaniccloud": "Large Magellanic Cloud",
+               "cathedra": "Cathedra", "ultraplate": "Ultraplate"}
+REF_TARGETS = {"short": "2 s", "medium": "5 s", "long": "15 s", "infinite": "infinite"}
+
+
+def reference_set_name(set_id):
+    """'valhallaroom_largeroom_medium' -> 'Valhalla Room · largeroom · 5 s'; 'supermassive_andromeda_fb054' ->
+    'Valhalla Supermassive · andromeda · feedback 54 %' (docs/reference-recording-guide.md naming)."""
+    parts = set_id.split("_")
+    out = [REF_UNITS.get(parts[0], parts[0])]
+    for p in parts[1:]:
+        if p in REF_TARGETS:
+            out.append(REF_TARGETS[p])
+        elif p.startswith("fb") and p[2:].isdigit():
+            out.append("feedback {} %".format(int(p[2:])))
+        else:
+            out.append(REF_PRESETS.get(p.lower(), p))
+    return " · ".join(out)
 
 
 def item_json(it, rel):

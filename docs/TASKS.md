@@ -12,6 +12,7 @@
 - Nothing open.
 
 ### Listen (first time)
+- [ ] **Immensio beside Valhalla** (`renders/valhalla_compare/index.html`, notes only): your Room, Plate and Supermassive takes in the same cards as our HALL, PLATE and MASSIVE, each column at a matched decay (2, 5, 15 s). What do they do that we don't, and the other way round? The Compare with menu now plays each card's own piece of music from the take you choose, so it works on any page.
 - Nothing open.
 
 ### At the rack
@@ -19,7 +20,7 @@
 - [ ] **M3 CPU check** (after M0): flash `firmware/build/immensio_versio_profile.bin` and send Claude the serial CPU report, so the CPU budget is measured, not estimated. Include a frozen MASSIVE: the twin and MASSIVE's early taps are the heaviest case.
 
 ### When convenient
-- [ ] **Reference recordings** (when convenient): the step-by-step is in `docs/reference-recording-guide.md`. Play the kit (`test_audio/reference_kit/`: calibrate, measure, music) through each unit, 100 % wet, at matched decays (about 2 / 5 / 15 s, plus infinite). Knob-only units get one 2-minute calibration take first; I'll tell you the positions. Start with the **H9 Reverse** (the yardstick for REVERSE), then Supermassive, Mercury7 Cathedra, Valhalla Plate and VintageVerb.
+- [ ] **Reference recordings** (when convenient; `docs/reference-recording-guide.md`): Valhalla Room, Plate and Supermassive are in (I read them straight from your Ableton set; no need to export). Still to record: the **H9 Reverse** (the yardstick for REVERSE), Mercury7 Cathedra, VintageVerb, then the rest. For Supermassive, Andromeda at 0 % feedback rang only 0.5 s; about 5 % should give the 2 s target. LMC can't go short: even at 20 % it rings 26 s.
 
 ## Waiting on Claude
 
@@ -34,6 +35,8 @@
 
 ## Done
 
+- 23 Oct 2026: **Your Valhalla takes are on a page** (`renders/valhalla_compare`), at matched decays. Our DECAY for 2 / 5 / 15 s: HALL 0.30 / 0.51 / 0.77 (SIZE 0.6), PLATE 0.40 / 0.62 / 0.82 (SIZE 0.6), MASSIVE 0.07 / 0.20 / 0.41 (SIZE 0.7; its shortest is 2.2 s).
+- 23 Oct 2026: **Your Valhalla recordings read from the Ableton set** (`Immersio Versio Testing.als`): the 28 named takes (Room: Large Room and Dark Chamber; Plate: Chrome and Lithium; each at 2 / 5 / 15 s; Supermassive Sagittarius and Andromeda, measure and music at four feedbacks) plus your four calibration exports. Supermassive's feedback hit the targets closely: Sagittarius 7 / 30 / 73 / 100 % rang 2 / 5 / 15 / 52 s, Andromeda 12 / 54 / 100 % rang 5 / 15 / 45 s. The six unnamed "ValhallaSuperMassive" clips were left out (they look like earlier tries).
 - 23 Oct 2026: **DRIFT clockwise, round 1 listened**: "My preference is for Orbit, but I'd like to hear a stronger version as it's quite subtle. Wander is also quite subtle… Replace Halo with a phaser exploration." No card picks; round 2 follows.
 - 23 Oct 2026: **ERA keeps its loudness on music** (your note: the Midiverb could sound louder; SPEC v1.0.19): measured, music got 4–6 LU louder across ERA, because each stage's level boost had been set on a noise-burst test that music doesn't behave like. The boosts are now set on music: ERA fully CW is within 0.5 LU of clean in HALL and MASSIVE, every stage in between too, and the test now listens to the dub skank.
 - 23 Oct 2026: **M6 listened** (ERA, DRIFT, TONE): "Tone sounds great"; tape and still "sound great". DRIFT fully CW is too seasick and the Midiverb can sound louder than the other stages (both measured, now on Claude's list).
