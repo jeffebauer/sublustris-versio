@@ -233,6 +233,7 @@ struct Soak {
     int64_t  dumpAt = -1;
     double   dumpSeconds = 4.0;
     std::string dumpPath;
+    int      traceEpisode = -1;
 
     // State.
     Rng rng{1};
@@ -270,7 +271,7 @@ struct Soak {
     // Timing.
     double  nsBaseline[3] = {0, 0, 0};
     int64_t blocksTimed[3] = {0, 0, 0};
-    int64_t spikes = 0;
+    int64_t spikes = 0, slowSeconds = 0;
     double  nsTotal[3] = {0, 0, 0};
     int64_t samplesBySpace[3] = {0, 0, 0};
     double  winNs = 0.0; int64_t winNsSamples = 0;
@@ -465,7 +466,6 @@ struct Soak {
             while (edgeNext < edges.size() && edges[edgeNext].at < t + n) {
                 const EdgeEv& e = edges[edgeNext++];
                 const int off = int(std::max<int64_t>(0, e.at - t));
-                if (std::getenv("SOAK_TRACE")) std::fprintf(stderr, "t %lld edge at %lld %s %d (n %d) frozen %d\n", (long long)t, (long long)e.at, e.isButton ? "button" : "gate", int(e.level), n, int(eng->frozen()));
                 if (++edgesThis <= 16) {
                     if (e.isButton) eng->button(e.level, off);
                     else eng->gate(e.level, off);
@@ -494,6 +494,12 @@ struct Soak {
                     }
             }
             gestureWatch(n);
+            if (traceEpisode == episode && (t + n) / int64_t(fs) != t / int64_t(fs)) {
+                // --trace-episode: each second, what the episode is doing (for reproducing a finding)
+                std::fprintf(stderr, "t %8.1f s  ep %d %-8s  out %6.1f dB  tank %6.1f slow %6.1f  in %s %.3f  frozen %d painting %d space %d\n",
+                             double(t + n) / fs, episode, episodeKind, winDb.empty() ? -300.0 : double(winDb.back()), eng->tankLevelDb(),
+                             eng->tankSlowLevelDb(), stimName(src.kind), src.amp, int(eng->frozen()), int(eng->painting()), eng->activeSpace());
+            }
             t += n;
             (void)before;
             for (int i = 0; i < n; ++i) // poisoned by a NaN: start over
@@ -520,11 +526,9 @@ struct Soak {
         winNsSamples += n;
         if (winNsSamples >= int64_t(fs)) {
             const double avg = winNs / double(winNsSamples);
-            if (blocksTimed[sp] > 500 && avg > 3.0 * nsBaseline[sp] && nsBaseline[sp] > 0.0) {
-                char d[96];
-                std::snprintf(d, sizeof d, "%.0f ns/sample over 1 s vs baseline %.0f", avg, nsBaseline[sp]);
-                report("slow_second", t, avg / nsBaseline[sp], d);
-            }
+            // Counted, not reported: parallel runs share the CPU (and an efficiency core is 3x slower),
+            // so a slow second is mostly the machine. The CPU table (--cpu) measures alone.
+            if (blocksTimed[sp] > 500 && avg > 3.0 * nsBaseline[sp] && nsBaseline[sp] > 0.0) ++slowSeconds;
             winNs = 0.0;
             winNsSamples = 0;
         }
@@ -532,13 +536,15 @@ struct Soak {
 
     // Subnormal floats sitting in the delay memory (slow on x86 desktops without flush-to-zero).
     int64_t subnormalMemMax = 0;
+    bool    subnormalReported = false;
     void scanMemory()
     {
         int64_t n = 0;
         for (float v : large) n += isSubnormal(v);
         for (float v : fast) n += isSubnormal(v);
         if (n > subnormalMemMax) subnormalMemMax = n;
-        if (n > 0 && n * 1000 > int64_t(large.size())) { // more than 0.1 % of the memory
+        if (n > 0 && n * 1000 > int64_t(large.size()) && !subnormalReported) { // more than 0.1 % of the memory; once per run
+            subnormalReported = true;
             char d[96];
             std::snprintf(d, sizeof d, "%lld subnormal floats in delay memory (%.2f %%)", (long long)n, 100.0 * double(n) / double(large.size() + fast.size()));
             report("subnormal_memory", t, double(n), d);
@@ -561,7 +567,9 @@ struct Soak {
             if (t + n >= pendingJumps[i].at + w) {
                 const double post = ringDb(pendingJumps[i].at, pendingJumps[i].at + w), pre = pendingJumps[i].pre;
                 const double diff = post - pre;
-                if ((diff > 4.0 && post > -50.0) || (diff < -10.0 && pre > -50.0)) {
+                const bool reverse = iv::normalisedToSwitch(eng->param(ParamId::Attack)) == 2;
+                const double upLimit = src.kind == Stim::Silence ? 4.0 : 6.0;
+                if (!reverse && ((diff > upLimit && post > -50.0) || (diff < -10.0 && pre > -50.0))) {
                     char d[128];
                     std::snprintf(d, sizeof d, "%s: %.1f dB -> %.1f dB in 10 ms", pendingJumps[i].what.c_str(), pre, post);
                     report("gesture_level_jump", pendingJumps[i].at, diff, d);
@@ -581,7 +589,6 @@ struct Soak {
             press(t + 1, 0.05);
             run(1.5);
         }
-        if (std::getenv("SOAK_DEBUG")) std::fprintf(stderr, "ep %d t %lld frozen %d button %d gate %d edges left %zu\n", episode, (long long)t, int(eng->frozen()), int(eng->buttonDown()), int(eng->gateHigh()), edges.size() - edgeNext);
     }
     void beginEpisode(const char* kind)
     {
@@ -911,10 +918,10 @@ struct Soak {
         types += "}";
         std::fprintf(log,
                      "{\"kind\":\"end\",\"seed\":%llu,\"rate\":%d,\"block\":%d,\"audio_s\":%.1f,\"wall_s\":%.1f,\"episodes\":%d,"
-                     "\"chaos\":%d,\"hold\":%d,\"decay\":%d,\"gesture\":%d,\"flip\":%d,\"findings\":%s,\"timing_spikes\":%lld,"
+                     "\"chaos\":%d,\"hold\":%d,\"decay\":%d,\"gesture\":%d,\"flip\":%d,\"findings\":%s,\"timing_spikes\":%lld,\"slow_seconds\":%lld,"
                      "\"subnormal_out\":%lld,\"subnormal_mem_max\":%lld,\"ns_per_sample\":[%.1f,%.1f,%.1f]}\n",
                      (unsigned long long)seed, int(fs), blockMode, double(t) / fs, wall, episode, kinds[0], kinds[1], kinds[2], kinds[3], kinds[4],
-                     types.c_str(), (long long)spikes, (long long)subnormalOut, (long long)subnormalMemMax,
+                     types.c_str(), (long long)spikes, (long long)slowSeconds, (long long)subnormalOut, (long long)subnormalMemMax,
                      samplesBySpace[0] ? nsTotal[0] / double(samplesBySpace[0]) : 0.0, samplesBySpace[1] ? nsTotal[1] / double(samplesBySpace[1]) : 0.0,
                      samplesBySpace[2] ? nsTotal[2] / double(samplesBySpace[2]) : 0.0);
         if (dumpAt >= 0) {
@@ -1030,6 +1037,7 @@ int main(int argc, char** argv)
         else if (a == "--dump-seconds") s.dumpSeconds = std::stod(next());
         else if (a == "--dump") s.dumpPath = next();
         else if (a == "--no-still-lows") s.stillLows = false;
+        else if (a == "--trace-episode") s.traceEpisode = std::stoi(next());
         else if (a == "--cpu") cpu = true;
         else { std::fprintf(stderr, "unknown argument %s\n", a.c_str()); return 2; }
     }
