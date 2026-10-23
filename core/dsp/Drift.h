@@ -19,6 +19,7 @@ struct DriftAmounts {
     float wowCents = 0, wowHz = 0.5f;
     float flutterCents = 0, flutterHz = 7.0f;
     float driftCents = 0, driftHz = 0.1f;
+    float rateSpread = 0.3f; // how far the lines' rates fan out (0.3: 0.85-1.15; PROTOTYPE Wander: 1, 0.5-1.5)
 };
 
 class Drift {
@@ -43,7 +44,7 @@ public:
     // caps the swing (a share of the line's length, the room in memory).
     float control(float dt, const DriftAmounts& a, float maxSamples)
     {
-        const float rateSkew = 0.85f + 0.3f * spread_;
+        const float rateSkew = 1.0f - 0.5f * a.rateSpread + a.rateSpread * spread_;
         // Wow: a smooth random line (new target every ~1/rate, smoothed twice).
         wowCountdown_ -= dt;
         if (wowCountdown_ <= 0.0f) {

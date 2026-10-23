@@ -60,9 +60,12 @@ constexpr float kMidiEngageSpan = 0.02f;
 constexpr float kCrackleDbfs = -48.0f;
 constexpr float kCracklePerSecond = 4.0f;
 
-// Loudness makeup per layer (dB on the wet), so ERA stays within ±2 dB
-// across the knob (SPEC §7 M6): darker, compressed, bit-reduced tails read
-// quieter. Measured on noise bursts (test_era), summed as the layers stack.
-constexpr float kMakeupNeveDb = 0.6f, kMakeupCassetteDb = 1.4f, kMakeupMuDb = 2.4f, kMakeupMidiverbDb = 1.3f; // 1.2 for the 8-bit box; 1.0 for the unit (v1.0.16); 1.3 with still lows (v1.0.18: the highs-only main tank loses a little more to the 13-bit truncation; music still rises no more across the stage than at v1.0.16)
+// Loudness makeup per layer (dB on the wet), so ERA's loudness on music stays
+// within ±1 dB across the knob (SPEC §7 M6, v1.0.19), summed as the layers stack.
+// Measured on music (LUFS over the twelve page materials, HALL and MASSIVE): the
+// stages themselves barely lose level (Neve −0.2, cassette −0.2, μ-law 0, Midiverb
+// −0.7 dB in HALL, less in MASSIVE). Until v1.0.19 these were set on noise-burst
+// tails (0.6 / 1.4 / 2.4 / 1.3 dB), which made music 4–6 LU louder at the end.
+constexpr float kMakeupNeveDb = 0.2f, kMakeupCassetteDb = 0.2f, kMakeupMuDb = 0.0f, kMakeupMidiverbDb = 0.4f;
 
 } // namespace iv::voicing
