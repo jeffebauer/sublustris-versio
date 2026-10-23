@@ -201,13 +201,13 @@ if on m6_character; then
     for ec in 0:A_clean 0.55:C_cassette 1:E_midiverb; do
         r m6_character era_massive ${ec##*:} "" --set space=MASSIVE --set decay=0.65 --set size=0.7 --set era=${ec%%:*}
     done
-    for dc in 0:A_tape 0.5:B_still 1:C_drift; do
+    for dc in 0:A_tape 0.5:B_still 1:C_wander; do
         r m6_character drift ${dc##*:} "" --set space=HALL --set decay=0.65 --set size=0.7 --set drift=${dc%%:*}
     done
     for tc in 0:A_dark 0.5:B_noon 1:C_bright; do
         r m6_character tone ${tc##*:} "" --set space=HALL --set decay=0.6 --set size=0.6 --set tone=${tc%%:*}
     done
-    finish m6_character "Immensio M6: ERA, DRIFT and TONE" "ERA's five stacked stages (loudness matched), DRIFT both ways, TONE's full range, rendered from today's reverb (23 Oct 2026). Since this page was first made: ERA's last stage is rebuilt as the real 1986 Midiverb (13 bits and its dark loop, so ERA fully CW darkens instead of turning to grit; your pick); TONE's noon is warmer (every tank's loss is a shelf at 2.5 kHz, so the upper mids fade with the highs; your pick); and the HALL's SIZE now starts at 35 ms with in-loop diffusion at the small end, so noon is a slightly bigger room (your pick). Does ERA feel like going back in time, stage by stage? Are DRIFT's tape side and Cathedra side what you hear in your head? Numbers are starting guesses for your ears to tune.
+    finish m6_character "Immensio M6: ERA, DRIFT and TONE" "ERA's five stacked stages (loudness matched), DRIFT both ways, TONE's full range, rendered from today's reverb (23 Oct 2026). Since this page was first made: ERA's last stage is rebuilt as the real 1986 Midiverb (13 bits and its dark loop, so ERA fully CW darkens instead of turning to grit; your pick); TONE's noon is warmer (every tank's loss is a shelf at 2.5 kHz, so the upper mids fade with the highs; your pick); and the HALL's SIZE now starts at 35 ms with in-loop diffusion at the small end, so noon is a slightly bigger room (your pick). Also since then: ERA keeps the same loudness on music (v1.0.19), the bass stays still under DRIFT (still lows, v1.0.18), and DRIFT's clockwise side is Wander (v1.0.20). Does ERA feel like going back in time, stage by stage? Are DRIFT's tape side and its Wander side what you hear in your head? Numbers are starting guesses for your ears to tune.
 
 era_hall     ERA's five stages in HALL (DECAY 0.6, SIZE 0.6)
 era_massive  three ERA stages in MASSIVE (DECAY 0.65, SIZE 0.7)
@@ -221,7 +221,7 @@ D_mulaw     ERA 0.8
 E_midiverb  ERA 1
 A_tape      DRIFT fully left (wow and flutter)
 B_still     DRIFT noon
-C_drift     DRIFT fully right (slow Cathedra drift)
+C_wander    DRIFT fully right (Wander: quick, small random movement; your pick, v1.0.20)
 A_dark      TONE fully CCW
 B_noon      TONE noon
 C_bright    TONE fully CW (highs outlast lows)"
