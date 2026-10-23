@@ -48,14 +48,14 @@ SHA="$(git rev-parse --short "$REF")"
 N="$(git rev-list --count "$SHA")"; PLUGIN_VERSION="1.$((N / 100)).$((N % 100))"   # always goes up (plugin/CMakeLists.txt)
 if [ -n "$LABEL" ]; then
     NAME="Immensio Versio $LABEL"
-    BUNDLE="com.Resilio.ImmensioVersio$LABEL"
-    CODE="RsV$(printf '%s' "$LABEL" | tr '[:lower:]' '[:upper:]' | cut -c1)"   # 4 characters, one per candidate letter
+    BUNDLE="com.OmbraAudio.ImmensioVersio$LABEL"
+    CODE="ImV$(printf '%s' "$LABEL" | tr '[:lower:]' '[:upper:]' | cut -c1)"   # 4 characters, one per candidate letter
     TAG="v$(date +%Y.%m.%d)-$SHA-candidate-$LABEL"
 else
-    NAME="Immensio Versio" CODE="RsVs" BUNDLE="com.Resilio.ImmensioVersio" TAG="v$(date +%Y.%m.%d)-$SHA"
+    NAME="Immensio Versio" CODE="ImVs" BUNDLE="com.OmbraAudio.ImmensioVersio" TAG="v$(date +%Y.%m.%d)-$SHA"
 fi
 OUT="dist/release/$TAG"
-SOURCE_URL="https://github.com/jeffebauer/resilio-versio/tree/$TAG"
+SOURCE_URL="https://github.com/jeffebauer/immensio-versio/tree/$TAG"
 mkdir -p "$OUT"
 
 WT=".claude/worktrees/share"

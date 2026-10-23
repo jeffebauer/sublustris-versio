@@ -10,11 +10,11 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 REF="${1:-HEAD}"
 LABEL="${2:-}"
 if [ -n "$LABEL" ]; then
-    NAME="Immensio Versio $LABEL" BUNDLE="com.Resilio.ImmensioVersio$LABEL"
-    CODE="RsV$(printf '%s' "$LABEL" | tr '[:lower:]' '[:upper:]' | cut -c1)"
+    NAME="Immensio Versio $LABEL" BUNDLE="com.OmbraAudio.ImmensioVersio$LABEL"
+    CODE="ImV$(printf '%s' "$LABEL" | tr '[:lower:]' '[:upper:]' | cut -c1)"
     RECORD="dist/installed_plugin_$LABEL.txt"
 else
-    NAME="Immensio Versio" CODE="RsVs" BUNDLE="com.Resilio.ImmensioVersio" RECORD="dist/installed_plugin.txt"
+    NAME="Immensio Versio" CODE="ImVs" BUNDLE="com.OmbraAudio.ImmensioVersio" RECORD="dist/installed_plugin.txt"
 fi
 SHA="$(git -C "$REPO" rev-parse --short "$REF")"
 # A version that always goes up, so hosts re-read the parameters (plugin/CMakeLists.txt).
@@ -53,4 +53,4 @@ done
 # bundles on a rescan (Option-click Rescan if it cached an old failure).
 
 echo "Installed $NAME plugin from $SHA: $(git -C "$REPO" log -1 --format=%s "$SHA")"
-echo "Now rescan plug-ins in Ableton. Validate the AU with Ableton closed: auval -v aumf $CODE Rslo"
+echo "Now rescan plug-ins in Ableton. Validate the AU with Ableton closed: auval -v aumf $CODE Ombr"

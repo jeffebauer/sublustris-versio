@@ -52,6 +52,14 @@
    - **Risk:** medium. It interacts with the floor governor and the loudness trims, so it needs re-measuring.
 6. **Fallback only: 16-bit SDRAM storage for the FDN lines.** Use it only if M3 profiling shows SDRAM bandwidth is the bottleneck. It conflicts with exact-unity frozen pads (ADR 0008/0009).
 
+## Tried (23 Oct 2026, session 3)
+
+- **#1** is in (v1.0.12, the owner's pick).
+- **#2, a wandering input diffuser:** the first allpass on each side wanders 0.18 ms at 0.4 Hz, opposite phase (the buffers' spare room caps it under a cent). Measured hit-to-hit similarity of the first 80 ms: PLATE 0.74 → 0.51; HALL and MASSIVE already low (0.01–0.12), so only the PLATE is asked (`renders/diffuser_motion`, `IV_DIFF_MOTION`).
+- **#3, a modulated MASSIVE in-loop allpass:** not built. Its motive, the owner's "upper harmonic building in a frozen MASSIVE", didn't reproduce when measured (22 Oct). Revisit if the owner hears it again.
+- **#4, independent right diffuser lengths:** built (`IV_DIFF_INDEPENDENT`), no measurable gain: onset L/R correlation stays 0.00–0.30 either way, since the tanks already decorrelate. Not put to the owner.
+- **#5:** not yet.
+
 ## Deliberately not copied
 
 - **Linear interpolation in the loop.** It dulls and flutters long tails. Our allpass interpolation suits infinite tails better.

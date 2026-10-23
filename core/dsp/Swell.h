@@ -28,36 +28,62 @@ public:
     static constexpr float kTapsFromSeconds = 0.12f;
     static constexpr float kSpanPerAttack = 1.25f;
 
-    static constexpr size_t memoryFloats(float sampleRate) { return 2 * nextPow2(size_t(kMaxSeconds * sampleRate) + 4); }
+    // PROTOTYPE (renders/swell_smear, the audit's S1): three allpasses per side after the taps,
+    // each a multiple of the tap spacing, so every tap is smeared across the gap to the next.
+    static constexpr int   kSmearStages = 3;
+    static constexpr float kSmearRatio[kSmearStages] = {0.53f, 0.79f, 1.17f};
+    static constexpr float kSmearMaxSeconds = kMaxSeconds / kTaps * 1.2f;
+    static constexpr size_t memoryFloats(float sampleRate)
+    {
+        return 2 * nextPow2(size_t(kMaxSeconds * sampleRate) + 4)
+             + 2 * kSmearStages * nextPow2(size_t(kSmearMaxSeconds * sampleRate) + 4);
+    }
 
     bool prepare(Arena& arena, float sampleRate)
     {
         sampleRate_ = sampleRate;
         bool ok = line_[0].init(arena, size_t(kMaxSeconds * sampleRate)) && line_[1].init(arena, size_t(kMaxSeconds * sampleRate));
+        for (auto& side : smear_)
+            for (auto& ap : side) ok = ok && ap.init(arena, size_t(kSmearMaxSeconds * sampleRate));
         // Fixed jitter and signs from a seeded generator (deterministic).
         uint32_t s = 0x5EE11u;
-        float energy = 0.0f;
         for (int c = 0; c < 2; ++c)
             for (int k = 0; k < kTaps; ++k) {
                 s = s * 1664525u + 1013904223u;
                 const float jitter = float(s >> 8) * (1.0f / 16777216.0f) - 0.5f; // ±half a slot
                 frac_[c][k] = (float(k) + 0.5f + 0.8f * jitter) / float(kTaps);
                 sign_[c][k] = (s & 0x80000000u) ? -1.0f : 1.0f;
-                const float g = (float(k) + 1.0f) / float(kTaps); // rising: the slab builds
+            }
+        setSCurve(sCurve_);
+        reset();
+        return ok;
+    }
+
+    // The shape of the taps' rise, x = 0..1 over the span: linear (the tank's), or an
+    // S-curve (raised cosine) that eases in and settles into place, MASSIVE's twin
+    // (owner, renders/swell_curve: B on all 18 cards over linear, crescendo, RC).
+    void setSCurve(bool on)
+    {
+        sCurve_ = on;
+        float energy = 0.0f;
+        for (int c = 0; c < 2; ++c)
+            for (int k = 0; k < kTaps; ++k) {
+                const float x = (float(k) + 1.0f) / float(kTaps);
+                const float g = sCurve_ ? 0.5f - 0.5f * std::cos(3.14159265f * x) : x; // rising: the slab builds
                 gain_[c][k] = g;
                 if (c == 0) energy += g * g;
             }
         const float norm = 1.0f / std::sqrt(energy);
         for (int c = 0; c < 2; ++c)
             for (int k = 0; k < kTaps; ++k) gain_[c][k] *= norm * sign_[c][k];
-        reset();
-        return ok;
     }
 
     void reset()
     {
         line_[0].clear();
         line_[1].clear();
+        for (auto& side : smear_)
+            for (auto& ap : side) ap.clear();
         attackNow_ = attackTarget_;
     }
 
@@ -78,6 +104,11 @@ public:
         tapMix_ = a <= kDirectBelowSeconds ? 0.0f
                 : (a >= kTapsFromSeconds ? 1.0f : (a - kDirectBelowSeconds) / (kTapsFromSeconds - kDirectBelowSeconds));
         const float span = kSpanPerAttack * a * sampleRate_;
+        const float maxLen = kSmearMaxSeconds * sampleRate_;
+        for (int j = 0; j < kSmearStages; ++j) {
+            const float len = span / float(kTaps) * kSmearRatio[j];
+            smearLen_[j] = len < 1.0f ? 1u : uint32_t(len > maxLen ? maxLen : len);
+        }
         for (int c2 = 0; c2 < 2; ++c2)
             for (int k = 0; k < kTaps; ++k) {
                 const float d = 1.0f + frac_[c2][k] * span;
@@ -99,6 +130,14 @@ public:
                 const float a0 = line_[c].read(di < 1 ? 1 : di), a1 = line_[c].read(di + 1);
                 sum[c] += gain_[c][k] * (a0 + t * (a1 - a0));
             }
+        if (smearG_ > 0.0f) // PROTOTYPE (setSmear)
+            for (int c = 0; c < 2; ++c)
+                for (int j = 0; j < kSmearStages; ++j) {
+                    const float d = smear_[c][j].read(smearLen_[j]);
+                    const float v = sum[c] + smearG_ * d;
+                    smear_[c][j].write(v);
+                    sum[c] = d - smearG_ * v;
+                }
         l += tapMix_ * (sum[0] - l);
         r += tapMix_ * (sum[1] - r);
     }
@@ -108,6 +147,13 @@ private:
     DelayLine line_[2];
     float     frac_[2][kTaps] = {}, sign_[2][kTaps] = {}, gain_[2][kTaps] = {}, tapDelay_[2][kTaps] = {};
     float     attackNow_ = 0.0f, attackTarget_ = 0.0f, tapMix_ = 0.0f;
+    bool      sCurve_ = false;
+    DelayLine smear_[2][kSmearStages];
+    uint32_t  smearLen_[kSmearStages] = {1, 1, 1};
+    float     smearG_ = 0.0f;
+
+public:
+    void setSmear(float g) { smearG_ = g; } // PROTOTYPE (renders/swell_smear): allpass gain, 0 = off
 };
 
 } // namespace iv::dsp

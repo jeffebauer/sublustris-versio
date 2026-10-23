@@ -71,6 +71,7 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
         }
     ready_ &= swell_.prepare(large_, sampleRate);
     ready_ &= twinSwell_.prepare(large_, sampleRate);
+    twinSwell_.setSCurve(true); // eases in, then settles (owner, renders/swell_curve)
     ready_ &= fdn_.prepare(large_, sampleRate, 0x1D5A7u);
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
     ready_ &= reverse_.prepare(large_, sampleRate);
@@ -137,6 +138,7 @@ IV_SIZE_OPT void Engine::reset()
     darken_.reset();
     limiter_.reset();
     duckEnv_ = duck_ = 0.0f;
+    compTargetDb_ = compGrDb_ = 0.0f;
     hissLp_[0] = hissLp_[1] = 0.0f;
     noiseSeed_ = 0xA11CEu;
     reverseMix_ = reverseTarget_;
@@ -283,6 +285,7 @@ void Engine::applySpace(bool snap)
         plate_.setGovernor(governor);
         plate_.setFloorDb(floorDb);
         plate_.setModDepth(1.0f - freezeMix_ * (1.0f - voicing::kFrozenPlateModDepth));
+        plate_.setLongDelayMod(1.0f - freezeMix_);
         plate_.setModScale(modScale_);
         plate_.setHoldDb(holdDb);
     } else {
@@ -301,7 +304,10 @@ void Engine::applySpace(bool snap)
         // A frozen MASSIVE goes to full in-loop diffusion: its long lines otherwise replay painted
         // material as audible repeats (owner, M5 listening).
         const float diff = massive ? map::massiveDiffusion(size) : 0.0f;
-        fdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : 0.0f);
+        fdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallInLoop_);
+        // PROTOTYPE (setHallInLoopDiffusion): HALL's allpasses scale with its mean line, so a small
+        // room stays small (MASSIVE's lengths at a 0.2 s mean and up).
+        fdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(size) / 0.2f));
         fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(size, decay));
         fdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
         fdn_.setModDepth(modScale_);
@@ -313,6 +319,10 @@ void Engine::applySpace(bool snap)
     dsp::EraMix loopEra = era;
     const float keep = 1.0f - freezeMix_;
     loopEra.midiRound = map::governorWeight(decay) >= 1.0f; // infinite: no systematic loss
+    if (midiverbReal_) { // PROTOTYPE (setMidiverbReal): 13 bits, as the unit, and its dark loop
+        loopEra.midiBits = 13.0f;
+        loopEra.midiDark = true;
+    }
     // Neve's even harmonics add energy in proportion to the level: harmless
     // while DECAY loses energy, a runaway in a lossless loop (measured: the
     // tail jumping 2-3 dB, then the governor overshooting into dips). So
@@ -341,7 +351,13 @@ void Engine::applySpace(bool snap)
     const float envDb = 20.0f * std::log10(duckEnv_ + 1e-10f);
     const float loud = map::clamp01((envDb - voicing::kDuckFromDbfs) / (voicing::kDuckFullDbfs - voicing::kDuckFromDbfs));
     // Fades out with the freeze glide (set to 0 in one sample, DARKEN's filter and dip jumped: a click).
-    duck_ = loud * map::governorWeight(smoothed(ParamId::Decay)) * (1.0f - freezeMix_);
+    duck_ = duckScale_ * loud * map::governorWeight(smoothed(ParamId::Decay)) * (1.0f - freezeMix_);
+    if (compAttackMs_ > 0.0f) { // PROTOTYPE (setDuckCompressor): 4:1 above -24 dBFS of input, no darkening
+        const float levelDb = 10.0f * std::log10(inputPower_ + 1e-12f);
+        const float over = levelDb + 24.0f;
+        compTargetDb_ = (over > 0.0f ? 0.75f * over : 0.0f) * map::governorWeight(smoothed(ParamId::Decay)) * (1.0f - freezeMix_);
+        duck_ = 0.0f;
+    }
     tilt_.set(smoothed(ParamId::Tone));
     darken_.set(duck_);
     // Hiss follows the input (none in silence, so an infinite tail doesn't
@@ -416,8 +432,29 @@ void Engine::applySpace(bool snap)
     }
 }
 
+// PROTOTYPE (setDiffuserIndependent): lengths of their own for the right side, each shorter
+// than the 1.071x copy the buffers were sized for, mutually prime in samples at 48 kHz.
+void Engine::setDiffuserIndependent(bool on)
+{
+    constexpr float kRight[4] = {0.004937f, 0.003437f, 0.013208f, 0.008687f};
+    for (int k = 0; k < 4; ++k) {
+        const float s = on ? kRight[k] : voicing::kDiffuserSeconds[k] * voicing::kDiffuserRightScale;
+        diffuser_[1].stage[k].length = uint32_t(s * sampleRate_);
+        twinDiffuser_[1].stage[k].length = uint32_t(s * sampleRate_);
+    }
+}
+
 void Engine::controlTick(int n)
 {
+    if (diffMotionMs_ > 0.0f) { // PROTOTYPE (setDiffuserMotion)
+        diffMotionPhase_ += 0.4f * float(n) / sampleRate_;
+        if (diffMotionPhase_ >= 1.0f) diffMotionPhase_ -= 1.0f;
+        float depth = diffMotionMs_ * 0.001f * sampleRate_;
+        if (depth > 8.0f) depth = 8.0f; // the buffers' spare room (nextPow2 of the 1.071x lengths)
+        const float m = depth * std::sin(6.2831853f * diffMotionPhase_);
+        diffuser_[0].stage[0].mod = m;
+        diffuser_[1].stage[0].mod = -m;
+    }
     // Smooth every knob toward its value (ParamSpec tiers, ADR 0012).
     for (const auto& p : kParams) {
         const size_t i = static_cast<size_t>(p.id);
@@ -606,6 +643,13 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)
             tilt_.process(wl, wr);
             darken_.process(wl, wr);
+            if (compAttackMs_ > 0.0f) { // PROTOTYPE (setDuckCompressor)
+                const float ms = compTargetDb_ > compGrDb_ ? compAttackMs_ : compReleaseMs_;
+                compGrDb_ += (1.0f - std::exp(-1000.0f / (ms * sampleRate_))) * (compTargetDb_ - compGrDb_);
+                const float g = std::pow(10.0f, -compGrDb_ / 20.0f);
+                wl *= g;
+                wr *= g;
+            }
             limiter_.process(wl, wr);
             dryNow_ += dryStep_;
             wetNow_ += wetStep_;

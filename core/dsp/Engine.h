@@ -28,6 +28,7 @@
 #include "params/ParamSpec.h"
 
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #if !defined(IV_NO_HEAP)
@@ -80,17 +81,38 @@ public:
     // Test hook: scales the tanks' own modulation (0 = none; DRIFT is separate), to check a
     // structure isn't metallic without it (Costello: tune it to sound good unmodulated).
     void  setModulationScale(float k) { modScale_ = k; }
-    // PROTOTYPE, renders/plate_modulation: the Plate's long delays wander too (both Plates).
-    void  setPlateLongDelayMod(float a) { plate_.setLongDelayMod(a); twinPlate_.setLongDelayMod(a); }
-    // PROTOTYPE, renders/tone_shelf: every tank's loss as a shelf crossing at hz (0 = today's).
-    void  setLossShelfHz(float hz)
+    // PROTOTYPES, renders/decisions: no held-tail makeup (ADR 0008 amendment, for the owner to
+    // approve), and MASSIVE's SIZE glide k × faster (k semitones of bend at most).
+    void  setMakeup(bool on)
     {
-        plate_.setShelfHz(hz);
-        twinPlate_.setShelfHz(hz);
-        fdn_.setShelfHz(hz);
-        twinFdn_.setShelfHz(hz);
-        reverseFdn_.setShelfHz(hz);
+        plate_.setMakeup(on);
+        twinPlate_.setMakeup(on);
+        fdn_.setMakeup(on);
+        twinFdn_.setMakeup(on);
     }
+    // PROTOTYPE, the ducking listening test (owner's M1 notes, 23 Oct 2026): × the duck amount (0 = off).
+    void  setDuckScale(float k) { duckScale_ = k; }
+    // PROTOTYPE, renders/still_lows (the audit's A4): HALL and MASSIVE keep their lows unmodulated.
+    void  setStillLows(bool on) { fdn_.setStillLows(on); twinFdn_.setStillLows(on); }
+    // PROTOTYPE, renders/midiverb (the audit's E1): ERA's last stretch as the real Midiverb
+    // (13 bits instead of 12 -> 8, and its one-pole low-pass on every pass).
+    void  setMidiverbReal(bool on) { midiverbReal_ = on; }
+    // PROTOTYPES, renders/diffuser_motion (Mutable Instruments ideas 2 and 4): the right input
+    // diffuser gets its own lengths instead of a 1.071x copy of the left; the first stage of
+    // each side wanders by depthMs at 0.4 Hz, L and R in opposite phase.
+    void  setDiffuserIndependent(bool on);
+    void  setDiffuserMotion(float depthMs) { diffMotionMs_ = depthMs; }
+    // PROTOTYPE, renders/plate_stereo (the audit's P1).
+    void  setPlateInputSwap(bool on) { plate_.setInputSwap(on); twinPlate_.setInputSwap(on); }
+    // PROTOTYPE, renders/swell_smear (the audit's S1): the swells' taps smeared by allpasses, gain g.
+    void  setSwellSmear(float g) { swell_.setSmear(g); twinSwell_.setSmear(g); }
+    // PROTOTYPE, renders/small_hall (owner's M1 notes; the audit's F1/F2, experiment E4): HALL gets
+    // in-loop diffusion too, amount 0..1 (× kInLoopCoeff), its allpasses scaled with SIZE.
+    void  setHallInLoopDiffusion(float a) { hallInLoop_ = a; }
+    // PROTOTYPE, the same test: duck by 4:1 compression of the wet, keyed by the input, instead
+    // of DARKEN (no darkening); attack and release of the gain reduction in ms (0 = off).
+    void  setDuckCompressor(float attackMs, float releaseMs) { compAttackMs_ = attackMs; compReleaseMs_ = releaseMs; }
+    void  setSizeSlewScale(float k) { fdn_.setSizeSlewScale(k); twinFdn_.setSizeSlewScale(k); }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.
@@ -174,6 +196,11 @@ private:
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f;
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
+    float duckScale_ = 1.0f; // PROTOTYPE (setDuckScale)
+    bool  midiverbReal_ = false; // PROTOTYPE (setMidiverbReal)
+    float diffMotionMs_ = 0.0f, diffMotionPhase_ = 0.0f; // PROTOTYPE (setDiffuserMotion)
+    float hallInLoop_ = 0.0f; // PROTOTYPE (setHallInLoopDiffusion)
+    float compAttackMs_ = 0.0f, compReleaseMs_ = 0.0f, compTargetDb_ = 0.0f, compGrDb_ = 0.0f; // PROTOTYPE (setDuckCompressor)
     float reverseMean_ = -1.0f;
 
     // Freeze (ADR 0009–0011). Button and gate edges this block, by offset.

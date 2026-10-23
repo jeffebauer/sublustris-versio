@@ -9,11 +9,11 @@ set(IV_PLUGIN_VERSION "${PROJECT_VERSION}" CACHE STRING "Plugin version shown to
 # and plugin code, so it installs next to the released plugin for A/B.
 set(IV_PLUGIN_NAME "Immensio Versio" CACHE STRING "Plugin name (and bundle name)")
 set(IV_PLUGIN_CODE "ImVs" CACHE STRING "4-character plugin code") # Resilio Versio is RsVs
-set(IV_PLUGIN_BUNDLE_ID "com.Resilio.ImmensioVersio" CACHE STRING "macOS bundle identifier")
+set(IV_PLUGIN_BUNDLE_ID "com.OmbraAudio.ImmensioVersio" CACHE STRING "macOS bundle identifier")
 juce_add_plugin(ImmensioVersio
     VERSION ${IV_PLUGIN_VERSION}
-    COMPANY_NAME "Resilio"
-    PLUGIN_MANUFACTURER_CODE Rslo
+    COMPANY_NAME "Ombra Audio"  # the maker both plugins sit under (owner, 23 Oct 2026)
+    PLUGIN_MANUFACTURER_CODE Ombr
     PLUGIN_CODE ${IV_PLUGIN_CODE}
     BUNDLE_ID ${IV_PLUGIN_BUNDLE_ID}
     PRODUCT_NAME "${IV_PLUGIN_NAME}"

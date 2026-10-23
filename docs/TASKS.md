@@ -1,20 +1,23 @@
 # Owner tasks
 
-**Last updated:** 22 Oct 2026, session 3 (testing plan chosen; two A/B pages still to pick on: `plate_modulation`, `tone_shelf`; they and every page now have a Tail button, and pick pages repeat one row).
+**Last updated:** 23 Oct 2026, session 3 (every A/B pick acted on; nothing waiting for a pick).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- [ ] **Approve or reject (ADR 0008 amendment):** infinite tails and frozen pads get a small, capped "makeup" that lifts a sagging held tail back to its own level (never above, ≤ 0.3 dB/s). Without it, infinite tails with tape wow fade out over ~10 minutes. It's the one place the loop gain may go a hair over 1.
-- [ ] **MASSIVE's SIZE glide:** SIZE moves bend at most a semitone (ADR 0012), so a full SIZE sweep in MASSIVE glides for ~40 s. Keep that gentle bend, or allow a faster swoop with more bend in MASSIVE only?
-- [ ] **Plugin identity** (one-line answers): keep manufacturer code `Rslo` and company name / bundle-ID prefix as Resilio's, with plugin code `ImVs`? (Same developer, so it groups both plugins together in Ableton.)
+- [ ] **Bass in a moving tail** (`renders/still_lows/index.html`, picks; the DSP audit's A4): with DRIFT up, the whole tail wavers, sub-bass included (HALL with DRIFT fully CW: about 4 semitones on a held 55 Hz). B keeps the lows below ~400 Hz still. Feature or mud?
+- [ ] **ERA's Midiverb** (`renders/midiverb/index.html`, picks; the DSP audit's E1): ERA fully CW today is a bitcrusher on the tail (8 bits, bright grit). B rebuilds it as the real 1986 unit (13 bits and a dark loop): much darker and smoother. Which feels more like the Midiverb?
+- [ ] **BLOOM on percussion** (`renders/swell_smear/index.html`, picks; the DSP audit's S1): a hit through a long BLOOM comes back as a rising train of ghost hits (measured: the swell flickers 3–7.5 dB). B smears each of the swell's taps across the gap to the next. A today or B?
+- [ ] **The PLATE's stereo image** (`renders/plate_stereo/index.html`, picks; the audit's P1): play hard left and the plate first answers only on the right. B answers on the side you played. A (a ping-pong) or B?
+- [ ] **Repeated hits in the PLATE** (`renders/diffuser_motion/index.html`, picks; Mutable Instruments idea): identical hits enter the plate identically. B lets the first input allpass wander very slightly. Subtle; A or B?
+- [ ] **Ducking at infinite DECAY** (`renders/ducking/index.html`, picks, not level-matched; your M1 notes): A today (darkens and dips), B none, C/D/E 4:1 compression with no darkening (quick 10 ms / 0.15 s, smooth 30 ms / 0.4 s, slow 50 ms / 1 s), in HALL, MASSIVE and PLATE on the new material. Measured: any ducking makes the tail rise when you stop; E pumps least (2.1–3.5 dB) with the smallest step.
+- [ ] **The small HALL's build-up** (`renders/small_hall/index.html`, picks; your M1 notes): at long and infinite DECAY, A today, B the smallest SIZE raised to 35 ms, C/D in-loop diffusion (a little / more), E both. Measured on noise: B rings least at long DECAY, the diffusion least at infinite. Your M1 TONE note ("sounds good") is logged.
+- [ ] **The held-tail makeup** (`renders/makeup/index.html`, picks, not level-matched): with it, an infinite tail holds where it settled; without it, with tape wobble and the cassette, MASSIVE sags about 3 dB over 10 minutes and HALL about 2.4 dB (frozen pads hold either way). It's the one place the loop may go a hair over 1. Each card is 20 s at minute 1 and at minute 10. Keep it (A) or drop it (B)?
+- [ ] **MASSIVE's SIZE glide** (`renders/size_glide/index.html`, picks): SIZE turned quickly up, then down. A today (a semitone of bend, a full sweep ~40 s), B about 3 semitones (~13 s), C about 6 (~6 s), MASSIVE only.
 
-- [ ] **PLATE, more movement?** (`renders/plate_modulation/index.html`, level-matched, picks): our PLATE moves only one of the four delays in each half of its loop, though the spec says every delay moves (found via Mutable Instruments' Beads, which moves both long delays). A today, B the long delays wander too (about 2 cents). The noise-burst measurements were mixed, so it's for your ears.
-- [ ] **TONE, a warmer noon?** (`renders/tone_shelf/index.html`, level-matched, picks): the audit's top finding. At noon the upper mids ring almost as long as the body, a glassy sheen. B lets them fade sooner (3 kHz 2.4 s instead of 3.7 s on a HALL; lows unchanged). Across HALL, PLATE, MASSIVE, and HALL with TONE bright.
 
 
-- [ ] **Grainy starts in big spaces:** the new grainy check says every tail ends up a smooth wash, but in big spaces the first part of the tail stays a little grainy for longer than the 0.3 s target: the PLATE from SIZE ½ (up to 0.7 s), the HALL at full SIZE (0.4–0.5 s), MASSIVE at full SIZE (up to 1.4 s). Real big rooms do take longer to fill in, so it may be fine, or even part of the size. Shall I make a short page (clicks, snare, piano) so you can hear whether the start sounds grainy?
 
 ### Listen (after your notes)
 - [ ] **M1: the Hall** (`renders/m1_hall/index.html`): SIZE now goes from a small room (shorter lines, and shorter tails, as a small room has) to a huge hall. Is small small enough, and has the buzz on long small rooms gone? TONE's ends go further (dark: more lows, fewer highs; bright: the opposite). Too much, too little?
@@ -34,16 +37,25 @@
 
 ## Waiting on Claude
 
+- **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
+- **Make the grainy reading steadier:** MASSIVE's density sits right at the 0.9 line from the start, so its "smooth after" jumps between 0.06 and 1.67 s on a one-sample change in the click; the PLATE and HALL readings move by 0.1–0.2 s. Research how others report it (a lower bar, a time average, or a mixing-time estimate) before trusting the known-misses list.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
-- **M8 tuning** from your listening notes on the pages above.
+- **M8 tuning** from your listening notes on the pages above, including MASSIVE medium and large sounding a little uneven on Hits (grainy_start).
 - **M8 findings to confirm by ear first** (`docs/sweetspot.md`, `docs/research/reverb-testing-practices.md`):
   - ERA's last stretch (the Midiverb stage) jumps about 20× harder than the rest of the knob, and its first 20 % barely changes anything measurable.
   - PLATE: TONE's first step from fully CCW jumps, and so does SIZE's last.
   - MASSIVE: DECAY's first step jumps; DRIFT is nearly flat from 20–50 %; TIME in NORMAL barely moves anything for its first 30 %.
-- **Modulation ideas from Mutable Instruments** (research doc above) and the DSP audit session's findings: to try together on an A/B page, starting with the PLATE gap.
+- **The rest of the Mutable Instruments ideas and the DSP audit's findings:** MI #2 is on a page; #3 and #4 aren't worth one (`docs/research/mutable-instruments-reverbs.md`); #5 and the audit's remaining findings are still to try.
 
 ## Done
 
+- 23 Oct 2026: **Brand: Ombra Audio.** Immensio's plugin now shows as "Ombra Audio: Immensio Versio" (maker code Ombr, plugin code ImVs, bundle com.OmbraAudio.ImmensioVersio). Fixed on the way: the install and release scripts still used Resilio's plugin code (RsVs) and linked Resilio's GitHub. Resilio moves to Ombra Audio in its own repo.
+- 23 Oct 2026: **TONE, a warmer noon: B** (all 36 cards, the repeated row agreeing). Every tank's loss is now a shelf at 2.5 kHz, so the upper mids fade with the highs (ADR 0012 amendment). It also freed 4.4 KB of flash (release 92,948 B).
+- 23 Oct 2026: **Big spaces don't start too grainy** (your listen on `grainy_start`): "overall it sounds good", apart from a couple of MASSIVE medium and large cards that sound a little uneven on Hits (kept for M8 tuning).
+- 23 Oct 2026: **Playing over a frozen pad is louder** (C on all 24 cards; "the sweet spot is between plus3 and plus6"): the twin now sits 6 dB under the pad (+4.4 dB on before). The switch and its page are gone.
+- 23 Oct 2026: **The main reverb's swell stays an even ramp** (A on 21 of 27 cards; MASSIVE 8 of 9). Only the frozen layer gets the S-curve. The page is deleted.
+- 22 Oct 2026: **The layer over a frozen MASSIVE swells in on an S-curve** (B on all 18 cards): it eases in and settles into place instead of rising in an even ramp. The page is deleted.
+- 23 Oct 2026: **PLATE, more movement: B** (all 9 small cards, 7 of 9 large). The PLATE's long delays now wander too. The frozen cards were a coin flip (4 to 4, and the repeated card disagreed), so a frozen PLATE stays as still as before. Your Skank note (a big drop after the first two repeats) measured as the freeze tap itself: from the tap on, chords go into the quieter twin (−10.5 dB), about 6–7 dB below the two before it, the same in A and B.
 - 22 Oct 2026: **Your testing plan is built.** Pages now have a Tail button (T) with a +12 dB switch, a **Numbers** panel per card (decay per band, how soon the tail turns smooth, clarity, width), a grainy flag, and on pick pages a repeated row that catches coin-flip picks. Three new kinds of material: a low voice, a dry piano and a full mix. Underneath: a grainy test and a safety net that fails the build if an approved sound changes without a changelog line. The wobble meter waits for DRIFT tuning.
 - 22 Oct 2026: **Playing over a frozen MASSIVE: B confirmed** (smooth, on all 18 cards). The twin swells like MASSIVE's tank; the A/B switch and its page are gone.
 - 22 Oct 2026: **The PLATE's full-SIZE ring** (your OK): nothing you could hear. It only showed with the PLATE's movement switched off, at the knob's last notch. Full SIZE is now 0.6 % smaller, which removes it, and the test checks small, medium and full PLATEs.

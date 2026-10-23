@@ -334,7 +334,7 @@ def acoustics(metrics):
         return None
     r = lambda v, d=2: round(float(v), d) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
     return {"hz": metrics.get("band_hz") or [], "t60": [r(v) for v in metrics["band_t60_s"]],
-            "edt": [r(v) for v in metrics.get("band_edt_s") or []], "dense": r(metrics.get("echo_density_time_s")),
+            "edt": [r(v) for v in metrics.get("band_edt_s") or []], "grain": r(metrics.get("echo_density_grain_s"), 3),
             "late": r(metrics.get("echo_density_late")), "c80": r(metrics.get("c80_db"), 1),
             "iacc": r(metrics.get("iacc_late")), "flat": r(metrics.get("tail_flatness_db"), 1)}
 
@@ -816,9 +816,9 @@ def build_page_data(root, out_path, items, refs, rows=None, columns=None, varian
                 items_out[iid] = item_json(it, rel)
                 ac = acoustics(measure_metrics(root, it))
                 items_out[iid]["ac"] = ac
-                # The grainy check (host/tests/test_density.cpp): a smooth wash within 0.3 s, and stays one.
-                if ac and ac["dense"] is not None and ac["dense"] > 0.3:
-                    items_out[iid]["flags"].append("grainy start {:.2f} s".format(ac["dense"]))
+                # The grainy check (host/tests/test_density.cpp): a start no grainier than 0.1 s of separate echoes (kEchoGrainMaxS), and stays a wash.
+                if ac and ac["grain"] is not None and ac["grain"] > 0.1:
+                    items_out[iid]["flags"].append("grainy start {:.3f} s".format(ac["grain"]))
                 if ac and ac["late"] is not None and ac["late"] < 0.9:
                     items_out[iid]["flags"].append("grainy tail")
             rms = [items_out[v["item"]]["rms"] for v in vs]

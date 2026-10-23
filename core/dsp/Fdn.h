@@ -56,10 +56,15 @@ public:
     void setFloorDb(float db) { governor_.floorDb = db; }
     // A held tail's ceiling, on the slow level (0 dBFS = no hold).
     void setHoldDb(float db) { governor_.holdDb = db; }
+    void setMakeup(bool on) { governor_.makeup = on; }        // PROTOTYPE (renders/decisions)
+    void setSizeSlewScale(float k) { slewScale_ = k; }        // PROTOTYPE (renders/decisions): × the semitone glide
     float slowLevelDb() const { return governor_.slowLevelDb; }
     void resyncHoldLevel() { governor_.resyncSlow(); }
     // In-loop diffusion amount 0..1 (MASSIVE's SIZE); 0 bypasses it.
     void setInLoopDiffusion(float amount) { inLoopTarget_ = amount; }
+    // PROTOTYPE (renders/small_hall): the in-loop allpasses' lengths × k (1 = MASSIVE's).
+    void setInLoopScale(float k) { apScale_ = k; }
+    void setStillLows(bool on) { stillLows_ = on; } // PROTOTYPE (renders/still_lows)
     // ERA's in-loop layers and DRIFT, set at control rate (SPEC §4.6, §4.7).
     void setEra(const EraMix& m)
     {
@@ -76,7 +81,6 @@ public:
     void setEarlyTaps(float amount) { earlyTarget_ = amount; }
     // The modulation floor's depth × modDepth (Engine::setModulationScale, a test hook).
     void setModDepth(float k) { modDepth_ = k; }
-    void setShelfHz(float hz) { shelfHz_ = hz; } // PROTOTYPE (Governor.h absorbent)
     // Extra output level for a voicing (MASSIVE's loudness match).
     void setOutputTrim(float trim) { outputTrim_ = trim; }
     float levelDb() const { return governor_.levelDb; }
@@ -101,10 +105,14 @@ private:
     // Per-sample read position for the current control block.
     float     readNow_[kN] = {}, readStep_[kN] = {};
     float     interp_[kN] = {}; // allpass-interpolation state per read
+    // PROTOTYPE (renders/still_lows, the audit's A4): a second, unmodulated read per line for the
+    // band below ~400 Hz (Schlecht: a modulated low end sounds detuned).
+    bool      stillLows_ = false;
+    float     stillNow_[kN] = {}, stillStep_[kN] = {}, stillInterp_[kN] = {}, lpStill_[kN] = {}, lpMod_[kN] = {}, lowCoeff_ = 0.05f;
     // Absorbent filters: y = g (1 − b) x + b y.
     float     gain_[kN] = {}, pole_[kN] = {}, absorbY_[kN] = {};
-    float     b1_[kN] = {}, absorbX_[kN] = {}, shelfHz_ = 0.0f;
-    float     modDepth_ = 1.0f;
+    float     b1_[kN] = {}, absorbX_[kN] = {}, shelfK_ = 0.0f; // lossShelfK(sampleRate_)
+    float     modDepth_ = 1.0f, slewScale_ = 1.0f;
     float     decayRate_ = 0.2f, highRatio_ = voicing::kDampingHighT60Ratio;
     LoopEra   era_[kN];
     Drift     driftGen_[kN];
@@ -112,6 +120,8 @@ private:
     float     extraRate_ = 0.0f;
     DelayLine apLine_[kN][2];
     uint32_t  apLen_[kN][2] = {};
+    uint32_t  apLenNow_[kN][2] = {}; // apLen_ × apScale_ (PROTOTYPE: HALL scales its allpasses with SIZE)
+    float     apScale_ = 1.0f;
     static constexpr int kEarlyTaps = voicing::kEarlyTaps;
     float     earlyFrac_[kN][kEarlyTaps] = {}, earlyGain_[kN][kEarlyTaps] = {};
     float     earlyTarget_ = 0.0f, earlyNow_ = 0.0f;

@@ -44,6 +44,10 @@ constexpr float kDampingHighT60Ratio = 0.45f;
 // At infinite DECAY the lows hold but the highs still fade, over about this
 // long at TONE noon, so an infinite tail darkens toward its floor (ADR 0008)
 // instead of ringing bright forever.
+// Every tank's loss is a shelf crossing here (Governor.h absorbent): the upper
+// mids fade with the highs (owner's pick on renders/tone_shelf, v1.0.15).
+constexpr float kLossShelfHz = 2500.0f;
+
 constexpr float kInfiniteHighT60Seconds = 30.0f;
 
 // Input diffusion (SPEC §4.1): Dattorro's four input allpasses, his lengths
@@ -94,7 +98,7 @@ constexpr float kHoldSeconds        = 8.0f; // the slow level a held tail's ceil
 constexpr float kSpaceFlipSeconds  = 0.05f;
 constexpr float kAttackFadeSeconds = 0.05f;
 
-// PROTOTYPE (renders/plate_modulation): the Plate's long delays d1 and d2 wander too.
+// The Plate's long delays d1 and d2 wander too (owner's pick on renders/plate_modulation, v1.0.12).
 constexpr float kPlateLongModSeconds = 0.0006f; // depth: ~2 cents at these rates *(start)*
 constexpr float kPlateLongModHz[4]   = {0.23f, 0.31f, 0.19f, 0.37f}; // L d1, L d2, R d1, R d2: none shared with ap1 *(start)*
 
@@ -138,7 +142,7 @@ constexpr float kFrozenPlateModDepth = 0.15f;
 // the untouched pad, fading back out within kTwinMaxT60 so the pad returns
 // to what it was. No predelay or swell on its input ("too much
 // predelay... disjointed"). (start)
-constexpr float kTwinLevel     = 0.3f;  // −10.5 dB against the pad: "a more subtle layer... not the main focus"
+constexpr float kTwinLevel     = 0.5f;  // −6 dB against the pad (was 0.3, −10.5 dB): "the sweet spot is between plus3 and plus6" (owner, renders/twin_level, v1.0.14)
 constexpr float kTwinMaxT60    = 8.0f;  // it always fades, even when DECAY is infinite
 constexpr float kTwinFadeSeconds = 0.02f; // its input opens / closes at freeze / unfreeze
 constexpr float kPaintHeadroomDb     = 1.5f;  // a painted pad may grow this far above its frozen level (or the floor)

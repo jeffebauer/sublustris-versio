@@ -63,6 +63,7 @@ float lerpRead(const ExactLine& l, float d)
 IV_SIZE_OPT bool Plate::prepare(Arena& arena, float sampleRate, float maxScale, bool colour, uint32_t seed)
 {
     sampleRate_ = sampleRate;
+    shelfK_ = lossShelfK(sampleRate);
     maxScale_ = maxScale;
     colour_ = colour;
     const float room = colour ? voicing::kDriftMaxSeconds * sampleRate : 0.0f;
@@ -140,8 +141,8 @@ void Plate::control(int n)
         br.d1Len = kD1[b] * k;
         br.ap2Len = kAp2[b] * k;
         br.d2Len = kD2[b] * k;
-        br.loss1 = absorbent((br.ap1Len + br.d1Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfHz_, sampleRate_);
-        br.loss2 = absorbent((br.ap2Len + br.d2Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfHz_, sampleRate_);
+        br.loss1 = absorbent((br.ap1Len + br.d1Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfK_);
+        br.loss2 = absorbent((br.ap2Len + br.d2Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfK_);
 
         // The modulated allpass: Dattorro's slow sine, plus the modulation
         // floor's slow random wander (as every tank's, SPEC §2.3 rule 1).
@@ -165,8 +166,8 @@ void Plate::control(int n)
         }
         br.modStep = (target - br.modNow) / float(n);
 
-        // PROTOTYPE: d1 and d2 wander too, each at its own rate (a sine plus the floor's random
-        // walk), about 2 cents; eased with modDepth_ while frozen like ap1.
+        // d1 and d2 wander too, each at its own rate (a sine plus the floor's random walk),
+        // about 2 cents; still on a frozen pad (longMod_ 0).
         const float longDepth = longMod_ * modDepth_ * modScale_ * voicing::kPlateLongModSeconds * sampleRate_;
         for (int j = 0; j < 2; ++j) {
             br.longPhase[j] += voicing::kPlateLongModHz[2 * b + j] * dt;
@@ -193,7 +194,7 @@ void Plate::process(const float* inL, const float* inR, float* outL, float* outR
         const float k = scaleNow_ * sampleRate_ / kPaperRate;
         const float outGain = kOutputGain * levelGain_;
         for (int s = start; s < start + m; ++s) {
-            const float in[2] = {inL[s], inR[s]};
+            const float in[2] = {swapIn_ ? inR[s] : inL[s], swapIn_ ? inL[s] : inR[s]};
             float next[2];
             for (int b = 0; b < 2; ++b) {
                 Branch& br = b_[b];

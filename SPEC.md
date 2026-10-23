@@ -6,6 +6,10 @@
 **Status:** Spec **v1.0 (frozen)**, 21 Oct 2026. Input: `IMMENSIO_BRIEF.md`. Vocabulary: `CONTEXT.md`. Decisions: `docs/adr/` (0001–0017; index in `docs/adr/README.md`). Session record: `docs/spec-session.md`. Changes after freeze: new ADR + changelog entry. Numbers marked *(start)* are starting guesses; tuned numbers replace them as milestones confirm them.
 
 ### Changelog
+- v1.0.15 — owner's TONE pick (23 Oct 2026, `renders/tone_shelf`; ADR 0012 amendment): **every tank's loss is a shelf crossing at 2.5 kHz**, so at TONE noon the upper mids fade with the highs instead of ringing as long as the body (a warmer noon; the DSP audit's A1). B on all 36 cards.
+- v1.0.14 — owner's pick (23 Oct 2026, `renders/twin_level`): **the twin sits 6 dB under the pad** (level 0.5, was 0.3 / −10.5 dB), so playing over a frozen pad is no longer a 6–7 dB drop at the tap. C (+6 dB) on all 24 cards, the repeated row agreeing; "the sweet spot is between plus3 and plus6", so +4.4 dB.
+- v1.0.13 — owner's picks (22–23 Oct 2026, `renders/swell_curve`, B on all 18 cards): **MASSIVE's twin swells in on an S-curve** (raised cosine: eases in, rises through the middle, settles into place) instead of an even ramp; picked over a crescendo and an analog-style arrive-and-settle. The tank's own swell (BLOOM, MASSIVE's mass) stays linear (`renders/tank_scurve`: A on 21 of 27 cards). +544 B flash.
+- v1.0.12 — owner's PLATE pick (23 Oct 2026, `renders/plate_modulation`): **the PLATE's long delays wander too** (§2.3 rule 1: every delay in the tank moves), about 2 cents each at its own rate, as Beads moves both of its long delays. B on all 9 small cards and 7 of 9 large; the frozen cards were a coin flip (4–4, the repeated card disagreed), so **a frozen PLATE keeps today's stillness** (the long wander fades out with the freeze). The twin wanders like an unfrozen PLATE.
 - v1.0.11 — PLATE full SIZE (22 Oct 2026, owner's OK): the tank's largest scale is **1.59**, not 1.6. At exactly 1.6 one 9.8 kHz mode lined up and outlasted its neighbours with the modulation off (15 dB; 8 dB at 99 % SIZE; nothing with the modulation on or on a frozen pad). 0.6 % shorter lines, far below hearing; `test_plate_freeze` now checks the unmodulated PLATE at SIZE 0, ½ and 1.
 - v1.0.10 — owner's MASSIVE pick (22 Oct 2026; ADR 0007 note): MASSIVE keeps its built-in swell, which also smears its first reflections (without it, plucks get two less-diffuse repeats). **MASSIVE's twin gets its own swell** (§4.2): measured on a click, its spikes at 0.12 / 0.3 / 0.8 s are gone; it arrives 0.2–0.33 s after the input, ~1 dB quieter. One more swell stage in SDRAM (7.6 s × 2), 24 more reads a sample per side while a MASSIVE is frozen.
 - v1.0.9 — owner's REVERSE notes, two rounds (22 Oct 2026; ADR 0015 amendment): **REVERSE is the hardware reverse reverb**, rising taps into a short reverb of its own (§4.11), replacing the reversed segments of the tank's output ("a delay, then a break after the first repeat, then audible chunks"). SIZE sets the short reverb's size, DECAY how sudden the stop is.
@@ -131,7 +135,7 @@ Level meters as Resilio (ADR 0031): LED 1–2 In L / In R, LED 3–4 Out L / Out
          │                                   │
          └─frozen──► TWIN tank (same space) ─(paint, a little)─┘ (into the frozen pad)
                           │
-   tank out + twin out (−10.5 dB) ─► ERA output layer (μ-law 24 kHz / 12→10-bit)
+   tank out + twin out (−6 dB, v1.0.14) ─► ERA output layer (μ-law 24 kHz / 12→10-bit)
                           ─► output limiter ─► MIX (equal-power) ◄── dry
                           ─► Out L/R
 ```
@@ -171,7 +175,7 @@ Stacking: each stage's layer fades in across its stretch of the knob and then st
 | + Neve (10–35 %) | loop LP 20 → 16 kHz; +1.5 dB shelf at 80 Hz | float | even-harmonic, asymmetric; 2nd harmonic ~−30 dB at nominal | none | none | in loop |
 | + Cassette (35–65 %) | 16 → 9 kHz; head bump +2 dB at ~70 Hz | float; slow 2:1 soft compression above −18 dBFS (gain at control rate) | tape curve on top | hiss into the tank input, up to ~−66 dBFS, ducked by input level (ADR 0005) | wow 0.3–0.8 Hz up to ±4 cents, flutter 6–8 Hz up to ±1 cent, added to DRIFT | in loop (hiss at tank input) |
 | + μ-law (65–85 %) | unchanged | 24 kHz / 12-bit μ-law → 10-bit at 85 % | – | – | – | wet output (ADR 0004) |
-| + Midiverb (85–100 %) | ~10 kHz ceiling via a 48 → 24 → 48 kHz box | 12 → 8-bit, truncation toward zero, TPDF dither | – | sparse crackle, growing to the end | – | in loop (ADR 0004) |
+| + Midiverb (85–100 %) | ~10 kHz ceiling via a 48 → 24 → 48 kHz box | 12 → 8-bit, truncation toward zero (rounding at infinite; no dither since v1.0.3) | – | sparse crackle, growing to the end | – | in loop (ADR 0004) |
 
 - The Midiverb box uses polyphase IIR halfbands (Resilio `Oversampler`). Its images are deliberately not fully removed, for a little aliasing grit *(start: stopband −40 dB)*. It **saves no CPU**: the tank stays at 48 kHz, because a live tail's tank rate can't crossfade cleanly (ADR 0004).
 - Midiverb character only (rate, bits, halving accumulator maths); no ROM microcode. emeb/MIDIVerb_RE is MIT and may inform it; thement/midiverb_emulator is GPL-3.0, reference only.
