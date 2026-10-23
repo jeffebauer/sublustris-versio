@@ -53,3 +53,34 @@ At full CW, HALL and PLATE also show a coherent **±25–27 cent sway at 0.3 Hz*
 4. **Today's drift, tamed**: the same slow sine, but its depth capped (≈ ±8–12 cents), rates spread ±50 % and phases random, so the lines don't sway together.
 
 The recipes are ours [I], following the sources named.
+
+## Prototypes (23 Oct 2026; `IV_DRIFT_CW` = 1 Halo, 2 Orbit, 3 Wander; owner chose these three)
+
+- **Halo:**
+  - Vibrato on the tank's input: 4 → 6 Hz, up to ±12 cents, L and R at different rates.
+  - Inside the tank: the floor's depth × (1 + 2t), with today's sine drift off.
+- **Orbit:**
+  - After the Hadamard mix, pairs of lines rotate through angles up to ±45°.
+  - Each pair swings at its own rate, (0.1 + 0.7 t) Hz × {0.5, 0.83, 1.17, 1.5}.
+  - Orthogonal, so the loop is energy-preserving. No delay modulation besides the floor.
+  - HALL and MASSIVE only, including the twin; the PLATE keeps just its floor.
+- **Wander:**
+  - The wow generator at 1 → 2 Hz, up to ±8 cents.
+  - Line rates fanned out ±50 % (`DriftAmounts::rateSpread`). No flutter, no sine.
+
+[M] Energy check:
+- **Holds:** 72/72 ten-minute holds pass (every SPACE × SIZE 0/0.5/1 × DRIFT 0.75/1 × mode).
+- **Build-up:** none in the full sweep.
+- **PLATE level:** with DRIFT CW, all three sit ~3 dB louder than today with equal decay slopes, because today's deep drift loses energy in the PLATE.
+
+[M] Held 1 kHz, p95 cents at DRIFT 0.75 / full:
+
+| | HALL | MASSIVE | PLATE |
+|---|---|---|---|
+| today | 34 / 64 | 30 / 37 | 48 / 57 |
+| Halo | 6 / 20 | 10 / 17 | 18 / 23 |
+| Orbit | 5 / 4 | 1 / 1 | 16 / 16 (floor only) |
+| Wander | 5 / 10 | 3 / 8 | 12 / 19 |
+| tape (CCW, full) | 21 | 11 | 20 |
+
+Page: `renders/drift_cw` (HALL and MASSIVE at 3/4 and full; E = tape for comparison).
