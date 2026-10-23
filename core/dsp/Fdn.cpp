@@ -118,11 +118,40 @@ IV_SIZE_OPT void Fdn::setMeanSeconds(float meanSeconds, float spread, bool snap)
 
 // Where an in-loop allpass's length is going: its own length × the scale, or nothing when the
 // diffusion is going out.
-uint32_t Fdn::apTargetLength(int i, int k) const
+IV_SIZE_OPT uint32_t Fdn::apTargetLength(int i, int k) const
 {
     if (inLoopTarget_ <= 0.0f) return 0u;
     const float len = float(apLen_[i][k]) * apScale_;
     return len < 1.0f ? 1u : uint32_t(len);
+}
+
+// In-loop diffusion in and out (HALL's small rooms, v1.0.17): the allpasses join the loop at no
+// length at all and grow from there (SIZE's glide); going out, they shrink back to nothing before
+// they're bypassed. Switched in or out at full length, the lines' lengths jumped and the bypassed
+// allpasses replayed stale sound: a click and a dropout whenever SIZE crossed noon in a HALL tail
+// (soak audit). Each allpass's length glides at SIZE's semitone slew, stepped per sample.
+IV_SIZE_OPT void Fdn::controlInLoop(float dt, int n, float slew)
+{
+    const bool wasBypassed = inLoopNow_ == 0.0f;
+    inLoopNow_ += (1.0f - std::exp(-dt / 0.08f)) * (inLoopTarget_ - inLoopNow_);
+    bool shrunk = true;
+    for (int i = 0; i < kN; ++i) shrunk &= apLenGlide_[i][0] <= 0.0f && apLenGlide_[i][1] <= 0.0f;
+    if (inLoopNow_ < 1e-4f && inLoopTarget_ == 0.0f && shrunk) inLoopNow_ = 0.0f;
+    const bool joining = wasBypassed && inLoopNow_ > 0.0f;
+    for (int i = 0; i < kN; ++i)
+        for (int k = 0; k < 2; ++k) {
+            apLenNow_[i][k] = apTargetLength(i, k);
+            float& glide = apLenGlide_[i][k];
+            if (joining) glide = 0.0f;
+            const float d = float(apLenNow_[i][k]) - glide;
+            if (std::fabs(d) < 1e-3f) { // there: the exact integer read again
+                glide = float(apLenNow_[i][k]);
+                apLenStep_[i][k] = 0.0f;
+            } else {
+                apLenStep_[i][k] = (d > slew ? slew : (d < -slew ? -slew : d)) / float(n);
+            }
+            if (joining) glide = -apLenStep_[i][k]; // the first sample reads no delay: the buffer holds nothing fresh yet
+        }
 }
 
 void Fdn::control(int n)
@@ -137,17 +166,7 @@ void Fdn::control(int n)
     const FloorGovernor& gov = leader_ ? leader_->governor_ : governor_; // a low tank follows its leader
     const float governRate = gov.extraRate;
 
-    // In-loop diffusion in and out (HALL's small rooms, v1.0.17): the allpasses join the loop at no
-    // length at all and grow from there (SIZE's glide); going out, they shrink back to nothing before
-    // they're bypassed. Switched in or out at full length, the lines' lengths jumped and the bypassed
-    // allpasses replayed stale sound: a click and a dropout whenever SIZE crossed noon in a HALL tail
-    // (soak audit).
-    const bool wasBypassed = inLoopNow_ == 0.0f;
-    inLoopNow_ += (1.0f - std::exp(-dt / 0.08f)) * (inLoopTarget_ - inLoopNow_);
-    bool shrunk = true;
-    for (int i = 0; i < kN; ++i) shrunk &= apLenGlide_[i][0] <= 0.0f && apLenGlide_[i][1] <= 0.0f;
-    if (inLoopNow_ < 1e-4f && inLoopTarget_ == 0.0f && shrunk) inLoopNow_ = 0.0f;
-    const bool joining = wasBypassed && inLoopNow_ > 0.0f;
+    controlInLoop(dt, n, slew);
     earlyNow_ += (1.0f - std::exp(-dt / 0.08f)) * (earlyTarget_ - earlyNow_);
     if (earlyNow_ < 1e-4f && earlyTarget_ == 0.0f) earlyNow_ = 0.0f;
     float meanLen = 0.0f;
@@ -181,19 +200,6 @@ void Fdn::control(int n)
         // decays at decayRate (+ the governor), the high end at that /
         // highRatio; at infinite the highs fade until the tail reaches its
         // floor, then it holds (ADR 0008).
-        for (int k = 0; k < 2; ++k) {
-            apLenNow_[i][k] = apTargetLength(i, k);
-            float& glide = apLenGlide_[i][k];
-            if (joining) glide = 0.0f;
-            const float d = float(apLenNow_[i][k]) - glide;
-            if (std::fabs(d) < 1e-3f) { // there: the exact integer read again
-                glide = float(apLenNow_[i][k]);
-                apLenStep_[i][k] = 0.0f;
-            } else {
-                apLenStep_[i][k] = (d > slew ? slew : (d < -slew ? -slew : d)) / float(n);
-            }
-            if (joining) glide = -apLenStep_[i][k]; // the first sample reads no delay: the buffer holds nothing fresh yet
-        }
         const float apSeconds = inLoopNow_ > 0.0f ? (apLenGlide_[i][0] + apLenGlide_[i][1]) / sampleRate_ : 0.0f;
         const Absorb a = absorbent(lenNow_[i] / sampleRate_ + apSeconds, decayRate_ + governRate + extraRate_, highRatio_,
                                    gov.darken, shelfK_);

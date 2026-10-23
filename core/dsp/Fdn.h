@@ -96,6 +96,7 @@ public:
 
 private:
     void control(int n);
+    void controlInLoop(float dt, int n, float slew);
     uint32_t apTargetLength(int i, int k) const;
 
     float     sampleRate_ = 48000.0f;
