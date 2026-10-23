@@ -48,24 +48,25 @@ ab() {
 }
 
 # DECAY in MASSIVE at full SIZE: its first notches.
-for p in 0 0.1 0.2; do
-    ab 1_decay decay_$p decay "skank drums" --set space=MASSIVE --set era=0 --set time=0 --set size=1 --set decay=$p
+# Rows are the positions p1, p2, p3 in every column (each card's chips show its setting).
+i=0; for p in 0 0.1 0.2; do i=$((i+1))
+    ab 1_decay p$i decay "skank drums" --set space=MASSIVE --set era=0 --set time=0 --set size=1 --set decay=$p
 done
 # ERA in HALL: the first notch, then into the Midiverb stretch.
-for p in 0.05 0.875 0.95; do
-    ab 2_era era_$p era "skank pad" --set space=HALL --set era=$p --set time=0 --set size=0.5 --set decay=0.5
+i=0; for p in 0.05 0.875 0.95; do i=$((i+1))
+    ab 2_era p$i era "skank drums" --set space=HALL --set era=$p --set time=0 --set size=0.5 --set decay=0.5
 done
 # TIME (NORMAL) in MASSIVE: predelay across the first third.
-for p in 0.1 0.2 0.3; do
-    ab 3_time time_$p time "skank drums" --set space=MASSIVE --set attack=NORMAL --set era=0 --set size=0.5 --set decay=0.5 --set time=$p
+i=0; for p in 0.1 0.2 0.3; do i=$((i+1))
+    ab 3_time p$i time "skank drums" --set space=MASSIVE --set attack=NORMAL --set era=0 --set size=0.5 --set decay=0.5 --set time=$p
 done
 # TIME (BLOOM) in PLATE: its first notches.
-for p in 0 0.1 0.2; do
-    ab 4_bloom bloom_$p bloom "skank piano" --set space=PLATE --set attack=BLOOM --set era=0 --set size=0.5 --set decay=0.5 --set time=$p
+i=0; for p in 0 0.1 0.2; do i=$((i+1))
+    ab 4_bloom p$i bloom "skank drums" --set space=PLATE --set attack=BLOOM --set era=0 --set size=0.5 --set decay=0.5 --set time=$p
 done
 # MASSIVE on hits (the owner's note): medium and large, the grainy_start settings.
-for p in 0.5:medium 1:large; do
-    ab 5_hits size_${p##*:} hits "hits drums" --set space=MASSIVE --set era=0 --set time=0 --set decay=0.4 --set size=${p%%:*}
+i=0; for p in 0.5 1; do i=$((i+1))
+    ab 5_hits p$i hits "hits drums" --set space=MASSIVE --set era=0 --set time=0 --set decay=0.4 --set size=$p
 done
 
 # Each B must really differ from its A (a prototype that didn't switch on would look identical).
@@ -78,28 +79,17 @@ done
 
 print -r -- "Every knob should change the sound evenly from the first notch to the last, with no stretch that does nothing and no notch that jumps. The M8 audit measured each knob after today's changes (docs/research/knob-feel-audit.md); these are the ones that still jump or sit still. In every card A is today and B is a smoother curve; both are at the same knob position. Pick the one that feels more even (or say neither), and note anything B loses.
 
-Each column is one knob; its rows are positions along the stretch that measured uneven. Play the positions in order, A on all of them and then B, and listen to how much each notch changes.
+Each column is one knob; its rows p1, p2, p3 are positions along the stretch that measured uneven (the chips on each card show the setting). Play the positions in order, A on all of them and then B, and listen to how much each notch changes.
 
 1_decay   DECAY in MASSIVE, SIZE fully CW. Does DECAY now grow evenly from the first notch? Today fully CCW is barely a tail (the build and one echo: its lines are 1.2-2.8 s long and a 2 s tail loses 30 dB a pass), then the first notch jumps to a real tail. B's shortest tail lasts three passes of the lines (6 s at full SIZE, 2.5 s at noon, still 2 s at SIZE fully CCW), so every notch adds about the same. B makes fully CCW longer in big MASSIVEs: is that still short enough?
-2_era     ERA in HALL. Does ERA start doing something from the first notch, and does the Midiverb come in gradually? Today the first 10 % is clean and Neve creeps in; the Midiverb (from 85 %) switches fully on within 2 % of the knob, cutting the tail to a quarter, and the last 13 % then does nothing. B: clean only in the first 3 %, and the Midiverb fades in across its whole stretch, so 87.5 % is partly in and 95 % mostly.
+2_era     ERA in HALL. Does ERA start doing something from the first notch, and does the Midiverb come in gradually? Today the first 10 % is clean and Neve creeps in; the Midiverb (from 85 %) switches fully on within 2 % of the knob, cutting a click's tail to about a fifth, and the last 13 % then does nothing. B: clean only in the first 3 %, and the Midiverb fades in across its whole stretch, so 87.5 % is partly in and 95 % mostly.
 3_time    TIME (NORMAL predelay) in MASSIVE. Does TIME now move the start from the first notch? MASSIVE's wet already starts 0.3 s after a hit, so today's curve (gentle at first) adds almost nothing for the first third. B moves the predelay in straight, even steps (same 0-250 ms range).
 4_bloom   TIME (BLOOM) in PLATE. Does BLOOM's first notch now swell no more than the next? Today BLOOM fully CCW still lets some of the dry attack straight through, so the first notch jumps to a swell. B starts at the shortest full swell (0.12 s instead of 0.1 s).
-5_hits    MASSIVE on hits, medium and large SIZE (your note: \"a little uneven on Hits\"). Does the swell after each hit now build in one even rise? Today its early taps sit in three bunches along each line and the build dips 3-6 dB before the lines' first echoes take over. B has twice as many early taps, each line's offset from the others so they interleave (same total level): the build dips 3 dB at most.
+5_hits    MASSIVE on hits, medium and large SIZE (your note: \"a little uneven on Hits\"). Does the swell after each hit now build in one even rise? Today its early taps sit in three bunches along each line, and the build dips (about 3 dB at medium, 6 dB at large) before the lines' first echoes take over. B has twice as many early taps, each line's offset from the others so they interleave (the same total level): the dip is about 2-3 dB at medium and 3-3.5 dB at large.
 
-decay_0     DECAY fully CCW
-decay_0.1   DECAY 0.1
-decay_0.2   DECAY 0.2
-era_0.05    ERA 5 %
-era_0.875   ERA 87.5 % (just into the Midiverb)
-era_0.95    ERA 95 %
-time_0.1    TIME 0.1
-time_0.2    TIME 0.2
-time_0.3    TIME 0.3
-bloom_0     TIME fully CCW
-bloom_0.1   TIME 0.1
-bloom_0.2   TIME 0.2
-size_medium SIZE noon, DECAY 0.4
-size_large  SIZE fully CW, DECAY 0.4
+p1  the first position: DECAY fully CCW / ERA 5 % / TIME 0.1 / TIME fully CCW / SIZE noon
+p2  the second: DECAY 0.1 / ERA 87.5 % (just into the Midiverb) / TIME 0.2 / TIME 0.1 / SIZE fully CW
+p3  the third: DECAY 0.2 / ERA 95 % / TIME 0.3 / TIME 0.2
 
 A_today     today's curve
 B_smoother  the smoother curve" > renders/$PAGE/README.txt
