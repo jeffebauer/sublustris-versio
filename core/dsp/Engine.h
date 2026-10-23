@@ -81,7 +81,6 @@ public:
     // Test hook: scales the tanks' own modulation (0 = none; DRIFT is separate), to check a
     // structure isn't metallic without it (Costello: tune it to sound good unmodulated).
     void  setModulationScale(float k) { modScale_ = k; }
-    // PROTOTYPE, renders/size_glide: MASSIVE's SIZE glide k × faster (k semitones of bend at most).
     // PROTOTYPE, renders/still_lows (the audit's A4): HALL and MASSIVE keep their lows unmodulated.
     void  setStillLows(bool on) { fdn_.setStillLows(on); twinFdn_.setStillLows(on); }
     // PROTOTYPE (Mutable Instruments idea 4, no measurable gain; kept for a later listen): the
@@ -90,7 +89,6 @@ public:
     // PROTOTYPE, renders/small_hall (owner's M1 notes; the audit's F1/F2, experiment E4): HALL gets
     // in-loop diffusion too, amount 0..1 (× kInLoopCoeff), its allpasses scaled with SIZE.
     void  setHallInLoopDiffusion(float a) { hallInLoop_ = a; }
-    void  setSizeSlewScale(float k) { fdn_.setSizeSlewScale(k); twinFdn_.setSizeSlewScale(k); }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.

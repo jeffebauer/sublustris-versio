@@ -122,7 +122,6 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* hd = std::getenv("IV_HALL_DIFFUSION")) engine.setHallInLoopDiffusion(float(std::atof(hd)));
     if (const char* di = std::getenv("IV_DIFF_INDEPENDENT")) engine.setDiffuserIndependent(std::atoi(di) != 0);
     if (const char* sl = std::getenv("IV_STILL_LOWS")) engine.setStillLows(std::atoi(sl) != 0);
-    if (const char* sl = std::getenv("IV_SIZE_SLEW")) engine.setSizeSlewScale(float(std::atof(sl)));
     if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
     if (!presetPath.empty()) {
         iv::json::Value preset;

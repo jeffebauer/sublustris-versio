@@ -6,15 +6,11 @@
 ## To do
 
 ### Decide
-- [ ] **MASSIVE's SIZE glide** (`renders/size_glide/index.html`, picks): SIZE turned quickly up, then down. A today (a semitone of bend, a full sweep ~40 s), B about 3 semitones (~13 s), C about 6 (~6 s), MASSIVE only.
 
 
 
 
 ### Listen (after your notes)
-- [ ] **M1: the Hall** (`renders/m1_hall/index.html`): SIZE now goes from a small room (shorter lines, and shorter tails, as a small room has) to a huge hall. Is small small enough, and has the buzz on long small rooms gone? TONE's ends go further (dark: more lows, fewer highs; bright: the opposite). Too much, too little?
-- [ ] **M4: MASSIVE and ATTACK** (`renders/m4_massive/index.html`): MASSIVE now starts with what you play and swells from there (it was silent for 1.2 s), and SIZE fully CCW is a wash instead of rhythmic echoes. Does MASSIVE feel connected to the source now? Is the smallest SIZE still big enough?
-- [ ] **M5: PLATE, freeze and paint** (`renders/m5_plate_freeze/index.html`): also, do you still hear an upper harmonic building in a frozen MASSIVE, or two repeats on the skank into a frozen PLATE? Neither measures in the current build (both notes came from the page before the twin), so tell me where if you do. does the PLATE sound like ours, not a stock Dattorro? Is your playing over a frozen pad a subtle layer that fades back out (the twin)? Does paint now add just a little?
 
 ### Listen (first time)
 - [ ] **M6: ERA, DRIFT** (`renders/m6_character/index.html`): does ERA feel like going back in time, stage by stage? Are DRIFT's tape side and Cathedra side what you hear in your head? All numbers are starting guesses for you to tune.
@@ -41,6 +37,8 @@
 
 ## Done
 
+- 23 Oct 2026: **MASSIVE's SIZE glide stays a semitone** (A on all 4: "the most smooth and cohesive"; 3 semitones made "odd stepped harmonies", 6 "staticky brick walls").
+- 23 Oct 2026: **M1, M4 and M5 re-listened**: "sounding much better" (HALL; TONE "sounds good"), "much better" (MASSIVE and ATTACK), "excellent" (PLATE, freeze and paint).
 - 23 Oct 2026: **Ducking is now 4:1 compression** (D on all 18; ADR 0014 amended): attack 30 ms, release 0.4 s, about 3 dB while you play at infinite DECAY, no darkening; DARKEN is gone. A freeze lets it go in 50 ms, so a fresh pad doesn't swell up.
 - 23 Oct 2026: **The small HALL** (E on all 10): smallest SIZE 35 ms with in-loop diffusion at the small end; its ringing at long DECAYs dropped (12.7 → 7.3 dB, infinite 10.2 → 0). Raising the minimum squeezes HALL's whole range, so SIZE noon is now a slightly bigger room (where 0.61 was: 95 ms instead of 72, tails ~10 % longer). Worth a listen on the next HALL page.
 - 23 Oct 2026: **The held-tail makeup approved** (A on all 4; ADR 0008).

@@ -116,7 +116,7 @@ IV_SIZE_OPT void Fdn::setMeanSeconds(float meanSeconds, float spread, bool snap)
 void Fdn::control(int n)
 {
     const float dt = float(n) / sampleRate_;
-    const float slew = voicing::kSizeSlewPerSecond * slewScale_ * float(n); // samples of length per block
+    const float slew = voicing::kSizeSlewPerSecond * float(n); // samples of length per block
     const float floorDepth = voicing::kFloorDepthSeconds * sampleRate_ * modDepth_;
     const float floorCoeff = 1.0f - std::exp(-2.0f * 3.14159265f * 0.3f * dt);
 

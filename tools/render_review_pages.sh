@@ -316,28 +316,3 @@ C_massive_large    SIZE fully CW" > renders/grainy_start/README.txt
 fi
 
 
-if on size_glide; then
-    # TASKS "MASSIVE's SIZE glide": SIZE moves bend at most a semitone (ADR 0012); a faster
-    # swoop in MASSIVE only? IV_SIZE_SLEW = × the semitone glide.
-    saved=("${MATERIALS[@]}"); MATERIALS=()
-    for m in pad keys stabs skank; do
-        [ -f $SRC/glide_$m.wav ] || ffmpeg -v error -y -i $SRC/$m.wav -af "apad=whole_dur=45" -c:a pcm_s24le $SRC/glide_$m.wav
-        print -r -- '{ "breakpoints": [ {"t": 0, "key": "size", "value": 0}, {"t": 4.0, "key": "size", "value": 0}, {"t": 4.5, "key": "size", "value": 1}, {"t": 24.0, "key": "size", "value": 1}, {"t": 24.5, "key": "size", "value": 0} ] }' > $SRC/sweep_glide_$m.json
-        MATERIALS+=(glide_$m)
-    done
-    page size_glide
-    for v in 1:A_semitone 3:B_three_semitones 7:C_six_semitones; do
-        IV_SIZE_SLEW=${v%%:*} r size_glide massive ${v##*:} sweep --set space=MASSIVE --set era=0 --set decay=0.6
-    done
-    MATERIALS=("${saved[@]}")
-    print -r -- "MASSIVE's SIZE glide. At 4 s SIZE is turned quickly from fully CCW to fully CW, at 24 s back. A SIZE move bends pitch like tape, at most a semitone today, so the full sweep glides for ~40 s and never finishes before it's turned back. B and C let MASSIVE swoop faster with more bend (HALL and PLATE stay at a semitone). Which feels right when you turn SIZE in MASSIVE?
-
-massive  MASSIVE, DECAY 0.6, ERA clean
-
-A_semitone          today: at most a semitone of bend, a full sweep takes ~40 s
-B_three_semitones   about 3 semitones of bend, a full sweep in ~13 s
-C_six_semitones     about 6 semitones of bend (a tritone), a full sweep in ~6 s" > renders/size_glide/README.txt
-    python3 tools/review/make_review.py renders/size_glide --title "Immensio: MASSIVE's SIZE glide" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/size_glide/index.html"
-fi
-
