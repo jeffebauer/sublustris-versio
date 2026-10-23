@@ -19,6 +19,7 @@
 #include "Sweep.h"
 #include "Wav.h"
 #include "dsp/Engine.h"
+#include "params/Mappings.h"
 
 #include <algorithm>
 #include <cmath>
@@ -123,6 +124,25 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* di = std::getenv("IV_DIFF_INDEPENDENT")) engine.setDiffuserIndependent(std::atoi(di) != 0);
     if (const char* sl = std::getenv("IV_STILL_LOWS")) engine.setStillLows(std::atoi(sl) != 0);
     if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
+    // PROTOTYPE, the M8 knob-feel audit (docs/research/knob-feel-audit.md, renders/knob_feel):
+    // IV_KNOB_FEEL = comma list of decay, era, time, bloom, hits (or "all"): smoother curves, off
+    // by default. IV_FEEL_PASSES / _CLEAN / _MIDIPOW / _BLOOMMIN / _TAPS / _TAPCOUNT tune them for the trials.
+    if (const char* kf = std::getenv("IV_KNOB_FEEL")) {
+        const std::string s = std::string(",") + kf + ",";
+        auto has = [&](const char* n) { return s.find(std::string(",") + n + ",") != std::string::npos || s == ",all,"; };
+        namespace f = iv::map::feel;
+        engine.setKnobFeel((has("decay") ? f::kDecay : 0u) | (has("era") ? f::kEra : 0u) | (has("time") ? f::kTime : 0u)
+                           | (has("bloom") ? f::kBloom : 0u) | (has("hits") ? f::kHits : 0u));
+    }
+    auto& tune = iv::map::feel::tuning();
+    if (const char* v = std::getenv("IV_FEEL_PASSES")) tune.massivePasses = float(std::atof(v));
+    if (const char* v = std::getenv("IV_FEEL_CLEAN")) tune.eraCleanTop = float(std::atof(v));
+    if (const char* v = std::getenv("IV_FEEL_MIDIPOW")) tune.midiPower = float(std::atof(v));
+    if (const char* v = std::getenv("IV_FEEL_BLOOMMIN")) tune.bloomMin = float(std::atof(v));
+    if (const char* v = std::getenv("IV_FEEL_TAPS")) tune.earlyTapScale = float(std::atof(v));
+    if (const char* v = std::getenv("IV_FEEL_TAPCOUNT")) tune.earlyTapCount = std::atoi(v);
+    if (const char* v = std::getenv("IV_FEEL_TAPPOW")) tune.earlyTapPower = float(std::atof(v));
+    if (const char* v = std::getenv("IV_FEEL_TAPEVEN")) tune.earlyTapEven = std::atoi(v);
     if (!presetPath.empty()) {
         iv::json::Value preset;
         if (!iv::json::loadFile(presetPath, preset, error)) return false;

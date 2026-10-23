@@ -94,6 +94,9 @@ public:
     // Test/demo override of HALL's in-loop diffusion amount (default kHallInLoopDiffusion, v1.0.17;
     // 0..1 × kInLoopCoeff, fading out by SIZE noon).
     void  setHallInLoopDiffusion(float a) { hallInLoop_ = a; }
+    // PROTOTYPE (M8 knob-feel audit, renders/knob_feel): smoother knob curves, a mask of
+    // map::feel bits (Mappings.h). 0 = today's curves, the default.
+    void  setKnobFeel(unsigned mask) { feel_ = mask; }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.
@@ -125,6 +128,8 @@ private:
     void onGesture(GestureReader::Event e);
     void controlTick(int n);
     void applySpace(bool snap);
+    float decayRate(float decay, float size) const;
+    float earlyTaps() const;
     float smoothed(ParamId id) const { return smooth_[static_cast<size_t>(id)]; }
 
     float sampleRate_   = 48000.0f;
@@ -193,6 +198,7 @@ private:
     float modScale_ = 1.0f;  // test hook (setModulationScale)
     float diffMotionNow_ = 0.0f, diffMotionPhase_ = 0.0f; // the PLATE's wandering input allpass, samples
     float hallInLoop_ = voicing::kHallInLoopDiffusion; // setHallInLoopDiffusion overrides it (renders/hall_diffusion)
+    unsigned feel_ = 0; // setKnobFeel (prototype)
     float reverseMean_ = -1.0f;
 
     // Freeze (ADR 0009–0011). Button and gate edges this block, by offset.

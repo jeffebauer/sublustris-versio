@@ -60,21 +60,34 @@ IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed, flo
         era_[i].prepare(sampleRate);
         driftGen_[i].prepare(sampleRate, seed * 2654435761u + uint32_t(i) * 40503u + 1u, float(i) / float(kN - 1));
     }
-    // Early taps: fixed, staggered points along each line (seeded, so every
-    // build is the same), louder the later they sit, so the first sound is
-    // quiet and the tank swells from there.
-    uint32_t es = 0xEA51u;
-    for (int i = 0; i < kN; ++i)
-        for (int k = 0; k < kEarlyTaps; ++k) {
-            const float u = 0.5f + 0.35f * uniform(es); // 0.15..0.85 of a slot
-            earlyFrac_[i][k] = (float(k) + u) / float(kEarlyTaps);
-            earlyGain_[i][k] = voicing::kEarlyTapLow + (1.0f - voicing::kEarlyTapLow) * earlyFrac_[i][k];
-            if (uniform(es) < 0.0f) earlyGain_[i][k] = -earlyGain_[i][k];
-        }
+    setEarlyLayout(kEarlyTaps);
     for (auto& t : lenTarget_) t = 0.0f;
     setMeanSeconds(0.1f, 1.0f, true);
     reset();
     return ready_;
+}
+
+// Early taps: fixed, staggered points along each line (seeded, so every
+// build is the same), louder the later they sit, so the first sound is
+// quiet and the tank swells from there. count > kEarlyTaps: the knob-feel
+// prototype (Engine::setKnobFeel, feel::kHits), more taps closer together.
+void Fdn::setEarlyLayout(int count, float power, int even)
+{
+    earlyPower_ = power;
+    earlyEven_ = even;
+    earlyCount_ = count < 1 ? 1 : (count > kEarlyTapsMax ? kEarlyTapsMax : count);
+    uint32_t es = 0xEA51u;
+    for (int i = 0; i < kN; ++i)
+        for (int k = 0; k < earlyCount_; ++k) {
+            float u = 0.5f + 0.35f * uniform(es); // 0.15..0.85 of a slot
+            // even (prototype): each line's taps offset by its own share of a slot, so the 8 lines'
+            // taps interleave instead of bunching (1: shorter lines earlier, 2: later).
+            if (even) u = (float(even == 1 ? i : kN - 1 - i) + 0.5f) / float(kN);
+            earlyFrac_[i][k] = (float(k) + u) / float(earlyCount_);
+            const float rise = power == 1.0f ? earlyFrac_[i][k] : std::pow(earlyFrac_[i][k], power);
+            earlyGain_[i][k] = voicing::kEarlyTapLow + (1.0f - voicing::kEarlyTapLow) * rise;
+            if (uniform(es) < 0.0f) earlyGain_[i][k] = -earlyGain_[i][k];
+        }
 }
 
 IV_SIZE_OPT void Fdn::reset()
@@ -205,7 +218,7 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                     // Each line's taps go out with another line's signs, so they decorrelate from the ends.
                     const int j = (i + 3) & (kN - 1);
                     float e = 0.0f;
-                    for (int k = 0; k < kEarlyTaps; ++k) {
+                    for (int k = 0; k < earlyCount_; ++k) {
                         const float d  = 1.0f + earlyFrac_[i][k] * lenNow_[i];
                         const auto  di = uint32_t(d);
                         const float t  = d - float(di);
