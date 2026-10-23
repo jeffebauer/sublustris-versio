@@ -541,8 +541,9 @@ void Engine::controlTick(int n)
         // the slower levels still remember the tail before the freeze (it can fall 130 dB in a second),
         // and the makeup swelled the pad up towards it for minutes, 25-55 dB, even a finished tail from
         // -260 dBFS (soak audit). Then the 8 s level starts over from now (the hold judges on it).
+        // Above the 1.5 s level too, so a pad whose level swings (a 50 ms dip) isn't misjudged.
         const float nowDb = activeSpace_ == 0 ? plate_.fastLevelDb() : fdn_.fastLevelDb();
-        if (tankSlowLevelDb() > nowDb + 3.0f) {
+        if (tankSlowLevelDb() > std::fmax(nowDb, tankLevelDb()) + 3.0f) {
             fdn_.resyncHoldLevelToFast();
             lowFdn_.resyncHoldLevelToFast();
             plate_.resyncHoldLevelToFast();
