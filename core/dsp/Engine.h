@@ -48,6 +48,7 @@ public:
         return dsp::Fdn::memoryFloats(sampleRate) + 2 * dsp::Swell::memoryFloats(sampleRate) // the tank's swell and the twin's
              + dsp::Reverse::memoryFloats(sampleRate) + 2 * dsp::Plate::memoryFloats(sampleRate, voicing::kPlateMaxScale, true)
              + dsp::Fdn::memoryFloats(sampleRate) // the freeze twin
+             + dsp::Fdn::memoryFloats(sampleRate / float(kLowDecimate)) // PROTOTYPE: still lows' low tank
              + dsp::Fdn::memoryFloats(sampleRate, voicing::kReverseMaxLineSeconds) // REVERSE's short reverb
              + 2 * dsp::nextPow2(size_t(voicing::kPredelayMaxSeconds * sampleRate) + 4);
     }
@@ -82,7 +83,8 @@ public:
     // structure isn't metallic without it (Costello: tune it to sound good unmodulated).
     void  setModulationScale(float k) { modScale_ = k; }
     // PROTOTYPE, renders/still_lows (the audit's A4): HALL and MASSIVE keep their lows unmodulated.
-    void  setStillLows(bool on) { fdn_.setStillLows(on); twinFdn_.setStillLows(on); }
+    // 0 off, 1 one-pole, 2 LR2, 3 LR4 (two reads per line); 4 two tanks (docs/research/still-lows.md).
+    void  setStillLows(int mode, float hz = 400.0f);
     // PROTOTYPE (Mutable Instruments idea 4, no measurable gain; kept for a later listen): the
     // right input diffuser gets its own lengths instead of a 1.071x copy of the left.
     void  setDiffuserIndependent(bool on);
@@ -112,6 +114,7 @@ public:
 
 private:
     static constexpr int kChunk = dsp::Fdn::kControlBlock;
+    static constexpr int kLowDecimate = 4; // PROTOTYPE: still lows' low tank runs at 12 kHz
     static constexpr int kMaxEdges = 16;
 
     void queueEdge(bool isButton, bool level, int offset);
@@ -146,6 +149,19 @@ private:
     // The freeze twin: the frozen tank's space, with its own decay.
     dsp::Fdn          twinFdn_;
     dsp::Fdn          reverseFdn_; // REVERSE's short reverb
+    // PROTOTYPE (still lows, mode 4; docs/research/still-lows.md): the tank's input splits at a
+    // crossover (Butterworth); the highs go to fdn_, the lows to lowFdn_, an unmodulated tank at
+    // 1/kLowDecimate the rate, which follows fdn_'s SIZE, DECAY and governor.
+    void              processTwoTanks(int n);
+    dsp::Fdn          lowFdn_;
+    bool              lowTank_ = false;
+    static constexpr float kLowAntiAliasHz = 2000.0f;
+    float             xoL_[5] = {}, xoH_[5] = {}, aaL_[5] = {}; // biquads b0 b1 b2 a1 a2: crossover LP/HP, 2 kHz LP
+    float             xoZ_[2][6][2] = {};              // per channel: in LP, in AA, in HP, (spare), out AA
+    int               lowPhase_ = 0;
+    float             lowPrev_[2] = {}, lowCur_[2] = {};
+    float             lowInL_[kChunk / kLowDecimate + 2] = {}, lowInR_[kChunk / kLowDecimate + 2] = {};
+    float             lowOutL_[kChunk / kLowDecimate + 2] = {}, lowOutR_[kChunk / kLowDecimate + 2] = {};
     dsp::Plate        twinPlate_;
     dsp::Diffuser<4>  twinDiffuser_[2];
     float             twinMean_ = -1.0f, twinSpread_ = -1.0f;

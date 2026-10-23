@@ -1,12 +1,12 @@
 # Owner tasks
 
-**Last updated:** 23 Oct 2026, session 3 (every pick acted on; M6 re-rendered for its first listen).
+**Last updated:** 23 Oct 2026, session 4 (still lows rebuilt safely: one pick waiting on you).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- Nothing open: every pick so far is acted on.
+- [ ] **Bass in a moving tail, round 2** (`renders/still_lows/index.html`, pick A or B per card): last time's B built up energy, so it was rebuilt the established way (the lows get their own reverb that never moves, as in Keith Barr's dual-band reverb and Eventide's H90 Hall). Checked safe first: nothing builds up, infinite holds stay put, every band rings as long as today's. Does the steadier bass sound better, or do you miss the movement down there? Known catch: with ERA at the Midiverb end, tails end a little sooner (to fix if you pick B).
 
 ### Listen (after your notes)
 - Nothing open.
@@ -23,7 +23,6 @@
 
 ## Waiting on Claude
 
-- **Still lows, done safely** (your B on MASSIVE): the two-read crossover isn't energy-preserving. Research says modulating the feedback matrix is stable where modulated delays aren't (Schlecht & Habets 2015, 2020); find an established way to keep the bass steady, then a new page.
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 - **M8 tuning** from your listening notes on the pages above, including MASSIVE medium and large sounding a little uneven on Hits (grainy_start; the new grain figure says it's smooth there, so measure the level of the swell and taps).
@@ -35,6 +34,7 @@
 
 ## Done
 
+- 23 Oct 2026: **Still lows rebuilt safely, for your re-listen** (`docs/research/still-lows.md`). Splitting each line in two inside the loop can't be made safe: the steadier splits stop the build-up but let infinite holds drain and the band around the split die early. The lows get their own still reverb instead (two tanks), which measures like today in every band, holds 10 minutes everywhere and keeps a 55 Hz bass within ~10 cents (HALL with DRIFT CW: 190 today).
 - 23 Oct 2026: **MASSIVE's SIZE glide stays a semitone** (A on all 4: "the most smooth and cohesive"; 3 semitones made "odd stepped harmonies", 6 "staticky brick walls").
 - 23 Oct 2026: **M1, M4 and M5 re-listened**: "sounding much better" (HALL; TONE "sounds good"), "much better" (MASSIVE and ATTACK), "excellent" (PLATE, freeze and paint).
 - 23 Oct 2026: **Ducking is now 4:1 compression** (D on all 18; ADR 0014 amended): attack 30 ms, release 0.4 s, about 3 dB while you play at infinite DECAY, no darkening; DARKEN is gone. A freeze lets it go in 50 ms, so a fresh pad doesn't swell up.

@@ -76,6 +76,12 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
     ready_ &= reverse_.prepare(large_, sampleRate);
     ready_ &= twinFdn_.prepare(large_, sampleRate, 0x7A1Eu);
+    ready_ &= lowFdn_.prepare(large_, sampleRate / float(kLowDecimate), 0x10F7u);
+    lowFdn_.setGovernorLeader(&fdn_);
+#ifndef IV_STILL_LOWS_DEFAULT
+#define IV_STILL_LOWS_DEFAULT 0 // PROTOTYPE: a scratch build can run every test with a mode on
+#endif
+    setStillLows(IV_STILL_LOWS_DEFAULT, 300.0f);
     // REVERSE's short reverb: short lines, no in-loop diffusion or early taps, never infinite.
     ready_ &= reverseFdn_.prepare(large_, sampleRate, 0x2E7Eu, voicing::kReverseMaxLineSeconds);
     reverseFdn_.setMeanSeconds(map::reverseMeanSeconds(0.5f), 1.0f, true);
@@ -89,6 +95,27 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     tilt_.prepare(sampleRate);
     limiter_.prepare(sampleRate);
     reset();
+}
+
+void Engine::setStillLows(int mode, float hz)
+{
+    lowTank_ = mode == 4;
+    fdn_.setStillLows(lowTank_ ? 0 : mode, hz);
+    twinFdn_.setStillLows(lowTank_ ? 0 : mode, hz);
+    fdn_.setExternalPower(0.0f);
+    // The crossover: a 2nd-order Butterworth pair (bilinear). The two tanks' outputs are uncorrelated,
+    // so they add in power, and a Butterworth pair is power complementary (|L|² + |H|² = 1).
+    auto butter = [this](float f, float* lp, float* hp) {
+        const float k = dsp::bilinearK(f, sampleRate_);
+        const float nrm = 1.0f / (1.0f + 1.41421356f * k + k * k);
+        lp[0] = k * k * nrm; lp[1] = 2.0f * lp[0]; lp[2] = lp[0];
+        hp[0] = nrm; hp[1] = -2.0f * nrm; hp[2] = nrm;
+        lp[3] = hp[3] = 2.0f * (k * k - 1.0f) * nrm;
+        lp[4] = hp[4] = (1.0f - 1.41421356f * k + k * k) * nrm;
+    };
+    float unused[5];
+    butter(hz, xoL_, xoH_);
+    butter(kLowAntiAliasHz, aaL_, unused); // flat below the crossover; with it, −70 dB at 6 kHz
 }
 
 IV_SIZE_OPT void Engine::reset()
@@ -124,6 +151,10 @@ IV_SIZE_OPT void Engine::reset()
     applySpace(true);
     swell_.reset();
     fdn_.reset();
+    lowFdn_.reset();
+    for (auto& c : xoZ_) for (auto& z : c) z[0] = z[1] = 0.0f;
+    lowPhase_ = 0;
+    lowPrev_[0] = lowPrev_[1] = lowCur_[0] = lowCur_[1] = 0.0f;
     plate_.reset();
     reverse_.reset();
     reverseFdn_.reset();
@@ -198,6 +229,7 @@ void Engine::onGesture(GestureReader::Event e)
         padCaptured_ = false;
         frozeAt_ = clock_;
         fdn_.resyncHoldLevel();
+        lowFdn_.resyncHoldLevel();
         plate_.resyncHoldLevel();
         tankInTarget_ = 0.0f;
         tankInStep_ = tankStep;
@@ -291,6 +323,7 @@ void Engine::applySpace(bool snap)
             lastMean_ = mean;
             lastSpread_ = spread;
             fdn_.setMeanSeconds(mean, spread, snap);
+            lowFdn_.setMeanSeconds(mean, spread, snap);
         }
         fdn_.setDecayRate(rate);
         fdn_.setHighT60Ratio(highRatio);
@@ -311,6 +344,17 @@ void Engine::applySpace(bool snap)
         fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(size, decay));
         fdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
         fdn_.setModDepth(modScale_);
+        // PROTOTYPE (still lows): the low tank follows, unmodulated.
+        lowFdn_.setDecayRate(rate);
+        lowFdn_.setHighT60Ratio(highRatio);
+        lowFdn_.setGovernor(governor);
+        lowFdn_.setFloorDb(floorDb);
+        lowFdn_.setHoldDb(holdDb);
+        lowFdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallDiff);
+        lowFdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(size) / 0.2f));
+        lowFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim : map::hallSizeLevelTrim(size, decay));
+        lowFdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
+        lowFdn_.setModDepth(0.0f);
     }
 
     // ERA in the loop and DRIFT (SPEC §4.6, §4.7). Freezing glides the
@@ -338,6 +382,9 @@ void Engine::applySpace(bool snap)
         fdn_.setEra(loopEra);
         fdn_.setDrift(drift);
         fdn_.setExtraRate(compress);
+        lowFdn_.setEra(loopEra);
+        lowFdn_.setDrift(dsp::DriftAmounts{0.0f, 0.5f, 0.0f, 7.0f, 0.0f, 0.1f});
+        lowFdn_.setExtraRate(compress);
     }
     muLaw_.set(era);
     eraMakeup_ = era.makeup;
@@ -516,6 +563,7 @@ void Engine::controlTick(int n)
         if (flipGain_ <= 0.0f) {
             activeSpace_ = space;
             fdn_.reset();
+            lowFdn_.reset();
             plate_.reset();
             swell_.reset();
             reverse_.reset();
@@ -634,7 +682,8 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         }
 
         if (activeSpace_ == 0) plate_.process(bufL_, bufR_, wetL_, wetR_, n);
-        else fdn_.process(bufL_, bufR_, wetL_, wetR_, n);
+        else if (!lowTank_) fdn_.process(bufL_, bufR_, wetL_, wetR_, n);
+        else processTwoTanks(n);
         for (int i = 0; i < n; ++i) revL_[i] = revR_[i] = 0.0f;
         if (reverseOn) reverseFdn_.process(revInL_, revInR_, revL_, revR_, n);
 
@@ -661,6 +710,55 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
     }
     // Edges beyond this block's length (a host's bad offset) apply next block.
     for (int i = 0; i < edgeCount_; ++i) edges_[i].offset -= numSamples;
+}
+
+// PROTOTYPE (still lows, mode 4): split the tank's input (Butterworth), the highs through fdn_, the lows
+// decimated through lowFdn_ (anti-aliased by the crossover's lowpass and a 2 kHz one), then linearly
+// interpolated back up and through the 2 kHz lowpass again (anti-image).
+void Engine::processTwoTanks(int n)
+{
+    auto bq = [](const float* c, float* z, float v) {
+        const float y = c[0] * v + z[0];
+        z[0] = c[1] * v - c[3] * y + z[1];
+        z[1] = c[2] * v - c[4] * y;
+        return y;
+    };
+    const int phase0 = lowPhase_;
+    int k = 0;
+    for (int i = 0; i < n; ++i) {
+        float* buf[2] = {bufL_, bufR_};
+        for (int c = 0; c < 2; ++c) {
+            const float x = buf[c][i];
+            const float lo = bq(aaL_, xoZ_[c][1], bq(xoL_, xoZ_[c][0], x));
+            buf[c][i] = bq(xoH_, xoZ_[c][2], x);
+            if (lowPhase_ == 0) (c ? lowInR_ : lowInL_)[k] = lo;
+        }
+        if (lowPhase_ == 0) ++k;
+        lowPhase_ = (lowPhase_ + 1) % kLowDecimate;
+    }
+    fdn_.process(bufL_, bufR_, wetL_, wetR_, n);
+    for (int j = 0; j < k; ++j) lowOutL_[j] = lowOutR_[j] = 0.0f;
+    if (k > 0) lowFdn_.process(lowInL_, lowInR_, lowOutL_, lowOutR_, k);
+    lowPhase_ = phase0;
+    int j = 0;
+    double power = 0.0;
+    for (int i = 0; i < n; ++i) {
+        if (lowPhase_ == 0) {
+            lowPrev_[0] = lowCur_[0]; lowPrev_[1] = lowCur_[1];
+            lowCur_[0] = lowOutL_[j]; lowCur_[1] = lowOutR_[j];
+            ++j;
+        }
+        const float t = float(lowPhase_) / float(kLowDecimate);
+        float* wet[2] = {wetL_, wetR_};
+        for (int c = 0; c < 2; ++c) {
+            const float up = lowPrev_[c] + t * (lowCur_[c] - lowPrev_[c]);
+            const float y = bq(aaL_, xoZ_[c][4], up); // anti-image (linear interpolation's own sinc² helps)
+            wet[c][i] += y;
+            power += 0.5 * double(y) * y;
+        }
+        lowPhase_ = (lowPhase_ + 1) % kLowDecimate;
+    }
+    fdn_.setExternalPower(float(power / double(n)));
 }
 
 } // namespace iv

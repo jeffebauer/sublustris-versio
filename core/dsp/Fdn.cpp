@@ -47,6 +47,7 @@ IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed, flo
 {
     sampleRate_ = sampleRate;
     lowCoeff_ = 1.0f - std::exp(-6.2831853f * 400.0f / sampleRate);
+    setStillLows(stillLows_, stillHz_);
     shelfK_ = lossShelfK(sampleRate);
     maxLen_ = maxLineSeconds * sampleRate - 4.0f;
     ready_ = true;
@@ -78,6 +79,19 @@ IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed, flo
     return ready_;
 }
 
+void Fdn::setStillLows(int mode, float hz)
+{
+    stillLows_ = mode;
+    stillHz_ = hz;
+    const float k = bilinearK(hz, sampleRate_);
+    lrA_ = (k - 1.0f) / (k + 1.0f);
+    const float n = 1.0f / (1.0f + 1.41421356f * k + k * k);
+    bqL_[0] = k * k * n; bqL_[1] = 2.0f * bqL_[0]; bqL_[2] = bqL_[0];
+    bqH_[0] = n; bqH_[1] = -2.0f * n; bqH_[2] = n;
+    bqL_[3] = bqH_[3] = 2.0f * (k * k - 1.0f) * n;
+    bqL_[4] = bqH_[4] = (1.0f - 1.41421356f * k + k * k) * n;
+}
+
 IV_SIZE_OPT void Fdn::reset()
 {
     for (int i = 0; i < kN; ++i) {
@@ -87,6 +101,7 @@ IV_SIZE_OPT void Fdn::reset()
         absorbY_[i] = absorbX_[i] = 0.0f;
         interp_[i] = 0.0f;
         stillInterp_[i] = lpStill_[i] = lpMod_[i] = 0.0f;
+        for (int k = 0; k < 4; ++k) lrX_[i][k] = lrY_[i][k] = bqZ_[i][k][0] = bqZ_[i][k][1] = 0.0f;
         era_[i].reset();
         driftGen_[i].reset();
         floorTarget_[i] = floorA_[i] = floorB_[i] = 0.0f;
@@ -122,7 +137,8 @@ void Fdn::control(int n)
 
     // The floor governor's extra loss (ADR 0008).
     governor_.control(n, sampleRate_);
-    const float governRate = governor_.extraRate;
+    const FloorGovernor& gov = leader_ ? leader_->governor_ : governor_;
+    const float governRate = gov.extraRate;
 
     inLoopNow_ += (1.0f - std::exp(-dt / 0.08f)) * (inLoopTarget_ - inLoopNow_);
     if (inLoopNow_ < 1e-4f && inLoopTarget_ == 0.0f) inLoopNow_ = 0.0f;
@@ -164,7 +180,7 @@ void Fdn::control(int n)
         }
         const float apSeconds = inLoopNow_ > 0.0f ? float(apLenNow_[i][0] + apLenNow_[i][1]) / sampleRate_ : 0.0f;
         const Absorb a = absorbent(lenNow_[i] / sampleRate_ + apSeconds, decayRate_ + governRate + extraRate_, highRatio_,
-                                   governor_.darken, shelfK_);
+                                   gov.darken, shelfK_);
         b1_[i] = a.b1;
         gain_[i] = a.gain;
         pole_[i] = a.pole;
@@ -187,11 +203,32 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                 readNow_[i] += readStep_[i];
                 float x = line_[i].readAllpass(readNow_[i], interp_[i]);
                 stillNow_[i] += stillStep_[i];
-                if (stillLows_) { // PROTOTYPE: the lows from the unmodulated read, the rest from the moving one
+                if (stillLows_ == 1) { // PROTOTYPE: the lows from the unmodulated read, the rest from the moving one
                     const float still = line_[i].readAllpass(stillNow_[i], stillInterp_[i]);
                     lpStill_[i] += lowCoeff_ * (still - lpStill_[i]);
                     lpMod_[i] += lowCoeff_ * (x - lpMod_[i]);
                     x += lpStill_[i] - lpMod_[i];
+                } else if (stillLows_ == 2) {
+                    float lo = line_[i].readAllpass(stillNow_[i], stillInterp_[i]), hi = x;
+                    for (int k = 0; k < 2; ++k) {
+                        const float al = lrA_ * lo + lrX_[i][k] - lrA_ * lrY_[i][k];
+                        lrX_[i][k] = lo; lrY_[i][k] = al; lo = 0.5f * (lo + al);
+                        const float ah = lrA_ * hi + lrX_[i][k + 2] - lrA_ * lrY_[i][k + 2];
+                        lrX_[i][k + 2] = hi; lrY_[i][k + 2] = ah; hi = 0.5f * (hi - ah);
+                    }
+                    x = lo - hi;
+                } else if (stillLows_ == 3) {
+                    float lo = line_[i].readAllpass(stillNow_[i], stillInterp_[i]), hi = x;
+                    for (int k = 0; k < 4; ++k) {
+                        const float* c = k < 2 ? bqL_ : bqH_;
+                        float& v = k < 2 ? lo : hi;
+                        float* z = bqZ_[i][k];
+                        const float y = c[0] * v + z[0];
+                        z[0] = c[1] * v - c[3] * y + z[1];
+                        z[1] = c[2] * v - c[4] * y;
+                        v = y;
+                    }
+                    x = lo + hi;
                 }
                 if (apG > 0.0f)
                     for (int k = 0; k < 2; ++k) { // in-loop diffusion (MASSIVE)
@@ -209,7 +246,7 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                 l += kOutL[i] * y[i];
                 r += kOutR[i] * y[i];
             }
-            governor_.add(0.5f * outGain * outGain * (l * l + r * r)); // the tank's own level, before the taps
+            governor_.add(0.5f * outGain * outGain * (l * l + r * r) + externalPower_); // the tank's own level, before the taps
             if (earlyG > 0.0f)
                 for (int i = 0; i < kN; ++i) {
                     // Each line's taps go out with another line's signs, so they decorrelate from the ends.
