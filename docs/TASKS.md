@@ -1,15 +1,11 @@
 # Owner tasks
 
-**Last updated:** 23 Oct 2026, session 3 (every A/B pick acted on; nothing waiting for a pick).
+**Last updated:** 23 Oct 2026, session 3 (four picks acted on; pages left: ducking, small_hall, makeup, size_glide). Previously: 23 Oct 2026, session 3 (every A/B pick acted on; nothing waiting for a pick).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- [ ] **ERA's Midiverb** (`renders/midiverb/index.html`, picks; the DSP audit's E1): ERA fully CW today is a bitcrusher on the tail (8 bits, bright grit). B rebuilds it as the real 1986 unit (13 bits and a dark loop): much darker and smoother. Which feels more like the Midiverb?
-- [ ] **BLOOM on percussion** (`renders/swell_smear/index.html`, picks; the DSP audit's S1): a hit through a long BLOOM comes back as a rising train of ghost hits (measured: the swell flickers 3–7.5 dB). B smears each of the swell's taps across the gap to the next. A today or B?
-- [ ] **The PLATE's stereo image** (`renders/plate_stereo/index.html`, picks; the audit's P1): play hard left and the plate first answers only on the right. B answers on the side you played. A (a ping-pong) or B?
-- [ ] **Repeated hits in the PLATE** (`renders/diffuser_motion/index.html`, picks; Mutable Instruments idea): identical hits enter the plate identically. B lets the first input allpass wander very slightly. Subtle; A or B?
 - [ ] **Ducking at infinite DECAY** (`renders/ducking/index.html`, picks, not level-matched; your M1 notes): A today (darkens and dips), B none, C/D/E 4:1 compression with no darkening (quick 10 ms / 0.15 s, smooth 30 ms / 0.4 s, slow 50 ms / 1 s), in HALL, MASSIVE and PLATE on the new material. Measured: any ducking makes the tail rise when you stop; E pumps least (2.1–3.5 dB) with the smallest step.
 - [ ] **The small HALL's build-up** (`renders/small_hall/index.html`, picks; your M1 notes): at long and infinite DECAY, A today, B the smallest SIZE raised to 35 ms, C/D in-loop diffusion (a little / more), E both. Measured on noise: B rings least at long DECAY, the diffusion least at infinite. Your M1 TONE note ("sounds good") is logged.
 - [ ] **The held-tail makeup** (`renders/makeup/index.html`, picks, not level-matched): with it, an infinite tail holds where it settled; without it, with tape wobble and the cassette, MASSIVE sags about 3 dB over 10 minutes and HALL about 2.4 dB (frozen pads hold either way). It's the one place the loop may go a hair over 1. Each card is 20 s at minute 1 and at minute 10. Keep it (A) or drop it (B)?
@@ -49,6 +45,10 @@
 
 ## Done
 
+- 23 Oct 2026: **ERA's Midiverb rebuilt as the real unit** (B on all 15): 13 bits and its dark loop instead of an 8-bit bitcrusher; level across ERA's last stretch kept within about 1.4 dB (make-up 1.2 → 1.0 dB).
+- 23 Oct 2026: **BLOOM smears its taps** (B on all 15): no more ghost hits. Your note "the attack is a little slower" measured true (the smear adds delay); the taps now close up so the swell still peaks on time, but its very start (first 10 %) still arrives 0.06–0.4 s later. Worth a re-listen on the next BLOOM page. BLOOM only, not MASSIVE's mass.
+- 23 Oct 2026: **PLATE's repeated hits** (B on all 4): its first input allpass wanders very slightly, so identical hits don't enter the plate identically.
+- 23 Oct 2026: **PLATE's stereo image stays as it is** (A on all 8: "more cohesive"; answering on the same side "creates a sonic gap").
 - 23 Oct 2026: **Bass in a moving tail: you liked B ("the frequency response feels more even and balanced"), but it isn't safe yet, so nothing changed.** Your HALL tape note ("waves of built-up distortion") measured as energy building in the loop: the still and moving reads add up to +3 dB a pass where they cross (~400 Hz), up to +12.7 dB in a small HALL. Made MASSIVE's default, it broke the 10-minute infinite hold and shortened MASSIVE's 1 kHz decay (22 → 17 s), so it's reverted. Part of the "even balance" you heard may have been that side effect. A stable design is on Claude's list.
 - 23 Oct 2026: **Steadier grainy reading merged** (your OK): the new "grain" figure moves by at most ~0.01 s where the old one swung 1.6 s. Only the PLATE at full SIZE and MASSIVE at its smallest SIZE start a little grainy (0.12–0.15 s); the MASSIVE Hits unevenness you heard measures as level, not grain. Pages show "grain" in the Numbers and flag it above 0.1 s.
 - 23 Oct 2026: **Brand: Ombra Audio.** Immensio's plugin now shows as "Ombra Audio: Immensio Versio" (maker code Ombr, plugin code ImVs, bundle com.OmbraAudio.ImmensioVersio). Fixed on the way: the install and release scripts still used Resilio's plugin code (RsVs) and linked Resilio's GitHub. Resilio moves to Ombra Audio in its own repo.

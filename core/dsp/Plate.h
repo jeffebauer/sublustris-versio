@@ -83,9 +83,6 @@ public:
     void setLongDelayMod(float amount) { longMod_ = amount; }
     // Test hook: scales every wander in the loop (chorus, floor, long delays); 0 = still.
     void setModScale(float k) { modScale_ = k; }
-    // PROTOTYPE (renders/plate_stereo, the audit's P1): L into branch 1, R into branch 0, so a
-    // left source's first plate energy comes out on the left (each output starts from the other branch).
-    void setInputSwap(bool on) { swapIn_ = on; }
 
     // Adds the wet to outL/outR (does not clear them).
     void process(const float* inL, const float* inR, float* outL, float* outR, int n);
@@ -120,7 +117,6 @@ private:
     float    modDepth_ = 1.0f;
     float    shelfK_ = 0.0f, modScale_ = 1.0f; // lossShelfK(sampleRate_)
     float    longMod_ = 1.0f; // d1 and d2 wander; 0 while frozen
-    bool     swapIn_ = false; // PROTOTYPE (setInputSwap)
     DriftAmounts drift_;
     FloorGovernor governor_;
     bool     ready_ = false;

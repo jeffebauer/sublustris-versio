@@ -36,7 +36,6 @@ struct EraMix {
     float muBits = 16.0f, muEngage = 0.0f;               // output μ-law
     float midiBits = 16.0f, midiEngage = 0.0f;           // in-loop box
     bool  midiRound = false;                             // at infinite: round (no systematic loss) instead of truncate
-    bool  midiDark = false;                              // PROTOTYPE (renders/midiverb, audit E1): the real unit's ½ one-pole every pass
     float makeup = 1.0f;                                 // wet gain keeping ERA's loudness level
 };
 
@@ -120,10 +119,9 @@ private:
         }
         phase_ = 0;
         float in = down_.down(pairFirst_, x);
-        if (mix_.midiDark) { // the Midiverb's loop low-pass: y = ½x + ½y' at its rate (about -3 dB at 2.7 kHz)
-            darkLp_ += 0.5f * (in - darkLp_);
-            in = darkLp_;
-        }
+        // The Midiverb's loop low-pass: y = ½x + ½y' at its rate (about -3 dB at 2.7 kHz).
+        darkLp_ += 0.5f * (in - darkLp_);
+        in = darkLp_;
         const float low = mix_.midiRound ? roundBits(in, midiStep_) : truncateBits(in, midiStep_);
         float a, b;
         up_.up(low, a, b);

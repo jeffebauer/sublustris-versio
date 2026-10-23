@@ -56,6 +56,9 @@ constexpr float kInfiniteHighT60Seconds = 30.0f;
 constexpr float kDiffuserSeconds[4] = {0.004771f, 0.003595f, 0.012735f, 0.009307f};
 constexpr float kDiffuserCoeff[4]   = {0.75f, 0.75f, 0.625f, 0.625f};
 constexpr float kDiffuserRightScale = 1.071f;
+// In PLATE the first stage of each side wanders, L and R in opposite phase (v1.0.16): under a
+// cent; the buffers have ~8 samples of spare room at 48 kHz.
+constexpr float kDiffuserMotionSeconds = 0.00018f, kDiffuserMotionHz = 0.4f;
 
 // Output level of the FDN's wet, so a Hall tail sits near the dry's level
 // at MIX noon (tuned by ear at M1). The tank's stored energy is spread over

@@ -15,3 +15,5 @@
 - Output-only grain (safest for infinite tails, but no grain growing as the tail fades).
 - 48 kHz with filters only (no aliasing character).
 - Running the whole tank at 24 kHz at the lo-fi end (can't crossfade a live tail).
+
+**Amendment (23 Oct 2026, owner's pick on `renders/midiverb`; SPEC v1.0.16):** the in-loop box follows the real Midiverb I (emeb/MIDIVerb_RE, MIT): 13 bits throughout the stage (it was 12 → 8, about 30 dB coarser than the unit, a bitcrusher on the tail), plus the unit's ½ one-pole low-pass on every pass (about −3 dB at 2.7 kHz at its rate). The stage now darkens rather than turning to grit: a HALL tail's share above 4 kHz went from −6.6 dB to −35.7 dB. B on all 15 cards (HALL, PLATE, MASSIVE), the repeated row agreeing. Its loudness make-up is 1.0 dB (was 1.2).

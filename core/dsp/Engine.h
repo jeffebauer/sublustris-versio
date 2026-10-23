@@ -94,18 +94,9 @@ public:
     void  setDuckScale(float k) { duckScale_ = k; }
     // PROTOTYPE, renders/still_lows (the audit's A4): HALL and MASSIVE keep their lows unmodulated.
     void  setStillLows(bool on) { fdn_.setStillLows(on); twinFdn_.setStillLows(on); }
-    // PROTOTYPE, renders/midiverb (the audit's E1): ERA's last stretch as the real Midiverb
-    // (13 bits instead of 12 -> 8, and its one-pole low-pass on every pass).
-    void  setMidiverbReal(bool on) { midiverbReal_ = on; }
-    // PROTOTYPES, renders/diffuser_motion (Mutable Instruments ideas 2 and 4): the right input
-    // diffuser gets its own lengths instead of a 1.071x copy of the left; the first stage of
-    // each side wanders by depthMs at 0.4 Hz, L and R in opposite phase.
+    // PROTOTYPE (Mutable Instruments idea 4, no measurable gain; kept for a later listen): the
+    // right input diffuser gets its own lengths instead of a 1.071x copy of the left.
     void  setDiffuserIndependent(bool on);
-    void  setDiffuserMotion(float depthMs) { diffMotionMs_ = depthMs; }
-    // PROTOTYPE, renders/plate_stereo (the audit's P1).
-    void  setPlateInputSwap(bool on) { plate_.setInputSwap(on); twinPlate_.setInputSwap(on); }
-    // PROTOTYPE, renders/swell_smear (the audit's S1): the swells' taps smeared by allpasses, gain g.
-    void  setSwellSmear(float g) { swell_.setSmear(g); twinSwell_.setSmear(g); }
     // PROTOTYPE, renders/small_hall (owner's M1 notes; the audit's F1/F2, experiment E4): HALL gets
     // in-loop diffusion too, amount 0..1 (× kInLoopCoeff), its allpasses scaled with SIZE.
     void  setHallInLoopDiffusion(float a) { hallInLoop_ = a; }
@@ -197,8 +188,7 @@ private:
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
     float duckScale_ = 1.0f; // PROTOTYPE (setDuckScale)
-    bool  midiverbReal_ = false; // PROTOTYPE (setMidiverbReal)
-    float diffMotionMs_ = 0.0f, diffMotionPhase_ = 0.0f; // PROTOTYPE (setDiffuserMotion)
+    float diffMotionNow_ = 0.0f, diffMotionPhase_ = 0.0f; // the PLATE's wandering input allpass, samples
     float hallInLoop_ = 0.0f; // PROTOTYPE (setHallInLoopDiffusion)
     float compAttackMs_ = 0.0f, compReleaseMs_ = 0.0f, compTargetDb_ = 0.0f, compGrDb_ = 0.0f; // PROTOTYPE (setDuckCompressor)
     float reverseMean_ = -1.0f;

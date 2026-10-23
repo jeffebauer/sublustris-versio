@@ -319,10 +319,6 @@ void Engine::applySpace(bool snap)
     dsp::EraMix loopEra = era;
     const float keep = 1.0f - freezeMix_;
     loopEra.midiRound = map::governorWeight(decay) >= 1.0f; // infinite: no systematic loss
-    if (midiverbReal_) { // PROTOTYPE (setMidiverbReal): 13 bits, as the unit, and its dark loop
-        loopEra.midiBits = 13.0f;
-        loopEra.midiDark = true;
-    }
     // Neve's even harmonics add energy in proportion to the level: harmless
     // while DECAY loses energy, a runaway in a lossless loop (measured: the
     // tail jumping 2-3 dB, then the governor overshooting into dips). So
@@ -378,6 +374,7 @@ void Engine::applySpace(bool snap)
     if (attack == 0) predelay += map::normalPredelaySeconds(time);
     if (attack == 1) attackSeconds = map::bloomSeconds(time) * (massive ? map::massiveMass(size) : 1.0f);
     swell_.setAttackSeconds(attackSeconds, snap);
+    swell_.setSmear(attack == 1); // BLOOM only (owner, renders/swell_smear)
     // REVERSE: rising taps over TIME into the short reverb; DECAY sets how sudden the stop is.
     reverse_.setSeconds(map::reverseSeconds(time), snap);
     reverseFdn_.setDecayRate(1.0f / map::reverseTailSeconds(smoothed(ParamId::Decay)));
@@ -446,14 +443,21 @@ void Engine::setDiffuserIndependent(bool on)
 
 void Engine::controlTick(int n)
 {
-    if (diffMotionMs_ > 0.0f) { // PROTOTYPE (setDiffuserMotion)
-        diffMotionPhase_ += 0.4f * float(n) / sampleRate_;
+    // The PLATE's first input allpass wanders (Mutable Instruments' Clouds and Beads; owner's pick
+    // on renders/diffuser_motion, v1.0.16), so repeated hits don't enter the tank identically.
+    // Its depth glides in and out with SPACE, so a flip never jumps the read.
+    const float motionTarget = activeSpace_ == 0 ? voicing::kDiffuserMotionSeconds * sampleRate_ : 0.0f;
+    diffMotionNow_ += (1.0f - std::exp(-float(n) / (0.1f * sampleRate_))) * (motionTarget - diffMotionNow_);
+    if (diffMotionNow_ > 1e-3f || motionTarget > 0.0f) {
+        diffMotionPhase_ += voicing::kDiffuserMotionHz * float(n) / sampleRate_;
         if (diffMotionPhase_ >= 1.0f) diffMotionPhase_ -= 1.0f;
-        float depth = diffMotionMs_ * 0.001f * sampleRate_;
+        float depth = diffMotionNow_;
         if (depth > 8.0f) depth = 8.0f; // the buffers' spare room (nextPow2 of the 1.071x lengths)
         const float m = depth * std::sin(6.2831853f * diffMotionPhase_);
         diffuser_[0].stage[0].mod = m;
         diffuser_[1].stage[0].mod = -m;
+    } else {
+        diffuser_[0].stage[0].mod = diffuser_[1].stage[0].mod = 0.0f; // still: the plain read
     }
     // Smooth every knob toward its value (ParamSpec tiers, ADR 0012).
     for (const auto& p : kParams) {

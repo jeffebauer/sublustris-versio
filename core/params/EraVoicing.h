@@ -50,10 +50,12 @@ constexpr float kMuBitsStart = 12.0f, kMuBitsEnd = 10.0f;
 constexpr float kMuFullScale = 1.0f;
 constexpr float kMuEngageSpan = 0.03f; // its crossfade in, on the ERA knob
 
-// Midiverb (ADR 0004): in the loop, a 48 → 24 → 48 kHz box with bits 12 → 8
-// truncated toward zero (a fading tail can't hold a buzz); sparse crackle
+// Midiverb (ADR 0004, amended v1.0.16): in the loop, a 48 → 24 → 48 kHz box
+// at the real unit's 13 bits, truncated toward zero (a fading tail can't hold
+// a buzz), with its ½ one-pole low-pass every pass (emeb/MIDIVerb_RE; it was
+// 12 → 8 bits, a bitcrusher: owner's pick on renders/midiverb); sparse crackle
 // into the tank's input, following the input level.
-constexpr float kMidiBitsStart = 12.0f, kMidiBitsEnd = 8.0f;
+constexpr float kMidiBitsStart = 13.0f, kMidiBitsEnd = 13.0f;
 constexpr float kMidiEngageSpan = 0.02f;
 constexpr float kCrackleDbfs = -48.0f;
 constexpr float kCracklePerSecond = 4.0f;
@@ -61,6 +63,6 @@ constexpr float kCracklePerSecond = 4.0f;
 // Loudness makeup per layer (dB on the wet), so ERA stays within ±2 dB
 // across the knob (SPEC §7 M6): darker, compressed, bit-reduced tails read
 // quieter. Measured on noise bursts (test_era), summed as the layers stack.
-constexpr float kMakeupNeveDb = 0.6f, kMakeupCassetteDb = 1.4f, kMakeupMuDb = 2.4f, kMakeupMidiverbDb = 1.2f;
+constexpr float kMakeupNeveDb = 0.6f, kMakeupCassetteDb = 1.4f, kMakeupMuDb = 2.4f, kMakeupMidiverbDb = 1.0f; // 1.2 for the 8-bit box; at 1.0 music rises 0.2-1.4 dB across the stage and test_era's broadband check stays in its window (v1.0.16)
 
 } // namespace iv::voicing

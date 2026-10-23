@@ -28,11 +28,14 @@ public:
     static constexpr float kTapsFromSeconds = 0.12f;
     static constexpr float kSpanPerAttack = 1.25f;
 
-    // PROTOTYPE (renders/swell_smear, the audit's S1): three allpasses per side after the taps,
-    // each a multiple of the tap spacing, so every tap is smeared across the gap to the next.
+    // BLOOM's smear (the audit's S1; owner's pick on renders/swell_smear, v1.0.16): three allpasses
+    // per side after the taps, each a multiple of the tap spacing, so every tap is smeared across
+    // the gap to the next instead of returning as a ghost hit.
     static constexpr int   kSmearStages = 3;
     static constexpr float kSmearRatio[kSmearStages] = {0.53f, 0.79f, 1.17f};
     static constexpr float kSmearMaxSeconds = kMaxSeconds / kTaps * 1.2f;
+    static constexpr float kSmearSpanScale = 0.95f;
+    static constexpr float kSmearGain = 0.5f;
     static constexpr size_t memoryFloats(float sampleRate)
     {
         return 2 * nextPow2(size_t(kMaxSeconds * sampleRate) + 4)
@@ -100,10 +103,15 @@ public:
     {
         const float c = 1.0f - std::exp(-float(n) / (0.15f * sampleRate_)); // 150 ms glide
         attackNow_ += c * (attackTarget_ - attackNow_);
+        smearG_ += c * (smearTarget_ - smearG_); // glides too, so switching it never clicks
+        if (smearTarget_ == 0.0f && smearG_ < 1e-4f) smearG_ = 0.0f;
         const float a = attackNow_;
         tapMix_ = a <= kDirectBelowSeconds ? 0.0f
                 : (a >= kTapsFromSeconds ? 1.0f : (a - kDirectBelowSeconds) / (kTapsFromSeconds - kDirectBelowSeconds));
-        const float span = kSpanPerAttack * a * sampleRate_;
+        // The smear's allpasses add about a tenth of the span of their own delay, so the taps
+        // close up by that much and the swell lands when it did unsmeared (owner: "the attack is a
+        // little slower").
+        const float span = kSpanPerAttack * a * sampleRate_ * (1.0f - (1.0f - kSmearSpanScale) * smearG_ / kSmearGain);
         const float maxLen = kSmearMaxSeconds * sampleRate_;
         for (int j = 0; j < kSmearStages; ++j) {
             const float len = span / float(kTaps) * kSmearRatio[j];
@@ -130,7 +138,7 @@ public:
                 const float a0 = line_[c].read(di < 1 ? 1 : di), a1 = line_[c].read(di + 1);
                 sum[c] += gain_[c][k] * (a0 + t * (a1 - a0));
             }
-        if (smearG_ > 0.0f) // PROTOTYPE (setSmear)
+        if (smearG_ > 0.0f)
             for (int c = 0; c < 2; ++c)
                 for (int j = 0; j < kSmearStages; ++j) {
                     const float d = smear_[c][j].read(smearLen_[j]);
@@ -150,10 +158,11 @@ private:
     bool      sCurve_ = false;
     DelayLine smear_[2][kSmearStages];
     uint32_t  smearLen_[kSmearStages] = {1, 1, 1};
-    float     smearG_ = 0.0f;
+    float     smearG_ = 0.0f, smearTarget_ = 0.0f;
 
 public:
-    void setSmear(float g) { smearG_ = g; } // PROTOTYPE (renders/swell_smear): allpass gain, 0 = off
+    // BLOOM smears its taps (kSmearGain); MASSIVE's mass and the twin's swell don't.
+    void setSmear(bool on) { smearTarget_ = on ? kSmearGain : 0.0f; }
 };
 
 } // namespace iv::dsp
