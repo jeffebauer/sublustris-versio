@@ -29,13 +29,14 @@ struct Rig {
     double phase = 0.0;
     // Click watch: the worst |second difference| of the output over its own recent level (10 ms).
     float y1[2] = {}, y2[2] = {}, dp[2] = {};
-    float worstClick = 0.0f;
+    float worstClick = 0.0f, maxD2 = 0.0f;
     // The quietest 1 ms of output since the last clearWatch().
     double minMs = 1e9, msAcc = 0.0;
     int msFill = 0;
-    void clearWatch() { worstClick = 0.0f; minMs = 1e9; }
+    void clearWatch() { worstClick = 0.0f; maxD2 = 0.0f; minMs = 1e9; }
 
-    // Runs `seconds` of input: noise at `level`, or a sine at `sineHz` (0 = noise); level 0 = silence.
+    // Runs `seconds` of input: noise at `level`, or a sine at `sineHz` (0 = noise, negative = a chord on
+    // -sineHz); level 0 = silence.
     // Returns the output's mean power.
     double run(double seconds, float level, float sineHz = 0.0f)
     {
@@ -48,6 +49,12 @@ struct Rig {
                 if (sineHz > 0.0f) {
                     phase += 2.0 * 3.14159265358979 * sineHz / e.sampleRate();
                     inL[size_t(i)] = inR[size_t(i)] = level * float(std::sin(phase));
+                    continue;
+                }
+                if (sineHz < 0.0f) { // a chord on -sineHz: root, major third, fifth, octave
+                    phase += 2.0 * 3.14159265358979 * -sineHz / e.sampleRate();
+                    inL[size_t(i)] = inR[size_t(i)] = level * 0.25f
+                        * float(std::sin(phase) + std::sin(phase * 1.26) + std::sin(phase * 1.5) + std::sin(phase * 2.0));
                     continue;
                 }
                 noise = noise * 1664525u + 1013904223u;
@@ -63,6 +70,7 @@ struct Rig {
                     const float d2 = o[c] - 2.0f * y1[c] + y2[c];
                     const float ratio = std::fabs(d2) / (std::sqrt(dp[c]) + 1e-4f);
                     if (ratio > worstClick) worstClick = ratio;
+                    if (std::fabs(d2) > maxD2) maxD2 = std::fabs(d2);
                     dp[c] += a * (d2 * d2 - dp[c]);
                     y2[c] = y1[c];
                     y1[c] = o[c];
@@ -260,6 +268,35 @@ void infiniteTailDoesntPlungeWhenTheInputStops()
     }
 }
 
+// Soak finding 6: a SPACE flip while playing in REVERSE cleared REVERSE's recording line, which
+// then held a hard edge where the input was cut off: the swell clicked when its taps reached it, up
+// to a TIME after the flip. REVERSE doesn't depend on SPACE, so it now keeps running through flips
+// (faded with the wet). After the flip's own fade, the sharpest step stays near the steady sound's.
+void reverseFlipWhilePlayingDoesntClickLater()
+{
+    for (int from = 0; from < 3; ++from) {
+        Rig r(48000.0f, 48);
+        r.e.setParam(ParamId::Space, iv::switchToNormalised(from));
+        r.e.setParam(ParamId::Decay, 0.7f);
+        r.e.setParam(ParamId::Time, 0.7f);
+        r.e.setParam(ParamId::Attack, iv::switchToNormalised(2));
+        r.e.setParam(ParamId::Mix, 1.0f);
+        r.e.reset();
+        r.run(3.0, 0.3f, -330.0f);
+        r.clearWatch();
+        r.run(1.0, 0.3f, -330.0f);
+        const float steady = r.maxD2;
+        r.e.setParam(ParamId::Space, iv::switchToNormalised((from + 1) % 3));
+        r.run(0.15, 0.3f, -330.0f); // the flip's own fade
+        r.clearWatch();
+        r.run(3.0, 0.3f, -330.0f);
+        char what[160];
+        std::snprintf(what, sizeof what, "REVERSE: a flip %d->%d while playing doesn't click later (sharpest step x%.1f the steady sound's)", from,
+                      (from + 1) % 3, r.maxD2 / steady);
+        check(r.maxD2 < 2.6f * steady, what); // it measured x3.0-6.2; a pure sine still shows x7-9 (see the audit)
+    }
+}
+
 } // namespace
 
 int main()
@@ -269,6 +306,7 @@ int main()
     freezeInsideAFlipKeepsThePad();
     smallHallSizeJumpsDontClick();
     infiniteTailDoesntPlungeWhenTheInputStops();
+    reverseFlipWhilePlayingDoesntClickLater();
     std::printf("%s\n", failures ? "SOME TESTS FAILED" : "ALL TESTS PASSED");
     return failures ? 1 : 0;
 }

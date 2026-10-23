@@ -266,7 +266,7 @@ void Engine::onGesture(GestureReader::Event e)
 // frozen, the big tank keeps the SIZE and DECAY it froze with and its loss
 // glides to none (freezeMix_); the knobs play the twin. snap: jump
 // straight there (reset, a SPACE flip).
-void Engine::applySpace(bool snap, int n)
+void Engine::applySpace(bool snap, int n, bool snapDiffusers)
 {
     const bool frozen = gesture_.frozen();
     const float size = frozen ? heldSize_ : smoothed(ParamId::Size);
@@ -398,9 +398,17 @@ void Engine::applySpace(bool snap, int n)
     crackleChance_ = era.midiverb * follow * voicing::kCracklePerSecond / sampleRate_;
     crackleGain_ = std::pow(10.0f, voicing::kCrackleDbfs / 20.0f);
 
+    // The input diffusers' amount glides (~50 ms): it changes with a SPACE flip and with MASSIVE's SIZE,
+    // and a jump stepped the input into the tank and REVERSE's line (soak audit).
     const float diffusion = massive ? map::massiveDiffusion(size) : 1.0f;
+    const float glide = snap && snapDiffusers ? 1.0f : 1.0f - std::exp(-float(n) / (0.05f * sampleRate_));
     for (int c = 0; c < 2; ++c)
-        for (int k = 0; k < 4; ++k) diffuser_[c].stage[k].coeff = voicing::kDiffuserCoeff[k] * diffusion;
+        for (int k = 0; k < 4; ++k) {
+            float& g = diffuser_[c].stage[k].coeff;
+            const float target = voicing::kDiffuserCoeff[k] * diffusion;
+            g += glide * (target - g);
+            if (std::fabs(target - g) < 1e-6f) g = target;
+        }
 
     // ATTACK (ADR 0015): what TIME means, and the swell stage's attack.
     float predelay = massive ? map::massivePredelaySeconds(size) : 0.0f;
@@ -575,13 +583,19 @@ void Engine::controlTick(int n)
             flipPhase_ = 2;
         } else if (flipGain_ <= 0.0f) {
             activeSpace_ = space;
-            applySpace(true); // targets first, so the resets below land on them (the FDN's output trim)
+            // Targets first, so the resets below land on them (the FDN's output trim). The predelay
+            // jumps too, here where the tank's input and REVERSE's are silent; the input diffusers glide
+            // (a jump in their amount rang on in them for ~100 ms, past the fade back in).
+            applySpace(true, n, false);
             fdn_.reset();
             lowFdn_.reset();
             plate_.reset();
             swell_.reset();
-            reverse_.reset();
-            reverseFdn_.reset();
+            // REVERSE (its recording line and its short reverb) doesn't depend on SPACE: it keeps
+            // running and fades with the flip. Cleared here while the input played, its line held a
+            // hard edge where the input was cut off and the swell clicked when its taps reached it,
+            // up to a TIME after the flip; and its restarted reverb clicked when sound first came
+            // round its lines (soak audit).
             // A twin still fading after an unfreeze belongs to the old space: it has faded out with
             // the wet, so it stops here and the new space's twin starts clean at the next freeze
             // (soak audit: it was cut off mid-sound, a click, and the other twin replayed stale sound).
@@ -608,7 +622,13 @@ void Engine::controlTick(int n)
     swell_.control(n);
     twinSwell_.control(n);
     reverse_.control(n);
+    // The predelay moves at most half a sample per sample (the input read at 0.5x-1.5x speed): a jump
+    // in its target (ATTACK switched with TIME up, MASSIVE's SIZE jumping, a SPACE flip) used to
+    // sweep it across in one control chunk, a burst of sped-up sound (soak audit). TIME's own knob
+    // glide stays as it was unless it's faster than that.
     predelayStep_ = (predelayTarget_ - predelayNow_) / float(n);
+    if (predelayStep_ > kPredelayMaxSpeed) predelayStep_ = kPredelayMaxSpeed;
+    if (predelayStep_ < -kPredelayMaxSpeed) predelayStep_ = -kPredelayMaxSpeed;
 
     const auto g = map::mixGains(smoothed(ParamId::Mix));
     dryStep_ = (g.dry - dryNow_) / float(n);
@@ -651,12 +671,17 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             if (predelayNow_ >= 2.0f) {
                 pl = predelay_[0].readCubic(predelayNow_);
                 pr = predelay_[1].readCubic(predelayNow_);
+            } else if (predelayNow_ > 0.0f) { // under 2 samples (the cubic's least): between the input and that
+                const float t = 0.5f * predelayNow_;
+                pl += t * (predelay_[0].readCubic(2.0f) - pl);
+                pr += t * (predelay_[1].readCubic(2.0f) - pr);
             }
             pl = diffuser_[0].process(pl);
             pr = diffuser_[1].process(pr);
-            // REVERSE's taps hear the same diffused input as the tank (always recording).
-            revInL_[i] = pl;
-            revInR_[i] = pr;
+            // REVERSE's taps hear the same diffused input as the tank (always recording), faded with
+            // a SPACE flip as the tank's is: the input side jumps at the flip's silent point.
+            revInL_[i] = flipGain_ * pl;
+            revInR_[i] = flipGain_ * pr;
             reverse_.process(revInL_[i], revInR_[i], reverseOn);
             // The twin hears the input itself, through its own diffusion: no predelay; in MASSIVE, its own swell.
             twinIn_ = clamp01(twinIn_ + twinInStep_);

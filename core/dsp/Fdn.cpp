@@ -102,6 +102,7 @@ IV_SIZE_OPT void Fdn::reset()
         }
     }
     outputTrimNow_ = outputTrim_;
+    externalPower_ = 0.0f; // a low tank's level from before (soak audit: a stale one read as a phantom level after a flip)
 }
 
 IV_SIZE_OPT void Fdn::setMeanSeconds(float meanSeconds, float spread, bool snap)
