@@ -78,8 +78,9 @@ public:
     void setEarlyTaps(float amount) { earlyTarget_ = amount; }
     // The modulation floor's depth × modDepth (Engine::setModulationScale, a test hook).
     void setModDepth(float k) { modDepth_ = k; }
-    // E4 PROTOTYPE (DSP audit, 24 Oct 2026): 0..1, the reads crossfade to the Lexicon 224 / PCM70 way
-    // (Costello): linear interpolation with its fraction quantised to kVintageSteps, and a noisy read.
+    // Vintage reads (v1.0.22, the DSP audit's E4; ADR 0019): 0..1 with ERA's μ-law stretch, the reads
+    // crossfade to the Lexicon 224 / PCM70 way (Costello): linear interpolation with its fraction
+    // quantised to kVintageSteps, and a noisy read.
     void setVintage(float v) { vintage_ = v; }
     // Extra output level for a voicing (MASSIVE's loudness match).
     void setOutputTrim(float trim) { outputTrim_ = trim; }

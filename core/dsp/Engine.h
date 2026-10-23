@@ -95,14 +95,6 @@ public:
     // Test/demo override of HALL's in-loop diffusion amount (default kHallInLoopDiffusion, v1.0.17;
     // 0..1 × kInLoopCoeff, fading out by SIZE noon).
     void  setHallInLoopDiffusion(float a) { hallInLoop_ = a; }
-    // PROTOTYPES for the DSP audit (docs/research/dsp-audit.md, 24 Oct 2026),
-    // set from the Renderer's IV_* env vars; all off by default (the default sound is bit-identical).
-    struct AuditHooks {
-        bool  freezeStill = false;  // A3: a frozen tank's own modulation glides to 0 (Costello: mod depth 0 to freeze)
-        bool  vintageMod = false;   // E4: from ERA's mu-law stretch on, the FDN reads Lexicon-style (quantised linear, noisy)
-        bool  tapeOut = false;      // E5: the cassette saturates the wet on its way out (outside the loop)
-    };
-    void  setAuditHooks(const AuditHooks& h) { hooks_ = h; }
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.
@@ -201,8 +193,7 @@ private:
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f;
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
-    AuditHooks hooks_;
-    dsp::Oversampler tapeOs_[2];                     // E5 prototype (hooks_.tapeOut)
+    dsp::Oversampler tapeOs_[2], tapeOs2_[2];        // tape out (v1.0.22): 2x inside 2x = 4x for the saturator
     float tapeDc_[2] = {}, tapeDrive_ = 0.0f;
     void  tapeOut(float& l, float& r);
     float diffMotionNow_ = 0.0f, diffMotionPhase_ = 0.0f; // the PLATE's wandering input allpass, samples

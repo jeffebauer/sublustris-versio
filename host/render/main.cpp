@@ -123,14 +123,6 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* di = std::getenv("IV_DIFF_INDEPENDENT")) engine.setDiffuserIndependent(std::atoi(di) != 0);
     if (const char* sl = std::getenv("IV_STILL_LOWS")) engine.setStillLows(std::atoi(sl) != 0);
     if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
-    { // The DSP audit's prototypes (docs/research/dsp-audit.md, 24 Oct 2026): all off by default.
-        auto env = [](const char* k) { const char* v = std::getenv(k); return v ? std::atoi(v) : 0; };
-        iv::Engine::AuditHooks h;
-        h.freezeStill = env("IV_FREEZE_STILL") != 0;
-        h.vintageMod = env("IV_VINTAGE_MOD") != 0;
-        h.tapeOut = env("IV_TAPE_OUT") != 0;
-        engine.setAuditHooks(h);
-    }
     if (!presetPath.empty()) {
         iv::json::Value preset;
         if (!iv::json::loadFile(presetPath, preset, error)) return false;

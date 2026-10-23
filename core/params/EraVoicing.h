@@ -68,7 +68,8 @@ constexpr float kMidiEngagePower = 2.0f;
 constexpr float kCrackleDbfs = -48.0f;
 constexpr float kCracklePerSecond = 4.0f;
 
-// E4 PROTOTYPE (DSP audit, 24 Oct 2026): the vintage read from the mu-law stretch on (Fdn::setVintage).
+// Vintage reads (v1.0.22, ADR 0019): from the μ-law stretch on (Fdn::setVintage). The 32 steps follow
+// Costello on the 224; the jitter's size is ours, tuned on the measured noise halo (docs/research/dsp-audit.md E4).
 constexpr float kVintageSteps = 32.0f;          // fraction steps per sample (Costello: "32 or 64 chunks")
 constexpr float kVintageJitterSamples = 0.15f;   // the noisy modulation's random offset per control block
 

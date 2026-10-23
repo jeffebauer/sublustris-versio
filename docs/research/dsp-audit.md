@@ -1,5 +1,7 @@
 # DSP audit: the engines against the published sources
 
+**Shipped (SPEC v1.0.22, 24 Oct 2026; owner: B on every card of `renders/dsp_audit`):** A3 (a frozen pad holds still), E4 (vintage reads, ADR 0019) and E5 (tape out, ADR 0019, now at 4×) are the defaults; their `IV_FREEZE_STILL` / `IV_VINTAGE_MOD` / `IV_TAPE_OUT` hooks and the page's scripts are gone. Every other item below is measured and closed.
+
 *22 Oct 2026. Docs only: no DSP was changed. This compares the code in `core/dsp/` with the sources named in `IMMENSIO_BRIEF.md` §8, read at the source, not from memory. It answers the owner's question: were the reverbs built from the research, or from reasoning alone?*
 
 **The short answer.**

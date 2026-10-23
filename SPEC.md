@@ -6,6 +6,12 @@
 **Status:** Spec **v1.0 (frozen)**, 21 Oct 2026. Input: `IMMENSIO_BRIEF.md`. Vocabulary: `CONTEXT.md`. Decisions: `docs/adr/` (0001–0017; index in `docs/adr/README.md`). Session record: `docs/spec-session.md`. Changes after freeze: new ADR + changelog entry. Numbers marked *(start)* are starting guesses; tuned numbers replace them as milestones confirm them.
 
 ### Changelog
+- v1.0.22 — owner's picks (24 Oct 2026; `renders/dsp_audit`, B on every card, the repeated cards agreeing; ADR 0019 new, ADR 0009 amendment; `docs/research/dsp-audit.md` A3, E4, E5):
+  - **A frozen pad holds still:** the floor and the PLATE's chorus glide out with the freeze (a frozen HALL chord's purity over 5 min: 0.66 → 0.93).
+  - **Vintage reads:** across ERA's μ-law stretch, HALL and MASSIVE read their lines the Lexicon 224 / PCM70 way (32-step quantised linear interpolation plus a small noisy jitter; Costello).
+  - **Tape out:** the cassette stage saturates the wet on its way out (an asymmetric tanh at 4×, outside the loop). Its in-loop drive never reached its knee on music.
+  - Energy-checked (sweeps, 10-minute holds, 5-minute freeze holds). `test_era`'s aliasing check now compares 48 against 96 kHz, because tape's asymmetry makes real difference tones.
+  - The rest of the audit was measured and closed (P2–P5, E2, E3, E6, R1, R2, MI #5).
 - v1.0.21 — owner's picks (24 Oct 2026; `renders/knob_feel`, B on 22 of 23 cards, the repeated Hits card agreeing; the one A was ERA's 95 % position on the skank; ADR 0003, 0007, 0015 amendments; `docs/research/knob-feel-audit.md`): **five knobs made even.**
   - **ERA:** Neve grows in straight steps from 3 % (Clean was 0–10 %, then a smoothstep: the first 20 % changed nothing measurable), and the Midiverb box fades in across its whole stretch as (share)² (it switched on within 2 % at 85 % and cut a tail ~5× in one notch, then the last 13 % did nothing).
   - **MASSIVE DECAY:** the shortest tail rings at least 3 passes of the mean line (2 s at SIZE 0 as before, ~2.5 s at noon, ~6 s at full SIZE; the first notch jumped 19–30× a typical step), with the level made up so each setting keeps its loudness.
@@ -170,7 +176,7 @@ Level meters as Resilio (ADR 0031): LED 1–2 In L / In R, LED 3–4 Out L / Out
 
 ### 4.4 Infinite and the floor (ADR 0008)
 - Decay 0.85–1: the loop gain reaches 1 at the floor level. Tone, Era and the saturation stay in the loop, so the tail keeps darkening and graining. The always-on soft saturator plus a slow RMS loop-level governor (control rate) hold the tail at a warm floor *(start: −24 dBFS RMS)* so it never turns to mud or falls silent.
-- **Freeze is different (ADR 0009):** the pad holds still. Gain is exactly 1, input is closed, the in-loop colour is bypassed (glided over 0.2 s), and only the modulation floor and Drift remain.
+- **Freeze is different (ADR 0009):** the pad holds still. Gain is exactly 1, input is closed, the in-loop colour is bypassed (glided over 0.2 s), and only Drift remains (the modulation floor glides out too, v1.0.22).
 
 ### 4.5 Massive mode: mass, echoes → wash (ADR 0007)
 - **Swell stage:** a feedforward stage between the input diffusion and the tank: 24 taps of one long delay per side, spread over 1.25 × A with rising gains (total energy 1), jittered and sign-scrambled per side (v1.0.1; was "4 long modulated delays and allpasses", which can't be steered to a chosen attack time). The energy reaches the loop gradually, so the attack is a slab, not a hit; the 10 → 90 % rise lands at A. Below A ≈ 40 ms it hands over to the direct path. **Shared by every space** (it is also BLOOM, §4.11).
