@@ -55,3 +55,8 @@ if(IV_BUILD_PLUGIN)
         message(WARNING "libs/JUCE not found: skipping Plugin. Run: git submodule update --init libs/JUCE")
     endif()
 endif()
+
+# The soak harness (docs/research/soak-audit.md): hours of randomised automation,
+# gestures and stimuli through the Engine. Not a ctest suite; run it by hand.
+add_executable(iv_soak tools/soak/soak.cpp)
+target_link_libraries(iv_soak PRIVATE iv_host_common)
