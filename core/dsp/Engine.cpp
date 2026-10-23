@@ -554,11 +554,7 @@ void Engine::controlTick(int n)
     // after the swell, so a long BLOOM (which feeds the tank for seconds after the input stops)
     // isn't judged while it's still rising (soak audit: its ceiling was taken too low and the tail
     // was pulled 5-6 dB under it).
-    // The floor's faster judgement of a falling tail starts as soon as the Engine's input is quiet.
-    const bool inputQuiet = 10.0f * std::log10(inputPower_ + 1e-20f) <= voicing::kQuietDbfs;
     const bool tankQuiet = 10.0f * std::log10(tankInPower_ + 1e-20f) <= voicing::kQuietDbfs;
-    fdn_.setInputQuiet(inputQuiet);
-    plate_.setInputQuiet(inputQuiet);
     if (!tankQuiet) {
         quietSince_ = clock_;
         tailCaptured_ = false;

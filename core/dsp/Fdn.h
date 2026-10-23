@@ -56,8 +56,6 @@ public:
     void setFloorDb(float db) { governor_.floorDb = db; }
     // A held tail's ceiling, on the slow level (0 dBFS = no hold).
     void setHoldDb(float db) { governor_.holdDb = db; }
-    // The Engine's input has gone quiet: the floor then judges a falling tail on a faster level.
-    void setInputQuiet(bool quiet) { governor_.quiet = quiet; }
     float slowLevelDb() const { return governor_.slowLevelDb; }
     void resyncHoldLevel() { governor_.resyncSlow(); }
     void resyncHoldLevelToFast() { governor_.resyncSlowToFast(); }
