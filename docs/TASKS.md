@@ -12,6 +12,7 @@
 - Nothing open.
 
 ### Listen (first time)
+- [ ] **ERA signatures** (reference, nothing to pick; https://claude.ai/artifact/AiR2JXPAaLbT8GeJseK3Vj, opens on your phone anywhere): what each ERA stage does to the reverb, measured and drawn as charts (tone, how long each frequency rings, harmonics, grain, hiss, mirror tones, pitch wobble). `tools/era_reference.py` remeasures it.
 - [ ] **M6 as it is now** (`renders/m6_character/index.html`; on the Mac, or the "review-pages" server on port 8765): ERA's five stages, DRIFT both ways and TONE, re-rendered from today's reverb. ERA has changed most since your last M6 listen: its knob feel, the old-Lexicon grain in the μ-law stretch, the held Midiverb, and tape out. Notes only: does each stage sound right, and does ERA feel like going back in time?
 
 ### At the rack
