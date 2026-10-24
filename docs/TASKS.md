@@ -1,12 +1,12 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, session 5 (v1.0.28 shipped: DECAY keeps the loudness; M6 re-rendered).
+**Last updated:** 24 Oct 2026, session 5 (v1.0.28 shipped; M6 re-rendered; era_dry page waiting).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- Nothing open: every pick so far is acted on.
+- [ ] **ERA on the dry too?** (`renders/era_dry/index.html`; on the Mac, or the "review-pages" server on port 8765). Your idea: ERA colours the dry as well, so the module works as a character box, even at MIX fully left. In each card, A is today, B puts ERA on the dry too, C adds the cassette's wow and flutter to the dry, and D drives the dry into the tape harder. The cards are rendered at a fixed MIX: four at 50 %, two at MIX fully left (the character box). Pick per card, with notes.
 
 ### Listen (after your notes)
 - Nothing open.
