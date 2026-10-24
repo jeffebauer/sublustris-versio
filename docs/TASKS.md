@@ -1,19 +1,18 @@
 # Owner tasks
 
-**Last updated:** 25 Oct 2026, session 5 (the new ERA built on a branch, waiting for your listen and OK to merge).
+**Last updated:** 25 Oct 2026, session 5 (v1.0.30 merged: the new ERA, five eras from sweet to gritty over the Neve).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- [ ] **Merge the new ERA into `main`?** (branch `claude/era-v2`; SPEC v1.0.30, ADR 0021). Your five eras, sweetest first: the Neve (the base, under all of them, and alone at ERA fully left), Midiverb, bucket-brigade, cassette, AM radio. All 14 desktop tests pass; flash is 1 KB under budget. It also carries the ERA click fix (v1.0.29). ERA's default moves to 0.1 (the middle of the Neve). Hear it first on the two pages under Listen.
+- Nothing open: every pick so far is acted on.
 
 ### Listen (after your notes)
 - Nothing open.
 
 ### Listen (first time)
-- [ ] **M6 with the new ERA** (`renders/m6_character/index.html`; phone: http://192.168.1.100:8766/m6_character/index.html): the five eras in HALL (three in MASSIVE), DRIFT and TONE. Notes only.
-- [ ] **ERA signatures** (reference, nothing to pick; https://claude.ai/artifact/AiR2JXPAaLbT8GeJseK3Vj, opens on your phone anywhere): what each ERA stage does to the reverb, measured and drawn as charts (tone, how long each frequency rings, harmonics, grain, hiss, mirror tones, pitch wobble). `tools/era_reference.py` remeasures it.
+- [ ] **ERA signatures** (out of date: it measures the old stacked ERA; Claude can re-measure it for the five eras; reference, nothing to pick; https://claude.ai/artifact/AiR2JXPAaLbT8GeJseK3Vj, opens on your phone anywhere): what each ERA stage does to the reverb, measured and drawn as charts (tone, how long each frequency rings, harmonics, grain, hiss, mirror tones, pitch wobble). `tools/era_reference.py` remeasures it.
 
 ### At the rack
 - [ ] **M0 hardware check** (`docs/m0-hardware-check.md`): flash `firmware/build/immensio_versio_m0test.bin`, check the boot pattern, switches, button (USB session), then knobs, gate and a quick passthrough listen (rack session). Tell Claude the results.
@@ -32,7 +31,7 @@
 
 ## Done
 
-- 25 Oct 2026: **ERA as a knob sweep listened**: "Era sweep test sounds excellent." The page stays until the merge.
+- 25 Oct 2026: **The new ERA is in `main`** (SPEC v1.0.30, ADR 0021; with the ERA click fix, v1.0.29): "Era sweep test sounds excellent", "M6 also sounding excellent. Merge." All 15 tests pass; release flash 111,572 B (1 KB under budget). ERA's default is now 0.1 (the middle of the Neve). Both pages are deleted.
 - 25 Oct 2026: **The new ERA, round 3** (B across the board): the bucket-brigade's grit reaching round 2's B at two-thirds wins; the round-3 radio wins without its whistles and polar flutter ("they read as slow rhythmic delays rather than dropouts"). The sampler goes (the BBD is gritty enough). Built as the module's ERA on branch `claude/era-v2` (SPEC v1.0.30, ADR 0021): five eras, the Neve under all; μ-law, vintage reads and stacking removed. On the way the radio got an AGC that follows the station (aiming at a fixed level made sparse music 6 dB louder) and a slow level hold (a held tail drained 6 dB through its band in six minutes). The stronger-ERA page is superseded (it was built on the stacked ERA); its branch stays. The round pages are deleted.
 - 25 Oct 2026: **The new ERA, round 2**: the bucket-brigade's B (more grit) preferred, "but rather than hitting that value at 0.5, make that the 0.66 position"; the radio needs refining (softer hiss; static too uniform; the whistle too steady). Researched real reception (`docs/research/radio-artifacts.md`); round 3 follows. The page is deleted.
 - 25 Oct 2026: **The new ERA, round 1** (A, the Neve base, on every card, repeated cards agreeing: "Neve base a clear winner"). Keep: the Neve, Midiverb, cassette and radio ("feels like a wandering phaser"). The bucket-brigade: "like the darker signature", wants a little more grit. The sampler: aliasing too intense, can go if the BBD gets grittier. Round 2: a grittier BBD, and the radio with light noise and artifacts. The page is deleted.
