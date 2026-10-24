@@ -294,7 +294,12 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
 
     // Freezing: loss → 0, highs kept (ratio → 1), the governor caps paint.
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
-    const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
+    float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
+    if (massive && massiveHighRatio_ > 0.0f) {
+        // Glides back to the shared share across DECAY's crossover, so infinite still darkens.
+        const float own = toneRatio * (massiveHighRatio_ / voicing::kDampingHighT60Ratio);
+        toneRatio = own + map::governorWeight(decay) * (toneRatio - own);
+    }
     const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(hallSize_) : 1.0f;
     const float rate = decayRate(decay, size) / sizeT60 * (1.0f - freezeMix_);
     const float highRatio = toneRatio + freezeMix_ * (1.0f - toneRatio);

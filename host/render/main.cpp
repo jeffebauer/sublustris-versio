@@ -125,6 +125,7 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* to = std::getenv("IV_TAPE_OUT")) engine.setTapeOut(std::atoi(to) != 0);
     if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
     if (const char* dm = std::getenv("IV_DECAY_MAKEUP")) engine.setDecayMakeup(float(std::atof(dm)));
+    if (const char* mh = std::getenv("IV_MASSIVE_HIGH")) engine.setMassiveHighRatio(float(std::atof(mh)));
     if (!presetPath.empty()) {
         iv::json::Value preset;
         if (!iv::json::loadFile(presetPath, preset, error)) return false;

@@ -88,6 +88,10 @@ public:
     // Test hook: how much of DECAY's level make-up applies (1 = v1.0.28; 0 = none, shorter tails
     // quieter, as v1.0.27), for demos.
     void  setDecayMakeup(float k) { decayMakeup_ = k; }
+    // PROTOTYPE (massive-air): MASSIVE's own high-end T60 share at TONE noon, before ERA's darkening
+    // (0 = the shared kDampingHighT60Ratio). Supermassive's Andromeda and Sagittarius don't damp
+    // in the loop at all. Infinite DECAY keeps the shared share (ADR 0008's darkening).
+    void  setMassiveHighRatio(float r) { massiveHighRatio_ = r; }
     // Test hook: false = no tape out (ERA's cassette stage without its output tape), for measuring.
     void  setTapeOut(bool on) { tapeOn_ = on; }
     // Test hook: false = one tank, the lows moving too (before v1.0.18), for demos.
@@ -203,6 +207,7 @@ private:
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f, reverseFeed_ = 0.0f; // reverseFeed_: the taps into the short reverb
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
+    float massiveHighRatio_ = 0.0f; // prototype hook (setMassiveHighRatio)
     dsp::BbdStage   bbd_;   // ERA's bucket-brigade and radio, on the wet (ADR 0021, dsp/EraStages.h)
     dsp::RadioStage radio_;
     float bbdW_ = 0, radioW_ = 0;
