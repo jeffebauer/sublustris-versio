@@ -1,17 +1,18 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, session 5 (decay_level page waiting).
+**Last updated:** 24 Oct 2026, session 5 (v1.0.28 shipped: DECAY keeps the loudness; M6 re-rendered).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- [ ] **Does a shorter tail get quieter?** (`renders/decay_level/index.html`; on the Mac, or the "review-pages" server on port 8765). Today it does: going from 15 s to 2 s, HALL drops about 8 dB, MASSIVE about 7 and PLATE about 3, so you'd chase it with MIX. Valhalla Room and Supermassive keep their level at every decay. In each card, A is today, B makes up half the loss, C all of it below 15 s, and D / E are your Valhalla takes. The page isn't level-matched, so listen down each column as well as across. Pick per card, with notes.
+- Nothing open: every pick so far is acted on.
 
 ### Listen (after your notes)
 - Nothing open.
 
 ### Listen (first time)
+- [ ] **M6 as it is now** (`renders/m6_character/index.html`; on the Mac, or the "review-pages" server on port 8765): ERA's five stages, DRIFT both ways and TONE, re-rendered from today's reverb. ERA has changed most since your last M6 listen: its knob feel, the old-Lexicon grain in the μ-law stretch, the held Midiverb, and tape out. Notes only: does each stage sound right, and does ERA feel like going back in time?
 
 ### At the rack
 - [ ] **M0 hardware check** (`docs/m0-hardware-check.md`): flash `firmware/build/immensio_versio_m0test.bin`, check the boot pattern, switches, button (USB session), then knobs, gate and a quick passthrough listen (rack session). Tell Claude the results.
@@ -23,14 +24,14 @@
 
 ## Waiting on Claude
 
-- **The rest of the Valhalla comparison** (`docs/research/valhalla-comparison.md`): the loudness one is now on the decay_level page (Decide). Still to come, each a page when you want it: MASSIVE's highs die sooner than Supermassive's (8 kHz rings 8 s at the 15 s setting against 15). Also Supermassive moves more in pitch at long settings (a DRIFT comparison).
-- **Re-render M6** (`renders/m6_character`): it predates today's ERA changes (knob curve, vintage reads, the Midiverb hold, tape out), if you'd like to hear ERA as it is now.
+- **The rest of the Valhalla comparison** (`docs/research/valhalla-comparison.md`): the loudness one is done (v1.0.28). Still to come, each a page when you want it: MASSIVE's highs die sooner than Supermassive's (8 kHz rings 8 s at the 15 s setting against 15). Also Supermassive moves more in pitch at long settings (a DRIFT comparison).
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 - **M2: install the plugin** when you'd like to play it in Ableton (`tools/install_plugin.sh`), with Ableton closed for the AU check.
 
 ## Done
 
+- 24 Oct 2026: **The reverb keeps its loudness whatever DECAY is** (C "all made up" on every card, the repeated cards agreeing; SPEC v1.0.28, ADR 0020): a short tail used to be up to 8–13 dB quieter than a long one, so you'd have chased it with MIX; now every finite setting in all three spaces sits within about 2 dB, like Valhalla Room and Supermassive. Your note on MASSIVE was right: it was matched to the others at DECAY noon, where it rings 26 s, so at the same tail length it was 5 dB under HALL and PLATE. It now matches them. A short REVERSE keeps its level too, and the PLATE is 0.4 dB louder to stay matched. Infinite tails and frozen pads are unchanged. With ERA's tape out, a short tail now meets the tape's soft limiting sooner. The page is deleted.
 - 24 Oct 2026: **Tape out is stronger with light hysteresis** (E on all 24 cards; SPEC v1.0.27): the highs are pushed into the tape first, it's driven up to 12 dB harder, and a light hysteresis adds tape's lag and grit. Quiet sounds pass unchanged; peaks and highs get the tape. From the cassette stage up the tape also softly limits the wet's loudest peaks. The page is deleted.
 - 24 Oct 2026: **No steady-level tape** (A on 12 of 15 cards: "jittery saturation" in long tails; only the drums liked +12 dB). The tape keeps today's behaviour with a third of the lopsidedness. The page is deleted.
 - 24 Oct 2026: **Tape out's lopsidedness is a third** (B on 14 cards; SPEC v1.0.26): held notes no longer pick up the strong second harmonic. **The full mix's send is 12 dB hotter** in the page material ("both"), as a pushed dub send. The steady-level tape waits for a held-note listen. Both pages are deleted.
