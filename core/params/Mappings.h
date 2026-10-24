@@ -170,7 +170,7 @@ inline dsp::EraMix eraMix(float v, bool discrete = false)
 // era_v2 prototype (docs/research/new-eras.md; owner, 25 Oct 2026): ERA from sweet to gritty, each era on
 // its own, in six equal stretches: the Neve base, Midiverb, BBD, cassette, sampler, AM radio. An era comes
 // in over the first third of its stretch (the one before goes as it comes), then runs from its sweet end
-// to its gritty end. neveBase: the Neve's warmth under all of them, instead of clean.
+// to its gritty end. neveBase: the Neve's warmth under all of them, instead of clean (false: clean, as before).
 inline dsp::EraMix eraMixV2(float v, bool neveBase)
 {
     using namespace voicing;
@@ -183,7 +183,7 @@ inline dsp::EraMix eraMixV2(float v, bool neveBase)
     }
     for (int i = 0; i < kEras - 1; ++i) w[i] *= 1.0f - w[i + 1];
     dsp::EraMix m;
-    m.neve = neveBase ? 1.0f : w[0];
+    m.neve = neveBase ? 1.0f : 0.0f; // without the base: clean where the Neve was, no warmth under the eras
     m.midiverb = w[1];
     m.bbd = w[2];
     m.cassette = w[3];
