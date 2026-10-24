@@ -1,6 +1,6 @@
 # 0003 — ERA stacks, weighted to the middle
 
-**Status:** Accepted, 21 Oct 2026 (owner). Spec-session decisions 1, 5.
+**Status:** Superseded by ADR 0021 (25 Oct 2026: each era on its own, sweet to gritty, over the Neve). Accepted 21 Oct 2026 (owner). Spec-session decisions 1, 5.
 
 **Context:** ERA runs Clean → Neve → Cassette → μ-law → Midiverb. The stages could **stack** (each keeps the colour of the ones before it) or **morph** (only the two nearest blend). The brief asks for a tail that "gets grainier as it fades", warm and never metallic.
 

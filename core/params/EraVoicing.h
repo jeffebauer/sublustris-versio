@@ -26,11 +26,15 @@ constexpr float kDriftMaxSeconds = 0.07f;
 constexpr float kSatCeiling = 1.2f;
 constexpr float kSatKnee    = 0.7f; // a held tail's peaks (crest ~4-5) stay under it; only a hot tank saturates
 
-// ---- ERA (P4): where each stacked layer comes in (ADR 0003) ----------------
-constexpr float kEraNeveFrom = 0.10f, kEraCassetteFrom = 0.35f, kEraMuFrom = 0.65f, kEraMidiverbFrom = 0.85f;
-// Neve's share grows in straight steps from kEraCleanTop to kEraCassetteFrom (v1.0.21, owner's pick on
-// renders/knob_feel: ERA's first 20 % changed nothing measurable; Clean was 0 → 0.10, then a smoothstep).
-constexpr float kEraCleanTop = 0.03f;
+// ---- ERA (P4): five eras from sweet to gritty, each on its own (ADR 0021) --
+// Neve (the base, always on), Midiverb, bucket-brigade, cassette, AM radio, in equal stretches of the
+// knob. Each era comes in over the first third of its stretch as the one before goes, then runs from its
+// sweet end to its gritty end (owner's picks on renders/era_discrete, era_v2, era_v2b, era_v2c).
+constexpr int   kEraCount = 5;
+constexpr float kEraFadeShare = 1.0f / 3.0f;
+// The BBD reaches the grit of round 2's B two-thirds into its stretch (owner, era_v2b), half as much
+// again by its end.
+constexpr float kBbdGritAt = 0.66f;
 
 // Neve (SPEC §4.7): a little darker (16 kHz in the table, here a shorter
 // high-end T60); gentle asymmetric, even harmonics.
@@ -50,21 +54,12 @@ constexpr float kHissFollowFromDbfs = -36.0f;    // input at or above this: full
 constexpr float kCassetteWowCents = 4.0f, kCassetteWowHz = 0.55f;
 constexpr float kCassetteFlutterCents = 1.0f, kCassetteFlutterHz = 7.0f;
 
-// μ-law (ADR 0004): the wet output at 24 kHz, 12 → 10 bits across the stage.
-constexpr float kMuLaw = 255.0f;
-constexpr float kMuBitsStart = 12.0f, kMuBitsEnd = 10.0f;
-constexpr float kMuFullScale = 1.0f;
-constexpr float kMuEngageSpan = 0.03f; // its crossfade in, on the ERA knob
-
 // Midiverb (ADR 0004, amended v1.0.16): in the loop, a 48 → 24 → 48 kHz box
 // at the real unit's 13 bits, truncated toward zero (a fading tail can't hold
 // a buzz), with its ½ one-pole low-pass every pass (emeb/MIDIVerb_RE; it was
 // 12 → 8 bits, a bitcrusher: owner's pick on renders/midiverb); sparse crackle
 // into the tank's input, following the input level.
-constexpr float kMidiBitsStart = 13.0f, kMidiBitsEnd = 13.0f;
-// The box engages across the Midiverb's whole stretch as (share)² (v1.0.21, knob_feel: it switched on
-// within 2 % at 0.85 and a tail got ~5× shorter in one notch, then the last 13 % did nothing).
-constexpr float kMidiEngagePower = 2.0f;
+constexpr float kMidiBitsStart = 13.0f;
 // At infinite DECAY the box keeps only this share of its dark loop (v1.0.23, owner's pick on
 // renders/midiverb_hold round 2, "brighter fading" on all 16 cards): the whole loop turned a held tail
 // into a low drone (a held 1 kHz tone gone within a minute); none let ERA's per-pass grain pile up in the
@@ -72,11 +67,6 @@ constexpr float kMidiEngagePower = 2.0f;
 constexpr float kMidiDarkAtInfinite = 0.25f;
 constexpr float kCrackleDbfs = -48.0f;
 constexpr float kCracklePerSecond = 4.0f;
-
-// Vintage reads (v1.0.22, ADR 0019): from the μ-law stretch on (Fdn::setVintage). The 32 steps follow
-// Costello on the 224; the jitter's size is ours, tuned on the measured noise halo (docs/research/dsp-audit.md E4).
-constexpr float kVintageSteps = 32.0f;          // fraction steps per sample (Costello: "32 or 64 chunks")
-constexpr float kVintageJitterSamples = 0.15f;   // the noisy modulation's random offset per control block
 
 // Tape out (v1.0.22, ADR 0019). Its asymmetry is a third of the first one's (v1.0.26, owner's pick on
 // renders/tape_bias: the full bias bent even quiet held notes, a 2nd harmonic 14-22 dB under them; at a
@@ -95,6 +85,9 @@ constexpr float kTapePlayWidth = 0.15f;     // the play operator's width × the 
 // stages themselves barely lose level (Neve −0.2, cassette −0.2, μ-law 0, Midiverb
 // −0.7 dB in HALL, less in MASSIVE). Until v1.0.19 these were set on noise-burst
 // tails (0.6 / 1.4 / 2.4 / 1.3 dB), which made music 4–6 LU louder at the end.
-constexpr float kMakeupNeveDb = 0.2f, kMakeupCassetteDb = 0.2f, kMakeupMuDb = 0.0f, kMakeupMidiverbDb = 0.4f;
+constexpr float kMakeupNeveDb = 0.2f, kMakeupCassetteDb = 0.2f, kMakeupMidiverbDb = 0.4f;
+
+// The BBD's and radio's level against the Neve base on music (LUFS; the radio's own make-up is in EraStages.h).
+constexpr float kEraBbdTrim = 1.0f, kEraRadioTrim = 1.0f;
 
 } // namespace iv::voicing

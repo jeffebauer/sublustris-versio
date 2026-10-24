@@ -195,10 +195,10 @@ fi
 
 if on m6_character; then
     page m6_character
-    for ec in 0:A_clean 0.3:B_neve 0.55:C_cassette 0.8:D_mulaw 1:E_midiverb; do
+    for ec in 0.1:A_neve 0.3:B_midiverb 0.5:C_bbd 0.7:D_cassette 0.9:E_radio; do
         r m6_character era_hall ${ec##*:} "" --set space=HALL --set decay=0.6 --set size=0.6 --set era=${ec%%:*}
     done
-    for ec in 0:A_clean 0.55:C_cassette 1:E_midiverb; do
+    for ec in 0.3:B_midiverb 0.7:D_cassette 0.9:E_radio; do
         r m6_character era_massive ${ec##*:} "" --set space=MASSIVE --set decay=0.65 --set size=0.7 --set era=${ec%%:*}
     done
     for dc in 0:A_tape 0.5:B_still 1:C_wander; do
@@ -207,21 +207,21 @@ if on m6_character; then
     for tc in 0:A_dark 0.5:B_noon 1:C_bright; do
         r m6_character tone ${tc##*:} "" --set space=HALL --set decay=0.6 --set size=0.6 --set tone=${tc%%:*}
     done
-    finish m6_character "Immensio M6: ERA, DRIFT and TONE" "ERA's five stacked stages, DRIFT both ways and TONE's full range, rendered from today's reverb (v1.0.28, 24 Oct 2026). Since your last M6 listen, ERA has changed the most: it does something from its first notch and the Midiverb fades in across its stretch (knob feel, v1.0.21); across the μ-law stretch the HALL and MASSIVE tails read the old-Lexicon way, a little grain and noise (v1.0.22); a held Midiverb tail keeps a quarter of its dark loop (v1.0.23); and the cassette stage warms the wet like tape, a little stronger with light hysteresis (tape out, v1.0.22 to v1.0.27). The HALL starts right behind the note and short tails stay brighter (v1.0.25), and the reverb keeps its loudness whatever DECAY is (v1.0.28). ERA stays loudness-matched on music. Does ERA feel like going back in time, stage by stage, and is each stage's character right? Are DRIFT's tape side and its Wander side what you hear in your head? Notes only.
+    finish m6_character "Immensio M6: ERA, DRIFT and TONE" "ERA's five eras (ADR 0021), DRIFT both ways and TONE's full range, from today's reverb. ERA now runs from sweet to gritty, each era on its own, with the Neve's warmth under all of them: the Neve, the Midiverb, a bucket-brigade delay line, the cassette and AM radio (each card is the middle of its stretch). Notes only.
 
-era_hall     ERA's five stages in HALL (DECAY 0.6, SIZE 0.6)
-era_massive  three ERA stages in MASSIVE (DECAY 0.65, SIZE 0.7)
+era_hall     ERA's five eras in HALL (DECAY 0.6, SIZE 0.6)
+era_massive  three eras in MASSIVE (DECAY 0.65, SIZE 0.7)
 drift        DRIFT left, noon, right (HALL, DECAY 0.65)
 tone         TONE dark, noon, bright (HALL, DECAY 0.6)
 
-A_clean     ERA 0
-B_neve      ERA 0.3
-C_cassette  ERA 0.55 (hiss while you play)
-D_mulaw     ERA 0.8
-E_midiverb  ERA 1
+A_neve      ERA 0.1: the Neve (the base under every era)
+B_midiverb  ERA 0.3: the Midiverb
+C_bbd       ERA 0.5: the bucket-brigade
+D_cassette  ERA 0.7: the cassette
+E_radio     ERA 0.9: AM radio
 A_tape      DRIFT fully left (wow and flutter)
 B_still     DRIFT noon
-C_wander    DRIFT fully right (Wander: quick, small random movement; your pick, v1.0.20)
+C_wander    DRIFT fully right (Wander)
 A_dark      TONE fully CCW
 B_noon      TONE noon
 C_bright    TONE fully CW (highs outlast lows)"
@@ -293,6 +293,44 @@ B_supermassive_sagittarius    Valhalla Supermassive, Sagittarius
 C_supermassive_andromeda      Valhalla Supermassive, Andromeda" > renders/valhalla_compare/README.txt
     python3 tools/review/make_review.py renders/valhalla_compare --title "Immensio beside Valhalla" --level-match --showcase --dry $SRC --wet-only "${refs[@]}" > /dev/null
     echo "renders/valhalla_compare/index.html"
+fi
+
+if on era_sweep; then
+    # ERA turned from fully left to fully right over 40 s while the music loops (renders/_material_sweep,
+    # 40 s loops + 12 s of tail), then the tail at ERA 1; chaptered at each era's start (ADR 0021).
+    SW=renders/_material_sweep
+    mkdir -p $SW
+    [ -f $SW/_click.wav ] || cp $SRC/_click.wav $SW/_click.wav
+    print -r -- '{ "breakpoints": [ {"t": 0, "key": "era", "value": 0}, {"t": 40, "key": "era", "value": 1}, {"t": 52, "key": "era", "value": 1} ] }' > $SW/era_lin.json
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in skank vibes stabs pad lead drums bass keys voice fullmix; do
+        [ -f $SRC/$m.wav ] || continue
+        MATERIALS+=($m)
+        for f in $m ${m}_send; do
+            [ -f $SRC/$f.wav ] || continue
+            [ -f $SW/$f.wav ] && continue
+            d=$(ffprobe -v error -show_entries format=duration -of csv=p=0 $SRC/$f.wav)
+            play=$(python3 -c "print(max(1.0, $d - 12))")
+            ffmpeg -v error -y -i $SRC/$f.wav -af "atrim=0:$play,aloop=loop=-1:size=2e9" -t 40 -c:a pcm_f32le $SW/_loop_$f.wav
+            ffmpeg -v error -y -i $SW/_loop_$f.wav -af "afade=t=out:st=39.9:d=0.1,apad=pad_dur=12" -c:a pcm_f32le $SW/$f.wav
+            rm -f $SW/_loop_$f.wav
+        done
+        cp $SW/era_lin.json $SW/era_lin_$m.json
+    done
+    page era_sweep
+    SRC0=$SRC; SRC=$SW
+    r era_sweep hall A_era_sweep era_lin --set space=HALL --set decay=0.6 --set size=0.6
+    r era_sweep massive A_era_sweep era_lin --set space=MASSIVE --set decay=0.65 --set size=0.7
+    SRC=$SRC0; MATERIALS=("${saved[@]}")
+    print -r -- "ERA turned from fully left to fully right over 40 s while the music plays, then the tail rings at full ERA. The bar under each card is in chapters at each era's start: click one to jump there (Neve 0 s, Midiverb 8 s, BBD 16 s, Cassette 24 s, Radio 32 s, Tail 40 s). Each era comes in over the first third of its chapter, then runs from its sweet end to its gritty end. Notes only.
+
+hall      HALL (DECAY 0.6, SIZE 0.6)
+massive   MASSIVE (DECAY 0.65, SIZE 0.7)
+
+A_era_sweep  ERA, fully left to fully right" > renders/era_sweep/README.txt
+    python3 tools/review/make_review.py renders/era_sweep --title "Immensio: ERA, knob sweep" --showcase --no-level-match --dry $SW --wet-only \
+        --chapters "Neve:0,Midiverb:8,BBD:16,Cassette:24,Radio:32,Tail:40" > /dev/null
+    echo "renders/era_sweep/index.html"
 fi
 
 if on reverse; then

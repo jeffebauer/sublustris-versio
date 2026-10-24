@@ -150,12 +150,14 @@ IV_SIZE_OPT void Engine::reset()
     reverse_.reset();
     reverseFdn_.reset();
     reverseRunning_ = false;
-    muLaw_.reset();
     tilt_.reset();
     tilt_.set(smoothed(ParamId::Tone));
     tilt_.snap();
     limiter_.reset();
     for (auto& t : tape_) t.reset();
+    bbd_.reset();
+    radio_.reset();
+    tapeMix_ = 0.0f;
     duck_ = duckGrDb_ = duckGainStep_ = 0.0f;
     duckGain_ = 1.0f;
     hissLp_[0] = hissLp_[1] = 0.0f;
@@ -382,6 +384,11 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
     // ERA in the loop and DRIFT (SPEC §4.6, §4.7). Freezing glides the
     // in-loop colour out (the pad holds still, ADR 0009); DRIFT stays.
     const dsp::EraMix era = map::eraMix(smoothed(ParamId::Era));
+    // The bucket-brigade and the radio on the wet (ADR 0021); each runs only while it's in.
+    bbdW_ = era.bbd;
+    radioW_ = era.radio;
+    if (bbdW_ > 0.0f) bbd_.set(era.bbdT, sampleRate_);
+    if (radioW_ > 0.0f) radio_.set(era.radioT, sampleRate_, n);
     dsp::EraMix loopEra = era;
     const float keep = 1.0f - freezeMix_;
     loopEra.midiRound = map::governorWeight(decay) >= 1.0f; // infinite: no systematic loss
@@ -413,11 +420,10 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
         lowFdn_.setDrift(dsp::DriftAmounts{}); // still: no wow, flutter or Wander
         lowFdn_.setExtraRate(compress);
     }
-    muLaw_.set(era);
     eraMakeup_ = era.makeup;
     tapeDrive_ = era.cassette; // tape out (v1.0.22, E5)
+    if (snap) tapeMix_ = tapeDrive_ > 0.0f && tapeOn_ ? 1.0f : 0.0f;
     for (auto& t : tape_) t.set(tapeDrive_, sampleRate_);
-    if (!plate) fdn_.setVintage(era.mu * keep); // vintage reads (v1.0.22, E4; ADR 0019): in-loop colour, out while frozen
 
     tilt_.set(smoothed(ParamId::Tone));
     // Hiss follows the input (none in silence, so an infinite tail doesn't
@@ -689,6 +695,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         return;
     }
     const float reverseStep = 1.0f / (voicing::kAttackFadeSeconds * sampleRate_);
+    const float tapeStep = 1.0f / (0.02f * sampleRate_);
     for (int start = 0; start < numSamples; start += kChunk) {
         const int n = (numSamples - start) < kChunk ? (numSamples - start) : kChunk;
         handleEdges(start, start + n);
@@ -801,10 +808,25 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             float wr = (fr + reverseMix_ * (rr - fr) + tr) * flipGain_;
             wl *= eraMakeup_;
             wr *= eraMakeup_;
-            muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)
-            if (tapeDrive_ > 0.0f && tapeOn_) { // ERA's tape out (v1.0.27, dsp/Tape.h)
-                wl = tape_[0].process(wl);
-                wr = tape_[1].process(wr);
+            // ERA's tape out (v1.0.27, dsp/Tape.h), faded in and out over ~20 ms as the cassette layer
+            // appears and leaves: switched in one sample, its oversampling filters' phase stepped the wet
+            // (a click turning ERA through 0.35, found 25 Oct 2026).
+            tapeMix_ = approach(tapeMix_, tapeDrive_ > 0.0f && tapeOn_ ? 1.0f : 0.0f, tapeStep);
+            if (tapeMix_ > 0.0f) {
+                const float tl2 = tape_[0].process(wl), tr2 = tape_[1].process(wr);
+                wl = tapeMix_ >= 1.0f ? tl2 : wl + tapeMix_ * (tl2 - wl);
+                wr = tapeMix_ >= 1.0f ? tr2 : wr + tapeMix_ * (tr2 - wr);
+            }
+            if (bbdW_ > 0.0f) { // ERA's bucket-brigade (ADR 0021)
+                const float bl = bbd_.process(wl, 0), br = bbd_.process(wr, 1);
+                wl += bbdW_ * (voicing::kEraBbdTrim * bl - wl);
+                wr += bbdW_ * (voicing::kEraBbdTrim * br - wr);
+            }
+            if (radioW_ > 0.0f) { // ERA's AM radio (ADR 0021)
+                float rl2 = wl, rr2 = wr;
+                radio_.process(rl2, rr2);
+                wl += radioW_ * (voicing::kEraRadioTrim * rl2 - wl);
+                wr += radioW_ * (voicing::kEraRadioTrim * rr2 - wr);
             }
             tilt_.process(wl, wr);
             duckGain_ += duckGainStep_; // ducking (ADR 0014)

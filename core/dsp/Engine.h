@@ -18,6 +18,7 @@
 // DTCM arrays before prepare(). Desktop Hosts may skip it: the Engine then
 // owns vectors (not in the firmware, which builds with IV_NO_HEAP).
 #include "dsp/Diffuser.h"
+#include "dsp/EraStages.h"
 #include "dsp/Fdn.h"
 #include "dsp/Memory.h"
 #include "dsp/Output.h"
@@ -183,7 +184,6 @@ private:
     float             twinIn_ = 0.0f, twinInStep_ = 0.0f;
     bool              twinActive_ = false;
     dsp::Reverse      reverse_;
-    dsp::MuLawOut     muLaw_;
     float             eraMakeup_ = 1.0f;
     // Ducking (ADR 0014) and the limiter (SPEC §4.10).
     dsp::Tilt         tilt_;
@@ -203,10 +203,14 @@ private:
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f, reverseFeed_ = 0.0f; // reverseFeed_: the taps into the short reverb
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
+    dsp::BbdStage   bbd_;   // ERA's bucket-brigade and radio, on the wet (ADR 0021, dsp/EraStages.h)
+    dsp::RadioStage radio_;
+    float bbdW_ = 0, radioW_ = 0;
     float decayMakeup_ = 1.0f, decayGain_ = 1.0f, decayGainNow_ = 1.0f; // DECAY's level make-up (v1.0.28)
     float reverseGain_ = 1.0f, reverseGainNow_ = 1.0f;                     // ... and REVERSE's
     float tapeDrive_ = 0.0f;
     bool  tapeOn_ = true; // test hook (setTapeOut)
+    float tapeMix_ = 0.0f; // tape out's fade in/out
     dsp::TapeOut tape_[2]; // tape out (v1.0.27, dsp/Tape.h)
     float diffMotionNow_ = 0.0f, diffMotionPhase_ = 0.0f; // the PLATE's wandering input allpass, samples
     float hallInLoop_ = voicing::kHallInLoopDiffusion; // setHallInLoopDiffusion overrides it (renders/hall_diffusion)

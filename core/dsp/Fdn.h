@@ -81,10 +81,6 @@ public:
     void setAir(float air) { air_ = air; } // 1/T60 in 1/s: see absorbent() (v1.0.25)
     // The modulation floor's depth × modDepth (Engine::setModulationScale, a test hook).
     void setModDepth(float k) { modDepth_ = k; }
-    // Vintage reads (v1.0.22, the DSP audit's E4; ADR 0019): 0..1 with ERA's μ-law stretch, the reads
-    // crossfade to the Lexicon 224 / PCM70 way (Costello): linear interpolation with its fraction
-    // quantised to kVintageSteps, and a noisy read.
-    void setVintage(float v) { vintage_ = v; }
     // Extra output level for a voicing (MASSIVE's loudness match).
     void setOutputTrim(float trim) { outputTrim_ = trim; }
     float levelDb() const { return governor_.levelDb; }
@@ -120,7 +116,7 @@ private:
     // Absorbent filters: y = g (1 − b) x + b y.
     float     gain_[kN] = {}, pole_[kN] = {}, absorbY_[kN] = {};
     float     b1_[kN] = {}, absorbX_[kN] = {}, shelfK_ = 0.0f; // lossShelfK(sampleRate_)
-    float     modDepth_ = 1.0f, vintage_ = 0.0f, jitter_[kN] = {}, air_ = 0.0f;
+    float     modDepth_ = 1.0f, air_ = 0.0f;
     float     decayRate_ = 0.2f, highRatio_ = voicing::kDampingHighT60Ratio;
     LoopEra   era_[kN];
     Drift     driftGen_[kN];

@@ -1,11 +1,10 @@
-// M6: the loop's character (SPEC §4.6, §4.7, §7 M6; ADR 0003, 0004, 0005,
-// 0008, 0012). ERA darkens the tail more with each stage; its loudness on music
-// stays within ±1 dB across the knob; the μ-law output layer adds grain on the
-// wet only; the Midiverb box lets a finite tail reach true silence (no stuck
-// buzz) and an infinite one hold; cassette hiss follows the input (none in
-// silence); infinite tails hold at every ERA stage; DRIFT's dead zone is
-// exact and both sides move the tail without clicks; the saturation doesn't
-// alias badly when hit hard.
+// M6: the loop's character (SPEC §4.6, §4.7, §7 M6; ADR 0004, 0005, 0008, 0012, 0021). ERA's five eras
+// (Neve base, Midiverb, bucket-brigade, cassette, AM radio): the Midiverb and cassette darken the tail
+// against the Neve base; loudness on music stays within ±1 dB across the knob; the BBD and radio are on
+// the wet only; the Midiverb box lets a finite tail reach true silence (no stuck buzz); the BBD's,
+// cassette's and radio's noise follows the input (none in silence); infinite tails hold at every era;
+// turning ERA through the eras doesn't click; DRIFT's dead zone is exact and both sides move the tail
+// without clicks; the saturation doesn't alias badly when hit hard.
 
 #include "Fft.h"
 #include "Metrics.h"
@@ -106,27 +105,27 @@ void bandT60s(const Stereo& out, double& low, double& high)
     high = iv::metrics::compute({hi}, kSr).t60S;
 }
 
-// ERA darkens with each stage: the highs' T60 over the lows' falls.
+// The Midiverb and the cassette darken the tail against the Neve base: the highs' T60 over the lows' falls.
 void eraDarkens()
 {
     std::vector<float> in(size_t(12.0f * kSr), 0.0f);
-    in[100] = 0.5f;
-    double prev = 10.0;
+    for (size_t i = 0; i < size_t(0.2f * kSr); ++i) in[i] = 0.3f * noise(); // a burst: one click is too quiet for the Midiverb's 13 bits
+    double base = 0.0;
     bool falling = true;
     std::string detail;
-    for (float era : {0.0f, 0.3f, 0.6f}) {
+    for (float era : {0.1f, 0.3f, 0.7f}) { // Neve, Midiverb, cassette
         Setting s;
         s.era = era;
         double lo, hi;
         bandT60s(render(in, s), lo, hi);
         const double ratio = hi / lo;
-        falling &= ratio < prev - 0.02;
-        prev = ratio;
+        if (era < 0.2f) base = ratio;
+        else falling &= ratio < base - 0.02;
         char buf[64];
         std::snprintf(buf, sizeof buf, " ERA %.1f: %.2f", era, ratio);
         detail += buf;
     }
-    check(falling, "ERA darkens the tail stage by stage (high/low T60:" + detail + ")");
+    check(falling, "the Midiverb and cassette darken the tail against the Neve base (high/low T60:" + detail + ")");
 }
 
 // SPEC §7 M6 (v1.0.19): ERA's loudness on music stays within ±1 dB across the
@@ -168,7 +167,7 @@ void eraLoudness()
     for (const Space& sp : {Space{1, 0.6f, 0.6f, "HALL"}, Space{2, 0.65f, 0.7f, "MASSIVE"}}) {
         double lo = 1e9, hi = -1e9;
         std::string detail;
-        for (float era : {0.0f, 0.3f, 0.55f, 0.8f, 1.0f}) {
+        for (float era : {0.0f, 0.3f, 0.5f, 0.7f, 0.9f, 1.0f}) { // Neve, Midiverb, BBD, cassette, radio
             Setting s;
             s.space = sp.space;
             s.decay = sp.decay;
@@ -185,109 +184,75 @@ void eraLoudness()
     }
 }
 
-// The μ-law layer, measured on its own: a −20 dBFS tone through it keeps a
-// clear but finite signal-to-noise (grain), more grain at 10 bits than 12;
-// below its stage it's bit-exact bypassed. And it's on the wet only: MIX 0
-// is still a clean passthrough at the μ-law stage.
-double muLawSnrDb(float era)
+// The BBD and the radio are on the wet only: MIX 0 there is still a bit-identical passthrough.
+void erasOnWetOnly()
 {
-    iv::dsp::MuLawOut mu;
-    mu.reset();
-    mu.set(iv::map::eraMix(era));
-    double sig = 0.0, err = 0.0;
-    const int n = 48000;
-    std::vector<float> x(static_cast<size_t>(n)), y(static_cast<size_t>(n));
-    for (int i = 0; i < n; ++i) {
-        float l = 0.1f * std::sin(2.0f * 3.14159265f * 440.0f * float(i) / kSr), r = l;
-        x[size_t(i)] = l;
-        mu.process(l, r);
-        y[size_t(i)] = l;
-    }
-    // Compare with the input delayed by the box's latency (best lag 0..8).
-    double best = 1e30;
-    for (int lag = 0; lag <= 8; ++lag) {
-        double e = 0.0, s = 0.0;
-        for (int i = 4800 + lag; i < n; ++i) {
-            const double d = double(y[size_t(i)]) - x[size_t(i - lag)];
-            e += d * d;
-            s += double(x[size_t(i - lag)]) * x[size_t(i - lag)];
-        }
-        if (e < best) {
-            best = e;
-            sig = s;
-        }
-    }
-    err = best;
-    return 10.0 * std::log10(sig / (err + 1e-30));
-}
-
-void muLawGrain()
-{
-    const double bypass = muLawSnrDb(0.6f), twelve = muLawSnrDb(0.68f), ten = muLawSnrDb(1.0f);
-    char msg[200];
-    std::snprintf(msg, sizeof msg, "μ-law layer: bypassed below its stage (SNR %.0f dB), grain at its start (%.1f dB) and "
-                                   "more at 10 bits (%.1f dB)", bypass, twelve, ten);
-    check(bypass > 200.0 && twelve < 60.0 && ten < twelve - 3.0, msg);
-
     std::vector<float> in(size_t(2.0f * kSr));
     for (size_t i = 0; i < in.size(); ++i) in[i] = 0.3f * std::sin(2.0f * 3.14159265f * 1000.0f * float(i) / kSr);
-    Setting dry;
-    dry.era = 0.8f;
-    dry.mix = 0.0f;
-    const Stereo out = render(in, dry);
-    bool same = true;
-    for (size_t i = 0; i < in.size(); ++i) same &= out.l[i] == in[i];
-    check(same, "μ-law is on the wet only: MIX 0 at ERA 0.8 is still a bit-identical passthrough");
+    for (float era : {0.5f, 0.9f}) {
+        Setting dry;
+        dry.era = era;
+        dry.mix = 0.0f;
+        const Stereo out = render(in, dry);
+        bool same = true;
+        for (size_t i = 0; i < in.size(); ++i) same &= out.l[i] == in[i];
+        check(same, std::string("ERA ") + (era < 0.6f ? "0.5 (BBD)" : "0.9 (radio)") + " is on the wet only: MIX 0 is a bit-identical passthrough");
+    }
 }
 
-// ADR 0004: at the Midiverb end a finite tail reaches true silence (the box
-// truncates toward zero: no stuck buzz).
+// ADR 0004: the Midiverb lets a finite tail reach true silence (the box truncates toward zero: no stuck buzz).
 void midiverbReachesSilence()
 {
     std::vector<float> in(size_t(60.0f * kSr), 0.0f);
     for (size_t i = 0; i < size_t(0.5f * kSr); ++i) in[i] = 0.3f * noise();
     Setting s;
-    s.era = 1.0f;
+    s.era = 0.3f; // the Midiverb
     s.decay = 0.5f;
     const Stereo out = render(in, s);
     const double end = rmsDb(out.l, 55.0, 60.0);
-    check(finite(out) && end < -110.0, "Midiverb end, DECAY 0.5: the tail reaches silence, no stuck buzz (" +
+    check(finite(out) && end < -110.0, "Midiverb, DECAY 0.5: the tail reaches silence, no stuck buzz (" +
                                            std::to_string(int(end)) + " dBFS at 55-60 s)");
 }
 
-// ADR 0005: hiss follows the input: none once the input is silent.
+// ADR 0005: noise follows the input: none once the input is silent (the cassette's hiss, the BBD's
+// compander noise, the radio's hiss and static).
 void hissFollowsInput()
 {
     std::vector<float> in(size_t(120.0f * kSr), 0.0f);
     for (size_t i = 0; i < size_t(1.0f * kSr); ++i) in[i] = 0.3f * noise();
-    Setting s;
-    s.era = 0.5f; // cassette
-    s.decay = 0.3f;
-    const Stereo out = render(in, s);
-    const double end = rmsDb(out.l, 115.0, 120.0);
-    check(end < -90.0, "cassette hiss is ducked to below −90 dBFS in silence (" + std::to_string(int(end)) + " dBFS after 2 min)");
+    for (float era : {0.5f, 0.7f, 0.9f}) {
+        Setting s;
+        s.era = era;
+        s.decay = 0.3f;
+        const Stereo out = render(in, s);
+        const double end = rmsDb(out.l, 115.0, 120.0);
+        check(finite(out) && end < -90.0, std::string(era < 0.6f ? "BBD" : era < 0.8f ? "cassette" : "radio") +
+                                              " noise is gone in silence (" + std::to_string(int(end)) + " dBFS after 2 min)");
+    }
 }
 
-// ADR 0008: an infinite tail holds at every ERA stage (10 min, within 3 dB,
-// no growth, not silent).
+// ADR 0008: an infinite tail holds at every era (10 min, within 3 dB, no growth, not silent). The radio's
+// station fades are on the wet after the loop and come and go by design (the deepest beyond what its AGC
+// gives back), so there the level is judged over 25 s stretches, which average the fades out.
 void infiniteAtEveryEra()
 {
     std::vector<float> in(size_t(620.0f * kSr), 0.0f);
     for (size_t i = 0; i < size_t(20.0f * kSr); ++i) in[i] = 0.3f * noise();
-    for (float era : {0.2f, 0.5f, 0.75f, 1.0f}) {
+    for (float era : {0.1f, 0.3f, 0.5f, 0.7f, 0.9f}) {
         Setting s;
         s.era = era;
         s.decay = 1.0f;
         const Stereo out = render(in, s);
-        const double first = rmsDb(out.l, 60.0, 70.0);
+        const double win = era > 0.8f ? 25.0 : 5.0; // the radio: average its fades
+        const double first = rmsDb(out.l, 60.0, 60.0 + std::fmax(10.0, win));
         double lo = first, hi = first;
-        for (double t = 60.0; t < 615.0; t += 30.0) {
-            const double db = rmsDb(out.l, t, t + 5.0);
+        for (double t = 60.0; t + win < 620.0; t += 30.0) {
+            const double db = rmsDb(out.l, t, t + win);
             lo = std::fmin(lo, db);
             hi = std::fmax(hi, db);
         }
         char msg[160];
-        std::snprintf(msg, sizeof msg, "infinite holds 10 min at ERA %.2f: %.1f .. %.1f dBFS", era, lo, hi);
+        std::snprintf(msg, sizeof msg, "infinite holds 10 min at ERA %.2f: %.1f .. %.1f dBFS (%.0f s windows)", era, lo, hi, win);
         check(finite(out) && hi - lo < 3.0 && hi <= first + 1.0 && lo > -60.0, msg);
     }
 }
@@ -296,7 +261,7 @@ void infiniteAtEveryEra()
 // both sides move the tail without clicks.
 void drift()
 {
-    std::vector<float> in(size_t(6.0f * kSr));
+    std::vector<float> in(size_t(10.0f * kSr));
     for (size_t i = 0; i < in.size(); ++i) in[i] = 0.2f * std::sin(2.0f * 3.14159265f * 330.0f * float(i) / kSr) + 0.01f * noise();
     Setting noon, edge;
     edge.drift = iv::voicing::kDriftDeadLo + 0.001f;
@@ -315,6 +280,40 @@ void drift()
     }
 }
 
+// Turning ERA through the eras doesn't click: through the Midiverb's, the BBD's and the cassette's starts
+// (where tape out comes in: switched in one sample, its oversampling filters' phase stepped the wet, found
+// 25 Oct 2026). The radio's crackle is clicks by design, so its start isn't judged here.
+void eraSweepClickFree()
+{
+    std::vector<float> in(size_t(6.0f * kSr));
+    for (size_t i = 0; i < in.size(); ++i)
+        in[i] = 0.2f * std::sin(2.0f * 3.14159265f * 220.0f * float(i) / kSr) + 0.1f * std::sin(2.0f * 3.14159265f * 331.0f * float(i) / kSr);
+    for (int mode : {0, 1, 2}) { // up, down, and down then back up (the tape comes back in after resting)
+        const bool up = mode == 0;
+        iv::Engine e;
+        e.prepare(kSr, 48);
+        e.setParam(iv::ParamId::Space, iv::switchToNormalised(1));
+        e.setParam(iv::ParamId::Mix, 1.0f);
+        e.setParam(iv::ParamId::Era, up ? 0.1f : 0.75f);
+        e.reset();
+        Stereo out{std::vector<float>(in.size()), std::vector<float>(in.size())};
+        for (size_t pos = 0; pos < in.size(); pos += 48) {
+            const float sec = float(pos) / kSr;
+            const float t = std::fmin(1.0f, std::fmax(0.0f, (sec - 1.0f) / 8.0f)); // 1 s still, 8 s across 0.10-0.75
+            float era = up ? 0.1f + 0.65f * t : 0.75f - 0.65f * t;
+            if (mode == 2) era = sec < 5.0f ? 0.75f - 0.25f * std::fmin(1.0f, std::fmax(0.0f, sec - 1.0f) / 2.0f) // to the BBD
+                                            : 0.5f + 0.25f * std::fmin(1.0f, (sec - 5.0f) / 2.0f);                 // and back
+            
+            e.setParam(iv::ParamId::Era, era);
+            const int n = int(std::min<size_t>(48, in.size() - pos));
+            e.process(in.data() + pos, in.data() + pos, out.l.data() + pos, out.r.data() + pos, n);
+        }
+        const auto m = iv::metrics::compute({out.l, out.r}, kSr);
+        check(finite(out) && m.clickCount == 0, std::string("ERA turned ") + (mode == 0 ? "up" : mode == 1 ? "down" : "down and back up") +
+                                                    " through the eras' starts, no clicks (" + std::to_string(m.clickCount) + ")");
+    }
+}
+
 // SPEC §7 M6: the saturation hit hard doesn't alias badly. A loud 7 kHz
 // tone's 3rd/5th harmonics fold to 27 → 21 kHz and 35 → 13 kHz: check the
 // band below 5 kHz, where nothing harmonic belongs. Tape out's asymmetry
@@ -326,7 +325,7 @@ double lowBandDb(float sr)
     std::vector<float> in(size_t(3.0f * sr));
     for (size_t i = 0; i < in.size(); ++i) in[i] = 0.9f * std::sin(2.0f * 3.14159265f * 7000.0f * float(i) / sr);
     Setting s;
-    s.era = 0.6f; // cassette drive
+    s.era = 0.75f; // cassette drive
     s.decay = 0.0f;
     const Stereo out = render(in, s, sr);
     if (!finite(out)) return 999.0;
@@ -357,11 +356,12 @@ int main()
 {
     eraDarkens();
     eraLoudness();
-    muLawGrain();
+    erasOnWetOnly();
     midiverbReachesSilence();
     hissFollowsInput();
     infiniteAtEveryEra();
     drift();
+    eraSweepClickFree();
     notAliasing();
     std::printf("%d failure(s)\n", failures);
     return failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;

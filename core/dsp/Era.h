@@ -1,7 +1,7 @@
 #pragma once
-// ERA (P4, SPEC §4.7; ADR 0003, 0004, 0005): clean → Neve → cassette → μ-law
-// → Midiverb, stacking. Each layer fades in across its stretch of the knob
-// and then stays. This file has the two processors:
+// ERA (P4, SPEC §4.7; ADR 0021, which replaces 0003's stacking): five eras from sweet to gritty, each
+// on its own over the Neve's warmth: Neve → Midiverb → bucket-brigade → cassette → AM radio. This file
+// has the loop's part (the BBD and radio are on the wet, dsp/EraStages.h):
 //
 //   LoopEra   one per tank line, inside the loop after the line's loss:
 //             the always-on soft saturation (Neve's even harmonics and the
@@ -15,8 +15,6 @@
 // infinite tail would die. It scales the tank's high-end T60 instead
 // (EraMix::highRatioScale, applied with TONE through the Jot loss), which
 // is the same at every length.
-//   MuLawOut  the wet output at 24 kHz through 12 → 10-bit μ-law: gritty
-//             peaks, a smooth quiet tail.
 //
 // Every loop gain stays ≤ 1 (SPEC §2.3 rule 2): the low-pass and the soft
 // clip only ever take energy out.
@@ -30,14 +28,14 @@ namespace iv::dsp {
 
 // What the ERA knob means right now (Mappings.h eraMix fills it).
 struct EraMix {
-    float neve = 0, cassette = 0, mu = 0, midiverb = 0; // layer weights 0..1, stacking
+    float neve = 0, midiverb = 0, bbd = 0, cassette = 0, radio = 0; // weights 0..1 (Neve: 1, the base)
     float highRatioScale = 1.0f;                         // × the tank's high-end T60 share (the era's darkening)
     float drive = 1.0f, even = 0.0f;                     // into the soft clip
-    float muBits = 16.0f, muEngage = 0.0f;               // output μ-law
     float midiBits = 16.0f, midiEngage = 0.0f;           // in-loop box
     bool  midiRound = false;                             // at infinite: round (no systematic loss) instead of truncate
     float midiDark = 1.0f;                               // share of the box's dark loop in use (v1.0.23: less at infinite)
     float makeup = 1.0f;                                 // wet gain keeping ERA's loudness level
+    float bbdT = 0, radioT = 0;                          // how far into the BBD's and radio's stretches (0 → 1)
 };
 
 // The loop's soft clip: exactly linear below the knee (so a tail at a normal
@@ -140,64 +138,6 @@ private:
     Halfband down_, up_;
     int      phase_ = 0;
     float    held_ = 0.0f, pairFirst_ = 0.0f, darkLp_ = 0.0f;
-};
-
-// The μ-law output layer (stereo, the wet only).
-class MuLawOut {
-public:
-    void reset()
-    {
-        for (auto& h : down_) h.reset();
-        for (auto& h : up_) h.reset();
-        phase_ = 0;
-        held_[0] = held_[1] = first_[0] = first_[1] = 0.0f;
-    }
-    void set(const EraMix& m)
-    {
-        engage_ = m.muEngage;
-        levels_ = std::exp2(m.muBits - 1.0f); // codes per polarity
-    }
-    void process(float& l, float& r)
-    {
-        if (engage_ <= 0.0f) return;
-        float in[2] = {l, r}, out[2];
-        if (phase_ == 0) {
-            first_[0] = in[0];
-            first_[1] = in[1];
-            out[0] = held_[0];
-            out[1] = held_[1];
-            phase_ = 1;
-        } else {
-            phase_ = 0;
-            for (int c = 0; c < 2; ++c) {
-                const float low = companded(down_[c].down(first_[c], in[c]));
-                float a, b;
-                up_[c].up(low, a, b);
-                held_[c] = b;
-                out[c] = a;
-            }
-        }
-        l += engage_ * (out[0] - l);
-        r += engage_ * (out[1] - r);
-    }
-
-private:
-    // μ-law encode, quantise to the code count, decode.
-    float companded(float x) const
-    {
-        const float fs = voicing::kMuFullScale, mu = voicing::kMuLaw;
-        float a = std::fabs(x) / fs;
-        if (a > 1.0f) a = 1.0f;
-        const float enc = std::log1p(mu * a) / std::log1p(mu);
-        const float q = std::round(enc * levels_) / levels_;
-        const float dec = (std::pow(1.0f + mu, q) - 1.0f) / mu;
-        return (x < 0.0f ? -dec : dec) * fs;
-    }
-
-    Halfband down_[2], up_[2];
-    int      phase_ = 0;
-    float    held_[2] = {}, first_[2] = {};
-    float    engage_ = 0.0f, levels_ = 2048.0f;
 };
 
 } // namespace iv::dsp
