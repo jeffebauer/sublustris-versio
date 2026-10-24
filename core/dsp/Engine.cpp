@@ -157,7 +157,6 @@ IV_SIZE_OPT void Engine::reset()
     limiter_.reset();
     for (auto& t : tape_) t.reset();
     tapeMix_ = 0.0f;
-    tapeLive_ = false;
     duck_ = duckGrDb_ = duckGainStep_ = 0.0f;
     duckGain_ = 1.0f;
     hissLp_[0] = hissLp_[1] = 0.0f;
@@ -810,16 +809,11 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             // appears and leaves: switched in one sample, its oversampling filters' phase stepped the wet
             // (a click turning ERA through 0.35, found 25 Oct 2026).
             tapeMix_ = approach(tapeMix_, tapeDrive_ > 0.0f && tapeOn_ ? 1.0f : 0.0f, tapeStep);
-            if (tapeMix_ >= 1.0f) {
-                wl = tape_[0].process(wl);
-                wr = tape_[1].process(wr);
-            } else if (tapeMix_ > 0.0f) {
-                wl += tapeMix_ * (tape_[0].process(wl) - wl);
-                wr += tapeMix_ * (tape_[1].process(wr) - wr);
-            } else if (tapeLive_) {
-                for (auto& t : tape_) t.reset(); // faded out: start clean next time
+            if (tapeMix_ > 0.0f) {
+                const float tl2 = tape_[0].process(wl), tr2 = tape_[1].process(wr);
+                wl = tapeMix_ >= 1.0f ? tl2 : wl + tapeMix_ * (tl2 - wl);
+                wr = tapeMix_ >= 1.0f ? tr2 : wr + tapeMix_ * (tr2 - wr);
             }
-            tapeLive_ = tapeMix_ > 0.0f;
             tilt_.process(wl, wr);
             duckGain_ += duckGainStep_; // ducking (ADR 0014)
             wl *= duckGain_;

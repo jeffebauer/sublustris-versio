@@ -322,7 +322,8 @@ void eraSweepClickFree()
     std::vector<float> in(size_t(6.0f * kSr));
     for (size_t i = 0; i < in.size(); ++i)
         in[i] = 0.2f * std::sin(2.0f * 3.14159265f * 220.0f * float(i) / kSr) + 0.1f * std::sin(2.0f * 3.14159265f * 331.0f * float(i) / kSr);
-    for (bool up : {true, false}) {
+    for (int mode : {0, 1, 2}) { // up, down, and down then back up (the tape comes back in after resting)
+        const bool up = mode == 0;
         iv::Engine e;
         e.prepare(kSr, 48);
         e.setParam(iv::ParamId::Space, iv::switchToNormalised(1));
@@ -331,13 +332,17 @@ void eraSweepClickFree()
         e.reset();
         Stereo out{std::vector<float>(in.size()), std::vector<float>(in.size())};
         for (size_t pos = 0; pos < in.size(); pos += 48) {
-            const float t = std::fmin(1.0f, std::fmax(0.0f, (float(pos) / kSr - 1.0f) / 4.0f)); // 1 s still, 4 s across 0.30-0.40
-            e.setParam(iv::ParamId::Era, up ? 0.3f + 0.1f * t : 0.4f - 0.1f * t);
+            const float sec = float(pos) / kSr;
+            const float t = std::fmin(1.0f, std::fmax(0.0f, (sec - 1.0f) / 4.0f)); // 1 s still, 4 s across 0.30-0.40
+            float era = up ? 0.3f + 0.1f * t : 0.4f - 0.1f * t;
+            if (mode == 2) era = sec < 3.0f ? 0.4f - 0.1f * std::fmin(1.0f, std::fmax(0.0f, sec - 1.0f))
+                                            : 0.3f + 0.1f * std::fmin(1.0f, sec - 3.0f);
+            e.setParam(iv::ParamId::Era, era);
             const int n = int(std::min<size_t>(48, in.size() - pos));
             e.process(in.data() + pos, in.data() + pos, out.l.data() + pos, out.r.data() + pos, n);
         }
         const auto m = iv::metrics::compute({out.l, out.r}, kSr);
-        check(finite(out) && m.clickCount == 0, std::string("ERA turned ") + (up ? "up" : "down") +
+        check(finite(out) && m.clickCount == 0, std::string("ERA turned ") + (mode == 0 ? "up" : mode == 1 ? "down" : "down and back up") +
                                                     " through the cassette's start, no clicks (" + std::to_string(m.clickCount) + ")");
     }
 }

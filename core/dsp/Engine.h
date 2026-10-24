@@ -211,7 +211,6 @@ private:
     float tapeDrive_ = 0.0f;
     bool  tapeOn_ = true; // test hook (setTapeOut)
     float tapeMix_ = 0.0f; // tape out's fade in/out
-    bool  tapeLive_ = false;
     dsp::TapeOut tape_[2]; // tape out (v1.0.27, dsp/Tape.h)
     float diffMotionNow_ = 0.0f, diffMotionPhase_ = 0.0f; // the PLATE's wandering input allpass, samples
     float hallInLoop_ = voicing::kHallInLoopDiffusion; // setHallInLoopDiffusion overrides it (renders/hall_diffusion)
