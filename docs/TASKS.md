@@ -1,13 +1,12 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, session 4 (soak merged, v1.0.24; four pages to hear: Valhalla round 2, distortion on held notes, tape out round 2, the full mix's send).
+**Last updated:** 24 Oct 2026, session 4 (Valhalla fixes shipped, v1.0.25; three pages to hear: distortion on held notes, tape out round 2, the full mix's send).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
 - [ ] **Distortion on held notes** (`renders/tape_bias/index.html`, pick per card): the saturation you heard on the vibes' ringing notes is tape out, not the Midiverb. Its curve is lopsided on purpose (tape-like even harmonics), which bends even quiet notes: a second harmonic 14-22 dB under a held note. A today, B a third of the lopsidedness, C none (held notes stay clean; loud peaks still saturate). Your pick also applies to the tape page's versions, which all carry today's curve.
-- [ ] **Immensio beside Valhalla, round 2** (`renders/valhalla_round2/index.html`, pick per card): a fix for each of your notes, beside the same Valhalla takes. HALL without the slap-back gap (early echoes) and with highs fading like air; the long HALL's resonances smoothed (more gentle movement); the PLATE's lows centred (they were partly out of phase, as you suspected); the long PLATE's top end tamed; MASSIVE with half the swell.
 - [ ] **The full mix's send** (`renders/fullmix_send/index.html`, pick per card; your note that the full mix sounds quieter with less tape): the reverb only hears the mix's send, 12 dB under the single instruments. A today, B the send 12 dB hotter, C tape that hears a steady level (more tape character, same wet level), D both. Not level-matched: keep one MIX setting for all four.
 - [ ] **Tape out, round 2** (`renders/tape_out/index.html`, pick per card): hysteresis on gentler tape, as you asked. A today, B a little stronger, C and D today plus light and full hysteresis, E and F a little stronger plus light and full. Light is cheap enough for the module; full is the physical tape model (may be too heavy for it) and also changes the tone noticeably. Does hysteresis add something you want, and on which strength?
 
@@ -39,6 +38,7 @@
 
 ## Done
 
+- 24 Oct 2026: **Five fixes from the Valhalla comparison shipped** (SPEC v1.0.25): the HALL starts right behind the note (no slap-back gap), its long tails ring smoother (more gentle movement), short HALL and PLATE tails stay brighter while long PLATEs lose some top end ("air"), the PLATE's lows are centred (they were partly out of phase), and MASSIVE swells half as long. HALL's level was trimmed so the spaces stay matched. Side effect: a big PLATE's very start is a touch grainier (a few hundredths of a second). The vibes cards were set aside for the tape distortion page. The page is deleted.
 - 24 Oct 2026: **Infinite tails hold where you stop, and ten bugs fixed** (your OK; SPEC v1.0.24): an infinite tail no longer plunges and creeps back when a loud input stops (PLATE −27 dB before, within ~2 dB now; the held keys' 7 dB drop too). The overnight soak's ten fixes are in: freeze taps never unfreezing, clicks on SPACE flips, small-HALL SIZE jumps and REVERSE switching, a frozen pad swelling up, and more. The page is deleted.
 - 24 Oct 2026: **A held Midiverb tail stays brighter and fades slowly** (B on all 16 cards; SPEC v1.0.23): at infinite DECAY the Midiverb keeps a quarter of its dark loop, so a held tail no longer turns into a low drone, and no hiss piles up. The page is deleted.
 - 24 Oct 2026: **Your Valhalla notes measured** (`docs/research/valhalla-notes.md`): the HALL's slap-back is a real 80 ms gap; the long HALL rings more resonantly than Room; the PLATE's lows were partly out of phase between left and right (Valhalla's aren't); our long PLATE has more top end (8 kHz rings 7.7 s against 2.9-6.3). Fixes are on the round-2 page.
