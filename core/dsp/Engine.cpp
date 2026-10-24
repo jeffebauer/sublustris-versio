@@ -292,7 +292,7 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
 
     // Freezing: loss → 0, highs kept (ratio → 1), the governor caps paint.
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
-    const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
+    const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era), eraDiscrete_).highRatioScale;
     const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(hallSize_) : 1.0f;
     const float rate = decayRate(decay, size) / sizeT60 * (1.0f - freezeMix_);
     const float highRatio = toneRatio + freezeMix_ * (1.0f - toneRatio);
@@ -381,7 +381,7 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
 
     // ERA in the loop and DRIFT (SPEC §4.6, §4.7). Freezing glides the
     // in-loop colour out (the pad holds still, ADR 0009); DRIFT stays.
-    const dsp::EraMix era = map::eraMix(smoothed(ParamId::Era));
+    const dsp::EraMix era = map::eraMix(smoothed(ParamId::Era), eraDiscrete_);
     dsp::EraMix loopEra = era;
     const float keep = 1.0f - freezeMix_;
     loopEra.midiRound = map::governorWeight(decay) >= 1.0f; // infinite: no systematic loss

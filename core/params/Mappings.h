@@ -135,7 +135,9 @@ inline float layer(float v, float from, float to)
     const float t = clamp01((v - from) / (to - from));
     return t * t * (3.0f - 2.0f * t);
 }
-inline dsp::EraMix eraMix(float v)
+// discrete: the era_discrete prototype (false = v1.0.28, stacking, ADR 0003): each stage fades out as
+// the next fades in, so only neighbours blend and each era sounds on its own.
+inline dsp::EraMix eraMix(float v, bool discrete = false)
 {
     using namespace voicing;
     dsp::EraMix m;
@@ -143,12 +145,17 @@ inline dsp::EraMix eraMix(float v)
     m.cassette = layer(v, kEraCassetteFrom, kEraMuFrom);
     m.mu = layer(v, kEraMuFrom, kEraMidiverbFrom);
     m.midiverb = layer(v, kEraMidiverbFrom, 1.0f);
+    if (discrete) {
+        m.neve *= 1.0f - m.cassette;
+        m.cassette *= 1.0f - m.mu;
+        m.mu *= 1.0f - m.midiverb;
+    }
     // The era's darkening, as a share of the high end's T60 (Era.h): Neve
     // a little, the cassette a lot (SPEC §4.7's 16 kHz / 9 kHz in spirit).
     m.highRatioScale = expLerp(expLerp(1.0f, kNeveHighRatio, m.neve), kCassetteHighRatio, m.cassette);
     m.even = kNeveEven * m.neve;
     m.drive = 1.0f + (kCassetteDrive - 1.0f) * m.cassette;
-    m.muEngage = clamp01((v - kEraMuFrom) / kMuEngageSpan);
+    m.muEngage = clamp01((v - kEraMuFrom) / kMuEngageSpan) * (discrete ? 1.0f - m.midiverb : 1.0f);
     m.muBits = kMuBitsStart + (kMuBitsEnd - kMuBitsStart) * clamp01((v - kEraMuFrom) / (kEraMidiverbFrom - kEraMuFrom));
     {
         const float t = clamp01((v - kEraMidiverbFrom) / (1.0f - kEraMidiverbFrom));

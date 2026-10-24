@@ -87,6 +87,8 @@ public:
     // Test hook: how much of DECAY's level make-up applies (1 = v1.0.28; 0 = none, shorter tails
     // quieter, as v1.0.27), for demos.
     void  setDecayMakeup(float k) { decayMakeup_ = k; }
+    // Prototype hook (era_discrete): each ERA stage on its own instead of stacking (ADR 0003).
+    void  setEraDiscrete(bool on) { eraDiscrete_ = on; }
     // Test hook: false = no tape out (ERA's cassette stage without its output tape), for measuring.
     void  setTapeOut(bool on) { tapeOn_ = on; }
     // Test hook: false = one tank, the lows moving too (before v1.0.18), for demos.
@@ -203,6 +205,7 @@ private:
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f, reverseFeed_ = 0.0f; // reverseFeed_: the taps into the short reverb
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
+    bool  eraDiscrete_ = false; // prototype hook (setEraDiscrete)
     float decayMakeup_ = 1.0f, decayGain_ = 1.0f, decayGainNow_ = 1.0f; // DECAY's level make-up (v1.0.28)
     float reverseGain_ = 1.0f, reverseGainNow_ = 1.0f;                     // ... and REVERSE's
     float tapeDrive_ = 0.0f;

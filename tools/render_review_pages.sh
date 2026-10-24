@@ -295,6 +295,39 @@ C_supermassive_andromeda      Valhalla Supermassive, Andromeda" > renders/valhal
     echo "renders/valhalla_compare/index.html"
 fi
 
+if on era_discrete; then
+    # Stacked ERA (today, ADR 0003) against discrete eras (owner, 24 Oct 2026): each stage on its own,
+    # only neighbours blending. Prototype hook IV_ERA_DISCRETE (core/params/Mappings.h eraMix). Each
+    # stage near its full strength: cassette 0.62, mu-law 0.83, Midiverb 1.
+    page era_discrete
+    vers() { # vers <col> --set ...: stacked, discrete
+        local col=$1; shift
+        IV_ERA_DISCRETE=0 r era_discrete $col A_stacked "" "$@"
+        IV_ERA_DISCRETE=1 r era_discrete $col B_discrete "" "$@"
+    }
+    H=(--set space=HALL --set decay=0.6 --set size=0.6)
+    M=(--set space=MASSIVE --set decay=0.65 --set size=0.7)
+    vers hall_1_cassette "${H[@]}" --set era=0.62
+    vers hall_2_mulaw "${H[@]}" --set era=0.83
+    vers hall_3_midiverb "${H[@]}" --set era=1
+    vers massive_1_cassette "${M[@]}" --set era=0.62
+    vers massive_2_mulaw "${M[@]}" --set era=0.83
+    vers massive_3_midiverb "${M[@]}" --set era=1
+    print -r -- "Should ERA's stages stack, or should each era sound on its own? A is today, stacked: each stage keeps the ones before it, so the μ-law still has the cassette's tape, hiss and wow under it, and the Midiverb has all three. B is discrete: only that era. The cassette without the Neve's warmth; the μ-law as an early digital unit alone (no tape, hiss or wow); the Midiverb as just the Midiverb (its 13 bits and dark loop, no tape, hiss or μ-law grain). On the knob, discrete eras crossfade only with their neighbours. Each stage is near full strength (ERA 0.62, 0.83 and 1). Loudness matches within about 0.2 dB, and the page is level-matched. The Neve has nothing under it, so it sounds the same either way and isn't on the page. Pick per card, with notes.
+
+hall_1_cassette     HALL, ERA 0.62 (cassette)
+hall_2_mulaw        HALL, ERA 0.83 (μ-law)
+hall_3_midiverb     HALL, ERA 1 (Midiverb)
+massive_1_cassette  MASSIVE, ERA 0.62 (cassette)
+massive_2_mulaw     MASSIVE, ERA 0.83 (μ-law)
+massive_3_midiverb  MASSIVE, ERA 1 (Midiverb)
+
+A_stacked           Stacked (today): each era on top of the ones before
+B_discrete          Discrete: each era on its own" > renders/era_discrete/README.txt
+    python3 tools/review/make_review.py renders/era_discrete --title "Immensio: ERA stacked or discrete?" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/era_discrete/index.html"
+fi
+
 if on reverse; then
     page reverse
     RV=(--set era=0 --set attack=REVERSE)
