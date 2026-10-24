@@ -156,6 +156,8 @@ IV_SIZE_OPT void Engine::reset()
     tilt_.snap();
     limiter_.reset();
     for (auto& t : tape_) t.reset();
+    tapeMix_ = 0.0f;
+    tapeLive_ = false;
     duck_ = duckGrDb_ = duckGainStep_ = 0.0f;
     duckGain_ = 1.0f;
     hissLp_[0] = hissLp_[1] = 0.0f;
@@ -416,6 +418,7 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
     muLaw_.set(era);
     eraMakeup_ = era.makeup;
     tapeDrive_ = era.cassette; // tape out (v1.0.22, E5)
+    if (snap) tapeMix_ = tapeDrive_ > 0.0f && tapeOn_ ? 1.0f : 0.0f;
     for (auto& t : tape_) t.set(tapeDrive_, sampleRate_);
     if (!plate) fdn_.setVintage(era.mu * keep); // vintage reads (v1.0.22, E4; ADR 0019): in-loop colour, out while frozen
 
@@ -689,6 +692,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         return;
     }
     const float reverseStep = 1.0f / (voicing::kAttackFadeSeconds * sampleRate_);
+    const float tapeStep = 1.0f / (0.02f * sampleRate_);
     for (int start = 0; start < numSamples; start += kChunk) {
         const int n = (numSamples - start) < kChunk ? (numSamples - start) : kChunk;
         handleEdges(start, start + n);
@@ -802,10 +806,20 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             wl *= eraMakeup_;
             wr *= eraMakeup_;
             muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)
-            if (tapeDrive_ > 0.0f && tapeOn_) { // ERA's tape out (v1.0.27, dsp/Tape.h)
+            // ERA's tape out (v1.0.27, dsp/Tape.h), faded in and out over ~20 ms as the cassette layer
+            // appears and leaves: switched in one sample, its oversampling filters' phase stepped the wet
+            // (a click turning ERA through 0.35, found 25 Oct 2026).
+            tapeMix_ = approach(tapeMix_, tapeDrive_ > 0.0f && tapeOn_ ? 1.0f : 0.0f, tapeStep);
+            if (tapeMix_ >= 1.0f) {
                 wl = tape_[0].process(wl);
                 wr = tape_[1].process(wr);
+            } else if (tapeMix_ > 0.0f) {
+                wl += tapeMix_ * (tape_[0].process(wl) - wl);
+                wr += tapeMix_ * (tape_[1].process(wr) - wr);
+            } else if (tapeLive_) {
+                for (auto& t : tape_) t.reset(); // faded out: start clean next time
             }
+            tapeLive_ = tapeMix_ > 0.0f;
             tilt_.process(wl, wr);
             duckGain_ += duckGainStep_; // ducking (ADR 0014)
             wl *= duckGain_;

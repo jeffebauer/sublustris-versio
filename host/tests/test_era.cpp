@@ -315,6 +315,33 @@ void drift()
     }
 }
 
+// Turning ERA through the cassette's start (0.35), where tape out comes in, doesn't click: switched
+// in one sample, its oversampling filters' phase stepped the wet (found 25 Oct 2026).
+void eraSweepClickFree()
+{
+    std::vector<float> in(size_t(6.0f * kSr));
+    for (size_t i = 0; i < in.size(); ++i)
+        in[i] = 0.2f * std::sin(2.0f * 3.14159265f * 220.0f * float(i) / kSr) + 0.1f * std::sin(2.0f * 3.14159265f * 331.0f * float(i) / kSr);
+    for (bool up : {true, false}) {
+        iv::Engine e;
+        e.prepare(kSr, 48);
+        e.setParam(iv::ParamId::Space, iv::switchToNormalised(1));
+        e.setParam(iv::ParamId::Mix, 1.0f);
+        e.setParam(iv::ParamId::Era, up ? 0.3f : 0.4f);
+        e.reset();
+        Stereo out{std::vector<float>(in.size()), std::vector<float>(in.size())};
+        for (size_t pos = 0; pos < in.size(); pos += 48) {
+            const float t = std::fmin(1.0f, std::fmax(0.0f, (float(pos) / kSr - 1.0f) / 4.0f)); // 1 s still, 4 s across 0.30-0.40
+            e.setParam(iv::ParamId::Era, up ? 0.3f + 0.1f * t : 0.4f - 0.1f * t);
+            const int n = int(std::min<size_t>(48, in.size() - pos));
+            e.process(in.data() + pos, in.data() + pos, out.l.data() + pos, out.r.data() + pos, n);
+        }
+        const auto m = iv::metrics::compute({out.l, out.r}, kSr);
+        check(finite(out) && m.clickCount == 0, std::string("ERA turned ") + (up ? "up" : "down") +
+                                                    " through the cassette's start, no clicks (" + std::to_string(m.clickCount) + ")");
+    }
+}
+
 // SPEC §7 M6: the saturation hit hard doesn't alias badly. A loud 7 kHz
 // tone's 3rd/5th harmonics fold to 27 → 21 kHz and 35 → 13 kHz: check the
 // band below 5 kHz, where nothing harmonic belongs. Tape out's asymmetry
@@ -362,6 +389,7 @@ int main()
     hissFollowsInput();
     infiniteAtEveryEra();
     drift();
+    eraSweepClickFree();
     notAliasing();
     std::printf("%d failure(s)\n", failures);
     return failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
