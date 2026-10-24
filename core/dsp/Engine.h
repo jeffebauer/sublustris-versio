@@ -216,6 +216,7 @@ private:
     dsp::BbdStage bbd_;
     dsp::SamplerStage sampler_;
     dsp::RadioStage radio_;
+    dsp::RadioStage2 radio2_; // round 3 (radioNoise_ 3)
     float bbdW_ = 0, samplerW_ = 0, radioW_ = 0;
     float decayMakeup_ = 1.0f, decayGain_ = 1.0f, decayGainNow_ = 1.0f; // DECAY's level make-up (v1.0.28)
     float reverseGain_ = 1.0f, reverseGainNow_ = 1.0f;                     // ... and REVERSE's

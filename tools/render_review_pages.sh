@@ -464,6 +464,34 @@ C_most      BBD: the most grit · Radio: noise and a drifting whistle" > renders
     echo "renders/era_v2b/index.html"
 fi
 
+if on era_v2c; then
+    # The new ERA, round 3 (owner, 25 Oct 2026): the BBD's round-2 "more" reached at two-thirds of its stretch
+    # instead of halfway (IV_BBD_GRIT=3), and the radio rebuilt from docs/research/radio-artifacts.md
+    # (IV_RADIO_NOISE=3). Neve base on. HALL as M6.
+    page era_v2c
+    H=(--set space=HALL --set decay=0.6 --set size=0.6)
+    for c in "bbd_1_third:0.3889" "bbd_2_two_thirds:0.4433" "bbd_3_end:0.4983"; do
+        IV_ERA_V2=1 IV_BBD_GRIT=1 r era_v2c ${c%%:*} A_round_2 "" "${H[@]}" --set era=${c##*:}
+        IV_ERA_V2=1 IV_BBD_GRIT=3 r era_v2c ${c%%:*} B_round_3 "" "${H[@]}" --set era=${c##*:}
+    done
+    for c in "radio_1_middle:0.917" "radio_2_gritty_end:0.99"; do
+        IV_ERA_V2=1 IV_RADIO_NOISE=1 r era_v2c ${c%%:*} A_round_2 "" "${H[@]}" --set era=${c##*:}
+        IV_ERA_V2=1 IV_RADIO_NOISE=3 r era_v2c ${c%%:*} B_round_3 "" "${H[@]}" --set era=${c##*:}
+    done
+    print -r -- "The new ERA, round 3, with the Neve's warmth underneath. The bucket-brigade (first three columns, at a third, two-thirds and the end of its stretch): A is round 2's B, your pick, which reached its grit halfway; B is the new curve, gentler at first, reaching that same grit at two-thirds (the middle column, where A and B should sound nearly the same) and half as much again by the end. The radio (last two columns): A is round 2's light noise. B is rebuilt from research on real reception. The station fades on its own while the receiver's noise stays put, so the AGC lifts the hiss and static exactly when the station dips, as on a real set. The hiss is softer and coloured. The static has three layers: a storm that comes and goes, crackle of varied brightness, and lightning crashes of 1-6 strokes, each with its own colour. Whistles live 4-30 s at a nearly fixed pitch with a slight wobble and their own fading, some only as a slow throb, then go quiet for a while. A slow drift off tune dulls and roughens it. At the gritty end there's now and then a drift off the station and back (with a whoop through zero beat), a burst of fast 'polar' flutter, and a faint mains hum. The wandering dip is unchanged. Events are random, so each clip has its own. Levels within about 1 dB; the page is level-matched. Pick per card, with notes.
+
+bbd_1_third         Bucket-brigade, a third into its stretch (ERA 0.39)
+bbd_2_two_thirds    Bucket-brigade, two-thirds in (ERA 0.44)
+bbd_3_end           Bucket-brigade, the end of its stretch (ERA 0.50)
+radio_1_middle      AM radio, middle of its stretch (ERA 0.92)
+radio_2_gritty_end  AM radio, its gritty end (ERA 0.99)
+
+A_round_2   Round 2 (BBD: your pick, B · Radio: light noise, B)
+B_round_3   Round 3 (BBD: the new curve · Radio: rebuilt from the research)" > renders/era_v2c/README.txt
+    python3 tools/review/make_review.py renders/era_v2c --title "Immensio: the new ERA, round 3" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/era_v2c/index.html"
+fi
+
 if on reverse; then
     page reverse
     RV=(--set era=0 --set attack=REVERSE)

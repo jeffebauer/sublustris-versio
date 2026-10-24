@@ -159,6 +159,7 @@ IV_SIZE_OPT void Engine::reset()
     bbd_.reset();
     sampler_.reset();
     radio_.reset();
+    radio2_.reset();
     tapeMix_ = 0.0f;
     duck_ = duckGrDb_ = duckGainStep_ = 0.0f;
     duckGain_ = 1.0f;
@@ -392,7 +393,10 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
     radioW_ = era.radio;
     if (bbdW_ > 0.0f) bbd_.set(era.bbdT, sampleRate_, bbdGrit_);
     if (samplerW_ > 0.0f) sampler_.set(era.samplerT, sampleRate_);
-    if (radioW_ > 0.0f) radio_.set(era.radioT, sampleRate_, n, radioNoise_);
+    if (radioW_ > 0.0f) {
+        if (radioNoise_ >= 3) radio2_.set(era.radioT, sampleRate_, n, radioNoise_ == 4);
+        else radio_.set(era.radioT, sampleRate_, n, radioNoise_);
+    }
     dsp::EraMix loopEra = era;
     const float keep = 1.0f - freezeMix_;
     loopEra.midiRound = map::governorWeight(decay) >= 1.0f; // infinite: no systematic loss
@@ -837,7 +841,8 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             }
             if (radioW_ > 0.0f) {
                 float rl2 = wl, rr2 = wr;
-                radio_.process(rl2, rr2);
+                if (radioNoise_ >= 3) radio2_.process(rl2, rr2);
+                else radio_.process(rl2, rr2);
                 wl += radioW_ * (voicing::kEraV2RadioTrim * rl2 - wl);
                 wr += radioW_ * (voicing::kEraV2RadioTrim * rr2 - wr);
             }
