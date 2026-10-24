@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, session 4 (five pages to hear: Valhalla round 2, distortion on held notes, tape out round 2, the full mix's send, infinite tails when you stop).
+**Last updated:** 24 Oct 2026, session 4 (soak merged, v1.0.24; four pages to hear: Valhalla round 2, distortion on held notes, tape out round 2, the full mix's send).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
@@ -12,7 +12,7 @@
 - [ ] **Tape out, round 2** (`renders/tape_out/index.html`, pick per card): hysteresis on gentler tape, as you asked. A today, B a little stronger, C and D today plus light and full hysteresis, E and F a little stronger plus light and full. Light is cheap enough for the module; full is the physical tape model (may be too heavy for it) and also changes the tone noticeably. Does hysteresis add something you want, and on which strength?
 
 ### Listen (after your notes)
-- [ ] **Infinite tails when you stop playing** (`renders/infinite_stop/index.html`, pick per card; this is also the drop you heard on the held PLATE keys, measured: today it falls about 7 dB when the keys stop, with the fix about 2): today (A) an infinite PLATE fed a loud input plunges 27 dB when the music stops and creeps back over a minute or more; the overnight fix (B) holds it within half a decibel. HALL improves a little, MASSIVE is the same either way; at normal levels they sound alike, so the music here is 12 dB hot (a loud Eurorack level). 80 s renders.
+- Nothing open.
 
 ### Listen (first time)
 
@@ -26,7 +26,7 @@
 
 ## Waiting on Claude
 
-- **Merge the soak and Valhalla branches** (your OK): soak fixes (ten bugs, sound unchanged, plus the held sound change below) and the Valhalla report. (Knob feel and the DSP audit are merged.)
+- **Merge the Valhalla report branch** (your OK): the comparison numbers and `tools/compare_reference.py` (no sound change).
 - **Valhalla numbers** (`docs/research/valhalla-comparison.md`, on its branch): the biggest differences are that our HALL's highs darken much faster in short tails, our HALL starts later (first sound at 80 ms against Room's 9–32 ms), MASSIVE's highs die earlier than Supermassive's, our wet gets quieter as DECAY shortens (HALL 10 dB from 15 s to 2 s), and the PLATE builds more slowly. Each is a page to make once you want it.
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
@@ -39,6 +39,7 @@
 
 ## Done
 
+- 24 Oct 2026: **Infinite tails hold where you stop, and ten bugs fixed** (your OK; SPEC v1.0.24): an infinite tail no longer plunges and creeps back when a loud input stops (PLATE −27 dB before, within ~2 dB now; the held keys' 7 dB drop too). The overnight soak's ten fixes are in: freeze taps never unfreezing, clicks on SPACE flips, small-HALL SIZE jumps and REVERSE switching, a frozen pad swelling up, and more. The page is deleted.
 - 24 Oct 2026: **A held Midiverb tail stays brighter and fades slowly** (B on all 16 cards; SPEC v1.0.23): at infinite DECAY the Midiverb keeps a quarter of its dark loop, so a held tail no longer turns into a low drone, and no hiss piles up. The page is deleted.
 - 24 Oct 2026: **Your Valhalla notes measured** (`docs/research/valhalla-notes.md`): the HALL's slap-back is a real 80 ms gap; the long HALL rings more resonantly than Room; the PLATE's lows were partly out of phase between left and right (Valhalla's aren't); our long PLATE has more top end (8 kHz rings 7.7 s against 2.9-6.3). Fixes are on the round-2 page.
 - 24 Oct 2026: **Held Midiverb, round 1 listened**: bright on most cards, drone on the vibes, "a balance between drone and bright would be ideal". The vibes' resonance is any infinite tail ringing a very pure note (it rings even more with ERA clean).
