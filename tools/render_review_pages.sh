@@ -295,64 +295,6 @@ C_supermassive_andromeda      Valhalla Supermassive, Andromeda" > renders/valhal
     echo "renders/valhalla_compare/index.html"
 fi
 
-if on decay_level; then
-    # Does the reverb get quieter as DECAY shortens? (valhalla-comparison.md suggestion 4.) Today a
-    # 2 s HALL is 8 dB quieter than a 15 s one; Room and Supermassive keep their level. The prototype
-    # hook IV_DECAY_MAKEUP makes up half or all of it below 15 s. Not level-matched: loudness is the
-    # question. The Valhalla takes and decays as valhalla_compare.
-    REF=test_audio/reference
-    [ -d $REF/valhallaroom_largeroom_medium ] || { echo "decay_level: no recordings in $REF"; exit 1; }
-    saved=("${MATERIALS[@]}"); MATERIALS=()
-    for m in skank vibes stabs pad lead drums bass keys voice; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
-    page decay_level
-    refcopy() { # refcopy <col> <tag> <reference set>
-        for m in $MATERIALS; do [ -f $REF/$3/$3_$m.wav ] && cp $REF/$3/$3_$m.wav renders/decay_level/$1/${m}_$2.wav; done
-    }
-    ours() { # ours <col> --set ...: today, half and all of the loss made up
-        local col=$1; shift
-        IV_DECAY_MAKEUP=0 r decay_level $col A_today "" --set era=0 "$@"
-        IV_DECAY_MAKEUP=0.5 r decay_level $col B_half_made_up "" --set era=0 "$@"
-        IV_DECAY_MAKEUP=1 r decay_level $col C_all_made_up "" --set era=0 "$@"
-    }
-    for t in "2:short:0.296:0.398:0.068:007:000" "5:medium:0.509:0.624:0.198:030:012" "15:long:0.772:0.816:0.406:073:054"; do
-        IFS=: read s tgt dh dp dm fs fa <<< "$t"
-        s=$(printf %02d $s)
-        ours hall_${s}s --set space=HALL --set size=0.6 --set decay=$dh
-        refcopy hall_${s}s D_valhalla_room_large_room valhallaroom_largeroom_$tgt
-        refcopy hall_${s}s E_valhalla_room_dark_chamber valhallaroom_darkchamber_$tgt
-        ours plate_${s}s --set space=PLATE --set size=0.6 --set decay=$dp
-        refcopy plate_${s}s D_valhalla_plate_chrome valhallaplate_chrome_$tgt
-        refcopy plate_${s}s E_valhalla_plate_lithium valhallaplate_lithium_$tgt
-        ours massive_${s}s --set space=MASSIVE --set size=0.7 --set decay=$dm
-        refcopy massive_${s}s D_supermassive_sagittarius supermassive_sagittarius_fb$fs
-        refcopy massive_${s}s E_supermassive_andromeda supermassive_andromeda_fb$fa
-    done
-    MATERIALS=("${saved[@]}")
-    print -r -- "When you shorten DECAY, should the reverb also get quieter? Today it does: a 2 s HALL is about 8 dB quieter than a 15 s one, MASSIVE about 7 dB, PLATE about 3 dB, so on the module you'd chase it with MIX. Valhalla Room and Supermassive keep the same level at every decay (Valhalla Plate gets louder as it gets longer). A is today. B makes up half the loss (a short tail is still a little quieter). C makes up all of it below 15 s (every decay about as loud, like Room). From 15 s up, and at infinite, all three are the same. D and E are your Valhalla takes. Not level-matched, on purpose: listen down a column (2 → 5 → 15 s) as well as across. Pick per card, with notes.
-
-hall_02s      HALL, about 2 s (DECAY 0.30, SIZE 0.6)
-hall_05s      HALL, about 5 s (DECAY 0.51)
-hall_15s      HALL, about 15 s (DECAY 0.77): A, B and C are the same here
-plate_02s     PLATE, about 2 s (DECAY 0.40, SIZE 0.6)
-plate_05s     PLATE, about 5 s (DECAY 0.62)
-plate_15s     PLATE, about 15 s (DECAY 0.82): A, B and C are the same here
-massive_02s   MASSIVE, about 2 s (DECAY 0.07, SIZE 0.7: its shortest is 2.2 s)
-massive_05s   MASSIVE, about 5 s (DECAY 0.20)
-massive_15s   MASSIVE, about 15 s (DECAY 0.41): A, B and C are the same here
-
-A_today                       Today (shorter is quieter)
-B_half_made_up                Half the loss made up
-C_all_made_up                 All the loss made up (same level at every decay)
-D_valhalla_room_large_room    Valhalla Room, Large Room
-E_valhalla_room_dark_chamber  Valhalla Room, Dark Chamber
-D_valhalla_plate_chrome       Valhalla Plate, Chrome
-E_valhalla_plate_lithium      Valhalla Plate, Lithium
-D_supermassive_sagittarius    Valhalla Supermassive, Sagittarius
-E_supermassive_andromeda      Valhalla Supermassive, Andromeda" > renders/decay_level/README.txt
-    python3 tools/review/make_review.py renders/decay_level --title "Immensio: does a shorter tail get quieter?" --no-level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/decay_level/index.html"
-fi
-
 if on reverse; then
     page reverse
     RV=(--set era=0 --set attack=REVERSE)
