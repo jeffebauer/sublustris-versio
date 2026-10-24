@@ -56,6 +56,14 @@ constexpr float kMassiveSwellScale = 0.5f;
 // HALL's level with its early taps and air (v1.0.25): music measured 2.3 LU louder (median over SIZE
 // 0 / 0.6 / 1 × DECAY 0.3 / 0.5 / 0.77), taken off so SPACE flips stay matched (short HALLs end ~1 dB up).
 constexpr float kHallOutputTrim = 0.767f;
+// DECAY keeps the loudness (v1.0.28, decay_level: C on every card, "levels should ideally be consistent
+// across reverb types"). A tail's level falls with its T60 (music, wet LUFS): 2 → 15 s HALL −8.2 dB,
+// MASSIVE −7.4, PLATE −3.2 (its early part carries more of it), so level ∝ T60^p; 15 s → the finite
+// top HALL −0.4, MASSIVE −5.3 (a gentler p). It's all made up to the finite top's level, which the
+// three SPACEs already share with each other and with infinite (within ~2 dB).
+constexpr float kDecayLevelRefSeconds = 15.0f;
+constexpr float kDecayLevelPower[3]     = {0.18f, 0.47f, 0.445f}; // PLATE, HALL, MASSIVE: below 15 s
+constexpr float kDecayLevelPowerLong[3] = {0.0f, 0.09f, 0.29f};   // from 15 s to the finite top
 // Still lows (v1.0.18, docs/research/still-lows.md): below this the HALL / MASSIVE tank's input goes to
 // a second, unmodulated tank (Butterworth split), so the bass never wavers; above it moves as before.
 constexpr float kStillLowsHz = 300.0f;
@@ -161,7 +169,7 @@ constexpr float kPlateMinScale     = 0.5f;  // SIZE fully CCW
 // full SIZE) is longer than the T60 asked for, so those tails stay longer
 // than the mapping: a big plate can't ring for only 0.4 s.
 constexpr float kPlateRateCalibration = 1.09f;
-constexpr float kPlateOutputTrim   = 0.41f; // −7.8 dB: PLATE matches HALL's loudness (test_plate_freeze)
+constexpr float kPlateOutputTrim   = 0.43f; // −7.3 dB: PLATE matches HALL's loudness (test_plate_freeze; +0.4 dB at v1.0.28, DECAY's make-up)
 
 // ---- Freeze and paint (ADR 0009, 0010; SPEC §3 "Button + Gate") -----------
 constexpr float kFreezeInputSeconds  = 0.02f; // the big tank's input closes

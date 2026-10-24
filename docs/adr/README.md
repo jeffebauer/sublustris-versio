@@ -23,3 +23,4 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0017](0017-panel-layout.md) | Panel layout: P1–P7 mirror Resilio's positions | owner approval of v1.0 |
 | [0018](0018-brand-ombra-audio.md) | Brand: Ombra Audio (maker code Ombr) for both plugins | owner, 23 Oct 2026 |
 | [0019](0019-vintage-reads-and-tape-out.md) | ERA gains vintage reads and tape out | owner, 24 Oct 2026 |
+| [0020](0020-decay-keeps-the-loudness.md) | DECAY keeps the loudness | owner, 24 Oct 2026 |
