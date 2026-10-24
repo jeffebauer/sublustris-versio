@@ -1,12 +1,12 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, session 5 (v1.0.28 shipped; M6 re-rendered; era_dry page waiting).
+**Last updated:** 24 Oct 2026, session 5 (v1.0.28 shipped; M6 re-rendered; ERA on the dry turned down).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- [ ] **ERA on the dry too?** (`renders/era_dry/index.html`; on the Mac, or the "review-pages" server on port 8765). Your idea: ERA colours the dry as well, so the module works as a character box, even at MIX fully left. In each card, A is today, B puts ERA on the dry too, C adds the cassette's wow and flutter to the dry, and D drives the dry into the tape harder. The cards are rendered at a fixed MIX: four at 50 %, two at MIX fully left (the character box). Pick per card, with notes.
+- Nothing open: every pick so far is acted on.
 
 ### Listen (after your notes)
 - Nothing open.
@@ -31,6 +31,7 @@
 
 ## Done
 
+- 24 Oct 2026: **ERA stays on the reverb only** (no pick on any card: "too intense for the most part… having it just on the reverb sounds better, even if the effects are somewhat subtle at times"). The dry stays clean, and MIX fully left is still a clean passthrough. The prototype is kept on a side branch for the record (ADR 0004). The page is deleted.
 - 24 Oct 2026: **The reverb keeps its loudness whatever DECAY is** (C "all made up" on every card, the repeated cards agreeing; SPEC v1.0.28, ADR 0020): a short tail used to be up to 8–13 dB quieter than a long one, so you'd have chased it with MIX; now every finite setting in all three spaces sits within about 2 dB, like Valhalla Room and Supermassive. Your note on MASSIVE was right: it was matched to the others at DECAY noon, where it rings 26 s, so at the same tail length it was 5 dB under HALL and PLATE. It now matches them. A short REVERSE keeps its level too, and the PLATE is 0.4 dB louder to stay matched. Infinite tails and frozen pads are unchanged. With ERA's tape out, a short tail now meets the tape's soft limiting sooner. The page is deleted.
 - 24 Oct 2026: **Tape out is stronger with light hysteresis** (E on all 24 cards; SPEC v1.0.27): the highs are pushed into the tape first, it's driven up to 12 dB harder, and a light hysteresis adds tape's lag and grit. Quiet sounds pass unchanged; peaks and highs get the tape. From the cassette stage up the tape also softly limits the wet's loudest peaks. The page is deleted.
 - 24 Oct 2026: **No steady-level tape** (A on 12 of 15 cards: "jittery saturation" in long tails; only the drums liked +12 dB). The tape keeps today's behaviour with a third of the lopsidedness. The page is deleted.
