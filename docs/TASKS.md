@@ -1,17 +1,19 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, session 5 (v1.0.28 shipped; ERA on the dry turned down; ERA redesign under way; era_strength page waiting; ERA signatures reference).
+**Last updated:** 24 Oct 2026, session 5 (v1.0.28 shipped; the new ERA pages waiting; era_strength page waiting; ERA signatures reference).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
+- [ ] **The new ERA** (`renders/era_v2/index.html`; phone: http://192.168.1.100:8766/era_v2/index.html). One card per era in the new sweet-to-gritty order: Neve, Midiverb, bucket-brigade (new), cassette, early sampler (new), AM radio (new); μ-law is gone. In each card, A has the Neve's warmth underneath, B doesn't (on the first card: the Neve against clean). Pick A or B per card, and say in the notes which eras to keep.
 - [ ] **ERA stronger on the reverb?** (`renders/era_strength/index.html`; on your phone: http://192.168.1.100:8766/era_strength/index.html while the laptop serves it). Only the reverb changes. In each card, A is today, B is about 1.5 times as strong and C about twice: the Neve's warmth, the cassette's wow, tape and darkening, and fewer bits in the μ-law and Midiverb stages. Each version keeps today's loudness. Use the MIX fader at the balance you'd use. Pick per card, with notes.
 
 ### Listen (after your notes)
 - Nothing open.
 
 ### Listen (first time)
+- [ ] **The new ERA as a knob sweep** (`renders/era_v2_sweep/index.html`; phone: http://192.168.1.100:8766/era_v2_sweep/index.html): ERA turned through all six eras in 40 s, chaptered at each one, HALL and MASSIVE, with and without the Neve base. Notes on how the journey feels.
 - [ ] **ERA signatures** (reference, nothing to pick; https://claude.ai/artifact/AiR2JXPAaLbT8GeJseK3Vj, opens on your phone anywhere): what each ERA stage does to the reverb, measured and drawn as charts (tone, how long each frequency rings, harmonics, grain, hiss, mirror tones, pitch wobble). `tools/era_reference.py` remeasures it.
 - [ ] **M6 as it is now** (`renders/m6_character/index.html`; on the Mac, or the "review-pages" server on port 8765): ERA's five stages, DRIFT both ways and TONE, re-rendered from today's reverb. ERA has changed most since your last M6 listen: its knob feel, the old-Lexicon grain in the μ-law stretch, the held Midiverb, and tape out. Notes only: does each stage sound right, and does ERA feel like going back in time?
 
@@ -25,7 +27,7 @@
 
 ## Waiting on Claude
 
-- **The ERA redesign** (your notes on the stacked-or-discrete page): each era on its own (discrete, your pick), the knob running from sweet to gritty, the Neve's warmth under every era in place of clean, and a new era in place of μ-law (which sounds too like the cassette: both add the same kind of grit, measured). You'd like to hear three candidates: an early sampler (SP-1200 style aliasing), a bucket-brigade (BBD) delay and AM/shortwave radio. Researching them first, then one page with the candidates in the new order, chaptered at each era.
+- **The ERA redesign** (`docs/research/new-eras.md`; prototype on branch `claude/era-v2`): its pages are waiting on you (Decide, Listen). After your picks: the chosen eras made final, flash found for them (μ-law's code goes), and the spec and ADRs updated.
 - **Tape click fix, waiting for your OK to merge** (branch `claude/tape-engage-click`): turning ERA through the cassette's start clicked (since v1.0.22); tape out now fades in over 20 ms. Static settings sound identical.
 - **The rest of the Valhalla comparison** (`docs/research/valhalla-comparison.md`): the loudness one is done (v1.0.28). Still to come, each a page when you want it: MASSIVE's highs die sooner than Supermassive's (8 kHz rings 8 s at the 15 s setting against 15). Also Supermassive moves more in pitch at long settings (a DRIFT comparison).
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
