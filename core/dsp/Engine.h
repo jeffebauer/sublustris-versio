@@ -84,6 +84,9 @@ public:
     // Test hook: scales the tanks' own modulation (0 = none; DRIFT is separate), to check a
     // structure isn't metallic without it (Costello: tune it to sound good unmodulated).
     void  setModulationScale(float k) { modScale_ = k; }
+    // Prototype hook (decay_level): how much of the level a tail shorter than 15 s loses is made up on
+    // the wet (0 = none, as v1.0.27; 1 = all, so DECAY keeps the loudness, as Valhalla Room does).
+    void  setDecayMakeup(float k) { decayMakeup_ = k; }
     // Test hook: false = no tape out (ERA's cassette stage without its output tape), for measuring.
     void  setTapeOut(bool on) { tapeOn_ = on; }
     // Test hook: false = one tank, the lows moving too (before v1.0.18), for demos.
@@ -200,6 +203,7 @@ private:
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f, reverseFeed_ = 0.0f; // reverseFeed_: the taps into the short reverb
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
+    float decayMakeup_ = 0.0f, decayGain_ = 1.0f, decayGainNow_ = 1.0f; // prototype hook (setDecayMakeup)
     float tapeDrive_ = 0.0f;
     bool  tapeOn_ = true; // test hook (setTapeOut)
     dsp::TapeOut tape_[2]; // tape out (v1.0.27, dsp/Tape.h)
