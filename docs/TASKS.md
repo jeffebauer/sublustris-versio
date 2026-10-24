@@ -1,18 +1,21 @@
 # Owner tasks
 
-**Last updated:** 25 Oct 2026, session 6 (MASSIVE's highs: a page to pick from).
-**Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
+**Last updated:** 25 Oct 2026, session 6 (MASSIVE's highs: D built on `claude/massive-air` and installed in Ableton).
+**Plugin installed:** `aca6356` on branch `claude/massive-air` (v1.0.31: v1.0.30 plus MASSIVE's highs ringing as long as the body), 25 Oct 2026; AU check passed. Rescan in Ableton to see it.
 
 ## To do
 
 ### Decide
-- [ ] **MASSIVE: how long the highs ring** (http://192.168.1.100:8766/massive_highs/index.html on the Wi-Fi; `renders/massive_highs/index.html`): today MASSIVE's top end fades at about half its body's length, so a 15 s tail settles darker; Supermassive's Andromeda and Sagittarius ring their highs as long as the body. A is today; B, C and D ring longer, D as long as the body. About 5 s and 15 s tails; the Compare with menu adds a Supermassive take. Pick one per column (or say if the answer differs by length). Prototype on branch `claude/massive-air`; infinite and freeze are unchanged.
+- Nothing open: every pick so far is acted on.
 
 ### Listen (after your notes)
 - Nothing open.
 
 ### Listen (first time)
 - [ ] **ERA signatures** (out of date: it measures the old stacked ERA; Claude can re-measure it for the five eras; reference, nothing to pick; https://claude.ai/artifact/AiR2JXPAaLbT8GeJseK3Vj, opens on your phone anywhere): what each ERA stage does to the reverb, measured and drawn as charts (tone, how long each frequency rings, harmonics, grain, hiss, mirror tones, pitch wobble). `tools/era_reference.py` remeasures it.
+
+### Try in Ableton
+- [ ] **Play the plugin** (Immensio Versio, AU or VST3; rescan plug-ins first). It's v1.0.31 from branch `claude/massive-air`: everything in `main` plus MASSIVE's new highs. Notes welcome on anything; it goes into `main` when you say so.
 
 ### At the rack
 - [ ] **M0 hardware check** (`docs/m0-hardware-check.md`): flash `firmware/build/immensio_versio_m0test.bin`, check the boot pattern, switches, button (USB session), then knobs, gate and a quick passthrough listen (rack session). Tell Claude the results.
@@ -24,6 +27,7 @@
 
 ## Waiting on Claude
 
+- **MASSIVE's drop after the music stops** (your note on `massive_highs`, 5 s): a short MASSIVE at a large SIZE holds about one trip round its long lines (~1.2 s), then the next trip comes in ~14 dB quieter. Measured and researched; next a page with ways to smooth it (spreading the fade along the first trip; a shortest DECAY that grows with SIZE).
 - **The rest of the Valhalla comparison** (`docs/research/valhalla-comparison.md`): the loudness one is done (v1.0.28); MASSIVE's highs are on a page to pick from (above). Still to come: Supermassive moves more in pitch at long settings (a DRIFT comparison). Found on the way: the Immensio beside Valhalla page's MASSIVE settings now ring longer than labelled (a 21 Oct 2026 DECAY change, v1.0.21: "15 s" rings ~20 s, "2 s" ~4.7 s); DECAY 0.08 / 0.33 give 5 / 15 s at SIZE 0.7, and 2 s is below MASSIVE's shortest at that SIZE.
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
@@ -31,6 +35,7 @@
 
 ## Done
 
+- 25 Oct 2026: **MASSIVE's highs ring as long as its body** (D on every card, 5 s and 15 s; SPEC v1.0.31, ADR 0022), as Supermassive's Andromeda and Sagittarius. Built on branch `claude/massive-air` (all tests pass; release flash 111,836 B) and installed in Ableton; not in `main` until you OK it. The page is kept for now.
 - 25 Oct 2026: **The new ERA is in `main`** (SPEC v1.0.30, ADR 0021; with the ERA click fix, v1.0.29): "Era sweep test sounds excellent", "M6 also sounding excellent. Merge." All 15 tests pass; release flash 111,572 B (1 KB under budget). ERA's default is now 0.1 (the middle of the Neve). Both pages are deleted.
 - 25 Oct 2026: **The new ERA, round 3** (B across the board): the bucket-brigade's grit reaching round 2's B at two-thirds wins; the round-3 radio wins without its whistles and polar flutter ("they read as slow rhythmic delays rather than dropouts"). The sampler goes (the BBD is gritty enough). Built as the module's ERA on branch `claude/era-v2` (SPEC v1.0.30, ADR 0021): five eras, the Neve under all; μ-law, vintage reads and stacking removed. On the way the radio got an AGC that follows the station (aiming at a fixed level made sparse music 6 dB louder) and a slow level hold (a held tail drained 6 dB through its band in six minutes). The stronger-ERA page is superseded (it was built on the stacked ERA); its branch was later deleted. The round pages are deleted.
 - 25 Oct 2026: **The new ERA, round 2**: the bucket-brigade's B (more grit) preferred, "but rather than hitting that value at 0.5, make that the 0.66 position"; the radio needs refining (softer hiss; static too uniform; the whistle too steady). Researched real reception (`docs/research/radio-artifacts.md`); round 3 follows. The page is deleted.
