@@ -1,13 +1,12 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, session 4 (tape bias a third and the hotter send shipped, v1.0.26; one page to hear: tape and held notes).
+**Last updated:** 24 Oct 2026, session 4 (no steady-level tape; one page to hear: tape out round 2, re-made on the settled tape).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- [ ] **Tape and held notes** (`renders/tape_level/index.html`, pick per card): the steady-level tape you picked on the full mix drives quiet held notes harder into the tape too (the vibes' harmonics up to 36 dB under the note). A no steady level, B at most +12 dB, C at most +24 dB (the one you heard). Your question answered: with the tape bypassed the held vibes' harmonics are 56-78 dB down, so what you heard was the tape's own saturation; it doesn't build up.
-- [ ] **Tape out, round 2** (`renders/tape_out`): **hold off** for now: it was made on the old tape curve. Once you've picked on the page above, I'll re-render strength and hysteresis on the settled tape.
+- [ ] **Tape out, round 2** (`renders/tape_out/index.html`, pick per card): re-made on the settled tape (a third of the lopsidedness, no steady level). A today, B a little stronger, C and D today plus light and full hysteresis, E and F a little stronger plus light and full. Light is cheap enough for the module; full is the physical tape model (may be too heavy for it). Does hysteresis add something you want, and on which strength?
 
 ### Listen (after your notes)
 - Nothing open.
@@ -37,6 +36,7 @@
 
 ## Done
 
+- 24 Oct 2026: **No steady-level tape** (A on 12 of 15 cards: "jittery saturation" in long tails; only the drums liked +12 dB). The tape keeps today's behaviour with a third of the lopsidedness. The page is deleted.
 - 24 Oct 2026: **Tape out's lopsidedness is a third** (B on 14 cards; SPEC v1.0.26): held notes no longer pick up the strong second harmonic. **The full mix's send is 12 dB hotter** in the page material ("both"), as a pushed dub send. The steady-level tape waits for a held-note listen. Both pages are deleted.
 - 24 Oct 2026: **Five fixes from the Valhalla comparison shipped** (SPEC v1.0.25): the HALL starts right behind the note (no slap-back gap), its long tails ring smoother (more gentle movement), short HALL and PLATE tails stay brighter while long PLATEs lose some top end ("air"), the PLATE's lows are centred (they were partly out of phase), and MASSIVE swells half as long. HALL's level was trimmed so the spaces stay matched. Side effect: a big PLATE's very start is a touch grainier (a few hundredths of a second). The vibes cards were set aside for the tape distortion page. The page is deleted.
 - 24 Oct 2026: **Infinite tails hold where you stop, and ten bugs fixed** (your OK; SPEC v1.0.24): an infinite tail no longer plunges and creeps back when a loud input stops (PLATE −27 dB before, within ~2 dB now; the held keys' 7 dB drop too). The overnight soak's ten fixes are in: freeze taps never unfreezing, clicks on SPACE flips, small-HALL SIZE jumps and REVERSE switching, a frozen pad swelling up, and more. The page is deleted.
