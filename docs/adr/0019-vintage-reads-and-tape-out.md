@@ -22,3 +22,5 @@
   - Release flash: about +2 KB.
 - **Testing aliasing.** Tape's asymmetry puts real difference tones below 5 kHz on a hot 7 kHz test tone (−35 dB). So `test_era`'s aliasing check now compares 48 kHz against 96 kHz: aliasing is what the lower rate adds, and here it adds nothing.
 - **PLATE.** Vintage reads are FDN only; the PLATE keeps its reads.
+
+**Amendment (24 Oct 2026, owner's pick on `renders/tape_bias`; SPEC v1.0.26):** tape out's asymmetry is a third of the first one's. The full bias bent even quiet signals, so held notes picked up a strong 2nd harmonic: "saturation-like distortion on resonances". At a third the held notes stay clean enough, and loud peaks keep the tape's even warmth. A test hook `setTapeOut(false)` bypasses the tape for measuring.

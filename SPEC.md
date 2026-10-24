@@ -6,6 +6,10 @@
 **Status:** Spec **v1.0 (frozen)**, 21 Oct 2026. Input: `IMMENSIO_BRIEF.md`. Vocabulary: `CONTEXT.md`. Decisions: `docs/adr/` (0001–0017; index in `docs/adr/README.md`). Session record: `docs/spec-session.md`. Changes after freeze: new ADR + changelog entry. Numbers marked *(start)* are starting guesses; tuned numbers replace them as milestones confirm them.
 
 ### Changelog
+- v1.0.26 — owner's picks (24 Oct 2026; `renders/tape_bias` B "a third" on 14 cards, one split; ADR 0019 amendment):
+  - **Tape out's asymmetry is a third of v1.0.22's** (`kTapeBias` 0.05 × the cassette layer). The full bias bent even quiet held notes: a 2nd harmonic 14–22 dB under a held vibes note. Now it sits 24–32 dB under, and the tape's even warmth stays on peaks.
+  - **The full mix's send is 12 dB hotter** in the page material (`tools/make_material.py`; "both" on `renders/fullmix_send`), as a pushed dub send.
+  - Not yet decided: the steady-level tape that page also preferred. On a quiet held note it drives the tape harder (3rd harmonic up to −36 dB), so it gets a held-note page first. With the tape bypassed (`IV_TAPE_OUT=0`), the held vibes' harmonics are −56 to −78 dB, the same as ERA clean: what's left is tape out's own odd saturation.
 - v1.0.25 — owner's picks (24 Oct 2026; `renders/valhalla_round2`, the vibes cards set aside for the tape distortion; ADR 0007, 0012, 0013 amendments; `docs/research/valhalla-notes.md`): **five fixes from the Valhalla comparison.**
   - **HALL starts right behind the note:** it gets MASSIVE's early taps. The first sound comes at 10 ms, not 80 ("a slight slap-back"). The taps now glide with SIZE sample by sample, so small-HALL SIZE jumps don't click.
   - **HALL's floor is 3× deeper** (`kHallFloorScale`): a long HALL's resonances smooth toward Room's (drums 11 → 8.9 dB over their surroundings). A held 1 kHz wavers 6.5 → 7.3 cents.

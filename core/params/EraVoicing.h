@@ -78,6 +78,14 @@ constexpr float kCracklePerSecond = 4.0f;
 constexpr float kVintageSteps = 32.0f;          // fraction steps per sample (Costello: "32 or 64 chunks")
 constexpr float kVintageJitterSamples = 0.15f;   // the noisy modulation's random offset per control block
 
+// Tape out (v1.0.22, ADR 0019). Its asymmetry is a third of the first one's (v1.0.26, owner's pick on
+// renders/tape_bias: the full bias bent even quiet held notes, a 2nd harmonic 14-22 dB under them; at a
+// third it's 24-32 dB under, the tape's even warmth kept on peaks).
+constexpr float kTapeBias = 0.05f;          // × the cassette layer (was 0.15)
+// PROTOTYPE (renders/fullmix_send "both", not yet heard on held notes): tape out hears a steady level, a slow
+// level driving quiet wets up to kTapeLevelRms (at most the cap) into the curve, the gain taken off after.
+constexpr float kTapeLevelRms = 0.126f;     // −18 dBFS
+
 // Loudness makeup per layer (dB on the wet), so ERA's loudness on music stays
 // within ±1 dB across the knob (SPEC §7 M6, v1.0.19), summed as the layers stack.
 // Measured on music (LUFS over the twelve page materials, HALL and MASSIVE): the

@@ -173,7 +173,8 @@ class Mix:
         g = min(g, db(-3) / max(1e-9, np.abs(y).max())) if gain is None else gain
         y = np.concatenate([y * g, np.zeros((int(TAIL * SR), 2))])
         OUT.mkdir(parents=True, exist_ok=True)
-        sf.write(str(OUT / f"{name}.wav"), y.astype(np.float32), SR, subtype="PCM_24")
+        # Float when it peaks over full scale (the pushed send does), so nothing clips; the renderer reads both.
+        sf.write(str(OUT / f"{name}.wav"), y.astype(np.float32), SR, subtype="FLOAT" if np.abs(y).max() > 1.0 else "PCM_24")
         print(f"wrote renders/_material/{name}.wav: {len(y) / SR:.1f} s (phrase {len(self.buf) / SR:.1f} s), gain {20 * np.log10(g):+.1f} dB")
         return g
 
@@ -432,8 +433,8 @@ def voicelow():
 
 def fullmix():
     """A dense track the way a reverb meets it in a mix: everything plays dry, and only the
-    stabs and rims go to the send (renders/_material/fullmix_send.wav, written at the mix's own
-    gain, so the send sits at its real level under the full mix)."""
+    stabs and rims go to the send (renders/_material/fullmix_send.wav, written 12 dB over the mix's
+    own gain: a pushed dub send, about as loud as the single instruments)."""
     vd, rd = CC0 / "virtuosity", CC0 / "rusty"
     g = lambda d: sorted(d.glob("*.flac"))
     kit = Kit({"kick": g(vd / "kick"), "rim": g(rd / "rimshot"), "hh": g(rd / "hh_closed")})
@@ -473,7 +474,9 @@ def fullmix():
     pad_ = svf_lp(x, 900 * (1 + 0.2 * np.sin(2 * np.pi * 0.1 * np.arange(n_pad) / SR)), 0.7) * adsr(n_pad, 2.0, 1.0, 1.0, 1.0, n_pad / SR - 1.0)
     full.add(np.stack([pad_, np.roll(pad_, int(0.009 * SR))], axis=1), 0.1, db(-14))
     gain = full.write("fullmix")
-    send.write("fullmix_send", gain=gain)
+    # The send 12 dB over the mix's own level, as a dub engineer pushes it (owner, renders/fullmix_send:
+    # "both"; at the mix's level it reached the reverb 12 dB under the single instruments, -30 LUFS).
+    send.write("fullmix_send", gain=gain * 10.0 ** (12.0 / 20.0))
 
 
 def piano_note(m: int, vel: float, hold: float) -> np.ndarray:
