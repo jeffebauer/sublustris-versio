@@ -1,12 +1,12 @@
 # Owner tasks
 
-**Last updated:** 25 Oct 2026, session 5 (v1.0.30 merged: the new ERA, five eras from sweet to gritty over the Neve).
+**Last updated:** 25 Oct 2026, session 6 (MASSIVE's highs: a page to pick from).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- Nothing open: every pick so far is acted on.
+- [ ] **MASSIVE: how long the highs ring** (http://192.168.1.100:8766/massive_highs/index.html on the Wi-Fi; `renders/massive_highs/index.html`): today MASSIVE's top end fades at about half its body's length, so a 15 s tail settles darker; Supermassive's Andromeda and Sagittarius ring their highs as long as the body. A is today; B, C and D ring longer, D as long as the body. About 5 s and 15 s tails; the Compare with menu adds a Supermassive take. Pick one per column (or say if the answer differs by length). Prototype on branch `claude/massive-air`; infinite and freeze are unchanged.
 
 ### Listen (after your notes)
 - Nothing open.
@@ -24,7 +24,7 @@
 
 ## Waiting on Claude
 
-- **The rest of the Valhalla comparison** (`docs/research/valhalla-comparison.md`): the loudness one is done (v1.0.28). Still to come, each a page when you want it: MASSIVE's highs die sooner than Supermassive's (8 kHz rings 8 s at the 15 s setting against 15) (the Neve base, now under every era, shortens every space's highs a little more: re-measure before designing). Also Supermassive moves more in pitch at long settings (a DRIFT comparison).
+- **The rest of the Valhalla comparison** (`docs/research/valhalla-comparison.md`): the loudness one is done (v1.0.28); MASSIVE's highs are on a page to pick from (above). Still to come: Supermassive moves more in pitch at long settings (a DRIFT comparison). Found on the way: the Immensio beside Valhalla page's MASSIVE settings now ring longer than labelled (a 21 Oct 2026 DECAY change, v1.0.21: "15 s" rings ~20 s, "2 s" ~4.7 s); DECAY 0.08 / 0.33 give 5 / 15 s at SIZE 0.7, and 2 s is below MASSIVE's shortest at that SIZE.
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 - **M2: install the plugin** when you'd like to play it in Ableton (`tools/install_plugin.sh`), with Ableton closed for the AU check.
