@@ -122,7 +122,7 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* hd = std::getenv("IV_HALL_DIFFUSION")) engine.setHallInLoopDiffusion(float(std::atof(hd)));
     if (const char* di = std::getenv("IV_DIFF_INDEPENDENT")) engine.setDiffuserIndependent(std::atoi(di) != 0);
     if (const char* sl = std::getenv("IV_STILL_LOWS")) engine.setStillLows(std::atoi(sl) != 0);
-    if (const char* tl = std::getenv("IV_TAPE_LEVEL_CAP")) engine.setTapeLevel(float(std::atof(tl))); // PROTOTYPE
+    if (const char* tm = std::getenv("IV_TAPE_MODE")) engine.setTapeMode(std::atoi(tm)); // PROTOTYPE
     if (const char* to = std::getenv("IV_TAPE_OUT")) engine.setTapeOut(std::atoi(to) != 0);
     if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
     if (!presetPath.empty()) {
