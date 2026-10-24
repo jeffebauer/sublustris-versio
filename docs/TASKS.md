@@ -1,13 +1,12 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, session 5 (v1.0.28 shipped; the new ERA round 2 waiting; era_strength page waiting; ERA signatures reference).
+**Last updated:** 24 Oct 2026, session 5 (v1.0.28 shipped; the new ERA round 3 waiting; era_strength page waiting; ERA signatures reference).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- [ ] **The new ERA, round 2** (`renders/era_v2b/index.html`; phone: http://192.168.1.100:8766/era_v2b/index.html), with the Neve base. The bucket-brigade: A round 1, B more grit (driven harder, more breathing noise, the clock's aliasing), C the most; if B or C is gritty enough, the sampler goes. The radio: A round 1, B light hiss, crackle and static bursts, C plus a faint drifting heterodyne whistle. Pick per card, with notes.
-  - Your radio notes (25 Oct 2026): softer hiss; the static bursts too uniform in colour, interval and length; the whistle too steady to feel like a radio. Researching real reception (tuning flutter, scanning, antenna interference) for a radio round 3. Your BBD picks on this page are still welcome.
+- [ ] **The new ERA, round 3** (`renders/era_v2c/index.html`; phone: http://192.168.1.100:8766/era_v2c/index.html), with the Neve base. The bucket-brigade: A your round-2 pick (grit reached halfway), B the new curve (that grit at two-thirds, more by the end). The radio: A round 2's light noise, B rebuilt from research on real reception (static that swells as the station fades, softer coloured hiss, varied crackle and lightning crashes, whistles that come and go, tuning drift, and at the gritty end drift-offs with a whoop, flutter and a faint hum; the wandering dip unchanged). Pick per card, with notes.
 - [ ] **ERA stronger on the reverb?** (`renders/era_strength/index.html`; on your phone: http://192.168.1.100:8766/era_strength/index.html while the laptop serves it). Only the reverb changes. In each card, A is today, B is about 1.5 times as strong and C about twice: the Neve's warmth, the cassette's wow, tape and darkening, and fewer bits in the μ-law and Midiverb stages. Each version keeps today's loudness. Use the MIX fader at the balance you'd use. Pick per card, with notes.
 
 ### Listen (after your notes)
@@ -37,6 +36,7 @@
 
 ## Done
 
+- 25 Oct 2026: **The new ERA, round 2**: the bucket-brigade's B (more grit) preferred, "but rather than hitting that value at 0.5, make that the 0.66 position"; the radio needs refining (softer hiss; static too uniform; the whistle too steady). Researched real reception (`docs/research/radio-artifacts.md`); round 3 follows. The page is deleted.
 - 25 Oct 2026: **The new ERA, round 1** (A, the Neve base, on every card, repeated cards agreeing: "Neve base a clear winner"). Keep: the Neve, Midiverb, cassette and radio ("feels like a wandering phaser"). The bucket-brigade: "like the darker signature", wants a little more grit. The sampler: aliasing too intense, can go if the BBD gets grittier. Round 2: a grittier BBD, and the radio with light noise and artifacts. The page is deleted.
 - 25 Oct 2026: **ERA's eras play on their own, not stacked** ("Discrete wins for me, hands down. MidiVerb sounds beautiful"): ships with the ERA redesign. Measured why cassette and μ-law sound alike: on their own, both add a 3rd harmonic at a fixed distance under the note (25 and 30 dB). The pages are deleted (the knob-sweep page had the cassette click in it; it comes back on the redesign page).
 - 24 Oct 2026: **ERA stays on the reverb only** (no pick on any card: "too intense for the most part… having it just on the reverb sounds better, even if the effects are somewhat subtle at times"). The dry stays clean, and MIX fully left is still a clean passthrough. The prototype is kept on a side branch for the record (ADR 0004). The page is deleted.
