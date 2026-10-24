@@ -294,15 +294,11 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
 
     // Freezing: loss → 0, highs kept (ratio → 1), the governor caps paint.
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
-    float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
-    if (massive && massiveHighRatio_ > 0.0f) {
-        // Glides back to the shared share across DECAY's crossover, so infinite still darkens.
-        const float own = toneRatio * (massiveHighRatio_ / voicing::kDampingHighT60Ratio);
-        toneRatio = own + map::governorWeight(decay) * (toneRatio - own);
-    }
+    const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
     const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(hallSize_) : 1.0f;
     const float rate = decayRate(decay, size) / sizeT60 * (1.0f - freezeMix_);
-    const float highRatio = toneRatio + freezeMix_ * (1.0f - toneRatio);
+    const float spaceRatio = massive ? map::massiveHighRatio(toneRatio, decay) : toneRatio;
+    const float highRatio = spaceRatio + freezeMix_ * (1.0f - spaceRatio);
     // Frozen: full weight (only the pad's own hold acts, there's no floor). Not frozen: DECAY's own
     // weight at once, not glided with freezeMix_: gliding it pulled a fed pad (above the floor) down
     // hard on unfreeze, "a pronounced immediate drop" and a too-steep decay (owner, freeze options).
@@ -503,7 +499,7 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
                 twinSpread_ = spread;
             }
             twinFdn_.setDecayRate(tRate);
-            twinFdn_.setHighT60Ratio(toneRatio);
+            twinFdn_.setHighT60Ratio(massive ? map::massiveHighRatio(toneRatio, tDecay) : toneRatio);
             twinFdn_.setGovernor(0.0f);
             twinFdn_.setInLoopDiffusion(massive ? 1.0f : 0.0f);
             twinFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(tDecay, tSize)

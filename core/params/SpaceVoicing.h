@@ -72,6 +72,10 @@ constexpr float kFloorStepSeconds  = 1.7f;
 // Fixed damping (SPEC §4.6): the high end's T60 as a share of the low
 // end's, at TONE noon. TONE moves it (Mappings.h toneHighT60Ratio).
 constexpr float kDampingHighT60Ratio = 0.45f;
+// MASSIVE's own share (v1.0.31, ADR 0022; owner's pick D on renders/massive_highs): × the Neve's
+// darkening (EraVoicing kNeveHighRatio 0.7) it's 1, so at TONE noon its highs ring as long as its
+// body, as Supermassive's Andromeda and Sagittarius do (they don't damp in the loop).
+constexpr float kMassiveHighT60Ratio = 1.43f;
 
 // At infinite DECAY the lows hold but the highs still fade, over about this
 // long at TONE noon, so an infinite tail darkens toward its floor (ADR 0008)

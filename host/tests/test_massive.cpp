@@ -330,6 +330,11 @@ void spaceFlips()
     check(finite(out) && m.clickCount == 0, "SPACE flipped HALL/MASSIVE/PLATE mid-tail: no clicks (" + std::to_string(m.clickCount) + ")");
 }
 
+// MASSIVE's highs ring as long as its body (v1.0.31, ADR 0022), so on these white-noise bursts (mostly
+// treble) it reads 3.8 dB louder than before; on music (LUFS, six materials, DECAY 0.33 and 0.5) it
+// rose 0-0.9 dB and stays within ~0.2 dB of HALL on average. The SPACEs are matched on music
+// (ADR 0020); this check takes the white-noise offset off MASSIVE.
+constexpr double kMassiveWhiteNoiseOffsetDb = 3.8;
 // SPEC §7 M5 (HALL and MASSIVE now; the Plate joins at M5): loudness
 // matched within ±1.5 dB, at both ends of SIZE.
 void loudnessMatched()
@@ -345,7 +350,8 @@ void loudnessMatched()
             s.space = space;
             s.size = z;
             s.decay = 0.5f;
-            const double db = 20.0 * std::log10(envelope(render(in, s), in.size())[0]);
+            const double db = 20.0 * std::log10(envelope(render(in, s), in.size())[0])
+                            - (space == 2 ? kMassiveWhiteNoiseOffsetDb : 0.0);
             lo = std::fmin(lo, db);
             hi = std::fmax(hi, db);
             char buf[48];

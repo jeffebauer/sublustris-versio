@@ -173,6 +173,15 @@ inline float governorWeight(float decay)
     return clamp01((decay - kDecayFiniteTop) / (kDecayInfiniteAt - kDecayFiniteTop));
 }
 
+// MASSIVE's high-end T60 share (v1.0.31, ADR 0022): TONE and ERA's share scaled to MASSIVE's own
+// (kMassiveHighT60Ratio), gliding back to the shared one across DECAY's crossover, so an infinite
+// MASSIVE still darkens towards its floor (ADR 0008).
+inline float massiveHighRatio(float toneRatio, float decay)
+{
+    const float own = toneRatio * (voicing::kMassiveHighT60Ratio / voicing::kDampingHighT60Ratio);
+    return own + governorWeight(decay) * (toneRatio - own);
+}
+
 // MASSIVE's DECAY: as decayRate(v, 2), but its shortest T60 is at least kMassiveMinPasses mean
 // lines (v1.0.21, knob_feel): 2 s at SIZE 0 (as before), ~2.5 s at noon, ~6 s at full SIZE.
 inline float massiveDecayRate(float v, float size)

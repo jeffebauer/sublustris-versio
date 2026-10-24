@@ -295,39 +295,6 @@ C_supermassive_andromeda      Valhalla Supermassive, Andromeda" > renders/valhal
     echo "renders/valhalla_compare/index.html"
 fi
 
-if on massive_highs; then
-    # PROTOTYPE (branch claude/massive-air): MASSIVE's highs ring longer (IV_MASSIVE_HIGH, its own
-    # high-end share before ERA's darkening; 0 = today's shared 0.45). Supermassive's Andromeda and
-    # Sagittarius don't damp in the loop (valhalladsp.com: their High EQ is a -6 dB/oct cut on the
-    # output). Measured 8 kHz / 1 kHz T60: today 0.43, B 0.58, C 0.75, D 1.00, Supermassive 1.00.
-    # DECAY for 5 / 15 s at SIZE 0.7 (v1.0.21's floor: 0.07 now rings ~4.7 s).
-    REF=test_audio/reference
-    saved=("${MATERIALS[@]}"); MATERIALS=()
-    for m in skank vibes stabs pad lead keys voice; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
-    page massive_highs
-    for t in "05s:0.077" "15s:0.327"; do
-        IFS=: read col d <<< "$t"
-        for v in A_today:0 B_a_little_airier:0.7 C_airier:1.0 D_as_long_as_the_body:1.43; do
-            IFS=: read tag hr <<< "$v"
-            IV_MASSIVE_HIGH=$hr r massive_highs $col $tag "" --set space=MASSIVE --set size=0.7 --set decay=$d
-        done
-    done
-    MATERIALS=("${saved[@]}")
-    refs=(); for d in supermassive_sagittarius_fb030 supermassive_andromeda_fb012 supermassive_sagittarius_fb073 supermassive_andromeda_fb054; do
-        [ -d $REF/$d ] && refs+=(--reference $REF/$d); done
-    print -r -- "How long should MASSIVE's top end ring? Today its highs fade well before its body: in a 15 s tail, 8 kHz is gone after about 8 s while the mids keep going, so the tail settles darker as it goes. Valhalla Supermassive's Andromeda and Sagittarius don't damp their highs at all: the shimmer rings as long as the body (their High EQ only cuts the top on the way out, it doesn't shorten it). B, C and D let our highs ring longer, step by step; D rings as long as the body, like Supermassive. The Neve's warmth, TONE and ERA still darken it on top of this. Infinite DECAY and freeze are unchanged. Versions are level-matched. The Compare with menu adds a Supermassive take as R (Sagittarius and Andromeda at about 5 s and 15 s). Listen to the last few seconds of each tail (Tail only helps): airy and shimmering, or settling darker?
-
-05s   MASSIVE, about 5 s (DECAY 0.08, SIZE 0.7, ERA and TONE at their defaults)
-15s   MASSIVE, about 15 s (DECAY 0.33)
-
-A_today                  Today: the highs fade at about half the body's length
-B_a_little_airier        The highs ring about 0.6 of the body's length
-C_airier                 The highs ring about 0.75 of the body's length
-D_as_long_as_the_body    The highs ring as long as the body (like Supermassive)" > renders/massive_highs/README.txt
-    python3 tools/review/make_review.py renders/massive_highs --title "MASSIVE: how long the highs ring" --level-match --dry $SRC --wet-only "${refs[@]}" > /dev/null
-    echo "renders/massive_highs/index.html"
-fi
-
 if on era_sweep; then
     # ERA turned from fully left to fully right over 40 s while the music loops (renders/_material_sweep,
     # 40 s loops + 12 s of tail), then the tail at ERA 1; chaptered at each era's start (ADR 0021).
