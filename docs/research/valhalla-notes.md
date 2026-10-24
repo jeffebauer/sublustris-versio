@@ -9,7 +9,7 @@
   - MASSIVE half swell.
   - HALL's level was trimmed −2.3 dB to keep the spaces matched.
 - **Full-mix send:** "both" was picked. The hotter send shipped as v1.0.26 (material). The steady-level tape was turned down after a held-note page.
-- The prototype hooks named below are gone; their code is on branch `claude/listen`.
+- The prototype hooks named below are gone; their code was on branch `claude/listen` (deleted 25 Oct 2026, last commit fbb283c).
 
 Each note was measured before anything was built (memory: measure owner notes first). The figures come from `docs/research/valhalla-comparison.md` (on its branch) and from new measurements. Prototypes live behind `IV_*` hooks (`Engine::ValhallaProto`), off by default. The page is `renders/valhalla_round2` (`tools/pages/valhalla_round2.sh`).
 

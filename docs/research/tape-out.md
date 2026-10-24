@@ -5,7 +5,7 @@
 - **Tape distortion, measured:** the full bias put a strong 2nd harmonic on held notes (14–22 dB under them). It became a third (v1.0.26, `renders/tape_bias`). With the tape bypassed, held-note harmonics are −56…−78 dB.
 - **Steady-level tape** (`renders/tape_level`): turned down, "jittery saturation" in long tails.
 - **Round 2 on the settled tape:** E, "a little stronger + light hysteresis", on all 24 cards. **Shipped as v1.0.27** (`core/dsp/Tape.h`, constants in `EraVoicing.h`).
-- **Gone:** the +24 dB strength and the Jiles–Atherton model. The prototype code is on branch `claude/listen`.
+- **Gone:** the +24 dB strength and the Jiles–Atherton model. The prototype code was on branch `claude/listen` (deleted 25 Oct 2026, last commit fbb283c).
 
 Owner, on `renders/dsp_audit`: tape out (v1.0.22) is liked but "very subtle — really only audible on MASSIVE drums. Can we make the saturation a little stronger? Should we explore adding tape hysteresis as well?"
 

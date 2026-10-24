@@ -58,7 +58,7 @@
 ## In flight
 
 - **Nothing running.**
-- **Branches kept on purpose:** `claude/era-dry` (ERA on the dry, rejected), `claude/era-strength` (stronger stacked ERA, superseded), `claude/listen` (older prototypes). Keep them for the record, or delete them.
+- **No branches kept:** the prototype branches `claude/era-dry` (7ec5af8), `claude/era-strength` (3608c89) and `claude/listen` (fbb283c) were deleted at the owner's request after the wrap; the decisions are in ADR 0004 and 0021.
 - `.claude/worktrees/serene-snyder-30d3a2` and `swell-curve`: old sessions' worktrees, already merged. The app cleans them.
 
 ## Next steps

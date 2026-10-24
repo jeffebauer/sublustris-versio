@@ -44,5 +44,5 @@
 - **Turned down:**
   - stacking (ADR 0003);
   - ERA on the dry too (ADR 0004 amendment, 24 Oct);
-  - stronger stacked stages (`claude/era-strength`, superseded);
+  - stronger stacked stages (superseded; branch `claude/era-strength` deleted, last commit 3608c89);
   - the early sampler, the round-1 and round-2 radios, whistles and polar flutter.
