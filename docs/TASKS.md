@@ -7,6 +7,7 @@
 
 ### Decide
 - [ ] **The new ERA, round 2** (`renders/era_v2b/index.html`; phone: http://192.168.1.100:8766/era_v2b/index.html), with the Neve base. The bucket-brigade: A round 1, B more grit (driven harder, more breathing noise, the clock's aliasing), C the most; if B or C is gritty enough, the sampler goes. The radio: A round 1, B light hiss, crackle and static bursts, C plus a faint drifting heterodyne whistle. Pick per card, with notes.
+  - Your radio notes (25 Oct 2026): softer hiss; the static bursts too uniform in colour, interval and length; the whistle too steady to feel like a radio. Researching real reception (tuning flutter, scanning, antenna interference) for a radio round 3. Your BBD picks on this page are still welcome.
 - [ ] **ERA stronger on the reverb?** (`renders/era_strength/index.html`; on your phone: http://192.168.1.100:8766/era_strength/index.html while the laptop serves it). Only the reverb changes. In each card, A is today, B is about 1.5 times as strong and C about twice: the Neve's warmth, the cassette's wow, tape and darkening, and fewer bits in the μ-law and Midiverb stages. Each version keeps today's loudness. Use the MIX fader at the balance you'd use. Pick per card, with notes.
 
 ### Listen (after your notes)
