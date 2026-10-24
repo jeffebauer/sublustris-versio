@@ -18,6 +18,7 @@
 // DTCM arrays before prepare(). Desktop Hosts may skip it: the Engine then
 // owns vectors (not in the firmware, which builds with IV_NO_HEAP).
 #include "dsp/Diffuser.h"
+#include "dsp/EraStages.h"
 #include "dsp/Fdn.h"
 #include "dsp/Memory.h"
 #include "dsp/Output.h"
@@ -89,6 +90,8 @@ public:
     void  setDecayMakeup(float k) { decayMakeup_ = k; }
     // Prototype hook (era_discrete): each ERA stage on its own instead of stacking (ADR 0003).
     void  setEraDiscrete(bool on) { eraDiscrete_ = on; }
+    // Prototype hook (era_v2): 1 = the redesigned ERA knob with the Neve base, 2 = without it, 0 = off.
+    void  setEraV2(int mode) { eraV2_ = mode; }
     // Test hook: false = no tape out (ERA's cassette stage without its output tape), for measuring.
     void  setTapeOut(bool on) { tapeOn_ = on; }
     // Test hook: false = one tank, the lows moving too (before v1.0.18), for demos.
@@ -206,6 +209,11 @@ private:
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
     bool  eraDiscrete_ = false; // prototype hook (setEraDiscrete)
+    int   eraV2_ = 0;           // prototype hook (setEraV2)
+    dsp::BbdStage bbd_;
+    dsp::SamplerStage sampler_;
+    dsp::RadioStage radio_;
+    float bbdW_ = 0, samplerW_ = 0, radioW_ = 0;
     float decayMakeup_ = 1.0f, decayGain_ = 1.0f, decayGainNow_ = 1.0f; // DECAY's level make-up (v1.0.28)
     float reverseGain_ = 1.0f, reverseGainNow_ = 1.0f;                     // ... and REVERSE's
     float tapeDrive_ = 0.0f;

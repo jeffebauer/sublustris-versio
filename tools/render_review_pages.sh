@@ -373,6 +373,65 @@ B_discrete  Discrete: each era on its own" > renders/era_discrete_sweep/README.t
     echo "renders/era_discrete_sweep/index.html"
 fi
 
+if on era_v2; then
+    # The redesigned ERA knob (owner, 25 Oct 2026; docs/research/new-eras.md): sweet to gritty, each era on
+    # its own, the Neve's warmth under all of them. Prototype hook IV_ERA_V2 (1 with the Neve base, 2
+    # without). Each era at the middle of its stretch, HALL as M6.
+    page era_v2
+    vers() { # vers <col> <era>
+        IV_ERA_V2=1 r era_v2 $1 A_neve_base "" --set space=HALL --set decay=0.6 --set size=0.6 --set era=$2
+        IV_ERA_V2=2 r era_v2 $1 B_no_base "" --set space=HALL --set decay=0.6 --set size=0.6 --set era=$2
+    }
+    vers e1_neve 0.083
+    vers e2_midiverb 0.25
+    vers e3_bbd 0.417
+    vers e4_cassette 0.583
+    vers e5_sampler 0.75
+    vers e6_radio 0.917
+    print -r -- "The redesigned ERA knob, one card per era, in the order the knob now runs, sweetest first: the Neve's warmth, then the Midiverb, a bucket-brigade (BBD) delay line, the cassette, an early sampler, and AM radio. Three are new (from the research on real units): the BBD (dark and woolly, the old analog delay chips' compander 'breathing' under the tail), the sampler (an SP-1200 / Mirage style low sample rate and 10 bits, its top folding away into aliasing), and the radio (a narrow band, a slowly wandering fade, crackle, an AGC that holds the tail up). μ-law is gone. In each card, A has the Neve's warmth underneath, B doesn't; on the first card that's the Neve against clean. Each era is shown halfway into its stretch of the knob (each goes from its sweet end to its gritty end across it). Levels are within about 1 dB, and the page is level-matched. Pick per card (A or B), and say in the notes which eras you'd keep. The knob-sweep page plays all six in a row, chaptered.
+
+e1_neve      Neve (ERA 0.08): A the Neve base, B clean
+e2_midiverb  Midiverb (ERA 0.25)
+e3_bbd       Bucket-brigade (ERA 0.42), new
+e4_cassette  Cassette (ERA 0.58)
+e5_sampler   Early sampler (ERA 0.75), new
+e6_radio     AM radio (ERA 0.92), new
+
+A_neve_base  With the Neve's warmth underneath
+B_no_base    Without it" > renders/era_v2/README.txt
+    python3 tools/review/make_review.py renders/era_v2 --title "Immensio: the new ERA" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/era_v2/index.html"
+fi
+
+if on era_v2_sweep; then
+    # The redesigned ERA knob swept from fully CCW to fully CW over 40 s (about 6.7 s per era) while the
+    # music loops, then the tail at ERA 1. Chapters at each era's start. Uses era_discrete_sweep's looped
+    # material (renders/_material_sweep).
+    SW=renders/_material_sweep
+    [ -f $SW/skank.wav ] || { echo "era_v2_sweep: make renders/_material_sweep first (era_discrete_sweep)"; exit 1; }
+    print -r -- '{ "breakpoints": [ {"t": 0, "key": "era", "value": 0}, {"t": 40, "key": "era", "value": 1}, {"t": 52, "key": "era", "value": 1} ] }' > $SW/era_lin.json
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in skank vibes stabs pad lead drums bass keys voice fullmix; do [ -f $SW/$m.wav ] && MATERIALS+=($m) && cp $SW/era_lin.json $SW/era_lin_$m.json; done
+    page era_v2_sweep
+    SRC0=$SRC; SRC=$SW
+    for sp in "hall:--set space=HALL --set decay=0.6 --set size=0.6" "massive:--set space=MASSIVE --set decay=0.65 --set size=0.7"; do
+        col=${sp%%:*}; args=(${=sp#*:})
+        IV_ERA_V2=1 r era_v2_sweep $col A_neve_base era_lin "${args[@]}"
+        IV_ERA_V2=2 r era_v2_sweep $col B_no_base era_lin "${args[@]}"
+    done
+    SRC=$SRC0; MATERIALS=("${saved[@]}")
+    print -r -- "The new ERA knob turned from fully left to fully right over 40 s while the music plays, then the tail rings at full ERA. The bar under each card is in chapters at each era's start: click one to jump there (Neve 0 s, Midiverb 6.7 s, BBD 13.3 s, Cassette 20 s, Sampler 26.7 s, Radio 33.3 s, Tail 40 s). Each era comes in over the first third of its chapter and then gets grittier until the next takes over. A has the Neve's warmth underneath, B doesn't. Notes only: how the journey feels, and where it should change.
+
+hall      HALL (DECAY 0.6, SIZE 0.6)
+massive   MASSIVE (DECAY 0.65, SIZE 0.7)
+
+A_neve_base  With the Neve's warmth underneath
+B_no_base    Without it" > renders/era_v2_sweep/README.txt
+    python3 tools/review/make_review.py renders/era_v2_sweep --title "Immensio: the new ERA, knob sweep" --showcase --level-match --dry $SW --wet-only \
+        --chapters "Neve:0,Midiverb:6.67,BBD:13.33,Cassette:20,Sampler:26.67,Radio:33.33,Tail:40" > /dev/null
+    echo "renders/era_v2_sweep/index.html"
+fi
+
 if on reverse; then
     page reverse
     RV=(--set era=0 --set attack=REVERSE)

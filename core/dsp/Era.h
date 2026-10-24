@@ -38,6 +38,8 @@ struct EraMix {
     bool  midiRound = false;                             // at infinite: round (no systematic loss) instead of truncate
     float midiDark = 1.0f;                               // share of the box's dark loop in use (v1.0.23: less at infinite)
     float makeup = 1.0f;                                 // wet gain keeping ERA's loudness level
+    float bbd = 0, sampler = 0, radio = 0;               // era_v2 prototype: the new eras' weights (EraStages.h)
+    float bbdT = 0, samplerT = 0, radioT = 0;            // ... and how far into each (sweet 0 → gritty 1)
 };
 
 // The loop's soft clip: exactly linear below the knee (so a tail at a normal

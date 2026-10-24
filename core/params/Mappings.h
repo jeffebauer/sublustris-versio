@@ -167,6 +167,41 @@ inline dsp::EraMix eraMix(float v, bool discrete = false)
     return m;
 }
 
+// era_v2 prototype (docs/research/new-eras.md; owner, 25 Oct 2026): ERA from sweet to gritty, each era on
+// its own, in six equal stretches: the Neve base, Midiverb, BBD, cassette, sampler, AM radio. An era comes
+// in over the first third of its stretch (the one before goes as it comes), then runs from its sweet end
+// to its gritty end. neveBase: the Neve's warmth under all of them, instead of clean.
+inline dsp::EraMix eraMixV2(float v, bool neveBase)
+{
+    using namespace voicing;
+    constexpr int kEras = 6;
+    float w[kEras], t[kEras];
+    for (int i = 0; i < kEras; ++i) {
+        const float from = float(i) / kEras, span = 1.0f / kEras;
+        w[i] = i == 0 ? 1.0f : layer(v, from, from + span / 3.0f);
+        t[i] = clamp01((v - from) / span);
+    }
+    for (int i = 0; i < kEras - 1; ++i) w[i] *= 1.0f - w[i + 1];
+    dsp::EraMix m;
+    m.neve = neveBase ? 1.0f : w[0];
+    m.midiverb = w[1];
+    m.bbd = w[2];
+    m.cassette = w[3];
+    m.sampler = w[4];
+    m.radio = w[5];
+    m.bbdT = t[2];
+    m.samplerT = t[4];
+    m.radioT = t[5];
+    m.highRatioScale = expLerp(expLerp(1.0f, kNeveHighRatio, m.neve), kCassetteHighRatio, m.cassette);
+    m.even = kNeveEven * m.neve;
+    m.drive = 1.0f + (kCassetteDrive - 1.0f) * m.cassette;
+    m.midiEngage = m.midiverb;
+    m.midiBits = kMidiBitsStart;
+    const float makeupDb = kMakeupNeveDb * m.neve + kMakeupCassetteDb * m.cassette + kMakeupMidiverbDb * m.midiverb;
+    m.makeup = std::pow(10.0f, makeupDb / 20.0f);
+    return m;
+}
+
 // The floor governor's weight across DECAY's crossover (ADR 0008): 0 while
 // the tail is finite, 1 from infinite on.
 inline float governorWeight(float decay)

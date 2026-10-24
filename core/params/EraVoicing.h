@@ -97,4 +97,7 @@ constexpr float kTapePlayWidth = 0.15f;     // the play operator's width × the 
 // tails (0.6 / 1.4 / 2.4 / 1.3 dB), which made music 4–6 LU louder at the end.
 constexpr float kMakeupNeveDb = 0.2f, kMakeupCassetteDb = 0.2f, kMakeupMuDb = 0.0f, kMakeupMidiverbDb = 0.4f;
 
+// era_v2 prototype: the new eras' level against the Neve base on music (set from LUFS, era_v2 page).
+constexpr float kEraV2BbdTrim = 1.0f, kEraV2SamplerTrim = 1.0f, kEraV2RadioTrim = 0.89f; // radio: its AGC lifts music ~1 LU
+
 } // namespace iv::voicing

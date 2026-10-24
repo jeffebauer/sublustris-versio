@@ -156,6 +156,9 @@ IV_SIZE_OPT void Engine::reset()
     tilt_.snap();
     limiter_.reset();
     for (auto& t : tape_) t.reset();
+    bbd_.reset();
+    sampler_.reset();
+    radio_.reset();
     tapeMix_ = 0.0f;
     duck_ = duckGrDb_ = duckGainStep_ = 0.0f;
     duckGain_ = 1.0f;
@@ -293,7 +296,7 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
 
     // Freezing: loss → 0, highs kept (ratio → 1), the governor caps paint.
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
-    const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era), eraDiscrete_).highRatioScale;
+    const float toneRatio = map::toneHighT60Ratio(tone) * (eraV2_ ? map::eraMixV2(smoothed(ParamId::Era), eraV2_ == 1) : map::eraMix(smoothed(ParamId::Era), eraDiscrete_)).highRatioScale;
     const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(hallSize_) : 1.0f;
     const float rate = decayRate(decay, size) / sizeT60 * (1.0f - freezeMix_);
     const float highRatio = toneRatio + freezeMix_ * (1.0f - toneRatio);
@@ -382,7 +385,14 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
 
     // ERA in the loop and DRIFT (SPEC §4.6, §4.7). Freezing glides the
     // in-loop colour out (the pad holds still, ADR 0009); DRIFT stays.
-    const dsp::EraMix era = map::eraMix(smoothed(ParamId::Era), eraDiscrete_);
+    const dsp::EraMix era = eraV2_ ? map::eraMixV2(smoothed(ParamId::Era), eraV2_ == 1) : map::eraMix(smoothed(ParamId::Era), eraDiscrete_);
+    // era_v2: the new eras on the wet (EraStages.h); each runs only while it's in.
+    bbdW_ = era.bbd;
+    samplerW_ = era.sampler;
+    radioW_ = era.radio;
+    if (bbdW_ > 0.0f) bbd_.set(era.bbdT, sampleRate_);
+    if (samplerW_ > 0.0f) sampler_.set(era.samplerT, sampleRate_);
+    if (radioW_ > 0.0f) radio_.set(era.radioT, sampleRate_, n);
     dsp::EraMix loopEra = era;
     const float keep = 1.0f - freezeMix_;
     loopEra.midiRound = map::governorWeight(decay) >= 1.0f; // infinite: no systematic loss
@@ -813,6 +823,23 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                 const float tl2 = tape_[0].process(wl), tr2 = tape_[1].process(wr);
                 wl = tapeMix_ >= 1.0f ? tl2 : wl + tapeMix_ * (tl2 - wl);
                 wr = tapeMix_ >= 1.0f ? tr2 : wr + tapeMix_ * (tr2 - wr);
+            }
+            if (bbdW_ > 0.0f) { // era_v2 prototype
+                const float bl = bbd_.process(wl, 0), br = bbd_.process(wr, 1);
+                wl += bbdW_ * (voicing::kEraV2BbdTrim * bl - wl);
+                wr += bbdW_ * (voicing::kEraV2BbdTrim * br - wr);
+            }
+            if (samplerW_ > 0.0f) {
+                float sl = wl, sr = wr;
+                sampler_.process(sl, sr);
+                wl += samplerW_ * (voicing::kEraV2SamplerTrim * sl - wl);
+                wr += samplerW_ * (voicing::kEraV2SamplerTrim * sr - wr);
+            }
+            if (radioW_ > 0.0f) {
+                float rl2 = wl, rr2 = wr;
+                radio_.process(rl2, rr2);
+                wl += radioW_ * (voicing::kEraV2RadioTrim * rl2 - wl);
+                wr += radioW_ * (voicing::kEraV2RadioTrim * rr2 - wr);
             }
             tilt_.process(wl, wr);
             duckGain_ += duckGainStep_; // ducking (ADR 0014)

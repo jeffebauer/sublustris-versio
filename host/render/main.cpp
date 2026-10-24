@@ -124,6 +124,7 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* sl = std::getenv("IV_STILL_LOWS")) engine.setStillLows(std::atoi(sl) != 0);
     if (const char* to = std::getenv("IV_TAPE_OUT")) engine.setTapeOut(std::atoi(to) != 0);
     if (const char* ed = std::getenv("IV_ERA_DISCRETE")) engine.setEraDiscrete(std::atoi(ed) != 0);
+    if (const char* v2 = std::getenv("IV_ERA_V2")) engine.setEraV2(std::atoi(v2));
     if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
     if (const char* dm = std::getenv("IV_DECAY_MAKEUP")) engine.setDecayMakeup(float(std::atof(dm)));
     if (!presetPath.empty()) {
