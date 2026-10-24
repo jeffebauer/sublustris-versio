@@ -92,6 +92,8 @@ public:
     void  setEraDiscrete(bool on) { eraDiscrete_ = on; }
     // Prototype hook (era_v2): 1 = the redesigned ERA knob with the Neve base, 2 = without it, 0 = off.
     void  setEraV2(int mode) { eraV2_ = mode; }
+    // Prototype hooks (era_v2 round 2): the BBD's grit (0-2) and the radio's noise (0-2).
+    void  setEraV2Variants(int bbdGrit, int radioNoise) { bbdGrit_ = bbdGrit; radioNoise_ = radioNoise; }
     // Test hook: false = no tape out (ERA's cassette stage without its output tape), for measuring.
     void  setTapeOut(bool on) { tapeOn_ = on; }
     // Test hook: false = one tank, the lows moving too (before v1.0.18), for demos.
@@ -210,6 +212,7 @@ private:
     float modScale_ = 1.0f;  // test hook (setModulationScale)
     bool  eraDiscrete_ = false; // prototype hook (setEraDiscrete)
     int   eraV2_ = 0;           // prototype hook (setEraV2)
+    int   bbdGrit_ = 0, radioNoise_ = 0;
     dsp::BbdStage bbd_;
     dsp::SamplerStage sampler_;
     dsp::RadioStage radio_;

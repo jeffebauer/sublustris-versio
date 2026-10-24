@@ -390,9 +390,9 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
     bbdW_ = era.bbd;
     samplerW_ = era.sampler;
     radioW_ = era.radio;
-    if (bbdW_ > 0.0f) bbd_.set(era.bbdT, sampleRate_);
+    if (bbdW_ > 0.0f) bbd_.set(era.bbdT, sampleRate_, bbdGrit_);
     if (samplerW_ > 0.0f) sampler_.set(era.samplerT, sampleRate_);
-    if (radioW_ > 0.0f) radio_.set(era.radioT, sampleRate_, n);
+    if (radioW_ > 0.0f) radio_.set(era.radioT, sampleRate_, n, radioNoise_);
     dsp::EraMix loopEra = era;
     const float keep = 1.0f - freezeMix_;
     loopEra.midiRound = map::governorWeight(decay) >= 1.0f; // infinite: no systematic loss

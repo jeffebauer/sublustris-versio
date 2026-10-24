@@ -432,6 +432,38 @@ B_no_base    Without it" > renders/era_v2_sweep/README.txt
     echo "renders/era_v2_sweep/index.html"
 fi
 
+if on era_v2b; then
+    # The new ERA, round 2 (owner, 25 Oct 2026): the BBD with more grit (IV_BBD_GRIT) and the radio with
+    # light noise and artifacts (IV_RADIO_NOISE), both with the Neve base. HALL as M6.
+    page era_v2b
+    vers() { # vers <col> <era> <hook>
+        IV_ERA_V2=1 IV_BBD_GRIT=0 IV_RADIO_NOISE=0 r era_v2b $1 A_round_1 "" --set space=HALL --set decay=0.6 --set size=0.6 --set era=$2
+        if [ $3 = bbd ]; then
+            IV_ERA_V2=1 IV_BBD_GRIT=1 r era_v2b $1 B_more "" --set space=HALL --set decay=0.6 --set size=0.6 --set era=$2
+            IV_ERA_V2=1 IV_BBD_GRIT=2 r era_v2b $1 C_most "" --set space=HALL --set decay=0.6 --set size=0.6 --set era=$2
+        else
+            IV_ERA_V2=1 IV_RADIO_NOISE=1 r era_v2b $1 B_more "" --set space=HALL --set decay=0.6 --set size=0.6 --set era=$2
+            IV_ERA_V2=1 IV_RADIO_NOISE=2 r era_v2b $1 C_most "" --set space=HALL --set decay=0.6 --set size=0.6 --set era=$2
+        fi
+    }
+    vers bbd_1_middle 0.417 bbd
+    vers bbd_2_gritty_end 0.49 bbd
+    vers radio_1_middle 0.917 radio
+    vers radio_2_gritty_end 0.99 radio
+    print -r -- "The new ERA, round 2, with the Neve's warmth underneath. The bucket-brigade (first two columns): A is round 1. B has more grit: the chip driven twice as hard (more of its warm 2nd harmonic), its compander's breathing noise 6 dB up, and the clock's own aliasing (a cheap long-delay BBD holds each sample for a clock period, so high notes fold into darker false tones). C has the most: three times the drive, 12 dB more noise, stronger aliasing. If B or C is gritty enough, the sampler goes. The radio (last two columns): A is round 1. B adds light noise: audible hiss in the radio band, more crackle, and now and then a burst of static. C adds a faint heterodyne whistle drifting slowly, the sound of two stations beating on shortwave. All noise follows the tail, so silence stays silent. Each era at the middle of its stretch, and at its gritty end. Levels within about 1 dB; the page is level-matched. Pick per card, with notes.
+
+bbd_1_middle        Bucket-brigade, middle of its stretch (ERA 0.42)
+bbd_2_gritty_end    Bucket-brigade, its gritty end (ERA 0.49)
+radio_1_middle      AM radio, middle of its stretch (ERA 0.92)
+radio_2_gritty_end  AM radio, its gritty end (ERA 0.99)
+
+A_round_1   Round 1
+B_more      BBD: more grit · Radio: light noise and static
+C_most      BBD: the most grit · Radio: noise and a drifting whistle" > renders/era_v2b/README.txt
+    python3 tools/review/make_review.py renders/era_v2b --title "Immensio: the new ERA, round 2" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/era_v2b/index.html"
+fi
+
 if on reverse; then
     page reverse
     RV=(--set era=0 --set attack=REVERSE)

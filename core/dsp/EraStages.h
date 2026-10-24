@@ -50,22 +50,35 @@ struct EraRng {
 class BbdStage {
 public:
     void reset() { for (int c = 0; c < 2; ++c) { aa_[c].reset(); rc1_[c].reset(); rc2_[c].reset(); p1_[c] = p2_[c] = envY_[c] = envZ_[c] = 0; } }
-    void set(float t, float sr)
+    // grit (round 2, owner: "a little more grit"): 0 = round 1; 1, 2 = the chip driven harder (x2, x3 its
+    // distortion), its compander noise 6 / 12 dB up and breathing slower, and the clock's own aliasing: the
+    // line holds each sample for a clock period (2.6 / 2.2 x the cutoff) behind a weaker anti-alias filter
+    // (2-pole / 1-pole), as a cheap long-delay BBD does.
+    void set(float t, float sr, int grit = 0)
     {
-        const float fc = 7000.0f * std::pow(2200.0f / 7000.0f, t);
+        const float fc = 7000.0f * std::pow(2200.0f / 7000.0f, t), g = float(grit);
         for (int c = 0; c < 2; ++c) { aa_[c].set(fc, 1.0f, sr); rc1_[c].set(fc, 0.707f, sr); rc2_[c].set(fc, 1.0f, sr); }
         wp_ = 1.0f - std::exp(-6.2831853f * fc / sr);
-        a_ = 0.02f + 0.06f * t;
-        b_ = 0.01f + 0.03f * t;
-        noise_ = std::pow(10.0f, (-66.0f + 12.0f * t) / 20.0f);
+        a_ = (0.02f + 0.06f * t) * (1.0f + g);
+        b_ = (0.01f + 0.03f * t) * (1.0f + g);
+        noise_ = std::pow(10.0f, (-66.0f + 12.0f * t + 6.0f * g) / 20.0f);
         wc_ = 1.0f - std::exp(-1.0f / (0.010f * sr));
-        we_ = 1.0f - std::exp(-1.0f / ((0.012f + 0.013f * t) * sr));
+        we_ = 1.0f - std::exp(-1.0f / ((0.012f + 0.013f * t) * (1.0f + 0.5f * g) * sr));
+        grit_ = grit;
+        clockInc_ = (grit == 1 ? 2.6f : 2.2f) * fc / sr;
     }
     float process(float x, int c)
     {
         constexpr float ref = 0.126f, floor = 1e-4f; // -18 dBFS: the compander's unity point
-        p1_[c] += wp_ * (aa_[c].lp(x) - p1_[c]);      // anti-alias: 2-pole + 1-pole
-        const float y = p1_[c] * ref / std::fmax(envY_[c], floor); // 2:1, rectifier on its own output
+        float in;
+        if (grit_ == 0) in = (p1_[c] += wp_ * (aa_[c].lp(x) - p1_[c])); // anti-alias: 2-pole + 1-pole
+        else {
+            in = grit_ == 1 ? aa_[c].lp(x) : (p1_[c] += wp_ * (x - p1_[c])); // weaker: 2-pole / 1-pole
+            if (c == 0) { clock_ += clockInc_; tick_ = clock_ >= 1.0f; if (tick_) clock_ -= 1.0f; }
+            if (tick_) held_[c] = in; // the clock's sample, held until the next
+            in = held_[c];
+        }
+        const float y = in * ref / std::fmax(envY_[c], floor); // 2:1, rectifier on its own output
         envY_[c] += wc_ * (std::fabs(y) - envY_[c]);
         const float u = std::fmin(2.0f, std::fmax(-2.0f, y / ref * 0.5f)); // the compressor overshoots on onsets
         float z = (u - a_ * u * u - b_ * u * u * u) * 2.0f * ref; // the line's soft 2nd harmonic
@@ -79,7 +92,9 @@ public:
 private:
     EraSvf aa_[2], rc1_[2], rc2_[2];
     float  p1_[2] = {}, p2_[2] = {}, envY_[2] = {}, envZ_[2] = {};
-    float  wp_ = 1, a_ = 0, b_ = 0, noise_ = 0, wc_ = 0, we_ = 0;
+    float  wp_ = 1, a_ = 0, b_ = 0, noise_ = 0, wc_ = 0, we_ = 0, clock_ = 0, clockInc_ = 0.5f, held_[2] = {};
+    int    grit_ = 0;
+    bool   tick_ = false;
     EraRng rng_;
 };
 
@@ -123,8 +138,13 @@ public:
         for (int c = 0; c < 2; ++c) { hp_[c].reset(); lp1_[c].reset(); lp2_[c].reset(); dip_[c].reset(); }
         agc_ = slow_ = 0; fadeA_ = fadeB_ = notchA_ = notchB_ = 0; fadeCount_ = notchCount_ = 0;
     }
-    void set(float t, float sr, int blockLen)
+    // noise (round 2, owner: "some light noise, hiss, or even radio artifacts"): 0 = round 1; 1 = audible
+    // band-limited hiss, more crackle, and now and then a burst of static (atmospherics); 2 = that plus a faint
+    // heterodyne whistle drifting slowly (two stations beating), the classic shortwave artifact. All of it
+    // follows the tail, so silence stays silent.
+    void set(float t, float sr, int blockLen, int noise = 0)
     {
+        noiseMode_ = noise;
         sr_ = sr;
         m_ = 0.9f + 0.5f * t;
         dipDb_ = -4.0f - 14.0f * t;
@@ -132,13 +152,25 @@ public:
         notchHz_ = 0.1f + 0.4f * t;
         fadeDb_ = 1.0f + 5.0f * t;
         maxBoost_ = std::pow(10.0f, (6.0f + 9.0f * t) / 20.0f);
-        crackle_ = (2.0f + 18.0f * t) / sr;
-        hiss_ = std::pow(10.0f, (-60.0f + 20.0f * t) / 20.0f);
+        crackle_ = (noise ? 6.0f + 24.0f * t : 2.0f + 18.0f * t) / sr;
+        crackleAmp_ = noise ? 0.15f : 0.06f;
+        hiss_ = std::pow(10.0f, ((noise ? -36.0f : -60.0f) + (noise ? 6.0f : 20.0f) * t) / 20.0f);
         for (int c = 0; c < 2; ++c) { hp_[c].set(200.0f + 200.0f * t, 0.707f, sr); lp1_[c].set(4500.0f * std::pow(2400.0f / 4500.0f, t), 0.54f, sr); lp2_[c].set(4500.0f * std::pow(2400.0f / 4500.0f, t), 1.31f, sr); }
         // The selective fade's centre and the flat fade wander on smoothed random targets.
         const float dt = float(blockLen) / sr;
         wander(notchA_, notchB_, notchTarget_, notchCount_, notchHz_, dt);
         wander(fadeA_, fadeB_, fadeTarget_, fadeCount_, 0.05f, dt);
+        if (noise) {
+            // Static bursts: every 3-8 s, 0.15-0.4 s long.
+            burstCount_ -= dt;
+            if (burstCount_ <= 0.0f) { burstCount_ = 3.0f + 2.5f * (rng_.next() + 1.0f); burstLeft_ = 0.15f + 0.125f * (rng_.next() + 1.0f); }
+            burstLeft_ -= dt;
+            burstGain_ += 0.3f * ((burstLeft_ > 0.0f ? 0.1f : 0.0f) - burstGain_);
+        }
+        if (noise == 2) {
+            wander(whA_, whB_, whTarget_, whCount_, 0.05f, dt);
+            whInc_ = (1500.0f + 900.0f * whB_) / sr; // 600 Hz - 2.4 kHz
+        }
         const float centre = 300.0f * std::pow(10.0f, 0.5f + 0.5f * notchB_);
         for (int c = 0; c < 2; ++c) dip_[c].set(centre, dipQ_, sr);
         dipGain_ = std::pow(10.0f, dipDb_ / 20.0f);
@@ -151,7 +183,14 @@ public:
     {
         constexpr float carrier = 0.25f, target = 0.1f; // -12 dBFS is full modulation; the AGC aims at -20
         slow_ += ws_ * (0.5f * (std::fabs(l) + std::fabs(r)) - slow_);
-        const float n = (hiss_ * rng_.next() + (rng_.next() * 0.5f + 0.5f < crackle_ ? 0.06f * rng_.next() : 0.0f)) * slow_ * 4.0f;
+        float n = hiss_ * rng_.next() + (rng_.next() * 0.5f + 0.5f < crackle_ ? crackleAmp_ * rng_.next() : 0.0f);
+        if (noiseMode_) n += burstGain_ * rng_.next();
+        if (noiseMode_ == 2) {
+            whPhase_ += whInc_;
+            whPhase_ -= float(int(whPhase_));
+            n += 0.012f * std::sin(6.2831853f * whPhase_);
+        }
+        n *= slow_ * 4.0f;
         float x[2] = {l, r};
         for (int c = 0; c < 2; ++c) {
             float v = std::fmax(x[c] / carrier * m_, -1.0f) / m_ * carrier; // over-modulation flattens the troughs
@@ -182,6 +221,9 @@ private:
     float  sr_ = 48000, m_ = 1, dipDb_ = 0, dipQ_ = 1, notchHz_ = 0.1f, fadeDb_ = 0, maxBoost_ = 1, crackle_ = 0, hiss_ = 0;
     float  agc_ = 0, slow_ = 0, dipGain_ = 1, flat_ = 1, wa_ = 0, wd_ = 0, ws_ = 0;
     float  fadeA_ = 0, fadeB_ = 0, fadeTarget_ = 0, fadeCount_ = 0, notchA_ = 0, notchB_ = 0, notchTarget_ = 0, notchCount_ = 0;
+    float  crackleAmp_ = 0.06f, burstCount_ = 2.0f, burstLeft_ = 0, burstGain_ = 0;
+    float  whA_ = 0, whB_ = 0, whTarget_ = 0, whCount_ = 0, whInc_ = 0.03f, whPhase_ = 0;
+    int    noiseMode_ = 0;
 };
 
 } // namespace iv::dsp
