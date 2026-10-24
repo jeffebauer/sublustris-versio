@@ -1,11 +1,12 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, session 5 (v1.0.28 shipped; the new ERA pages waiting; era_strength page waiting; ERA signatures reference).
+**Last updated:** 24 Oct 2026, session 5 (v1.0.28 shipped; the new ERA round 2 waiting; era_strength page waiting; ERA signatures reference).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
+- [ ] **The new ERA, round 2** (`renders/era_v2b/index.html`; phone: http://192.168.1.100:8766/era_v2b/index.html), with the Neve base. The bucket-brigade: A round 1, B more grit (driven harder, more breathing noise, the clock's aliasing), C the most; if B or C is gritty enough, the sampler goes. The radio: A round 1, B light hiss, crackle and static bursts, C plus a faint drifting heterodyne whistle. Pick per card, with notes.
 - [ ] **ERA stronger on the reverb?** (`renders/era_strength/index.html`; on your phone: http://192.168.1.100:8766/era_strength/index.html while the laptop serves it). Only the reverb changes. In each card, A is today, B is about 1.5 times as strong and C about twice: the Neve's warmth, the cassette's wow, tape and darkening, and fewer bits in the μ-law and Midiverb stages. Each version keeps today's loudness. Use the MIX fader at the balance you'd use. Pick per card, with notes.
 
 ### Listen (after your notes)
