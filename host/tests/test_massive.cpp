@@ -166,7 +166,10 @@ void attackFollowsTime()
     }
     Setting hall;
     const double h = riseSeconds(hall);
-    check(h < 0.1, "HALL NORMAL attacks at once: rise " + std::to_string(h) + " s (< 0.1)");
+    // v1.0.25: the HALL's early taps start the sound ~10 ms after the note (it was ~80), so the 10 % point comes
+    // much sooner while the peak stays put: the rise reads longer although the hall answers sooner. No swell
+    // still means well under BLOOM's shortest (0.12 s → its build).
+    check(h < 0.15, "HALL NORMAL attacks at once: rise " + std::to_string(h) + " s (< 0.15)");
 }
 
 // ADR 0008: fed hard for 20 s at infinite, the tank sits near the floor

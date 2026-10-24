@@ -6,6 +6,14 @@
 **Status:** Spec **v1.0 (frozen)**, 21 Oct 2026. Input: `IMMENSIO_BRIEF.md`. Vocabulary: `CONTEXT.md`. Decisions: `docs/adr/` (0001–0017; index in `docs/adr/README.md`). Session record: `docs/spec-session.md`. Changes after freeze: new ADR + changelog entry. Numbers marked *(start)* are starting guesses; tuned numbers replace them as milestones confirm them.
 
 ### Changelog
+- v1.0.25 — owner's picks (24 Oct 2026; `renders/valhalla_round2`, the vibes cards set aside for the tape distortion; ADR 0007, 0012, 0013 amendments; `docs/research/valhalla-notes.md`): **five fixes from the Valhalla comparison.**
+  - **HALL starts right behind the note:** it gets MASSIVE's early taps. The first sound comes at 10 ms, not 80 ("a slight slap-back"). The taps now glide with SIZE sample by sample, so small-HALL SIZE jumps don't click.
+  - **HALL's floor is 3× deeper** (`kHallFloorScale`): a long HALL's resonances smooth toward Room's (drums 11 → 8.9 dB over their surroundings). A held 1 kHz wavers 6.5 → 7.3 cents.
+  - **Air** (`kAirHallDbPerSecond` 5.5, `kAirPlateDbPerSecond` 8): HALL's and PLATE's highs lose a steady extra few dB per second at every finite DECAY, as air does, instead of a fixed share of the decay. A 2 s HALL's 8 kHz rings 1.8 s (was 1.1; Room 1.8). A 15 s PLATE's 8 kHz rings 5.6 s (was 7.8).
+  - **The PLATE's lows are centred:** the cross-branch output taps are added, not subtracted. With true-stereo input, Dattorro's signs made left and right lows near mirror images (vibes −0.86 below 250 Hz); now +0.14. The highs stay wide.
+  - **MASSIVE's built-in swell is halved** (`kMassiveSwellScale`): it peaks ~0.3 s sooner.
+  - **Level:** HALL measured 2.3 LU louder, so `kHallOutputTrim` takes it off and SPACEs stay matched.
+  - **Side effect:** a big PLATE's start is 0.01–0.03 s grainier (`test_density`'s known list updated).
 - v1.0.24 — owner's OK after `renders/infinite_stop` and the held-Midiverb listen (24 Oct 2026; ADR 0008 amendment; `docs/research/soak-audit.md`): **an infinite tail holds where you stopped.**
   - **The problem:** the floor governor (and ERA's cassette compression) judged the tail on a 1.5 s level that lagged behind it, so a loud input that stopped or faded made an infinite tail plunge and creep back over minutes. Fed 12 dB hot, PLATE fell 27 dB; at ERA's Midiverb end, held keys fell ~7 dB when they stopped.
   - **The fix:** both now take the lower of the 1.5 s and a 50 ms level, and a held tail's hold waits for the tank's own input to go quiet (BLOOM still feeding it). Every dip is now within ~2 dB. Steady fed levels, finite tails, pads and the goldens are unchanged.

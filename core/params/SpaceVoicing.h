@@ -41,6 +41,21 @@ constexpr float kSizeSlewPerSecond = 0.0595f;
 // is ~±1.5 cents at the ~0.3 Hz rate below); a new random target every
 // kFloorStepSeconds × (1 + line spread).
 constexpr float kFloorDepthSeconds = 0.00046f;
+// HALL's floor is this many times deeper (v1.0.25, owner's pick on renders/valhalla_round2: a long
+// HALL's tail held sharper resonances than Valhalla Room's, drums 11 dB over their surroundings
+// against 8.5; ×3 gives 8.9, and a held 1 kHz wavers 6.5 → 7.3 cents).
+constexpr float kHallFloorScale = 3.0f;
+// "Air" (v1.0.25, valhalla_round2): HALL's and PLATE's highs lose this much more than their lows
+// at every finite DECAY, in dB/s, as air does in a room (Valhalla Room measured 3-7), instead of a
+// fixed share of the decay (which made short tails go dull fast: a 2 s HALL's 8 kHz rang 1.1 s
+// against Room's 1.8; now 1.8). TONE scales it against noon. MASSIVE keeps the share.
+constexpr float kAirHallDbPerSecond = 5.5f, kAirPlateDbPerSecond = 8.0f;
+// MASSIVE's built-in swell (NORMAL) at this share of massiveNormalAttackSeconds (v1.0.25,
+// valhalla_round2: "less swell… more smoothed out"; it peaks ~0.3 s sooner).
+constexpr float kMassiveSwellScale = 0.5f;
+// HALL's level with its early taps and air (v1.0.25): music measured 2.3 LU louder (median over SIZE
+// 0 / 0.6 / 1 × DECAY 0.3 / 0.5 / 0.77), taken off so SPACE flips stay matched (short HALLs end ~1 dB up).
+constexpr float kHallOutputTrim = 0.767f;
 // Still lows (v1.0.18, docs/research/still-lows.md): below this the HALL / MASSIVE tank's input goes to
 // a second, unmodulated tank (Butterworth split), so the bass never wavers; above it moves as before.
 constexpr float kStillLowsHz = 300.0f;

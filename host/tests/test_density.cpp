@@ -344,9 +344,13 @@ struct Known {
     float size, decay;
     double grainS; // echoDensityGrainS when listed
 };
+// v1.0.25 (the owner's Valhalla picks: the PLATE's centred lows and air): a big PLATE's start reads
+// 0.012-0.03 s grainier (SIZE 1: 0.150 → 0.180, 0.178 → 0.190 s), and SIZE 0.5 at DECAY 0.7 tips to
+// 0.100 s from 0.099; re-listed at the new values and told to the owner.
 const Known kKnown[] = {
-    {0, 1.0f, 0.4f, 0.124},
-    {0, 1.0f, 0.7f, 0.146},
+    {0, 1.0f, 0.4f, 0.180},
+    {0, 1.0f, 0.7f, 0.190},
+    {0, 0.5f, 0.7f, 0.100},
     {2, 0.0f, 0.4f, 0.132},
     {2, 0.0f, 0.7f, 0.116},
 };

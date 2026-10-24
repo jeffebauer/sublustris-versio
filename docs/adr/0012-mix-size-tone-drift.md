@@ -40,3 +40,5 @@
   - Orbit, a rotating feedback mix after Schlecht & Habets: "quite subtle" at first, then "too intense and creates pitch-y swirling" when stronger.
   - Three phasers: Jet on the wet, Dweller on the input, Tide in the loop.
 - **Tape (left) is unchanged.** Wander uses the same random generator, but quicker, with no flutter and the lines spread wider, so the two sides stay distinct.
+
+**Amendment (24 Oct 2026, owner's picks on `renders/valhalla_round2`; SPEC v1.0.25):** HALL's modulation floor is three times deeper, which smooths a long HALL's resonances toward Valhalla Room's with almost no audible pitch movement. HALL's and PLATE's highs now fade by "air", a steady extra loss of a few dB per second at every finite DECAY, instead of a fixed share of the decay. Short tails stay bright, as in a real room, and long PLATEs lose some top end. TONE still scales it. MASSIVE keeps the share.

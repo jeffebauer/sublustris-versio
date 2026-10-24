@@ -9,3 +9,5 @@
 - **True stereo in:** L and R enter the tank at different points (different FDN lines / Plate inputs), so stereo placement survives. A signal on L alone reaches both inputs through the hardware normal.
 
 **Rejected:** the old tail ringing out (two tanks at once); summing L and R into a mono send (as Resilio).
+
+**Amendment (24 Oct 2026, owner's picks on `renders/valhalla_round2`; SPEC v1.0.25):** the PLATE's cross-branch output taps are added, not subtracted as in Dattorro's table. With true-stereo input his signs made left and right lows near mirror images, which sounded vague and less centred than Valhalla's plates. Added, the lows centre and the highs stay wide. The HALL now takes MASSIVE's early taps too, so it starts ~10 ms after the note instead of ~80 ms.

@@ -93,6 +93,7 @@ IV_SIZE_OPT void Fdn::reset()
         governor_.reset();
         lenNow_[i] = lenTarget_[i];
         readNow_[i] = lenNow_[i];
+        tapLen_[i] = lenNow_[i];
         inLoopNow_ = inLoopTarget_;
         earlyNow_ = earlyTarget_;
         readStep_[i] = 0.0f;
@@ -203,6 +204,7 @@ void Fdn::control(int n)
         if (target < 4.0f) target = 4.0f;
         if (target > maxLen_) target = maxLen_;
         readStep_[i] = (target - readNow_[i]) / float(n);
+        tapStep_[i] = (lenNow_[i] - tapLen_[i]) / float(n); // the early taps glide with SIZE, sample by sample
 
         // Loss per pass from this line's own length (Jot): the low end
         // decays at decayRate (+ the governor), the high end at that /
@@ -210,7 +212,7 @@ void Fdn::control(int n)
         // floor, then it holds (ADR 0008).
         const float apSeconds = inLoopNow_ > 0.0f ? (apLenGlide_[i][0] + apLenGlide_[i][1]) / sampleRate_ : 0.0f;
         const Absorb a = absorbent(lenNow_[i] / sampleRate_ + apSeconds, decayRate_ + governRate + extraRate_, highRatio_,
-                                   gov.darken, shelfK_);
+                                   gov.darken, shelfK_, air_);
         b1_[i] = a.b1;
         gain_[i] = a.gain;
         pole_[i] = a.pole;
@@ -267,13 +269,14 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                 r += kOutR[i] * y[i];
             }
             governor_.add(0.5f * outGain * outGain * (l * l + r * r) + externalPower_); // the tank's own level (+ a low tank's), before the taps
+            for (int i = 0; i < kN; ++i) tapLen_[i] += tapStep_[i]; // v1.0.25: no per-block steps on SIZE moves
             if (earlyG > 0.0f)
                 for (int i = 0; i < kN; ++i) {
                     // Each line's taps go out with another line's signs, so they decorrelate from the ends.
                     const int j = (i + 3) & (kN - 1);
                     float e = 0.0f;
                     for (int k = 0; k < kEarlyTaps; ++k) {
-                        const float d  = 1.0f + earlyFrac_[i][k] * lenNow_[i];
+                        const float d  = 1.0f + earlyFrac_[i][k] * tapLen_[i];
                         const auto  di = uint32_t(d);
                         const float t  = d - float(di);
                         const float a0 = line_[i].read(di), a1 = line_[i].read(di + 1);
