@@ -1,13 +1,12 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, session 5 (v1.0.28 shipped; ERA on the dry turned down; era_strength and era_discrete pages waiting; ERA signatures reference).
+**Last updated:** 24 Oct 2026, session 5 (v1.0.28 shipped; ERA on the dry turned down; ERA redesign under way; era_strength page waiting; ERA signatures reference).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
 - [ ] **ERA stronger on the reverb?** (`renders/era_strength/index.html`; on your phone: http://192.168.1.100:8766/era_strength/index.html while the laptop serves it). Only the reverb changes. In each card, A is today, B is about 1.5 times as strong and C about twice: the Neve's warmth, the cassette's wow, tape and darkening, and fewer bits in the μ-law and Midiverb stages. Each version keeps today's loudness. Use the MIX fader at the balance you'd use. Pick per card, with notes.
-- [ ] **ERA stacked or discrete?** (`renders/era_discrete/index.html`; on your phone: http://192.168.1.100:8766/era_discrete/index.html). A is today (each era on top of the ones before), B plays each era on its own (the μ-law without the cassette's tape and hiss, the Midiverb as just the Midiverb). Cassette, μ-law and Midiverb in HALL and MASSIVE, loudness matched. Pick per card, with notes.
 
 ### Listen (after your notes)
 - Nothing open.
@@ -26,6 +25,8 @@
 
 ## Waiting on Claude
 
+- **The ERA redesign** (your notes on the stacked-or-discrete page): each era on its own (discrete, your pick), the knob running from sweet to gritty, the Neve's warmth under every era in place of clean, and a new era in place of μ-law (which sounds too like the cassette: both add the same kind of grit, measured). You'd like to hear three candidates: an early sampler (SP-1200 style aliasing), a bucket-brigade (BBD) delay and AM/shortwave radio. Researching them first, then one page with the candidates in the new order, chaptered at each era.
+- **Tape click fix, waiting for your OK to merge** (branch `claude/tape-engage-click`): turning ERA through the cassette's start clicked (since v1.0.22); tape out now fades in over 20 ms. Static settings sound identical.
 - **The rest of the Valhalla comparison** (`docs/research/valhalla-comparison.md`): the loudness one is done (v1.0.28). Still to come, each a page when you want it: MASSIVE's highs die sooner than Supermassive's (8 kHz rings 8 s at the 15 s setting against 15). Also Supermassive moves more in pitch at long settings (a DRIFT comparison).
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
@@ -33,6 +34,7 @@
 
 ## Done
 
+- 25 Oct 2026: **ERA's eras play on their own, not stacked** ("Discrete wins for me, hands down. MidiVerb sounds beautiful"): ships with the ERA redesign. Measured why cassette and μ-law sound alike: on their own, both add a 3rd harmonic at a fixed distance under the note (25 and 30 dB). The pages are deleted (the knob-sweep page had the cassette click in it; it comes back on the redesign page).
 - 24 Oct 2026: **ERA stays on the reverb only** (no pick on any card: "too intense for the most part… having it just on the reverb sounds better, even if the effects are somewhat subtle at times"). The dry stays clean, and MIX fully left is still a clean passthrough. The prototype is kept on a side branch for the record (ADR 0004). The page is deleted.
 - 24 Oct 2026: **The reverb keeps its loudness whatever DECAY is** (C "all made up" on every card, the repeated cards agreeing; SPEC v1.0.28, ADR 0020): a short tail used to be up to 8–13 dB quieter than a long one, so you'd have chased it with MIX; now every finite setting in all three spaces sits within about 2 dB, like Valhalla Room and Supermassive. Your note on MASSIVE was right: it was matched to the others at DECAY noon, where it rings 26 s, so at the same tail length it was 5 dB under HALL and PLATE. It now matches them. A short REVERSE keeps its level too, and the PLATE is 0.4 dB louder to stay matched. Infinite tails and frozen pads are unchanged. With ERA's tape out, a short tail now meets the tape's soft limiting sooner. The page is deleted.
 - 24 Oct 2026: **Tape out is stronger with light hysteresis** (E on all 24 cards; SPEC v1.0.27): the highs are pushed into the tape first, it's driven up to 12 dB harder, and a light hysteresis adds tape's lag and grit. Quiet sounds pass unchanged; peaks and highs get the tape. From the cassette stage up the tape also softly limits the wet's loudest peaks. The page is deleted.
