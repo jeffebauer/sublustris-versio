@@ -135,69 +135,33 @@ inline float layer(float v, float from, float to)
     const float t = clamp01((v - from) / (to - from));
     return t * t * (3.0f - 2.0f * t);
 }
-// discrete: the era_discrete prototype (false = v1.0.28, stacking, ADR 0003): each stage fades out as
-// the next fades in, so only neighbours blend and each era sounds on its own.
-inline dsp::EraMix eraMix(float v, bool discrete = false)
+// ERA (P4; ADR 0021): five eras from sweet to gritty, each on its own over the Neve's warmth, in equal
+// stretches (EraVoicing.h). An era comes in over the first third of its stretch (the one before goes as
+// it comes); the BBD's and radio's intensity runs from their sweet end to their gritty end across theirs.
+inline dsp::EraMix eraMix(float v)
 {
     using namespace voicing;
-    dsp::EraMix m;
-    m.neve = clamp01((v - kEraCleanTop) / (kEraCassetteFrom - kEraCleanTop)); // straight steps (v1.0.21)
-    m.cassette = layer(v, kEraCassetteFrom, kEraMuFrom);
-    m.mu = layer(v, kEraMuFrom, kEraMidiverbFrom);
-    m.midiverb = layer(v, kEraMidiverbFrom, 1.0f);
-    if (discrete) {
-        m.neve *= 1.0f - m.cassette;
-        m.cassette *= 1.0f - m.mu;
-        m.mu *= 1.0f - m.midiverb;
-    }
-    // The era's darkening, as a share of the high end's T60 (Era.h): Neve
-    // a little, the cassette a lot (SPEC §4.7's 16 kHz / 9 kHz in spirit).
-    m.highRatioScale = expLerp(expLerp(1.0f, kNeveHighRatio, m.neve), kCassetteHighRatio, m.cassette);
-    m.even = kNeveEven * m.neve;
-    m.drive = 1.0f + (kCassetteDrive - 1.0f) * m.cassette;
-    m.muEngage = clamp01((v - kEraMuFrom) / kMuEngageSpan) * (discrete ? 1.0f - m.midiverb : 1.0f);
-    m.muBits = kMuBitsStart + (kMuBitsEnd - kMuBitsStart) * clamp01((v - kEraMuFrom) / (kEraMidiverbFrom - kEraMuFrom));
-    {
-        const float t = clamp01((v - kEraMidiverbFrom) / (1.0f - kEraMidiverbFrom));
-        m.midiEngage = kMidiEngagePower == 2.0f ? t * t : std::pow(t, kMidiEngagePower); // across its stretch (v1.0.21)
-    }
-    m.midiBits = kMidiBitsStart + (kMidiBitsEnd - kMidiBitsStart) * clamp01((v - kEraMidiverbFrom) / (1.0f - kEraMidiverbFrom));
-    const float makeupDb = kMakeupNeveDb * m.neve + kMakeupCassetteDb * m.cassette + kMakeupMuDb * m.mu + kMakeupMidiverbDb * m.midiverb;
-    m.makeup = std::pow(10.0f, makeupDb / 20.0f);
-    return m;
-}
-
-// era_v2 prototype (docs/research/new-eras.md; owner, 25 Oct 2026): ERA from sweet to gritty, each era on
-// its own, in six equal stretches: the Neve base, Midiverb, BBD, cassette, sampler, AM radio. An era comes
-// in over the first third of its stretch (the one before goes as it comes), then runs from its sweet end
-// to its gritty end. neveBase: the Neve's warmth under all of them, instead of clean (false: clean, as before).
-inline dsp::EraMix eraMixV2(float v, bool neveBase)
-{
-    using namespace voicing;
-    constexpr int kEras = 6;
-    float w[kEras], t[kEras];
-    for (int i = 0; i < kEras; ++i) {
-        const float from = float(i) / kEras, span = 1.0f / kEras;
-        w[i] = i == 0 ? 1.0f : layer(v, from, from + span / 3.0f);
+    float w[kEraCount], t[kEraCount];
+    for (int i = 0; i < kEraCount; ++i) {
+        const float span = 1.0f / kEraCount, from = float(i) * span;
+        w[i] = i == 0 ? 1.0f : layer(v, from, from + kEraFadeShare * span);
         t[i] = clamp01((v - from) / span);
     }
-    for (int i = 0; i < kEras - 1; ++i) w[i] *= 1.0f - w[i + 1];
+    for (int i = 0; i < kEraCount - 1; ++i) w[i] *= 1.0f - w[i + 1];
     dsp::EraMix m;
-    m.neve = neveBase ? 1.0f : 0.0f; // without the base: clean where the Neve was, no warmth under the eras
+    m.neve = 1.0f; // the base, under every era (owner, era_v2: "a clear winner")
     m.midiverb = w[1];
     m.bbd = w[2];
     m.cassette = w[3];
-    m.sampler = w[4];
-    m.radio = w[5];
+    m.radio = w[4];
     m.bbdT = t[2];
-    m.samplerT = t[4];
-    m.radioT = t[5];
-    m.highRatioScale = expLerp(expLerp(1.0f, kNeveHighRatio, m.neve), kCassetteHighRatio, m.cassette);
-    m.even = kNeveEven * m.neve;
+    m.radioT = t[4];
+    m.highRatioScale = expLerp(kNeveHighRatio, kCassetteHighRatio, m.cassette);
+    m.even = kNeveEven;
     m.drive = 1.0f + (kCassetteDrive - 1.0f) * m.cassette;
     m.midiEngage = m.midiverb;
     m.midiBits = kMidiBitsStart;
-    const float makeupDb = kMakeupNeveDb * m.neve + kMakeupCassetteDb * m.cassette + kMakeupMidiverbDb * m.midiverb;
+    const float makeupDb = kMakeupNeveDb + kMakeupCassetteDb * m.cassette + kMakeupMidiverbDb * m.midiverb;
     m.makeup = std::pow(10.0f, makeupDb / 20.0f);
     return m;
 }

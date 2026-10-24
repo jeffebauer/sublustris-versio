@@ -150,16 +150,13 @@ IV_SIZE_OPT void Engine::reset()
     reverse_.reset();
     reverseFdn_.reset();
     reverseRunning_ = false;
-    muLaw_.reset();
     tilt_.reset();
     tilt_.set(smoothed(ParamId::Tone));
     tilt_.snap();
     limiter_.reset();
     for (auto& t : tape_) t.reset();
     bbd_.reset();
-    sampler_.reset();
     radio_.reset();
-    radio2_.reset();
     tapeMix_ = 0.0f;
     duck_ = duckGrDb_ = duckGainStep_ = 0.0f;
     duckGain_ = 1.0f;
@@ -297,7 +294,7 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
 
     // Freezing: loss → 0, highs kept (ratio → 1), the governor caps paint.
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
-    const float toneRatio = map::toneHighT60Ratio(tone) * (eraV2_ ? map::eraMixV2(smoothed(ParamId::Era), eraV2_ == 1) : map::eraMix(smoothed(ParamId::Era), eraDiscrete_)).highRatioScale;
+    const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
     const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(hallSize_) : 1.0f;
     const float rate = decayRate(decay, size) / sizeT60 * (1.0f - freezeMix_);
     const float highRatio = toneRatio + freezeMix_ * (1.0f - toneRatio);
@@ -386,17 +383,12 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
 
     // ERA in the loop and DRIFT (SPEC §4.6, §4.7). Freezing glides the
     // in-loop colour out (the pad holds still, ADR 0009); DRIFT stays.
-    const dsp::EraMix era = eraV2_ ? map::eraMixV2(smoothed(ParamId::Era), eraV2_ == 1) : map::eraMix(smoothed(ParamId::Era), eraDiscrete_);
-    // era_v2: the new eras on the wet (EraStages.h); each runs only while it's in.
+    const dsp::EraMix era = map::eraMix(smoothed(ParamId::Era));
+    // The bucket-brigade and the radio on the wet (ADR 0021); each runs only while it's in.
     bbdW_ = era.bbd;
-    samplerW_ = era.sampler;
     radioW_ = era.radio;
-    if (bbdW_ > 0.0f) bbd_.set(era.bbdT, sampleRate_, bbdGrit_);
-    if (samplerW_ > 0.0f) sampler_.set(era.samplerT, sampleRate_);
-    if (radioW_ > 0.0f) {
-        if (radioNoise_ >= 3) radio2_.set(era.radioT, sampleRate_, n, radioNoise_ == 4);
-        else radio_.set(era.radioT, sampleRate_, n, radioNoise_);
-    }
+    if (bbdW_ > 0.0f) bbd_.set(era.bbdT, sampleRate_);
+    if (radioW_ > 0.0f) radio_.set(era.radioT, sampleRate_, n);
     dsp::EraMix loopEra = era;
     const float keep = 1.0f - freezeMix_;
     loopEra.midiRound = map::governorWeight(decay) >= 1.0f; // infinite: no systematic loss
@@ -428,12 +420,10 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
         lowFdn_.setDrift(dsp::DriftAmounts{}); // still: no wow, flutter or Wander
         lowFdn_.setExtraRate(compress);
     }
-    muLaw_.set(era);
     eraMakeup_ = era.makeup;
     tapeDrive_ = era.cassette; // tape out (v1.0.22, E5)
     if (snap) tapeMix_ = tapeDrive_ > 0.0f && tapeOn_ ? 1.0f : 0.0f;
     for (auto& t : tape_) t.set(tapeDrive_, sampleRate_);
-    if (!plate) fdn_.setVintage(era.mu * keep); // vintage reads (v1.0.22, E4; ADR 0019): in-loop colour, out while frozen
 
     tilt_.set(smoothed(ParamId::Tone));
     // Hiss follows the input (none in silence, so an infinite tail doesn't
@@ -818,7 +808,6 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             float wr = (fr + reverseMix_ * (rr - fr) + tr) * flipGain_;
             wl *= eraMakeup_;
             wr *= eraMakeup_;
-            muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)
             // ERA's tape out (v1.0.27, dsp/Tape.h), faded in and out over ~20 ms as the cassette layer
             // appears and leaves: switched in one sample, its oversampling filters' phase stepped the wet
             // (a click turning ERA through 0.35, found 25 Oct 2026).
@@ -828,23 +817,16 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                 wl = tapeMix_ >= 1.0f ? tl2 : wl + tapeMix_ * (tl2 - wl);
                 wr = tapeMix_ >= 1.0f ? tr2 : wr + tapeMix_ * (tr2 - wr);
             }
-            if (bbdW_ > 0.0f) { // era_v2 prototype
+            if (bbdW_ > 0.0f) { // ERA's bucket-brigade (ADR 0021)
                 const float bl = bbd_.process(wl, 0), br = bbd_.process(wr, 1);
-                wl += bbdW_ * (voicing::kEraV2BbdTrim * bl - wl);
-                wr += bbdW_ * (voicing::kEraV2BbdTrim * br - wr);
+                wl += bbdW_ * (voicing::kEraBbdTrim * bl - wl);
+                wr += bbdW_ * (voicing::kEraBbdTrim * br - wr);
             }
-            if (samplerW_ > 0.0f) {
-                float sl = wl, sr = wr;
-                sampler_.process(sl, sr);
-                wl += samplerW_ * (voicing::kEraV2SamplerTrim * sl - wl);
-                wr += samplerW_ * (voicing::kEraV2SamplerTrim * sr - wr);
-            }
-            if (radioW_ > 0.0f) {
+            if (radioW_ > 0.0f) { // ERA's AM radio (ADR 0021)
                 float rl2 = wl, rr2 = wr;
-                if (radioNoise_ >= 3) radio2_.process(rl2, rr2);
-                else radio_.process(rl2, rr2);
-                wl += radioW_ * (voicing::kEraV2RadioTrim * rl2 - wl);
-                wr += radioW_ * (voicing::kEraV2RadioTrim * rr2 - wr);
+                radio_.process(rl2, rr2);
+                wl += radioW_ * (voicing::kEraRadioTrim * rl2 - wl);
+                wr += radioW_ * (voicing::kEraRadioTrim * rr2 - wr);
             }
             tilt_.process(wl, wr);
             duckGain_ += duckGainStep_; // ducking (ADR 0014)

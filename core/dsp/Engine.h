@@ -88,12 +88,6 @@ public:
     // Test hook: how much of DECAY's level make-up applies (1 = v1.0.28; 0 = none, shorter tails
     // quieter, as v1.0.27), for demos.
     void  setDecayMakeup(float k) { decayMakeup_ = k; }
-    // Prototype hook (era_discrete): each ERA stage on its own instead of stacking (ADR 0003).
-    void  setEraDiscrete(bool on) { eraDiscrete_ = on; }
-    // Prototype hook (era_v2): 1 = the redesigned ERA knob with the Neve base, 2 = without it, 0 = off.
-    void  setEraV2(int mode) { eraV2_ = mode; }
-    // Prototype hooks (era_v2 round 2): the BBD's grit (0-2) and the radio's noise (0-2).
-    void  setEraV2Variants(int bbdGrit, int radioNoise) { bbdGrit_ = bbdGrit; radioNoise_ = radioNoise; }
     // Test hook: false = no tape out (ERA's cassette stage without its output tape), for measuring.
     void  setTapeOut(bool on) { tapeOn_ = on; }
     // Test hook: false = one tank, the lows moving too (before v1.0.18), for demos.
@@ -190,7 +184,6 @@ private:
     float             twinIn_ = 0.0f, twinInStep_ = 0.0f;
     bool              twinActive_ = false;
     dsp::Reverse      reverse_;
-    dsp::MuLawOut     muLaw_;
     float             eraMakeup_ = 1.0f;
     // Ducking (ADR 0014) and the limiter (SPEC §4.10).
     dsp::Tilt         tilt_;
@@ -210,14 +203,9 @@ private:
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f, reverseFeed_ = 0.0f; // reverseFeed_: the taps into the short reverb
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
-    bool  eraDiscrete_ = false; // prototype hook (setEraDiscrete)
-    int   eraV2_ = 0;           // prototype hook (setEraV2)
-    int   bbdGrit_ = 0, radioNoise_ = 0;
-    dsp::BbdStage bbd_;
-    dsp::SamplerStage sampler_;
+    dsp::BbdStage   bbd_;   // ERA's bucket-brigade and radio, on the wet (ADR 0021, dsp/EraStages.h)
     dsp::RadioStage radio_;
-    dsp::RadioStage2 radio2_; // round 3 (radioNoise_ 3)
-    float bbdW_ = 0, samplerW_ = 0, radioW_ = 0;
+    float bbdW_ = 0, radioW_ = 0;
     float decayMakeup_ = 1.0f, decayGain_ = 1.0f, decayGainNow_ = 1.0f; // DECAY's level make-up (v1.0.28)
     float reverseGain_ = 1.0f, reverseGainNow_ = 1.0f;                     // ... and REVERSE's
     float tapeDrive_ = 0.0f;
