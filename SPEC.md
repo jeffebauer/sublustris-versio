@@ -6,6 +6,14 @@
 **Status:** Spec **v1.0 (frozen)**, 21 Oct 2026. Input: `IMMENSIO_BRIEF.md`. Vocabulary: `CONTEXT.md`. Decisions: `docs/adr/` (0001–0017; index in `docs/adr/README.md`). Session record: `docs/spec-session.md`. Changes after freeze: new ADR + changelog entry. Numbers marked *(start)* are starting guesses; tuned numbers replace them as milestones confirm them.
 
 ### Changelog
+- v1.0.27 — owner's pick (24 Oct 2026; `renders/tape_out` round 2 on the settled tape, E "a little stronger, light hysteresis" on all 24 cards, the repeated cards agreeing; ADR 0019 amendment; `docs/research/tape-out.md`): **tape out is stronger and has light hysteresis** (`dsp/Tape.h`). Across the cassette layer:
+  - a record pre-emphasis shelf at 2 kHz, up to +6 dB;
+  - drive up to +12 dB, taken off after the curve;
+  - a play-operator hysteresis whose width follows the level;
+  - the asymmetric curve (a third of v1.0.22's bias) at 4×;
+  - the exact de-emphasis and a 5 Hz DC blocker.
+
+  It is unity for small signals; the peaks and the highs change. At the cassette layer's full drive the tape soft-limits the wet's peaks to about a quarter of full scale (ERA's loudness on music still within ±1 dB; `test_output`'s limiter check moved to ERA 0.3). The steady-level tape was turned down (`renders/tape_level`, A on 12 of 15 cards). The full Jiles–Atherton hysteresis wasn't picked and is gone.
 - v1.0.26 — owner's picks (24 Oct 2026; `renders/tape_bias` B "a third" on 14 cards, one split; ADR 0019 amendment):
   - **Tape out's asymmetry is a third of v1.0.22's** (`kTapeBias` 0.05 × the cassette layer). The full bias bent even quiet held notes: a 2nd harmonic 14–22 dB under a held vibes note. Now it sits 24–32 dB under, and the tape's even warmth stays on peaks.
   - **The full mix's send is 12 dB hotter** in the page material (`tools/make_material.py`; "both" on `renders/fullmix_send`), as a pushed dub send.

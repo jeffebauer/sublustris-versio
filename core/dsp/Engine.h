@@ -84,8 +84,6 @@ public:
     // Test hook: scales the tanks' own modulation (0 = none; DRIFT is separate), to check a
     // structure isn't metallic without it (Costello: tune it to sound good unmodulated).
     void  setModulationScale(float k) { modScale_ = k; }
-    // PROTOTYPE (renders/tape_out): tape out's strength × 10 + hysteresis (Tape.h); 0 = today's tape out.
-    void  setTapeMode(int mode) { tapeMode_ = mode; }
     // Test hook: false = no tape out (ERA's cassette stage without its output tape), for measuring.
     void  setTapeOut(bool on) { tapeOn_ = on; }
     // Test hook: false = one tank, the lows moving too (before v1.0.18), for demos.
@@ -202,12 +200,9 @@ private:
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f, reverseFeed_ = 0.0f; // reverseFeed_: the taps into the short reverb
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
-    dsp::Oversampler tapeOs_[2], tapeOs2_[2];        // tape out (v1.0.22): 2x inside 2x = 4x for the saturator
-    float tapeDc_[2] = {}, tapeDrive_ = 0.0f;
+    float tapeDrive_ = 0.0f;
     bool  tapeOn_ = true; // test hook (setTapeOut)
-    int   tapeMode_ = 0;  // PROTOTYPE (setTapeMode)
-    dsp::TapeChannel tapeProto_[2];
-    void  tapeOut(float& l, float& r);
+    dsp::TapeOut tape_[2]; // tape out (v1.0.27, dsp/Tape.h)
     float diffMotionNow_ = 0.0f, diffMotionPhase_ = 0.0f; // the PLATE's wandering input allpass, samples
     float hallInLoop_ = voicing::kHallInLoopDiffusion; // setHallInLoopDiffusion overrides it (renders/hall_diffusion)
     float reverseMean_ = -1.0f;

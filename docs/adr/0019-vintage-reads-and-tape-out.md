@@ -24,3 +24,9 @@
 - **PLATE.** Vintage reads are FDN only; the PLATE keeps its reads.
 
 **Amendment (24 Oct 2026, owner's pick on `renders/tape_bias`; SPEC v1.0.26):** tape out's asymmetry is a third of the first one's. The full bias bent even quiet signals, so held notes picked up a strong 2nd harmonic: "saturation-like distortion on resonances". At a third the held notes stay clean enough, and loud peaks keep the tape's even warmth. A test hook `setTapeOut(false)` bypasses the tape for measuring.
+
+**Amendment (24 Oct 2026, owner's pick on `renders/tape_out` round 2; SPEC v1.0.27):** tape out is "a little stronger" with light hysteresis:
+- pre-emphasis (+6 dB at 2 kHz) and drive (+12 dB), both taken off after the curve;
+- a play operator (backlash) before the curve, its width following the level.
+
+Rejected after listening: a much stronger drive (+24 dB, "too difficult to hear the hysteresis"), the full Jiles–Atherton tape model, and a tape that hears a steady level ("jittery saturation" in long tails).

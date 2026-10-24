@@ -82,6 +82,10 @@ constexpr float kVintageJitterSamples = 0.15f;   // the noisy modulation's rando
 // renders/tape_bias: the full bias bent even quiet held notes, a 2nd harmonic 14-22 dB under them; at a
 // third it's 24-32 dB under, the tape's even warmth kept on peaks).
 constexpr float kTapeBias = 0.05f;          // × the cassette layer (was 0.15)
+// v1.0.27 (owner's pick on renders/tape_out, E on all 24 cards): pre-emphasis, drive and light hysteresis
+// (dsp/Tape.h), each at full with the cassette layer.
+constexpr float kTapeEmphHz = 2000.0f, kTapeEmphDb = 6.0f, kTapeDriveDb = 12.0f;
+constexpr float kTapePlayWidth = 0.15f;     // the play operator's width × the 50 ms level × the drive
 // (A tape that hears a steady level, driving quiet wets harder into the curve, was tried and turned down:
 // A on 12 of 15 cards of renders/tape_level, "jittery saturation" in long tails.)
 
