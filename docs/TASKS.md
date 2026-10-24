@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, session 4 (tape out shipped, v1.0.27; no pages waiting).
+**Last updated:** 24 Oct 2026, end of session 4 (v1.0.18–v1.0.27 shipped; no pages waiting).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
@@ -23,16 +23,11 @@
 
 ## Waiting on Claude
 
-- **Merge the Valhalla report branch** (your OK): the comparison numbers and `tools/compare_reference.py` (no sound change).
-- **Valhalla numbers** (`docs/research/valhalla-comparison.md`, on its branch): the biggest differences are that our HALL's highs darken much faster in short tails, our HALL starts later (first sound at 80 ms against Room's 9–32 ms), MASSIVE's highs die earlier than Supermassive's, our wet gets quieter as DECAY shortens (HALL 10 dB from 15 s to 2 s), and the PLATE builds more slowly. Each is a page to make once you want it.
+- **The rest of the Valhalla comparison** (`docs/research/valhalla-comparison.md`): two differences you haven't heard yet, each a page when you want it: our wet gets quieter as DECAY shortens (HALL about 10 dB from 15 s to 2 s; Room and Supermassive keep their level), and MASSIVE's highs die sooner than Supermassive's (8 kHz rings 8 s at the 15 s setting against 15). Also Supermassive moves more in pitch at long settings (a DRIFT comparison).
+- **Re-render M6** (`renders/m6_character`): it predates today's ERA changes (knob curve, vintage reads, the Midiverb hold, tape out), if you'd like to hear ERA as it is now.
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
-- **M8 tuning** from your listening notes on the pages above, including MASSIVE medium and large sounding a little uneven on Hits (grainy_start; the new grain figure says it's smooth there, so measure the level of the swell and taps).
-- **M8 findings to confirm by ear first** (`docs/sweetspot.md`, `docs/research/reverb-testing-practices.md`):
-  - ERA: its first 20 % barely changes anything measurable; the Midiverb stretch jumped 20× harder than the rest, measured before its rebuild (v1.0.16), so re-measure with `.venv/bin/python tools/sweetspot.py`.
-  - PLATE: TONE's first step from fully CCW jumps, and so does SIZE's last.
-  - MASSIVE: DECAY's first step jumps; DRIFT is nearly flat from 20–50 %; TIME in NORMAL barely moves anything for its first 30 %.
-- **The rest of the Mutable Instruments ideas and the DSP audit's findings:** MI #1 and #2 are in, #3 and #4 aren't worth a page (`docs/research/mutable-instruments-reverbs.md`); still to try: MI #5 (input trim with DECAY), and the audit's A3 (freeze keeps modulating), P2–P5, E2–E6, R1–R2 (`docs/research/dsp-audit.md`).
+- **M2: install the plugin** when you'd like to play it in Ableton (`tools/install_plugin.sh`), with Ableton closed for the AU check.
 
 ## Done
 
