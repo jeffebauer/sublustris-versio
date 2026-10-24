@@ -302,15 +302,13 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
     // Freezing glides the weight up with freezeMix_ (a jump to full changed a finite tail's loss in
     // one sample: a click).
     const float governor = frozen ? std::fmax(map::governorWeight(decay), freezeMix_) : map::governorWeight(decay);
-    // decay_level prototype: a tail's energy goes with its T60, so a shorter one is quieter. Measured
-    // on music (wet LUFS, 2 → 15 s): HALL −8.2 dB, MASSIVE −7.4, PLATE −3.2 (its early part carries
-    // more of it), i.e. level ∝ T60^p. Make up decayMakeup_ of that below 15 s; none from 15 s up, so
-    // long and infinite tails (and a frozen pad, which keeps heldDecay_) are as before. MASSIVE uses
-    // the plain curve, as massiveDecayLevelTrim already takes its longer shortest tails back to it.
-    {
-        const float p = plate ? 0.18f : massive ? 0.445f : 0.47f;
-        const float r = map::decayRate(decay, activeSpace_);
-        decayGain_ = r > 0.0f ? std::pow(std::fmax(1.0f, 15.0f * r), decayMakeup_ * p) : 1.0f;
+    // DECAY keeps the loudness (v1.0.28): a shorter tail is made up to the finite top's level, on the
+    // wet and the twin alike. A frozen pad keeps heldDecay_, so freezing doesn't move it.
+    decayGain_ = std::pow(map::decayLevelMakeup(decay, activeSpace_), decayMakeup_);
+    reverseGain_ = std::pow(map::reverseLevelMakeup(smoothed(ParamId::Decay)), decayMakeup_);
+    if (snap) {
+        decayGainNow_ = decayGain_;
+        reverseGainNow_ = reverseGain_;
     }
     // The cap: a still pad's own level (or + headroom while painting); an
     // infinite tail's settled level once the input has gone quiet; else the
@@ -789,13 +787,18 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
 
         for (int i = 0; i < n; ++i) {
             // REVERSE: the swell replaces the forward wet, crossfaded over ~50 ms.
-            const float rl = voicing::kReverseLevel * revL_[i], rr = voicing::kReverseLevel * revR_[i];
+            // DECAY's level make-up (v1.0.28) on the forward wet, the twin and REVERSE, ~40 ms glides.
+            decayGainNow_ += 0.0005f * (decayGain_ - decayGainNow_);
+            reverseGainNow_ += 0.0005f * (reverseGain_ - reverseGainNow_);
+            const float rg = voicing::kReverseLevel * reverseGainNow_;
+            const float rl = rg * revL_[i], rr = rg * revR_[i];
             reverseMix_ = approach(reverseMix_, reverseTarget_, reverseStep);
             // The twin fades with a SPACE flip too (it stops at the flip's silent point).
-            decayGainNow_ += 0.0005f * (decayGain_ - decayGainNow_); // ~40 ms glide (decay_level)
             const float fl = decayGainNow_ * wetL_[i], fr = decayGainNow_ * wetR_[i];
-            float wl = (fl + reverseMix_ * (rl - fl) + voicing::kTwinLevel * twinL_[i]) * flipGain_;
-            float wr = (fr + reverseMix_ * (rr - fr) + voicing::kTwinLevel * twinR_[i]) * flipGain_;
+            const float tl = decayGainNow_ * voicing::kTwinLevel * twinL_[i];
+            const float tr = decayGainNow_ * voicing::kTwinLevel * twinR_[i];
+            float wl = (fl + reverseMix_ * (rl - fl) + tl) * flipGain_;
+            float wr = (fr + reverseMix_ * (rr - fr) + tr) * flipGain_;
             wl *= eraMakeup_;
             wr *= eraMakeup_;
             muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)

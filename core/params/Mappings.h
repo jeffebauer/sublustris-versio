@@ -186,6 +186,32 @@ inline float massiveDecayLevelTrim(float v, float size)
     return now > 0.0f && was > 0.0f ? std::sqrt(now / was) : 1.0f;
 }
 
+// DECAY's level make-up on the wet (v1.0.28): what a tail shorter than the finite top loses by being
+// shorter (SpaceVoicing.h, kDecayLevelPower). The plain decayRate curve: HALL's SIZE has
+// hallSizeLevelTrim, MASSIVE's longer shortest tails massiveDecayLevelTrim. 1 at the finite top, and
+// through the crossover and infinite (T60 only grows there), so a held tail is as before.
+inline float decayLevelMakeup(float v, int space)
+{
+    const float r = decayRate(v, space);
+    if (r <= 0.0f) return 1.0f;
+    const float t = 1.0f / r, top = t60Range(space).maxS, ref = std::fmin(voicing::kDecayLevelRefSeconds, top);
+    const float shortGain = std::pow(ref / std::fmin(t, ref), voicing::kDecayLevelPower[space]);
+    const float longGain = top > ref ? std::pow(top / std::fmin(std::fmax(t, ref), top), voicing::kDecayLevelPowerLong[space]) : 1.0f;
+    return shortGain * longGain;
+}
+
+// REVERSE's level make-up (v1.0.28), so a short stop doesn't drop below the forward wet, which DECAY
+// no longer turns down: measured (HALL, skank / vibes / pad, LUFS) 14 dB quieter at DECAY 0 than 1, not
+// a T60 power (TIME's swell carries the long end). dB at DECAY 0, 0.25, 0.5, 0.75; none from 0.75 up,
+// where REVERSE was already at the forward wet's level or above.
+inline float reverseLevelMakeup(float v)
+{
+    constexpr float kDb[4] = {11.5f, 5.4f, 0.8f, 0.0f};
+    const float x = std::fmin(std::fmax(v, 0.0f), 0.75f) * 4.0f;
+    const int i = int(x) < 2 ? int(x) : 2;
+    return std::pow(10.0f, (kDb[i] + (x - float(i)) * (kDb[i + 1] - kDb[i])) / 20.0f);
+}
+
 // HALL: The level a finite tail loses by being shorter (its energy goes with its
 // T60), made up on the output; none at infinite, where nothing is shorter.
 inline float hallSizeLevelTrim(float size, float decay)
