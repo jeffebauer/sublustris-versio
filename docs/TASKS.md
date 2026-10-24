@@ -6,7 +6,6 @@
 ## To do
 
 ### Decide
-- [ ] **The new ERA** (`renders/era_v2/index.html`; phone: http://192.168.1.100:8766/era_v2/index.html). One card per era in the new sweet-to-gritty order: Neve, Midiverb, bucket-brigade (new), cassette, early sampler (new), AM radio (new); μ-law is gone. In each card, A has the Neve's warmth underneath, B doesn't (on the first card: the Neve against clean). Pick A or B per card, and say in the notes which eras to keep.
 - [ ] **ERA stronger on the reverb?** (`renders/era_strength/index.html`; on your phone: http://192.168.1.100:8766/era_strength/index.html while the laptop serves it). Only the reverb changes. In each card, A is today, B is about 1.5 times as strong and C about twice: the Neve's warmth, the cassette's wow, tape and darkening, and fewer bits in the μ-law and Midiverb stages. Each version keeps today's loudness. Use the MIX fader at the balance you'd use. Pick per card, with notes.
 
 ### Listen (after your notes)
@@ -36,6 +35,7 @@
 
 ## Done
 
+- 25 Oct 2026: **The new ERA, round 1** (A, the Neve base, on every card, repeated cards agreeing: "Neve base a clear winner"). Keep: the Neve, Midiverb, cassette and radio ("feels like a wandering phaser"). The bucket-brigade: "like the darker signature", wants a little more grit. The sampler: aliasing too intense, can go if the BBD gets grittier. Round 2: a grittier BBD, and the radio with light noise and artifacts. The page is deleted.
 - 25 Oct 2026: **ERA's eras play on their own, not stacked** ("Discrete wins for me, hands down. MidiVerb sounds beautiful"): ships with the ERA redesign. Measured why cassette and μ-law sound alike: on their own, both add a 3rd harmonic at a fixed distance under the note (25 and 30 dB). The pages are deleted (the knob-sweep page had the cassette click in it; it comes back on the redesign page).
 - 24 Oct 2026: **ERA stays on the reverb only** (no pick on any card: "too intense for the most part… having it just on the reverb sounds better, even if the effects are somewhat subtle at times"). The dry stays clean, and MIX fully left is still a clean passthrough. The prototype is kept on a side branch for the record (ADR 0004). The page is deleted.
 - 24 Oct 2026: **The reverb keeps its loudness whatever DECAY is** (C "all made up" on every card, the repeated cards agreeing; SPEC v1.0.28, ADR 0020): a short tail used to be up to 8–13 dB quieter than a long one, so you'd have chased it with MIX; now every finite setting in all three spaces sits within about 2 dB, like Valhalla Room and Supermassive. Your note on MASSIVE was right: it was matched to the others at DECAY noon, where it rings 26 s, so at the same tail length it was 5 dB under HALL and PLATE. It now matches them. A short REVERSE keeps its level too, and the PLATE is 0.4 dB louder to stay matched. Infinite tails and frozen pads are unchanged. With ERA's tape out, a short tail now meets the tape's soft limiting sooner. The page is deleted.
