@@ -328,6 +328,51 @@ B_discrete          Discrete: each era on its own" > renders/era_discrete/README
     echo "renders/era_discrete/index.html"
 fi
 
+if on era_discrete_sweep; then
+    # The era_discrete question as ERA knob sweeps, chaptered at each era's start (owner, 24 Oct 2026).
+    # Each material's playing part loops for 40 s while ERA turns, an equal 8 s per era, then the tail
+    # rings at ERA 1 for 12 s.
+    SW=renders/_material_sweep
+    mkdir -p $SW
+    [ -f $SW/_click.wav ] || cp $SRC/_click.wav $SW/_click.wav
+    print -r -- '{ "breakpoints": [ {"t": 0, "key": "era", "value": 0}, {"t": 2, "key": "era", "value": 0.03},
+      {"t": 10, "key": "era", "value": 0.35}, {"t": 18, "key": "era", "value": 0.65},
+      {"t": 26, "key": "era", "value": 0.85}, {"t": 34, "key": "era", "value": 1}, {"t": 52, "key": "era", "value": 1} ] }' > $SW/era_sweep.json
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in skank vibes stabs pad lead drums bass keys voice fullmix; do
+        [ -f $SRC/$m.wav ] || continue
+        MATERIALS+=($m)
+        for f in $m ${m}_send; do
+            [ -f $SRC/$f.wav ] || continue
+            [ -f $SW/$f.wav ] && continue
+            d=$(ffprobe -v error -show_entries format=duration -of csv=p=0 $SRC/$f.wav)
+            play=$(python3 -c "print(max(1.0, $d - 12))")
+            ffmpeg -v error -y -i $SRC/$f.wav -af "atrim=0:$play,aloop=loop=-1:size=2e9" -t 40 -c:a pcm_f32le $SW/_loop_$f.wav
+            ffmpeg -v error -y -i $SW/_loop_$f.wav -af "afade=t=out:st=39.9:d=0.1,apad=pad_dur=12" -c:a pcm_f32le $SW/$f.wav
+            rm -f $SW/_loop_$f.wav
+        done
+        cp $SW/era_sweep.json $SW/era_sweep_$m.json
+    done
+    page era_discrete_sweep
+    SRC0=$SRC; SRC=$SW
+    for sp in "hall:--set space=HALL --set decay=0.6 --set size=0.6" "massive:--set space=MASSIVE --set decay=0.65 --set size=0.7"; do
+        col=${sp%%:*}; args=(${=sp#*:})
+        IV_ERA_DISCRETE=0 r era_discrete_sweep $col A_stacked era_sweep "${args[@]}"
+        IV_ERA_DISCRETE=1 r era_discrete_sweep $col B_discrete era_sweep "${args[@]}"
+    done
+    SRC=$SRC0; MATERIALS=("${saved[@]}")
+    print -r -- "Stacked against discrete ERA as the knob turns: ERA sweeps from clean to the Midiverb while the music plays, about 8 s per era, then the tail rings at full ERA. The bar under each card is in chapters at each era's start: click one to jump to it (Clean 0 s, Neve 2 s, Cassette 10 s, μ-law 18 s, Midiverb 26 s, Tail 40 s). A is today, stacked: each era on top of the ones before. B is discrete: each era on its own, crossfading only with its neighbours. Switch A/B inside a chapter to hear the difference at that era. Loudness matches within about 0.2 dB. Pick per card, with notes.
+
+hall      HALL (DECAY 0.6, SIZE 0.6)
+massive   MASSIVE (DECAY 0.65, SIZE 0.7)
+
+A_stacked   Stacked (today)
+B_discrete  Discrete: each era on its own" > renders/era_discrete_sweep/README.txt
+    python3 tools/review/make_review.py renders/era_discrete_sweep --title "Immensio: ERA stacked or discrete, knob sweep" --level-match --dry $SW --wet-only \
+        --chapters "Clean:0,Neve:2,Cassette:10,μ-law:18,Midiverb:26,Tail:40" > /dev/null
+    echo "renders/era_discrete_sweep/index.html"
+fi
+
 if on reverse; then
     page reverse
     RV=(--set era=0 --set attack=REVERSE)

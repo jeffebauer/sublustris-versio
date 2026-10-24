@@ -360,6 +360,14 @@ def write_listen(out_dir, out_path, args):
                                       level_match=args.level_match, dry_dir=args.dry)
     except listen.LayoutError as e:
         die(str(e))
+    if args.chapters:
+        # One set of chapters for every row (a knob swept over time), instead of the material's own.
+        marks = []
+        for part in args.chapters.split(","):
+            name, t = part.rsplit(":", 1)
+            marks.append([name.strip(), float(t)])
+        for row in data["rows"]:
+            row["marks"] = marks
     data["choices"] = not args.showcase
     if data["choices"] and not args.no_hidden_twin:
         listen.add_hidden_twin(data)
@@ -405,6 +413,9 @@ def main():
     parser.add_argument("--no-hidden-twin", action="store_true",
                         help="Pick pages repeat one card elsewhere (a hidden twin): if its two copies get different "
                              "picks, the results say 'no clear preference' for it. This leaves it out")
+    parser.add_argument("--chapters", default=None,
+                        help="'Name:seconds,Name:seconds,...': the chapter bar for every row (e.g. a knob swept over "
+                             "time), instead of each material's own chapters")
     parser.add_argument("--classic", action="store_true", help="Write the older metrics page (template.html) instead")
     args = parser.parse_args()
 
