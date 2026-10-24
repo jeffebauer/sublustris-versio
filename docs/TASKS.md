@@ -1,12 +1,12 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, session 4 (no steady-level tape; one page to hear: tape out round 2, re-made on the settled tape).
+**Last updated:** 24 Oct 2026, session 4 (tape out shipped, v1.0.27; no pages waiting).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- [ ] **Tape out, round 2** (`renders/tape_out/index.html`, pick per card): re-made on the settled tape (a third of the lopsidedness, no steady level). A today, B a little stronger, C and D today plus light and full hysteresis, E and F a little stronger plus light and full. Light is cheap enough for the module; full is the physical tape model (may be too heavy for it). Does hysteresis add something you want, and on which strength?
+- Nothing open: every pick so far is acted on.
 
 ### Listen (after your notes)
 - Nothing open.
@@ -36,6 +36,7 @@
 
 ## Done
 
+- 24 Oct 2026: **Tape out is stronger with light hysteresis** (E on all 24 cards; SPEC v1.0.27): the highs are pushed into the tape first, it's driven up to 12 dB harder, and a light hysteresis adds tape's lag and grit. Quiet sounds pass unchanged; peaks and highs get the tape. From the cassette stage up the tape also softly limits the wet's loudest peaks. The page is deleted.
 - 24 Oct 2026: **No steady-level tape** (A on 12 of 15 cards: "jittery saturation" in long tails; only the drums liked +12 dB). The tape keeps today's behaviour with a third of the lopsidedness. The page is deleted.
 - 24 Oct 2026: **Tape out's lopsidedness is a third** (B on 14 cards; SPEC v1.0.26): held notes no longer pick up the strong second harmonic. **The full mix's send is 12 dB hotter** in the page material ("both"), as a pushed dub send. The steady-level tape waits for a held-note listen. Both pages are deleted.
 - 24 Oct 2026: **Five fixes from the Valhalla comparison shipped** (SPEC v1.0.25): the HALL starts right behind the note (no slap-back gap), its long tails ring smoother (more gentle movement), short HALL and PLATE tails stay brighter while long PLATEs lose some top end ("air"), the PLATE's lows are centred (they were partly out of phase), and MASSIVE swells half as long. HALL's level was trimmed so the spaces stay matched. Side effect: a big PLATE's very start is a touch grainier (a few hundredths of a second). The vibes cards were set aside for the tape distortion page. The page is deleted.
