@@ -1,6 +1,7 @@
 // Plugin Host. Parameters are generated from the ParamSpec table; this
 // file never lists parameters by hand (SPEC §6).
 
+#include "KnobText.h"
 #include "PluginEditor.h"
 #include "dsp/Engine.h"
 
@@ -20,8 +21,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout makeLayout()
                 id, p.name, juce::StringArray{p.choices[0], p.choices[1], p.choices[2]},
                 iv::normalisedToSwitch(p.defaultValue)));
         } else {
+            const auto pid = p.id;
             layout.add(std::make_unique<juce::AudioParameterFloat>(
-                id, p.name, juce::NormalisableRange<float>(0.0f, 1.0f), p.defaultValue));
+                id, p.name, juce::NormalisableRange<float>(0.0f, 1.0f), p.defaultValue,
+                juce::AudioParameterFloatAttributes().withStringFromValueFunction(
+                    [pid](float v, int) { return iv::plugin::knobText(pid, v); })));
         }
     }
     return layout;

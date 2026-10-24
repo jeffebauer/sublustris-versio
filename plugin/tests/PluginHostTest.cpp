@@ -308,6 +308,16 @@ int main()
                     check(labelsMatch, what + " choice labels match ParamSpec");
                 }
             }
+            // The host shows ERA as its era and the share of its fifth, DRIFT as its side (KnobText.h).
+            if (auto* era = byId[size_t(iv::ParamId::Era)]) {
+                const juce::String a = era->getText(0.0f, 64), b = era->getText(0.5f, 64), c = era->getText(0.7f, 64),
+                                   d = era->getText(1.0f, 64);
+                check(a == "Neve 0 %" && b == "BBD 50 %" && c == "Cassette 50 %" && d == "Radio 100 %",
+                      "ERA's text names its era: " + (a + " / " + b + " / " + c + " / " + d).toStdString());
+            }
+            if (auto* drift = byId[size_t(iv::ParamId::Drift)])
+                check(drift->getText(0.5f, 64) == "Still" && drift->getText(1.0f, 64) == "Drift 100 %",
+                      "DRIFT's text names its side (host view)");
         }
     }
 
