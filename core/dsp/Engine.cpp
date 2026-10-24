@@ -129,6 +129,7 @@ IV_SIZE_OPT void Engine::reset()
     twinSwell_.reset();
     for (auto& d : twinDiffuser_) d.clear();
     inputPower_ = 0.0f;
+    tankInPower_ = 0.0f;
     quietSince_ = 0;
     tailCaptured_ = false;
     smooth_ = values_;
@@ -159,7 +160,7 @@ IV_SIZE_OPT void Engine::reset()
     duckGain_ = 1.0f;
     hissLp_[0] = hissLp_[1] = 0.0f;
     noiseSeed_ = 0xA11CEu;
-    reverseMix_ = reverseTarget_;
+    reverseMix_ = reverseFeed_ = reverseTarget_;
     predelayStep_ = 0.0f;
     const auto g = map::mixGains(smoothed(ParamId::Mix));
     dryNow_ = g.dry;
@@ -225,6 +226,7 @@ void Engine::onGesture(GestureReader::Event e)
         tankInTarget_ = 0.0f;
         tankInStep_ = tankStep;
         if (!twinActive_) {
+            twinFdn_.setInLoopDiffusion(activeSpace_ == 2 ? 1.0f : 0.0f); // before the reset, so it starts there
             twinFdn_.reset();
             twinPlate_.reset();
             for (auto& d : twinDiffuser_) d.clear();
@@ -271,10 +273,18 @@ float Engine::decayRate(float decay, float size) const
 // frozen, the big tank keeps the SIZE and DECAY it froze with and its loss
 // glides to none (freezeMix_); the knobs play the twin. snap: jump
 // straight there (reset, a SPACE flip).
-void Engine::applySpace(bool snap)
+void Engine::applySpace(bool snap, int n, bool snapInput)
 {
     const bool frozen = gesture_.frozen();
     const float size = frozen ? heldSize_ : smoothed(ParamId::Size);
+    // HALL's SIZE also sets its T60 scale, output trim and in-loop diffusion, which act at once (the
+    // lines' lengths glide on their own): they follow a ~80 ms glide of SIZE, so a SIZE jump (CV, or an
+    // unfreeze after SIZE moved) doesn't step the loop's gains (soak audit).
+    if (snap) hallSize_ = size;
+    else {
+        hallSize_ += (1.0f - std::exp(-float(n) / (0.08f * sampleRate_))) * (size - hallSize_);
+        if (std::fabs(size - hallSize_) < 1e-6f) hallSize_ = size;
+    }
     const float decay = frozen ? heldDecay_ : smoothed(ParamId::Decay);
     const float time = smoothed(ParamId::Time), tone = smoothed(ParamId::Tone);
     const int attack = normalisedToSwitch(smoothed(ParamId::Attack));
@@ -283,7 +293,7 @@ void Engine::applySpace(bool snap)
     // Freezing: loss → 0, highs kept (ratio → 1), the governor caps paint.
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
     const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
-    const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(size) : 1.0f;
+    const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(hallSize_) : 1.0f;
     const float rate = decayRate(decay, size) / sizeT60 * (1.0f - freezeMix_);
     const float highRatio = toneRatio + freezeMix_ * (1.0f - toneRatio);
     // Frozen: full weight (only the pad's own hold acts, there's no floor). Not frozen: DECAY's own
@@ -335,13 +345,13 @@ void Engine::applySpace(bool snap)
         // HALL's in-loop diffusion is for the small rooms (v1.0.17): full at SIZE fully CCW, gone by
         // noon, so medium and large HALLs stay as they were (with it they measured ~2 dB quieter at
         // full SIZE and no less grainy).
-        const float hallDiff = hallInLoop_ * std::fmax(0.0f, 1.0f - size / voicing::kHallInLoopUntilSize);
+        const float hallDiff = hallInLoop_ * std::fmax(0.0f, 1.0f - hallSize_ / voicing::kHallInLoopUntilSize);
         fdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallDiff);
         // HALL's allpasses scale with its mean line, so a small
         // room stays small (MASSIVE's lengths at a 0.2 s mean and up).
-        fdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(size) / 0.2f));
+        fdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(hallSize_) / 0.2f));
         fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decay, size)
-                                   : map::hallSizeLevelTrim(size, decay));
+                                   : map::hallSizeLevelTrim(hallSize_, decay));
         fdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
         // The floor glides out with the freeze (v1.0.22, A3; Costello: mod depth to 0 for a freeze).
         fdn_.setModDepth(modScale_ * (1.0f - freezeMix_));
@@ -352,9 +362,9 @@ void Engine::applySpace(bool snap)
         lowFdn_.setFloorDb(floorDb);
         lowFdn_.setHoldDb(holdDb);
         lowFdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallDiff);
-        lowFdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(size) / 0.2f));
+        lowFdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(hallSize_) / 0.2f));
         lowFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decay, size)
-                                      : map::hallSizeLevelTrim(size, decay));
+                                      : map::hallSizeLevelTrim(hallSize_, decay));
         lowFdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
         lowFdn_.setModDepth(0.0f);
     }
@@ -375,7 +385,11 @@ void Engine::applySpace(bool snap)
     loopEra.midiEngage *= keep;
     const dsp::DriftAmounts drift = map::driftAmounts(smoothed(ParamId::Drift), era.cassette);
     // The cassette's slow 2:1 compression: more loss above −18 dBFS.
-    const float over = tankLevelDb() - voicing::kCompressThresholdDb;
+    // Judged like the floor (the lower of its 1.5 s and 50 ms levels): on the 1.5 s level alone it
+    // kept compressing for seconds after a loud input stopped, and an infinite tail plunged 20+ dB
+    // under the floor (soak audit). A steady tail measures the same.
+    const float tankNowDb = activeSpace_ == 0 ? plate_.fastLevelDb() : fdn_.fastLevelDb();
+    const float over = std::fmin(tankLevelDb(), tankNowDb) - voicing::kCompressThresholdDb;
     const float compress = over > 0.0f ? keep * era.cassette * voicing::kCompressRatePerDb * over : 0.0f;
     if (plate) {
         plate_.setEra(loopEra);
@@ -403,9 +417,17 @@ void Engine::applySpace(bool snap)
     crackleChance_ = era.midiverb * follow * voicing::kCracklePerSecond / sampleRate_;
     crackleGain_ = std::pow(10.0f, voicing::kCrackleDbfs / 20.0f);
 
+    // The input diffusers' amount glides (~50 ms): it changes with a SPACE flip and with MASSIVE's SIZE,
+    // and a jump stepped the input into the tank and REVERSE's line (soak audit).
     const float diffusion = massive ? map::massiveDiffusion(size) : 1.0f;
+    const float glide = snap && snapInput ? 1.0f : 1.0f - std::exp(-float(n) / (0.05f * sampleRate_));
     for (int c = 0; c < 2; ++c)
-        for (int k = 0; k < 4; ++k) diffuser_[c].stage[k].coeff = voicing::kDiffuserCoeff[k] * diffusion;
+        for (int k = 0; k < 4; ++k) {
+            float& g = diffuser_[c].stage[k].coeff;
+            const float target = voicing::kDiffuserCoeff[k] * diffusion;
+            g += glide * (target - g);
+            if (std::fabs(target - g) < 1e-6f) g = target;
+        }
 
     // ATTACK (ADR 0015): what TIME means, and the swell stage's attack.
     float predelay = massive ? map::massivePredelaySeconds(size) : 0.0f;
@@ -417,11 +439,11 @@ void Engine::applySpace(bool snap)
     swell_.setAttackSeconds(attackSeconds, snap);
     swell_.setSmear(attack == 1); // BLOOM only (owner, renders/swell_smear)
     // REVERSE: rising taps over TIME into the short reverb; DECAY sets how sudden the stop is.
-    reverse_.setSeconds(map::reverseSeconds(time), snap);
+    reverse_.setSeconds(map::reverseSeconds(time), snap && snapInput); // REVERSE runs on through a flip: it glides there
     reverseFdn_.setDecayRate(1.0f / map::reverseTailSeconds(smoothed(ParamId::Decay)));
     const float revMean = map::reverseMeanSeconds(smoothed(ParamId::Size));
     if (snap || std::fabs(revMean - reverseMean_) > 1e-6f) {
-        reverseFdn_.setMeanSeconds(revMean, 1.0f, snap);
+        reverseFdn_.setMeanSeconds(revMean, 1.0f, snap && snapInput);
         reverseMean_ = revMean;
     }
     reverseFdn_.setHighT60Ratio(toneRatio);
@@ -536,11 +558,27 @@ void Engine::controlTick(int n)
     // after the freeze), so it can't creep up afterwards.
     if (gesture_.frozen() && !gesture_.painting() && !padCaptured_ && freezeMix_ >= 1.0f && tankIn_ <= 0.0f
         && clock_ - frozeAt_ > uint64_t(voicing::kPadSettleSeconds * sampleRate_)) {
+        // Judged on the 8 s level, which averages a MASSIVE pad's early swings; unless that's still
+        // well above the pad's level now (50 ms), as when a fast-dying tail (a short DECAY) was frozen:
+        // the slower levels still remember the tail before the freeze (it can fall 130 dB in a second),
+        // and the makeup swelled the pad up towards it for minutes, 25-55 dB, even a finished tail from
+        // -260 dBFS (soak audit). Then the 8 s level starts over from now (the hold judges on it).
+        // Above the 1.5 s level too, so a pad whose level swings (a 50 ms dip) isn't misjudged.
+        const float nowDb = activeSpace_ == 0 ? plate_.fastLevelDb() : fdn_.fastLevelDb();
+        if (tankSlowLevelDb() > std::fmax(nowDb, tankLevelDb()) + 3.0f) {
+            fdn_.resyncHoldLevelToFast();
+            lowFdn_.resyncHoldLevelToFast();
+            plate_.resyncHoldLevelToFast();
+        }
         padFloorDb_ = tankSlowLevelDb() + voicing::kPadCeilingDb;
         padCaptured_ = true;
     }
-    // An infinite tail holds where it settled once the input goes quiet.
-    if (10.0f * std::log10(inputPower_ + 1e-20f) > voicing::kQuietDbfs) {
+    // An infinite tail holds where it settled once the input goes quiet: the big tank's own input,
+    // after the swell, so a long BLOOM (which feeds the tank for seconds after the input stops)
+    // isn't judged while it's still rising (soak audit: its ceiling was taken too low and the tail
+    // was pulled 5-6 dB under it).
+    const bool tankQuiet = 10.0f * std::log10(tankInPower_ + 1e-20f) <= voicing::kQuietDbfs;
+    if (!tankQuiet) {
         quietSince_ = clock_;
         tailCaptured_ = false;
     } else if (map::governorWeight(smoothed(ParamId::Decay)) >= 1.0f
@@ -559,7 +597,9 @@ void Engine::controlTick(int n)
                                  : approach(paint_, 0.0f, dt / voicing::kPaintReleaseSeconds);
     // Painting adds less and less as the pad nears its ceiling, so the pad's own layers stay on top
     // (owner: once painted "it becomes dominant"; the slow ceiling let a pad grow 7 dB).
-    paintRoom_ = clamp01((padFloorDb_ - tankLevelDb()) / voicing::kPaintFadeDb);
+    // Only while painting: at the release the pad's ceiling is lifted (PaintStop), and the room jumped
+    // to full while the paint was still letting go, a burst of the twin into the pad (soak audit).
+    if (gesture_.painting()) paintRoom_ = clamp01((padFloorDb_ - tankLevelDb()) / voicing::kPaintFadeDb);
 
     // SPACE flip (ADR 0013): fade out, restart the tank in the new voicing,
     // fade back in. Not while frozen: the pad waits for the unfreeze.
@@ -568,15 +608,36 @@ void Engine::controlTick(int n)
     if (flipPhase_ == 0 && space != activeSpace_ && !gesture_.frozen() && freezeMix_ == 0.0f) flipPhase_ = 1;
     if (flipPhase_ == 1) {
         flipStep_ = -flipChunk / float(n);
-        if (flipGain_ <= 0.0f) {
+        if (gesture_.frozen()) {
+            // A freeze inside the fade-out keeps the old space: it fades back in as the pad, and the
+            // flip waits for the unfreeze like any other (soak audit: the tank used to restart under
+            // the freeze, so the pad came out silent).
+            flipPhase_ = 2;
+        } else if (flipGain_ <= 0.0f) {
             activeSpace_ = space;
+            // Targets first, so the resets below land on them (the FDN's output trim). The predelay
+            // jumps too, here where the tank's input and REVERSE's are silent; the input diffusers glide
+            // (a jump in their amount rang on in them for ~100 ms, past the fade back in).
+            applySpace(true, n, false);
             fdn_.reset();
             lowFdn_.reset();
             plate_.reset();
             swell_.reset();
-            reverse_.reset();
-            reverseFdn_.reset();
-            applySpace(true);
+            // REVERSE (its recording line and its short reverb) doesn't depend on SPACE: it keeps
+            // running and fades with the flip. Cleared here while the input played, its line held a
+            // hard edge where the input was cut off and the swell clicked when its taps reached it,
+            // up to a TIME after the flip; and its restarted reverb clicked when sound first came
+            // round its lines (soak audit).
+            // A twin still fading after an unfreeze belongs to the old space: it has faded out with
+            // the wet, so it stops here and the new space's twin starts clean at the next freeze
+            // (soak audit: it was cut off mid-sound, a click, and the other twin replayed stale sound).
+            twinActive_ = false;
+            twinIn_ = twinInStep_ = 0.0f;
+            twinFdn_.reset();
+            twinPlate_.reset();
+            twinSwell_.reset();
+            for (auto& d : twinDiffuser_) d.clear();
+            twinMean_ = twinSpread_ = -1.0f;
             flipPhase_ = 2;
         }
     }
@@ -589,11 +650,17 @@ void Engine::controlTick(int n)
     }
     if (flipPhase_ == 0) flipStep_ = 0.0f;
 
-    applySpace(false);
+    applySpace(false, n);
     swell_.control(n);
     twinSwell_.control(n);
     reverse_.control(n);
+    // The predelay moves at most half a sample per sample (the input read at 0.5x-1.5x speed): a jump
+    // in its target (ATTACK switched with TIME up, MASSIVE's SIZE jumping, a SPACE flip) used to
+    // sweep it across in one control chunk, a burst of sped-up sound (soak audit). TIME's own knob
+    // glide stays as it was unless it's faster than that.
     predelayStep_ = (predelayTarget_ - predelayNow_) / float(n);
+    if (predelayStep_ > kPredelayMaxSpeed) predelayStep_ = kPredelayMaxSpeed;
+    if (predelayStep_ < -kPredelayMaxSpeed) predelayStep_ = -kPredelayMaxSpeed;
 
     const auto g = map::mixGains(smoothed(ParamId::Mix));
     dryStep_ = (g.dry - dryNow_) / float(n);
@@ -636,13 +703,24 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             if (predelayNow_ >= 2.0f) {
                 pl = predelay_[0].readCubic(predelayNow_);
                 pr = predelay_[1].readCubic(predelayNow_);
+            } else if (predelayNow_ > 0.0f) { // under 2 samples (the cubic's least): between the input and that
+                const float t = 0.5f * predelayNow_;
+                pl += t * (predelay_[0].readCubic(2.0f) - pl);
+                pr += t * (predelay_[1].readCubic(2.0f) - pr);
             }
             pl = diffuser_[0].process(pl);
             pr = diffuser_[1].process(pr);
-            // REVERSE's taps hear the same diffused input as the tank (always recording).
-            revInL_[i] = pl;
-            revInR_[i] = pr;
+            // REVERSE's taps hear the same diffused input as the tank (always recording), faded with
+            // a SPACE flip as the tank's is: the input side jumps at the flip's silent point.
+            revInL_[i] = flipGain_ * pl;
+            revInR_[i] = flipGain_ * pr;
             reverse_.process(revInL_[i], revInR_[i], reverseOn);
+            // The taps fade into the short reverb as REVERSE comes in (an ATTACK switch, an unfreeze):
+            // a restarted reverb fed the full swell at once clicked when it first came round its lines,
+            // 25-80 ms later, through the crossfade (soak audit).
+            reverseFeed_ = approach(reverseFeed_, reverseTarget_, reverseStep);
+            revInL_[i] *= reverseFeed_;
+            revInR_[i] *= reverseFeed_;
             // The twin hears the input itself, through its own diffusion: no predelay; in MASSIVE, its own swell.
             twinIn_ = clamp01(twinIn_ + twinInStep_);
             twinInL_[i] = twinDiffuser_[0].process(twinIn_ * l);
@@ -671,6 +749,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             const float g = tankIn_ * flipGain_;
             bufL_[i] = g * pl;
             bufR_[i] = g * pr;
+            tankInPower_ += 0.002f * (0.5f * (bufL_[i] * bufL_[i] + bufR_[i] * bufR_[i]) - tankInPower_);
             wetL_[i] = wetR_[i] = 0.0f;
         }
 
@@ -699,8 +778,9 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             // REVERSE: the swell replaces the forward wet, crossfaded over ~50 ms.
             const float rl = voicing::kReverseLevel * revL_[i], rr = voicing::kReverseLevel * revR_[i];
             reverseMix_ = approach(reverseMix_, reverseTarget_, reverseStep);
-            float wl = (wetL_[i] + reverseMix_ * (rl - wetL_[i])) * flipGain_ + voicing::kTwinLevel * twinL_[i];
-            float wr = (wetR_[i] + reverseMix_ * (rr - wetR_[i])) * flipGain_ + voicing::kTwinLevel * twinR_[i];
+            // The twin fades with a SPACE flip too (it stops at the flip's silent point).
+            float wl = (wetL_[i] + reverseMix_ * (rl - wetL_[i]) + voicing::kTwinLevel * twinL_[i]) * flipGain_;
+            float wr = (wetR_[i] + reverseMix_ * (rr - wetR_[i]) + voicing::kTwinLevel * twinR_[i]) * flipGain_;
             wl *= eraMakeup_;
             wr *= eraMakeup_;
             muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)

@@ -59,10 +59,14 @@ public:
     }
 
     // Time passing (call at least once per control chunk): a held press
-    // turns into painting once the tap window has passed.
+    // turns into painting once the tap window has passed. `now` may be
+    // earlier than a press made inside the same chunk (the Engine ticks at
+    // the chunk's start): without the first test, now - pressAt_ wrapped
+    // round and every tap that landed part-way into a chunk became a paint
+    // and never unfroze (soak audit, docs/research/soak-audit.md).
     Event tick(uint64_t now)
     {
-        if (armed_ && down_ && now - pressAt_ >= tapMax_) {
+        if (armed_ && down_ && now >= pressAt_ && now - pressAt_ >= tapMax_) {
             armed_ = false;
             painting_ = true;
             return Event::PaintStart;

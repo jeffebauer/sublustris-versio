@@ -111,6 +111,9 @@ constexpr float kFloorDbfs          = -24.0f;
 constexpr float kGovernorRatePerDb  = 0.08f;
 constexpr float kGovernorSeconds    = 1.5f;
 constexpr float kHoldSeconds        = 8.0f; // the slow level a held tail's ceiling is judged on
+// A falling infinite tail is judged on this faster level too (soak audit: with the 1.5 s level
+// alone it plunged far below the floor after a loud input stopped or faded).
+constexpr float kGovernorFallSeconds = 0.05f;
 
 // SPACE flips fade out, then in, over this long each (ADR 0013: ~100 ms
 // in all). ATTACK into or out of REVERSE crossfades over kAttackFadeSeconds.

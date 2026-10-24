@@ -23,7 +23,7 @@ struct FloorGovernor {
 
     void reset()
     {
-        power_ = slow_ = block_ = 0.0f;
+        power_ = slow_ = block_ = fast_ = 0.0f;
         levelDb = slowLevelDb = -200.0f;
         extraRate = 0.0f;
         darken = 1.0f;
@@ -35,6 +35,14 @@ struct FloorGovernor {
         slow_ = power_;
         slowLevelDb = levelDb;
     }
+    // The level over the last ~50 ms, and the slow level starting over from it (a pad frozen from a
+    // fast-dying tail: both slower levels still remember the tail, soak audit).
+    float fastLevelDb() const { return 10.0f * std::log10(fast_ + 1e-20f); }
+    void resyncSlowToFast()
+    {
+        slow_ = fast_;
+        slowLevelDb = fastLevelDb();
+    }
     // One output sample's power (mean of the channels' squares).
     void add(float power) { block_ += power; }
 
@@ -44,10 +52,20 @@ struct FloorGovernor {
         const float dt = float(n) / sampleRate;
         power_ += (1.0f - std::exp(-dt / voicing::kGovernorSeconds)) * (block_ / float(n) - power_);
         slow_ += (1.0f - std::exp(-dt / voicing::kHoldSeconds)) * (block_ / float(n) - slow_);
+        fast_ += (1.0f - std::exp(-dt / voicing::kGovernorFallSeconds)) * (block_ / float(n) - fast_);
         block_ = 0.0f;
         levelDb = 10.0f * std::log10(power_ + 1e-20f);
         slowLevelDb = 10.0f * std::log10(slow_ + 1e-20f);
-        const float over = levelDb - floorDb;
+        // The floor judges a falling tail on a faster level. Judged on the 1.5 s level alone, a fed
+        // tail sitting above the floor kept its full loss for seconds after the input stopped or
+        // faded, while the level caught up: it plunged 10-64 dB below the floor and the hold's
+        // makeup took minutes to bring it back (soak audit). A steady fed tail measures the same.
+        float floorLevelDb = levelDb;
+        {
+            const float fastDb = fastLevelDb();
+            if (fastDb < floorLevelDb) floorLevelDb = fastDb;
+        }
+        const float over = floorLevelDb - floorDb;
         // The floor: loss in proportion to how far a fed tail is over it.
         extraRate = over > 0.0f ? weight * voicing::kGovernorRatePerDb * over : 0.0f;
         // A held tail (a pad, or an infinite tail once the input is quiet)
@@ -64,13 +82,13 @@ struct FloorGovernor {
                 extraRate -= weight * up;
             }
         }
-        float above = (levelDb - (floorDb - 3.0f)) / 6.0f;
+        float above = (floorLevelDb - (floorDb - 3.0f)) / 6.0f;
         above = above < 0.0f ? 0.0f : (above > 1.0f ? 1.0f : above);
         darken = 1.0f - weight * (1.0f - above);
     }
 
 private:
-    float power_ = 0.0f, slow_ = 0.0f, block_ = 0.0f;
+    float power_ = 0.0f, slow_ = 0.0f, block_ = 0.0f, fast_ = 0.0f;
 };
 
 // A tank segment's absorbent filter (Jot): a first-order shelf crossing at

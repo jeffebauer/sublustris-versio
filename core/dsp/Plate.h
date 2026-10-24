@@ -64,6 +64,8 @@ public:
     void setHoldDb(float db) { governor_.holdDb = db; }
     float slowLevelDb() const { return governor_.slowLevelDb; }
     void resyncHoldLevel() { governor_.resyncSlow(); }
+    void resyncHoldLevelToFast() { governor_.resyncSlowToFast(); }
+    float fastLevelDb() const { return governor_.fastLevelDb(); }
     float levelDb() const { return governor_.levelDb; }
     // ERA's in-loop layers and DRIFT (ignored without colour).
     void setEra(const EraMix& m)

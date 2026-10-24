@@ -20,3 +20,4 @@
 
 **Approved (23 Oct 2026, owner's pick on `renders/makeup`, A on all 4 cards; SPEC v1.0.17):** the held-tail makeup stays. Measured then: without it an infinite MASSIVE with tape wobble and the cassette sagged about 3 dB over 10 minutes and a HALL about 2.4 dB; frozen pads held either way.
 
+**Amendment (24 Oct 2026, owner's OK; SPEC v1.0.24):** the governor's loss, and ERA's cassette compression, judge a falling tail fast. Each takes the lower of its 1.5 s level and a 50 ms level, so a tail that drops when the input stops is never judged as still loud. A held tail's hold level is taken only once the tank's own input is quiet (in BLOOM the swell keeps feeding the tank after the input stops). Before this, a loud input stopping made an infinite tail plunge (PLATE −27 dB, fed 12 dB hot) and creep back over minutes. Now every dip is within ~2 dB. Found by the overnight soak (`docs/research/soak-audit.md`).

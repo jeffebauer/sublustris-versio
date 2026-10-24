@@ -125,7 +125,10 @@ private:
     void handleEdges(int chunkStart, int chunkEnd);
     void onGesture(GestureReader::Event e);
     void controlTick(int n);
-    void applySpace(bool snap);
+    // snap: jump to the targets (reset, a SPACE flip); snapInput: the input diffusers' amount and
+    // REVERSE too (not on a flip, where they keep running and glide).
+    void applySpace(bool snap, int n = kChunk, bool snapInput = true);
+    static constexpr float kPredelayMaxSpeed = 0.5f; // samples per sample
     float decayRate(float decay, float size) const;
     float smoothed(ParamId id) const { return smooth_[static_cast<size_t>(id)]; }
 
@@ -184,13 +187,14 @@ private:
     uint32_t          noiseSeed_ = 0xA11CEu;
     float             hissLp_[2] = {}, hissGain_ = 0.0f, crackleChance_ = 0.0f, crackleGain_ = 0.0f;
     float             lastMean_ = -1.0f, lastSpread_ = -1.0f;
+    float             hallSize_ = 0.5f; // HALL's SIZE for its gains, glided (applySpace)
 
     // SPACE flips (ADR 0013): the wet and the tank's input fade out, the
     // tank restarts in the new voicing, and both fade back in.
     int   activeSpace_ = 1, flipPhase_ = 0; // 0 steady, 1 fading out, 2 fading in
     float flipGain_ = 1.0f, flipStep_ = 0.0f;
     // ATTACK = REVERSE: crossfade between the forward wet and the reverse swell.
-    float reverseMix_ = 0.0f, reverseTarget_ = 0.0f;
+    float reverseMix_ = 0.0f, reverseTarget_ = 0.0f, reverseFeed_ = 0.0f; // reverseFeed_: the taps into the short reverb
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
     dsp::Oversampler tapeOs_[2], tapeOs2_[2];        // tape out (v1.0.22): 2x inside 2x = 4x for the saturator
@@ -218,6 +222,7 @@ private:
     uint64_t frozeAt_ = 0;
     // Input quiet detector for holding an infinite tail where it settled.
     float    inputPower_ = 0.0f;
+    float    tankInPower_ = 0.0f; // the big tank's input (after the swell), for the quiet detector
     uint64_t quietSince_ = 0;
     bool     tailCaptured_ = false;
     float    tailCeilingDb_ = -24.0f;

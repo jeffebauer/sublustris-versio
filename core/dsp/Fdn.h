@@ -58,6 +58,8 @@ public:
     void setHoldDb(float db) { governor_.holdDb = db; }
     float slowLevelDb() const { return governor_.slowLevelDb; }
     void resyncHoldLevel() { governor_.resyncSlow(); }
+    void resyncHoldLevelToFast() { governor_.resyncSlowToFast(); }
+    float fastLevelDb() const { return governor_.fastLevelDb(); }
     // In-loop diffusion amount 0..1 (MASSIVE's SIZE); 0 bypasses it.
     void setInLoopDiffusion(float amount) { inLoopTarget_ = amount; }
     // The in-loop allpasses' lengths × k (1 = MASSIVE's; HALL scales them with its room, v1.0.17).
@@ -98,6 +100,8 @@ public:
 
 private:
     void control(int n);
+    void controlInLoop(float dt, int n, float slew);
+    uint32_t apTargetLength(int i, int k) const;
 
     float     sampleRate_ = 48000.0f;
     DelayLine line_[kN];
@@ -122,12 +126,17 @@ private:
     float     extraRate_ = 0.0f;
     DelayLine apLine_[kN][2];
     uint32_t  apLen_[kN][2] = {};
-    uint32_t  apLenNow_[kN][2] = {}; // apLen_ × apScale_ (HALL scales its allpasses with SIZE)
+    uint32_t  apLenNow_[kN][2] = {}; // apLen_ × apScale_ (HALL scales its allpasses with SIZE): where each length is going
+    // Each allpass's length as it glides there (SIZE's semitone slew), read between samples while it moves:
+    // jumping with the knob clicked loudly in a small HALL (soak audit). Still, it is the exact integer read.
+    // Bypassed allpasses (no in-loop diffusion) have length 0: they join and leave the loop from there.
+    float     apLenGlide_[kN][2] = {}, apLenStep_[kN][2] = {}; // per sample
     float     apScale_ = 1.0f;
     static constexpr int kEarlyTaps = voicing::kEarlyTaps;
     float     earlyFrac_[kN][kEarlyTaps] = {}, earlyGain_[kN][kEarlyTaps] = {};
     float     earlyTarget_ = 0.0f, earlyNow_ = 0.0f;
     float     inLoopTarget_ = 0.0f, inLoopNow_ = 0.0f, outputTrim_ = 1.0f, levelGain_ = 1.0f;
+    float     outputTrimNow_ = 1.0f; // glides to outputTrim_ (~50 ms): it follows SIZE and DECAY, which can jump (soak audit)
     FloorGovernor governor_;
     const Fdn* leader_ = nullptr;
     float     externalPower_ = 0.0f;
