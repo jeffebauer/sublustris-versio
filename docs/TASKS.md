@@ -1,21 +1,20 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, session 5 (v1.0.28 shipped; the new ERA round 3 waiting; era_strength page waiting; ERA signatures reference).
+**Last updated:** 25 Oct 2026, session 5 (the new ERA built on a branch, waiting for your listen and OK to merge).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- [ ] **The new ERA, round 3** (`renders/era_v2c/index.html`; phone: http://192.168.1.100:8766/era_v2c/index.html), with the Neve base. The bucket-brigade: A your round-2 pick (grit reached halfway), B the new curve (that grit at two-thirds, more by the end). The radio: A round 2's light noise, B rebuilt from research on real reception (static that swells as the station fades, softer coloured hiss, varied crackle and lightning crashes, whistles that come and go, tuning drift, and at the gritty end drift-offs with a whoop, flutter and a faint hum; the wandering dip unchanged). Pick per card, with notes.
-- [ ] **ERA stronger on the reverb?** (`renders/era_strength/index.html`; on your phone: http://192.168.1.100:8766/era_strength/index.html while the laptop serves it). Only the reverb changes. In each card, A is today, B is about 1.5 times as strong and C about twice: the Neve's warmth, the cassette's wow, tape and darkening, and fewer bits in the μ-law and Midiverb stages. Each version keeps today's loudness. Use the MIX fader at the balance you'd use. Pick per card, with notes.
+- [ ] **Merge the new ERA into `main`?** (branch `claude/era-v2`; SPEC v1.0.30, ADR 0021). Your five eras, sweetest first: the Neve (the base, under all of them, and alone at ERA fully left), Midiverb, bucket-brigade, cassette, AM radio. All 14 desktop tests pass; flash is 1 KB under budget. It also carries the ERA click fix (v1.0.29). ERA's default moves to 0.1 (the middle of the Neve). Hear it first on the two pages under Listen.
 
 ### Listen (after your notes)
 - Nothing open.
 
 ### Listen (first time)
-- [ ] **The new ERA as a knob sweep** (`renders/era_v2_sweep/index.html`; phone: http://192.168.1.100:8766/era_v2_sweep/index.html): ERA turned through all six eras in 40 s, chaptered at each one, HALL and MASSIVE, with and without the Neve base. Notes on how the journey feels.
+- [ ] **ERA as a knob sweep** (`renders/era_sweep/index.html`; phone: http://192.168.1.100:8766/era_sweep/index.html): the final ERA turned through all five eras in 40 s, chaptered at each one, HALL and MASSIVE. Notes only.
+- [ ] **M6 with the new ERA** (`renders/m6_character/index.html`; phone: http://192.168.1.100:8766/m6_character/index.html): the five eras in HALL (three in MASSIVE), DRIFT and TONE. Notes only.
 - [ ] **ERA signatures** (reference, nothing to pick; https://claude.ai/artifact/AiR2JXPAaLbT8GeJseK3Vj, opens on your phone anywhere): what each ERA stage does to the reverb, measured and drawn as charts (tone, how long each frequency rings, harmonics, grain, hiss, mirror tones, pitch wobble). `tools/era_reference.py` remeasures it.
-- [ ] **M6 as it is now** (`renders/m6_character/index.html`; on the Mac, or the "review-pages" server on port 8765): ERA's five stages, DRIFT both ways and TONE, re-rendered from today's reverb. ERA has changed most since your last M6 listen: its knob feel, the old-Lexicon grain in the μ-law stretch, the held Midiverb, and tape out. Notes only: does each stage sound right, and does ERA feel like going back in time?
 
 ### At the rack
 - [ ] **M0 hardware check** (`docs/m0-hardware-check.md`): flash `firmware/build/immensio_versio_m0test.bin`, check the boot pattern, switches, button (USB session), then knobs, gate and a quick passthrough listen (rack session). Tell Claude the results.
@@ -27,8 +26,6 @@
 
 ## Waiting on Claude
 
-- **The ERA redesign** (`docs/research/new-eras.md`; prototype on branch `claude/era-v2`): its pages are waiting on you (Decide, Listen). After your picks: the chosen eras made final, flash found for them (μ-law's code goes), and the spec and ADRs updated.
-- **Tape click fix, waiting for your OK to merge** (branch `claude/tape-engage-click`): turning ERA through the cassette's start clicked (since v1.0.22); tape out now fades in over 20 ms. Static settings sound identical.
 - **The rest of the Valhalla comparison** (`docs/research/valhalla-comparison.md`): the loudness one is done (v1.0.28). Still to come, each a page when you want it: MASSIVE's highs die sooner than Supermassive's (8 kHz rings 8 s at the 15 s setting against 15). Also Supermassive moves more in pitch at long settings (a DRIFT comparison).
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
@@ -36,6 +33,7 @@
 
 ## Done
 
+- 25 Oct 2026: **The new ERA, round 3** (B across the board): the bucket-brigade's grit reaching round 2's B at two-thirds wins; the round-3 radio wins without its whistles and polar flutter ("they read as slow rhythmic delays rather than dropouts"). The sampler goes (the BBD is gritty enough). Built as the module's ERA on branch `claude/era-v2` (SPEC v1.0.30, ADR 0021): five eras, the Neve under all; μ-law, vintage reads and stacking removed. On the way the radio got an AGC that follows the station (aiming at a fixed level made sparse music 6 dB louder) and a slow level hold (a held tail drained 6 dB through its band in six minutes). The stronger-ERA page is superseded (it was built on the stacked ERA); its branch stays. The round pages are deleted.
 - 25 Oct 2026: **The new ERA, round 2**: the bucket-brigade's B (more grit) preferred, "but rather than hitting that value at 0.5, make that the 0.66 position"; the radio needs refining (softer hiss; static too uniform; the whistle too steady). Researched real reception (`docs/research/radio-artifacts.md`); round 3 follows. The page is deleted.
 - 25 Oct 2026: **The new ERA, round 1** (A, the Neve base, on every card, repeated cards agreeing: "Neve base a clear winner"). Keep: the Neve, Midiverb, cassette and radio ("feels like a wandering phaser"). The bucket-brigade: "like the darker signature", wants a little more grit. The sampler: aliasing too intense, can go if the BBD gets grittier. Round 2: a grittier BBD, and the radio with light noise and artifacts. The page is deleted.
 - 25 Oct 2026: **ERA's eras play on their own, not stacked** ("Discrete wins for me, hands down. MidiVerb sounds beautiful"): ships with the ERA redesign. Measured why cassette and μ-law sound alike: on their own, both add a 3rd harmonic at a fixed distance under the note (25 and 30 dB). The pages are deleted (the knob-sweep page had the cassette click in it; it comes back on the redesign page).
