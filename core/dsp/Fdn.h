@@ -78,6 +78,11 @@ public:
     // "too much delay before the reverb starts swelling") and every pass is
     // denser. Output only: the loop itself is unchanged.
     void setEarlyTaps(float amount) { earlyTarget_ = amount; }
+    // PROTOTYPE (massive_drop): 0..1 of each line's per-pass loss carried by its early taps, a tap at
+    // fraction f along the line × g^f (g the line's mid-band gain per pass), so the first pass fades
+    // as it goes instead of holding and stepping down a whole pass's loss (Dattorro's decay
+    // multipliers between a tank's sections; Jot's loss ∝ delay length).
+    void setEarlySpread(float amount) { earlySpread_ = amount; }
     void setAir(float air) { air_ = air; } // 1/T60 in 1/s: see absorbent() (v1.0.25)
     // The modulation floor's depth × modDepth (Engine::setModulationScale, a test hook).
     void setModDepth(float k) { modDepth_ = k; }
@@ -133,6 +138,7 @@ private:
     static constexpr int kEarlyTaps = voicing::kEarlyTaps;
     float     earlyFrac_[kN][kEarlyTaps] = {}, earlyGain_[kN][kEarlyTaps] = {};
     float     earlyTarget_ = 0.0f, earlyNow_ = 0.0f;
+    float     earlySpread_ = 0.0f, earlyLoss_[kN][kEarlyTaps] = {}; // prototype (setEarlySpread)
     float     inLoopTarget_ = 0.0f, inLoopNow_ = 0.0f, outputTrim_ = 1.0f, levelGain_ = 1.0f;
     float     outputTrimNow_ = 1.0f; // glides to outputTrim_ (~50 ms): it follows SIZE and DECAY, which can jump (soak audit)
     FloorGovernor governor_;

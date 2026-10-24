@@ -199,6 +199,10 @@ void Fdn::control(int n)
         if (target > maxLen_) target = maxLen_;
         readStep_[i] = (target - readNow_[i]) / float(n);
         tapStep_[i] = (lenNow_[i] - tapLen_[i]) / float(n); // the early taps glide with SIZE, sample by sample
+        {
+            const float lnG = -6.9077553f * (lenNow_[i] / sampleRate_) * (decayRate_ + governRate + extraRate_); // ln 10^(-3 L rate)
+            for (int k = 0; k < kEarlyTaps; ++k) earlyLoss_[i][k] = std::exp(earlySpread_ * earlyFrac_[i][k] * lnG);
+        }
 
         // Loss per pass from this line's own length (Jot): the low end
         // decays at decayRate (+ the governor), the high end at that /
@@ -266,7 +270,7 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                         const auto  di = uint32_t(d);
                         const float t  = d - float(di);
                         const float a0 = line_[i].read(di), a1 = line_[i].read(di + 1);
-                        e += earlyGain_[i][k] * (a0 + t * (a1 - a0));
+                        e += earlyGain_[i][k] * earlyLoss_[i][k] * (a0 + t * (a1 - a0));
                     }
                     l += earlyG * kOutL[j] * e;
                     r += earlyG * kOutR[j] * e;

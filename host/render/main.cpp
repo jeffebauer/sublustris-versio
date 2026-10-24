@@ -125,6 +125,9 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* to = std::getenv("IV_TAPE_OUT")) engine.setTapeOut(std::atoi(to) != 0);
     if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
     if (const char* dm = std::getenv("IV_DECAY_MAKEUP")) engine.setDecayMakeup(float(std::atof(dm)));
+    if (const char* es = std::getenv("IV_EARLY_SPREAD")) engine.setMassiveEarlySpread(float(std::atof(es)));
+    if (const char* mp = std::getenv("IV_MIN_PASSES")) engine.setMassiveMinPasses(float(std::atof(mp)));
+    if (const char* pc = std::getenv("IV_PASS_CAP")) engine.setMassivePassCap(float(std::atof(pc)));
     if (!presetPath.empty()) {
         iv::json::Value preset;
         if (!iv::json::loadFile(presetPath, preset, error)) return false;

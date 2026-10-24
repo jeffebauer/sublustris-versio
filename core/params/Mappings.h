@@ -184,9 +184,9 @@ inline float massiveHighRatio(float toneRatio, float decay)
 
 // MASSIVE's DECAY: as decayRate(v, 2), but its shortest T60 is at least kMassiveMinPasses mean
 // lines (v1.0.21, knob_feel): 2 s at SIZE 0 (as before), ~2.5 s at noon, ~6 s at full SIZE.
-inline float massiveDecayRate(float v, float size)
+inline float massiveDecayRate(float v, float size, float minPasses = voicing::kMassiveMinPasses)
 {
-    const float lo = std::fmax(kT60Massive.minS, voicing::kMassiveMinPasses * massiveMeanSeconds(size));
+    const float lo = std::fmax(kT60Massive.minS, minPasses * massiveMeanSeconds(size));
     if (v <= kDecayFiniteTop) return 1.0f / expLerp(lo, kT60Massive.maxS, v / kDecayFiniteTop);
     if (v >= kDecayInfiniteAt) return 0.0f;
     return (kDecayInfiniteAt - v) / (kDecayInfiniteAt - kDecayFiniteTop) / kT60Massive.maxS;
