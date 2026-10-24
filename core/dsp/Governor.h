@@ -112,9 +112,12 @@ inline float bilinearK(float hz, float sampleRate)
 }
 inline float lossShelfK(float sampleRate) { return bilinearK(voicing::kLossShelfHz, sampleRate); }
 
-inline Absorb absorbent(float seconds, float lowRate, float highRatio, float darken, float shelfK)
+// air (1/T60 in 1/s; v1.0.25): the highs lose this much more than the lows at every finite DECAY, as
+// air does in a room, scaled by TONE's ratio against noon. 0 = a fixed share of the decay (MASSIVE).
+inline Absorb absorbent(float seconds, float lowRate, float highRatio, float darken, float shelfK, float air = 0.0f)
 {
-    float highRate = lowRate / highRatio;
+    float highRate = air > 0.0f && lowRate > 0.0f ? lowRate + air * (voicing::kDampingHighT60Ratio / highRatio)
+                                                  : lowRate / highRatio;
     const float infiniteHigh = darken * (1.0f / highRatio - 1.0f) / voicing::kInfiniteHighT60Seconds;
     if (highRate < infiniteHigh) highRate = infiniteHigh;
     const float gLow  = std::pow(10.0f, -3.0f * seconds * lowRate);

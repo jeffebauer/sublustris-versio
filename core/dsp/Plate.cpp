@@ -23,10 +23,15 @@ struct Tap {
     int   branch, element;
     float offset, sign;
 };
+// The cross-branch taps (the last three of each side) are added, not subtracted as in his table
+// (v1.0.25, owner's pick on renders/valhalla_round2). With true-stereo input the branches are
+// independent, so his signs made L ≈ 2·b1 − 3·b0 and R ≈ 2·b0 − 3·b1 where the taps cohere (the lows):
+// left and right lows nearly mirror images (vibes −0.86 correlation below 250 Hz; Valhalla's plates
+// +0.1 to +0.45). Added, the lows centre (vibes +0.14) and the highs stay wide.
 constexpr Tap kLeft[7]  = {{1, 0, 266, 1},  {1, 0, 2974, 1}, {1, 1, 1913, -1}, {1, 2, 1996, 1},
-                           {0, 0, 1990, -1}, {0, 1, 187, -1}, {0, 2, 1066, -1}};
+                           {0, 0, 1990, 1}, {0, 1, 187, 1}, {0, 2, 1066, 1}};
 constexpr Tap kRight[7] = {{0, 0, 353, 1},  {0, 0, 3627, 1}, {0, 1, 1228, -1}, {0, 2, 2673, 1},
-                           {1, 0, 2111, -1}, {1, 1, 335, -1}, {1, 2, 121, -1}};
+                           {1, 0, 2111, 1}, {1, 1, 335, 1}, {1, 2, 121, 1}};
 constexpr float elementLength(const Tap& t)
 {
     return t.element == 0 ? kD1[t.branch] : (t.element == 1 ? kAp2[t.branch] : kD2[t.branch]);
@@ -141,8 +146,8 @@ void Plate::control(int n)
         br.d1Len = kD1[b] * k;
         br.ap2Len = kAp2[b] * k;
         br.d2Len = kD2[b] * k;
-        br.loss1 = absorbent((br.ap1Len + br.d1Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfK_);
-        br.loss2 = absorbent((br.ap2Len + br.d2Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfK_);
+        br.loss1 = absorbent((br.ap1Len + br.d1Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfK_, air_);
+        br.loss2 = absorbent((br.ap2Len + br.d2Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfK_, air_);
 
         // The modulated allpass: Dattorro's slow sine, plus the modulation
         // floor's slow random wander (as every tank's, SPEC §2.3 rule 1).

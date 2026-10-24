@@ -78,6 +78,7 @@ public:
     // "too much delay before the reverb starts swelling") and every pass is
     // denser. Output only: the loop itself is unchanged.
     void setEarlyTaps(float amount) { earlyTarget_ = amount; }
+    void setAir(float air) { air_ = air; } // 1/T60 in 1/s: see absorbent() (v1.0.25)
     // The modulation floor's depth × modDepth (Engine::setModulationScale, a test hook).
     void setModDepth(float k) { modDepth_ = k; }
     // Vintage reads (v1.0.22, the DSP audit's E4; ADR 0019): 0..1 with ERA's μ-law stretch, the reads
@@ -114,11 +115,12 @@ private:
     uint32_t  rng_ = 1;
     // Per-sample read position for the current control block.
     float     readNow_[kN] = {}, readStep_[kN] = {};
+    float     tapLen_[kN] = {}, tapStep_[kN] = {}; // the early taps' line length, gliding per sample
     float     interp_[kN] = {}; // allpass-interpolation state per read
     // Absorbent filters: y = g (1 − b) x + b y.
     float     gain_[kN] = {}, pole_[kN] = {}, absorbY_[kN] = {};
     float     b1_[kN] = {}, absorbX_[kN] = {}, shelfK_ = 0.0f; // lossShelfK(sampleRate_)
-    float     modDepth_ = 1.0f, vintage_ = 0.0f, jitter_[kN] = {};
+    float     modDepth_ = 1.0f, vintage_ = 0.0f, jitter_[kN] = {}, air_ = 0.0f;
     float     decayRate_ = 0.2f, highRatio_ = voicing::kDampingHighT60Ratio;
     LoopEra   era_[kN];
     Drift     driftGen_[kN];

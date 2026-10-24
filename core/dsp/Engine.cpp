@@ -325,6 +325,7 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
         // DSP audit's A3; it kept 0.15 of the chorus and slowly shimmered out of tune).
         plate_.setModScale(modScale_ * (1.0f - freezeMix_));
         plate_.setHoldDb(holdDb);
+        plate_.setAir(voicing::kAirPlateDbPerSecond / 60.0f); // v1.0.25
     } else {
         const float mean = massive ? map::massiveMeanSeconds(size) : map::hallMeanSeconds(size);
         const float spread = massive ? map::massiveSpread(size) : 1.0f;
@@ -351,10 +352,11 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
         // room stays small (MASSIVE's lengths at a 0.2 s mean and up).
         fdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(hallSize_) / 0.2f));
         fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decay, size)
-                                   : map::hallSizeLevelTrim(hallSize_, decay));
-        fdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
+                                   : voicing::kHallOutputTrim * map::hallSizeLevelTrim(hallSize_, decay));
+        fdn_.setEarlyTaps(1.0f); // HALL too (v1.0.25: no gap after the note, its "slap-back")
+        fdn_.setAir(massive ? 0.0f : voicing::kAirHallDbPerSecond / 60.0f); // v1.0.25
         // The floor glides out with the freeze (v1.0.22, A3; Costello: mod depth to 0 for a freeze).
-        fdn_.setModDepth(modScale_ * (1.0f - freezeMix_));
+        fdn_.setModDepth(modScale_ * (massive ? 1.0f : voicing::kHallFloorScale) * (1.0f - freezeMix_));
         // Still lows: the low tank follows, unmodulated.
         lowFdn_.setDecayRate(rate);
         lowFdn_.setHighT60Ratio(highRatio);
@@ -364,8 +366,8 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
         lowFdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallDiff);
         lowFdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(hallSize_) / 0.2f));
         lowFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decay, size)
-                                      : map::hallSizeLevelTrim(hallSize_, decay));
-        lowFdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
+                                      : voicing::kHallOutputTrim * map::hallSizeLevelTrim(hallSize_, decay));
+        lowFdn_.setEarlyTaps(1.0f);
         lowFdn_.setModDepth(0.0f);
     }
 
@@ -431,7 +433,7 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
 
     // ATTACK (ADR 0015): what TIME means, and the swell stage's attack.
     float predelay = massive ? map::massivePredelaySeconds(size) : 0.0f;
-    float attackSeconds = massive ? map::massiveNormalAttackSeconds(decay, size) : 0.0f;
+    float attackSeconds = massive ? voicing::kMassiveSwellScale * map::massiveNormalAttackSeconds(decay, size) : 0.0f;
     if (attack == 0)
         predelay += massive ? map::massiveNormalPredelaySeconds(time) : map::normalPredelaySeconds(time);
     if (attack == 1)
@@ -485,7 +487,7 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
             twinFdn_.setGovernor(0.0f);
             twinFdn_.setInLoopDiffusion(massive ? 1.0f : 0.0f);
             twinFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(tDecay, tSize)
-                                           : map::hallSizeLevelTrim(tSize, tDecay));
+                                           : voicing::kHallOutputTrim * map::hallSizeLevelTrim(tSize, tDecay));
             twinFdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
             twinFdn_.setEra(tEra);
             twinFdn_.setDrift(drift);
