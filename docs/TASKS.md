@@ -1,12 +1,12 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, end of session 4 (v1.0.18–v1.0.27 shipped; no pages waiting).
+**Last updated:** 24 Oct 2026, session 5 (decay_level page waiting).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- Nothing open: every pick so far is acted on.
+- [ ] **Does a shorter tail get quieter?** (`renders/decay_level/index.html`; on the Mac, or the "review-pages" server on port 8765). Today it does: going from 15 s to 2 s, HALL drops about 8 dB, MASSIVE about 7 and PLATE about 3, so you'd chase it with MIX. Valhalla Room and Supermassive keep their level at every decay. In each card, A is today, B makes up half the loss, C all of it below 15 s, and D / E are your Valhalla takes. The page isn't level-matched, so listen down each column as well as across. Pick per card, with notes.
 
 ### Listen (after your notes)
 - Nothing open.
@@ -23,7 +23,7 @@
 
 ## Waiting on Claude
 
-- **The rest of the Valhalla comparison** (`docs/research/valhalla-comparison.md`): two differences you haven't heard yet, each a page when you want it: our wet gets quieter as DECAY shortens (HALL about 10 dB from 15 s to 2 s; Room and Supermassive keep their level), and MASSIVE's highs die sooner than Supermassive's (8 kHz rings 8 s at the 15 s setting against 15). Also Supermassive moves more in pitch at long settings (a DRIFT comparison).
+- **The rest of the Valhalla comparison** (`docs/research/valhalla-comparison.md`): the loudness one is now on the decay_level page (Decide). Still to come, each a page when you want it: MASSIVE's highs die sooner than Supermassive's (8 kHz rings 8 s at the 15 s setting against 15). Also Supermassive moves more in pitch at long settings (a DRIFT comparison).
 - **Re-render M6** (`renders/m6_character`): it predates today's ERA changes (knob curve, vintage reads, the Midiverb hold, tape out), if you'd like to hear ERA as it is now.
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
