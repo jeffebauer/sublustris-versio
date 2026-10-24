@@ -1,18 +1,18 @@
 # Owner tasks
 
-**Last updated:** 24 Oct 2026, session 4 (five pages to hear: Valhalla round 2, held Midiverb round 2, tape out stronger, the full mix's send, infinite tails when you stop).
+**Last updated:** 24 Oct 2026, session 4 (five pages to hear: Valhalla round 2, distortion on held notes, tape out round 2, the full mix's send, infinite tails when you stop).
 **Plugin installed:** none yet (M2 installs the first build with `tools/install_plugin.sh`).
 
 ## To do
 
 ### Decide
-- [ ] **A held Midiverb tail, round 2** (`renders/midiverb_hold/index.html`, pick per card): between the drone and the bright, as you asked. The rise-and-drop you saw was noise piling up once the dark loop was gone; keeping part of it stops that. A today's drone, B brighter with the highs fading slowly (a quarter of the loop kept), C brighter still, barely fading (a tenth).
+- [ ] **Distortion on held notes** (`renders/tape_bias/index.html`, pick per card): the saturation you heard on the vibes' ringing notes is tape out, not the Midiverb. Its curve is lopsided on purpose (tape-like even harmonics), which bends even quiet notes: a second harmonic 14-22 dB under a held note. A today, B a third of the lopsidedness, C none (held notes stay clean; loud peaks still saturate). Your pick also applies to the tape page's versions, which all carry today's curve.
 - [ ] **Immensio beside Valhalla, round 2** (`renders/valhalla_round2/index.html`, pick per card): a fix for each of your notes, beside the same Valhalla takes. HALL without the slap-back gap (early echoes) and with highs fading like air; the long HALL's resonances smoothed (more gentle movement); the PLATE's lows centred (they were partly out of phase, as you suspected); the long PLATE's top end tamed; MASSIVE with half the swell.
 - [ ] **The full mix's send** (`renders/fullmix_send/index.html`, pick per card; your note that the full mix sounds quieter with less tape): the reverb only hears the mix's send, 12 dB under the single instruments. A today, B the send 12 dB hotter, C tape that hears a steady level (more tape character, same wet level), D both. Not level-matched: keep one MIX setting for all four.
 - [ ] **Tape out, round 2** (`renders/tape_out/index.html`, pick per card): hysteresis on gentler tape, as you asked. A today, B a little stronger, C and D today plus light and full hysteresis, E and F a little stronger plus light and full. Light is cheap enough for the module; full is the physical tape model (may be too heavy for it) and also changes the tone noticeably. Does hysteresis add something you want, and on which strength?
 
 ### Listen (after your notes)
-- [ ] **Infinite tails when you stop playing** (`renders/infinite_stop/index.html`, pick per card): today (A) an infinite PLATE fed a loud input plunges 27 dB when the music stops and creeps back over a minute or more; the overnight fix (B) holds it within half a decibel. HALL improves a little, MASSIVE is the same either way; at normal levels they sound alike, so the music here is 12 dB hot (a loud Eurorack level). 80 s renders.
+- [ ] **Infinite tails when you stop playing** (`renders/infinite_stop/index.html`, pick per card; this is also the drop you heard on the held PLATE keys, measured: today it falls about 7 dB when the keys stop, with the fix about 2): today (A) an infinite PLATE fed a loud input plunges 27 dB when the music stops and creeps back over a minute or more; the overnight fix (B) holds it within half a decibel. HALL improves a little, MASSIVE is the same either way; at normal levels they sound alike, so the music here is 12 dB hot (a loud Eurorack level). 80 s renders.
 
 ### Listen (first time)
 
@@ -39,6 +39,7 @@
 
 ## Done
 
+- 24 Oct 2026: **A held Midiverb tail stays brighter and fades slowly** (B on all 16 cards; SPEC v1.0.23): at infinite DECAY the Midiverb keeps a quarter of its dark loop, so a held tail no longer turns into a low drone, and no hiss piles up. The page is deleted.
 - 24 Oct 2026: **Your Valhalla notes measured** (`docs/research/valhalla-notes.md`): the HALL's slap-back is a real 80 ms gap; the long HALL rings more resonantly than Room; the PLATE's lows were partly out of phase between left and right (Valhalla's aren't); our long PLATE has more top end (8 kHz rings 7.7 s against 2.9-6.3). Fixes are on the round-2 page.
 - 24 Oct 2026: **Held Midiverb, round 1 listened**: bright on most cards, drone on the vibes, "a balance between drone and bright would be ideal". The vibes' resonance is any infinite tail ringing a very pure note (it rings even more with ERA clean).
 - 24 Oct 2026: **The DSP audit's three ideas shipped** (B on every card; SPEC v1.0.22, ADR 0019): a frozen pad holds still instead of slowly shimmering out of tune; across ERA's μ-law stretch the HALL and MASSIVE tails read the old-Lexicon way (a little grain and noise, like a 224 or PCM70); the cassette stage now warms the wet like tape (it had no audible saturation before). The page is deleted. M6's ERA row was rendered before these and v1.0.21.
