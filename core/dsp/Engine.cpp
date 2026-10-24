@@ -155,9 +155,7 @@ IV_SIZE_OPT void Engine::reset()
     tilt_.set(smoothed(ParamId::Tone));
     tilt_.snap();
     limiter_.reset();
-    for (int c = 0; c < 2; ++c) { tapeOs_[c].reset(); tapeOs2_[c].reset(); tapeDc_[c] = 0.0f; }
-    tapePow_ = 0.0f;
-    tapeLevelGain_ = 1.0f;
+    for (int c = 0; c < 2; ++c) { tapeOs_[c].reset(); tapeOs2_[c].reset(); tapeDc_[c] = 0.0f; tapeProto_[c].reset(); }
     duck_ = duckGrDb_ = duckGainStep_ = 0.0f;
     duckGain_ = 1.0f;
     hissLp_[0] = hissLp_[1] = 0.0f;
@@ -788,7 +786,13 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             wl *= eraMakeup_;
             wr *= eraMakeup_;
             muLaw_.process(wl, wr); // ERA's μ-law output layer (the wet only)
-            if (tapeDrive_ > 0.0f && tapeOn_) tapeOut(wl, wr);
+            if (tapeDrive_ > 0.0f && tapeOn_) {
+                if (tapeMode_ == 0) tapeOut(wl, wr);
+                else { // PROTOTYPE: stronger tape out and hysteresis (Tape.h)
+                    wl = tapeProto_[0].process(wl, tapeDrive_, tapeMode_, sampleRate_);
+                    wr = tapeProto_[1].process(wr, tapeDrive_, tapeMode_, sampleRate_);
+                }
+            }
             tilt_.process(wl, wr);
             duckGain_ += duckGainStep_; // ducking (ADR 0014)
             wl *= duckGain_;
@@ -822,18 +826,9 @@ void Engine::tapeOut(float& l, float& r)
     auto sat = [&](float x) { return (th(d * (x + b)) - tb) * norm; };
     float* ch[2] = {&l, &r};
     const float dcCoeff = 6.2831853f * 5.0f / sampleRate_;
-    // PROTOTYPE (setTapeLevel): a steady level into the tape: a 0.3 s level sets the gain, glided over 50 ms.
-    float g = 1.0f;
-    if (tapeLevelCap_ > 1.0f) {
-        tapePow_ += (1.0f - std::exp(-1.0f / (0.3f * sampleRate_))) * (0.5f * (l * l + r * r) - tapePow_);
-        const float want = voicing::kTapeLevelRms / std::sqrt(tapePow_ + 1e-12f);
-        const float target = want < 1.0f ? 1.0f : (want > tapeLevelCap_ ? tapeLevelCap_ : want);
-        tapeLevelGain_ += (1.0f - std::exp(-1.0f / (0.05f * sampleRate_))) * (target - tapeLevelGain_);
-        g = tapeLevelGain_;
-    }
     for (int c = 0; c < 2; ++c) {
         dsp::Oversampler& inner = tapeOs2_[c];
-        const float y = tapeOs_[c].process(*ch[c] * g, [&](float u) { return inner.process(u, sat); }) / g;
+        const float y = tapeOs_[c].process(*ch[c], [&](float u) { return inner.process(u, sat); });
         tapeDc_[c] += dcCoeff * (y - tapeDc_[c]);
         *ch[c] = y - tapeDc_[c];
     }
