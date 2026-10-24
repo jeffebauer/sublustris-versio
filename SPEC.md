@@ -6,6 +6,7 @@
 **Status:** Spec **v1.0 (frozen)**, 21 Oct 2026. Input: `IMMENSIO_BRIEF.md`. Vocabulary: `CONTEXT.md`. Decisions: `docs/adr/` (0001–0017; index in `docs/adr/README.md`). Session record: `docs/spec-session.md`. Changes after freeze: new ADR + changelog entry. Numbers marked *(start)* are starting guesses; tuned numbers replace them as milestones confirm them.
 
 ### Changelog
+- v1.0.30 — owner's picks (25 Oct 2026; `renders/era_discrete`, `era_v2`, `era_v2b`, `era_v2c`; new ADR 0021, superseding ADR 0003): **ERA runs from sweet to gritty, each era on its own, over the Neve's warmth.** Five eras in equal stretches: Neve (the base, under every era), Midiverb, a bucket-brigade delay line (new: dark, the compander's breathing, the clock's aliasing, its grit growing across its stretch), cassette, AM radio (new: a station fading on its own path while the receiver's static swells with the AGC, soft hiss, three-layer static, a slow detune, rare drift-offs and a faint hum at the gritty end). The BBD and radio are on the wet after the loop. μ-law and vintage reads are removed (they sounded like the cassette); ERA fully CCW is now the Neve, not clean, and ERA's default moves from 0.2 to 0.1 (the middle of the Neve; 0.2 is where the Midiverb now starts). Loudness within ±1 dB across the knob; holds, silence, MIX 0 passthrough and click-free sweeps checked in `test_era`.
 - v1.0.29 — bug fix (25 Oct 2026, found on the era_discrete knob-sweep page): **turning ERA through the cassette's start no longer clicks.** Tape out switched in and out in one sample, and its oversampling filters stepped the wet (a spike about 250× the surrounding level at ERA 0.35, either way, since v1.0.22). It now fades in and out over 20 ms (`Engine` `tapeMix_`). Static settings are bit-identical; `test_era` checks the sweep up, down, and down and back up.
 - v1.0.28 — owner's picks (24 Oct 2026; `renders/decay_level` C "all made up" on every card, the repeated cards agreeing, and "levels should ideally be consistent across reverb types"; new ADR 0020): **DECAY keeps the loudness.** A shorter tail is no longer quieter: the wet (and the twin) is made up to the level of each SPACE's longest finite tail (`map::decayLevelMakeup`), and REVERSE's short stops come up to the forward wet (`map::reverseLevelMakeup`); the PLATE is 0.4 dB louder to stay matched. Every finite setting in every SPACE now measures within about 2 dB on music (13 dB before; MASSIVE was 5 dB under HALL and PLATE at the same tail length). The finite top, the crossover, infinite and a frozen pad are unchanged.
 - v1.0.27 — owner's pick (24 Oct 2026; `renders/tape_out` round 2 on the settled tape, E "a little stronger, light hysteresis" on all 24 cards, the repeated cards agreeing; ADR 0019 amendment; `docs/research/tape-out.md`): **tape out is stronger and has light hysteresis** (`dsp/Tape.h`). Across the cassette layer:
@@ -95,7 +96,7 @@ Flashing: NE Firmware Swap web app, "Select Custom File" (Resilio ADR 0011). Tha
 - **Warm and lush, never metallic.** Reference dislikes: Make Noise Erbe-Verb, Plexophone.
 - **Sustains near-infinitely without running away.** At infinite, the tail evolves to a warm floor and holds there (ADR 0008).
 - **Massive mode has mass:** a gentle built-in swell in NORMAL (or a timed BLOOM) that starts with the source, and SIZE from a long wash to a boundless one (§4.5, §4.11; v1.0.6).
-- **Era is a journey back in time**, from clean to Neve, cassette, μ-law and Midiverb. The layers stack (§4.7).
+- **Era runs from sweet to gritty** (ADR 0021): Neve, Midiverb, bucket-brigade, cassette, AM radio, each on its own over the Neve's warmth (§4.7). *(v1.0.30; until then a stacked journey back in time, ADR 0003.)*
 - **Its own instrument:** not a Dattorro plate with distortion (Plateau Versio), and no Desmodus-style "scream".
 
 ### 2.2 Inspirations → what we take
@@ -119,10 +120,10 @@ Pots are named by panel position P1–P7, in reading order, as in Resilio ADR 00
 
 | Pot | Name | Function | Range and curve *(start)* | Smoothing |
 |---|---|---|---|---|
-| P1 | **MIX** | Dry/wet, equal-power (ADR 0012) | θ = x·π/2; dry = cos θ, wet = sin θ. Fully CCW = clean passthrough (dry untouched, even with Era up: the μ-law box is wet-only); fully CW = 100 % wet | snappy 5 ms |
+| P1 | **MIX** | Dry/wet, equal-power (ADR 0012) | θ = x·π/2; dry = cos θ, wet = sin θ. Fully CCW = clean passthrough (dry untouched, even with Era up: every era is wet-only); fully CW = 100 % wet | snappy 5 ms |
 | P2 | **DECAY** | Tail length; past ~3 o'clock, infinite plus ducking (ADR 0008, 0014); keeps the loudness (ADR 0020); in Massive NORMAL it also shortens the built-in mass (ADR 0007) | 0–0.80: T60 exponential. Plate 0.4 → 12 s, Hall 0.8 → 25 s, Massive 2 → 120 s. 0.80–0.85: crossover to infinite. 0.85–1: infinite (loop gain 1 at the floor), duck depth grows 0 → full (§4.9) | gliding 80 ms |
 | P3 | **TONE** | Tilt EQ in the loop: the tail darkens or brightens with each pass, plus a matching tilt on the wet (v1.0.8: CCW +4 dB lows / −9 dB highs, CW −4 / +6 dB round 600 Hz). Noon is flat (ADR 0012) | Pivot ~800 Hz. Per pass, gain at 10 kHz relative to 100 Hz: −6 dB (CCW) → 0 (noon) → +2 dB (CW). The loop gain is renormalised so that "bright" never exceeds 1 at any frequency. Noon dead zone ±2 % | snappy 5 ms |
-| P4 | **ERA** | Clean → Neve → Cassette → μ-law → Midiverb, stacking (ADR 0003, 0004, 0005) | Travel weighted to the middle: 0–10 / 10–35 / 35–65 / 65–85 / 85–100 %. Each layer fades in across its stretch, then stays. §4.7 | gliding 60 ms (rate changes crossfade) |
+| P4 | **ERA** | Neve → Midiverb → Bucket-brigade → Cassette → AM radio, each on its own over the Neve (ADR 0021, 0004, 0005) | Five equal stretches of 20 %; each era comes in over the first third of its stretch as the one before goes. §4.7 | gliding 60 ms (rate changes crossfade) |
 | P5 | **SIZE** | The space. Plate / Hall: scale. Massive: long wash → boundless wash, predelay grows a little (ADR 0007, v1.0.6). Moves bend pitch like tape (ADR 0012). While frozen it plays the companion | Plate: tank scale 0.5 → 1.59 (v1.0.11). Hall: mean line delay 35 → 260 ms, finite T60 × 0.49 → 1 (v1.0.8, v1.0.17). Massive: mean line delay 0.35 → 2 s, exponential; delay-ratio spread (Warp) 0.4 → 1; in-loop and input diffusion 0.45 → 1 (×); predelay 0 → 100 ms (∝ x²) (v1.0.6). Slew-limited to ≤ ±1 semitone of bend (≤ 6 % delay change per second); a fast move becomes a swoop over up to ~1.5 s | slew-limited (§4.3) |
 | P6 | **DRIFT** | Bipolar pitch movement in the tank (ADR 0012) | Dead zone 0.47–0.53, which leaves only the anti-metallic floor (±1–2 cents per line, slow random). Left: tape wow 0.2–1 Hz up to ±15 cents, flutter 5–9 Hz up to ±3 cents, random and never repeating. Right: Wander (v1.0.20): quick, small random movement, 1 → 2.25 Hz up to ±20 cents at full, each line's rate fanned out ±50 % so they never sway together (Lexicon Random Hall, Valhalla Random Space). Below 300 Hz the tail stays still (v1.0.18) | gliding 80 ms |
 | P7 | **TIME** | The attack's timing, per ATTACK (ADR 0015). NORMAL: predelay. BLOOM: swell time. REVERSE: reverse length | NORMAL: predelay 0 → 250 ms (∝ x²) *(start)*. BLOOM: swell time 0.1 → 4 s, exponential (shorter keeps a swell from clashing with the harmony coming in). REVERSE: segment length 0.2 → 2 s, exponential | gliding 80 ms (REVERSE length changes at the next segment) |
@@ -182,7 +183,7 @@ Level meters as Resilio (ADR 0031): LED 1–2 In L / In R, LED 3–4 Out L / Out
          │                                   │
          └─frozen──► TWIN tank (same space) ─(paint, a little)─┘ (into the frozen pad)
                           │
-   tank out + twin out (−6 dB, v1.0.14) ─► ERA output layer (μ-law 24 kHz / 12→10-bit)
+   tank out + twin out (−6 dB, v1.0.14) ─► ERA on the wet (tape out, bucket-brigade, AM radio)
                           ─► output limiter ─► MIX (equal-power) ◄── dry
                           ─► Out L/R
 ```
@@ -214,16 +215,16 @@ Level meters as Resilio (ADR 0031): LED 1–2 In L / In R, LED 3–4 Out L / Out
 ### 4.6 Loop character chain (per pass)
 Order inside each line or branch *(start)*: modulated delay read → TONE tilt (one-pole shelf pair) + fixed damping → soft saturation (cheap polynomial or rational soft clip, no tanh, no oversampling in the loop) → ERA in-loop layers → DARKEN duck. The dub-desk inspiration lives on through Tone, the saturation and Era; there is no resonant Desk EQ (ADR 0015).
 
-### 4.7 Era (ADR 0003, 0004, 0005)
-Stacking: each stage's layer fades in across its stretch of the knob and then stays.
+### 4.7 Era (ADR 0021, 0004, 0005)
+Five eras in equal stretches, sweetest first, each on its own over the Neve's warmth (until v1.0.30 the stages stacked, ADR 0003). Each era comes in over the first third of its stretch as the one before goes.
 
-| Stage (layer added) | Bandwidth | Bits / companding | Saturation | Noise | Wow / flutter | Where |
+| Era (ERA) | Bandwidth | Bits / companding | Saturation | Noise | Movement | Where |
 |---|---|---|---|---|---|---|
-| Clean (0–10 %) | full | float | always-on loop soft-clip only | none | none (Drift only) | – |
-| + Neve (10–35 %) | loop LP 20 → 16 kHz; +1.5 dB shelf at 80 Hz | float | even-harmonic, asymmetric; 2nd harmonic ~−30 dB at nominal | none | none | in loop |
-| + Cassette (35–65 %) | 16 → 9 kHz; head bump +2 dB at ~70 Hz | float; slow 2:1 soft compression above −18 dBFS (gain at control rate) | tape curve on top | hiss into the tank input, up to ~−66 dBFS, ducked by input level (ADR 0005) | wow 0.3–0.8 Hz up to ±4 cents, flutter 6–8 Hz up to ±1 cent, added to DRIFT | in loop (hiss at tank input) |
-| + μ-law (65–85 %) | unchanged | 24 kHz / 12-bit μ-law → 10-bit at 85 % | – | – | – | wet output (ADR 0004) |
-| + Midiverb (85–100 %) | ~10 kHz ceiling via a 48 → 24 → 48 kHz box | 13-bit (the unit's; was 12 → 8 until v1.0.16) with its ½ one-pole every pass, truncation toward zero (rounding at infinite; no dither since v1.0.3) | – | sparse crackle, growing to the end | – | in loop (ADR 0004) |
+| Neve, the base (always) | the tank's highs a little shorter (×0.7 T60 share) | float | even-harmonic into the loop's soft clip | none | none | in loop |
+| Midiverb (20–40 %) | ~10 kHz ceiling via a 48 → 24 → 48 kHz box | 13-bit with its ½ one-pole every pass, truncation toward zero (rounding at infinite) | – | sparse crackle | – | in loop (ADR 0004) |
+| Bucket-brigade (40–60 %) | low-pass 7 → 2.2 kHz (a third of the clock), the clock's sample-and-hold behind a weak anti-alias filter (its aliasing) | NE570 compander 2:1 / 1:2 | the chip's soft 2nd harmonic, growing | compander noise, breathing with the level | – | wet, after the loop (ADR 0021) |
+| Cassette (60–80 %) | the tank's highs much shorter (×0.4 T60 share); tape out's pre-emphasis | slow 2:1 soft compression above −18 dBFS | tape drive in the loop; tape out on the wet (fades in/out over 20 ms) | hiss into the tank input, ducked by the input (ADR 0005) | wow up to ±4 cents, flutter ±1 cent, added to DRIFT | in loop + wet |
+| AM radio (80–100 %) | high-pass 200 → 400 Hz, low-pass 4.5 → 2.4 kHz, a wandering dip (selective fading) | – | over-modulation, deeper as the station fades | soft coloured hiss, crackle, lightning flashes; all follow the tail | the station's Rician fade (0.08 → 0.5 Hz) given back by an AGC, a slow detune; at the gritty end rare drift-offs and a faint mains hum | wet, after the loop (ADR 0021) |
 
 - The Midiverb box uses polyphase IIR halfbands (Resilio `Oversampler`). Its images are deliberately not fully removed, for a little aliasing grit *(start: stopband −40 dB)*. It **saves no CPU**: the tank stays at 48 kHz, because a live tail's tank rate can't crossfade cleanly (ADR 0004).
 - Midiverb character only (rate, bits, halving accumulator maths); no ROM microcode. emeb/MIDIVerb_RE is MIT and may inform it; thement/midiverb_emulator is GPL-3.0, reference only.
@@ -232,10 +233,10 @@ Stacking: each stage's layer fades in across its stretch of the knob and then st
 Removed before the freeze, after the owner's demo listening: the knob became TIME (ADR 0015).
 
 ### 4.9 Ducking: 4:1 compression of the wet (ADR 0014, amended v1.0.17)
-- The input's ~10 ms power keys a 4:1 compressor on the wet (after ERA's μ-law layer and TONE's tilt, before the limiter): above −24 dBFS, attack 30 ms, release 0.4 s, at control rate with the gain ramped per sample. Its depth is 0 below Decay 0.85, then grows to full at Decay 1. Not while frozen (a freeze lets it go in 50 ms). No darkening. While you play the tail steps back about 3 dB, and it comes back over about a second when you stop. (Until v1.0.17 it was DARKEN, a low-pass closing to ~1.5 kHz plus a 3 dB dip.)
+- The input's ~10 ms power keys a 4:1 compressor on the wet (after ERA's wet stages and TONE's tilt, before the limiter): above −24 dBFS, attack 30 ms, release 0.4 s, at control rate with the gain ramped per sample. Its depth is 0 below Decay 0.85, then grows to full at Decay 1. Not while frozen (a freeze lets it go in 50 ms). No darkening. While you play the tail steps back about 3 dB, and it comes back over about a second when you stop. (Until v1.0.17 it was DARKEN, a low-pass closing to ~1.5 kHz plus a 3 dB dip.)
 
 ### 4.10 Output stage
-Era's μ-law layer (wet only) → soft limiter (ceiling −1 dBFS, Resilio-style) → MIX. The dry path is untouched.
+Era's wet stages (tape out, bucket-brigade, AM radio) → soft limiter (ceiling −1 dBFS, Resilio-style) → MIX. The dry path is untouched.
 
 ### 4.11 ATTACK and TIME (ADR 0015)
 - **NORMAL:** TIME is predelay, 0 → 250 ms *(start)*. Massive adds its gentle built-in mass (§4.5) and Size's predelay.
@@ -261,7 +262,7 @@ Era's μ-law layer (wet only) → soft limiter (ceiling −1 dBFS, Resilio-style
 | Loop chain × 8 (tilt, damping, saturation) | ~250 | cheap soft clip, `Select.h` VSEL |
 | ERA in loop (Neve/Cassette cheap; Midiverb box × 8) | ~350 | worst case, Era at full |
 | Twin tank (when frozen) | ~ the big tank's | SDRAM; frozen pad + twin is the worst case (M3 measures it) |
-| Output μ-law box (stereo) + limiter + mix | ~200 | Resilio `OutputBits` scale |
+| ERA's wet stages (tape out, BBD, radio) + limiter + mix | ~200+ | measured at M3 |
 | Control-rate work (amortised) | ~150 | LFOs, coefficient redesigns, governor |
 | **Total (Massive, Era full, BLOOM, frozen + painting)** | **~2,080 → ×2 ≈ 4,200 (≈ 42 %)** | leaves room; 16 lines decided at M3 |
 
@@ -278,7 +279,7 @@ Plate mode ~1,500 × 2 ≈ 30 %. Mitigations, if short: stagger coefficient rede
 | Plate engine (scale up to 1.59, stereo taps) | ~150 KB | AXI SRAM | random-ish taps; internal is faster than SDRAM |
 | Twin tank (an FDN and a Plate, as the big tank) | ~3.5 MB | SDRAM | runs only while frozen (v1.0.7) |
 | Input diffusers | ~20 KB | DTCM | hottest loop |
-| Filter states, Era boxes, μ-law, LFOs | < 8 KB | DTCM | |
+| Filter states, Era boxes, BBD and radio, LFOs | < 8 KB | DTCM | |
 | Stack, HAL/USB buffers | as libDaisy | AXI SRAM | (Resilio moved its pool to DTCM and kept the stack in AXI) |
 
 DTCM total ~85 KB of 128 KB. SDRAM total ~6 MB of 64 MB. **Unverified:** SDRAM random-read cost under modulation. Measured first at M3 with an on-chip microbenchmark, before features are stacked.
@@ -293,7 +294,7 @@ As Resilio §6: `core/` (params + dsp, no platform includes), `host/render` (CLI
 
 ### 6.1 Seeded from Resilio Versio (copied, provenance in `NOTICE`; ADR 0001: new repo, no shared lib yet)
 - **As-is:** `ParamSpec` pattern, `host/common` (Wav, Json, Fft, Spectrogram, Metrics, Automation, Sweep), the test runner and ctest wiring, the plugin shell + `plugin_host_test`, firmware `PotEndStops`, `LedMeter`, LED PWM, build variants (release / m0test / profile), `ProfileHook`, `Filters`, `Oversampler`, `Select`, `Seed`, `SizeOpt`, and the tools (stimulus, review pages, sweetspot, install and release scripts).
-- **Refactored (maths kept, Resilio voicings dropped):** μ-law (`OutputBits` → the output layer, `EchoBits` → the Midiverb box), `Drive` / `EchoWear` (saturation, tape), `Wobble` (→ DRIFT).
+- **Refactored (maths kept, Resilio voicings dropped):** `EchoBits` → the Midiverb box (the μ-law output layer from `OutputBits` was removed in v1.0.30), `Drive` / `EchoWear` (saturation, tape), `Wobble` (→ DRIFT).
 
 ### 6.2 Repo layout
 ```
@@ -377,7 +378,7 @@ As Resilio §8: NE Firmware Swap → Select Custom File → `immensio_versio.bin
 | SDRAM read cost under modulation | microbenchmark at M3, before features stack; swell stage and lines can trade length for speed |
 | Metallic ringing | modulation floor on every delay, prime lengths, metallic metric from M1 |
 | Infinite runaway or mud | gain ≤ 1 rule, soft saturation, floor governor, 10-minute renders |
-| Era stages sound like separate boxes | stacking, plus the travel weighting and blind tests at M6 |
+| Era stages sound like separate boxes | by design since v1.0.30 (each era on its own, ADR 0021), with the Neve's warmth under all of them |
 | Midiverb box aliasing ugly rather than charming | stopband is a tuning number; owner listening at M6 |
 | Size bend feels seasick | slew limit is a tuning number; noon-ish default |
 | Hiss builds up in infinite tails | hiss ducked by the input level; silent-render test |

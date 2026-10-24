@@ -30,3 +30,5 @@
 - a play operator (backlash) before the curve, its width following the level.
 
 Rejected after listening: a much stronger drive (+24 dB, "too difficult to hear the hysteresis"), the full Jiles–Atherton tape model, and a tape that hears a steady level ("jittery saturation" in long tails).
+
+**Amendment (25 Oct 2026, ADR 0021; SPEC v1.0.30):** vintage reads are removed with the μ-law stretch they belonged to. Tape out stays (the cassette era), with its 20 ms fade in and out (v1.0.29).

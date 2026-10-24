@@ -19,13 +19,14 @@ Shared vocabulary for this project. Use these terms exactly in code, comments an
 | **Modulation floor** | The always-on faint random movement of every tank delay (±1–2 cents) that kills metallic ringing. What remains at DRIFT noon. |
 | **Air** | HALL's and PLATE's highs lose a steady extra few dB per second at every finite DECAY, as air does in a room, instead of a fixed share of the decay, so short tails stay bright and long PLATEs lose some top end (v1.0.25). MASSIVE keeps the share. |
 | **Tape out** | ERA's cassette stage on the wet, outside the loop: pre-emphasis, up to +12 dB of drive taken off again, a light hysteresis and a gently lopsided curve. Quiet sound passes unchanged; peaks and highs take the tape (v1.0.22, v1.0.26, v1.0.27). |
-| **Vintage reads** | Across ERA's μ-law stretch, HALL and MASSIVE read their lines the Lexicon 224 / PCM70 way: coarse 32-step interpolation and a little noisy jitter (v1.0.22, ADR 0019). |
 | **Wander** | DRIFT's clockwise side: quick, small random movement of every tank line (up to ±20 cents, 1–2.25 Hz, the lines' rates fanned out so they never sway together). The tape side is the slower wow plus flutter (v1.0.20). |
 | **Still lows** | Below ~300 Hz the HALL / MASSIVE tail rings in its own unmodulated tank, so the bass never wavers; DRIFT and the modulation floor move only what's above (v1.0.18). |
 | **Loop chain** | Everything inside each line per pass: modulated read → TONE tilt + damping → soft saturation → ERA in-loop layers. |
-| **Era stage / layer** | One of Clean, Neve, Cassette, μ-law, Midiverb. Layers **stack**: each fades in across its stretch of the knob and stays. |
-| **μ-law layer** | Era 65–85 %: 24 kHz / 12 → 10-bit μ-law on the wet output (gritty peaks, smooth quiet tail). |
-| **Midiverb box** | Era 85–100 %: an in-loop 48 → 24 → 48 kHz box with 12 → 8-bit truncation toward zero; the tail gets grainier as it fades. |
+| **Era** | One of ERA's five, sweetest first: Neve, Midiverb, Bucket-brigade, Cassette, AM radio. Each plays **on its own** in its fifth of the knob; only neighbours crossfade (v1.0.30, ADR 0021). |
+| **Neve base** | The Neve's warmth (even harmonics, slightly shorter highs), under every era and alone at ERA fully CCW (v1.0.30). |
+| **Bucket-brigade (BBD)** | ERA 40–60 %: an old analog delay chip's sound on the wet: dark, the compander's breathing noise, the clock's aliasing; grittier across its stretch. |
+| **AM radio** | ERA 80–100 %: a station fading on its own path while the receiver's static swells with the AGC; a wandering dip, soft hiss, crackle and lightning, a slow detune. |
+| **Midiverb box** | Era 20–40 %: an in-loop 48 → 24 → 48 kHz box with the unit's 13 bits, truncated toward zero; the tail gets grainier as it fades. |
 | **Hiss** | Cassette-stage noise fed into the tank input, ducked by the input level. |
 | **Duck** | Tail ducking from the input level, only at infinite Decay: 4:1 compression of the wet (attack 30 ms, release 0.4 s), about 3 dB while you play, no darkening (v1.0.17; it was DARKEN). |
 | **ATTACK** | SW1: NORMAL / BLOOM / REVERSE. Sets the attack in every space. |

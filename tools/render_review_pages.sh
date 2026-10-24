@@ -195,10 +195,10 @@ fi
 
 if on m6_character; then
     page m6_character
-    for ec in 0:A_clean 0.3:B_neve 0.55:C_cassette 0.8:D_mulaw 1:E_midiverb; do
+    for ec in 0.1:A_neve 0.3:B_midiverb 0.5:C_bbd 0.7:D_cassette 0.9:E_radio; do
         r m6_character era_hall ${ec##*:} "" --set space=HALL --set decay=0.6 --set size=0.6 --set era=${ec%%:*}
     done
-    for ec in 0:A_clean 0.55:C_cassette 1:E_midiverb; do
+    for ec in 0.3:B_midiverb 0.7:D_cassette 0.9:E_radio; do
         r m6_character era_massive ${ec##*:} "" --set space=MASSIVE --set decay=0.65 --set size=0.7 --set era=${ec%%:*}
     done
     for dc in 0:A_tape 0.5:B_still 1:C_wander; do
@@ -207,21 +207,21 @@ if on m6_character; then
     for tc in 0:A_dark 0.5:B_noon 1:C_bright; do
         r m6_character tone ${tc##*:} "" --set space=HALL --set decay=0.6 --set size=0.6 --set tone=${tc%%:*}
     done
-    finish m6_character "Immensio M6: ERA, DRIFT and TONE" "ERA's five stacked stages, DRIFT both ways and TONE's full range, rendered from today's reverb (v1.0.28, 24 Oct 2026). Since your last M6 listen, ERA has changed the most: it does something from its first notch and the Midiverb fades in across its stretch (knob feel, v1.0.21); across the μ-law stretch the HALL and MASSIVE tails read the old-Lexicon way, a little grain and noise (v1.0.22); a held Midiverb tail keeps a quarter of its dark loop (v1.0.23); and the cassette stage warms the wet like tape, a little stronger with light hysteresis (tape out, v1.0.22 to v1.0.27). The HALL starts right behind the note and short tails stay brighter (v1.0.25), and the reverb keeps its loudness whatever DECAY is (v1.0.28). ERA stays loudness-matched on music. Does ERA feel like going back in time, stage by stage, and is each stage's character right? Are DRIFT's tape side and its Wander side what you hear in your head? Notes only.
+    finish m6_character "Immensio M6: ERA, DRIFT and TONE" "ERA's five eras (ADR 0021), DRIFT both ways and TONE's full range, from today's reverb. ERA now runs from sweet to gritty, each era on its own, with the Neve's warmth under all of them: the Neve, the Midiverb, a bucket-brigade delay line, the cassette and AM radio (each card is the middle of its stretch). Notes only.
 
-era_hall     ERA's five stages in HALL (DECAY 0.6, SIZE 0.6)
-era_massive  three ERA stages in MASSIVE (DECAY 0.65, SIZE 0.7)
+era_hall     ERA's five eras in HALL (DECAY 0.6, SIZE 0.6)
+era_massive  three eras in MASSIVE (DECAY 0.65, SIZE 0.7)
 drift        DRIFT left, noon, right (HALL, DECAY 0.65)
 tone         TONE dark, noon, bright (HALL, DECAY 0.6)
 
-A_clean     ERA 0
-B_neve      ERA 0.3
-C_cassette  ERA 0.55 (hiss while you play)
-D_mulaw     ERA 0.8
-E_midiverb  ERA 1
+A_neve      ERA 0.1: the Neve (the base under every era)
+B_midiverb  ERA 0.3: the Midiverb
+C_bbd       ERA 0.5: the bucket-brigade
+D_cassette  ERA 0.7: the cassette
+E_radio     ERA 0.9: AM radio
 A_tape      DRIFT fully left (wow and flutter)
 B_still     DRIFT noon
-C_wander    DRIFT fully right (Wander: quick, small random movement; your pick, v1.0.20)
+C_wander    DRIFT fully right (Wander)
 A_dark      TONE fully CCW
 B_noon      TONE noon
 C_bright    TONE fully CW (highs outlast lows)"
@@ -295,49 +295,13 @@ C_supermassive_andromeda      Valhalla Supermassive, Andromeda" > renders/valhal
     echo "renders/valhalla_compare/index.html"
 fi
 
-if on era_discrete; then
-    # Stacked ERA (today, ADR 0003) against discrete eras (owner, 24 Oct 2026): each stage on its own,
-    # only neighbours blending. Prototype hook IV_ERA_DISCRETE (core/params/Mappings.h eraMix). Each
-    # stage near its full strength: cassette 0.62, mu-law 0.83, Midiverb 1.
-    page era_discrete
-    vers() { # vers <col> --set ...: stacked, discrete
-        local col=$1; shift
-        IV_ERA_DISCRETE=0 r era_discrete $col A_stacked "" "$@"
-        IV_ERA_DISCRETE=1 r era_discrete $col B_discrete "" "$@"
-    }
-    H=(--set space=HALL --set decay=0.6 --set size=0.6)
-    M=(--set space=MASSIVE --set decay=0.65 --set size=0.7)
-    vers hall_1_cassette "${H[@]}" --set era=0.62
-    vers hall_2_mulaw "${H[@]}" --set era=0.83
-    vers hall_3_midiverb "${H[@]}" --set era=1
-    vers massive_1_cassette "${M[@]}" --set era=0.62
-    vers massive_2_mulaw "${M[@]}" --set era=0.83
-    vers massive_3_midiverb "${M[@]}" --set era=1
-    print -r -- "Should ERA's stages stack, or should each era sound on its own? A is today, stacked: each stage keeps the ones before it, so the μ-law still has the cassette's tape, hiss and wow under it, and the Midiverb has all three. B is discrete: only that era. The cassette without the Neve's warmth; the μ-law as an early digital unit alone (no tape, hiss or wow); the Midiverb as just the Midiverb (its 13 bits and dark loop, no tape, hiss or μ-law grain). On the knob, discrete eras crossfade only with their neighbours. Each stage is near full strength (ERA 0.62, 0.83 and 1). Loudness matches within about 0.2 dB, and the page is level-matched. Without the cassette's darkening under them, discrete μ-law and Midiverb tails keep their highs a little longer (at the μ-law stage, 2 kHz rings 4.1 s instead of 3.5). The 10-minute infinite holds pass. The Neve has nothing under it, so it sounds the same either way and isn't on the page. Pick per card, with notes.
-
-hall_1_cassette     HALL, ERA 0.62 (cassette)
-hall_2_mulaw        HALL, ERA 0.83 (μ-law)
-hall_3_midiverb     HALL, ERA 1 (Midiverb)
-massive_1_cassette  MASSIVE, ERA 0.62 (cassette)
-massive_2_mulaw     MASSIVE, ERA 0.83 (μ-law)
-massive_3_midiverb  MASSIVE, ERA 1 (Midiverb)
-
-A_stacked           Stacked (today): each era on top of the ones before
-B_discrete          Discrete: each era on its own" > renders/era_discrete/README.txt
-    python3 tools/review/make_review.py renders/era_discrete --title "Immensio: ERA stacked or discrete?" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/era_discrete/index.html"
-fi
-
-if on era_discrete_sweep; then
-    # The era_discrete question as ERA knob sweeps, chaptered at each era's start (owner, 24 Oct 2026).
-    # Each material's playing part loops for 40 s while ERA turns, an equal 8 s per era, then the tail
-    # rings at ERA 1 for 12 s.
+if on era_sweep; then
+    # ERA turned from fully left to fully right over 40 s while the music loops (renders/_material_sweep,
+    # 40 s loops + 12 s of tail), then the tail at ERA 1; chaptered at each era's start (ADR 0021).
     SW=renders/_material_sweep
     mkdir -p $SW
     [ -f $SW/_click.wav ] || cp $SRC/_click.wav $SW/_click.wav
-    print -r -- '{ "breakpoints": [ {"t": 0, "key": "era", "value": 0}, {"t": 2, "key": "era", "value": 0.03},
-      {"t": 10, "key": "era", "value": 0.35}, {"t": 18, "key": "era", "value": 0.65},
-      {"t": 26, "key": "era", "value": 0.85}, {"t": 34, "key": "era", "value": 1}, {"t": 52, "key": "era", "value": 1} ] }' > $SW/era_sweep.json
+    print -r -- '{ "breakpoints": [ {"t": 0, "key": "era", "value": 0}, {"t": 40, "key": "era", "value": 1}, {"t": 52, "key": "era", "value": 1} ] }' > $SW/era_lin.json
     saved=("${MATERIALS[@]}"); MATERIALS=()
     for m in skank vibes stabs pad lead drums bass keys voice fullmix; do
         [ -f $SRC/$m.wav ] || continue
@@ -351,145 +315,22 @@ if on era_discrete_sweep; then
             ffmpeg -v error -y -i $SW/_loop_$f.wav -af "afade=t=out:st=39.9:d=0.1,apad=pad_dur=12" -c:a pcm_f32le $SW/$f.wav
             rm -f $SW/_loop_$f.wav
         done
-        cp $SW/era_sweep.json $SW/era_sweep_$m.json
+        cp $SW/era_lin.json $SW/era_lin_$m.json
     done
-    page era_discrete_sweep
+    page era_sweep
     SRC0=$SRC; SRC=$SW
-    for sp in "hall:--set space=HALL --set decay=0.6 --set size=0.6" "massive:--set space=MASSIVE --set decay=0.65 --set size=0.7"; do
-        col=${sp%%:*}; args=(${=sp#*:})
-        IV_ERA_DISCRETE=0 r era_discrete_sweep $col A_stacked era_sweep "${args[@]}"
-        IV_ERA_DISCRETE=1 r era_discrete_sweep $col B_discrete era_sweep "${args[@]}"
-    done
+    r era_sweep hall A_era_sweep era_lin --set space=HALL --set decay=0.6 --set size=0.6
+    r era_sweep massive A_era_sweep era_lin --set space=MASSIVE --set decay=0.65 --set size=0.7
     SRC=$SRC0; MATERIALS=("${saved[@]}")
-    print -r -- "Stacked against discrete ERA as the knob turns: ERA sweeps from clean to the Midiverb while the music plays, about 8 s per era, then the tail rings at full ERA. The bar under each card is in chapters at each era's start: click one to jump to it (Clean 0 s, Neve 2 s, Cassette 10 s, μ-law 18 s, Midiverb 26 s, Tail 40 s). A is today, stacked: each era on top of the ones before. B is discrete: each era on its own, crossfading only with its neighbours. Switch A/B inside a chapter to hear the difference at that era. Loudness matches within about 0.2 dB. Pick per card, with notes.
+    print -r -- "ERA turned from fully left to fully right over 40 s while the music plays, then the tail rings at full ERA. The bar under each card is in chapters at each era's start: click one to jump there (Neve 0 s, Midiverb 8 s, BBD 16 s, Cassette 24 s, Radio 32 s, Tail 40 s). Each era comes in over the first third of its chapter, then runs from its sweet end to its gritty end. Notes only.
 
 hall      HALL (DECAY 0.6, SIZE 0.6)
 massive   MASSIVE (DECAY 0.65, SIZE 0.7)
 
-A_stacked   Stacked (today)
-B_discrete  Discrete: each era on its own" > renders/era_discrete_sweep/README.txt
-    python3 tools/review/make_review.py renders/era_discrete_sweep --title "Immensio: ERA stacked or discrete, knob sweep" --level-match --dry $SW --wet-only \
-        --chapters "Clean:0,Neve:2,Cassette:10,μ-law:18,Midiverb:26,Tail:40" > /dev/null
-    echo "renders/era_discrete_sweep/index.html"
-fi
-
-if on era_v2; then
-    # The redesigned ERA knob (owner, 25 Oct 2026; docs/research/new-eras.md): sweet to gritty, each era on
-    # its own, the Neve's warmth under all of them. Prototype hook IV_ERA_V2 (1 with the Neve base, 2
-    # without). Each era at the middle of its stretch, HALL as M6.
-    page era_v2
-    vers() { # vers <col> <era>
-        IV_ERA_V2=1 r era_v2 $1 A_neve_base "" --set space=HALL --set decay=0.6 --set size=0.6 --set era=$2
-        IV_ERA_V2=2 r era_v2 $1 B_no_base "" --set space=HALL --set decay=0.6 --set size=0.6 --set era=$2
-    }
-    vers e1_neve 0.083
-    vers e2_midiverb 0.25
-    vers e3_bbd 0.417
-    vers e4_cassette 0.583
-    vers e5_sampler 0.75
-    vers e6_radio 0.917
-    print -r -- "The redesigned ERA knob, one card per era, in the order the knob now runs, sweetest first: the Neve's warmth, then the Midiverb, a bucket-brigade (BBD) delay line, the cassette, an early sampler, and AM radio. Three are new (from the research on real units): the BBD (dark and woolly, the old analog delay chips' compander 'breathing' under the tail), the sampler (an SP-1200 / Mirage style low sample rate and 10 bits, its top folding away into aliasing), and the radio (a narrow band, a slowly wandering fade, crackle, an AGC that holds the tail up). μ-law is gone. In each card, A has the Neve's warmth underneath, B doesn't; on the first card that's the Neve against clean. Each era is shown halfway into its stretch of the knob (each goes from its sweet end to its gritty end across it). Levels are within about 1 dB, and the page is level-matched. Safety: the Neve base, Midiverb and cassette pass the 10-minute infinite holds with the Neve underneath; the radio's slow fades make a held (infinite) tail wander by up to about 4 dB, by design. Pick per card (A or B), and say in the notes which eras you'd keep. The knob-sweep page plays all six in a row, chaptered.
-
-e1_neve      Neve (ERA 0.08): A the Neve base, B clean
-e2_midiverb  Midiverb (ERA 0.25)
-e3_bbd       Bucket-brigade (ERA 0.42), new
-e4_cassette  Cassette (ERA 0.58)
-e5_sampler   Early sampler (ERA 0.75), new
-e6_radio     AM radio (ERA 0.92), new
-
-A_neve_base  With the Neve's warmth underneath
-B_no_base    Without it" > renders/era_v2/README.txt
-    python3 tools/review/make_review.py renders/era_v2 --title "Immensio: the new ERA" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/era_v2/index.html"
-fi
-
-if on era_v2_sweep; then
-    # The redesigned ERA knob swept from fully CCW to fully CW over 40 s (about 6.7 s per era) while the
-    # music loops, then the tail at ERA 1. Chapters at each era's start. Uses era_discrete_sweep's looped
-    # material (renders/_material_sweep).
-    SW=renders/_material_sweep
-    [ -f $SW/skank.wav ] || { echo "era_v2_sweep: make renders/_material_sweep first (era_discrete_sweep)"; exit 1; }
-    print -r -- '{ "breakpoints": [ {"t": 0, "key": "era", "value": 0}, {"t": 40, "key": "era", "value": 1}, {"t": 52, "key": "era", "value": 1} ] }' > $SW/era_lin.json
-    saved=("${MATERIALS[@]}"); MATERIALS=()
-    for m in skank vibes stabs pad lead drums bass keys voice fullmix; do [ -f $SW/$m.wav ] && MATERIALS+=($m) && cp $SW/era_lin.json $SW/era_lin_$m.json; done
-    page era_v2_sweep
-    SRC0=$SRC; SRC=$SW
-    for sp in "hall:--set space=HALL --set decay=0.6 --set size=0.6" "massive:--set space=MASSIVE --set decay=0.65 --set size=0.7"; do
-        col=${sp%%:*}; args=(${=sp#*:})
-        IV_ERA_V2=1 r era_v2_sweep $col A_neve_base era_lin "${args[@]}"
-        IV_ERA_V2=2 r era_v2_sweep $col B_no_base era_lin "${args[@]}"
-    done
-    SRC=$SRC0; MATERIALS=("${saved[@]}")
-    print -r -- "The new ERA knob turned from fully left to fully right over 40 s while the music plays, then the tail rings at full ERA. The bar under each card is in chapters at each era's start: click one to jump there (Neve 0 s, Midiverb 6.7 s, BBD 13.3 s, Cassette 20 s, Sampler 26.7 s, Radio 33.3 s, Tail 40 s). Each era comes in over the first third of its chapter and then gets grittier until the next takes over. A has the Neve's warmth underneath, B doesn't. Notes only: how the journey feels, and where it should change.
-
-hall      HALL (DECAY 0.6, SIZE 0.6)
-massive   MASSIVE (DECAY 0.65, SIZE 0.7)
-
-A_neve_base  With the Neve's warmth underneath
-B_no_base    Without it" > renders/era_v2_sweep/README.txt
-    python3 tools/review/make_review.py renders/era_v2_sweep --title "Immensio: the new ERA, knob sweep" --showcase --level-match --dry $SW --wet-only \
-        --chapters "Neve:0,Midiverb:6.67,BBD:13.33,Cassette:20,Sampler:26.67,Radio:33.33,Tail:40" > /dev/null
-    echo "renders/era_v2_sweep/index.html"
-fi
-
-if on era_v2b; then
-    # The new ERA, round 2 (owner, 25 Oct 2026): the BBD with more grit (IV_BBD_GRIT) and the radio with
-    # light noise and artifacts (IV_RADIO_NOISE), both with the Neve base. HALL as M6.
-    page era_v2b
-    vers() { # vers <col> <era> <hook>
-        IV_ERA_V2=1 IV_BBD_GRIT=0 IV_RADIO_NOISE=0 r era_v2b $1 A_round_1 "" --set space=HALL --set decay=0.6 --set size=0.6 --set era=$2
-        if [ $3 = bbd ]; then
-            IV_ERA_V2=1 IV_BBD_GRIT=1 r era_v2b $1 B_more "" --set space=HALL --set decay=0.6 --set size=0.6 --set era=$2
-            IV_ERA_V2=1 IV_BBD_GRIT=2 r era_v2b $1 C_most "" --set space=HALL --set decay=0.6 --set size=0.6 --set era=$2
-        else
-            IV_ERA_V2=1 IV_RADIO_NOISE=1 r era_v2b $1 B_more "" --set space=HALL --set decay=0.6 --set size=0.6 --set era=$2
-            IV_ERA_V2=1 IV_RADIO_NOISE=2 r era_v2b $1 C_most "" --set space=HALL --set decay=0.6 --set size=0.6 --set era=$2
-        fi
-    }
-    vers bbd_1_middle 0.417 bbd
-    vers bbd_2_gritty_end 0.49 bbd
-    vers radio_1_middle 0.917 radio
-    vers radio_2_gritty_end 0.99 radio
-    print -r -- "The new ERA, round 2, with the Neve's warmth underneath. The bucket-brigade (first two columns): A is round 1. B has more grit: the chip driven twice as hard (more of its warm 2nd harmonic), its compander's breathing noise 6 dB up, and the clock's own aliasing (a cheap long-delay BBD holds each sample for a clock period, so high notes fold into darker false tones). C has the most: three times the drive, 12 dB more noise, stronger aliasing. If B or C is gritty enough, the sampler goes. The radio (last two columns): A is round 1. B adds light noise: audible hiss in the radio band, more crackle, and now and then a burst of static. C adds a faint heterodyne whistle drifting slowly, the sound of two stations beating on shortwave. All noise follows the tail, so silence stays silent. Each era at the middle of its stretch, and at its gritty end. Levels within about 1 dB; the page is level-matched. Pick per card, with notes.
-
-bbd_1_middle        Bucket-brigade, middle of its stretch (ERA 0.42)
-bbd_2_gritty_end    Bucket-brigade, its gritty end (ERA 0.49)
-radio_1_middle      AM radio, middle of its stretch (ERA 0.92)
-radio_2_gritty_end  AM radio, its gritty end (ERA 0.99)
-
-A_round_1   Round 1
-B_more      BBD: more grit · Radio: light noise and static
-C_most      BBD: the most grit · Radio: noise and a drifting whistle" > renders/era_v2b/README.txt
-    python3 tools/review/make_review.py renders/era_v2b --title "Immensio: the new ERA, round 2" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/era_v2b/index.html"
-fi
-
-if on era_v2c; then
-    # The new ERA, round 3 (owner, 25 Oct 2026): the BBD's round-2 "more" reached at two-thirds of its stretch
-    # instead of halfway (IV_BBD_GRIT=3), and the radio rebuilt from docs/research/radio-artifacts.md
-    # (IV_RADIO_NOISE=3). Neve base on. HALL as M6.
-    page era_v2c
-    H=(--set space=HALL --set decay=0.6 --set size=0.6)
-    for c in "bbd_1_third:0.3889" "bbd_2_two_thirds:0.4433" "bbd_3_end:0.4983"; do
-        IV_ERA_V2=1 IV_BBD_GRIT=1 r era_v2c ${c%%:*} A_round_2 "" "${H[@]}" --set era=${c##*:}
-        IV_ERA_V2=1 IV_BBD_GRIT=3 r era_v2c ${c%%:*} B_round_3 "" "${H[@]}" --set era=${c##*:}
-    done
-    for c in "radio_1_middle:0.917" "radio_2_gritty_end:0.99"; do
-        IV_ERA_V2=1 IV_RADIO_NOISE=1 r era_v2c ${c%%:*} A_round_2 "" "${H[@]}" --set era=${c##*:}
-        IV_ERA_V2=1 IV_RADIO_NOISE=3 r era_v2c ${c%%:*} B_round_3 "" "${H[@]}" --set era=${c##*:}
-    done
-    print -r -- "The new ERA, round 3, with the Neve's warmth underneath. The bucket-brigade (first three columns, at a third, two-thirds and the end of its stretch): A is round 2's B, your pick, which reached its grit halfway; B is the new curve, gentler at first, reaching that same grit at two-thirds (the middle column, where A and B should sound nearly the same) and half as much again by the end. The radio (last two columns): A is round 2's light noise. B is rebuilt from research on real reception. The station fades on its own while the receiver's noise stays put, so the AGC lifts the hiss and static exactly when the station dips, as on a real set. The hiss is softer and coloured. The static has three layers: a storm that comes and goes, crackle of varied brightness, and lightning crashes of 1-6 strokes, each with its own colour. Whistles live 4-30 s at a nearly fixed pitch with a slight wobble and their own fading, some only as a slow throb, then go quiet for a while. A slow drift off tune dulls and roughens it. At the gritty end there's now and then a drift off the station and back (with a whoop through zero beat), a burst of fast 'polar' flutter, and a faint mains hum. The wandering dip is unchanged. Events are random, so each clip has its own. Levels within about 1 dB; the page is level-matched. Pick per card, with notes.
-
-bbd_1_third         Bucket-brigade, a third into its stretch (ERA 0.39)
-bbd_2_two_thirds    Bucket-brigade, two-thirds in (ERA 0.44)
-bbd_3_end           Bucket-brigade, the end of its stretch (ERA 0.50)
-radio_1_middle      AM radio, middle of its stretch (ERA 0.92)
-radio_2_gritty_end  AM radio, its gritty end (ERA 0.99)
-
-A_round_2   Round 2 (BBD: your pick, B · Radio: light noise, B)
-B_round_3   Round 3 (BBD: the new curve · Radio: rebuilt from the research)" > renders/era_v2c/README.txt
-    python3 tools/review/make_review.py renders/era_v2c --title "Immensio: the new ERA, round 3" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/era_v2c/index.html"
+A_era_sweep  ERA, fully left to fully right" > renders/era_sweep/README.txt
+    python3 tools/review/make_review.py renders/era_sweep --title "Immensio: ERA, knob sweep" --showcase --no-level-match --dry $SW --wet-only \
+        --chapters "Neve:0,Midiverb:8,BBD:16,Cassette:24,Radio:32,Tail:40" > /dev/null
+    echo "renders/era_sweep/index.html"
 fi
 
 if on reverse; then

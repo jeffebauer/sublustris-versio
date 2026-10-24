@@ -6,7 +6,7 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 |---|---|---|
 | [0001](0001-new-repo-seeded-from-resilio.md) | A new repo, seeded from Resilio Versio | Phase 1 finding |
 | [0002](0002-internal-flash-and-flash-budget.md) | Internal flash, Firmware Swap, and a flash budget | Phase 1 finding |
-| [0003](0003-era-stacks.md) | ERA stacks, weighted to the middle | 1, 5 |
+| [0003](0003-era-stacks.md) | ERA stacks, weighted to the middle (superseded by 0021) | 1, 5 |
 | [0004](0004-era-grain-and-midiverb-box.md) | ERA's grain in two places; the Midiverb box at 24 kHz | 2, 4 |
 | [0005](0005-hiss-into-the-tank.md) | Cassette hiss goes into the tank, ducked by the input | 3 |
 | [0006](0006-two-engines-and-licence-rules.md) | Two engines: a Plate (also the companion) and one FDN; licence rules | 22 |
@@ -24,3 +24,4 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0018](0018-brand-ombra-audio.md) | Brand: Ombra Audio (maker code Ombr) for both plugins | owner, 23 Oct 2026 |
 | [0019](0019-vintage-reads-and-tape-out.md) | ERA gains vintage reads and tape out | owner, 24 Oct 2026 |
 | [0020](0020-decay-keeps-the-loudness.md) | DECAY keeps the loudness | owner, 24 Oct 2026 |
+| [0021](0021-era-sweet-to-gritty.md) | ERA runs from sweet to gritty: five eras, each on its own, over the Neve | owner, 25 Oct 2026 |

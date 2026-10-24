@@ -13,6 +13,7 @@
 //               a slow detune, and at the gritty end rare drift-offs and a faint mains hum. No whistles or
 //               fast flutter (owner, era_v2c: they "read as slow rhythmic delays rather than dropouts").
 //               All added noise is mono and follows the tail, so silence stays silent.
+#include "dsp/SizeOpt.h"
 #include "params/EraVoicing.h"
 
 #include <cmath>
@@ -23,9 +24,10 @@ namespace iv::dsp {
 // Simper's trapezoidal state-variable filter (low, band, high from one state).
 struct EraSvf {
     float ic1 = 0, ic2 = 0, a1 = 1, a2 = 0, a3 = 0, k = 1.4f;
-    void set(float fc, float q, float sr)
+    IV_SIZE_OPT void set(float fc, float q, float sr)
     {
-        const float g = std::tan(3.14159265f * std::fmin(fc, 0.45f * sr) / sr);
+        const float w = 3.14159265f * std::fmin(fc, 0.45f * sr) / sr;
+        const float g = std::sin(w) / std::cos(w); // not std::tan: it pulled 2.7 KB of maths into the firmware
         k = 1.0f / q;
         a1 = 1.0f / (1.0f + g * (g + k));
         a2 = g * a1;
@@ -53,8 +55,8 @@ struct EraRng {
 
 class BbdStage {
 public:
-    void reset() { for (int c = 0; c < 2; ++c) { aa_[c].reset(); rc1_[c].reset(); rc2_[c].reset(); p1_[c] = p2_[c] = envY_[c] = envZ_[c] = held_[c] = 0; } }
-    void set(float t, float sr)
+    IV_SIZE_OPT void reset() { for (int c = 0; c < 2; ++c) { aa_[c].reset(); rc1_[c].reset(); rc2_[c].reset(); p1_[c] = p2_[c] = envY_[c] = envZ_[c] = held_[c] = 0; } }
+    IV_SIZE_OPT void set(float t, float sr)
     {
         const float g = t / voicing::kBbdGritAt; // grit: 1 at two-thirds, 1.5 at the end
         aliasMix_ = std::fmin(1.0f, g);
@@ -98,7 +100,7 @@ private:
 
 class RadioStage {
 public:
-    void reset()
+    IV_SIZE_OPT void reset()
     {
         for (int c = 0; c < 2; ++c) { hp_[c].reset(); lp1_[c].reset(); lp2_[c].reset(); dip_[c].reset(); }
         crashBp_.reset();
@@ -106,7 +108,7 @@ public:
         inPow_ = outPow_ = 0.0f;
         slow_ = hissLp_ = clickLp_ = clickEnv_ = strokeEnv_ = nfast_ = phHum_ = 0.0f;
     }
-    void set(float t, float sr, int blockLen)
+    IV_SIZE_OPT void set(float t, float sr, int blockLen)
     {
         sr_ = sr;
         t_ = t;
@@ -228,9 +230,9 @@ public:
 
 private:
     static constexpr float kMakeupDb = 0.0f; // music LUFS against the Neve base (era tests)
-    float expo(float mean) { return -mean * std::log(0.5f * rng_.next() + 0.5f + 1e-4f); }
+    IV_NOINLINE float expo(float mean) { return -mean * std::log(0.5f * rng_.next() + 0.5f + 1e-4f); }
     // A smooth random line: a new target every ~1/hz seconds, smoothed twice (s = {a, b, target, countdown}).
-    void wander(float& a, float& b, float& target, float& count, float hz, float dt)
+    IV_NOINLINE IV_SIZE_OPT void wander(float& a, float& b, float& target, float& count, float hz, float dt)
     {
         count -= dt;
         if (count <= 0.0f) { target = rng_.next(); count = (0.7f + 0.6f * (0.5f + 0.5f * rng_.next())) / hz; }
