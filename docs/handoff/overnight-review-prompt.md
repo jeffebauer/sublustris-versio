@@ -1,9 +1,14 @@
 # Overnight review: architecture, implementation, technique and performance
 
-Paste everything below the line into a new Claude Code session (Fable 5.1 recommended), started in
+Paste everything below the line into a new Claude Code session, started in
 `/Users/jesse/Documents/Sites/immensio-versio`. It runs unattended overnight and leaves a report.
 
+- **Session:** Fable 5.1 at high effort (xhigh to trade breadth for depth). Pick the model and effort in the app before pasting.
+- **The prompt asks for a workflow** (multi-agent orchestration). A workflow only runs when you ask for it in your own words. That's the "Use a workflow" line below; delete it to have the session use individual agents instead.
+
 ---
+
+Use a workflow for this review.
 
 You're doing an independent, in-depth review of Immensio Versio, a reverb firmware for the Noise Engineering Versio (Daisy Seed, STM32H750, Cortex-M7 at 480 MHz). Nobody will answer questions tonight: work on your own judgment, and leave decisions that are the owner's (anything that changes the sound) as clearly argued options.
 
@@ -96,6 +101,17 @@ Put the numbers in the report. If a promising idea needs the module to confirm, 
 ## Using sub-agents
 
 The review splits into independent parts. Use sub-agents where a part needs much reading, fetching or measuring and only its conclusions matter to you. Keep the synthesis, the ranking and the report to yourself.
+
+- **Orchestrate it as a workflow** (load the `workflow-authoring` skill first):
+  - one phase of parallel agents for the literature survey and the per-area cost studies;
+  - a second phase in which the prototypes you choose are built and measured, each in its own worktree;
+  - a verification phase for the claims you intend to report.
+  - Keep it to about 10 agents in all.
+- **Models:**
+  - literature, fetching and summarising: Sonnet;
+  - per-area cost studies and prototypes: Opus 5.5;
+  - anything that needs judgement (reconciling measurements with code, choosing what to prototype, ranking, verifying, writing the report): keep it yourself.
+  - Set each agent's model explicitly.
 
 - **Good candidates, run in parallel** (about 4-6 at a time; more costs more than it saves):
   - the literature survey, one agent per topic, each returning sourced findings with URLs and sections:
