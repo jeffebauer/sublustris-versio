@@ -27,6 +27,9 @@
 #include "daisy_versio.h"
 #if !defined(IV_MODE_M0TEST)
 #include "dsp/Engine.h"
+#include "dsp/EraStages.h"
+#include "dsp/Tape.h"
+#include "params/Mappings.h"
 #include "params/ParamSpec.h"
 #endif
 
@@ -327,7 +330,7 @@ void AppendFixed1(char*& p, const char* end, int tenths, int width)
 // Fraction (0..1) -> tenths of a percent, e.g. 0.583f -> 583 ("58.3").
 int FracToPercentTenths(float frac) { return int(frac * 1000.0f + 0.5f); }
 
-constexpr size_t kLineBufSize = 768; // CORNER + SPLIT + PEAK (+ BENCH) lines, sent in one transmit
+constexpr size_t kLineBufSize = 1100; // CORNER + SPLIT + PEAK (+ BENCH) lines, sent in one transmit
 
 void TransmitLine(const char* buf, size_t len)
 {
@@ -345,7 +348,11 @@ struct Corner {
     char  name[40];
 };
 
-constexpr int kNumCorners = 3 * 2 * 2 * 2;
+// M3 round 10: every era (the centre of each one's stretch: Neve, Midiverb, bucket-brigade, cassette,
+// AM radio), SIZE 0 / 1, DECAY full.
+constexpr float kCornerEras[5] = {0.1f, 0.3f, 0.5f, 0.7f, 0.9f};
+const char* const kEraNames[5] = {"neve", "midiverb", "bbd", "cassette", "radio"};
+constexpr int kNumCorners = 3 * 2 * 5;
 Corner        gCorners[kNumCorners];
 
 const char* const kSpaceNames[3] = {"PLATE", "HALL", "MASSIVE"};
@@ -354,26 +361,21 @@ void BuildCornerTable()
 {
     int idx = 0;
     for (int spacePos = 0; spacePos < 3; ++spacePos) {
-        for (int decay = 0; decay < 2; ++decay) {
-            for (int size = 0; size < 2; ++size) {
-                for (int era = 0; era < 2; ++era) {
-                    Corner& c  = gCorners[idx++];
-                    c.spacePos = spacePos;
-                    c.decay    = float(decay);
-                    c.size     = float(size);
-                    c.era      = float(era);
-                    char*       p   = c.name;
-                    const char* end = c.name + sizeof(c.name) - 1;
-                    AppendStr(p, end, kSpaceNames[spacePos]);
-                    AppendStr(p, end, " D");
-                    AppendInt(p, end, decay);
-                    AppendStr(p, end, " S");
-                    AppendInt(p, end, size);
-                    AppendStr(p, end, " E");
-                    AppendInt(p, end, era);
-                    if (spacePos == 2 && era == 1) AppendStr(p, end, " (worst?)");
-                    *p = '\0';
-                }
+        for (int size = 0; size < 2; ++size) {
+            for (int era = 0; era < 5; ++era) {
+                Corner& c  = gCorners[idx++];
+                c.spacePos = spacePos;
+                c.decay    = 1.0f;
+                c.size     = float(size);
+                c.era      = kCornerEras[era];
+                char*       p   = c.name;
+                const char* end = c.name + sizeof(c.name) - 1;
+                AppendStr(p, end, kSpaceNames[spacePos]);
+                AppendStr(p, end, " S");
+                AppendInt(p, end, size);
+                AppendStr(p, end, " ");
+                AppendStr(p, end, kEraNames[era]);
+                *p = '\0';
             }
         }
     }
@@ -491,10 +493,12 @@ void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer ou
 // line's read-then-write), internal RAM (AXI, DTCM), or the maths library?
 volatile float gSink = 0.0f;
 float          gAxiTest[32 * 512]; // 64 KB of AXI SRAM (.bss)
-constexpr int  kMicro = 13;
+constexpr int  kMicro = 20;
 int            gMicro[kMicro]{};
 const char* const kMicroNames[kMicro] = {"sdr1", "sdr32", "sdw32", "sdline8", "axi32", "dtcm32",
-                                         "exp", "sin", "pow", "log10", "div", "fdnAXI", "fdnSDRAM"};
+                                         "exp", "sin", "pow", "log10", "div", "fdnAXI", "fdnSDRAM",
+                                         "tape/smp", "bbd/smp", "radio/smp", "bbdSet/blk", "radioSet/blk",
+                                         "loopNeve/smp", "loopMidi/smp"};
 
 // The same small tank (an Fdn at 12 kHz: 0.1 s mean lines, in-loop diffusion and early taps on) run
 // with its memory in AXI SRAM and then in SDRAM, cycles per sample (M3 round 8): if they cost about
@@ -575,6 +579,29 @@ void RunMicroTests()
     gMicro[8] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::pow(x, 1.0f + float(i) * 1e-4f); });
     gMicro[9] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::log10(x + float(i) * 1e-4f); });
     gMicro[10] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += 1.0f / (x + float(i)); });
+    // ERA's stages alone (M3 round 10), stereo per sample (both channels) or per block's set():
+    {
+        static iv::dsp::TapeOut tape[2];
+        static iv::dsp::BbdStage bbd;
+        static iv::dsp::RadioStage radio;
+        static iv::dsp::LoopEra loop;
+        for (auto& t : tape) { t.reset(); t.set(1.0f, 48000.0f); }
+        bbd.reset();
+        bbd.set(0.5f, 48000.0f);
+        radio.reset();
+        radio.set(0.5f, 48000.0f, 32);
+        float l = 0.1f, r = -0.1f;
+        gMicro[13] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) { l = tape[0].process(0.3f * NextNoise()); r = tape[1].process(0.3f * NextNoise()); acc += l + r; } });
+        gMicro[14] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) { acc += bbd.process(0.3f * NextNoise(), 0) + bbd.process(0.3f * NextNoise(), 1); } });
+        gMicro[15] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) { l = 0.3f * NextNoise(); r = 0.3f * NextNoise(); radio.process(l, r); acc += l + r; } });
+        gMicro[16] = Tenths(100, [&] { for (int i = 0; i < 100; ++i) bbd.set(0.5f + 1e-4f * float(i), 48000.0f); });
+        gMicro[17] = Tenths(100, [&] { for (int i = 0; i < 100; ++i) radio.set(0.5f, 48000.0f, 32); });
+        loop.prepare(48000.0f);
+        loop.set(iv::map::eraMix(0.1f));
+        gMicro[18] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) acc += loop.process(0.3f * NextNoise()); });
+        loop.set(iv::map::eraMix(0.3f));
+        gMicro[19] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) acc += loop.process(0.3f * NextNoise()); });
+    }
     gMicro[11] = TimeTestFdn(gAxiArena, sizeof(gAxiArena) / sizeof(float), false);
     gMicro[12] = TimeTestFdn(gLarge, kLargeFloats, true);
     gSink = acc;
@@ -704,7 +731,7 @@ int main()
             // Where the time goes, each section as % of the whole budget
             // (10,000 cycles per sample): cycles / (samples x 10) = tenths of a %.
             static const char* const kSectionNames[kNumSections] = {"ctl", "in", "shim", "swell", "twin", "tank",
-                                                                    "tkctl", "tkloop", "tkout", "tkmix", "era", "out"};
+                                                                    "tkctl", "tkloop", "tkout", "tkmix", "tape", "bbd", "radio", "out"};
             // Same buffer, one transmit: the USB CDC send is non-blocking and
             // drops a second call made while the first is still going out.
             AppendStr(p, end, "  SPLIT");

@@ -878,18 +878,20 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                 wl = tapeMix_ >= 1.0f ? tl2 : wl + tapeMix_ * (tl2 - wl);
                 wr = tapeMix_ >= 1.0f ? tr2 : wr + tapeMix_ * (tr2 - wr);
             }
+            prof::mark(prof::kEraTape);
             if (bbdW_ > 0.0f) { // ERA's bucket-brigade (ADR 0021)
                 const float bl = bbd_.process(wl, 0), br = bbd_.process(wr, 1);
                 wl += bbdW_ * (voicing::kEraBbdTrim * bl - wl);
                 wr += bbdW_ * (voicing::kEraBbdTrim * br - wr);
             }
+            prof::mark(prof::kEraBbd);
             if (radioW_ > 0.0f) { // ERA's AM radio (ADR 0021)
                 float rl2 = wl, rr2 = wr;
                 radio_.process(rl2, rr2);
                 wl += radioW_ * (voicing::kEraRadioTrim * rl2 - wl);
                 wr += radioW_ * (voicing::kEraRadioTrim * rr2 - wr);
             }
-            prof::mark(prof::kEra);
+            prof::mark(prof::kEraRadio);
             tilt_.process(wl, wr);
             duckGain_ += duckGainStep_; // ducking (ADR 0014)
             wl *= duckGain_;
