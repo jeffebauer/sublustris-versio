@@ -32,14 +32,14 @@ inline float rnd01(uint32_t& s)
 // 1.6 dB on a noise-like tail (below the unshifted tail's own 2.4).
 class PitchShifter {
 public:
-    static constexpr int kMaxHeads = 4;
+    static constexpr int kMaxHeads = 8;
     void prepare(float ratio, float windowSamples, uint32_t seed, int heads = 2, float jitter = 0.15f)
     {
         ratio_ = ratio;
         w0_ = windowSamples;
         heads_ = heads;
         jitter_ = jitter;
-        buf_.assign(1u << 15, 0.0f);
+        buf_.assign(1u << 16, 0.0f); // up to ~1.3 s of window
         mask_ = buf_.size() - 1;
         seed_ = seed;
         for (int k = 0; k < heads_; ++k) {
@@ -103,6 +103,41 @@ struct OnePole { // y += a (x - y)
     float hp(float x) { return x - lp(x); }
 };
 
+// Butterworth low-pass, 8th order (4 biquads, RBJ), for the shimmer's feed (round 3). Shifting up an
+// octave doubles every frequency; above 12 kHz that passes 24 kHz and folds back as inharmonic tones,
+// what a sample-rate reducer does (owner: "different flavours of bit crushing"; measured round 1-2:
+// 13 / 16 / 19 kHz came out at 22 / 16 / 10 kHz, only 8-16 dB down, and again on every trip). At
+// 6 kHz: -48 dB at 12 kHz, -68 dB at 16 kHz.
+class SteepLowPass {
+public:
+    void set(float hz, float sampleRate)
+    {
+        static constexpr float kQ[4] = {0.5098f, 0.6013f, 0.9000f, 2.5629f};
+        const float w = 6.2831853f * hz / sampleRate, cw = std::cos(w), sw = std::sin(w);
+        for (int k = 0; k < 4; ++k) {
+            const float al = sw / (2.0f * kQ[k]), a0 = 1.0f + al;
+            b_[k][0] = b_[k][2] = (1.0f - cw) * 0.5f / a0;
+            b_[k][1] = (1.0f - cw) / a0;
+            a_[k][0] = -2.0f * cw / a0;
+            a_[k][1] = (1.0f - al) / a0;
+            z_[k][0] = z_[k][1] = 0.0f;
+        }
+    }
+    float process(float x)
+    {
+        for (int k = 0; k < 4; ++k) { // transposed direct form II
+            const float y = b_[k][0] * x + z_[k][0];
+            z_[k][0] = b_[k][1] * x - a_[k][0] * y + z_[k][1];
+            z_[k][1] = b_[k][2] * x - a_[k][1] * y;
+            x = y;
+        }
+        return x;
+    }
+
+private:
+    float b_[4][3] = {}, a_[4][2] = {}, z_[4][2] = {};
+};
+
 // Shimmer, up or down: in = the tank's wet; out = what goes back into the tank's input.
 // Styles (round 2, owner: round 1 "too static ... almost like bit crushing"):
 //   Round1:   2 heads, 43 ms, ±15 % jitter (fluttered 14-25 dB at 23 Hz).
@@ -115,20 +150,32 @@ struct OnePole { // y += a (x - y)
 //             "steel drum-esque" to "slow attack string pads").
 class Shimmer {
 public:
-    enum class Style { Round1, Smooth, Moving, Evolving };
+    // Round 3: Clean (Smooth's shifter behind SteepLowPass at 6 kHz, then a 9 kHz one-pole so each
+    // octave up is a little softer) and CleanMoving (Clean + the slow shared drift). Fed from the wet
+    // (each trip climbs) or from the input (one octave, no feedback), Engine decides.
+    // CleanDark: Clean at 3.5 kHz into the shifter and 5 kHz after: the splices' smear (each trip
+    // spreads every harmonic into its neighbours, worst up high) stays where it reads as a wash.
+    enum class Style { Round1, Smooth, Moving, Evolving, Clean, CleanMoving, CleanDark };
+    // Clean styles' shifter shape (heads, window seconds), set before prepare (round 3 trials).
+    void setShape(int heads, float windowSeconds) { heads_ = heads; window_ = windowSeconds; }
     void prepare(float sampleRate, bool down, Style style = Style::Round1)
     {
         down_ = down;
         style_ = style;
         sr_ = sampleRate;
         const bool r1 = style == Style::Round1;
-        const float lp = down ? 3000.0f : (style == Style::Evolving ? 4500.0f : 7000.0f);
+        clean_ = style == Style::Clean || style == Style::CleanMoving || style == Style::CleanDark;
+        const bool dark = style == Style::CleanDark;
+        const float lp = down ? 3000.0f : (style == Style::Evolving ? 4500.0f : (dark ? 5000.0f : (clean_ ? 9000.0f : 7000.0f)));
         for (int c = 0; c < 2; ++c) {
             float ratio = down ? 0.5f : 2.0f;
             if (style == Style::Moving || style == Style::Evolving) ratio *= std::exp2((c == 0 ? 2.0f : -2.0f) / 1200.0f);
-            shift_[c].prepare(ratio, (r1 ? (down ? 0.085f : 0.043f) : 0.1f) * sampleRate,
-                              0x5A1u + 77u * uint32_t(c) + (down ? 9u : 0u), r1 ? 2 : 4, r1 ? 0.15f : 0.0f);
-            if (style == Style::Moving || style == Style::Evolving) shift_[c].setDrift(0.003f * sampleRate, sampleRate);
+            const float win = r1 ? (down ? 0.085f : 0.043f) : (clean_ ? window_ : 0.1f);
+            shift_[c].prepare(ratio, win * sampleRate, 0x5A1u + 77u * uint32_t(c) + (down ? 9u : 0u),
+                              r1 ? 2 : (clean_ ? heads_ : 4), r1 ? 0.15f : 0.0f);
+            if (style == Style::Moving || style == Style::Evolving || style == Style::CleanMoving)
+                shift_[c].setDrift(0.003f * sampleRate, sampleRate);
+            steep_[c].set(dark ? 3500.0f : 6000.0f, sampleRate);
             pre_[c].set(lp, sampleRate);
             pre2_[c].set(lp, sampleRate);
             for (auto& h : post_[c]) h.set(down ? 45.0f : 80.0f, sampleRate);
@@ -144,8 +191,9 @@ public:
             breathe = 1.0f + 0.35f * std::sin(6.2831853f * lfo_);
         }
         for (int c = 0; c < 2; ++c) {
-            float x = pre2_[c].lp(pre_[c].lp(*io[c]));
-            x = shift_[c].process(x);
+            float x = *io[c];
+            if (clean_) x = pre_[c].lp(shift_[c].process(steep_[c].process(x))); // the 9 kHz one-pole after
+            else        x = shift_[c].process(pre2_[c].lp(pre_[c].lp(x)));
             x = post_[c][0].hp(x);
             if (down_) x = post_[c][1].hp(x); // steeper: the second octave down falls away
             *io[c] = breathe * x;
@@ -153,8 +201,11 @@ public:
     }
 
 private:
-    bool         down_ = false;
+    bool         down_ = false, clean_ = false;
+    int          heads_ = 4;
+    float        window_ = 0.1f;
     Style        style_ = Style::Round1;
+    SteepLowPass steep_[2];
     float        sr_ = 48000.0f, lfo_ = 0.0f;
     PitchShifter shift_[2];
     OnePole      pre_[2], pre2_[2], post_[2][2];

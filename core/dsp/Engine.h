@@ -96,8 +96,19 @@ public:
     // 0 = REVERSE, 1 = shimmer up, 2 = sub shimmer, 3 = grains (dsp/AltAttack.h); round 2: 4 smooth
     // shimmer, 5 moving, 6 evolving. (Inside the tank was tried: re-shifting most of each pass, with
     // the 4 heads averaging a tail down ~4 dB, collapsed the tail; an equal-power blend grew a held
-    // chord. It needs DAFx 2026's energy compensation: not this round.)
+    // chord. It needs DAFx 2026's energy compensation: not this round.) Round 3, the fold-back
+    // filtered out: 8 clean, 9 clean + drift (both fed from the wet), 10 clean from the input only,
+    // 11 clean and darker from the wet.
     void  setAltAttack(int mode) { altMode_ = mode; }
+    // Round 3 trials: the clean shimmers' shifter heads and window (re-prepares them).
+    void  setShimmerShape(int heads, float windowSeconds)
+    {
+        for (auto* s : {&shimClean_, &shimCleanMoving_, &shimInput_, &shimCleanDark_}) s->setShape(heads, windowSeconds); // all four
+        shimClean_.prepare(sampleRate_, false, dsp::proto::Shimmer::Style::Clean);
+        shimCleanMoving_.prepare(sampleRate_, false, dsp::proto::Shimmer::Style::CleanMoving);
+        shimInput_.prepare(sampleRate_, false, dsp::proto::Shimmer::Style::Clean);
+        shimCleanDark_.prepare(sampleRate_, false, dsp::proto::Shimmer::Style::CleanDark);
+    }
 #endif
     // Test hook: false = no tape out (ERA's cassette stage without its output tape), for measuring.
     void  setTapeOut(bool on) { tapeOn_ = on; }
@@ -263,6 +274,7 @@ private:
     float altTarget_ = 0.0f, altMix_ = 0.0f, altTime_ = 0.0f;
     float shimSrcL_[kChunk] = {}, shimSrcR_[kChunk] = {}; // the last chunk's tank wet
     dsp::proto::Shimmer shimUp_, shimDown_, shimSmooth_, shimMoving_, shimEvolving_; // round 1; round 2 (4 .. 6)
+    dsp::proto::Shimmer shimClean_, shimCleanMoving_, shimInput_, shimCleanDark_; // round 3 (8 .. 11)
     dsp::proto::Grains  grains_;
 #endif
 };

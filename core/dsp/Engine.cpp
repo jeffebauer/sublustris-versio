@@ -81,6 +81,13 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     shimSmooth_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::Smooth);
     shimMoving_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::Moving);
     shimEvolving_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::Evolving);
+    // Fed back, the splices' sidebands (±10, 20, 30 Hz around every note at 100 ms) pile up trip on
+    // trip: off-harmonic energy -14 dB (plain reverb -35). 8 heads of 800 ms: -30.
+    for (auto* s : {&shimClean_, &shimCleanMoving_, &shimCleanDark_}) s->setShape(8, 0.8f);
+    shimClean_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::Clean);
+    shimCleanMoving_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::CleanMoving);
+    shimInput_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::Clean);
+    shimCleanDark_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::CleanDark);
     grains_.prepare(sampleRate);
 #endif
     ready_ &= twinFdn_.prepare(large_, sampleRate, 0x7A1Eu);
@@ -307,6 +314,14 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
     const float rate = decayRate(decay, size) / sizeT60 * (1.0f - freezeMix_);
     const float spaceRatio = massive ? map::massiveHighRatio(toneRatio, decay) : toneRatio;
     const float highRatio = spaceRatio + freezeMix_ * (1.0f - spaceRatio);
+#ifndef IV_FIXED_VOICINGS
+    // Prototype: a fed-back shimmer turns the tank's own movement off: re-applied on every trip round
+    // the shimmer loop, PLATE's chorus and HALL's deeper floor piled up into a smeared, gritty octave
+    // (off-harmonic energy, PLATE -11 dB with it, -26 without; at 30 % still -10.5).
+    const float shimMod = altMode_ == 8 || altMode_ == 9 || altMode_ == 11 ? 1.0f - altMix_ : 1.0f;
+#else
+    constexpr float shimMod = 1.0f;
+#endif
     // Frozen: full weight (only the pad's own hold acts, there's no floor). Not frozen: DECAY's own
     // weight at once, not glided with freezeMix_: gliding it pulled a fed pad (above the floor) down
     // hard on unfreeze, "a pronounced immediate drop" and a too-steep decay (owner, freeze options).
@@ -342,7 +357,7 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
         plate_.setLongDelayMod(1.0f - freezeMix_);
         // A frozen PLATE's chorus and floor glide out too, so a held chord stays pure (v1.0.22, the
         // DSP audit's A3; it kept 0.15 of the chorus and slowly shimmered out of tune).
-        plate_.setModScale(modScale_ * (1.0f - freezeMix_));
+        plate_.setModScale(modScale_ * shimMod * (1.0f - freezeMix_));
         plate_.setHoldDb(holdDb);
         plate_.setAir(voicing::kAirPlateDbPerSecond / 60.0f); // v1.0.25
     } else {
@@ -375,7 +390,7 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
         fdn_.setEarlyTaps(1.0f); // HALL too (v1.0.25: no gap after the note, its "slap-back")
         fdn_.setAir(massive ? 0.0f : voicing::kAirHallDbPerSecond / 60.0f); // v1.0.25
         // The floor glides out with the freeze (v1.0.22, A3; Costello: mod depth to 0 for a freeze).
-        fdn_.setModDepth(modScale_ * (massive ? 1.0f : voicing::kHallFloorScale) * (1.0f - freezeMix_));
+        fdn_.setModDepth(modScale_ * shimMod * (massive ? 1.0f : voicing::kHallFloorScale) * (1.0f - freezeMix_));
         // Still lows: the low tank follows, unmodulated.
         lowFdn_.setDecayRate(rate);
         lowFdn_.setHighT60Ratio(highRatio);
@@ -774,11 +789,18 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                     grains_.process(pl, pr, gl, gr, altTime_ * altTime_ * 2.0f + 0.05f);
                     pl += altMix_ * (0.3f * pl + gl - pl);
                     pr += altMix_ * (0.3f * pr + gr - pr);
+                } else if (altMode_ == 10) {
+                    // Input shimmer: what you play, an octave up, into the tank; no feedback.
+                    float sl = pl, sr2 = pr;
+                    shimInput_.process(sl, sr2);
+                    const float send = altMix_ * 1.2f * altTime_;
+                    pl += send * sl;
+                    pr += send * sr2;
                 } else if (altMix_ > 0.0f) {
                     // Shimmer: the last chunk's wet, an octave up (or down), back into the tank.
                     float sl = shimSrcL_[i], sr2 = shimSrcR_[i];
                     dsp::proto::Shimmer& sh = altMode_ == 2 ? shimDown_ : (altMode_ == 4 ? shimSmooth_ : (altMode_ == 5 ? shimMoving_
-                                       : (altMode_ == 6 ? shimEvolving_ : shimUp_)));
+                                       : (altMode_ == 6 ? shimEvolving_ : (altMode_ == 8 ? shimClean_ : (altMode_ == 9 ? shimCleanMoving_ : (altMode_ == 11 ? shimCleanDark_ : shimUp_))))));
                     sh.process(sl, sr2);
                     const float send = altMix_ * (altMode_ == 2 ? 0.45f : 0.6f) * altTime_;
                     pl += send * sl;

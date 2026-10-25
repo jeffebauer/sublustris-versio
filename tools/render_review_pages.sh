@@ -357,6 +357,39 @@ D_evolving            Moving, darker, breathing" > renders/shimmer2/README.txt
     echo "renders/shimmer2/index.html"
 fi
 
+if on shimmer3; then
+    # PROTOTYPES, shimmer round 3 (owner on round 2: "different flavours of bit crushing"). Found three
+    # causes, each measured with a 1,037 Hz bright note (energy away from its harmonics; plain reverb
+    # about -35 dB): fold-back above 12 kHz (an 8th-order 6 kHz low-pass now, -68 dB at 16 kHz); the
+    # splices' sidebands piling up trip on trip (8 heads of 800 ms when fed back: -14 -> -30 dB); the
+    # tank's own movement re-applied every trip (off under a fed-back shimmer: PLATE -11 -> -26 dB).
+    # IV_ALT_ATTACK 4 round 2 smooth; 8 feedback; 9 feedback + drift; 11 feedback, darker; 10 input only.
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in vibes pad keys lead voice stabs; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page shimmer3
+    for t in "1_hall_time_mid:HALL:0.5" "2_massive_time_high:MASSIVE:0.85" "3_plate_time_mid:PLATE:0.6"; do
+        IFS=: read col sp tm <<< "$t"
+        for v in "A_round_2:4" "B_feedback:8" "C_feedback_drifting:9" "D_feedback_darker:11" "E_input_only:10"; do
+            tag=${v%%:*}; mode=${v##*:}
+            IV_ALT_ATTACK=$mode r shimmer3 $col $tag "" --set space=$sp --set attack=REVERSE --set decay=0.6 --set time=$tm
+        done
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "Shimmer, round 3. Your note on round 2: \"different flavours of bit crushing\". Measured three causes and fixed each: (1) shifting up an octave folded everything above 12 kHz back down as unrelated tones (what a sample-rate reducer does): now filtered out before the shift; (2) the shifter's crossfades left faint copies of each note either side of it, which piled up trip after trip round the reverb: now much longer, gentler crossfades when fed back; (3) the reverb's own pitch movement (PLATE's chorus especially) was re-applied every trip and smeared into grit: switched off while the shimmer feeds back. A is round 2 (B on the last page) for comparison. B, C and D feed the shimmer back so octaves keep climbing (C adds a slow wander, D is darker, the cleanest by measurement). E is the other kind you asked for: only what you play is shifted up an octave into the reverb, no feedback: one octave, steadier. TIME is how much shimmer. Versions are level-matched; none builds up.
+
+1_hall_time_mid       HALL, TIME 0.5 (DECAY 0.6)
+2_massive_time_high   MASSIVE, TIME 0.85
+3_plate_time_mid      PLATE, TIME 0.6
+
+A_round_2             Round 2's smooth (for comparison)
+B_feedback            Fed back: octaves keep climbing
+C_feedback_drifting   Fed back, slowly wandering
+D_feedback_darker     Fed back, darker (cleanest)
+E_input_only          Your input an octave up, no feedback" > renders/shimmer3/README.txt
+    python3 tools/review/make_review.py renders/shimmer3 --title "Shimmer, round 3" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/shimmer3/index.html"
+fi
+
 if on era_sweep; then
     # ERA turned from fully left to fully right over 40 s while the music loops (renders/_material_sweep,
     # 40 s loops + 12 s of tail), then the tail at ERA 1; chaptered at each era's start (ADR 0021).
