@@ -93,6 +93,36 @@ Put the numbers in the report. If a promising idea needs the module to confirm, 
 
 **3. Listening candidates (optional).** If a sound-affecting option looks worth it, render level-matched candidates with `tools/review/make_review.py` into `renders/<name>/`. Leave them unsent; list them in the report. Keep `renders/` under ~2 GB.
 
+## Using sub-agents
+
+The review splits into independent parts. Use sub-agents where a part needs much reading, fetching or measuring and only its conclusions matter to you. Keep the synthesis, the ranking and the report to yourself.
+
+- **Good candidates, run in parallel** (about 4-6 at a time; more costs more than it saves):
+  - the literature survey, one agent per topic, each returning sourced findings with URLs and sections:
+    - FDN design and modulation (Jot, Schlecht & Habets, Välimäki);
+    - plates and allpass diffusion (Dattorro, Costello, Barr / FV-1);
+    - Cortex-M7 / STM32H7 performance (ST AN4839, AN4891, Arm's guidance, CMSIS-DSP, DaisySP, Mutable Instruments' MIT code);
+    - tape and AM-radio emulation at low cost;
+  - the cost model of one area each:
+    - the FDN tank (`Fdn.cpp`, `HalfRate.h`);
+    - ERA's wet stages (`Tape.h`, `EraStages.h`) and in-loop stage (`Era.h`);
+    - the swell, shimmer and twin;
+    - the Plate.
+  - an architecture and test-strategy read of `core/` and `host/tests`.
+- **Brief each agent fully,** because it only knows what you tell it:
+  - the goal and the files to read;
+  - what's already known: the round 6-9b numbers;
+  - the format to return: findings with evidence, estimates with assumptions.
+  - **The rules:**
+    - read-only on the repo, unless given its own worktree;
+    - never delete or recreate `build/`; use its own build directory (two builds in one directory corrupt each other);
+    - no commits (you commit);
+    - no hardware, no Audio Unit or `coreaudiod` commands;
+    - no GPL code.
+- **Prototypes and measurements that build code:** give each agent its own git worktree off your branch (agent isolation "worktree"), so parallel builds don't collide. Review its diff before taking anything into your branch.
+- **Verify before you report.** An agent's claim goes into the report only after you've checked it: re-run its measurement, open its source. Treat its confident tone as no evidence. Where you couldn't check, label the claim as the agent's and unverified.
+- Don't delegate a quick lookup you can do in a few tool calls yourself.
+
 ## How to work
 
 - Check the existing measurements before trusting a hunch. Three hunches this project chased cost a round of hardware each (memory: measure-owner-notes-first, research-before-designing).
