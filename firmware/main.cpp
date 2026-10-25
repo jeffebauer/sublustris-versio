@@ -714,6 +714,24 @@ struct Result {
 volatile bool     gRealtime = false;
 volatile uint32_t gPadCycles = 0, gPeriodCycles = 1, gLate = 0, gBlocks = 0, gMaxCycles = 0, gStepBlocks = 1;
 volatile uint64_t gSumCycles = 0;
+// M3 round 13 (26 Oct 2026; the owner heard crackle in v1.0.37 with a frozen MASSIVE and with SIZE and
+// DECAY high): the real-time test also plays the release's knob sends. gKnobSend: the seven knob
+// parameters sent every block, as release's AudioCallback does; gJitterAmp: +-amp of noise on each (the
+// rack check found every reading changing all the time, inside +-0.0005); gRtFreeze: a tap-freeze at the
+// step's start (press, released 10 blocks later), as MeasureCorner's frozen corner does.
+volatile bool  gKnobSend = false, gRtFreeze = false;
+volatile float gJitterAmp = 0.0f;
+float          gKnobBase[7];
+constexpr ParamId kKnobParams[7] = {ParamId::Mix, ParamId::Decay, ParamId::Tone, ParamId::Era,
+                                    ParamId::Size, ParamId::Drift, ParamId::Time};
+uint32_t       gJitterState = 0x2545F491u;
+float NextJitter() // its own xorshift32, -1..1, so the input noise's sequence stays as it was
+{
+    gJitterState ^= gJitterState << 13;
+    gJitterState ^= gJitterState >> 17;
+    gJitterState ^= gJitterState << 5;
+    return float(gJitterState) * (2.0f / 4294967296.0f) - 1.0f;
+}
 
 void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer out, size_t size)
 {
@@ -722,6 +740,15 @@ void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer ou
         return;
     }
     const uint32_t t0 = DWT->CYCCNT;
+    if (gRtFreeze) {
+        if (gBlocks == 0) engine.button(true, 0);
+        if (gBlocks == 10) engine.button(false, 0);
+    }
+    if (gKnobSend)
+        for (int k = 0; k < 7; ++k) {
+            const float v = gKnobBase[k] + gJitterAmp * NextJitter();
+            engine.setParam(kKnobParams[k], v < 0.0f ? 0.0f : (v > 1.0f ? 1.0f : v));
+        }
     static float buf[kBlockSize];
     for (size_t i = 0; i < size; ++i) {
         float x = 5.0e-4f * NextNoise();
@@ -740,6 +767,32 @@ void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer ou
     // The callback ends the step itself: over 100 % it runs back to back and the main loop never gets
     // the CPU to stop it (round 9's first run stalled there).
     if (++gBlocks >= gStepBlocks) gRealtime = false;
+}
+
+// Round 13's real-time settings: MASSIVE with the knobs where the owner heard the crackle (SIZE and
+// DECAY high, the rest near noon), BLOOM, ERA at the Neve or the cassette. Set from the main loop while
+// the callback is idle (gRealtime false), and kept in gKnobBase for the callback's sends.
+void ApplyRealtime(float era)
+{
+    const float v[7] = {0.5f, 0.9f, 0.5f, era, 0.9f, 0.5f, 0.5f}; // MIX DECAY TONE ERA SIZE DRIFT TIME
+    for (int k = 0; k < 7; ++k) {
+        gKnobBase[k] = v[k];
+        engine.setParam(kKnobParams[k], v[k]);
+    }
+    engine.setParam(ParamId::Space, iv::switchToNormalised(2));
+    engine.setParam(ParamId::Attack, iv::switchToNormalised(1));
+}
+
+// Untimed blocks from the main loop (callback idle): n of them, or until the twin stops (n < 0, capped at
+// 30 s). The input is the lap's low noise.
+void RunUntimed(int n, float fs)
+{
+    static float l[kBlockSize], r[kBlockSize], ol[kBlockSize], orr[kBlockSize];
+    const int cap = n >= 0 ? n : int(30.0f * fs) / kBlockSize;
+    for (int b = 0; b < cap && (n >= 0 || engine.twinActive()); ++b) {
+        for (int i = 0; i < kBlockSize; ++i) l[i] = r[i] = 5.0e-4f * NextNoise();
+        engine.process(l, r, ol, orr, kBlockSize);
+    }
 }
 
 // Micro-tests (M3 round 6), once at boot before the Engine takes its memory: what each building
@@ -1422,6 +1475,61 @@ int main()
                 if (pct >= 0 && gLate > 0) ++lateSteps;
             }
             gPadCycles = 0;
+
+            // Round 13: the release's case in real time. Four settings (MASSIVE knobs high; Neve or
+            // cassette; playing or frozen), each with the knobs still and with jitter, 3 s each (frozen 6 s:
+            // the freeze glides in first). Between settings the Engine runs on, untimed, until the twin stops.
+            struct Rt {
+                float       era;
+                bool        frozen;
+                const char* name;
+            };
+            static const Rt kRt[4] = {{0.1f, false, "MASSIVE knobs high neve"},
+                                      {0.7f, false, "MASSIVE knobs high cassette"},
+                                      {0.1f, true, "MASSIVE knobs high neve FROZEN"},
+                                      {0.7f, true, "MASSIVE knobs high cassette FROZEN"}};
+            for (const Rt& rt : kRt) {
+                for (int jit = 0; jit < 2; ++jit) {
+                    ApplyRealtime(rt.era);
+                    RunUntimed(int(1.0f * fs) / kBlockSize, fs); // 1 s to settle the knobs' glides
+                    gKnobSend  = true;
+                    gJitterAmp = jit ? 2.0e-4f : 0.0f;
+                    gRtFreeze  = rt.frozen;
+                    gLate = gBlocks = gMaxCycles = 0;
+                    gSumCycles = 0;
+                    gStepBlocks = uint32_t((rt.frozen ? 6.0f : 3.0f) * fs / float(kBlockSize));
+                    gRealtime = true;
+                    while (gRealtime) {
+                    }
+                    gKnobSend = gRtFreeze = false;
+                    gJitterAmp = 0.0f;
+                    System::Delay(5);
+                    const float period = float(gPeriodCycles);
+                    const float avg = gBlocks ? float(gSumCycles) / float(gBlocks) / period : 0.0f;
+                    static char rb[160];
+                    char*       p   = rb;
+                    const char* end = rb + sizeof(rb);
+                    AppendStr(p, end, "REALTIME ");
+                    AppendPadRight(p, end, rt.name, 34);
+                    AppendStr(p, end, jit ? " jitter" : " still ");
+                    AppendStr(p, end, " avg ");
+                    AppendFixed1(p, end, FracToPercentTenths(avg), 5);
+                    AppendStr(p, end, "% max ");
+                    AppendFixed1(p, end, FracToPercentTenths(float(gMaxCycles) / period), 5);
+                    AppendStr(p, end, "% | late blocks ");
+                    AppendUInt(p, end, unsigned(gLate));
+                    AppendStr(p, end, " of ");
+                    AppendUInt(p, end, unsigned(gBlocks));
+                    AppendStr(p, end, "\r\n");
+                    TransmitLine(rb, size_t(p - rb));
+                    if (rt.frozen) { // a tap unfreezes; run on until the twin stops
+                        engine.button(true, 0);
+                        RunUntimed(1, fs);
+                        engine.button(false, 0);
+                        RunUntimed(-1, fs);
+                    }
+                }
+            }
             ApplyCorner(gCurrentCorner);
         }
 
@@ -1714,8 +1822,20 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
     if (button != lastButton) engine.button(button, 0);
     lastButton = button;
 
-    for (int p = 0; p < DaisyVersio::KNOB_LAST; ++p)
-        engine.setParam(kPotParams[p], ivpot::endStops(hw.GetKnobValue(kPotKnob[p]))); // exact 0 / 1 at the stops
+    // Knob deadband (26 Oct 2026, after the rack jitter check: every reading changes all the time, inside
+    // +-0.0005): a knob's value goes to the Engine only once it has moved more than kKnobDeadband from the
+    // last one sent, or when it reaches an end stop (exact 0 / 1). Then the Engine's memos (ERA's stages,
+    // the loss filters, the drift) see a still knob as still and skip their maths, as the profile measured.
+    // Moves come in steps of 0.05 % of the travel.
+    constexpr float kKnobDeadband = 0.0005f;
+    static float    sent[DaisyVersio::KNOB_LAST] = {-1, -1, -1, -1, -1, -1, -1};
+    for (int p = 0; p < DaisyVersio::KNOB_LAST; ++p) {
+        const float v = ivpot::endStops(hw.GetKnobValue(kPotKnob[p])); // exact 0 / 1 at the stops
+        if (std::fabs(v - sent[p]) > kKnobDeadband || ((v == 0.0f || v == 1.0f) && v != sent[p])) {
+            sent[p] = v;
+            engine.setParam(kPotParams[p], v);
+        }
+    }
 
     engine.setParam(iv::ParamId::Space,
                     iv::switchToNormalised(SwitchPosition(DaisyVersio::SW_0, kSpaceSwitchInverted)));

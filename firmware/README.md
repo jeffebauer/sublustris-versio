@@ -177,6 +177,17 @@ Round 12 (the same `make -C firmware all-variants` / `PROFILE_ITCM=1` commands):
 
 **v1.0.37 (26 Oct 2026): adopted in release.** ITCM (+~350 B), the twin-stop fix and SIZE's 0.1 % hysteresis (both now the Core's defaults, for the Plugin too), and the SDRAM at 3 / 3, paid for by `Engine::queueEdge`, `Engine::onGesture` and `Drift::control` built for size (−744 B). `-fno-math-errno` and `-fmove-loop-invariants` on the Core's objects made release larger (+240 / +440 B at -O3), so they're not used. Sizes: release 112,412 B (228 B under the 110 KB budget), profile 123,756 B, m0test 83,420 B; ITCM 52,136 B (release) / 52,152 B (profile) of 63 KB.
 
+### Round 13 and the knob deadband (26 Oct 2026)
+
+The owner played v1.0.37: crackle in MASSIVE with SIZE and DECAY high (now and then) and constant while frozen, and no freeze tint on the LEDs (the LEDs update in the main loop, which gets no time when the audio callback takes it all). The profile never played the release's knob sends, and the rack jitter check showed the module's readings change all the time, which defeats every memo keyed on an exact value (ERA's stages, the loss filters, the drift).
+
+- **Round 13 (profile):** after the headroom test, `REALTIME` lines: MASSIVE with the knobs where the owner heard it (SIZE and DECAY 0.9, MIX / TONE / DRIFT / TIME 0.5, BLOOM), ERA at the Neve (0.1) or the cassette (0.7), playing or tap-frozen, each run in the audio callback with the seven knob parameters sent every block, **still** and with **jitter** (±2·10⁻⁴ of noise on each, inside what the rack check found). 3 s each (frozen 6 s); late blocks are drop-outs. `still` is also what the deadband build gives. Profile 125,008 B (95 %: profile-only, the warning is expected).
+- **Release, to try: a knob deadband.** A knob's value goes to the Engine only once it has moved more than 0.0005 from the last value sent, or reaches an end stop (exact 0 / 1), so a still knob is still to the Engine and the memos work. Moves come in steps of 0.05 % of the travel. Release 112,500 B (+88; 140 B left).
+
+```
+REALTIME MASSIVE knobs high neve FROZEN     still  avg  95.0% max 101.2% | late blocks 12 of 6000
+```
+
 ## Memory
 
 Nothing yet (M0 passthrough). The plan (SPEC §5.2): the FDN lines, swell stage, predelay and REVERSE segments in the 64 MB SDRAM; the input diffusers and the companion plate in DTCM (`IV_DTCM` in `main.cpp`: zero-wait, NOLOAD, so cleared by whoever uses it); the Plate engine in AXI SRAM. libDaisy's linker script already puts the stack in AXI SRAM, leaving DTCM free (Resilio measured this).
