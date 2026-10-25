@@ -754,7 +754,11 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         handleEdges(start, start + n);
         controlTick(n);
         prof::mark(prof::kControl);
-
+        // The twin's input side runs only while there is a twin (overnight review, 26 Oct 2026). The bits
+        // are the same: without a twin its input is shut (twinIn_ 0: only a freeze opens it, and that
+        // starts a twin), a freeze clears its diffusers and swell before it starts one (onGesture), and
+        // their output is read only while it runs.
+        const bool twinRuns = twinActive_;
 
         // Input side: predelay, diffusion; the swell feeds the big tank; the
         // twin hears the input through its own diffusers.
@@ -795,8 +799,10 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             prof::mark(prof::kShimmer);
             // The twin hears the input itself, through its own diffusion: no predelay; in MASSIVE, its own swell.
             twinIn_ = clamp01(twinIn_ + twinInStep_);
-            twinInL_[i] = twinDiffuser_[0].process(twinIn_ * l);
-            twinInR_[i] = twinDiffuser_[1].process(twinIn_ * r);
+            if (twinRuns) { // no twin, nothing to hear: a freeze clears them before it starts (onGesture)
+                twinInL_[i] = twinDiffuser_[0].process(twinIn_ * l);
+                twinInR_[i] = twinDiffuser_[1].process(twinIn_ * r);
+            }
             // MASSIVE's twin swells as its tank does, so what you play over a frozen MASSIVE
             // arrives as a wash, not two distinct repeats first (owner, 22 Oct 2026).
             twinL_[i] = twinR_[i] = 0.0f;
@@ -807,7 +813,9 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             wetL_[i] = wetR_[i] = 0.0f;
             prof::mark(prof::kInput);
         }
-        twinSwell_.processBlock(twinInL_, twinInR_, n);
+        // Its swell too: after a MASSIVE freeze its attack stayed set, and with no twin it read 24 taps
+        // a sample from a ring of silence until power-off (overnight review, 26 Oct 2026).
+        if (twinRuns) twinSwell_.processBlock(twinInL_, twinInR_, n);
         prof::mark(prof::kTwin);
         swell_.processBlock(bufL_, bufR_, n);
         prof::mark(prof::kSwell);
