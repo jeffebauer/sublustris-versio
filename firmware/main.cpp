@@ -90,7 +90,13 @@ void SdramWriteAllocate()
 // flash and copied to RAM at startup, while zeroed .bss storage costs no
 // flash (128 KB budget, SPEC §5.3; Resilio measured ~7.9 KB for its Tank).
 // Never destroyed (main never returns).
-alignas(iv::Engine) unsigned char gEngineStorage[sizeof(iv::Engine)];
+// In DTCM (overnight review 26 Oct 2026, lit-m7 section 4.3): the Engine's own state (~24 KB, read
+// and written every sample) sat in cached AXI SRAM and fought the delay lines for the 16 KB data
+// cache; DTCM is zero-wait and never cached. .dtcmram_bss is NOLOAD, but `iv::Engine()` (value
+// initialisation) zeroes the whole object before constructing it (a memset in main), so nothing
+// depends on startup's .bss clear. DTCM budget (release map): gFast 36,864 + this 24,208 = 61,072 B
+// from 0x20000000; the stack grows down from _estack = 0x20020000, leaving ~68 KB for it.
+IV_DTCM alignas(iv::Engine) unsigned char gEngineStorage[sizeof(iv::Engine)];
 iv::Engine& engine = *reinterpret_cast<iv::Engine*>(gEngineStorage);
 
 // Delay memory (SPEC §5.2): the long lines (FDN, predelay) in SDRAM, the
