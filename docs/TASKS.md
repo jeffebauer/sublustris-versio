@@ -17,7 +17,7 @@
 - [ ] **Play the plugin** (Immensio Versio, AU or VST3; rescan plug-ins first). It's v1.0.33 from branch `claude/massive-air`: everything in `main` plus MASSIVE's highs and shortest tail, ERA's era names, and **SHIMMER** on ATTACK's third position (TIME is how much). Notes welcome on anything; it goes into `main` when you say so.
 
 ### At the rack
-- [ ] **M3 CPU check, round 7.** Flash `dist/immensio_versio_profile_M3_round7.bin`, let it run one full lap, and tell Claude.
+- [ ] **M3 CPU check, round 8: memory or arithmetic?** Flash `dist/immensio_versio_profile_M3_round8.bin` and tell Claude once it's running (the answer is in the first `MICRO` line, at the start of each lap).
 
 ### When convenient
 - [ ] **Re-record Supermassive's short settings at a feedback that sounds like a reverb** (your note: at 0 % and 12 % it's separate delays): about 5 % for Andromeda's 2 s, or skip 2 s and record the longer settings you like (15 s, 30 s, infinite). Also **re-export three clipped Valhalla takes about 6 dB lower**: Plate Chrome 15 s, Plate Lithium 15 s and Supermassive Andromeda 100 % (measure and music). Also check Supermassive's DELAY: its first sound came at different times between takes (Sagittarius 421 / 38 / 3 ms, Andromeda 1.1 / 0.7 / 0.65 s).
@@ -36,6 +36,7 @@
 
 ## Done
 
+- 25 Oct 2026: **M3 CPU check, round 7** (your run): fetching the tank's memory before each block cost ~30 % and saved little, so the averages didn't improve (MASSIVE ~171-185 %). Round 8 runs one small tank in the fast and in the slow memory to settle whether the tank waits on memory or on arithmetic.
 - 25 Oct 2026: **M3 CPU check, round 6: the building blocks** (your run). Cycles per operation: external memory (SDRAM) 10 for one steady stream, 33 for 32 streams at once (the tank's pattern), 48 for writes, ~100 for a delay line's read-and-write; the chip's own memory 3 for the same 32 streams. Maths calls: exp 112, sin 85, pow 209, log10 157. So the long delay lines in the external memory are the main cost, then the maths calls once a block. Averages now: PLATE 67-82 %, HALL 135-178 %, MASSIVE 161-180 %.
 - 25 Oct 2026: **M3 CPU check, round 5** (your run): the memory setting helped a little (PLATE ~66 %, HALL ~142-167 %); the tank's output and early taps still cost far more than their few reads should. Round 6 times the building blocks directly.
 - 25 Oct 2026: **M3 CPU check, round 4** (your run): inside HALL's tank, the lines take 26-55 %, the output and early taps 38-49 % (only ~30 reads a sample, so they're waiting on the external memory), the per-block maths 10-16 %, the mixing ~4 %. Round 5 tries one memory setting (writes grouped into bursts).
