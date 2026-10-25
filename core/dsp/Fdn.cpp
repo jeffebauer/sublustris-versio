@@ -567,19 +567,38 @@ IV_NO_UNSWITCH void Fdn::runBlock(const float* inL, const float* inR, float* out
 
     // The early taps, after the writes: the tap at sample s reads where it did before sample s's write
     // (what it reaches was written before it, and nothing it reaches was overwritten: blockFits).
-    float el[kControlBlock], er[kControlBlock], ol[kControlBlock], orr[kControlBlock];
-    for (int s = 0; s < m; ++s) el[s] = er[s] = ol[s] = orr[s] = 0.0f;
+    float e[kN][kControlBlock], ol[kControlBlock], orr[kControlBlock]; // each line's taps; the old ones' sums
+    for (int s = 0; s < q; ++s) ol[s] = orr[s] = 0.0f;
     for (int i = 0; i < kN; ++i) {
-        float tl[kControlBlock], e[kControlBlock];
+        float tl[kControlBlock];
         float len = tapLen_[i];
         const float step = tapStep_[i];
         for (int s = 0; s < m; ++s) tl[s] = (len += step); // v1.0.25: no per-block steps on SIZE moves
         tapLen_[i] = len;
         if (!(earlyG > 0.0f)) continue;
-        for (int s = 0; s < m; ++s) e[s] = 0.0f;
+        for (int s = 0; s < m; ++s) e[i][s] = 0.0f;
         const DelayLine& w = was[i];
         if (step == 0.0f) { // still (always, but after a snap): each tap one stream, a0 the next sample's a1
-            for (int k = 0; k < earlyCount_; ++k) {
+            int k = 0;
+            if (w.full()) // two taps a pass, each sample's sum in a register (still in k order)
+                for (; k + 1 < earlyCount_; k += 2) {
+                    const float    g0 = tapGainNow_[i][k], g1 = tapGainNow_[i][k + 1];
+                    const float    d0 = 1.0f + earlyFrac_[i][k] * tl[0], d1 = 1.0f + earlyFrac_[i][k + 1] * tl[0];
+                    const auto     i0 = uint32_t(d0), i1 = uint32_t(d1);
+                    const float    t0 = d0 - float(i0), t1 = d1 - float(i1);
+                    const uint32_t p0 = w.pos - i0, p1 = w.pos - i1;
+                    float b0 = w.buf[(p0 - 1u) & w.mask], b1 = w.buf[(p1 - 1u) & w.mask];
+                    for (int s = 0; s < m; ++s) {
+                        const float a0 = w.buf[(p0 + uint32_t(s)) & w.mask], a1 = w.buf[(p1 + uint32_t(s)) & w.mask];
+                        float sum = e[i][s];
+                        sum += g0 * (a0 + t0 * (b0 - a0));
+                        sum += g1 * (a1 + t1 * (b1 - a1));
+                        e[i][s] = sum;
+                        b0 = a0;
+                        b1 = a1;
+                    }
+                }
+            for (; k < earlyCount_; ++k) {
                 const float g  = tapGainNow_[i][k]; // the tap's gain x the trip's correction (per block)
                 const float d  = 1.0f + earlyFrac_[i][k] * tl[0];
                 const auto  di = uint32_t(d);
@@ -590,25 +609,25 @@ IV_NO_UNSWITCH void Fdn::runBlock(const float* inL, const float* inR, float* out
                 float a1 = lag < 0 ? w.buf[(p - 1u) & w.mask] : 0.0f;
                 for (int s = 0; s < m; ++s) {
                     const float a0 = s >= lag ? w.buf[(p + uint32_t(s)) & w.mask] : 0.0f;
-                    e[s] += g * (a0 + t * (a1 - a0));
+                    e[i][s] += g * (a0 + t * (a1 - a0));
                     a1 = a0;
                 }
             }
         } else {
-            tapsMoving(i, m, tl, w, e);
-        }
-        // Each line's taps go out with another line's signs, so they decorrelate from the ends.
-        const int j = (i + 3) & (kN - 1);
-        for (int s = 0; s < m; ++s) {
-            el[s] += kOutL[j] * e[s];
-            er[s] += kOutR[j] * e[s];
+            tapsMoving(i, m, tl, w, e[i]);
         }
         if (q > 0) tapsOld(i, q, tl, w, ol, orr);
     }
     for (int s = 0; s < m; ++s) {
         float l = ls[s], r = rs[s];
         if (earlyG > 0.0f) {
-            float tapL = el[s], tapR = er[s];
+            float tapL = 0.0f, tapR = 0.0f;
+            for (int i = 0; i < kN; ++i) {
+                // Each line's taps go out with another line's signs, so they decorrelate from the ends.
+                const int j = (i + 3) & (kN - 1);
+                tapL += kOutL[j] * e[i][s];
+                tapR += kOutR[j] * e[i][s];
+            }
             if (s < q) { // the old positions fade out with the lines
                 tapL = xn[s] * tapL + xo[s] * ol[s];
                 tapR = xn[s] * tapR + xo[s] * orr[s];
@@ -645,13 +664,25 @@ IV_NO_UNSWITCH bool Fdn::lineFast(int i, int m, float apG, float eraIn, float er
     const bool     full = line.full();
     const float    step = readStep_[i], corr = xfLineCorr_[i], gain = gain_[i], b1 = b1_[i], pole = pole_[i];
     float read = readNow_[i], state = interp_[i], ay = absorbY_[i], ax = absorbX_[i];
+    // A read that holds still (the low tank: no modulation) has one position all block (read + 0 is read),
+    // so its coefficient and its divide are worked out once.
+    const bool still = step == 0.0f;
+    uint32_t   di  = 0;
+    float      eta = 0.0f;
+    if (still) {
+        di = uint32_t(int32_t(read - 0.5f));
+        const float f = read - float(di);
+        eta = (1.0f - f) / (1.0f + f);
+    }
     for (int s = 0; s < m; ++s) {
         // DelayLine::readAllpass as it stood at sample s (filling: through ago(), silence before the clear).
-        read += step;
         const uint32_t pos = pos0 + uint32_t(s), fill = fill0 + uint32_t(s);
-        const auto     di  = uint32_t(int32_t(read - 0.5f));
-        const float    f   = read - float(di);
-        const float    eta = (1.0f - f) / (1.0f + f);
+        if (!still) {
+            read += step;
+            di = uint32_t(int32_t(read - 0.5f));
+            const float f = read - float(di);
+            eta = (1.0f - f) / (1.0f + f);
+        }
         float a, b;
         if (full || di + 1 <= fill) {
             a = buf[(pos - di) & mask];
