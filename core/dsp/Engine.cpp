@@ -28,6 +28,20 @@ float approach(float now, float target, float step)
 
 } // namespace
 
+// Early taps per line by SPACE (v1.0.36, ADR 0026; owner's pick B on renders/early_hits): HALL 2,
+// MASSIVE 4, of the six laid out (one per line opened MASSIVE's dip before a hit's tail back up:
+// 16.9 dB at SIZE full; four 2.9, six 1.9). The twin follows its space.
+IV_SIZE_OPT void Engine::setEarlyTapsForSpace()
+{
+    int n = activeSpace_ == 2 ? voicing::kMassiveEarlyTaps : voicing::kHallEarlyTaps;
+#ifndef IV_FIXED_VOICINGS
+    if (fitEarlyTaps_ > 0) n = fitEarlyTaps_;
+#endif
+    fdn_.setEarlyTapCount(n);
+    lowFdn_.setEarlyTapCount(n);
+    twinFdn_.setEarlyTapCount(n);
+}
+
 #ifndef IV_FIXED_VOICINGS
 void Engine::setEarlyTapPrototype(int earlyTaps)
 {
@@ -91,11 +105,6 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     ready_ &= swell_.prepare(large_, sampleRate);
     ready_ &= twinSwell_.prepare(large_, sampleRate);
     twinSwell_.setSCurve(true); // eases in, then settles (owner, renders/swell_curve)
-#ifndef IV_FIXED_VOICINGS
-    fdn_.setEarlyTapCount(fitEarlyTaps_);
-    twinFdn_.setEarlyTapCount(fitEarlyTaps_);
-    lowFdn_.setEarlyTapCount(fitEarlyTaps_);
-#endif
     // The tank and its twin at half the rate (v1.0.35, ADR 0026; dsp/HalfRate.h).
     ready_ &= fdn_.prepare(large_, 0.5f * sampleRate, 0x1D5A7u);
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
@@ -159,6 +168,7 @@ IV_SIZE_OPT void Engine::reset()
     for (auto& p : predelay_) p.clear();
     for (auto& d : diffuser_) d.clear();
     activeSpace_ = normalisedToSwitch(values_[static_cast<size_t>(ParamId::Space)]);
+    setEarlyTapsForSpace();
     flipPhase_ = 0;
     flipGain_ = 1.0f;
     flipStep_ = 0.0f;
@@ -666,6 +676,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
             flipPhase_ = 2;
         } else if (flipGain_ <= 0.0f) {
             activeSpace_ = space;
+            setEarlyTapsForSpace(); // the tanks restart here, so their early taps re-lay out unheard
             // Targets first, so the resets below land on them (the FDN's output trim). The predelay
             // jumps too, here where the tank's input is silent; the input diffusers glide
             // (a jump in their amount rang on in them for ~100 ms, past the fade back in).

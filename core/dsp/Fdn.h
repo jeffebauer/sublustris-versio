@@ -79,8 +79,9 @@ public:
     // "too much delay before the reverb starts swelling") and every pass is
     // denser. Output only: the loop itself is unchanged.
     void setEarlyTaps(float amount) { earlyTarget_ = amount; }
-    // PROTOTYPE (renders/fit_cpu): n early taps per line over the same span, the same energy, before prepare().
-    void setEarlyTapCount(int n) { earlyCount_ = n > 0 && n < kEarlyTaps ? n : kEarlyTaps; }
+    // n of the early taps per line (v1.0.36, ADR 0026: HALL 2, MASSIVE 4), the same early energy;
+    // re-lays them out, so call it where the tank restarts (a SPACE flip, reset).
+    void setEarlyTapCount(int n);
     void setAir(float air) { air_ = air; } // 1/T60 in 1/s: see absorbent() (v1.0.25)
     // The modulation floor's depth × modDepth (Engine::setModulationScale, a test hook).
     void setModDepth(float k) { modDepth_ = k; }
@@ -105,6 +106,7 @@ private:
     float xfAllpass(int i, float x, float g, bool old);
     float xfOldAllpass(int i, int k, float x, float d);
     void  xfOldTaps(float& el, float& er);
+    void  layoutEarly();
     void controlInLoop(float dt, int n, float slew, bool pending);
     uint32_t apTargetLength(int i, int k) const;
 

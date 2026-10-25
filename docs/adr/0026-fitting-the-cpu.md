@@ -27,7 +27,10 @@ Amends ADR 0007 (the swell) and ADR 0012 (the still-lows tanks).
   - everything in the tanks is set in seconds, so lengths, T60s and levels hold (T60 within 3 %, level on music within 0.9 dB).
 - **ERA's Midiverb box in a 24 kHz tank:** its ½ one-pole loop low-pass and its bits, without the halfbands (it was already 24 kHz inside). The 12 kHz low tank keeps only the bits, as before.
 - **The swell has 12 taps per side** (was 24), over the same span, with the same jitter draws (24 drawn a side, the first 12 used), total energy 1.
-- **Held back:** one early reflection per line (fit_cpu's D) stays a prototype (`IV_FIT_EARLY_TAPS`), "if needed".
+- **Early reflections (v1.0.36, the owner's pick B on `renders/early_hits`):**
+  - HALL's tank uses 2 of its 6 per line, MASSIVE's 4, re-laid out where the tanks restart (`Engine::setEarlyTapsForSpace`).
+  - One per line (fit_cpu's D) opened MASSIVE's dip before a hit's tail back up (the owner's v1.0.21 fix): 16.9 dB at SIZE full, against four 2.9 and six 1.9.
+  - fit_cpu's page called D "one instead of three"; it was one instead of six.
 
 **Considered:**
 - Moving the lines into internal SRAM: MASSIVE's ~4.6 MB doesn't fit.
@@ -40,7 +43,7 @@ Amends ADR 0007 (the swell) and ADR 0012 (the still-lows tanks).
   - the HALL / MASSIVE tail stops around 11-12 kHz;
   - on white noise HALL is 2.7 dB and MASSIVE 1.9 dB quieter (test offset), on music 0.2-0.9 dB;
   - BLOOM's swell is built from 12 points;
-  - a hot 7 kHz tone at the cassette stage folds its 3rd harmonic (21 kHz at the 24 kHz rate) to 3 kHz: -38 dB below 5 kHz (the test's limit moved from -40 to -36).
+  - a hot 7 kHz tone at the cassette stage folds its 3rd harmonic (~21 kHz at the 24 kHz rate) to ~3 kHz: about -34 dB below 5 kHz averaged over five tones 6.6-7.4 kHz (a single tone's figure is comb luck, -31 to -41). The test now averages the five; its limit moved from -40 to -32.
 - **Painting:** at the paint test's old white-noise level the pad froze under the floor, where painting may grow it to the floor + 1.5 dB by design. The test now uses louder noise.
 - **Goldens updated.** The click's clarity (C80) and smoothness times moved most, on the onset the metric finds; a click rendered both ways starts at 11 ms with C80 within 0.8 dB.
 - **CPU:** to be measured in round 9, together with the real limit (the owner's idea: extra load in the audio callback, step by step, counting late blocks).

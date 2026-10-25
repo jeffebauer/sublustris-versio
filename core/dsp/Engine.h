@@ -144,6 +144,7 @@ private:
     // snap: jump to the targets (reset, a SPACE flip); snapInput: the input diffusers' amount and
     // the shimmer's recording too (not on a flip, where they keep running and glide).
     void applySpace(bool snap, int n = kChunk, bool snapInput = true);
+    void setEarlyTapsForSpace();
     float decayRate(float decay, float size) const;
     float smoothed(ParamId id) const { return smooth_[static_cast<size_t>(id)]; }
 

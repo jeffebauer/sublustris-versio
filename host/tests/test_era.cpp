@@ -320,10 +320,13 @@ void eraSweepClickFree()
 // (v1.0.22, even harmonics as tape's) puts real difference tones there too, so
 // the same tone is also rendered at 96 kHz, where little folds: aliasing is
 // what 48 kHz adds over that (or the band simply stays 40 dB down).
-double lowBandDb(float sr)
+// Averaged over five tones 6.6-7.4 kHz (v1.0.36): the tank's early taps comb a single tone and its
+// fold-back, so one tone's figure is luck (7 kHz alone: -37 dB with six taps, -31 with two; the five
+// average -33.6 and -33.5).
+double lowBandDb(float sr, float hz)
 {
     std::vector<float> in(size_t(3.0f * sr));
-    for (size_t i = 0; i < in.size(); ++i) in[i] = 0.9f * std::sin(2.0f * 3.14159265f * 7000.0f * float(i) / sr);
+    for (size_t i = 0; i < in.size(); ++i) in[i] = 0.9f * std::sin(2.0f * 3.14159265f * hz * float(i) / sr);
     Setting s;
     s.era = 0.75f; // cassette drive
     s.decay = 0.0f;
@@ -339,18 +342,25 @@ double lowBandDb(float sr)
         total += p;
         if (f < 5000.0f) lowBand += p;
     }
-    return 10.0 * std::log10(lowBand / total + 1e-30);
+    return lowBand / (total + 1e-30);
+}
+
+double lowBandDb(float sr)
+{
+    double share = 0.0;
+    for (float hz : {6600.0f, 6800.0f, 7000.0f, 7200.0f, 7400.0f}) share += lowBandDb(sr, hz) / 5.0;
+    return 10.0 * std::log10(share + 1e-30);
 }
 
 void notAliasing()
 {
     const double at48 = lowBandDb(kSr), at96 = lowBandDb(96000.0f);
-    // v1.0.35 (ADR 0026): the HALL tank runs at 24 kHz, so in its loop the 3rd harmonic (21 kHz) folds to
-    // 3 kHz: -38 dB here (was under -40). Accepted for the CPU (classic digital reverbs fold the same way);
-    // the limit for it is -36.
-    check(at48 < -36.0 || at48 - at96 < 2.0,
+    // v1.0.35 (ADR 0026): the HALL tank runs at 24 kHz, so in its loop the 3rd harmonic (~21 kHz) folds to
+    // ~3 kHz: about -34 dB here (was under -40). Accepted for the CPU (classic digital reverbs fold the
+    // same way); the limit for it is -32.
+    check(at48 < -32.0 || at48 - at96 < 2.0,
           "hot 7 kHz tone at the cassette stage: energy below 5 kHz " + std::to_string(int(at48)) + " dB re total at 48 kHz, " +
-              std::to_string(int(at96)) + " at 96 kHz (< −40, or aliasing adds < 2 dB)");
+              std::to_string(int(at96)) + " at 96 kHz (< −32 with the 24 kHz tank, or aliasing adds < 2 dB)");
 }
 
 } // namespace

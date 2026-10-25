@@ -89,31 +89,7 @@ IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed, flo
         era_[i].prepare(sampleRate);
         driftGen_[i].prepare(sampleRate, seed * 2654435761u + uint32_t(i) * 40503u + 1u, float(i) / float(kN - 1));
     }
-    // Early taps: fixed points along each line, louder the later they sit, so the first sound is
-    // quiet and the tank swells from there. The 8 lines' taps interleave (each line offset by its
-    // own share of a slot, shorter lines first) instead of bunching (v1.0.21; the seeded jitter
-    // they replace still draws, so every build's signs are the same).
-    uint32_t es = 0xEA51u;
-    for (int i = 0; i < kN; ++i)
-        for (int k = 0; k < kEarlyTaps; ++k) {
-            (void)uniform(es);
-            earlyFrac_[i][k] = (float(k) + (float(i) + 0.5f) / float(kN)) / float(earlyCount_);
-            earlyGain_[i][k] = voicing::kEarlyTapLow + (1.0f - voicing::kEarlyTapLow) * earlyFrac_[i][k];
-            if (uniform(es) < 0.0f) earlyGain_[i][k] = -earlyGain_[i][k];
-            if (k >= earlyCount_) earlyFrac_[i][k] = earlyGain_[i][k] = 0.0f; // setEarlyTapCount (prototype)
-        }
-    if (earlyCount_ < kEarlyTaps) { // the same early energy from fewer taps
-        float full = 0.0f, used = 0.0f;
-        for (int i = 0; i < kN; ++i)
-            for (int k = 0; k < kEarlyTaps; ++k) {
-                const float fr = (float(k) + (float(i) + 0.5f) / float(kN)) / float(kEarlyTaps);
-                const float g = voicing::kEarlyTapLow + (1.0f - voicing::kEarlyTapLow) * fr;
-                full += g * g;
-                used += earlyGain_[i][k] * earlyGain_[i][k];
-            }
-        const float norm = std::sqrt(full / used);
-        for (auto& row : earlyGain_) for (auto& g : row) g *= norm;
-    }
+    layoutEarly();
     for (auto& t : lenTarget_) t = 0.0f;
     setMeanSeconds(0.1f, 1.0f, true);
     reset();
@@ -165,6 +141,49 @@ IV_SIZE_OPT void Fdn::reset()
         }
     }
     externalPower_ = 0.0f; // a low tank's level from before (soak audit: a stale one read as a phantom level after a flip)
+}
+
+// Early taps: fixed points along each line, louder the later they sit, so the first sound is quiet and
+// the tank swells from there. The 8 lines' taps interleave (each line offset by its own share of a slot,
+// shorter lines first) instead of bunching (v1.0.21; the seeded jitter they replace still draws, so
+// every build's signs are the same). earlyCount_ of the kEarlyTaps laid out (v1.0.36, ADR 0026: HALL 2,
+// MASSIVE 4, the owner's pick on renders/early_hits), at the same early energy as all six.
+IV_SIZE_OPT void Fdn::layoutEarly()
+{
+    uint32_t es = 0xEA51u;
+    for (int i = 0; i < kN; ++i)
+        for (int k = 0; k < kEarlyTaps; ++k) {
+            (void)uniform(es);
+            earlyFrac_[i][k] = (float(k) + (float(i) + 0.5f) / float(kN)) / float(earlyCount_);
+            earlyGain_[i][k] = voicing::kEarlyTapLow + (1.0f - voicing::kEarlyTapLow) * earlyFrac_[i][k];
+            if (uniform(es) < 0.0f) earlyGain_[i][k] = -earlyGain_[i][k];
+            if (k >= earlyCount_) earlyFrac_[i][k] = earlyGain_[i][k] = 0.0f;
+        }
+    if (earlyCount_ < kEarlyTaps) { // the same early energy from fewer taps
+        float full = 0.0f, used = 0.0f;
+        for (int i = 0; i < kN; ++i)
+            for (int k = 0; k < kEarlyTaps; ++k) {
+                const float fr = (float(k) + (float(i) + 0.5f) / float(kN)) / float(kEarlyTaps);
+                const float g = voicing::kEarlyTapLow + (1.0f - voicing::kEarlyTapLow) * fr;
+                full += g * g;
+                used += earlyGain_[i][k] * earlyGain_[i][k];
+            }
+        const float norm = std::sqrt(full / used);
+        for (auto& row : earlyGain_) for (auto& g : row) g *= norm;
+    }
+}
+
+IV_SIZE_OPT void Fdn::setEarlyTapCount(int n)
+{
+    n = n > 0 && n < kEarlyTaps ? n : kEarlyTaps;
+    if (n == earlyCount_) return;
+    earlyCount_ = n;
+    layoutEarly();
+    for (int i = 0; i < kN; ++i)
+        for (int k = 0; k < kEarlyTaps; ++k) {
+            xfTapCorr_[i][k] = 1.0f;
+            tapGainNow_[i][k] = earlyGain_[i][k];
+        }
 }
 
 IV_SIZE_OPT void Fdn::setMeanSeconds(float meanSeconds, float spread, bool snap)
@@ -289,7 +308,7 @@ IV_NOINLINE IV_SIZE_OPT void Fdn::xfOldTaps(float& el, float& er)
     for (int i = 0; i < kN; ++i) {
         const int j = (i + 3) & (kN - 1);
         float e = 0.0f;
-        for (int k = 0; k < kEarlyTaps; ++k) { // the old positions, on the old timeline (no correction)
+        for (int k = 0; k < earlyCount_; ++k) { // the old positions, on the old timeline (no correction)
             const float od = 1.0f + earlyFrac_[i][k] * (tapLen_[i] + xfDelta_[i]);
             const auto  oi = uint32_t(od);
             const float ot = od - float(oi);
@@ -410,7 +429,7 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
         };
         for (int i = 0; i < kN; ++i) {
             xfLineCorr_[i] = corr(xfLnGain_[i], xfHold_[i]);
-            for (int k = 0; k < kEarlyTaps; ++k) xfTapCorr_[i][k] = corr(earlyFrac_[i][k] * xfLnGain_[i], earlyFrac_[i][k] * xfHold_[i]);
+            for (int k = 0; k < earlyCount_; ++k) xfTapCorr_[i][k] = corr(earlyFrac_[i][k] * xfLnGain_[i], earlyFrac_[i][k] * xfHold_[i]);
         }
         if (s > maxLen_ + float(xfLen_)) { // every line's trip done
             xfSince_ = -1;
@@ -453,7 +472,7 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
         // The trip's level correction after a SIZE jump rides on the early taps' gains (they hold no state,
         // so it's exact); the line's own read takes it per sample (on the loss filter, the in-loop
         // allpasses' memory sat between: the old read entered them x5 at a jump, a click).
-        for (int k = 0; k < kEarlyTaps; ++k) tapGainNow_[i][k] = earlyGain_[i][k] * xfTapCorr_[i][k];
+        for (int k = 0; k < earlyCount_; ++k) tapGainNow_[i][k] = earlyGain_[i][k] * xfTapCorr_[i][k];
         pole_[i] = o * xfAbsOld_[i][2] + w * a.pole;
     }
 }
@@ -531,7 +550,7 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                     // Each line's taps go out with another line's signs, so they decorrelate from the ends.
                     const int j = (i + 3) & (kN - 1);
                     float e = 0.0f;
-                    for (int k = 0; k < kEarlyTaps; ++k) {
+                    for (int k = 0; k < earlyCount_; ++k) {
                         const float d  = 1.0f + earlyFrac_[i][k] * tapLen_[i];
                         const auto  di = uint32_t(d);
                         const float t  = d - float(di);

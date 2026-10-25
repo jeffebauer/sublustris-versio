@@ -120,6 +120,9 @@ constexpr float kMassiveOutputTrim  = 0.60f; // −3.3 dB: MASSIVE matches HALL'
 // owner's pick on renders/knob_feel: the swell no longer dips before its peak,
 // "uneven on Hits"; it dipped 5.8 dB at large SIZE, now 3.5).
 constexpr int   kEarlyTaps     = 6;
+// Of them, in use (v1.0.36, ADR 0026; owner's pick B on renders/early_hits, for the CPU): HALL 2, MASSIVE 4.
+constexpr int   kHallEarlyTaps    = 2;
+constexpr int   kMassiveEarlyTaps = 4;
 constexpr float kEarlyTapLow   = 0.3f;
 constexpr float kEarlyTapLevel = 0.5f * 0.71f;
 // MASSIVE's shortest DECAY rings at least this many passes of its mean line
