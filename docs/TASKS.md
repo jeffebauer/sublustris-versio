@@ -1,7 +1,7 @@
 # Owner tasks
 
 **Last updated:** 25 Oct 2026, session 6 (MASSIVE's highs: D built on `claude/massive-air` and installed in Ableton).
-**Plugin installed:** `aca6356` on branch `claude/massive-air` (v1.0.31: v1.0.30 plus MASSIVE's highs ringing as long as the body), 25 Oct 2026; AU check passed. Rescan in Ableton to see it.
+**Plugin installed:** `18cadab` on branch `claude/massive-air` (v1.0.31: v1.0.30 plus MASSIVE's highs ringing as long as the body; ERA's value names its era, e.g. "Cassette 40 %"), 25 Oct 2026 11:03; AU check passed. Rescan in Ableton to see it.
 
 ## To do
 
@@ -27,6 +27,7 @@
 
 ## Waiting on Claude
 
+- **SPACE flips keep the tail** (your question, 25 Oct): possible. The freeze's spare reverbs already hold the memory; two reverbs run while the old tail rings out (as a frozen MASSIVE with playing over it); flash is the limit (~800 B left on the branch, the ring-out ~0.5-1.5 KB), so it needs room freed first, planned with REVERSE's replacement. Your call: ring out fully, or fade over a few seconds.
 - **Alternatives to REVERSE** (your question, 25 Oct): shimmer (octave up), sub shimmer (octave down), granular cloud, gated. Waiting on which ones you'd like on a demo page; research first, then a page. TIME's name follows (it's pre-delay only in NORMAL).
 - **The rest of the Valhalla comparison** (`docs/research/valhalla-comparison.md`): the loudness one is done (v1.0.28); MASSIVE's highs are on a page to pick from (above). Still to come: Supermassive moves more in pitch at long settings (a DRIFT comparison). Found on the way: the Immensio beside Valhalla page's MASSIVE settings now ring longer than labelled (a 21 Oct 2026 DECAY change, v1.0.21: "15 s" rings ~20 s, "2 s" ~4.7 s); DECAY 0.08 / 0.33 give 5 / 15 s at SIZE 0.7, and 2 s is below MASSIVE's shortest at that SIZE.
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
