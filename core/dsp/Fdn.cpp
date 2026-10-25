@@ -179,7 +179,19 @@ void Fdn::control(int n)
     float meanLen = 0.0f;
     for (int i = 0; i < kN; ++i) meanLen += lenNow_[i];
     meanLen /= float(kN) * sampleRate_;
+#ifndef IV_FIXED_VOICINGS
+    // With crossfades the trim that follows SIZE (hallSizeLevelTrim, massiveDecayLevelTrim) waits for
+    // the lines: following the knob while the lines held still, a flicked HALL's level flickered.
+    if (sizeXfade_ > 0.0f) { // no SIZE move waiting: the trim follows as usual (DECAY's part too)
+        bool pending = false;
+        for (int i = 0; i < kN; ++i) pending |= std::fabs(lenTarget_[i] - lenNow_[i]) > 0.5f;
+        if (!pending) xfTrim_ = outputTrim_;
+    }
+    const float trimTarget = sizeXfade_ > 0.0f ? xfTrim_ : outputTrim_;
+    outputTrimNow_ += (1.0f - std::exp(-dt / (sizeXfade_ > 0.0f ? 0.5f * sizeXfade_ : 0.05f))) * (trimTarget - outputTrimNow_);
+#else
     outputTrimNow_ += (1.0f - std::exp(-dt / 0.05f)) * (outputTrim_ - outputTrimNow_);
+#endif
     if (std::fabs(outputTrim_ - outputTrimNow_) < 1e-6f) outputTrimNow_ = outputTrim_;
 #ifndef IV_FIXED_VOICINGS
     if (sizeXfade_ > 0.0f) { // the lengths jump, so the level that follows them glides over the crossfade
@@ -207,8 +219,17 @@ void Fdn::control(int n)
         for (int i = 0; i < kN; ++i) moved |= std::fabs(lenTarget_[i] - lenNow_[i]) > 0.5f;
         if (moved) {
             xfLen_ = xfLeft_ = int(sizeXfade_ * sampleRate_);
+            xfSince_ = 0;
+            xfTrim_ = outputTrim_;
             for (int i = 0; i < kN; ++i) {
                 xfDelta_[i] = lenNow_[i] - lenTarget_[i]; // old minus new
+                // For one trip after the jump the new read hears sound written before it: from further
+                // back (louder, the tail was younger) when longer, nearer (quieter) when shorter. Its
+                // level is corrected by the tail's own decay over the difference for exactly that trip,
+                // then eased back over the crossfade (owner: "some jumps in amplitude with the
+                // crossfades"; HALL flicked 0.15 -> 0.85: steps up to 8 dB in 25 ms).
+                xfLnGain_[i] = 6.9077553f * xfDelta_[i] / sampleRate_ * (decayRate_ + governRate + extraRate_);
+                xfHold_[i] = lenTarget_[i];
                 lenNow_[i] = lenTarget_[i];
                 readNow_[i] -= xfDelta_[i];
                 interpOld_[i] = interp_[i]; // the old read carries on exactly as it was (allpass, its own state)
@@ -290,6 +311,7 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                 readNow_[i] += readStep_[i];
                 float x = line_[i].readAllpass(readNow_[i], interp_[i]);
 #ifndef IV_FIXED_VOICINGS
+                if (xfSince_ >= 0) x *= xfCorrection(xfLnGain_[i], xfHold_[i]);
                 if (xfLeft_ > 0) { // the old length fading out, equal power (the reads are mostly unrelated)
                     const float g = 1.5707963f * float(xfLeft_) / float(xfLen_);
                     // Read the old position the way it was read before (allpass, carrying its state): a cubic
@@ -351,6 +373,7 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                         const float a0 = line_[i].read(di), a1 = line_[i].read(di + 1);
                         float v = a0 + t * (a1 - a0);
 #ifndef IV_FIXED_VOICINGS
+                        if (xfSince_ >= 0) v *= xfCorrection(earlyFrac_[i][k] * xfLnGain_[i], earlyFrac_[i][k] * xfHold_[i]);
                         if (xfLeft_ > 0) { // the tap's old position, fading out with the line's old read
                             const float g = 1.5707963f * float(xfLeft_) / float(xfLen_);
                             const float od = 1.0f + earlyFrac_[i][k] * (tapLen_[i] + xfDelta_[i]);
@@ -369,6 +392,7 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
             outR[s] += outGain * r;
 #ifndef IV_FIXED_VOICINGS
             if (xfLeft_ > 0) --xfLeft_;
+            if (xfSince_ >= 0 && ++xfSince_ > int(maxLen_) + xfLen_) xfSince_ = -1; // every line's trip done
 #endif
 
             // Fast Walsh–Hadamard transform: 24 adds for the 8×8 mix.

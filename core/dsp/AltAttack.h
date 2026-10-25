@@ -32,14 +32,14 @@ inline float rnd01(uint32_t& s)
 // 1.6 dB on a noise-like tail (below the unshifted tail's own 2.4).
 class PitchShifter {
 public:
-    static constexpr int kMaxHeads = 8;
+    static constexpr int kMaxHeads = 16;
     void prepare(float ratio, float windowSamples, uint32_t seed, int heads = 2, float jitter = 0.15f)
     {
         ratio_ = ratio;
         w0_ = windowSamples;
         heads_ = heads;
         jitter_ = jitter;
-        buf_.assign(1u << 16, 0.0f); // up to ~1.3 s of window
+        buf_.assign(1u << 17, 0.0f); // up to ~1.3 s of window plus its scatter
         mask_ = buf_.size() - 1;
         seed_ = seed;
         for (int k = 0; k < heads_; ++k) {
@@ -49,6 +49,11 @@ public:
         pos_ = 0;
     }
     void setRatio(float r) { ratio_ = r; } // small moves only (detune); the windows stay
+    // Each head starts each grain at a random extra delay (0..scatter of the window): heads at fixed
+    // spacings cancel each other at fixed frequencies, a comb on the octave (round 3, 4 heads of
+    // 100 ms: 110 / 165 / 330 Hz notes' octaves nearly gone, only the detuned splice copies left).
+    // Random onsets move the cancellation every grain (Valhalla's randomised shifter, Clouds' grains).
+    void setScatter(float share) { scatter_ = share; }
     // The heads' reads wander together, slowly, by up to ±samples (a new target every few jumps,
     // glided over ~1.5 s): a few cents of slow movement, as BigSky's Mod and Valhalla's random
     // modulators. A new target every ~30 jumps (~3 s); together: heads drifting apart played at slightly different pitches and beat
@@ -70,12 +75,13 @@ public:
             if (phase_[k] < 0.0f || phase_[k] >= 1.0f) {
                 phase_[k] = ratio_ > 1.0f ? phase_[k] + 1.0f : phase_[k] - 1.0f;
                 if (jitter_ > 0.0f) win_[k] = w0_ * (1.0f - jitter_ + 2.0f * jitter_ * rnd01(seed_));
+                if (scatter_ > 0.0f) offset_[k] = scatter_ * w0_ * rnd01(seed_);
                 if (drift_ > 0.0f && k == 0 && ++jumps_ >= 30) { // a new target every ~3 s: slower moves wobbled at 10 Hz
                     jumps_ = 0;
                     driftTarget_ = drift_ * (2.0f * rnd01(seed_) - 1.0f);
                 }
             }
-            const float d = 2.0f + drift_ + driftNow_ + win_[k] * phase_[k];
+            const float d = 2.0f + drift_ + driftNow_ + offset_[k] + win_[k] * phase_[k];
             const auto  di = uint32_t(d);
             const float t = d - float(di);
             const float a = buf_[(pos_ - di) & mask_], b = buf_[(pos_ - di - 1) & mask_];
@@ -93,6 +99,7 @@ private:
     float    ratio_ = 2.0f, w0_ = 2048.0f, jitter_ = 0.15f, win_[kMaxHeads] = {}, phase_[kMaxHeads] = {};
     float    drift_ = 0.0f, driftCoeff_ = 0.0f, driftTarget_ = 0.0f, driftNow_ = 0.0f;
     int      jumps_ = 0;
+    float    scatter_ = 0.0f, offset_[kMaxHeads] = {};
     uint32_t seed_ = 1;
 };
 
@@ -158,6 +165,7 @@ public:
     enum class Style { Round1, Smooth, Moving, Evolving, Clean, CleanMoving, CleanDark };
     // Clean styles' shifter shape (heads, window seconds), set before prepare (round 3 trials).
     void setShape(int heads, float windowSeconds) { heads_ = heads; window_ = windowSeconds; }
+    void setScatter(float share) { scatter_ = share; } // round 4: random grain onsets (PitchShifter::setScatter)
     void prepare(float sampleRate, bool down, Style style = Style::Round1)
     {
         down_ = down;
@@ -175,6 +183,7 @@ public:
                               r1 ? 2 : (clean_ ? heads_ : 4), r1 ? 0.15f : 0.0f);
             if (style == Style::Moving || style == Style::Evolving || style == Style::CleanMoving)
                 shift_[c].setDrift(0.003f * sampleRate, sampleRate);
+            shift_[c].setScatter(scatter_);
             steep_[c].set(dark ? 3500.0f : 6000.0f, sampleRate);
             pre_[c].set(lp, sampleRate);
             pre2_[c].set(lp, sampleRate);
@@ -203,7 +212,7 @@ public:
 private:
     bool         down_ = false, clean_ = false;
     int          heads_ = 4;
-    float        window_ = 0.1f;
+    float        window_ = 0.1f, scatter_ = 0.0f;
     Style        style_ = Style::Round1;
     SteepLowPass steep_[2];
     float        sr_ = 48000.0f, lfo_ = 0.0f;

@@ -98,7 +98,8 @@ public:
     // the 4 heads averaging a tail down ~4 dB, collapsed the tail; an equal-power blend grew a held
     // chord. It needs DAFx 2026's energy compensation: not this round.) Round 3, the fold-back
     // filtered out: 8 clean, 9 clean + drift (both fed from the wet), 10 clean from the input only,
-    // 11 clean and darker from the wet.
+    // 11 clean and darker from the wet. Round 4, random grain onsets (no comb on certain notes):
+    // 12 input only (8 heads, 400 ms), 13 fed back, 14 fed back and darker (8 heads, 800 ms).
     void  setAltAttack(int mode) { altMode_ = mode; }
     // SIZE trials: the FDN tanks catch up with SIZE within this many seconds (0 = the semitone limit).
     void  setSizeCatchUp(float seconds)
@@ -286,11 +287,12 @@ private:
 #ifndef IV_FIXED_VOICINGS
     int   altMode_ = 0;
     float altTarget_ = 0.0f, altMix_ = 0.0f, altTime_ = 0.0f;
-    float predelayXfade_ = 0.0f, pdOld_ = 0.0f;
+    float predelayXfade_ = 0.0f, pdOld_ = 0.0f, pdLastTarget_ = 0.0f, pdRest_ = 0.0f;
     int   pdXfLen_ = 1, pdXfLeft_ = 0;
     float shimSrcL_[kChunk] = {}, shimSrcR_[kChunk] = {}; // the last chunk's tank wet
     dsp::proto::Shimmer shimUp_, shimDown_, shimSmooth_, shimMoving_, shimEvolving_; // round 1; round 2 (4 .. 6)
     dsp::proto::Shimmer shimClean_, shimCleanMoving_, shimInput_, shimCleanDark_; // round 3 (8 .. 11)
+    dsp::proto::Shimmer shimInputR4_, shimFeedR4_, shimFeedDarkR4_; // round 4 (12 .. 14): random onsets
     dsp::proto::Grains  grains_;
 #endif
 };

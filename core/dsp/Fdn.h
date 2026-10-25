@@ -18,6 +18,7 @@
 #include "dsp/Memory.h"
 #include "params/SpaceVoicing.h"
 
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 
@@ -146,6 +147,17 @@ private:
     float     sizeCatchUp_ = 0.0f, sizeXfade_ = 0.0f, xfDelta_[kN] = {};
     int       xfLen_ = 1, xfLeft_ = 0;
     float     xfLastTarget_[kN] = {}, xfRest_ = 0.0f, interpOld_[kN] = {}, apOld_[kN][2] = {};
+    float     xfLnGain_[kN] = {}, xfHold_[kN] = {};
+    int       xfSince_ = -1; // samples since a crossfade started, -1 when no correction runs
+    float     xfTrim_ = 1.0f;   // the output trim the lines are at (moves at a crossfade's start)
+    // The level correction for a read `hold` samples long after a jump: full for the trip, then eased out.
+    float xfCorrection(float lnGain, float hold) const
+    {
+        const float s = float(xfSince_);
+        if (s < hold) return std::exp(lnGain);
+        const float r = (s - hold) / float(xfLen_);
+        return r >= 1.0f ? 1.0f : std::exp(lnGain * (1.0f - r));
+    }
 #endif
     bool      ready_ = false;
 };

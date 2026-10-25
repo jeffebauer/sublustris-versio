@@ -446,6 +446,41 @@ C_crossfade_slow    No sliding: the old setting fades out in 0.3 s" > renders/kn
     echo "renders/knob_moves/index.html"
 fi
 
+if on shimmer4; then
+    # PROTOTYPES, shimmer round 4 (owner on round 3: fed back "still sound quite bitcrushy"; input only
+    # "sounds the most like a shimmer, however there are some inharmonic resonances that make certain
+    # tones sound a little out of tune"). Measured: heads at fixed spacings comb the octave (4 heads of
+    # 100 ms: 110 / 165 / 330 Hz notes' octaves nearly gone, their detuned splice copies left; the
+    # octave's level varied 59 dB across notes). Random grain onsets (PitchShifter::setScatter): 0.4-2.6
+    # dB, the worst note's detuned copies -38 (400 ms) / -55 dB (800 ms). In the reverb (ten notes, the
+    # off-pitch share): input only now equals the plain reverb (HALL -19 worst, MASSIVE -20); fed back
+    # equals it in MASSIVE, HALL 5-7 dB more. IV_ALT_ATTACK 10 round 3 input; 12 round 4 input (8 heads,
+    # 400 ms); 13 fed back; 14 fed back, darker (8 heads, 800 ms).
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in vibes pad keys lead voice stabs; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page shimmer4
+    for t in "1_hall_time_mid:HALL:0.5" "2_massive_time_high:MASSIVE:0.85" "3_plate_time_mid:PLATE:0.6"; do
+        IFS=: read col sp tm <<< "$t"
+        for v in "A_round_3_input_only:10" "B_input_only:12" "C_fed_back:13" "D_fed_back_darker:14"; do
+            tag=${v%%:*}; mode=${v##*:}
+            IV_ALT_ATTACK=$mode r shimmer4 $col $tag "" --set space=$sp --set attack=REVERSE --set decay=0.6 --set time=$tm
+        done
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "Shimmer, round 4. Your note on round 3: the input-only kind \"sounds the most like a shimmer, however there are some inharmonic resonances that make certain tones sound a little out of tune\"; the fed-back kinds \"still sound quite bitcrushy\". Measured why: the shifter's read heads sat at fixed distances apart, so for some notes they cancelled each other's octave (110, 165 and 330 Hz almost vanished), leaving only faint detuned copies: those notes sounded out of tune. Now each head starts at a random point each time (as Valhalla's and Mutable Instruments' shifters do), so no note is singled out; the octave comes out evenly across the keyboard and the detuned copies are 38-55 dB down. In the reverb, B now adds no off-pitch sound at all (it measures the same as the plain reverb); C and D, fed back, measure the same in MASSIVE but still a little grittier in HALL. A is round 3's input-only, for comparison. TIME is how much shimmer. Level-matched; none builds up.
+
+1_hall_time_mid       HALL, TIME 0.5 (DECAY 0.6)
+2_massive_time_high   MASSIVE, TIME 0.85
+3_plate_time_mid      PLATE, TIME 0.6
+
+A_round_3_input_only   Round 3's input-only (what you heard)
+B_input_only           Your input an octave up, no feedback, random onsets
+C_fed_back             Fed back (octaves keep climbing), random onsets
+D_fed_back_darker      Fed back and darker, random onsets" > renders/shimmer4/README.txt
+    python3 tools/review/make_review.py renders/shimmer4 --title "Shimmer, round 4" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/shimmer4/index.html"
+fi
+
 if on era_sweep; then
     # ERA turned from fully left to fully right over 40 s while the music loops (renders/_material_sweep,
     # 40 s loops + 12 s of tail), then the tail at ERA 1; chaptered at each era's start (ADR 0021).

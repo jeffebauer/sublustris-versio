@@ -88,6 +88,13 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     shimCleanMoving_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::CleanMoving);
     shimInput_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::Clean);
     shimCleanDark_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::CleanDark);
+    shimInputR4_.setShape(8, 0.4f);
+    shimFeedR4_.setShape(8, 0.8f);
+    shimFeedDarkR4_.setShape(8, 0.8f);
+    for (auto* s : {&shimInputR4_, &shimFeedR4_, &shimFeedDarkR4_}) s->setScatter(1.0f);
+    shimInputR4_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::Clean);
+    shimFeedR4_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::Clean);
+    shimFeedDarkR4_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::CleanDark);
     grains_.prepare(sampleRate);
 #endif
     ready_ &= twinFdn_.prepare(large_, sampleRate, 0x7A1Eu);
@@ -318,7 +325,7 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
     // Prototype: a fed-back shimmer turns the tank's own movement off: re-applied on every trip round
     // the shimmer loop, PLATE's chorus and HALL's deeper floor piled up into a smeared, gritty octave
     // (off-harmonic energy, PLATE -11 dB with it, -26 without; at 30 % still -10.5).
-    const float shimMod = altMode_ == 8 || altMode_ == 9 || altMode_ == 11 ? 1.0f - altMix_ : 1.0f;
+    const float shimMod = altMode_ == 8 || altMode_ == 9 || altMode_ == 11 || altMode_ == 13 || altMode_ == 14 ? 1.0f - altMix_ : 1.0f;
 #else
     constexpr float shimMod = 1.0f;
 #endif
@@ -712,10 +719,14 @@ void Engine::controlTick(int n)
     // PROTOTYPE (owner, plugin: "changing TIME rapidly also creates a large wash of noise"; measured:
     // a held note's energy away from its pitch -24 dB steady, -1 dB while TIME moves): the pre-delay
     // jumps and the old delay crossfades out (equal power) instead of sliding, which swept the input
-    // by up to an octave. Before the tank, so a dip can't stay in the loop: crossfades run back to back.
+    // by up to an octave.
     if (predelayXfade_ > 0.0f) {
         predelayStep_ = 0.0f;
-        if (pdXfLeft_ <= 0 && std::fabs(predelayTarget_ - predelayNow_) > 0.5f) {
+        // Once TIME has rested 50 ms (as SIZE): back to back, each flick jumped the reverb's input
+        // back and forth in time, a stutter (25 ms steps 6.8 dB against today's 5.9).
+        pdRest_ = std::fabs(predelayTarget_ - pdLastTarget_) > 0.5f ? 0.0f : pdRest_ + float(n) / sampleRate_;
+        pdLastTarget_ = predelayTarget_;
+        if (pdXfLeft_ <= 0 && pdRest_ >= 0.05f && std::fabs(predelayTarget_ - predelayNow_) > 0.5f) {
             pdOld_ = predelayNow_;
             predelayNow_ = predelayTarget_;
             pdXfLen_ = pdXfLeft_ = int(predelayXfade_ * sampleRate_);
@@ -811,10 +822,10 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                     grains_.process(pl, pr, gl, gr, altTime_ * altTime_ * 2.0f + 0.05f);
                     pl += altMix_ * (0.3f * pl + gl - pl);
                     pr += altMix_ * (0.3f * pr + gr - pr);
-                } else if (altMode_ == 10) {
+                } else if (altMode_ == 10 || altMode_ == 12) {
                     // Input shimmer: what you play, an octave up, into the tank; no feedback.
                     float sl = pl, sr2 = pr;
-                    shimInput_.process(sl, sr2);
+                    (altMode_ == 12 ? shimInputR4_ : shimInput_).process(sl, sr2);
                     const float send = altMix_ * 1.2f * altTime_;
                     pl += send * sl;
                     pr += send * sr2;
@@ -822,7 +833,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                     // Shimmer: the last chunk's wet, an octave up (or down), back into the tank.
                     float sl = shimSrcL_[i], sr2 = shimSrcR_[i];
                     dsp::proto::Shimmer& sh = altMode_ == 2 ? shimDown_ : (altMode_ == 4 ? shimSmooth_ : (altMode_ == 5 ? shimMoving_
-                                       : (altMode_ == 6 ? shimEvolving_ : (altMode_ == 8 ? shimClean_ : (altMode_ == 9 ? shimCleanMoving_ : (altMode_ == 11 ? shimCleanDark_ : shimUp_))))));
+                                       : (altMode_ == 6 ? shimEvolving_ : (altMode_ == 8 ? shimClean_ : (altMode_ == 9 ? shimCleanMoving_ : (altMode_ == 11 ? shimCleanDark_ : (altMode_ == 13 ? shimFeedR4_ : (altMode_ == 14 ? shimFeedDarkR4_ : shimUp_))))))));
                     sh.process(sl, sr2);
                     const float send = altMix_ * (altMode_ == 2 ? 0.45f : 0.6f) * altTime_;
                     pl += send * sl;
