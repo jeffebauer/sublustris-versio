@@ -1,4 +1,5 @@
 #include "dsp/Engine.h"
+#include "dsp/ProfileHook.h"
 
 #include "dsp/SizeOpt.h"
 #include "params/Mappings.h"
@@ -711,6 +712,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         const int n = (numSamples - start) < kChunk ? (numSamples - start) : kChunk;
         handleEdges(start, start + n);
         controlTick(n);
+        prof::mark(prof::kControl);
 
 
         // Input side: predelay, diffusion; the swell feeds the big tank; the
@@ -735,6 +737,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             if (pdXfLeft_ > 0) predelayCrossfade(l, r, pl, pr);
             pl = diffuser_[0].process(pl);
             pr = diffuser_[1].process(pr);
+            prof::mark(prof::kInput);
             // SHIMMER: the diffused input, an octave up, joins it into the tank (always recording, so
             // switching in finds the last moments ready). Its recording fades with a SPACE flip as the
             // tank's input does: the predelay jumps at the flip's silent point, and recorded unfaded
@@ -748,6 +751,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                 pl += send * sl;
                 pr += send * sr;
             }
+            prof::mark(prof::kShimmer);
             // The twin hears the input itself, through its own diffusion: no predelay; in MASSIVE, its own swell.
             twinIn_ = clamp01(twinIn_ + twinInStep_);
             twinInL_[i] = twinDiffuser_[0].process(twinIn_ * l);
@@ -756,7 +760,9 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             // arrives as a wash, not two distinct repeats first (owner, 22 Oct 2026).
             twinSwell_.process(twinInL_[i], twinInR_[i]);
             twinL_[i] = twinR_[i] = 0.0f;
+            prof::mark(prof::kTwin);
             swell_.process(pl, pr);
+            prof::mark(prof::kSwell);
             if (hissGain_ > 0.0f || crackleChance_ > 0.0f) {
                 // ERA's noise into the tank: soft (3 kHz) hiss, sparse crackle.
                 for (int c = 0; c < 2; ++c) {
@@ -778,6 +784,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             bufR_[i] = g * pr;
             tankInPower_ += 0.002f * (0.5f * (bufL_[i] * bufL_[i] + bufR_[i] * bufR_[i]) - tankInPower_);
             wetL_[i] = wetR_[i] = 0.0f;
+            prof::mark(prof::kInput);
         }
 
         // The twin first, so painting can send it into the pad.
@@ -795,9 +802,11 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                 }
         }
 
+        prof::mark(prof::kTwin);
         if (activeSpace_ == 0) plate_.process(bufL_, bufR_, wetL_, wetR_, n);
         else if (!lowTank_) fdn_.process(bufL_, bufR_, wetL_, wetR_, n); // the test hook's one tank
         else processTwoTanks(n);
+        prof::mark(prof::kTank);
 
         for (int i = 0; i < n; ++i) {
             // DECAY's level make-up (v1.0.28) on the forward wet and the twin, a ~40 ms glide.
@@ -813,6 +822,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             // ERA's tape out (v1.0.27, dsp/Tape.h), faded in and out over ~20 ms as the cassette layer
             // appears and leaves: switched in one sample, its oversampling filters' phase stepped the wet
             // (a click turning ERA through 0.35, found 25 Oct 2026).
+            prof::mark(prof::kOutput);
             tapeMix_ = approach(tapeMix_, tapeDrive_ > 0.0f && tapeOn_ ? 1.0f : 0.0f, tapeStep);
             if (tapeMix_ > 0.0f) {
                 const float tl2 = tape_[0].process(wl), tr2 = tape_[1].process(wr);
@@ -830,6 +840,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                 wl += radioW_ * (voicing::kEraRadioTrim * rl2 - wl);
                 wr += radioW_ * (voicing::kEraRadioTrim * rr2 - wr);
             }
+            prof::mark(prof::kEra);
             tilt_.process(wl, wr);
             duckGain_ += duckGainStep_; // ducking (ADR 0014)
             wl *= duckGain_;
@@ -839,6 +850,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             wetNow_ += wetStep_;
             outL[start + i] = dryNow_ * inL[start + i] + wetNow_ * wl;
             outR[start + i] = dryNow_ * inR[start + i] + wetNow_ * wr;
+            prof::mark(prof::kOutput);
         }
         clock_ += uint64_t(n);
     }

@@ -381,9 +381,7 @@ float NextNoise()
     return (u - 0.5f) * 2.0f;                                    // -1..1
 }
 
-daisy::CpuLoadMeter gLoadMeter;
-size_t              gCornerElapsed = 0;
-int                 gCurrentCorner = 0;
+int gCurrentCorner = 0;
 
 // Per-section cycle split (dsp/ProfileHook.h): the Engine marks each
 // section's end; the time since the previous mark goes to that section. DWT
@@ -417,53 +415,57 @@ struct Result {
     uint32_t peak[kNumSections];
     size_t   samples;
 };
-volatile bool gResultReady = false;
-Result        gPendingResult{};
 
+// The audio runs (codec, SAI and DMA as in release) but plays silence: the Engine is timed in the
+// main loop instead, one block after another off the audio clock, so a corner over 100 % still
+// reports (timed inside the callback, one over 100 % starved the main loop and the serial stopped,
+// M3 round 1, 25 Oct 2026). The callback and USB interrupts still land inside the timed blocks.
 void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer out, size_t size)
 {
-    gLoadMeter.OnBlockStart();
+    for (size_t i = 0; i < size; ++i) out[0][i] = out[1][i] = 0.0f;
+}
 
-    float bufL[kBlockSize];
-    float bufR[kBlockSize];
-    for (size_t i = 0; i < size; ++i) {
-        float x = 5.0e-4f * NextNoise(); // low-level noise: keeps loops busy between clicks
-        if (gClickPhase == 0) x += 0.8f; // click
-        if (++gClickPhase >= gClickPeriodSamples) gClickPhase = 0;
-        bufL[i] = bufR[i] = x;
-    }
-    gProfLast = DWT->CYCCNT;
-    engine.process(bufL, bufR, out[0], out[1], int(size));
-    for (int k = 0; k < kNumSections; ++k) {
-        const uint32_t d = uint32_t(gProfAcc[k] - gProfPrev[k]);
-        if (d > gProfPeak[k]) gProfPeak[k] = d;
-        gProfPrev[k] = gProfAcc[k];
-    }
-
-    gLoadMeter.OnBlockEnd();
-
-    gCornerElapsed += size;
-    if (gCornerElapsed >= gCornerSamples && !gResultReady) {
-        gPendingResult.index    = gCurrentCorner;
-        gPendingResult.avg      = gLoadMeter.GetAvgCpuLoad();
-        gPendingResult.max      = gLoadMeter.GetMaxCpuLoad();
-        gPendingResult.min      = gLoadMeter.GetMinCpuLoad();
-        gPendingResult.memBytes = engine.memoryBytes();
-        gPendingResult.samples  = gCornerElapsed;
-        for (int k = 0; k < kNumSections; ++k) {
-            gPendingResult.split[k] = gProfAcc[k];
-            gPendingResult.peak[k]  = gProfPeak[k];
-            gProfAcc[k]             = 0;
-            gProfPrev[k]            = 0;
-            gProfPeak[k]            = 0;
+// One corner: kCornerSeconds of the test signal through the Engine, each block timed by the cycle
+// counter against its share of the clock (480 MHz / 48 kHz = 10,000 cycles a sample).
+Result MeasureCorner(int index, float fs)
+{
+    static float bufL[kBlockSize], bufR[kBlockSize], outL[kBlockSize], outR[kBlockSize];
+    const float budget = float(SystemCoreClock) / fs * float(kBlockSize); // cycles per block
+    Result r{};
+    r.index = index;
+    r.min = 1e9f;
+    float sum = 0.0f;
+    int blocks = 0;
+    for (int k = 0; k < kNumSections; ++k) gProfAcc[k] = gProfPrev[k] = gProfPeak[k] = 0;
+    for (size_t done = 0; done < gCornerSamples; done += kBlockSize) {
+        for (int i = 0; i < kBlockSize; ++i) {
+            float x = 5.0e-4f * NextNoise(); // low-level noise: keeps loops busy between clicks
+            if (gClickPhase == 0) x += 0.8f; // click
+            if (++gClickPhase >= gClickPeriodSamples) gClickPhase = 0;
+            bufL[i] = bufR[i] = x;
         }
-        gResultReady = true;
-
-        gCurrentCorner = (gCurrentCorner + 1) % kNumCorners;
-        ApplyCorner(gCurrentCorner);
-        gLoadMeter.Reset();
-        gCornerElapsed = 0;
+        const uint32_t t0 = DWT->CYCCNT;
+        gProfLast = t0;
+        engine.process(bufL, bufR, outL, outR, kBlockSize);
+        const float load = float(DWT->CYCCNT - t0) / budget;
+        for (int k = 0; k < kNumSections; ++k) {
+            const uint32_t d = uint32_t(gProfAcc[k] - gProfPrev[k]);
+            if (d > gProfPeak[k]) gProfPeak[k] = d;
+            gProfPrev[k] = gProfAcc[k];
+        }
+        sum += load;
+        if (load > r.max) r.max = load;
+        if (load < r.min) r.min = load;
+        ++blocks;
+        r.samples += kBlockSize;
     }
+    r.avg = blocks ? sum / float(blocks) : 0.0f;
+    r.memBytes = engine.memoryBytes();
+    for (int k = 0; k < kNumSections; ++k) {
+        r.split[k] = gProfAcc[k];
+        r.peak[k]  = gProfPeak[k];
+    }
+    return r;
 }
 
 } // namespace
@@ -500,7 +502,6 @@ int main()
     const float fs      = hw.AudioSampleRate();
     gCornerSamples      = size_t(kCornerSeconds * fs);
     gClickPeriodSamples = size_t(0.5f * fs); // click every 500 ms
-    gLoadMeter.Init(fs, kBlockSize);
 
     BootPattern();
 
@@ -515,9 +516,10 @@ int main()
 
     bool everExceeded = false;
     while (true) {
-        if (gResultReady) {
-            const Result r = gPendingResult;
-            gResultReady    = false;
+        {
+            const Result r = MeasureCorner(gCurrentCorner, fs);
+            gCurrentCorner = (gCurrentCorner + 1) % kNumCorners;
+            ApplyCorner(gCurrentCorner);
             const Corner& c = gCorners[r.index];
             const int cyclesPerSample = int(r.avg * 10000.0f + 0.5f); // SPEC §5: 480 MHz / 48 kHz ~= 10,000 cycles/sample
 
@@ -544,8 +546,8 @@ int main()
 
             // Where the time goes, each section as % of the whole budget
             // (10,000 cycles per sample): cycles / (samples x 10) = tenths of a %.
-            static const char* const kSectionNames[kNumSections] = {"ctl", "in", "swell", "tank",
-                                                                    "comp", "era", "out"};
+            static const char* const kSectionNames[kNumSections] = {"ctl", "in", "shim", "swell", "twin",
+                                                                    "tank", "era", "out"};
             // Same buffer, one transmit: the USB CDC send is non-blocking and
             // drops a second call made while the first is still going out.
             AppendStr(p, end, "  SPLIT");
