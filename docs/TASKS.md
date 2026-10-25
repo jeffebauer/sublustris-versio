@@ -8,7 +8,7 @@
 ### Decide
 
 ### Listen (after your notes)
-- Nothing open.
+- [ ] **BLOOM's swell: 24 or 12 points** (a correction, sorry: the last page's C didn't really have 12 points; a prototype bug left 24 points with a longer smear, so that's what you picked). http://192.168.1.238:8766/swell_points/index.html: A today's 24, B what you picked, C a true 12 (the CPU saving); all with the tank at 24 kHz, which is built.
 
 ### Listen (first time)
 - [ ] **ERA signatures** (out of date: it measures the old stacked ERA; Claude can re-measure it for the five eras; reference, nothing to pick; https://claude.ai/artifact/AiR2JXPAaLbT8GeJseK3Vj, opens on your phone anywhere): what each ERA stage does to the reverb, measured and drawn as charts (tone, how long each frequency rings, harmonics, grain, hiss, mirror tones, pitch wobble). `tools/era_reference.py` remeasures it.
