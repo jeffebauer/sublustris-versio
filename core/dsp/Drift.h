@@ -9,6 +9,7 @@
 //
 // Pitch deviation p from a delay swinging by A samples at f Hz is
 // 2π f A / fs, so for a depth in cents A = (2^(c/1200) − 1) fs / (2π f).
+#include "dsp/SizeOpt.h"
 #include "params/EraVoicing.h"
 
 #include <cmath>
@@ -41,7 +42,7 @@ public:
 
     // Advances dt seconds; returns the read offset in samples. maxSamples
     // caps the swing (a share of the line's length, the room in memory).
-    float control(float dt, const DriftAmounts& a, float maxSamples)
+    IV_SIZE_OPT float control(float dt, const DriftAmounts& a, float maxSamples) // once per block: built for size (flash)
     {
         const float rateSkew = 1.0f - 0.5f * a.rateSpread + a.rateSpread * spread_;
         // Wow: a smooth random line (new target every ~1/rate, smoothed twice).

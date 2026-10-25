@@ -42,6 +42,9 @@ constexpr float kSizeSlewPerSecond = 0.0595f;
 // in-loop allpasses when they come in or go out without a SIZE move.
 constexpr float kSizeCrossfadeSeconds = 0.3f;
 constexpr float kSizeRestSeconds      = 0.05f;
+// SIZE's hysteresis in HALL and MASSIVE (v1.0.37; Engine::hysteresisSize): SIZE moves on once the mean
+// line length would move by more than 0.1 % (1.7 cents), so a knob's noise never restarts the rest timer.
+constexpr float kSizeHysteresis       = 1e-3f;
 
 // Modulation floor (SPEC §2.3 rule 1, CONTEXT "Modulation floor"): every
 // line's read wanders slowly at random. Depth in seconds of delay (0.46 ms

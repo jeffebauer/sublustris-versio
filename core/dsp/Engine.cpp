@@ -260,7 +260,7 @@ void Engine::setParam(ParamId id, float normalised)
 
 // ---- Button and gate (ADR 0011) ---------------------------------------------
 
-void Engine::queueEdge(bool isButton, bool level, int offset)
+IV_SIZE_OPT void Engine::queueEdge(bool isButton, bool level, int offset) // once per edge: built for size (flash)
 {
     if (edgeCount_ >= kMaxEdges) return; // more than 16 edges in one block: drop the rest
     // Keep the queue in time order (hosts send each source in order).
@@ -290,7 +290,7 @@ IV_SIZE_OPT void Engine::handleEdges(int chunkStart, int chunkEnd) // once per b
     onGesture(gesture_.tick(clock_));
 }
 
-void Engine::onGesture(GestureReader::Event e)
+IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: built for size (flash)
 {
     const float twinStep = 1.0f / (voicing::kTwinFadeSeconds * sampleRate_);
     const float tankStep = 1.0f / (voicing::kFreezeInputSeconds * sampleRate_);
@@ -299,9 +299,7 @@ void Engine::onGesture(GestureReader::Event e)
         // The big tank keeps the SIZE and DECAY it had; the knobs move to
         // the twin. Its input closes, its colour glides out.
         heldSize_ = smoothed(ParamId::Size);
-#ifndef IV_FIXED_VOICINGS
-        if (sizeHyst_ > 0.0f && sizeHeld_ >= 0.0f) heldSize_ = sizeHeld_; // the SIZE the tank has (setSizeHysteresis)
-#endif
+        if (sizeHyst_ > 0.0f && sizeHeld_ >= 0.0f) heldSize_ = sizeHeld_; // the SIZE the tank has (hysteresisSize)
         heldDecay_ = smoothed(ParamId::Decay);
         padFloorDb_ = 0.0f; // no cap until the pad has settled (controlTick)
         padCaptured_ = false;
@@ -350,8 +348,7 @@ void Engine::onGesture(GestureReader::Event e)
 
 // ---- Voicing -------------------------------------------------------------------
 
-#ifndef IV_FIXED_VOICINGS
-// setSizeHysteresis: in HALL and MASSIVE, SIZE moves on (held) only once the mean line length it means
+// SIZE's hysteresis (v1.0.37; setSizeHysteresis): in HALL and MASSIVE, SIZE moves on (held) only once the mean line length it means
 // would move by more than sizeHyst_ (relative, in log terms); everything SIZE sets follows the held
 // value, so nothing in the tank sees the knob's noise (the lines' targets, MASSIVE's in-loop diffusion
 // and pre-delay, which each restarted a rest timer). SIZE sets the mean exponentially (expLerp), so
@@ -365,7 +362,6 @@ float Engine::hysteresisSize(float size, float& held, bool snap) const
     if (snap || held < 0.0f || activeSpace_ == 0 || std::fabs(size - held) * perUnit > sizeHyst_) held = size;
     return held;
 }
-#endif
 
 // DECAY's loss rate for the SPACE in use (MASSIVE's shortest tail follows SIZE, v1.0.21).
 float Engine::decayRate(float decay, float size) const
@@ -380,11 +376,7 @@ float Engine::decayRate(float decay, float size) const
 IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once per block: built for size (flash)
 {
     const bool frozen = gesture_.frozen();
-#ifndef IV_FIXED_VOICINGS
     const float size = frozen ? heldSize_ : hysteresisSize(smoothed(ParamId::Size), sizeHeld_, snap);
-#else
-    const float size = frozen ? heldSize_ : smoothed(ParamId::Size);
-#endif
     // HALL's SIZE also sets its T60 scale, output trim and in-loop diffusion, which act at once (the
     // lines' lengths glide on their own): they follow a ~80 ms glide of SIZE, so a SIZE jump (CV, or an
     // unfreeze after SIZE moved) doesn't step the loop's gains (soak audit).
@@ -577,11 +569,7 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // DECAY play it while frozen (at the freeze they're where the pad froze, so it starts as the
     // pad's twin); it always fades within kTwinMaxT60. Full in-loop diffusion in MASSIVE, like the pad.
     if (twinActive_) {
-#ifndef IV_FIXED_VOICINGS
         const float tSize = hysteresisSize(smoothed(ParamId::Size), twinSizeHeld_, snap || twinMean_ < 0.0f);
-#else
-        const float tSize = smoothed(ParamId::Size);
-#endif
         const float tDecay = smoothed(ParamId::Decay);
         twinSwell_.setAttackSeconds(massive ? map::massiveNormalAttackSeconds(tDecay, tSize) : 0.0f, snap);
         const float tT60 = activeSpace_ == 1 ? map::hallT60Scale(tSize) : 1.0f;
@@ -950,11 +938,11 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         if (twinActive_) {
             if (activeSpace_ == 0) twinPlate_.process(twinInL_, twinInR_, twinL_, twinR_, n);
             else twinHalf_.process(twinFdn_, twinInL_, twinInR_, twinL_, twinR_, n);
-            float lvl = activeSpace_ == 0 ? twinPlate_.levelDb() : twinFdn_.levelDb();
+            // The twin stops on its 50 ms level (v1.0.37; overnight review, lit-plate 6): ~15-24 s sooner
+            // after an unfreeze than on its 1.5 s level, which kept a silent second tank running.
+            float lvl = activeSpace_ == 0 ? twinPlate_.fastLevelDb() : twinFdn_.fastLevelDb();
 #ifndef IV_FIXED_VOICINGS
-            if (twinStopFast_) lvl = activeSpace_ == 0 ? twinPlate_.fastLevelDb() : twinFdn_.fastLevelDb(); // setTwinStopFast
-#elif defined(IV_TWIN_STOP_FAST) // the firmware's profile build (M3 round 12), which has no hooks
-            lvl = activeSpace_ == 0 ? twinPlate_.fastLevelDb() : twinFdn_.fastLevelDb();
+            if (!twinStopFast_) lvl = activeSpace_ == 0 ? twinPlate_.levelDb() : twinFdn_.levelDb(); // setTwinStopFast(false)
 #endif
             if (!gesture_.frozen() && twinIn_ == 0.0f && lvl < -100.0f) twinActive_ = false;
             // Painting (holding) copies a little of the twin into the pad: what you played becomes a layer of it.

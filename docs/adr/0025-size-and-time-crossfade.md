@@ -46,3 +46,7 @@
 - **CPU:** the extra reads run only during a fade (0.3 s). `applySpace` at -Os runs once a block; measure at M3 with the profile build.
 - **Phase 2:** BLOOM's swell taps under TIME, and PLATE's SIZE, still glide.
 - **Tests:** `test_fdn` `sizeAndTimeCrossfade` (pitch, flicks, infinite hold, jumps between fades); soak regressions (small-HALL jumps, unfreeze after SIZE moved).
+
+## Amendment, 26 Oct 2026 (v1.0.37): SIZE's hysteresis
+
+The rest timer restarts whenever a line's target moves by more than half a sample in a block, and MASSIVE's lines are long enough that ±2·10⁻⁵ of knob noise (about one ADC step) does that: on the module SIZE could never take effect (the overnight review, section 5.1; HALL from ±2·10⁻⁴). SIZE now moves on in HALL and MASSIVE only once the mean line length would move by more than 0.1 % (`voicing::kSizeHysteresis`, 1.7 cents), and everything SIZE sets follows the held value (the lines' targets, MASSIVE's in-loop diffusion and pre-delay, the twin's SIZE). SIZE can settle up to 0.1 % from where the knob stops. The PLATE glides its scale and has no rest timer. `test_size_noise`. A slow LFO into SIZE's CV still holds the tank until it rests (by design; the owner may revisit).

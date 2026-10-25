@@ -39,6 +39,7 @@ The M0 release figure is the platform's floor before any DSP: libDaisy, the HAL,
 | M6 (ERA, DRIFT, soft saturation, μ-law, Midiverb box) | 84,100 (64 %) | 85,088 | 82,356 |
 | M7 (DARKEN, limiter) | 85,076 (64 %) | 86,008 | 82,356 |
 | Knob-jitter readout (26 Oct 2026) | 112,484 (86 %) | 123,684 | 83,420 |
+| v1.0.37: ITCM, SDRAM 3/3, twin stop, SIZE hysteresis (26 Oct 2026) | 112,412 (86 %) | 123,756 | 83,420 |
 
 Memory at M5: `gLarge` 16 MB in SDRAM (FDN lines and in-loop allpasses, the PLATE, swell, REVERSE segments, predelay), `gFast` 100.6 KB of DTCM's 128 KB (the companion plate and the input diffusers), the Engine object in AXI SRAM. M3 decides whether the PLATE moves from SDRAM to AXI SRAM (SPEC §5.2).
 
@@ -159,7 +160,7 @@ MICRO (cycles per op) sdr1 10.0 sdr32 33.0 ... fdnMassiveApAxit 4321.0
 
 **Profile link order (fixed in the overnight review).** Since round 10 the profile's micro-tests call the ERA stages (and now the swell) from `main.cpp`, which is built `-Os`. Inline functions from the Core's headers get one copy per object and the linker keeps the first: with `main.o` first, the Engine itself ran `main.o`'s `-Os` copies of `Swell::processBlock` (596 B against release's 1,658), `TapeOut::process` (248 against 1,766) and `RadioStage::process` / `set`. The profile now links the Core first, so it runs release's code; the `.bin` grew ~3.8 KB to 124.6 KB (95 %: the `all-variants` warning is expected for profile). **Round 10's cassette and radio numbers (`tape`, `radio` in SPLIT, `tape/smp`, `radio/smp`) were measured on the slower `-Os` code, so expect them lower now for that reason alone.** (`bbd/smp`, `loopNeve/smp` and `loopMidi/smp` still time out-of-line `-Os` copies that only the micro-tests use; the Engine inlines its own.)
 
-**ITCM trial (`make -C firmware MODE=profile PROFILE_ITCM=1` → `immensio_versio_profile-itcm.bin`, 124,904 B at round 11, 124,260 B at round 12). Untested on hardware: flash it after the default profile build has given its numbers.** `Engine.o`, `Fdn.o` and `Plate.o` (52.5 KB of code, with the swell, tape and radio stages they use) run from ITCM (`firmware/STM32H750IB_flash_itcm.lds`, ITCM from 0x400) instead of flash through the 16 KB instruction cache, copied there first thing in `main()`. BENCH says `itcm 52472 B` (else `itcm off`). If the module doesn't boot (no boot pattern, no serial), flash the default profile `.bin` back. lit-m7 expects 3–6 points off the heavy corners.
+**ITCM (release and profile since v1.0.37; `PROFILE_ITCM=0` builds `immensio_versio_profile-noitcm.bin` with the code in flash).** `Engine.o`, `Fdn.o` and `Plate.o` (~52 KB of code, with the swell, tape and radio stages they use) run from ITCM (`firmware/STM32H750IB_flash_itcm.lds`, ITCM from 0x400) instead of flash through the 16 KB instruction cache, copied there first thing in `main()` (`CopyItcm`). BENCH says `itcm 52152 B` (else `itcm off`). Round 12 booted it and measured 2.5-3.5 points off every corner (lit-m7 expected 3-6).
 
 To halve a tank-sample figure into the share of the 10,000-cycle budget: `fdnMassive24k` / 2 / 100 = % of the budget for one tank (the Engine also runs the low tank, the swell, etc.).
 
@@ -170,9 +171,11 @@ Round 11's serial output is in `docs/research/m3-round11.log`. In short: `SDRAMC
 Round 12 (the same `make -C firmware all-variants` / `PROFILE_ITCM=1` commands):
 - **Release runs the SDRAM at 3 / 3** (`SdramSetTiming` at boot after `SdramWriteAllocate`, without the cache clean the profile needs: +120 B, release 112,604 B, 36 B left of the 110 KB budget).
 - **The frozen corner is last**, and after it the profile runs the Engine on, untimed, until the twin stops (capped at 30 s), so the headroom test starts clean. Its CORNER line ends `| twin on N ms after`.
-- **The profile's twin stops on its 50 ms level** (the review's twin-stop fix, `IV_TWIN_STOP_FAST`; `PROFILE_TWIN_STOP_FAST=0` builds `immensio_versio_profile-twinslow.bin` with release's behaviour). Release doesn't have it yet (+96 B, a SPEC line).
+- **The profile's twin stopped on its 50 ms level** (the review's twin-stop fix, then a profile-only flag; since v1.0.37 the Core's default for every build).
 - **Every CORNER line ends `| max at block N`**: which block, counted from the corner's start, took longest. Block 0-2 means the spike is the settings change between corners (a SIZE 0 → 1 jump starts a SIZE crossfade); in the SIZE move, the moves land at blocks 1500, 3000 and 4500 (every 1.5 s).
 - ITCM build: 124,260 B, 52,632 B of code in ITCM.
+
+**v1.0.37 (26 Oct 2026): adopted in release.** ITCM (+~350 B), the twin-stop fix and SIZE's 0.1 % hysteresis (both now the Core's defaults, for the Plugin too), and the SDRAM at 3 / 3, paid for by `Engine::queueEdge`, `Engine::onGesture` and `Drift::control` built for size (−744 B). `-fno-math-errno` and `-fmove-loop-invariants` on the Core's objects made release larger (+240 / +440 B at -O3), so they're not used. Sizes: release 112,412 B (228 B under the 110 KB budget), profile 123,756 B, m0test 83,420 B; ITCM 52,136 B (release) / 52,152 B (profile) of 63 KB.
 
 ## Memory
 

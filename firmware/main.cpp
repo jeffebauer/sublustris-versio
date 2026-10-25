@@ -131,6 +131,27 @@ uint32_t SdtrWith(uint32_t base, uint32_t trp, uint32_t trcd)
     return (base & ~(FMC_SDTRx_TRP_Msk | FMC_SDTRx_TRCD_Msk)) | ((trp - 1u) << FMC_SDTRx_TRP_Pos)
          | ((trcd - 1u) << FMC_SDTRx_TRCD_Pos);
 }
+
+// ITCM (STM32H750IB_flash_itcm.lds; release, and the profile unless PROFILE_ITCM=0): the Core's hot code
+// (Engine.o, Fdn.o, Plate.o) is linked to run from ITCM but stored in flash; copy it there before
+// anything calls it, first thing in main(). Code in flash (main.o), word by word. M3 round 12 (26 Oct
+// 2026): it boots, and every corner is 2.5-3.5 points cheaper than from flash through the I-cache.
+#ifndef IV_ITCM
+#define IV_ITCM 0
+#endif
+#if IV_ITCM
+extern "C" uint32_t _sitcm_text, _eitcm_text, _siitcm_text;
+void CopyItcm()
+{
+    SCB->ITCMCR |= SCB_ITCMCR_EN_Msk; // on from reset on the H7; make sure
+    __DSB();
+    __ISB();
+    const volatile uint32_t* src = &_siitcm_text;
+    for (volatile uint32_t* dst = &_sitcm_text; dst < &_eitcm_text;) *dst++ = *src++;
+    __DSB();
+    __ISB();
+}
+#endif
 #endif
 #if !defined(IV_MODE_M0TEST)
 // The Engine is built at boot (placement new at the top of main), not as a
@@ -410,8 +431,6 @@ int main()
 #include "util/CpuLoadMeter.h"
 #include "dsp/ProfileHook.h"
 
-// STM32H750IB_flash_itcm.lds (PROFILE_ITCM=1): the ITCM code's place in ITCM and its copy in flash.
-extern "C" uint32_t _sitcm_text, _eitcm_text, _siitcm_text;
 
 namespace {
 
@@ -562,8 +581,7 @@ void BuildCornerTable()
     // glide (the twin runs from the press on). The SIZE move: 6 s, four moves. Frozen last (round 12):
     // in round 11 it came first and its twin rang on through SHIMMER, the SIZE move and the headroom
     // test (~14 % each that wasn't theirs); MeasureCorner now runs the engine on, untimed, until the
-    // twin stops, and the profile's Core has the review's twin-stop fix (Makefile PROFILE_TWIN_STOP_FAST,
-    // IV_TWIN_STOP_FAST in Engine.cpp: the twin ends on its 50 ms level, ~15-24 s sooner).
+    // twin stops (since v1.0.37 on its 50 ms level, ~15-24 s sooner than before).
     const struct {
         float size, seconds;
         int   kind;
@@ -745,9 +763,6 @@ void SetFlushToZero(bool on)
 // first so no write-back is in flight. The H7 has no SDSR busy flag: a PALL takes tRP (<= 16 SDCLK,
 // 160 ns), so a 2 us wait covers it. The functions are shared with release (above, after
 // SdramWriteAllocate): round 11's SDRAMCHK read 0 / 0 / 0 at 3 / 3, so release runs it at boot too.
-#ifndef IV_PROFILE_ITCM
-#define IV_PROFILE_ITCM 0
-#endif
 #ifndef IV_PROFILE_SDRAM_TIGHT
 #define IV_PROFILE_SDRAM_TIGHT 1 // keep 3 / 3 for the corner lap (0: back to libDaisy's after the tests)
 #endif
@@ -1155,26 +1170,12 @@ Result MeasureCorner(int index, float fs)
     return r;
 }
 
-// PROFILE_ITCM=1 (STM32H750IB_flash_itcm.lds): the Core's hot code is linked to run from ITCM but
-// stored in flash; copy it there before anything calls it. Code in flash (main.o), word by word.
-#if IV_PROFILE_ITCM
-void CopyItcm()
-{
-    SCB->ITCMCR |= SCB_ITCMCR_EN_Msk; // on from reset on the H7; make sure
-    __DSB();
-    __ISB();
-    const volatile uint32_t* src = &_siitcm_text;
-    for (volatile uint32_t* dst = &_sitcm_text; dst < &_eitcm_text;) *dst++ = *src++;
-    __DSB();
-    __ISB();
-}
-#endif
 
 } // namespace
 
 int main()
 {
-#if IV_PROFILE_ITCM
+#if IV_ITCM
     CopyItcm(); // first: the Engine's constructor may live in Engine.o
 #endif
     new (gEngineStorage) iv::Engine(); // before anything touches it (see gEngineStorage)
@@ -1308,7 +1309,7 @@ int main()
                 AppendStr(p, end, " sdclk ");
                 AppendUInt(p, end, sdDiv ? pll2.PLL2_R_Frequency / sdDiv / 1000000u : 0u);
                 AppendStr(p, end, " MHz | itcm ");
-#if IV_PROFILE_ITCM
+#if IV_ITCM
                 AppendUInt(p, end, unsigned(uintptr_t(&_eitcm_text) - uintptr_t(&_sitcm_text)));
                 AppendStr(p, end, " B");
 #else
@@ -1714,6 +1715,7 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
 
 int main()
 {
+    CopyItcm(); // first: the Engine's constructor may live in Engine.o
     new (gEngineStorage) iv::Engine(); // before anything touches it (see gEngineStorage)
     hw.Init(true); // boost to 480 MHz
     SdramWriteAllocate();
