@@ -183,6 +183,7 @@ The owner played v1.0.37: crackle in MASSIVE with SIZE and DECAY high (now and t
 
 - **Round 13 (profile):** after the headroom test, `REALTIME` lines: MASSIVE with the knobs where the owner heard it (SIZE and DECAY 0.9, MIX / TONE / DRIFT / TIME 0.5, BLOOM), ERA at the Neve (0.1) or the cassette (0.7), playing or tap-frozen, each run in the audio callback with the seven knob parameters sent every block, **still** and with **jitter** (±2·10⁻⁴ of noise on each, inside what the rack check found). 3 s each (frozen 6 s); late blocks are drop-outs. `still` is also what the deadband build gives. Profile 125,008 B (95 %: profile-only, the warning is expected).
 - **Release, to try: a knob deadband.** A knob's value goes to the Engine only once it has moved more than 0.0005 from the last value sent, or reaches an end stop (exact 0 / 1), so a still knob is still to the Engine and the memos work. Moves come in steps of 0.05 % of the travel. Release 112,500 B (+88; 140 B left).
+- **v1.0.38: ERA's tape out at 2×** (the owner's pick on `renders/tape_os`); `TapeOut::process` is one shared copy (`IV_NOINLINE`). Release 111,652 B (988 B left), profile 124,008 B; ITCM 51,296 / 51,312 B.
 
 ```
 REALTIME <setting>                          still|jitter avg  <%> max  <%> | late blocks <n> of <blocks>
