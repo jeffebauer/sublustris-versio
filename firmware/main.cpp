@@ -94,7 +94,7 @@ void SdramWriteAllocate()
 // and written every sample) sat in cached AXI SRAM and fought the delay lines for the 16 KB data
 // cache; DTCM is zero-wait and never cached. .dtcmram_bss is NOLOAD, but `iv::Engine()` (value
 // initialisation) zeroes the whole object before constructing it (a memset in main), so nothing
-// depends on startup's .bss clear. DTCM budget (release map): gFast 36,864 + this 24,208 = 61,072 B
+// depends on startup's .bss clear. DTCM budget (release map): gFast 36,864 + this 24,232 = 61,096 B
 // from 0x20000000; the stack grows down from _estack = 0x20020000, leaving ~68 KB for it.
 IV_DTCM alignas(iv::Engine) unsigned char gEngineStorage[sizeof(iv::Engine)];
 iv::Engine& engine = *reinterpret_cast<iv::Engine*>(gEngineStorage);
