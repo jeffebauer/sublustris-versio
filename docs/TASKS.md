@@ -1,12 +1,11 @@
 # Owner tasks
 
-**Last updated:** 25 Oct 2026, session 6 (shimmer round 4; SIZE and TIME crossfades with level matching).
+**Last updated:** 25 Oct 2026, session 6 (shimmer: input-only B picked; echo-verb, nonlinear and a new reverse being researched).
 **Plugin installed:** `2a7d7b6` on branch `claude/massive-air` (v1.0.32: v1.0.30 plus MASSIVE's highs ringing as long as the body and its shortest tail lasting six trips; ERA's value names its era), 25 Oct 2026 11:40; AU check passed. Rescan in Ableton to see it.
 
 ## To do
 
 ### Decide
-- [ ] **Shimmer, round 4** (http://192.168.1.100:8766/shimmer4/index.html on the Wi-Fi; `renders/shimmer4/index.html`): the out-of-tune notes traced to the shifter's heads cancelling certain notes' octaves (110 / 165 / 330 Hz nearly vanished); each head now starts at a random point. A round 3's input-only; B input only (now as clean as the plain reverb); C fed back; D fed back, darker.
 - [ ] **Moving SIZE and TIME, round 2** (http://192.168.1.100:8766/knob_moves/index.html): your note "some jumps in amplitude with the crossfades": after a jump the reverb reads sound from further back (louder) or nearer (quieter); that's now corrected for one trip, the SIZE-following level waits for the lines, and TIME crossfades once the knob rests. A today; B / C crossfade 0.1 / 0.3 s.
 
 ### Listen (after your notes)
@@ -39,6 +38,7 @@
 
 ## Done
 
+- 25 Oct 2026: **Shimmer, round 4: B wins** ("the most musical and pitch-accurate"): your input shifted an octave up into the reverb, no feedback, random grain onsets (prototype mode 12 on `claude/massive-air`). It joins the next page beside echo-verb, nonlinear and a new reverse. The page is deleted.
 - 25 Oct 2026: **Shimmer, round 3** (your notes): fed back "still quite bitcrushy"; input only "the most like a shimmer" but some notes out of tune (round 4 fixes the cause). **Moving SIZE and TIME, round 1**: "crossfades sound better than the current state", with some amplitude jumps (round 2). Both pages are deleted or replaced.
 - 25 Oct 2026: **Shimmer, round 2** (your note): "none of those shimmers sound right… different flavours of bit crushing". Measured: shifting up folded everything above 12 kHz back down, and every version shared that; round 3 fixes it. The page is deleted.
 - 25 Oct 2026: **REVERSE's replacements, round 1** (your notes): shimmer up "too static… almost like bit crushing" (measured: its splices fluttered the octave 14-25 dB at 23 Hz; round 2 on its page); sub shimmer "a bit muddy"; grains "more like modulation than grains" and delayed repeats. The page is deleted.
