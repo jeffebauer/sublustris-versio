@@ -4,12 +4,12 @@
 **Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Rescan in Ableton to see it.
 
 ## To do
-- [ ] **M3 CPU check, round 9: v1.0.35 and the real limit.** Flash `dist/immensio_versio_profile_M3_round9.bin` and let it run a lap plus its headroom test (about 4 minutes; `HEADROOM` lines at the end of the lap), then tell Claude.
+- [ ] **M3 CPU check, round 9b: v1.0.35 and the real limit.** Flash `dist/immensio_versio_profile_M3_round9b.bin` (round 9's headroom test stalled at its first step; fixed) and let it run a lap plus its headroom test (`HEADROOM` lines after the lap), then tell Claude.
 
 ### Decide
 
 ### Listen (after your notes)
-- Nothing open.
+- [ ] **BLOOM's swell: other seeds** (your note: the 12 points "seemed to accentuate the mids"): http://192.168.1.238:8766/swell_seed/index.html. Measured: 12 and 24 points are equally even on noise and note by note; which notes stand out moves with TIME and the seed. B-D are the three most even seeds; E the old 24 points for reference.
 
 ### Listen (first time)
 - [ ] **ERA signatures** (out of date: it measures the old stacked ERA; Claude can re-measure it for the five eras; reference, nothing to pick; https://claude.ai/artifact/AiR2JXPAaLbT8GeJseK3Vj, opens on your phone anywhere): what each ERA stage does to the reverb, measured and drawn as charts (tone, how long each frequency rings, harmonics, grain, hiss, mirror tones, pitch wobble). `tools/era_reference.py` remeasures it.
