@@ -5,6 +5,15 @@
 
 #include <cmath>
 
+// The tank's rare paths (lineSlow, tapsMoving, tapsOld) are built for size, with the small DelayLine and
+// LoopEra steps inlined into them: called out of line from -Os code, every read and write paid a call
+// (~5 more a line-sample while SIZE crossfades). +160 B of flash for the three.
+#if defined(__GNUC__)
+#define IV_FLATTEN __attribute__((flatten))
+#else
+#define IV_FLATTEN
+#endif
+
 namespace iv::dsp {
 
 namespace {
@@ -677,7 +686,7 @@ IV_NO_UNSWITCH bool Fdn::lineFast(int i, int m, float apG, float eraIn, float er
 
 // One line over the block, the sample loop's own steps: SIZE crossfading (its first q samples), an
 // allpass gliding, joining or leaving, or filling after a clear(). Rare, so built for size (flash).
-IV_NOINLINE IV_SIZE_OPT void Fdn::lineSlow(int i, int m, int q, const float* xn, const float* xo, float apG,
+IV_NOINLINE IV_SIZE_OPT IV_FLATTEN void Fdn::lineSlow(int i, int m, int q, const float* xn, const float* xo, float apG,
                                           float apGOld, float eraIn, float eraOut, float* y)
 {
     for (int s = 0; s < m; ++s) {
@@ -725,7 +734,7 @@ IV_NOINLINE IV_SIZE_OPT void Fdn::lineSlow(int i, int m, int q, const float* xn,
 }
 
 // A line's early taps while they move (the block after a snap), each read as it stood at its sample.
-IV_NOINLINE IV_SIZE_OPT void Fdn::tapsMoving(int i, int m, const float* tl, const DelayLine& was, float* e) const
+IV_NOINLINE IV_SIZE_OPT IV_FLATTEN void Fdn::tapsMoving(int i, int m, const float* tl, const DelayLine& was, float* e) const
 {
     for (int k = 0; k < earlyCount_; ++k)
         for (int s = 0; s < m; ++s) {
@@ -740,7 +749,7 @@ IV_NOINLINE IV_SIZE_OPT void Fdn::tapsMoving(int i, int m, const float* tl, cons
 
 // SIZE's crossfade, its first q samples: a line's early taps at the old positions, on the old timeline
 // (no correction), summed into the old taps' output with the line's signs.
-IV_NOINLINE IV_SIZE_OPT void Fdn::tapsOld(int i, int q, const float* tl, const DelayLine& was, float* ol, float* orr) const
+IV_NOINLINE IV_SIZE_OPT IV_FLATTEN void Fdn::tapsOld(int i, int q, const float* tl, const DelayLine& was, float* ol, float* orr) const
 {
     const int j = (i + 3) & (kN - 1);
     for (int s = 0; s < q; ++s) {
