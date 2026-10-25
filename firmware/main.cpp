@@ -239,6 +239,11 @@ int SwitchPosition(int sw, bool invert)
 //           must not be connected at the same time)
 // - Controls -> USB serial, 10 times a second, exact values (x1000), pots
 //   in panel order P1..P7.
+// - Jitter mode, for rack power (on USB power alone the knob circuits aren't powered and every knob
+//   reads full scale): SW0 left and SW1 right turn the LEDs into the jitter readout below. A knob's
+//   channel (LED_0 R/G/B = P1-P3, LED_1 R/G/B = P4-P6, LED_2 R = P7) lights if its reading never
+//   stayed still for 50 ms in the last second; LED_3 is green if no knob left the +-0.001 band (the
+//   SIZE fix would hold still), red if one did, dim blue for the first second.
 // - Knob jitter -> USB serial, once a second (overnight review 26 Oct 2026,
 //   section 5.1: a reading that never rests defeats SIZE's rest timer and every
 //   memo keyed on exact float equality). Read once per audio block, as the
@@ -364,20 +369,55 @@ int main()
         const int space  = SwitchPosition(DaisyVersio::SW_0, false);
         const int attack = SwitchPosition(DaisyVersio::SW_1, false);
 
-        hw.SetLed(DaisyVersio::LED_0, p[0], p[1], p[2]);
-        hw.SetLed(DaisyVersio::LED_1, p[3], p[4], p[5]);
-        hw.SetLed(DaisyVersio::LED_2, p[6], space * 0.5f, attack * 0.5f);
-        if (hw.tap.Pressed())
-            hw.SetLed(DaisyVersio::LED_3, 1, 1, 1);
-        else if (System::GetNow() < gateFlashUntil)
-            hw.SetLed(DaisyVersio::LED_3, 1, 0, 0);
-        else {
-            bool allAtExtremes = true;
-            for (float v : p)
-                allAtExtremes &= (v <= 0.02f || v >= 0.98f);
-            hw.SetLed(DaisyVersio::LED_3, 0, allAtExtremes ? 1.0f : 0.0f, 0);
+        // The last full second of knob jitter (MeasureJitter), for the serial lines and jitter mode.
+        static Jitter   shown{};
+        static bool     haveJitter = false, freshJitter = false;
+        static uint32_t copiedSeq  = 0;
+        const uint32_t  seq        = gJitterSeq;
+        if (seq != copiedSeq && (seq & 1u) == 0) {
+            __asm__ volatile("" ::: "memory");
+            const Jitter j = gJitter;
+            __asm__ volatile("" ::: "memory");
+            if (gJitterSeq == seq) { // not overwritten while copying
+                copiedSeq  = seq;
+                shown      = j;
+                haveJitter = freshJitter = true;
+            }
         }
-        hw.UpdateLeds();
+
+        if (attack == 2 && space == 0) {
+            // Jitter mode (SW0 left, SW1 right; readable on rack power, where serial is off limits): per
+            // knob, its LED channel lit if its reading never stayed still for 50 ms in the last second
+            // (SIZE's rest timer, kSizeRestSeconds); LED_3 green if no knob left the SIZE fix's +-0.001
+            // band in the last second, red if one did, dim blue until the first second is in.
+            float u[DaisyVersio::KNOB_LAST];
+            bool  crossed = false;
+            for (int i = 0; i < DaisyVersio::KNOB_LAST; ++i) {
+                u[i] = haveJitter && shown.run[i] < 50 ? 1.0f : 0.0f;
+                crossed |= haveJitter && shown.hys[i] > 0;
+            }
+            hw.SetLed(DaisyVersio::LED_0, u[0], u[1], u[2]);
+            hw.SetLed(DaisyVersio::LED_1, u[3], u[4], u[5]);
+            hw.SetLed(DaisyVersio::LED_2, u[6], 0, 0);
+            if (!haveJitter) hw.SetLed(DaisyVersio::LED_3, 0, 0, 0.2f);
+            else hw.SetLed(DaisyVersio::LED_3, crossed ? 1.0f : 0.0f, crossed ? 0.0f : 1.0f, 0);
+            hw.UpdateLeds();
+        } else {
+            hw.SetLed(DaisyVersio::LED_0, p[0], p[1], p[2]);
+            hw.SetLed(DaisyVersio::LED_1, p[3], p[4], p[5]);
+            hw.SetLed(DaisyVersio::LED_2, p[6], space * 0.5f, attack * 0.5f);
+            if (hw.tap.Pressed())
+                hw.SetLed(DaisyVersio::LED_3, 1, 1, 1);
+            else if (System::GetNow() < gateFlashUntil)
+                hw.SetLed(DaisyVersio::LED_3, 1, 0, 0);
+            else {
+                bool allAtExtremes = true;
+                for (float v : p)
+                    allAtExtremes &= (v <= 0.02f || v >= 0.98f);
+                hw.SetLed(DaisyVersio::LED_3, 0, allAtExtremes ? 1.0f : 0.0f, 0);
+            }
+            hw.UpdateLeds();
+        }
 
         const uint32_t now = System::GetNow();
         if (now >= nextPrint) {
@@ -387,25 +427,20 @@ int main()
                               space, attack, int(hw.tap.Pressed()), buttonPresses, int(hw.Gate()), gateEdges);
         }
 
-        static uint32_t printedSeq = 0;
-        const uint32_t  seq        = gJitterSeq;
-        if (seq != printedSeq && (seq & 1u) == 0) {
-            __asm__ volatile("" ::: "memory");
-            const Jitter j = gJitter;
-            __asm__ volatile("" ::: "memory");
-            if (gJitterSeq == seq) { // not overwritten while copying
-                printedSeq = seq;
-                hw.seed.PrintLine("JPP  %5lu %5lu %5lu %5lu %5lu %5lu %5lu", (unsigned long)j.pp[0],
-                                  (unsigned long)j.pp[1], (unsigned long)j.pp[2], (unsigned long)j.pp[3],
-                                  (unsigned long)j.pp[4], (unsigned long)j.pp[5], (unsigned long)j.pp[6]);
-                hw.seed.PrintLine("JCHG %5d %5d %5d %5d %5d %5d %5d", j.chg[0], j.chg[1], j.chg[2], j.chg[3],
-                                  j.chg[4], j.chg[5], j.chg[6]);
-                hw.seed.PrintLine("JRUN %5d %5d %5d %5d %5d %5d %5d", j.run[0], j.run[1], j.run[2], j.run[3],
-                                  j.run[4], j.run[5], j.run[6]);
-                hw.seed.PrintLine("JHYS %5d %5d %5d %5d %5d %5d %5d", j.hys[0], j.hys[1], j.hys[2], j.hys[3],
-                                  j.hys[4], j.hys[5], j.hys[6]);
-            }
+        if (freshJitter) {
+            freshJitter    = false;
+            const Jitter& j = shown;
+            hw.seed.PrintLine("JPP  %5lu %5lu %5lu %5lu %5lu %5lu %5lu", (unsigned long)j.pp[0],
+                              (unsigned long)j.pp[1], (unsigned long)j.pp[2], (unsigned long)j.pp[3],
+                              (unsigned long)j.pp[4], (unsigned long)j.pp[5], (unsigned long)j.pp[6]);
+            hw.seed.PrintLine("JCHG %5d %5d %5d %5d %5d %5d %5d", j.chg[0], j.chg[1], j.chg[2], j.chg[3],
+                              j.chg[4], j.chg[5], j.chg[6]);
+            hw.seed.PrintLine("JRUN %5d %5d %5d %5d %5d %5d %5d", j.run[0], j.run[1], j.run[2], j.run[3],
+                              j.run[4], j.run[5], j.run[6]);
+            hw.seed.PrintLine("JHYS %5d %5d %5d %5d %5d %5d %5d", j.hys[0], j.hys[1], j.hys[2], j.hys[3],
+                              j.hys[4], j.hys[5], j.hys[6]);
         }
+
         System::Delay(1);
     }
 }
