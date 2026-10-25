@@ -174,8 +174,23 @@ struct ExactLine {
         else if (i >= int32_t(size)) i -= int32_t(size);
         return buf[i];
     }
+    // Every sample of the ring written since the last clear(): its steady state, where the reads below
+    // that end in Full skip at()'s fill test (it never fails) and wrap with one compare. A full ring
+    // stays full until the next clear(), so a caller can ask once a block.
+    bool full() const { return fill >= size; }
     // d >= 1: the sample written d ticks ago.
     float read(uint32_t d) const { return at(int32_t(pos) - int32_t(d)); }
+    // Linear read between di and di + 1 ticks ago (di >= 1, t: the fraction toward the older one) of a
+    // full ring, for a delay fixed through a block and split once (the Plate's output taps): the same
+    // sums as at(i) + t * (at(i - 1) - at(i)).
+    float lerpFull(int32_t di, float t) const
+    {
+        int32_t i = int32_t(pos) - di; // in (pos - size, pos - 1]
+        if (i < 0) i += int32_t(size);
+        const int32_t j = i == 0 ? int32_t(size) - 1 : i - 1;
+        const float a = buf[i];
+        return a + t * (buf[j] - a);
+    }
     // Catmull-Rom cubic read at a fractional delay d >= 2.
     float readCubic(float d) const
     {
@@ -196,6 +211,22 @@ struct ExactLine {
         const float   eta = (1.0f - f) / (1.0f + f);
         const int32_t i   = int32_t(pos) - di;
         state = at(i - 1) + eta * (at(i) - state);
+        return state;
+    }
+    // The same for a full ring (the same sums, so the same bits); and at the whole samples and the
+    // coefficient worked out once, for a delay fixed through a block.
+    float readAllpassFull(float d, float& state) const
+    {
+        const int32_t di  = int32_t(d - 0.5f);
+        const float   f   = d - float(di);
+        return allpassFull(di, (1.0f - f) / (1.0f + f), state);
+    }
+    float allpassFull(int32_t di, float eta, float& state) const
+    {
+        int32_t i = int32_t(pos) - di; // in (pos - size, pos - 1]
+        if (i < 0) i += int32_t(size);
+        const int32_t j = i == 0 ? int32_t(size) - 1 : i - 1;
+        state = buf[j] + eta * (buf[i] - state);
         return state;
     }
 };
