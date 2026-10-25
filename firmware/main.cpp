@@ -455,7 +455,7 @@ struct Result {
 // gPadCycles of busy waiting added, stepped up 5 % at a time. A block that takes longer than its
 // period is late: what the codec plays then is a stale half-buffer, a drop-out.
 volatile bool     gRealtime = false;
-volatile uint32_t gPadCycles = 0, gPeriodCycles = 1, gLate = 0, gBlocks = 0, gMaxCycles = 0;
+volatile uint32_t gPadCycles = 0, gPeriodCycles = 1, gLate = 0, gBlocks = 0, gMaxCycles = 0, gStepBlocks = 1;
 volatile uint64_t gSumCycles = 0;
 
 void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer out, size_t size)
@@ -480,7 +480,9 @@ void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer ou
     if (d > gMaxCycles) gMaxCycles = d;
     if (d > gPeriodCycles) ++gLate;
     gSumCycles = gSumCycles + d;
-    ++gBlocks;
+    // The callback ends the step itself: over 100 % it runs back to back and the main loop never gets
+    // the CPU to stop it (round 9's first run stalled there).
+    if (++gBlocks >= gStepBlocks) gRealtime = false;
 }
 
 // Micro-tests (M3 round 6), once at boot before the Engine takes its memory: what each building
@@ -754,9 +756,10 @@ int main()
                 gPadCycles = pct < 0 ? 0u : uint32_t(float(gPeriodCycles) * float(pct) / 100.0f);
                 gLate = gBlocks = gMaxCycles = 0;
                 gSumCycles = 0;
+                gStepBlocks = uint32_t(3.0f * fs / float(kBlockSize)); // 3 s of blocks
                 gRealtime = true;
-                System::Delay(3000);
-                gRealtime = false;
+                while (gRealtime) {
+                }
                 System::Delay(5);
                 const float period = float(gPeriodCycles);
                 const float avg = gBlocks ? float(gSumCycles) / float(gBlocks) / period : 0.0f;
