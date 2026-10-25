@@ -326,6 +326,37 @@ D_grains          Granular: grains of what you played, smoothed by the reverb" >
     echo "renders/alt_attack/index.html"
 fi
 
+if on shimmer2; then
+    # PROTOTYPES, round 2 of the shimmer (owner on alt_attack: "too static and sounds almost like bit
+    # crushing or reduction instead of a shimmer"). Measured: round 1's 2-head, 43 ms, jittered
+    # shifter fluttered 14-25 dB at the 23 Hz splice rate. IV_ALT_ATTACK 1 round 1; 4 smooth (4 heads,
+    # 100 ms, fixed: 0.8 dB on a sine); 5 moving (+ slow shared drift, L/R ±2 cents); 6 evolving (+ a
+    # darker feed, the send breathing).
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in vibes pad keys lead voice stabs; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page shimmer2
+    for t in "1_hall_time_low:HALL:0.4" "2_massive_time_high:MASSIVE:0.85" "3_plate_time_mid:PLATE:0.6"; do
+        IFS=: read col sp tm <<< "$t"
+        for v in "A_round_1:1" "B_smooth:4" "C_moving:5" "D_evolving:6"; do
+            tag=${v%%:*}; mode=${v##*:}
+            IV_ALT_ATTACK=$mode r shimmer2 $col $tag "" --set space=$sp --set attack=REVERSE --set decay=0.6 --set time=$tm
+        done
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "Shimmer, round 2. Your note on round 1 (A): \"too static… almost like bit crushing\". Measured why: its pitch shifter splices about 23 times a second, and the way it varied its splices made the octave flutter by 14-25 dB at that rate, which the ear hears as grit. B fixes the shifter (four overlapping read heads, longer and evenly spaced): the octave is clean and steady. C adds movement the way Strymon's and Valhalla's shimmers do: the octave slowly wanders a few cents, and left and right are detuned slightly for width. D adds evolution: a darker feed so each higher octave fades sooner, and the shimmer slowly breathes in and out. TIME is how much shimmer (low in the first column, high in the second). Versions are level-matched. All rest while frozen; none builds up, finite or infinite.
+
+1_hall_time_low       HALL, TIME 0.4 (DECAY 0.6)
+2_massive_time_high   MASSIVE, TIME 0.85
+3_plate_time_mid      PLATE, TIME 0.6
+
+A_round_1             Round 1 (what you heard)
+B_smooth              A clean, steady octave
+C_moving              Clean, slowly wandering, wide
+D_evolving            Moving, darker, breathing" > renders/shimmer2/README.txt
+    python3 tools/review/make_review.py renders/shimmer2 --title "Shimmer, round 2" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/shimmer2/index.html"
+fi
+
 if on era_sweep; then
     # ERA turned from fully left to fully right over 40 s while the music loops (renders/_material_sweep,
     # 40 s loops + 12 s of tail), then the tail at ERA 1; chaptered at each era's start (ADR 0021).

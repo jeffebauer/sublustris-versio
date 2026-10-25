@@ -24,37 +24,58 @@ inline float rnd01(uint32_t& s)
     return float(s >> 8) * (1.0f / 16777216.0f);
 }
 
-// One channel's two-tap delay pitch shifter: two heads half a window apart, each faded by
-// sin² of its own phase so it's silent when it jumps; each head picks a fresh window length
-// (±15 %) when it jumps, so the crossfade rate never settles into a steady flutter.
+// One channel's delay-line pitch shifter: `heads` read heads evenly spaced through a window, each
+// faded by sin² of its own phase so it's silent when it jumps; evenly spaced sin² windows sum to a
+// constant (heads / 2). Round 1 used 2 heads, 43 ms, each picking a fresh length (±15 %) at its jump:
+// the windows then no longer summed to a constant and the octave fluttered 14-25 dB at the 23 Hz
+// splice rate (heard as "bit crushing"). 4 heads of 100 ms with fixed lengths: 0.8 dB on a sine,
+// 1.6 dB on a noise-like tail (below the unshifted tail's own 2.4).
 class PitchShifter {
 public:
-    void prepare(float ratio, float windowSamples, uint32_t seed)
+    static constexpr int kMaxHeads = 4;
+    void prepare(float ratio, float windowSamples, uint32_t seed, int heads = 2, float jitter = 0.15f)
     {
         ratio_ = ratio;
         w0_ = windowSamples;
+        heads_ = heads;
+        jitter_ = jitter;
         buf_.assign(1u << 15, 0.0f);
         mask_ = buf_.size() - 1;
         seed_ = seed;
-        for (int k = 0; k < 2; ++k) {
+        for (int k = 0; k < heads_; ++k) {
             win_[k] = w0_;
-            phase_[k] = 0.5f * float(k);
+            phase_[k] = float(k) / float(heads_);
         }
         pos_ = 0;
+    }
+    void setRatio(float r) { ratio_ = r; } // small moves only (detune); the windows stay
+    // The heads' reads wander together, slowly, by up to ±samples (a new target every few jumps,
+    // glided over ~1.5 s): a few cents of slow movement, as BigSky's Mod and Valhalla's random
+    // modulators. A new target every ~30 jumps (~3 s); together: heads drifting apart played at slightly different pitches and beat
+    // (the splice-rate roughness came back, +0.6 dB fast-against-slow movement vs -10 smooth).
+    void setDrift(float samples, float sampleRate)
+    {
+        drift_ = samples;
+        driftCoeff_ = 1.0f - std::exp(-1.0f / (2.5f * sampleRate));
     }
     float process(float x)
     {
         buf_[pos_ & mask_] = x;
+        driftNow_ += driftCoeff_ * (driftTarget_ - driftNow_);
         float y = 0.0f;
-        for (int k = 0; k < 2; ++k) {
+        for (int k = 0; k < heads_; ++k) {
             // Up: the delay shrinks (phase 1 → 0); down: it grows (0 → 1).
             const float step = std::fabs(1.0f - ratio_) / win_[k];
             phase_[k] += ratio_ > 1.0f ? -step : step;
             if (phase_[k] < 0.0f || phase_[k] >= 1.0f) {
                 phase_[k] = ratio_ > 1.0f ? phase_[k] + 1.0f : phase_[k] - 1.0f;
-                win_[k] = w0_ * (0.85f + 0.3f * rnd01(seed_));
+                if (jitter_ > 0.0f) win_[k] = w0_ * (1.0f - jitter_ + 2.0f * jitter_ * rnd01(seed_));
+                if (drift_ > 0.0f && k == 0 && ++jumps_ >= 30) { // a new target every ~3 s: slower moves wobbled at 10 Hz
+                    jumps_ = 0;
+                    driftTarget_ = drift_ * (2.0f * rnd01(seed_) - 1.0f);
+                }
             }
-            const float d = 2.0f + win_[k] * phase_[k];
+            const float d = 2.0f + drift_ + driftNow_ + win_[k] * phase_[k];
             const auto  di = uint32_t(d);
             const float t = d - float(di);
             const float a = buf_[(pos_ - di) & mask_], b = buf_[(pos_ - di - 1) & mask_];
@@ -62,13 +83,16 @@ public:
             y += s * s * (a + t * (b - a));
         }
         ++pos_;
-        return y;
+        return y * (2.0f / float(heads_));
     }
 
 private:
     std::vector<float> buf_;
     size_t   mask_ = 0, pos_ = 0;
-    float    ratio_ = 2.0f, w0_ = 2048.0f, win_[2] = {}, phase_[2] = {};
+    int      heads_ = 2;
+    float    ratio_ = 2.0f, w0_ = 2048.0f, jitter_ = 0.15f, win_[kMaxHeads] = {}, phase_[kMaxHeads] = {};
+    float    drift_ = 0.0f, driftCoeff_ = 0.0f, driftTarget_ = 0.0f, driftNow_ = 0.0f;
+    int      jumps_ = 0;
     uint32_t seed_ = 1;
 };
 
@@ -80,32 +104,58 @@ struct OnePole { // y += a (x - y)
 };
 
 // Shimmer, up or down: in = the tank's wet; out = what goes back into the tank's input.
+// Styles (round 2, owner: round 1 "too static ... almost like bit crushing"):
+//   Round1:   2 heads, 43 ms, ±15 % jitter (fluttered 14-25 dB at 23 Hz).
+//   Smooth:   4 heads, 100 ms, fixed: a clean octave (0.8 dB swing on a sine).
+//   Moving:   Smooth + the heads drifting together ±3 ms (slow) + left/right detuned ±2 cents (±6
+//             beat ~21 times a second at 3 kHz: roughness again) (BigSky's Mod,
+//             Valhalla's random modulators; the Eno/Lanois chain into a modulated Lexicon hall).
+//   Evolving: Moving + a darker feed (4.5 kHz, so each higher octave fades faster) and the send
+//             breathing slowly (±35 % at ~0.07 Hz) (Costello: loop gain and EQ take it from
+//             "steel drum-esque" to "slow attack string pads").
 class Shimmer {
 public:
-    void prepare(float sampleRate, bool down)
+    enum class Style { Round1, Smooth, Moving, Evolving };
+    void prepare(float sampleRate, bool down, Style style = Style::Round1)
     {
         down_ = down;
+        style_ = style;
+        sr_ = sampleRate;
+        const bool r1 = style == Style::Round1;
+        const float lp = down ? 3000.0f : (style == Style::Evolving ? 4500.0f : 7000.0f);
         for (int c = 0; c < 2; ++c) {
-            shift_[c].prepare(down ? 0.5f : 2.0f, (down ? 0.085f : 0.043f) * sampleRate, 0x5A1u + 77u * uint32_t(c) + (down ? 9u : 0u));
-            pre_[c].set(down ? 3000.0f : 7000.0f, sampleRate);
-            pre2_[c].set(down ? 3000.0f : 7000.0f, sampleRate);
+            float ratio = down ? 0.5f : 2.0f;
+            if (style == Style::Moving || style == Style::Evolving) ratio *= std::exp2((c == 0 ? 2.0f : -2.0f) / 1200.0f);
+            shift_[c].prepare(ratio, (r1 ? (down ? 0.085f : 0.043f) : 0.1f) * sampleRate,
+                              0x5A1u + 77u * uint32_t(c) + (down ? 9u : 0u), r1 ? 2 : 4, r1 ? 0.15f : 0.0f);
+            if (style == Style::Moving || style == Style::Evolving) shift_[c].setDrift(0.003f * sampleRate, sampleRate);
+            pre_[c].set(lp, sampleRate);
+            pre2_[c].set(lp, sampleRate);
             for (auto& h : post_[c]) h.set(down ? 45.0f : 80.0f, sampleRate);
         }
     }
     void process(float& l, float& r)
     {
         float* io[2] = {&l, &r};
+        float breathe = 1.0f;
+        if (style_ == Style::Evolving) {
+            lfo_ += 0.07f / sr_;
+            if (lfo_ >= 1.0f) lfo_ -= 1.0f;
+            breathe = 1.0f + 0.35f * std::sin(6.2831853f * lfo_);
+        }
         for (int c = 0; c < 2; ++c) {
             float x = pre2_[c].lp(pre_[c].lp(*io[c]));
             x = shift_[c].process(x);
             x = post_[c][0].hp(x);
             if (down_) x = post_[c][1].hp(x); // steeper: the second octave down falls away
-            *io[c] = x;
+            *io[c] = breathe * x;
         }
     }
 
 private:
     bool         down_ = false;
+    Style        style_ = Style::Round1;
+    float        sr_ = 48000.0f, lfo_ = 0.0f;
     PitchShifter shift_[2];
     OnePole      pre_[2], pre2_[2], post_[2][2];
 };

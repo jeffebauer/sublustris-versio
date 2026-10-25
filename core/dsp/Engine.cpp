@@ -78,6 +78,9 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
 #ifndef IV_FIXED_VOICINGS
     shimUp_.prepare(sampleRate, false);
     shimDown_.prepare(sampleRate, true);
+    shimSmooth_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::Smooth);
+    shimMoving_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::Moving);
+    shimEvolving_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::Evolving);
     grains_.prepare(sampleRate);
 #endif
     ready_ &= twinFdn_.prepare(large_, sampleRate, 0x7A1Eu);
@@ -774,8 +777,10 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                 } else if (altMix_ > 0.0f) {
                     // Shimmer: the last chunk's wet, an octave up (or down), back into the tank.
                     float sl = shimSrcL_[i], sr2 = shimSrcR_[i];
-                    (altMode_ == 1 ? shimUp_ : shimDown_).process(sl, sr2);
-                    const float send = altMix_ * (altMode_ == 1 ? 0.6f : 0.45f) * altTime_;
+                    dsp::proto::Shimmer& sh = altMode_ == 2 ? shimDown_ : (altMode_ == 4 ? shimSmooth_ : (altMode_ == 5 ? shimMoving_
+                                       : (altMode_ == 6 ? shimEvolving_ : shimUp_)));
+                    sh.process(sl, sr2);
+                    const float send = altMix_ * (altMode_ == 2 ? 0.45f : 0.6f) * altTime_;
                     pl += send * sl;
                     pr += send * sr2;
                 }

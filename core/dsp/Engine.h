@@ -93,7 +93,10 @@ public:
     void  setDecayMakeup(float k) { decayMakeup_ = k; }
 #ifndef IV_FIXED_VOICINGS
     // PROTOTYPES (desktop only): what ATTACK's third position plays instead of REVERSE.
-    // 0 = REVERSE, 1 = shimmer up, 2 = sub shimmer, 3 = grains (dsp/AltAttack.h).
+    // 0 = REVERSE, 1 = shimmer up, 2 = sub shimmer, 3 = grains (dsp/AltAttack.h); round 2: 4 smooth
+    // shimmer, 5 moving, 6 evolving. (Inside the tank was tried: re-shifting most of each pass, with
+    // the 4 heads averaging a tail down ~4 dB, collapsed the tail; an equal-power blend grew a held
+    // chord. It needs DAFx 2026's energy compensation: not this round.)
     void  setAltAttack(int mode) { altMode_ = mode; }
 #endif
     // Test hook: false = no tape out (ERA's cassette stage without its output tape), for measuring.
@@ -259,7 +262,7 @@ private:
     int   altMode_ = 0;
     float altTarget_ = 0.0f, altMix_ = 0.0f, altTime_ = 0.0f;
     float shimSrcL_[kChunk] = {}, shimSrcR_[kChunk] = {}; // the last chunk's tank wet
-    dsp::proto::Shimmer shimUp_, shimDown_;
+    dsp::proto::Shimmer shimUp_, shimDown_, shimSmooth_, shimMoving_, shimEvolving_; // round 1; round 2 (4 .. 6)
     dsp::proto::Grains  grains_;
 #endif
 };
