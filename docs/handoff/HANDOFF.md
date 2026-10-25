@@ -13,7 +13,7 @@
 | M0 hardware | **Passed** (owner, 25 Oct 2026: "everything worked as expected") |
 | M1 Hall, M4 MASSIVE, M5 PLATE | Built and listened |
 | M2 | Criteria pass. **Not installed** in Ableton |
-| M3 | Needs the owner at the rack (CPU). New wet stages since the last estimate: the BBD and the radio |
+| M3 | **Round 1 run 25 Oct 2026: over budget.** PLATE 88-101 % avg, ~120 % peak; output stalled after 7/24 corners (LED 3 red). SPLIT/PEAK read 0 (Engine doesn't mark sections) |
 | M6 character | **Redesigned and listened:** ERA's five eras ("M6 also sounding excellent"; the ERA sweep "sounds excellent") |
 | M7 duck | Done |
 | M8 | Knob feel done; DECAY keeps the loudness (v1.0.28) |
