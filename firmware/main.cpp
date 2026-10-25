@@ -327,7 +327,7 @@ void AppendFixed1(char*& p, const char* end, int tenths, int width)
 // Fraction (0..1) -> tenths of a percent, e.g. 0.583f -> 583 ("58.3").
 int FracToPercentTenths(float frac) { return int(frac * 1000.0f + 0.5f); }
 
-constexpr size_t kLineBufSize = 640; // CORNER + SPLIT + PEAK (+ BENCH) lines, sent in one transmit
+constexpr size_t kLineBufSize = 768; // CORNER + SPLIT + PEAK (+ BENCH) lines, sent in one transmit
 
 void TransmitLine(const char* buf, size_t len)
 {
@@ -461,10 +461,46 @@ void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer ou
 // line's read-then-write), internal RAM (AXI, DTCM), or the maths library?
 volatile float gSink = 0.0f;
 float          gAxiTest[32 * 512]; // 64 KB of AXI SRAM (.bss)
-constexpr int  kMicro = 11;
+constexpr int  kMicro = 13;
 int            gMicro[kMicro]{};
 const char* const kMicroNames[kMicro] = {"sdr1", "sdr32", "sdw32", "sdline8", "axi32", "dtcm32",
-                                         "exp", "sin", "pow", "log10", "div"};
+                                         "exp", "sin", "pow", "log10", "div", "fdnAXI", "fdnSDRAM"};
+
+// The same small tank (an Fdn at 12 kHz: 0.1 s mean lines, in-loop diffusion and early taps on) run
+// with its memory in AXI SRAM and then in SDRAM, cycles per sample (M3 round 8): if they cost about
+// the same, the tank is short of arithmetic; if the SDRAM one is far slower, it's the memory.
+constexpr size_t kTestFdnFloats = iv::dsp::Fdn::memoryFloats(12000.0f, 0.25f);
+alignas(32) float gAxiArena[kTestFdnFloats + iv::dsp::Arena::kSkewLines * iv::dsp::Arena::kLineFloats];
+alignas(iv::dsp::Fdn) unsigned char gTestFdnStorage[sizeof(iv::dsp::Fdn)];
+
+int TimeTestFdn(float* mem, size_t floats, bool skew)
+{
+    auto* f = new (gTestFdnStorage) iv::dsp::Fdn();
+    iv::dsp::Arena a;
+    a.reset(mem, floats, skew);
+    if (!f->prepare(a, 12000.0f, 0x1234u, 0.25f)) return -10;
+    f->setMeanSeconds(0.1f, 1.0f, true);
+    f->setDecayRate(1.0f / 3.0f);
+    f->setInLoopDiffusion(1.0f);
+    f->setEarlyTaps(1.0f);
+    f->reset();
+    static float in[32], l[32], r[32];
+    uint32_t s = 1;
+    auto block = [&] {
+        for (int i = 0; i < 32; ++i) {
+            s = s * 1664525u + 1013904223u;
+            in[i] = 0.1f * float(int32_t(s)) * (1.0f / 2147483648.0f);
+            l[i] = r[i] = 0.0f;
+        }
+        f->process(in, in, l, r, 32);
+    };
+    for (int b = 0; b < 375; ++b) block(); // 1 s to fill the lines
+    const uint32_t t0 = DWT->CYCCNT;
+    for (int b = 0; b < 375; ++b) block();
+    const int tenths = int(float(DWT->CYCCNT - t0) * 10.0f / (375.0f * 32.0f));
+    gSink = l[0];
+    return tenths;
+}
 
 template <typename F> int Tenths(int ops, F&& f)
 {
@@ -509,6 +545,8 @@ void RunMicroTests()
     gMicro[8] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::pow(x, 1.0f + float(i) * 1e-4f); });
     gMicro[9] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::log10(x + float(i) * 1e-4f); });
     gMicro[10] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += 1.0f / (x + float(i)); });
+    gMicro[11] = TimeTestFdn(gAxiArena, sizeof(gAxiArena) / sizeof(float), false);
+    gMicro[12] = TimeTestFdn(gLarge, kLargeFloats, true);
     gSink = acc;
 }
 
