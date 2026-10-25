@@ -321,15 +321,17 @@ void Engine::onGesture(GestureReader::Event e)
 
 #ifndef IV_FIXED_VOICINGS
 // setSizeHysteresis: in HALL and MASSIVE, SIZE moves on (held) only once the mean line length it means
-// would move by more than sizeHyst_ of the last one; everything SIZE sets follows the held value, so
-// nothing in the tank sees the knob's noise (the lines' targets, MASSIVE's in-loop diffusion and
-// pre-delay, which each restarted a rest timer). snap or held < 0: take SIZE as it is. The PLATE glides
-// its scale (no rest timer): SIZE as it is.
+// would move by more than sizeHyst_ (relative, in log terms); everything SIZE sets follows the held
+// value, so nothing in the tank sees the knob's noise (the lines' targets, MASSIVE's in-loop diffusion
+// and pre-delay, which each restarted a rest timer). SIZE sets the mean exponentially (expLerp), so
+// log(mean) moves by log(hi / lo) per unit of SIZE: the test is on SIZE itself (no maths a chunk).
+// snap or held < 0: take SIZE as it is. The PLATE glides its scale (no rest timer): SIZE as it is.
 float Engine::hysteresisSize(float size, float& held, bool snap) const
 {
     if (sizeHyst_ <= 0.0f) return size;
-    auto mean = [this](float v) { return activeSpace_ == 2 ? map::massiveMeanSeconds(v) : map::hallMeanSeconds(v); };
-    if (snap || held < 0.0f || activeSpace_ == 0 || std::fabs(mean(size) - mean(held)) > sizeHyst_ * mean(held)) held = size;
+    const float perUnit = activeSpace_ == 2 ? std::log(2.0f / 0.35f) // map::massiveMeanSeconds
+                                            : std::log(voicing::kHallMeanMaxMs / voicing::kHallMeanMinMs); // map::hallMeanSeconds
+    if (snap || held < 0.0f || activeSpace_ == 0 || std::fabs(size - held) * perUnit > sizeHyst_) held = size;
     return held;
 }
 #endif
