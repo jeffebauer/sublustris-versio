@@ -455,6 +455,63 @@ void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer ou
     for (size_t i = 0; i < size; ++i) out[0][i] = out[1][i] = 0.0f;
 }
 
+// Micro-tests (M3 round 6), once at boot before the Engine takes its memory: what each building
+// block costs on this chip, in tenths of a cycle per operation. The reverb's sections cost ~10x what
+// their instructions should (round 4), so: is it the SDRAM (one stream, 32 at once, writes, a delay
+// line's read-then-write), internal RAM (AXI, DTCM), or the maths library?
+volatile float gSink = 0.0f;
+float          gAxiTest[32 * 512]; // 64 KB of AXI SRAM (.bss)
+constexpr int  kMicro = 11;
+int            gMicro[kMicro]{};
+const char* const kMicroNames[kMicro] = {"sdr1", "sdr32", "sdw32", "sdline8", "axi32", "dtcm32",
+                                         "exp", "sin", "pow", "log10", "div"};
+
+template <typename F> int Tenths(int ops, F&& f)
+{
+    const uint32_t t0 = DWT->CYCCNT;
+    f();
+    return int(float(DWT->CYCCNT - t0) * 10.0f / float(ops));
+}
+
+void RunMicroTests()
+{
+    float* sd = gLarge; // all of it free until engine.prepare()
+    float  acc = 0.0f;
+    gMicro[0] = Tenths(1 << 18, [&] { for (int i = 0; i < (1 << 18); ++i) acc += sd[i]; });
+    // 32 streams, each sequential, 160 KB apart (plus an odd offset), as a tank's reads.
+    gMicro[1] = Tenths(32 * 4096, [&] {
+        for (int s = 0; s < 4096; ++s)
+            for (int k = 0; k < 32; ++k) acc += sd[(1 << 20) + k * 40009 + s];
+    });
+    gMicro[2] = Tenths(32 * 4096, [&] {
+        for (int s = 0; s < 4096; ++s)
+            for (int k = 0; k < 32; ++k) sd[(1 << 22) + k * 40009 + s] = float(s);
+    });
+    // 8 delay lines: read one place, write another (each 0.4 s apart), as the FDN's lines.
+    gMicro[3] = Tenths(8 * 4096, [&] {
+        for (int s = 0; s < 4096; ++s)
+            for (int k = 0; k < 8; ++k) {
+                float* line = sd + (3 << 20) + k * 262147; // within gLarge (~7.9 M floats)
+                line[s + 19200] = 0.5f * line[s];
+            }
+    });
+    gMicro[4] = Tenths(32 * 512, [&] {
+        for (int s = 0; s < 512; ++s)
+            for (int k = 0; k < 32; ++k) acc += gAxiTest[k * 512 + s];
+    });
+    gMicro[5] = Tenths(32 * 256, [&] {
+        for (int s = 0; s < 256; ++s)
+            for (int k = 0; k < 32; ++k) acc += gFast[k * 256 + s];
+    });
+    volatile float x = 0.37f;
+    gMicro[6] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::exp(x + float(i) * 1e-4f); });
+    gMicro[7] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::sin(x + float(i) * 1e-4f); });
+    gMicro[8] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::pow(x, 1.0f + float(i) * 1e-4f); });
+    gMicro[9] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::log10(x + float(i) * 1e-4f); });
+    gMicro[10] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += 1.0f / (x + float(i)); });
+    gSink = acc;
+}
+
 // One corner: kCornerSeconds of the test signal through the Engine, each block timed by the cycle
 // counter against its share of the clock (480 MHz / 48 kHz = 10,000 cycles a sample).
 Result MeasureCorner(int index, float fs)
@@ -523,9 +580,10 @@ int main()
     }
     hw.seed.SetAudioBlockSize(kBlockSize);
 
+    StartCycleCounter();
+    RunMicroTests(); // before the Engine takes (and zeroes) its memory
     engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats);
     engine.prepare(hw.AudioSampleRate(), kBlockSize);
-    StartCycleCounter();
     iv::prof::markHook = ProfMark;
     BuildCornerTable();
     ApplyCorner(0);
@@ -605,6 +663,13 @@ int main()
                 AppendStr(p, end, (SCB->CCR & SCB_CCR_IC_Msk) ? "on" : "OFF");
                 AppendStr(p, end, " dcache ");
                 AppendStr(p, end, (SCB->CCR & SCB_CCR_DC_Msk) ? "on" : "OFF");
+                AppendStr(p, end, "\r\nMICRO (cycles per op)");
+                for (int k = 0; k < kMicro; ++k) {
+                    AppendStr(p, end, " ");
+                    AppendStr(p, end, kMicroNames[k]);
+                    AppendStr(p, end, " ");
+                    AppendFixed1(p, end, gMicro[k], 1);
+                }
                 AppendStr(p, end, "\r\n");
             }
             TransmitLine(buf, size_t(p - buf));
