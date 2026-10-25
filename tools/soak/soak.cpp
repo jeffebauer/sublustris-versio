@@ -584,9 +584,9 @@ struct Soak {
             if (t + n >= pendingJumps[i].at + w) {
                 const double post = ringDb(pendingJumps[i].at, pendingJumps[i].at + w), pre = pendingJumps[i].pre;
                 const double diff = post - pre;
-                const bool reverse = iv::normalisedToSwitch(eng->param(ParamId::Attack)) == 2;
+                const bool shimmer = iv::normalisedToSwitch(eng->param(ParamId::Attack)) == 2;
                 const double upLimit = src.kind == Stim::Silence ? 4.0 : 6.0;
-                if (!reverse && ((diff > upLimit && post > -50.0) || (diff < -10.0 && pre > -50.0))) {
+                if (!shimmer && ((diff > upLimit && post > -50.0) || (diff < -10.0 && pre > -50.0))) {
                     char d[128];
                     std::snprintf(d, sizeof d, "%s: %.1f dB -> %.1f dB in 10 ms", pendingJumps[i].what.c_str(), pre, post);
                     report("gesture_level_jump", pendingJumps[i].at, diff, d);
@@ -980,7 +980,7 @@ void cpuTable(FILE* log)
         {"MASSIVE, frozen + twin playing", 2, 0.5f, 0.2f, 0.5f, 0.2f, 0.0f, true, true, false},
         {"MASSIVE, ERA full + DRIFT full Wander", 2, 0.5f, 1.0f, 1.0f, 0.2f, 0.0f, true, false, false},
         {"MASSIVE, BLOOM, TIME full", 2, 0.5f, 0.2f, 0.5f, 1.0f, 0.5f, true, false, false},
-        {"MASSIVE, REVERSE, TIME full", 2, 0.5f, 0.2f, 0.5f, 1.0f, 1.0f, true, false, false},
+        {"MASSIVE, SHIMMER, TIME full", 2, 0.5f, 0.2f, 0.5f, 1.0f, 1.0f, true, false, false},
         {"MASSIVE worst: frozen + twin, ERA full, DRIFT CW, BLOOM", 2, 1.0f, 1.0f, 1.0f, 1.0f, 0.5f, true, true, false},
         {"HALL, 5 min of silence after a tail", 1, 0.6f, 0.2f, 0.5f, 0.2f, 0.0f, true, false, true},
         {"MASSIVE, 5 min of silence after a tail", 2, 0.75f, 0.2f, 0.5f, 0.2f, 0.0f, true, false, true},

@@ -141,11 +141,11 @@ if on m4_massive; then
         r m4_massive $f A_normal "" --set space=$sp --set era=0 --set attack=NORMAL --set time=0.2 --set decay=0.55 --set size=0.7
         r m4_massive $f B_bloom_short "" --set space=$sp --set era=0 --set attack=BLOOM --set time=0.3 --set decay=0.55 --set size=0.7
         r m4_massive $f C_bloom_long "" --set space=$sp --set era=0 --set attack=BLOOM --set time=0.8 --set decay=0.55 --set size=0.7
-        r m4_massive $f D_reverse "" --set space=$sp --set era=0 --set attack=REVERSE --set time=0.4 --set decay=0.45 --set size=0.7
+        r m4_massive $f D_shimmer "" --set space=$sp --set era=0 --set attack=SHIMMER --set time=0.6 --set decay=0.45 --set size=0.7
     done
     r m4_massive infinite A_hall "" --set space=HALL --set era=0 --set decay=1 --set size=0.7
     r m4_massive infinite B_massive "" --set space=MASSIVE --set era=0 --set decay=1 --set size=0.7
-    finish m4_massive "Immensio M4: MASSIVE and ATTACK" "After your M4 notes: MASSIVE starts with what you play and swells from there (it was silent for over a second), SIZE fully CCW is a wash, not rhythmic echoes, and DARKEN lets go sooner between phrases. The four ATTACK settings in HALL and MASSIVE, and infinite DECAY (ERA clean). REVERSE is shown in full on renders/reverse.
+    finish m4_massive "Immensio M4: MASSIVE and ATTACK" "After your M4 notes: MASSIVE starts with what you play and swells from there (it was silent for over a second), SIZE fully CCW is a wash, not rhythmic echoes, and DARKEN lets go sooner between phrases. The four ATTACK settings in HALL and MASSIVE, and infinite DECAY (ERA clean). SHIMMER (ATTACK's third position since v1.0.33) adds your input an octave up.
 
 massive_size    MASSIVE's SIZE, DECAY 0.7
 attack_hall     the ATTACK switch in HALL
@@ -158,7 +158,7 @@ C_largest      MASSIVE, SIZE fully CW
 A_normal       ATTACK NORMAL (TIME = short predelay)
 B_bloom_short  ATTACK BLOOM, TIME 0.3
 C_bloom_long   ATTACK BLOOM, TIME 0.8
-D_reverse      ATTACK REVERSE, TIME 0.4
+D_shimmer      ATTACK SHIMMER, TIME 0.6
 A_hall         HALL, DECAY infinite
 B_massive      MASSIVE, DECAY infinite"
 fi
@@ -295,101 +295,6 @@ C_supermassive_andromeda      Valhalla Supermassive, Andromeda" > renders/valhal
     echo "renders/valhalla_compare/index.html"
 fi
 
-if on alt_attack; then
-    # PROTOTYPES (branch claude/massive-air; desktop only, dsp/AltAttack.h): what ATTACK's third
-    # position could play instead of REVERSE (owner, 25 Oct 2026: "shimmer up, sub shimmer, granular").
-    # IV_ALT_ATTACK 1 shimmer up, 2 sub shimmer, 3 grains; TIME is the shimmer's send / how far back
-    # the grains reach. Checked: no build-up at TIME full (every SPACE, DECAY 0.5 / 0.78 / infinite),
-    # grains click-free and no more flicker than NORMAL.
-    saved=("${MATERIALS[@]}"); MATERIALS=()
-    for m in skank vibes stabs pad lead keys voice; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
-    page alt_attack
-    for t in "1_hall_time_low:HALL:0.3" "2_hall_time_high:HALL:0.8" "3_massive_time_mid:MASSIVE:0.55"; do
-        IFS=: read col sp tm <<< "$t"
-        for v in "A_reverse_today:0" "B_shimmer_up:1" "C_sub_shimmer:2" "D_grains:3"; do
-            tag=${v%%:*}; mode=${v##*:}
-            IV_ALT_ATTACK=$mode r alt_attack $col $tag "" --set space=$sp --set attack=REVERSE --set decay=0.6 --set time=$tm
-        done
-    done
-    MATERIALS=("${saved[@]}")
-    print -r -- "What could ATTACK's third position play instead of REVERSE? A is today's REVERSE; B, C and D are first prototypes built from how Valhalla Shimmer, Strymon BigSky, Mutable Instruments' Clouds and Beads and the Microcosm do it. B, shimmer: the reverb's own sound is shifted an octave up and fed back in, so each trip round climbs an octave; TIME is how much (a faint halo low, cascading octaves high). C, sub shimmer: the same an octave down, filtered so it stays a dark undertow rather than mud. D, grains: small overlapping slices (80-200 ms) of what you just played, scattered in time and very slightly in pitch, feed the reverb, which smooths them into a cloud; TIME is how far back the slices reach (just now, low; up to 2 s ago, high). All rest while frozen. Versions are level-matched (the grains come out 3-5 dB quieter). These are first passes: say what you like and what you'd change.
-
-1_hall_time_low      HALL, TIME 0.3 (DECAY 0.6)
-2_hall_time_high     HALL, TIME 0.8
-3_massive_time_mid   MASSIVE, TIME 0.55
-
-A_reverse_today   Today's REVERSE
-B_shimmer_up      Shimmer, an octave up
-C_sub_shimmer     Sub shimmer, an octave down
-D_grains          Granular: grains of what you played, smoothed by the reverb" > renders/alt_attack/README.txt
-    python3 tools/review/make_review.py renders/alt_attack --title "Instead of REVERSE: shimmer, sub, grains" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/alt_attack/index.html"
-fi
-
-if on shimmer2; then
-    # PROTOTYPES, round 2 of the shimmer (owner on alt_attack: "too static and sounds almost like bit
-    # crushing or reduction instead of a shimmer"). Measured: round 1's 2-head, 43 ms, jittered
-    # shifter fluttered 14-25 dB at the 23 Hz splice rate. IV_ALT_ATTACK 1 round 1; 4 smooth (4 heads,
-    # 100 ms, fixed: 0.8 dB on a sine); 5 moving (+ slow shared drift, L/R ±2 cents); 6 evolving (+ a
-    # darker feed, the send breathing).
-    saved=("${MATERIALS[@]}"); MATERIALS=()
-    for m in vibes pad keys lead voice stabs; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
-    page shimmer2
-    for t in "1_hall_time_low:HALL:0.4" "2_massive_time_high:MASSIVE:0.85" "3_plate_time_mid:PLATE:0.6"; do
-        IFS=: read col sp tm <<< "$t"
-        for v in "A_round_1:1" "B_smooth:4" "C_moving:5" "D_evolving:6"; do
-            tag=${v%%:*}; mode=${v##*:}
-            IV_ALT_ATTACK=$mode r shimmer2 $col $tag "" --set space=$sp --set attack=REVERSE --set decay=0.6 --set time=$tm
-        done
-    done
-    MATERIALS=("${saved[@]}")
-    print -r -- "Shimmer, round 2. Your note on round 1 (A): \"too static… almost like bit crushing\". Measured why: its pitch shifter splices about 23 times a second, and the way it varied its splices made the octave flutter by 14-25 dB at that rate, which the ear hears as grit. B fixes the shifter (four overlapping read heads, longer and evenly spaced): the octave is clean and steady. C adds movement the way Strymon's and Valhalla's shimmers do: the octave slowly wanders a few cents, and left and right are detuned slightly for width. D adds evolution: a darker feed so each higher octave fades sooner, and the shimmer slowly breathes in and out. TIME is how much shimmer (low in the first column, high in the second). Versions are level-matched. All rest while frozen; none builds up, finite or infinite.
-
-1_hall_time_low       HALL, TIME 0.4 (DECAY 0.6)
-2_massive_time_high   MASSIVE, TIME 0.85
-3_plate_time_mid      PLATE, TIME 0.6
-
-A_round_1             Round 1 (what you heard)
-B_smooth              A clean, steady octave
-C_moving              Clean, slowly wandering, wide
-D_evolving            Moving, darker, breathing" > renders/shimmer2/README.txt
-    python3 tools/review/make_review.py renders/shimmer2 --title "Shimmer, round 2" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/shimmer2/index.html"
-fi
-
-if on shimmer3; then
-    # PROTOTYPES, shimmer round 3 (owner on round 2: "different flavours of bit crushing"). Found three
-    # causes, each measured with a 1,037 Hz bright note (energy away from its harmonics; plain reverb
-    # about -35 dB): fold-back above 12 kHz (an 8th-order 6 kHz low-pass now, -68 dB at 16 kHz); the
-    # splices' sidebands piling up trip on trip (8 heads of 800 ms when fed back: -14 -> -30 dB); the
-    # tank's own movement re-applied every trip (off under a fed-back shimmer: PLATE -11 -> -26 dB).
-    # IV_ALT_ATTACK 4 round 2 smooth; 8 feedback; 9 feedback + drift; 11 feedback, darker; 10 input only.
-    saved=("${MATERIALS[@]}"); MATERIALS=()
-    for m in vibes pad keys lead voice stabs; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
-    page shimmer3
-    for t in "1_hall_time_mid:HALL:0.5" "2_massive_time_high:MASSIVE:0.85" "3_plate_time_mid:PLATE:0.6"; do
-        IFS=: read col sp tm <<< "$t"
-        for v in "A_round_2:4" "B_feedback:8" "C_feedback_drifting:9" "D_feedback_darker:11" "E_input_only:10"; do
-            tag=${v%%:*}; mode=${v##*:}
-            IV_ALT_ATTACK=$mode r shimmer3 $col $tag "" --set space=$sp --set attack=REVERSE --set decay=0.6 --set time=$tm
-        done
-    done
-    MATERIALS=("${saved[@]}")
-    print -r -- "Shimmer, round 3. Your note on round 2: \"different flavours of bit crushing\". Measured three causes and fixed each: (1) shifting up an octave folded everything above 12 kHz back down as unrelated tones (what a sample-rate reducer does): now filtered out before the shift; (2) the shifter's crossfades left faint copies of each note either side of it, which piled up trip after trip round the reverb: now much longer, gentler crossfades when fed back; (3) the reverb's own pitch movement (PLATE's chorus especially) was re-applied every trip and smeared into grit: switched off while the shimmer feeds back. A is round 2 (B on the last page) for comparison. B, C and D feed the shimmer back so octaves keep climbing (C adds a slow wander, D is darker, the cleanest by measurement). E is the other kind you asked for: only what you play is shifted up an octave into the reverb, no feedback: one octave, steadier. TIME is how much shimmer. Versions are level-matched; none builds up.
-
-1_hall_time_mid       HALL, TIME 0.5 (DECAY 0.6)
-2_massive_time_high   MASSIVE, TIME 0.85
-3_plate_time_mid      PLATE, TIME 0.6
-
-A_round_2             Round 2's smooth (for comparison)
-B_feedback            Fed back: octaves keep climbing
-C_feedback_drifting   Fed back, slowly wandering
-D_feedback_darker     Fed back, darker (cleanest)
-E_input_only          Your input an octave up, no feedback" > renders/shimmer3/README.txt
-    python3 tools/review/make_review.py renders/shimmer3 --title "Shimmer, round 3" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/shimmer3/index.html"
-fi
-
 if on knob_moves; then
     # PROTOTYPES (owner, plugin): MASSIVE's SIZE "moves too slowly causing slow pitch shifts that make
     # it sound really out of tune"; "changing TIME rapidly also creates a large wash of noise"; HALL's
@@ -446,81 +351,6 @@ C_crossfade_slow    No sliding: the old setting fades out in 0.3 s" > renders/kn
     echo "renders/knob_moves/index.html"
 fi
 
-if on shimmer4; then
-    # PROTOTYPES, shimmer round 4 (owner on round 3: fed back "still sound quite bitcrushy"; input only
-    # "sounds the most like a shimmer, however there are some inharmonic resonances that make certain
-    # tones sound a little out of tune"). Measured: heads at fixed spacings comb the octave (4 heads of
-    # 100 ms: 110 / 165 / 330 Hz notes' octaves nearly gone, their detuned splice copies left; the
-    # octave's level varied 59 dB across notes). Random grain onsets (PitchShifter::setScatter): 0.4-2.6
-    # dB, the worst note's detuned copies -38 (400 ms) / -55 dB (800 ms). In the reverb (ten notes, the
-    # off-pitch share): input only now equals the plain reverb (HALL -19 worst, MASSIVE -20); fed back
-    # equals it in MASSIVE, HALL 5-7 dB more. IV_ALT_ATTACK 10 round 3 input; 12 round 4 input (8 heads,
-    # 400 ms); 13 fed back; 14 fed back, darker (8 heads, 800 ms).
-    saved=("${MATERIALS[@]}"); MATERIALS=()
-    for m in vibes pad keys lead voice stabs; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
-    page shimmer4
-    for t in "1_hall_time_mid:HALL:0.5" "2_massive_time_high:MASSIVE:0.85" "3_plate_time_mid:PLATE:0.6"; do
-        IFS=: read col sp tm <<< "$t"
-        for v in "A_round_3_input_only:10" "B_input_only:12" "C_fed_back:13" "D_fed_back_darker:14"; do
-            tag=${v%%:*}; mode=${v##*:}
-            IV_ALT_ATTACK=$mode r shimmer4 $col $tag "" --set space=$sp --set attack=REVERSE --set decay=0.6 --set time=$tm
-        done
-    done
-    MATERIALS=("${saved[@]}")
-    print -r -- "Shimmer, round 4. Your note on round 3: the input-only kind \"sounds the most like a shimmer, however there are some inharmonic resonances that make certain tones sound a little out of tune\"; the fed-back kinds \"still sound quite bitcrushy\". Measured why: the shifter's read heads sat at fixed distances apart, so for some notes they cancelled each other's octave (110, 165 and 330 Hz almost vanished), leaving only faint detuned copies: those notes sounded out of tune. Now each head starts at a random point each time (as Valhalla's and Mutable Instruments' shifters do), so no note is singled out; the octave comes out evenly across the keyboard and the detuned copies are 38-55 dB down. In the reverb, B now adds no off-pitch sound at all (it measures the same as the plain reverb); C and D, fed back, measure the same in MASSIVE but still a little grittier in HALL. A is round 3's input-only, for comparison. TIME is how much shimmer. Level-matched; none builds up.
-
-1_hall_time_mid       HALL, TIME 0.5 (DECAY 0.6)
-2_massive_time_high   MASSIVE, TIME 0.85
-3_plate_time_mid      PLATE, TIME 0.6
-
-A_round_3_input_only   Round 3's input-only (what you heard)
-B_input_only           Your input an octave up, no feedback, random onsets
-C_fed_back             Fed back (octaves keep climbing), random onsets
-D_fed_back_darker      Fed back and darker, random onsets" > renders/shimmer4/README.txt
-    python3 tools/review/make_review.py renders/shimmer4 --title "Shimmer, round 4" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/shimmer4/index.html"
-fi
-
-if on attack_alts2; then
-    # PROTOTYPES, ATTACK's third position, round 2 (owner: shimmer B picked; "I still want to hear the
-    # other alternatives"): IV_ALT_ATTACK 12 shimmer (input only, the pick); 15 reverse into the tank
-    # (FutureVerb's reversed granular delays as a predelay: 4-8 overlapping Hann grains, random lengths,
-    # +-4 cents); 16 reversed tail (a short reverb, T60 ~ TIME, played backwards in grains); 17 echo-verb
-    # "Tubby" (a mono tape echo before the tank: 150 Hz HP, 3 kHz LP, soft saturation per pass, wow and
-    # flutter, TIME 80 ms - 1 s, DECAY the repeats); 18 the same with the reverb re-echoed (Supermassive's
-    # EchoVerb); 19 nonlinear gate (REVERSE's taps flat then cut: AMS RMX16 Nonlin, BigSky Gate; TIME
-    # 0.1-0.8 s); 20 gated room (the main wet keyed by the input: open while playing, held TIME, 40 ms
-    # close; Padgham, SPX90). Checked: no clicks, no build-up (5 min infinite holds), loudness within
-    # ~1.5 dB of NORMAL except the echo-verbs (+1.5 to +3.4: level-matched here).
-    saved=("${MATERIALS[@]}"); MATERIALS=()
-    for m in skank stabs drums vibes pad voice; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
-    page attack_alts2
-    for t in "1_hall_time_low:HALL:0.3" "2_hall_time_high:HALL:0.7" "3_massive_time_mid:MASSIVE:0.5"; do
-        IFS=: read col sp tm <<< "$t"
-        for v in "A_shimmer_your_pick:12" "B_reverse_into_the_reverb:15" "C_reversed_tail:16" "D_echo_verb:17" \
-                 "E_echo_verb_reverb_re_echoed:18" "F_nonlinear_gate:19" "G_gated_room:20"; do
-            tag=${v%%:*}; mode=${v##*:}
-            IV_ALT_ATTACK=$mode r attack_alts2 $col $tag "" --set space=$sp --set attack=REVERSE --set decay=0.5 --set time=$tm
-        done
-    done
-    MATERIALS=("${saved[@]}")
-    print -r -- "The other alternatives for ATTACK's third position, each built the way established units do it, beside your shimmer pick (A). B, reverse into the reverb: what you play comes back reversed in overlapping slices (random lengths, slightly detuned, so no rhythm of seams), and the reverb smooths it (Valhalla FutureVerb's reverse). C, reversed tail: a short reverb's own tail is played backwards, so each note swells up into a cut (the studio 'pre-verb' sound, live). D, echo-verb: a dub tape echo in front of the reverb; each repeat darker and thinner with a little tape wobble, the reverb growing out of the echoes; TIME is the echo time, DECAY how many repeats (King Tubby, the Space Echo). E is D with the reverb fed back into the echo, so the wash itself echoes (Supermassive's EchoVerb). F, nonlinear gate: a dense burst that stays level, then stops dead after TIME (the AMS RMX16 'Nonlin', Strymon's Gate); it never chops a sustained sound. G, gated room: the full reverb, cut short TIME after you stop playing (the 80s gated drum sound). TIME is low in column 1, high in column 2. Level-matched. Picks and notes on which to keep refining.
-
-1_hall_time_low      HALL, TIME 0.3 (DECAY 0.5)
-2_hall_time_high     HALL, TIME 0.7
-3_massive_time_mid   MASSIVE, TIME 0.5
-
-A_shimmer_your_pick            Shimmer, input only (your pick)
-B_reverse_into_the_reverb      Reverse: reversed slices into the reverb
-C_reversed_tail                Reverse: the tail played backwards
-D_echo_verb                    Echo-verb: a dub tape echo into the reverb
-E_echo_verb_reverb_re_echoed   Echo-verb, the reverb fed back into the echo
-F_nonlinear_gate               Nonlinear: level, then a sudden stop
-G_gated_room                   Gated room: the full reverb, cut after you stop" > renders/attack_alts2/README.txt
-    python3 tools/review/make_review.py renders/attack_alts2 --title "ATTACK's third position: the alternatives" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/attack_alts2/index.html"
-fi
-
 if on era_sweep; then
     # ERA turned from fully left to fully right over 40 s while the music loops (renders/_material_sweep,
     # 40 s loops + 12 s of tail), then the tail at ERA 1; chaptered at each era's start (ADR 0021).
@@ -557,42 +387,6 @@ A_era_sweep  ERA, fully left to fully right" > renders/era_sweep/README.txt
     python3 tools/review/make_review.py renders/era_sweep --title "Immensio: ERA, knob sweep" --showcase --no-level-match --dry $SW --wet-only \
         --chapters "Neve:0,Midiverb:8,BBD:16,Cassette:24,Radio:32,Tail:40" > /dev/null
     echo "renders/era_sweep/index.html"
-fi
-
-if on reverse; then
-    page reverse
-    RV=(--set era=0 --set attack=REVERSE)
-    for tm in 0:A_0.2s 0.4:B_0.5s 0.8:C_1.3s 1:D_2s; do
-        r reverse time ${tm##*:} "" --set space=HALL $RV --set time=${tm%%:*} --set decay=0.45 --set size=0.5
-    done
-    for dc in 0:A_sharp 0.5:B_middle 1:C_soft; do
-        r reverse decay ${dc##*:} "" --set space=HALL $RV --set time=0.4 --set decay=${dc%%:*} --set size=0.5
-    done
-    for sz in 0:A_fine 1:B_coarse; do
-        r reverse size ${sz##*:} "" --set space=HALL $RV --set time=0.4 --set decay=0.45 --set size=${sz%%:*}
-    done
-    r reverse attack A_normal "" --set space=HALL --set era=0 --set attack=NORMAL --set time=0 --set decay=0.45 --set size=0.5
-    r reverse attack B_bloom "" --set space=HALL --set era=0 --set attack=BLOOM --set time=0.4 --set decay=0.45 --set size=0.5
-    r reverse attack C_reverse "" --set space=HALL $RV --set time=0.4 --set decay=0.45 --set size=0.5
-    finish reverse "Immensio: REVERSE, the hardware way" "REVERSE rebuilt the established way (AMS RMX16, Lexicon and Midiverb reverse programs): each note blooms into a swell that starts with it, rises over TIME, then stops. Nothing plays backwards; the reverb's shape is reversed. Inside: a delay with 32 taps per side that get louder over TIME, into a short reverb of its own that smooths them into one swell. TIME is the swell's length, DECAY how sudden the stop is, SIZE the short reverb's size (the swell's grain). It's the same in every SPACE (MASSIVE adds its predelay), as on the hardware, where reverse is its own program.
-
-time     TIME (HALL, DECAY 0.45)
-decay    DECAY, the stop (TIME 0.4)
-size     SIZE, the grain (TIME 0.4)
-attack   the three ATTACK settings side by side (TIME 0.4)
-
-A_0.2s     TIME fully CCW: a 0.2 s swell
-B_0.5s     TIME 0.4: 0.5 s
-C_1.3s     TIME 0.8: 1.3 s
-D_2s       TIME fully CW: 2 s
-A_sharp    DECAY fully CCW: the swell stops within ~0.2 s
-B_middle   DECAY noon
-C_soft     DECAY fully CW: a softer stop (~1 s)
-A_fine     SIZE fully CCW: a fine, dense grain
-B_coarse   SIZE fully CW: a coarser, roomier grain
-A_normal   NORMAL: the reverb as usual
-B_bloom    BLOOM: swells over TIME, then decays naturally
-C_reverse  REVERSE: swells over TIME, then stops"
 fi
 
 if on grainy_start; then

@@ -2,14 +2,16 @@
 // 0013, 0015). BLOOM's rise follows TIME in every space; MASSIVE's gentle
 // built-in mass follows DECAY and SIZE, starting soon after the source (M4
 // notes); HALL in NORMAL attacks at once; infinite tails hold a floor for
-// 10 minutes without growing; MASSIVE has no rhythmic echoes at any SIZE; REVERSE swells from the
+// 10 minutes without growing; MASSIVE has no rhythmic echoes at any SIZE; SHIMMER adds the octave evenly (was: REVERSE swells from the
 // note over TIME and stops, with no hole or jumps; SPACE flips are click-free; HALL and MASSIVE match in
 // loudness; MASSIVE is stable at every corner.
 
 #include "Metrics.h"
 #include "dsp/Engine.h"
+#include "dsp/Shimmer.h"
 #include "params/Mappings.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -263,53 +265,87 @@ void noRhythmicEchoes()
     check(smooth, "MASSIVE has no rhythmic echoes at any SIZE (spikiness dB:" + detail + "; < 1 everywhere, was 2+ at SIZE 0)");
 }
 
-// REVERSE (ADR 0015, amended 22 Oct 2026): the hardware reverse. A click
-// blooms into a swell that starts with it, rises smoothly over TIME and
-// stops (the owner's notes on the old segments: a delay, a break after the
-// first repeat, then chunks). No clicks on a held tone.
-void reverseSwells()
+// Power at frequency f over [a, b) samples of the mid signal (Goertzel).
+double tonePower(const Stereo& o, double f, size_t a, size_t b)
 {
-    for (int space : {0, 1, 2})
-        for (float t : {0.0f, 0.4f, 1.0f}) {
-            const double length = iv::map::reverseSeconds(t);
-            std::vector<float> in(size_t((length + 2.0) * kSr), 0.0f);
-            in[10] = 0.8f;
+    const double w = 2.0 * 3.141592653589793 * f / kSr, c = 2.0 * std::cos(w);
+    double s1 = 0.0, s2 = 0.0;
+    for (size_t i = a; i < b && i < o.l.size(); ++i) {
+        const double s0 = 0.5 * (o.l[i] + o.r[i]) + c * s1 - s2;
+        s2 = s1;
+        s1 = s0;
+    }
+    return (s1 * s1 + s2 * s2 - c * s1 * s2) / double(b - a);
+}
+
+// SHIMMER (ADR 0024): the input an octave up into the tank. On its own, the octave comes out evenly
+// across the keyboard: heads at fixed spacings combed certain notes' octaves away (59 dB apart, heard
+// as out-of-tune notes); random grain onsets keep them within a few dB. In the engine a note's octave
+// is clearly added (the median over notes: a held sine meets the tank's own peaks and dips, +-15 dB);
+// at TIME 0 it's the plain reverb; no clicks on a held tone.
+void shimmerAddsTheOctave()
+{
+    double lo = 1e9, hi = -1e9;
+    std::string detail;
+    for (double f : {110.0, 147.0, 165.0, 196.0, 220.0, 330.0, 440.0, 587.0, 880.0, 1320.0}) {
+        std::vector<float> mem(iv::dsp::Shimmer::memoryFloats(kSr));
+        iv::dsp::Arena arena;
+        arena.reset(mem.data(), mem.size());
+        iv::dsp::Shimmer sh;
+        sh.prepare(arena, kSr);
+        double sum = 0.0;
+        const int n = int(4.0f * kSr), from = int(1.5f * kSr);
+        for (int i = 0; i < n; ++i) {
+            float l = 0.3f * float(std::sin(2.0 * 3.141592653589793 * f * double(i) / kSr)), r = l;
+            sh.process(l, r, true);
+            if (i >= from) sum += double(l) * l;
+        }
+        const double db = 10.0 * std::log10(sum / double(n - from) + 1e-20);
+        lo = std::fmin(lo, db);
+        hi = std::fmax(hi, db);
+    }
+    char msg[120];
+    std::snprintf(msg, sizeof msg, "SHIMMER on its own: the octave's level across ten notes within %.1f dB (< 4)", hi - lo);
+    check(hi - lo < 4.0, msg);
+    for (int space : {0, 1, 2}) {
+        std::vector<double> gains;
+        for (double f : {110.0, 165.0, 330.0, 880.0}) {
+            std::vector<float> in(size_t(4.0f * kSr), 0.0f);
+            for (size_t i = 0; i < size_t(3.0f * kSr); ++i) in[i] = 0.2f * float(std::sin(2.0 * 3.141592653589793 * f * double(i) / kSr));
             Setting s;
             s.space = space;
             s.attack = 2;
-            s.time = t;
-            s.decay = 0.45f;
-            const auto e = envelope(render(in, s), 480); // 10 ms windows
-            size_t peak = 0;
-            for (size_t i = 0; i < e.size(); ++i)
-                if (e[i] > e[peak]) peak = i;
-            size_t onset = 0;
-            while (onset < peak && e[onset] < e[peak] * 1e-3) ++onset; // −60 dB: it has started
-            double worstDrop = 0.0; // the biggest 10 ms fall during the rise, dB (a break)
-            for (size_t i = onset + 1; i <= peak; ++i)
-                worstDrop = std::fmax(worstDrop, 20.0 * std::log10(e[i - 1] / (e[i] + 1e-12)));
-            size_t stop = peak;
-            while (stop < e.size() && e[stop] > e[peak] * 0.01) ++stop; // −40 dB
-            const double peakAt = double(peak) * 0.01, onsetAt = double(onset) * 0.01, stopAfter = double(stop - peak) * 0.01;
-            // MASSIVE adds SIZE's predelay (up to 100 ms) before both.
-            const double pre = space == 2 ? iv::map::massivePredelaySeconds(s.size) : 0.0;
-            char msg[240];
-            std::snprintf(msg, sizeof msg,
-                          "REVERSE space %d, %.2f s: starts at %.2f s, peaks at %.2f s, no break (worst 10 ms fall %.1f dB), stops 40 dB in %.2f s",
-                          space, length, onsetAt - pre, peakAt - pre, worstDrop, stopAfter);
-            check(onsetAt - pre < 0.06 && std::fabs(peakAt - pre - length) < 0.15 * length + 0.03 && worstDrop < 6.0
-                      && stopAfter < 0.5,
-                  msg);
+            s.decay = 0.5f;
+            s.time = 0.8f;
+            const Stereo on = render(in, s);
+            s.time = 0.0f;
+            const Stereo off = render(in, s);
+            const size_t a = size_t(1.5f * kSr), b = size_t(3.0f * kSr);
+            gains.push_back(10.0 * std::log10(tonePower(on, 2.0 * f, a, b) / (tonePower(off, 2.0 * f, a, b) + 1e-20)));
         }
-    std::vector<float> held(size_t(6.0f * kSr));
-    for (auto& x : held) x = 0.2f * std::sin(0.03f * float(&x - held.data())) + 0.02f * noise();
+        std::sort(gains.begin(), gains.end());
+        const double median = 0.5 * (gains[1] + gains[2]);
+        check(median > 10.0, "SHIMMER space " + std::to_string(space) + ": a note's octave added (median +" + std::to_string(int(median)) + " dB)");
+    }
+    std::vector<float> in(size_t(3.0f * kSr));
+    for (auto& x : in) x = 0.2f * std::sin(0.03f * float(&x - in.data())) + 0.02f * noise();
     Setting s;
     s.attack = 2;
-    s.time = 0.3f;
+    s.time = 0.0f;
+    const Stereo plain = render(in, s);
+    s.attack = 0;
+    const Stereo normal = render(in, s);
+    double diff = 0.0;
+    for (size_t i = 0; i < plain.l.size(); ++i) diff = std::fmax(diff, std::fabs(plain.l[i] - normal.l[i]));
+    check(diff < 1e-6, "SHIMMER at TIME 0 is the plain reverb (largest difference " + std::to_string(diff) + ")");
+    std::vector<float> held(size_t(6.0f * kSr));
+    for (auto& x : held) x = 0.2f * std::sin(0.03f * float(&x - held.data())) + 0.02f * noise();
+    s.attack = 2;
+    s.time = 0.8f;
     s.mix = 1.0f;
     const Stereo out = render(held, s);
     const auto m = iv::metrics::compute({out.l, out.r}, kSr);
-    check(finite(out) && m.clickCount == 0, "REVERSE on a held tone: no clicks (" + std::to_string(m.clickCount) + ")");
+    check(finite(out) && m.clickCount == 0, "SHIMMER on a held tone: no clicks (" + std::to_string(m.clickCount) + ")");
 }
 
 // ADR 0013: SPACE flips mid-tail crossfade without clicks.
@@ -392,7 +428,7 @@ int main()
     attackFollowsTime();
     infiniteHoldsTheFloor();
     noRhythmicEchoes();
-    reverseSwells();
+    shimmerAddsTheOctave();
     spaceFlips();
     loudnessMatched();
     massiveStable();

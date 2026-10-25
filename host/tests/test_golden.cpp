@@ -63,7 +63,7 @@ const Corner kCorners[] = {
     {"hall_radio",      1, 0, 0.5f, 0.5f, 0.5f, 0.9f,  0.5f, 0.2f},
     {"massive_small",   2, 0, 0.0f, 0.5f, 0.5f, -1.0f, 0.5f, 0.2f},
     {"massive_large",   2, 0, 1.0f, 0.6f, 0.5f, -1.0f, 0.5f, 0.5f},
-    {"massive_reverse", 2, 2, 0.5f, 0.5f, 0.5f, -1.0f, 0.5f, 0.5f},
+    {"massive_shimmer", 2, 2, 0.5f, 0.5f, 0.5f, -1.0f, 0.5f, 0.5f},
 };
 
 using Stereo = std::vector<std::vector<float>>;

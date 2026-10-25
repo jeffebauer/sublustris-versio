@@ -40,7 +40,7 @@ void labelsAndNumbers()
     check(set(engine, "space=MASSIVE") && engine.param(iv::ParamId::Space) == 1.0f, "space=MASSIVE sets the right position");
     check(set(engine, "attack=NORMAL") && engine.param(iv::ParamId::Attack) == 0.0f, "attack=NORMAL sets the left position");
     check(set(engine, "attack=BLOOM") && engine.param(iv::ParamId::Attack) == 0.5f, "attack=BLOOM sets the centre position");
-    check(set(engine, "attack=REVERSE") && engine.param(iv::ParamId::Attack) == 1.0f, "attack=REVERSE sets the right position");
+    check(set(engine, "attack=SHIMMER") && engine.param(iv::ParamId::Attack) == 1.0f, "attack=SHIMMER sets the right position");
     check(set(engine, "decay=0.8") && std::fabs(engine.param(iv::ParamId::Decay) - 0.8f) < 1e-6f, "numeric knob value accepted");
 
     iv::Engine fresh;

@@ -60,7 +60,7 @@ constexpr Toggle kToggles[] = {
 
 // The button sits at the module's height (69.33 mm), nudged right of its
 // 26.185 mm centre and drawn wider than the 7 mm cap, so FREEZE reads in
-// full at 1x and still clears ATTACK's REVERSE.
+// full at 1x and still clears ATTACK's SHIMMER.
 constexpr Part kButton{28.0f, 69.330f};
 // The plugin's own ZOOM control (panel scale) in the bottom row.
 constexpr float kBottomRowYMm = 121.0f;

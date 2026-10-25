@@ -29,10 +29,10 @@ Shared vocabulary for this project. Use these terms exactly in code, comments an
 | **Midiverb box** | Era 20–40 %: an in-loop 48 → 24 → 48 kHz box with the unit's 13 bits, truncated toward zero; the tail gets grainier as it fades. |
 | **Hiss** | Cassette-stage noise fed into the tank input, ducked by the input level. |
 | **Duck** | Tail ducking from the input level, only at infinite Decay: 4:1 compression of the wet (attack 30 ms, release 0.4 s), about 3 dB while you play, no darkening (v1.0.17; it was DARKEN). |
-| **ATTACK** | SW1: NORMAL / BLOOM / REVERSE. Sets the attack in every space. |
-| **TIME** | P7: NORMAL predelay, BLOOM swell time, or REVERSE swell length. |
+| **ATTACK** | SW1: NORMAL / BLOOM / SHIMMER. Sets the attack in every space (SHIMMER since v1.0.33; it was REVERSE). |
+| **TIME** | P7: NORMAL predelay, BLOOM swell time, or how much SHIMMER. |
 | **Bloom** | The tail swells in over TIME (the swell stage, in every space). |
-| **Reverse** | The hardware reverse reverb (AMS RMX16-style): each note blooms into a swell that starts with it, rises over TIME and stops. Rising taps into a short reverb of its own; nothing plays backwards. |
+| **Shimmer** | ATTACK's third position (v1.0.33, ADR 0024): what you play, an octave up, joins the input into the reverb; no feedback, so one steady octave. Eight overlapping grains with random onsets, behind a steep 6 kHz filter. Replaced **Reverse** (the hardware reverse reverb, v1.0.9-v1.0.32). |
 | **SPACE** | SW0: PLATE / HALL / MASSIVE. Flips crossfade ~100 ms. |
 | **P1–P7** | Pots by panel position, reading order (Resilio ADR 0028), not libDaisy index. |
 | **Normalised** | 0–1 parameter value every host passes; mapping curves live only in `core/params/`. |

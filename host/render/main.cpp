@@ -125,12 +125,9 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* to = std::getenv("IV_TAPE_OUT")) engine.setTapeOut(std::atoi(to) != 0);
     if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
     if (const char* dm = std::getenv("IV_DECAY_MAKEUP")) engine.setDecayMakeup(float(std::atof(dm)));
-    if (const char* aa = std::getenv("IV_ALT_ATTACK")) engine.setAltAttack(std::atoi(aa));
     if (const char* sc = std::getenv("IV_SIZE_CATCHUP")) engine.setSizeCatchUp(float(std::atof(sc)));
     if (const char* sx = std::getenv("IV_SIZE_XFADE")) engine.setSizeCrossfade(float(std::atof(sx)));
     if (const char* px = std::getenv("IV_PREDELAY_XFADE")) engine.setPredelayCrossfade(float(std::atof(px)));
-    if (const char* sh = std::getenv("IV_SHIM_HEADS"))
-        engine.setShimmerShape(std::atoi(sh), std::getenv("IV_SHIM_WIN") ? float(std::atof(std::getenv("IV_SHIM_WIN"))) : 0.1f);
     if (!presetPath.empty()) {
         iv::json::Value preset;
         if (!iv::json::loadFile(presetPath, preset, error)) return false;

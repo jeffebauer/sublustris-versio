@@ -30,7 +30,7 @@ public:
     static constexpr int kControlBlock = 32;
 
     // Floats of delay memory prepare() takes from its arena at this rate.
-    // maxLineSeconds: the longest a line may get (REVERSE's short reverb uses far less than the tank).
+    // maxLineSeconds: the longest a line may get (a smaller FDN can ask for less memory).
     static constexpr size_t memoryFloats(float sampleRate, float maxLineSeconds = voicing::kFdnMaxLineSeconds)
     {
         return size_t(kN) * (nextPow2(size_t(maxLineSeconds * sampleRate) + 4)

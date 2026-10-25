@@ -146,7 +146,7 @@ constexpr float kHoldSeconds        = 8.0f; // the slow level a held tail's ceil
 constexpr float kGovernorFallSeconds = 0.05f;
 
 // SPACE flips fade out, then in, over this long each (ADR 0013: ~100 ms
-// in all). ATTACK into or out of REVERSE crossfades over kAttackFadeSeconds.
+// in all). ATTACK into or out of SHIMMER fades the octave's send over kAttackFadeSeconds.
 constexpr float kSpaceFlipSeconds  = 0.05f;
 constexpr float kAttackFadeSeconds = 0.05f;
 
@@ -154,18 +154,18 @@ constexpr float kAttackFadeSeconds = 0.05f;
 constexpr float kPlateLongModSeconds = 0.0006f; // depth: ~2 cents at these rates *(start)*
 constexpr float kPlateLongModHz[4]   = {0.23f, 0.31f, 0.19f, 0.37f}; // L d1, L d2, R d1, R d2: none shared with ap1 *(start)*
 
-// ---- REVERSE (SPEC §4.11, ADR 0015 amendment 22 Oct 2026) ------------------------
-// Rising taps over TIME into a short reverb of its own (Reverse.h). Tuned
-// together: tap spacing (TIME / kReverseTaps) against the short reverb's
-// line lengths, and the rise against how sudden the stop is.
-constexpr int   kReverseTaps            = 32;     // per side *(start)*
-constexpr float kReverseRiseDb          = 30.0f;  // first tap to last *(start)*
-constexpr float kReverseMeanMinSeconds  = 0.02f;  // the short reverb's mean line at SIZE fully CCW *(start)*
-constexpr float kReverseMeanMaxSeconds  = 0.09f;  // at SIZE fully CW *(start)*
-constexpr float kReverseMaxLineSeconds  = 0.25f;  // its memory: mean × 1.41 + DRIFT's room
-constexpr float kReverseTailMinSeconds  = 0.15f;  // its T60 at DECAY fully CCW: a sharp stop *(start)*
-constexpr float kReverseTailMaxSeconds  = 1.0f;   // at DECAY's top: a softer stop *(start)*
-constexpr float kReverseLevel           = 6.0f;   // +15.5 dB: loudness matches the forward wet (skank, vibes; every space)
+// ---- SHIMMER (SPEC §4.11, ADR 0024; owner's picks on renders/shimmer4, attack_alts2) ----------
+// The input an octave up, sent into the tank with it, no feedback (dsp/Shimmer.h). Measured (rounds
+// 1-4): fold-back above 12 kHz heard as "bit crushing" (the 8th-order feed filter: -68 dB at 16 kHz);
+// heads at fixed spacings combing certain notes' octaves (random onsets: within 2.6 dB across notes,
+// the detuned copies -38 dB); in the reverb, no more off-pitch sound than the plain reverb.
+constexpr int   kShimmerHeads         = 8;
+constexpr float kShimmerWindowSeconds = 0.4f;    // each grain; its octave starts this smeared
+constexpr float kShimmerScatter       = 1.0f;    // random extra delay per grain, x the window
+constexpr float kShimmerFeedHz        = 6000.0f; // the feed's 8th-order low-pass: its octave reaches 12 kHz
+constexpr float kShimmerAfterHz       = 9000.0f; // a one-pole after: each octave a little softer than the note
+constexpr float kShimmerLowCutHz      = 80.0f;   // a one-pole high-pass after
+constexpr float kShimmerSend          = 1.2f;    // x TIME: the octave's level into the tank at TIME full
 
 // ---- Plate (SPEC §4.2) -----------------------------------------------------
 constexpr float kPlateMaxScale     = 1.59f; // SIZE fully CW (1.6 lined a 9.8 kHz mode up, v1.0.11)

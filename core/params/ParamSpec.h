@@ -60,7 +60,7 @@ inline constexpr std::array<ParamSpec, static_cast<size_t>(ParamId::Count)> kPar
     {ParamId::Drift,  "drift",  "DRIFT",  ParamKind::Knob,    0.5f, Smoothing::Gliding, 80.0f, {}},
     {ParamId::Time,   "time",   "TIME",   ParamKind::Knob,    0.2f, Smoothing::Gliding, 80.0f, {}},
     {ParamId::Space,  "space",  "SPACE",  ParamKind::Switch3, 0.5f, Smoothing::Switch, 100.0f, {"PLATE", "HALL", "MASSIVE"}},
-    {ParamId::Attack, "attack", "ATTACK", ParamKind::Switch3, 0.0f, Smoothing::Switch,  50.0f, {"NORMAL", "BLOOM", "REVERSE"}},
+    {ParamId::Attack, "attack", "ATTACK", ParamKind::Switch3, 0.0f, Smoothing::Switch,  50.0f, {"NORMAL", "BLOOM", "SHIMMER"}},
 }};
 
 constexpr const ParamSpec& spec(ParamId id) { return kParams[static_cast<size_t>(id)]; }

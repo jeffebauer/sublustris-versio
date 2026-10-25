@@ -83,7 +83,7 @@ inline float massiveMass(float size) { return 1.0f + 0.5f * size; }
 inline float massiveNormalAttackSeconds(float decay, float size) { return expLerp(0.5f, 0.2f, decay) * massiveMass(size); }
 
 // TIME (P7), ADR 0015. NORMAL: predelay 0 → 250 ms, ∝ x². BLOOM: swell
-// 0.1 → 4 s. REVERSE: segment length 0.2 → 2 s. Both exponential.
+// 0.1 → 4 s, exponential. SHIMMER: how much (the send, linear; ADR 0024).
 inline float normalPredelaySeconds(float v) { return 0.25f * v * v; }
 // MASSIVE in NORMAL: 0 → 250 ms in straight steps (v1.0.21, knob_feel). Its wet already arrives
 // 0.3–0.6 s after a hit (the swell, the SIZE predelay), so x² added under 10 ms over the first 20 %.
@@ -91,11 +91,6 @@ inline float massiveNormalPredelaySeconds(float v) { return 0.25f * v; }
 // BLOOM: 0.12 → 4 s (v1.0.21, knob_feel: below 0.12 s the swell stage crossfades to the direct path,
 // Swell.h, so a 0.1 s start made the first notch jump 3-6×).
 inline float bloomSeconds(float v) { return expLerp(0.12f, 4.0f, v); }
-inline float reverseSeconds(float v) { return expLerp(0.2f, 2.0f, v); }
-// DECAY in REVERSE: the short reverb's T60, how sudden the stop is.
-// SIZE in REVERSE: the short reverb's mean line, the swell's grain.
-inline float reverseMeanSeconds(float v) { return expLerp(voicing::kReverseMeanMinSeconds, voicing::kReverseMeanMaxSeconds, v); }
-inline float reverseTailSeconds(float v) { return expLerp(voicing::kReverseTailMinSeconds, voicing::kReverseTailMaxSeconds, v); }
 
 // SIZE (P5) in PLATE: the tank's scale, 0.5 → 1.59 of Dattorro's (SPEC §3).
 inline float plateScale(float v) { return expLerp(voicing::kPlateMinScale, voicing::kPlateMaxScale, v); }
@@ -214,18 +209,6 @@ inline float decayLevelMakeup(float v, int space)
     const float shortGain = std::pow(ref / std::fmin(t, ref), voicing::kDecayLevelPower[space]);
     const float longGain = top > ref ? std::pow(top / std::fmin(std::fmax(t, ref), top), voicing::kDecayLevelPowerLong[space]) : 1.0f;
     return shortGain * longGain;
-}
-
-// REVERSE's level make-up (v1.0.28), so a short stop doesn't drop below the forward wet, which DECAY
-// no longer turns down: measured (HALL, skank / vibes / pad, LUFS) 14 dB quieter at DECAY 0 than 1, not
-// a T60 power (TIME's swell carries the long end). dB at DECAY 0, 0.25, 0.5, 0.75; none from 0.75 up,
-// where REVERSE was already at the forward wet's level or above.
-inline float reverseLevelMakeup(float v)
-{
-    constexpr float kDb[4] = {11.5f, 5.4f, 0.8f, 0.0f};
-    const float x = std::fmin(std::fmax(v, 0.0f), 0.75f) * 4.0f;
-    const int i = int(x) < 2 ? int(x) : 2;
-    return std::pow(10.0f, (kDb[i] + (x - float(i)) * (kDb[i + 1] - kDb[i])) / 20.0f);
 }
 
 // HALL: The level a finite tail loses by being shorter (its energy goes with its

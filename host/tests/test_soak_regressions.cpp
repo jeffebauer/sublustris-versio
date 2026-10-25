@@ -274,11 +274,12 @@ void infiniteTailDoesntPlungeWhenTheInputStops()
     }
 }
 
-// Soak finding 6: a SPACE flip while playing in REVERSE cleared REVERSE's recording line, which
+// Soak finding 6 (found with REVERSE, kept for SHIMMER, ADR 0024: ATTACK's third position keeps
+// running through flips): a SPACE flip while playing in REVERSE cleared REVERSE's recording line, which
 // then held a hard edge where the input was cut off: the swell clicked when its taps reached it, up
 // to a TIME after the flip. REVERSE doesn't depend on SPACE, so it now keeps running through flips
 // (faded with the wet). After the flip's own fade, the sharpest step stays near the steady sound's.
-void reverseFlipWhilePlayingDoesntClickLater()
+void thirdAttackFlipWhilePlayingDoesntClickLater()
 {
     for (int from = 0; from < 3; ++from) {
         Rig r(48000.0f, 48);
@@ -297,16 +298,16 @@ void reverseFlipWhilePlayingDoesntClickLater()
         r.clearWatch();
         r.run(3.0, 0.3f, -330.0f);
         char what[160];
-        std::snprintf(what, sizeof what, "REVERSE: a flip %d->%d while playing doesn't click later (sharpest step x%.1f the steady sound's)", from,
+        std::snprintf(what, sizeof what, "SHIMMER: a flip %d->%d while playing doesn't click later (sharpest step x%.1f the steady sound's)", from,
                       (from + 1) % 3, r.maxD2 / steady);
         check(r.maxD2 < 2.6f * steady, what); // it measured x3.0-6.2; a pure sine still shows x7-9 (see the audit)
     }
 }
 
-// Soak finding 7: REVERSE coming in while playing (an ATTACK switch, or the unfreeze that ends
+// Soak finding 7 (found with REVERSE, kept for SHIMMER): REVERSE coming in while playing (an ATTACK switch, or the unfreeze that ends
 // REVERSE's rest) fed its freshly restarted short reverb the whole swell at once, which clicked
 // when it first came round the reverb's lines, 25-80 ms later (x18-46). The taps now fade in.
-void reverseComingInDoesntClick()
+void thirdAttackComingInDoesntClick()
 {
     for (int sp = 0; sp < 3; ++sp)
         for (int how = 0; how < 2; ++how) {
@@ -318,7 +319,7 @@ void reverseComingInDoesntClick()
             r.e.setParam(ParamId::Attack, iv::switchToNormalised(how == 0 ? 2 : 0));
             r.e.reset();
             r.run(3.0, 0.3f, -330.0f);
-            if (how == 0) { // freeze (REVERSE rests), then unfreeze
+            if (how == 0) { // freeze (SHIMMER rests), then unfreeze
                 r.e.button(true, 0);
                 r.run(0.05, 0.3f, -330.0f);
                 r.e.button(false, 0);
@@ -334,7 +335,7 @@ void reverseComingInDoesntClick()
             }
             r.run(0.5, 0.3f, -330.0f);
             char what[160];
-            std::snprintf(what, sizeof what, "space %d: REVERSE coming in (%s) while playing doesn't click (worst x%.1f)", sp,
+            std::snprintf(what, sizeof what, "space %d: SHIMMER coming in (%s) while playing doesn't click (worst x%.1f)", sp,
                           how == 0 ? "unfreeze" : "ATTACK switch", r.worstClick);
             check(r.worstClick < 6.0f, what);
         }
@@ -422,36 +423,47 @@ void cassetteCompressionDoesntPlunge()
     check(end - lowest < 4.0, what);
 }
 
-// ...and with TIME and SIZE still gliding when the flip reaches its silent point: the flip snapped
+// ...and with TIME and SIZE still gliding when the flip reaches its silent point (found with REVERSE,
+// kept for SHIMMER): the flip snapped
 // REVERSE's taps and short reverb to their targets, a jump now that REVERSE runs on (a click
 // 20-35 ms into the fade back in; confirmation soak). Now they glide on, as without a flip.
-void reverseFlipWhileTimeGlidesDoesntClick()
+void thirdAttackFlipWhileTimeGlidesDoesntClick()
 {
-    auto sharpest = [](int from, bool flip) {
+    // SHIMMER plays the forward wet (REVERSE replaced it), so the flip's own restart is heard: a sine
+    // through a freshly restarted PLATE starts with a small edge in NORMAL too (x3.6-4 its steady
+    // sound's sharpest step). The test asks what it was for: the third position adds nothing to a flip.
+    auto sharpestAt = [](int from, bool flip, int attack, double offset) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(from));
         r.e.setParam(ParamId::Decay, 0.7f);
         r.e.setParam(ParamId::Time, 0.4f);
         r.e.setParam(ParamId::Size, 0.3f);
-        r.e.setParam(ParamId::Attack, iv::switchToNormalised(2));
+        r.e.setParam(ParamId::Attack, iv::switchToNormalised(attack));
         r.e.setParam(ParamId::Mix, 1.0f);
         r.e.reset();
-        r.run(4.0, 0.3f, -330.0f);
+        r.run(4.0 + offset, 0.3f, -330.0f);
         if (flip) r.e.setParam(ParamId::Space, iv::switchToNormalised((from + 1) % 3));
         r.e.setParam(ParamId::Time, 0.5f); // both glide on past the flip's silent point (~50 ms)
         r.e.setParam(ParamId::Size, 0.5f);
         r.run(0.045, 0.3f, -330.0f);
         r.clearWatch();
         r.run(0.2, 0.3f, -330.0f);
-        return r.maxD2;
+        return r.worstClick; // each sample's sharpness against its own recent sound's (brightness cancels)
+    };
+    // The restart's own edge depends on where in the waveform the flip lands (x3-11 in NORMAL), so
+    // each mode's worst over a few flip moments.
+    auto sharpest = [&](int from, bool flip, int attack = 2) {
+        float worst = 0.0f;
+        for (double offset : {0.0, 0.0131, 0.0277, 0.0413}) worst = std::fmax(worst, sharpestAt(from, flip, attack, offset));
+        return worst;
     };
     for (int from = 0; from < 3; ++from) {
-        const float withFlip = sharpest(from, true), without = sharpest(from, false);
+        const float withFlip = sharpest(from, true), normal = sharpest(from, true, 0);
         char what[180];
         std::snprintf(what, sizeof what,
-                      "REVERSE: a flip %d->%d while TIME and SIZE glide adds no click (sharpest step x%.1f the same glide's without a flip)",
-                      from, (from + 1) % 3, withFlip / without);
-        check(withFlip < 1.5f * without, what);
+                      "SHIMMER: a flip %d->%d while TIME and SIZE glide adds no click (worst x%.1f, NORMAL's x%.1f)",
+                      from, (from + 1) % 3, withFlip, normal);
+        check(withFlip < 1.5f * normal, what);
     }
 }
 
@@ -464,12 +476,12 @@ int main()
     freezeInsideAFlipKeepsThePad();
     smallHallSizeJumpsDontClick();
     infiniteTailDoesntPlungeWhenTheInputStops();
-    reverseFlipWhilePlayingDoesntClickLater();
-    reverseComingInDoesntClick();
+    thirdAttackFlipWhilePlayingDoesntClickLater();
+    thirdAttackComingInDoesntClick();
     paintReleaseDoesntBurst();
     padFrozenFromADyingTailHolds();
     cassetteCompressionDoesntPlunge();
-    reverseFlipWhileTimeGlidesDoesntClick();
+    thirdAttackFlipWhileTimeGlidesDoesntClick();
     std::printf("%s\n", failures ? "SOME TESTS FAILED" : "ALL TESTS PASSED");
     return failures ? 1 : 0;
 }

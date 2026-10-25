@@ -6,8 +6,8 @@
 //
 // M5: the three SPACEs (PLATE on the Plate, HALL and MASSIVE on the FDN),
 // ATTACK, and the freeze: In → predelay → input diffusion → swell → big
-// tank → MIX (SPEC §4.1); in REVERSE the diffused input's rising taps feed
-// a short reverb of its own, which replaces the big tank's wet. The button and the gate feed one
+// tank → MIX (SPEC §4.1); in SHIMMER the diffused input, shifted an octave up, joins the input into
+// the tank (dsp/Shimmer.h, ADR 0024). The button and the gate feed one
 // gesture reader (ADR 0011): a tap freezes the big tank into a still pad and
 // moves the input to the twin, a second tank of the same space whose sound
 // fades back out over the pad (SIZE and DECAY play it); holding while frozen
@@ -24,12 +24,9 @@
 #include "dsp/Output.h"
 #include "dsp/Oversampler.h"
 #include "dsp/Plate.h"
-#include "dsp/Reverse.h"
+#include "dsp/Shimmer.h"
 #include "dsp/Swell.h"
 #include "dsp/Tape.h"
-#ifndef IV_FIXED_VOICINGS
-#include "dsp/AltAttack.h" // prototypes: REVERSE's replacements (desktop only)
-#endif
 #include "params/GestureReader.h"
 #include "params/ParamSpec.h"
 
@@ -52,10 +49,9 @@ public:
     static constexpr size_t largeFloats(float sampleRate)
     {
         return dsp::Fdn::memoryFloats(sampleRate) + 2 * dsp::Swell::memoryFloats(sampleRate) // the tank's swell and the twin's
-             + dsp::Reverse::memoryFloats(sampleRate) + 2 * dsp::Plate::memoryFloats(sampleRate, voicing::kPlateMaxScale, true)
+             + dsp::Shimmer::memoryFloats(sampleRate) + 2 * dsp::Plate::memoryFloats(sampleRate, voicing::kPlateMaxScale, true)
              + dsp::Fdn::memoryFloats(sampleRate) // the freeze twin
              + dsp::Fdn::memoryFloats(sampleRate / float(kLowDecimate)) // still lows' low tank
-             + dsp::Fdn::memoryFloats(sampleRate, voicing::kReverseMaxLineSeconds) // REVERSE's short reverb
              + 2 * dsp::nextPow2(size_t(voicing::kPredelayMaxSeconds * sampleRate) + 4);
     }
     static constexpr size_t fastFloats(float sampleRate)
@@ -92,19 +88,7 @@ public:
     // quieter, as v1.0.27), for demos.
     void  setDecayMakeup(float k) { decayMakeup_ = k; }
 #ifndef IV_FIXED_VOICINGS
-    // PROTOTYPES (desktop only): what ATTACK's third position plays instead of REVERSE.
-    // 0 = REVERSE, 1 = shimmer up, 2 = sub shimmer, 3 = grains (dsp/AltAttack.h); round 2: 4 smooth
-    // shimmer, 5 moving, 6 evolving. (Inside the tank was tried: re-shifting most of each pass, with
-    // the 4 heads averaging a tail down ~4 dB, collapsed the tail; an equal-power blend grew a held
-    // chord. It needs DAFx 2026's energy compensation: not this round.) Round 3, the fold-back
-    // filtered out: 8 clean, 9 clean + drift (both fed from the wet), 10 clean from the input only,
-    // 11 clean and darker from the wet. Round 4, random grain onsets (no comb on certain notes):
-    // 12 input only (8 heads, 400 ms), 13 fed back, 14 fed back and darker (8 heads, 800 ms).
-    void  setAltAttack(int mode)
-    {
-        altMode_ = mode;
-        reverse_.setGateShape(mode == 19); // NONLINEAR gate: REVERSE's taps, a flat-then-cut curve
-    }
+    // PROTOTYPES (owner's pick C on knob_moves: SIZE and TIME by a 0.3 s crossfade, not sliding):
     // SIZE trials: the FDN tanks catch up with SIZE within this many seconds (0 = the semitone limit).
     void  setSizeCatchUp(float seconds)
     {
@@ -112,21 +96,12 @@ public:
         lowFdn_.setSizeCatchUp(seconds);
         twinFdn_.setSizeCatchUp(seconds);
     }
-    void  setPredelayCrossfade(float seconds) { predelayXfade_ = seconds; } // TIME trials (NORMAL's pre-delay)
+    void  setPredelayCrossfade(float seconds) { predelayXfade_ = seconds; } // TIME (NORMAL's pre-delay)
     void  setSizeCrossfade(float seconds)
     {
         fdn_.setSizeCrossfade(seconds);
         lowFdn_.setSizeCrossfade(seconds);
         twinFdn_.setSizeCrossfade(seconds);
-    }
-    // Round 3 trials: the clean shimmers' shifter heads and window (re-prepares them).
-    void  setShimmerShape(int heads, float windowSeconds)
-    {
-        for (auto* s : {&shimClean_, &shimCleanMoving_, &shimInput_, &shimCleanDark_}) s->setShape(heads, windowSeconds); // all four
-        shimClean_.prepare(sampleRate_, false, dsp::proto::Shimmer::Style::Clean);
-        shimCleanMoving_.prepare(sampleRate_, false, dsp::proto::Shimmer::Style::CleanMoving);
-        shimInput_.prepare(sampleRate_, false, dsp::proto::Shimmer::Style::Clean);
-        shimCleanDark_.prepare(sampleRate_, false, dsp::proto::Shimmer::Style::CleanDark);
     }
 #endif
     // Test hook: false = no tape out (ERA's cassette stage without its output tape), for measuring.
@@ -174,7 +149,7 @@ private:
     void onGesture(GestureReader::Event e);
     void controlTick(int n);
     // snap: jump to the targets (reset, a SPACE flip); snapInput: the input diffusers' amount and
-    // REVERSE too (not on a flip, where they keep running and glide).
+    // the shimmer's recording too (not on a flip, where they keep running and glide).
     void applySpace(bool snap, int n = kChunk, bool snapInput = true);
     static constexpr float kPredelayMaxSpeed = 0.5f; // samples per sample
     float decayRate(float decay, float size) const;
@@ -204,7 +179,6 @@ private:
     dsp::Plate        plate_;
     // The freeze twin: the frozen tank's space, with its own decay.
     dsp::Fdn          twinFdn_;
-    dsp::Fdn          reverseFdn_; // REVERSE's short reverb
     // Still lows (v1.0.18, ADR 0012 amendment; docs/research/still-lows.md): the HALL / MASSIVE tank's
     // input splits at kStillLowsHz (Butterworth); the highs go to fdn_, the lows to lowFdn_, an
     // unmodulated tank at 1/kLowDecimate the rate that follows fdn_'s SIZE, DECAY and governor
@@ -224,7 +198,7 @@ private:
     float             twinMean_ = -1.0f, twinSpread_ = -1.0f;
     float             twinIn_ = 0.0f, twinInStep_ = 0.0f;
     bool              twinActive_ = false;
-    dsp::Reverse      reverse_;
+    dsp::Shimmer      shimmer_; // ATTACK's third position (ADR 0024)
     float             eraMakeup_ = 1.0f;
     // Ducking (ADR 0014) and the limiter (SPEC §4.10).
     dsp::Tilt         tilt_;
@@ -240,22 +214,24 @@ private:
     // tank restarts in the new voicing, and both fade back in.
     int   activeSpace_ = 1, flipPhase_ = 0; // 0 steady, 1 fading out, 2 fading in
     float flipGain_ = 1.0f, flipStep_ = 0.0f;
-    // ATTACK = REVERSE: crossfade between the forward wet and the reverse swell.
-    float reverseMix_ = 0.0f, reverseTarget_ = 0.0f, reverseFeed_ = 0.0f; // reverseFeed_: the taps into the short reverb
-    bool  reverseRunning_ = false;
+    // ATTACK = SHIMMER: the octave's send fades in and out over kAttackFadeSeconds; it rests while
+    // frozen. shimmerAmount_: TIME, how much shimmer.
+    float shimmerMix_ = 0.0f, shimmerTarget_ = 0.0f, shimmerAmount_ = 0.0f;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
+#ifndef IV_FIXED_VOICINGS
+    float predelayXfade_ = 0.0f, pdOld_ = 0.0f, pdLastTarget_ = 0.0f, pdRest_ = 0.0f; // prototypes
+    int   pdXfLen_ = 1, pdXfLeft_ = 0;
+#endif
     dsp::BbdStage   bbd_;   // ERA's bucket-brigade and radio, on the wet (ADR 0021, dsp/EraStages.h)
     dsp::RadioStage radio_;
     float bbdW_ = 0, radioW_ = 0;
     float decayMakeup_ = 1.0f, decayGain_ = 1.0f, decayGainNow_ = 1.0f; // DECAY's level make-up (v1.0.28)
-    float reverseGain_ = 1.0f, reverseGainNow_ = 1.0f;                     // ... and REVERSE's
     float tapeDrive_ = 0.0f;
     bool  tapeOn_ = true; // test hook (setTapeOut)
     float tapeMix_ = 0.0f; // tape out's fade in/out
     dsp::TapeOut tape_[2]; // tape out (v1.0.27, dsp/Tape.h)
     float diffMotionNow_ = 0.0f, diffMotionPhase_ = 0.0f; // the PLATE's wandering input allpass, samples
     float hallInLoop_ = voicing::kHallInLoopDiffusion; // setHallInLoopDiffusion overrides it (renders/hall_diffusion)
-    float reverseMean_ = -1.0f;
 
     // Freeze (ADR 0009–0011). Button and gate edges this block, by offset.
     struct Edge {
@@ -287,26 +263,6 @@ private:
     // Scratch for one chunk.
     float bufL_[kChunk] = {}, bufR_[kChunk] = {}, wetL_[kChunk] = {}, wetR_[kChunk] = {};
     float twinInL_[kChunk] = {}, twinInR_[kChunk] = {}, twinL_[kChunk] = {}, twinR_[kChunk] = {};
-    float revInL_[kChunk] = {}, revInR_[kChunk] = {}, revL_[kChunk] = {}, revR_[kChunk] = {};
-#ifndef IV_FIXED_VOICINGS
-    int   altMode_ = 0;
-    float altTarget_ = 0.0f, altMix_ = 0.0f, altTime_ = 0.0f;
-    float predelayXfade_ = 0.0f, pdOld_ = 0.0f, pdLastTarget_ = 0.0f, pdRest_ = 0.0f;
-    int   pdXfLen_ = 1, pdXfLeft_ = 0;
-    float shimSrcL_[kChunk] = {}, shimSrcR_[kChunk] = {}; // the last chunk's tank wet
-    dsp::proto::Shimmer shimUp_, shimDown_, shimSmooth_, shimMoving_, shimEvolving_; // round 1; round 2 (4 .. 6)
-    dsp::proto::Shimmer shimClean_, shimCleanMoving_, shimInput_, shimCleanDark_; // round 3 (8 .. 11)
-    dsp::proto::Shimmer shimInputR4_, shimFeedR4_, shimFeedDarkR4_; // round 4 (12 .. 14): random onsets
-    // Alternatives round 2: 15 reverse into the tank, 16 reversed tail, 17 echo-verb, 18 echo-verb with
-    // the tank fed back into the echo.
-    dsp::proto::ReverseGrains revA_[2], revB_[2];
-    dsp::proto::TapeEcho      echo_;
-    float echoTapL_[kChunk] = {}, echoTapR_[kChunk] = {}, altFb_ = 0.5f;
-    // 19 NONLINEAR gate (REVERSE's taps re-shaped); 20 GATED ROOM (the main wet gated by the input).
-    float gateRamp_ = 0.0f;
-    int   gateHold_ = 0;
-    dsp::proto::Grains  grains_;
-#endif
 };
 
 } // namespace iv

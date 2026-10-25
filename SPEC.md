@@ -6,6 +6,7 @@
 **Status:** Spec **v1.0 (frozen)**, 21 Oct 2026. Input: `IMMENSIO_BRIEF.md`. Vocabulary: `CONTEXT.md`. Decisions: `docs/adr/` (0001–0017; index in `docs/adr/README.md`). Session record: `docs/spec-session.md`. Changes after freeze: new ADR + changelog entry. Numbers marked *(start)* are starting guesses; tuned numbers replace them as milestones confirm them.
 
 ### Changelog
+- v1.0.33 — owner's picks (25 Oct 2026; `renders/shimmer4` B "the most musical and pitch-accurate", then `renders/attack_alts2` "Shimmer wins hands-down" over two reverses, two echo-verbs, a nonlinear gate and a gated room; new ADR 0024, amending ADR 0015): **ATTACK's third position is SHIMMER, not REVERSE.** What you play, shifted an octave up, joins the input into the reverb (no feedback: one octave, steady and in tune); TIME sets how much. Found on the way (four rounds): fold-back above 12 kHz heard as "bit crushing" (an 8th-order 6 kHz filter before the shift), and heads at fixed spacings combing certain notes' octaves away, heard as out-of-tune notes (random grain onsets). REVERSE's taps, short reverb, mappings and level tables are removed. Release flash +224 B (112,060 B).
 - v1.0.32 — owner's pick (25 Oct 2026; `renders/massive_drop`, E: "solves the abrupt level drop, and extends the tail… truly MASSIVE"; new ADR 0023): **MASSIVE's shortest tail lasts at least 6 trips round its lines** (was 3, v1.0.21). A short MASSIVE at a big SIZE no longer holds one trip after the music stops and then drops ~14 dB: at most ~10 dB a trip, a smooth fade. The shortest MASSIVE is now ~2.1 s at SIZE 0, ~5 s at noon, ~7 s at SIZE 0.7 and 12 s at full SIZE; its level is kept by `massiveDecayLevelTrim` as before.
 - v1.0.31 — owner's pick (25 Oct 2026; `renders/massive_highs`; new ADR 0022): **MASSIVE's highs ring as long as its body,** as Supermassive's Andromeda and Sagittarius do (they don't damp in the loop). MASSIVE gets its own high-end T60 share (`kMassiveHighT60Ratio` 1.43, 1 under the Neve's ×0.7) in place of the shared 0.45; TONE and ERA scale it as before. At 5 and 15 s its 8 kHz T60 goes from 0.43 of the 1 kHz T60 to 1.0. Infinite DECAY and a frozen pad are unchanged (the share glides back across DECAY's crossover); the twin follows MASSIVE.
 - v1.0.30 — owner's picks (25 Oct 2026; `renders/era_discrete`, `era_v2`, `era_v2b`, `era_v2c`; new ADR 0021, superseding ADR 0003): **ERA runs from sweet to gritty, each era on its own, over the Neve's warmth.** Five eras in equal stretches: Neve (the base, under every era), Midiverb, a bucket-brigade delay line (new: dark, the compander's breathing, the clock's aliasing, its grit growing across its stretch), cassette, AM radio (new: a station fading on its own path while the receiver's static swells with the AGC, soft hiss, three-layer static, a slow detune, rare drift-offs and a faint hum at the gritty end). The BBD and radio are on the wet after the loop. μ-law and vintage reads are removed (they sounded like the cassette); ERA fully CCW is now the Neve, not clean, and ERA's default moves from 0.2 to 0.1 (the middle of the Neve; 0.2 is where the Midiverb now starts). Loudness within ±1 dB across the knob; holds, silence, MIX 0 passthrough and click-free sweeps checked in `test_era`.
@@ -128,17 +129,17 @@ Pots are named by panel position P1–P7, in reading order, as in Resilio ADR 00
 | P4 | **ERA** | Neve → Midiverb → Bucket-brigade → Cassette → AM radio, each on its own over the Neve (ADR 0021, 0004, 0005) | Five equal stretches of 20 %; each era comes in over the first third of its stretch as the one before goes. §4.7 | gliding 60 ms (rate changes crossfade) |
 | P5 | **SIZE** | The space. Plate / Hall: scale. Massive: long wash → boundless wash, predelay grows a little (ADR 0007, v1.0.6). Moves bend pitch like tape (ADR 0012). While frozen it plays the companion | Plate: tank scale 0.5 → 1.59 (v1.0.11). Hall: mean line delay 35 → 260 ms, finite T60 × 0.49 → 1 (v1.0.8, v1.0.17). Massive: mean line delay 0.35 → 2 s, exponential; delay-ratio spread (Warp) 0.4 → 1; in-loop and input diffusion 0.45 → 1 (×); predelay 0 → 100 ms (∝ x²) (v1.0.6). Slew-limited to ≤ ±1 semitone of bend (≤ 6 % delay change per second); a fast move becomes a swoop over up to ~1.5 s | slew-limited (§4.3) |
 | P6 | **DRIFT** | Bipolar pitch movement in the tank (ADR 0012) | Dead zone 0.47–0.53, which leaves only the anti-metallic floor (±1–2 cents per line, slow random). Left: tape wow 0.2–1 Hz up to ±15 cents, flutter 5–9 Hz up to ±3 cents, random and never repeating. Right: Wander (v1.0.20): quick, small random movement, 1 → 2.25 Hz up to ±20 cents at full, each line's rate fanned out ±50 % so they never sway together (Lexicon Random Hall, Valhalla Random Space). Below 300 Hz the tail stays still (v1.0.18) | gliding 80 ms |
-| P7 | **TIME** | The attack's timing, per ATTACK (ADR 0015). NORMAL: predelay. BLOOM: swell time. REVERSE: reverse length | NORMAL: predelay 0 → 250 ms (∝ x²) *(start)*. BLOOM: swell time 0.1 → 4 s, exponential (shorter keeps a swell from clashing with the harmony coming in). REVERSE: segment length 0.2 → 2 s, exponential | gliding 80 ms (REVERSE length changes at the next segment) |
+| P7 | **TIME** | The attack's timing or amount, per ATTACK (ADR 0015, 0024). NORMAL: predelay. BLOOM: swell time. SHIMMER: how much shimmer | NORMAL: predelay 0 → 250 ms (∝ x²) *(start)*. BLOOM: swell time 0.1 → 4 s, exponential (shorter keeps a swell from clashing with the harmony coming in). SHIMMER: the octave's send 0 → full, linear | gliding 80 ms |
 
 ### Switches
 
 | Switch | Left | Centre | Right |
 |---|---|---|---|
 | SW0 **SPACE** | **PLATE**: Dattorro-family plate, dense, quick attack | **HALL**: the FDN voiced as a big room, normal attack | **MASSIVE**: the FDN voiced with swell, mass and long delays |
-| SW1 **ATTACK** | **NORMAL**: the sound enters the tank at once (Massive keeps a gentle built-in mass) | **BLOOM**: the tail swells in over TIME | **REVERSE**: classic reverse swell: each stretch of reverb plays backwards, rising to a cut; TIME sets the length |
+| SW1 **ATTACK** | **NORMAL**: the sound enters the tank at once (Massive keeps a gentle built-in mass) | **BLOOM**: the tail swells in over TIME | **SHIMMER** (v1.0.33, ADR 0024; was REVERSE): what you play, an octave up, joins it into the reverb; TIME sets how much |
 
 Which toggle is SW0 and which is SW1 follows the printed panel (confirmed at M0).
-Switch changes: SPACE crossfades ~100 ms; the old tail fades out while the new space takes the input, and only one big tank ever runs (ADR 0013). ATTACK crossfades ~50 ms on the wet; into or out of REVERSE, the forward and reversed wet crossfade over 50 ms.
+Switch changes: SPACE crossfades ~100 ms; the old tail fades out while the new space takes the input, and only one big tank ever runs (ADR 0013). ATTACK crossfades ~50 ms on the wet; into or out of SHIMMER, the octave's send fades over 50 ms.
 Ducking has no switch: it is 4:1 compression of the wet at infinite DECAY (ADR 0014, amended v1.0.17).
 
 ### Audio I/O
@@ -181,7 +182,7 @@ Level meters as Resilio (ADR 0031): LED 1–2 In L / In R, LED 3–4 Out L / Out
          │                               Midiverb 24 kHz box + bits)      │
          │                             (ducking: 4:1 on the wet, §4.9) ◄──┘
          │                                   │
-         │    diffused input ─► REVERSE: rising taps → short FDN (replaces the tank's wet, §4.11)
+         │    diffused input ─► SHIMMER: an octave up (8 grains, random onsets) ─► joins the input into the tank (§4.11)
          │                                   │
          └─frozen──► TWIN tank (same space) ─(paint, a little)─┘ (into the frozen pad)
                           │
@@ -241,10 +242,10 @@ Removed before the freeze, after the owner's demo listening: the knob became TIM
 ### 4.10 Output stage
 Era's wet stages (tape out, bucket-brigade, AM radio) → soft limiter (ceiling −1 dBFS, Resilio-style) → MIX. The dry path is untouched.
 
-### 4.11 ATTACK and TIME (ADR 0015)
+### 4.11 ATTACK and TIME (ADR 0015, 0024)
 - **NORMAL:** TIME is predelay, 0 → 250 ms *(start)*. Massive adds its gentle built-in mass (§4.5) and Size's predelay.
 - **BLOOM:** the swell stage (§4.5) is set so the tail's envelope rises over TIME, 0.1 → 4 s, in every space (× m(Size) in Massive). A short TIME keeps a swell from clashing with the harmony coming in (owner's demo note).
-- **REVERSE (the hardware reverse reverb, v1.0.9):** each note blooms into a swell that starts with it, rises over TIME (0.2 → 2 s) and stops; the reverb's envelope is reversed, nothing plays backwards (AMS RMX16 / Lexicon / Midiverb reverse programs). The diffused input feeds a 2 s delay with 32 taps per side spread over TIME (jittered, signs per side), rising 30 dB first to last *(start)*, into a short FDN of its own (8 lines, mean 20 → 90 ms with SIZE, T60 0.15 → 1 s with DECAY: how sudden the stop is) *(start)*. Its output replaces the tank's wet (+15.5 dB, loudness-matched); the big tank keeps running underneath, so leaving REVERSE crossfades back to a live tail. The same in every SPACE (MASSIVE adds its predelay). While frozen, REVERSE is bypassed with a 50 ms crossfade.
+- **SHIMMER (v1.0.33, ADR 0024; replaces REVERSE, v1.0.9-v1.0.32):** the diffused input, shifted an octave up, is sent into the tank with it; no feedback, so one octave, steady and in tune. The shifter: a delay line read by 8 heads, each sweeping a 0.4 s grain at twice the speed of time, faded by sin² of its place in it, starting each grain at a random extra delay (up to a grain), so no note's octave is combed away; an 8th-order low-pass at 6 kHz before the shift, so nothing folds back above 24 kHz; a 9 kHz one-pole and an 80 Hz high-pass after. TIME sets the send (0 → 1.2 × the input). The same in every SPACE. While frozen, SHIMMER rests (its send fades out over 50 ms); it keeps recording, so switching in finds the last moments ready, and its recording fades with a SPACE flip as the tank's input does.
 
 ---
 
@@ -259,7 +260,7 @@ Era's wet stages (tape out, bucket-brigade, AM radio) → soft limiter (ceiling 
 | Input gain, follower, hiss | ~40 | follower at control rate |
 | Predelay + input diffusion (8 allpasses, stereo) | ~120 | diffusers in DTCM |
 | Swell stage (BLOOM / Massive, 4 stages × 2 ch) | ~250 | SDRAM reads, sequential per line |
-| REVERSE segmenter (stereo write + reversed read + edge fades) | ~40 | SDRAM |
+| SHIMMER (8th-order feed filter, 8 heads x 2 ch, linear reads) | ~300 *(estimate; measured at M3)* | SDRAM |
 | FDN 8 lines: modulated allpass-interpolated reads | ~350 | SDRAM; cost dominated by cache misses (to measure) |
 | FDN matrix (8-pt Walsh) | ~30 | |
 | Loop chain × 8 (tilt, damping, saturation) | ~250 | cheap soft clip, `Select.h` VSEL |
@@ -278,7 +279,7 @@ Plate mode ~1,500 × 2 ≈ 30 %. Mitigations, if short: stagger coefficient rede
 | FDN lines (8 × 2.05 s mono, incl. modulation headroom) | ~3.2 MB | SDRAM | too big for internal RAM; reads are sequential per line, so the D-cache helps |
 | Swell stage (4 × 2 ch × 1 s) | ~1.5 MB | SDRAM | |
 | Predelay (stereo, 0.75 s: Size + TIME) | ~0.3 MB | SDRAM | |
-| REVERSE segments (2 × 2 s, stereo) | ~0.75 MB | SDRAM | |
+| SHIMMER's line (2 × 0.8 s, stereo, power of two) | ~0.5 MB | SDRAM | |
 | Plate engine (scale up to 1.59, stereo taps) | ~150 KB | AXI SRAM | random-ish taps; internal is faster than SDRAM |
 | Twin tank (an FDN and a Plate, as the big tank) | ~3.5 MB | SDRAM | runs only while frozen (v1.0.7) |
 | Input diffusers | ~20 KB | DTCM | hottest loop |
@@ -304,7 +305,7 @@ As Resilio §6: `core/` (params + dsp, no platform includes), `host/render` (CLI
 immensio-versio/
   CMakeLists.txt
   core/params/   ParamSpec.h, Mappings.h, EraVoicing.h, SpaceVoicing.h, GestureReader.h
-  core/dsp/      Plate.h/.cpp, Fdn.h/.cpp, Swell.h, Reverse.h, LoopChain.h, Era.h, Duck.h,
+  core/dsp/      Plate.h/.cpp, Fdn.h/.cpp, Swell.h, Shimmer.h, LoopChain.h, Era.h, Duck.h,
                  OutputBits.h, Oversampler.h, Filters.h, Select.h, Seed.h, SizeOpt.h, ProfileHook.h
   host/render, host/common, host/tests
   plugin/
@@ -337,8 +338,8 @@ immensio-versio/
 
 ### M4 — Massive mode + ATTACK
 - [A] Attack: the 10 → 90 % rise of the envelope on a burst matches the target within 20 %: NORMAL in Massive across Decay × Size (A₀·m); BLOOM across TIME in every space.
-- [A] REVERSE: each segment's envelope rises to its end, then cuts; no click-detector hits at segment edges; wet latency = TIME (±1 block), dry not delayed; frozen bypass is click-free.
-- [L] BLOOM at short TIME doesn't smear the harmony of a changing chord; REVERSE sounds like a classic reverse reverb.
+- [A] SHIMMER (v1.0.33): a note's octave is added in every SPACE; on its own the octave's level is even across the keyboard (within 4 dB over ten notes); at TIME 0 it's the plain reverb; no clicks on a held tone, coming in, or across a SPACE flip; it rests while frozen. *(Was REVERSE's segment checks.)*
+- [L] BLOOM at short TIME doesn't smear the harmony of a changing chord; SHIMMER is musical and pitch-accurate (owner, renders/shimmer4).
 - [A] Echoes → wash: at Size 0, the autocorrelation shows distinct repeats; at Size 1, echo density exceeds a threshold *(start)* within 300 ms.
 - [A] Infinite: a 10-minute render at Decay 1 holds the floor (RMS within ±3 dB of the target, no growth, no NaN), in every Era stage.
 - [L] CygnusX1 / DarkMatter / BensonArizona / Ice Floe "family": a slab with mass that swells in (NORMAL's gentle mass, and BLOOM for the slow Sagittarius / Andromeda swells).

@@ -4,7 +4,7 @@
 // metallic check; all three SPACEs matched in loudness; a frozen pad holds
 // its level for 5 minutes in every SPACE; painting adds a quiet layer to the
 // pad, boundedly; unfreeze and freeze are click-free; the twin answers SIZE
-// and DECAY while frozen and fades back out to the pad; REVERSE rests while
+// and DECAY while frozen and fades back out to the pad; SHIMMER rests while
 // frozen.
 
 #include "Metrics.h"
@@ -349,8 +349,9 @@ void clickFree()
     }
 }
 
-// ADR 0015: REVERSE rests while frozen (a still pad reversed is the same pad).
-void reverseRestsWhileFrozen()
+// ADR 0015, 0024: ATTACK's third position rests while frozen (REVERSE then, SHIMMER now): the pad
+// stays the still pad, no octave piling onto it.
+void shimmerRestsWhileFrozen()
 {
     std::vector<float> in(size_t(10.0f * kSr), 0.0f);
     for (size_t i = 0; i < size_t(2.0f * kSr); ++i) in[i] = 0.25f * noise();
@@ -358,15 +359,14 @@ void reverseRestsWhileFrozen()
     s.attack = 2;
     s.time = 0.4f;
     const Stereo out = render(in, s, {{2.0, true}, {2.1, false}});
-    // A pad played forwards is steady; one still reversing would cut out at
-    // every segment edge. Steady = small spread of 50 ms levels.
+    // A still pad is steady. Steady = small spread of 50 ms levels.
     double lo = 1e9, hi = -1e9;
     for (double t = 5.0; t < 9.0; t += 0.05) {
         const double db = rmsDb(out, t, t + 0.05);
         lo = std::fmin(lo, db);
         hi = std::fmax(hi, db);
     }
-    check(hi - lo < 6.0, "REVERSE rests while frozen: the pad is steady (50 ms levels within " + std::to_string(hi - lo) + " dB)");
+    check(hi - lo < 6.0, "SHIMMER rests while frozen: the pad is steady (50 ms levels within " + std::to_string(hi - lo) + " dB)");
 }
 
 } // namespace
@@ -421,7 +421,7 @@ int main()
     twin();
     paint();
     clickFree();
-    reverseRestsWhileFrozen();
+    shimmerRestsWhileFrozen();
     notMetallicUnmodulated();
     std::printf("%d failure(s)\n", failures);
     return failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;

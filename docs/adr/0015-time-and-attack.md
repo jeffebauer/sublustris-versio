@@ -34,3 +34,5 @@
 **Amendment (23 Oct 2026, owner's pick on `renders/swell_smear`; SPEC v1.0.16):** BLOOM smears its 24 taps with three allpasses per side sized to the gap between taps, so a hit through a long BLOOM swells instead of returning as ghost hits (the DSP audit's S1; flicker 3–7.5 → 2.7–6.1 dB). The taps close up by 5 % so the swell still peaks on time (the owner heard "the attack is a little slower"); its first 10 % still arrives 0.06–0.4 s later. BLOOM only: MASSIVE's built-in mass and the twin's swell keep their taps unsmeared.
 
 **Amendment (24 Oct 2026, owner's picks on `renders/knob_feel`; SPEC v1.0.21):** in MASSIVE, TIME's NORMAL predelay moves in straight steps (0–250 ms; x² was dead for its first quarter, MASSIVE's wet already arriving 0.3 s after a hit), and BLOOM starts at 0.12 s instead of 0.1 s (below 0.12 s the swell stage still passes the dry attack, so the first notch jumped).
+
+**Superseded in part (25 Oct 2026, ADR 0024; SPEC v1.0.33):** ATTACK's third position is SHIMMER, not REVERSE (the owner's pick over refined shimmers, two other reverses, echo-verbs and gates). NORMAL, BLOOM and TIME's other meanings stand.
