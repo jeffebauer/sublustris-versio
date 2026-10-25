@@ -1,12 +1,13 @@
 # Owner tasks
 
-**Last updated:** 25 Oct 2026, session 6 (SHIMMER built into the module and plugin, installed).
-**Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Rescan in Ableton to see it.
+**Last updated:** 25 Oct 2026, end of session 6 (SHIMMER, SIZE/TIME crossfade, CPU fitting v1.0.35-36, M0 passed, M3 rounds 1-9b).
+**Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Not yet in it: v1.0.35-36 (the 24 kHz tank, 12-point swell, fewer early reflections); say when you'd like it installed (Ableton closed).
 
 ## To do
 - [ ] **M3 CPU check, round 10: v1.0.36 and every era.** Flash `dist/immensio_versio_profile_M3_round10.bin`, let it run a lap (30 settings, ~3 min) plus the headroom test, then tell Claude. It times each era and ERA's cassette and radio stages on their own, for your question about what in them costs most.
 
 ### Decide
+- [ ] **Merge `claude/massive-air` into main?** It holds everything since v1.0.33 (SIZE/TIME crossfade, the CPU work, v1.0.34-36, the profile builds), 33 commits, all tests passing. Your OK first.
 
 ### Listen (after your notes)
 - [ ] **BLOOM's swell: other seeds** (your note: the 12 points "seemed to accentuate the mids"): http://192.168.1.238:8766/swell_seed/index.html. Measured: 12 and 24 points are equally even on noise and note by note; which notes stand out moves with TIME and the seed. B-D are the three most even seeds; E the old 24 points for reference.
@@ -25,7 +26,7 @@
 
 ## Waiting on Claude
 
-- **CPU, after round 9b.** The real limit (your headroom test): no drop-outs up to 96 % at the worst block, late blocks from 101 %, so the target is ~90 % at peak (not 75 %). PLATE fits (59-69 % avg, ~88 % peak). HALL 101-123 % and MASSIVE 115-129 % avg (worst 122 % avg / 127 % peak live) need ~30 % more. The spikes at a SPACE change and big SIZE jumps (150-210 %) are fixed (a prime table, sound unchanged; to confirm in round 10). Next: your early_hits pick, then more tuning of the tank's loop.
+- **CPU, after round 10.** Target ~90 % at peak (your headroom test). Built so far: the 24 kHz tank, 12-point swell, HALL 2 / MASSIVE 4 early reflections (v1.0.35-36), the prime table (spikes). Round 10 (yours to flash) measures every era and ERA's stages alone; then: ERA's cheaper paths (cassette's 4x tape, the radio's per-sample sin and divisions, per-block filter maths), sound-neutral first, any sound change as a page; then more tuning of the tank's loop.
 - **BLOOM's TIME and PLATE's SIZE by crossfade** (phase 2 of your pick C): they still slide; HALL and MASSIVE's SIZE and TIME's pre-delay are done (v1.0.34).
 - **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): build it for real. For 3 s after a flip both spaces hear the music while one crossfades into the other; it needs a second reverb running for those 3 s (the freeze's spare) and ~0.5-1 KB of flash, which has to be freed first (804 B left). A plan before building.
 - **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper; a later round if the shimmer is kept.
