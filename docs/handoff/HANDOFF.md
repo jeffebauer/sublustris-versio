@@ -53,7 +53,7 @@
   | m0test | 82,356 | 62 % |
 
 - **Listening pages:** none waiting (`renders/` holds only `_material` and `_material_sweep`, 626 MB). The ERA signatures reference page (https://claude.ai/artifact/AiR2JXPAaLbT8GeJseK3Vj) measures the **old** stacked ERA. The owner declined a re-measure for now.
-- **Phone listening:** `.claude/launch.json` "review-pages-lan" serves `renders/` on the Wi-Fi at port 8766 (http://192.168.1.100:8766/…; the IP comes from `ipconfig getifaddr en0`). See memory [[owner-reviews-on-phone]].
+- **Phone listening:** `.claude/launch.json` "review-pages-lan" serves `renders/` on the Wi-Fi at port 8766 (http://<IP>:8766/…; the IP changes, so take it from `ipconfig getifaddr en0` each time: .238 on 25 Oct 2026). See memory [[owner-reviews-on-phone]].
 
 ## In flight
 

@@ -6,7 +6,7 @@
 ## To do
 
 ### Decide
-- [ ] **CPU: how to fit the module** (it's ~2.3× over at worst). Claude's options: hear the tank at a lower internal sample rate (like classic digital reverbs: the tail's top end stops around 11-12 kHz), fewer swell points for BLOOM, fewer early reflections; each would come as a listening page, level-matched against today's sound.
+- [ ] **CPU: how to fit the module** (it's ~2.3× over at worst). Listen: http://192.168.1.238:8766/fit_cpu/index.html (`renders/fit_cpu`): B the tank at 24 kHz, C 12 swell points, D one early reflection per line, E all three, level-matched against today. Even E probably leaves MASSIVE with BLOOM near 90 % (target 75 %), so more work follows whichever you pick.
 
 ### Listen (after your notes)
 - Nothing open.
