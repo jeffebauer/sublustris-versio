@@ -17,7 +17,7 @@
 - [ ] **Play the plugin** (Immensio Versio, AU or VST3; rescan plug-ins first). It's v1.0.33 from branch `claude/massive-air`: everything in `main` plus MASSIVE's highs and shortest tail, ERA's era names, and **SHIMMER** on ATTACK's third position (TIME is how much). Notes welcome on anything; it goes into `main` when you say so.
 
 ### At the rack
-- [ ] **M3 CPU check, round 2: where the time goes.** Flash `dist/immensio_versio_profile_M3_round2.bin` (not `firmware/build/immensio_versio_profile.bin`, which is the old one; the new one's lines say `shim` and `twin`), let it run one full lap of all 24 settings (about 2 minutes; it shouldn't stop this time), and tell Claude when it has. Nothing in the sound changes; this build only measures each stage.
+- [ ] **M3 CPU check, round 3** (after Claude's speed-ups): flash the build Claude names and run a lap.
 
 ### When convenient
 - [ ] **Re-record Supermassive's short settings at a feedback that sounds like a reverb** (your note: at 0 % and 12 % it's separate delays): about 5 % for Andromeda's 2 s, or skip 2 s and record the longer settings you like (15 s, 30 s, infinite). Also **re-export three clipped Valhalla takes about 6 dB lower**: Plate Chrome 15 s, Plate Lithium 15 s and Supermassive Andromeda 100 % (measure and music). Also check Supermassive's DELAY: its first sound came at different times between takes (Sagittarius 421 / 38 / 3 ms, Andromeda 1.1 / 0.7 / 0.65 s).
@@ -25,7 +25,7 @@
 
 ## Waiting on Claude
 
-- **CPU: the module is over budget** (M3 round 1). Find where the time goes (wire up the per-stage timing, check memory placement and near-silent numbers), research how other Daisy reverbs fit, then a plan before changing the sound.
+- **CPU: the module is over budget, about 2.6× at worst** (M3 rounds 1-2). Plan: first the speed-ups that don't change the sound (the swell and the tanks reading memory in runs instead of hopping, the memory wipes on a SPACE change or freeze spread out so they don't stall, the per-block maths trimmed), then measure again (round 3). Only if that isn't enough, sound-changing options, each as a listening page. Waiting for your go-ahead.
 - **BLOOM's TIME and PLATE's SIZE by crossfade** (phase 2 of your pick C): they still slide; HALL and MASSIVE's SIZE and TIME's pre-delay are done (v1.0.34).
 - **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): build it for real. For 3 s after a flip both spaces hear the music while one crossfades into the other; it needs a second reverb running for those 3 s (the freeze's spare) and ~0.5-1 KB of flash, which has to be freed first (804 B left). A plan before building.
 - **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper; a later round if the shimmer is kept.
@@ -36,6 +36,7 @@
 
 ## Done
 
+- 25 Oct 2026: **M3 CPU check, round 2: where the time goes** (your run). Average load: PLATE 93-105 %, HALL 158-192 %, MASSIVE ~191-195 % (target ≤ 75 % at peak). The BLOOM swell takes ~47 % in every space, the tank 23-28 % (PLATE) and 77-127 % (HALL, MASSIVE), the per-block control 4-12 %, ERA 8 % when full, the rest ~15 %. A SPACE change stalls the audio ~130 ms (the tanks' memory is wiped in one go); a freeze likely stalls too (it wipes the twin). Plan in Waiting on Claude.
 - 25 Oct 2026: **M3 CPU check, round 1** (your run): PLATE alone takes 88–101 % of the processor on average and ~120 % at peak (target ≤ 75 % peak); the serial output stopped after 7 of 24 settings, all PLATE, with LED 3 red, most likely because the next setting ran past 100 % and left no time to print. The per-stage breakdown read 0 (not wired up yet). CPU work is now Claude's (Waiting on Claude).
 - 25 Oct 2026: **SIZE and TIME by crossfade are built** (SPEC v1.0.34, ADR 0025; your pick C): in HALL and MASSIVE a SIZE move no longer bends pitch, and TIME's pre-delay changes without the noise wash. Once the knob rests, the old setting fades into the new over 0.3 s; fast flicks don't click or drop out. Settings you don't touch sound exactly as before. Release flash 110,764 B (1,876 B under budget). Installed in Ableton.
 - 25 Oct 2026: **M0 hardware check passed** (your report: "everything worked as expected"): boot pattern, switches, button, knobs, gate and passthrough on the Versio. Next at the rack: the M3 CPU check.

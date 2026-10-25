@@ -13,7 +13,7 @@
 | M0 hardware | **Passed** (owner, 25 Oct 2026: "everything worked as expected") |
 | M1 Hall, M4 MASSIVE, M5 PLATE | Built and listened |
 | M2 | Criteria pass. **Not installed** in Ableton |
-| M3 | **Round 1 run 25 Oct 2026: over budget.** PLATE 88-101 % avg, ~120 % peak; output stalled after 7/24 corners (LED 3 red). SPLIT/PEAK read 0 (Engine doesn't mark sections) |
+| M3 | **Over budget (rounds 1-2, 25 Oct 2026).** Avg: PLATE ~100 %, HALL 158-192 %, MASSIVE ~195 %. Swell ~47 % everywhere (48 SDRAM taps per sample), tank 25 % / 77-127 %, ctl 4-12 %, ERA 8 %. SPACE flip stalls ~130 ms (tank resets clear ~30 MB SDRAM in one block); freeze resets the twin likewise. Profile build: `dist/immensio_versio_profile_M3_round2.bin` (branch 1f3a12d) |
 | M6 character | **Redesigned and listened:** ERA's five eras ("M6 also sounding excellent"; the ERA sweep "sounds excellent") |
 | M7 duck | Done |
 | M8 | Knob feel done; DECAY keeps the loudness (v1.0.28) |
