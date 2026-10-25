@@ -17,7 +17,7 @@
 - [ ] **Play the plugin** (Immensio Versio, AU or VST3; rescan plug-ins first). It's v1.0.33 from branch `claude/massive-air`: everything in `main` plus MASSIVE's highs and shortest tail, ERA's era names, and **SHIMMER** on ATTACK's third position (TIME is how much). Notes welcome on anything; it goes into `main` when you say so.
 
 ### At the rack
-- [ ] **M3 CPU check, round 3** (after Claude's speed-ups): flash the build Claude names and run a lap.
+- [ ] **M3 CPU check, round 3: after the first speed-ups.** Flash `dist/immensio_versio_profile_M3_round3.bin`, let it run one full lap (24 settings), and tell Claude.
 
 ### When convenient
 - [ ] **Re-record Supermassive's short settings at a feedback that sounds like a reverb** (your note: at 0 % and 12 % it's separate delays): about 5 % for Andromeda's 2 s, or skip 2 s and record the longer settings you like (15 s, 30 s, infinite). Also **re-export three clipped Valhalla takes about 6 dB lower**: Plate Chrome 15 s, Plate Lithium 15 s and Supermassive Andromeda 100 % (measure and music). Also check Supermassive's DELAY: its first sound came at different times between takes (Sagittarius 421 / 38 / 3 ms, Andromeda 1.1 / 0.7 / 0.65 s).
@@ -25,7 +25,7 @@
 
 ## Waiting on Claude
 
-- **CPU: the module is over budget, about 2.6× at worst** (M3 rounds 1-2). Plan: first the speed-ups that don't change the sound (the swell and the tanks reading memory in runs instead of hopping, the memory wipes on a SPACE change or freeze spread out so they don't stall, the per-block maths trimmed), then measure again (round 3). Only if that isn't enough, sound-changing options, each as a listening page. Waiting for your go-ahead.
+- **CPU: the module is over budget, about 2.6× at worst** (M3 rounds 1-2). Done so far, all without changing the sound (renders identical to the bit): the swell reads in runs; each delay line starts on its own part of the processor's cache (they were all fighting over the same few places); a SPACE change or freeze no longer wipes memory in one go (it stalled the audio ~130 ms). Next: measure (round 3), then the tanks' reads and the per-block maths if still needed.
 - **BLOOM's TIME and PLATE's SIZE by crossfade** (phase 2 of your pick C): they still slide; HALL and MASSIVE's SIZE and TIME's pre-delay are done (v1.0.34).
 - **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): build it for real. For 3 s after a flip both spaces hear the music while one crossfades into the other; it needs a second reverb running for those 3 s (the freeze's spare) and ~0.5-1 KB of flash, which has to be freed first (804 B left). A plan before building.
 - **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper; a later round if the shimmer is kept.
