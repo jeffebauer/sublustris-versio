@@ -28,11 +28,35 @@ bool isPrime(uint32_t n)
     return true;
 }
 
+// Which odd numbers are prime, up to every line a 24 kHz tank can have at a 96 kHz host (two such
+// rates' worth), sieved once at the first prepare(). The search by trial division ran for 16 lines
+// at every SIZE change and SPACE flip: blocks of 150-210 % on the module, drop-outs (M3 round 9b).
+// Odd n <-> bit n / 2; beyond the table, trial division as before. The same primes either way.
+constexpr uint32_t kSieveMax = uint32_t(voicing::kFdnMaxLineSeconds * 48000.0f) + 64u;
+uint32_t           gOddComposite[(kSieveMax / 2 + 31) / 32];
+bool               gSieved = false;
+
+IV_NOINLINE IV_SIZE_OPT void sievePrimes()
+{
+    for (uint32_t p = 3; p * p < kSieveMax; p += 2)
+        if (!(gOddComposite[(p / 2) >> 5] & (1u << ((p / 2) & 31u))))
+            for (uint32_t q = p * p; q < kSieveMax; q += 2 * p) gOddComposite[(q / 2) >> 5] |= 1u << ((q / 2) & 31u);
+    gSieved = true;
+}
+
+bool isPrimeFast(uint32_t n)
+{
+    if (n >= kSieveMax || !gSieved) return isPrime(n);
+    if (n < 3) return n == 2;
+    if (!(n & 1u)) return false;
+    return !(gOddComposite[(n / 2) >> 5] & (1u << ((n / 2) & 31u)));
+}
+
 // The nearest prime at or above n not already taken by a lower line.
 uint32_t primeAtOrAbove(uint32_t n, const float* taken, int count)
 {
     for (;; ++n) {
-        if (!isPrime(n)) continue;
+        if (!isPrimeFast(n)) continue;
         bool clash = false;
         for (int i = 0; i < count; ++i) clash |= uint32_t(taken[i]) == n;
         if (!clash) return n;
@@ -49,6 +73,7 @@ float uniform(uint32_t& s) // −1..1
 
 IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed, float maxLineSeconds)
 {
+    if (!gSieved) sievePrimes();
     sampleRate_ = sampleRate;
     shelfK_ = lossShelfK(sampleRate);
     maxLen_ = maxLineSeconds * sampleRate - 4.0f;
