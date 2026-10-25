@@ -18,13 +18,15 @@ PROFILE_BLOCK ?= 48
 # Profile-only switches (overnight review, 26 Oct 2026; firmware/README.md "profile"):
 #   PROFILE_FZ=0          the profile build without flush-to-zero (FPSCR/FPDSCR.FZ)
 #   PROFILE_SDRAM_TIGHT=0 the corner lap at libDaisy's SDRAM timing (the micro-tests still try 3 / 3)
+#   PROFILE_TWIN_STOP_FAST=0 the profile's twin stopping as release does (on its 1.5 s level)
 # A non-default value gets its own object directory and .bin name (immensio_versio_profile-nofz.bin, ...).
 #   PROFILE_ITCM=1        Engine.o, Fdn.o and Plate.o run from ITCM (STM32H750IB_flash_itcm.lds);
 #                         UNTESTED ON HARDWARE, so off by default (immensio_versio_profile-itcm.bin)
 PROFILE_FZ ?= 1
 PROFILE_SDRAM_TIGHT ?= 1
+PROFILE_TWIN_STOP_FAST ?= 1
 PROFILE_ITCM ?= 0
-PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(PROFILE_ITCM)),-itcm)
+PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(PROFILE_ITCM)),-itcm)$(if $(filter 0,$(PROFILE_TWIN_STOP_FAST)),-twinslow)
 
 ifeq ($(MODE),m0test)
   TARGET    = immensio_versio_m0test
@@ -32,7 +34,8 @@ ifeq ($(MODE),m0test)
 else ifeq ($(MODE),profile)
   TARGET    = immensio_versio_profile$(PROFILE_TAG)
   MODE_DEFS = -DIV_MODE_PROFILE -DIV_PROFILE_HOOKS -DIV_PROFILE_FZ=$(PROFILE_FZ) \
-              -DIV_PROFILE_SDRAM_TIGHT=$(PROFILE_SDRAM_TIGHT) -DIV_PROFILE_ITCM=$(PROFILE_ITCM)
+              -DIV_PROFILE_SDRAM_TIGHT=$(PROFILE_SDRAM_TIGHT) -DIV_PROFILE_ITCM=$(PROFILE_ITCM) \
+              $(if $(filter 1,$(PROFILE_TWIN_STOP_FAST)),-DIV_TWIN_STOP_FAST)
   ifeq ($(PROFILE_ITCM),1)
     LDSCRIPT = STM32H750IB_flash_itcm.lds
   endif

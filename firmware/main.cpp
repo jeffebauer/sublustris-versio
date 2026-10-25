@@ -84,6 +84,54 @@ void SdramWriteAllocate()
     __DSB();
     __ISB();
 }
+
+#if !defined(IV_MODE_M0TEST)
+// The cycle counter: the profile times with it; the SDRAM timing change below waits on it.
+void StartCycleCounter()
+{
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->LAR    = 0xC5ACCE55; // unlock (Cortex-M7)
+    DWT->CYCCNT = 0;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+}
+
+// SDRAM at datasheet timing, TRP / TRCD 3 / 3 instead of libDaisy's 16 / 10 (overnight review, lit-m7
+// 4.3 Finding A; the reasoning and RM0433's rules at "SDRAM timing" in the profile section). M3 round 11
+// (26 Oct 2026): SDRAMCHK 0 / 0 / 0, SDRAM reads 34 -> 17 cycles, a MASSIVE tank sample -25 %. Release
+// sets it at boot, right after SdramWriteAllocate(), before anything uses the SDRAM.
+constexpr uint32_t kTightTrp = 3, kTightTrcd = 3; // SDCLK cycles
+
+void SdramPrechargeAll()
+{
+    __DSB();
+    FMC_Bank5_6_R->SDCMR = FMC_SDCMR_MODE_1 | FMC_SDCMR_CTB1; // MODE 010: PALL, bank 1, NRFS 0, MRD 0
+    __DSB();
+    const uint32_t t0 = DWT->CYCCNT;
+    while (DWT->CYCCNT - t0 < 1000u) { // ~2 us
+    }
+}
+
+// cleanCache false: only straight after SdramWriteAllocate() (which cleans the D-cache) with nothing
+// having touched the SDRAM since, as release does at boot (the clean costs ~100 B of flash).
+void SdramSetTiming(uint32_t sdtr, bool cleanCache = true)
+{
+    __disable_irq();
+    if (cleanCache) SCB_CleanInvalidateDCache();
+    __DSB();
+    __ISB();
+    SdramPrechargeAll();
+    FMC_Bank5_6_R->SDTR[0] = sdtr;
+    __DSB();
+    SdramPrechargeAll();
+    __enable_irq();
+}
+
+uint32_t SdtrWith(uint32_t base, uint32_t trp, uint32_t trcd)
+{
+    return (base & ~(FMC_SDTRx_TRP_Msk | FMC_SDTRx_TRCD_Msk)) | ((trp - 1u) << FMC_SDTRx_TRP_Pos)
+         | ((trcd - 1u) << FMC_SDTRx_TRCD_Pos);
+}
+#endif
 #if !defined(IV_MODE_M0TEST)
 // The Engine is built at boot (placement new at the top of main), not as a
 // plain global: an object with default member values is .data, stored in
@@ -511,15 +559,19 @@ void BuildCornerTable()
         }
     }
     // The extra corners: MASSIVE, Neve, DECAY full. Frozen: 6 s, so most of it is past the freeze's
-    // glide (the twin runs from the press on). The SIZE move: 6 s, four moves.
+    // glide (the twin runs from the press on). The SIZE move: 6 s, four moves. Frozen last (round 12):
+    // in round 11 it came first and its twin rang on through SHIMMER, the SIZE move and the headroom
+    // test (~14 % each that wasn't theirs); MeasureCorner now runs the engine on, untimed, until the
+    // twin stops, and the profile's Core has the review's twin-stop fix (Makefile PROFILE_TWIN_STOP_FAST,
+    // IV_TWIN_STOP_FAST in Engine.cpp: the twin ends on its 50 ms level, ~15-24 s sooner).
     const struct {
         float size, seconds;
         int   kind;
         const char* name;
     } extra[3] = {
-        {1.0f, 6.0f, kFrozen, "MASSIVE S1 neve FROZEN+twin"},
         {1.0f, 3.0f, kShimmerCorner, "MASSIVE S1 neve SHIMMER"},
         {kSizeMoveLow, 6.0f, kSizeMove, "MASSIVE neve SIZE .3<>.8"},
+        {1.0f, 6.0f, kFrozen, "MASSIVE S1 neve FROZEN+twin"},
     };
     for (const auto& e : extra) {
         Corner& c  = gCorners[idx++];
@@ -585,14 +637,6 @@ void ProfMark(int section)
     gProfLast = now;
 }
 
-void StartCycleCounter()
-{
-    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-    DWT->LAR    = 0xC5ACCE55; // unlock (Cortex-M7)
-    DWT->CYCCNT = 0;
-    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-}
-
 struct Result {
     int      index;
     float    avg, max, min;
@@ -600,6 +644,8 @@ struct Result {
     uint64_t split[kNumSections];
     uint32_t peak[kNumSections];
     size_t   samples;
+    int      maxBlock;   // the block (from the corner's start) that took longest: what spikes?
+    int      twinOnMs;   // frozen corner: how long the twin ran on after the corner (untimed)
 };
 
 // The audio runs (codec, SAI and DMA as in release) but plays silence: the Engine is timed in the
@@ -697,44 +743,15 @@ void SetFlushToZero(bool on)
 // and TRP / TRC live only in FMC_SDTR1. A precharge-all before and after (RM0433: before changing
 // RBURST/RPIPE, "to make sure ongoing operations are complete"), interrupts off, the D-cache cleaned
 // first so no write-back is in flight. The H7 has no SDSR busy flag: a PALL takes tRP (<= 16 SDCLK,
-// 160 ns), so a 2 us wait covers it. Release never runs this (the owner decides after SDRAMCHK).
+// 160 ns), so a 2 us wait covers it. The functions are shared with release (above, after
+// SdramWriteAllocate): round 11's SDRAMCHK read 0 / 0 / 0 at 3 / 3, so release runs it at boot too.
 #ifndef IV_PROFILE_ITCM
 #define IV_PROFILE_ITCM 0
 #endif
 #ifndef IV_PROFILE_SDRAM_TIGHT
 #define IV_PROFILE_SDRAM_TIGHT 1 // keep 3 / 3 for the corner lap (0: back to libDaisy's after the tests)
 #endif
-constexpr uint32_t kTightTrp = 3, kTightTrcd = 3; // SDCLK cycles
 uint32_t           gSdtrLibDaisy = 0;             // FMC_SDTR1 as libDaisy left it
-
-void SdramPrechargeAll()
-{
-    __DSB();
-    FMC_Bank5_6_R->SDCMR = FMC_SDCMR_MODE_1 | FMC_SDCMR_CTB1; // MODE 010: PALL, bank 1, NRFS 0, MRD 0
-    __DSB();
-    const uint32_t t0 = DWT->CYCCNT;
-    while (DWT->CYCCNT - t0 < 1000u) { // ~2 us
-    }
-}
-
-void SdramSetTiming(uint32_t sdtr)
-{
-    __disable_irq();
-    SCB_CleanInvalidateDCache();
-    __DSB();
-    __ISB();
-    SdramPrechargeAll();
-    FMC_Bank5_6_R->SDTR[0] = sdtr;
-    __DSB();
-    SdramPrechargeAll();
-    __enable_irq();
-}
-
-uint32_t SdtrWith(uint32_t base, uint32_t trp, uint32_t trcd)
-{
-    return (base & ~(FMC_SDTRx_TRP_Msk | FMC_SDTRx_TRCD_Msk)) | ((trp - 1u) << FMC_SDTRx_TRP_Pos)
-         | ((trcd - 1u) << FMC_SDTRx_TRCD_Pos);
-}
 
 // SDRAMCHK: the integrity test for a timing. 8 MB at 24..32 MB of the SDRAM (gLarge ends at
 // ~23.8 MB; nothing else lives there), an address-derived pattern written in order and read back
@@ -1110,7 +1127,10 @@ Result MeasureCorner(int index, float fs)
             gProfPrev[k] = gProfAcc[k];
         }
         sum += load;
-        if (load > r.max) r.max = load;
+        if (load > r.max) {
+            r.max      = load;
+            r.maxBlock = b;
+        }
         if (load < r.min) r.min = load;
         ++blocks;
         r.samples += kBlockSize;
@@ -1120,6 +1140,17 @@ Result MeasureCorner(int index, float fs)
     for (int k = 0; k < kNumSections; ++k) {
         r.split[k] = gProfAcc[k];
         r.peak[k]  = gProfPeak[k];
+    }
+    // After the unfreeze: run on, untimed, until the twin stops (capped at 30 s), so the next corner and
+    // the headroom test start without it, and report how long that took.
+    if (c.kind == kFrozen) {
+        const int cap = int(30.0f * fs) / kBlockSize;
+        int       n   = 0;
+        for (; n < cap && engine.twinActive(); ++n) {
+            for (int i = 0; i < kBlockSize; ++i) bufL[i] = bufR[i] = 5.0e-4f * NextNoise();
+            engine.process(bufL, bufR, outL, outR, kBlockSize);
+        }
+        r.twinOnMs = int(float(n) * float(kBlockSize) * 1000.0f / fs);
     }
     return r;
 }
@@ -1218,7 +1249,14 @@ int main()
             AppendInt(p, end, int(fs));
             AppendStr(p, end, " Hz | ~");
             AppendInt(p, end, cyclesPerSample);
-            AppendStr(p, end, " cyc/sample\r\n");
+            AppendStr(p, end, " cyc/sample | max at block ");
+            AppendInt(p, end, r.maxBlock);
+            if (c.kind == kFrozen) {
+                AppendStr(p, end, " | twin on ");
+                AppendInt(p, end, r.twinOnMs);
+                AppendStr(p, end, " ms after");
+            }
+            AppendStr(p, end, "\r\n");
 
             // Where the time goes, each section as % of the whole budget
             // (10,000 cycles per sample): cycles / (samples x 10) = tenths of a %.
@@ -1679,6 +1717,8 @@ int main()
     new (gEngineStorage) iv::Engine(); // before anything touches it (see gEngineStorage)
     hw.Init(true); // boost to 480 MHz
     SdramWriteAllocate();
+    StartCycleCounter();
+    SdramSetTiming(SdtrWith(FMC_Bank5_6_R->SDTR[0], kTightTrp, kTightTrcd), false); // M3 round 11: SDRAMCHK clean
     hw.SetAudioBlockSize(kBlockSize);
     engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats, gAxi, kAxiFloats);
     engine.prepare(hw.AudioSampleRate(), kBlockSize);

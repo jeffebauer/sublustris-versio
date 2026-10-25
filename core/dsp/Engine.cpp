@@ -953,6 +953,8 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             float lvl = activeSpace_ == 0 ? twinPlate_.levelDb() : twinFdn_.levelDb();
 #ifndef IV_FIXED_VOICINGS
             if (twinStopFast_) lvl = activeSpace_ == 0 ? twinPlate_.fastLevelDb() : twinFdn_.fastLevelDb(); // setTwinStopFast
+#elif defined(IV_TWIN_STOP_FAST) // the firmware's profile build (M3 round 12), which has no hooks
+            lvl = activeSpace_ == 0 ? twinPlate_.fastLevelDb() : twinFdn_.fastLevelDb();
 #endif
             if (!gesture_.frozen() && twinIn_ == 0.0f && lvl < -100.0f) twinActive_ = false;
             // Painting (holding) copies a little of the twin into the pad: what you played becomes a layer of it.
