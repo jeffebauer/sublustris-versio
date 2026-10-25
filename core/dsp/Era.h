@@ -19,6 +19,7 @@
 // Every loop gain stays ≤ 1 (SPEC §2.3 rule 2): the low-pass and the soft
 // clip only ever take energy out.
 #include "dsp/Oversampler.h"
+#include "dsp/SizeOpt.h"
 #include "params/EraVoicing.h"
 
 #include <cmath>
@@ -86,18 +87,7 @@ public:
 
     float process(float x)
     {
-        // Soft saturation, always on; Neve adds even harmonics, the
-        // cassette drives it harder (level-compensated). The even term's
-        // own DC is taken off it (its slow mean), so the loop needs no DC
-        // blocker, which would drain the lows of an infinite tail.
-        const float d = mix_.drive;
-        float even = 0.0f;
-        if (mix_.even > 0.0f) {
-            const float sq = d * x * d * x;
-            evenMean_ += evenCoeff_ * (sq - evenMean_);
-            even = mix_.even * (sq - evenMean_);
-        }
-        float y = softClip(d * x + even, voicing::kSatCeiling) / d;
+        float y = saturate(x, mix_.drive, mix_.even, evenCoeff_, evenMean_);
         // Midiverb box.
         if (mix_.midiEngage > 0.0f) {
             const float boxed = box(y);
@@ -106,10 +96,44 @@ public:
         return y;
     }
 
+    // process() over a block of one line (the line-major tank, Fdn::lineFast): io[s] = post *
+    // process(pre * io[s]), the same operations in the same order, with the mix and the even term's
+    // mean in locals (stores into io can't move them).
+    void run(float* io, int m, float pre, float post)
+    {
+        if (mix_.midiEngage > 0.0f) {
+            for (int s = 0; s < m; ++s) io[s] = post * process(pre * io[s]);
+            return;
+        }
+        const float d = mix_.drive, ev = mix_.even, ec = evenCoeff_;
+        float mean = evenMean_;
+        for (int s = 0; s < m; ++s) io[s] = post * saturate(pre * io[s], d, ev, ec, mean);
+        evenMean_ = mean;
+    }
+
 private:
+    // Soft saturation, always on; Neve adds even harmonics, the cassette
+    // drives it harder (level-compensated). The even term's own DC is taken
+    // off it (its slow mean), so the loop needs no DC blocker, which would
+    // drain the lows of an infinite tail. At the Neve the drive is 1, and
+    // x / 1 is x exactly: the divide (~16 cycles on the M7) is skipped.
+    static float saturate(float x, float d, float ev, float ec, float& mean)
+    {
+        float even = 0.0f;
+        if (ev > 0.0f) {
+            const float sq = d * x * d * x;
+            mean += ec * (sq - mean);
+            even = ev * (sq - mean);
+        }
+        float y = softClip(d * x + even, voicing::kSatCeiling);
+        if (d != 1.0f) y /= d;
+        return y;
+    }
+
     // 48 → 24 → 48 kHz with truncation at 24 kHz. One sample in, one out
-    // (one sample late: pairs are formed on the odd samples).
-    float box(float x)
+    // (one sample late: pairs are formed on the odd samples). One shared copy (flash): process() is
+    // inlined both into the tank's fast path (LoopEra::run) and into its slow one.
+    IV_NOINLINE float box(float x)
     {
         // Still lows' low tank (12 kHz, v1.0.18): below ~300 Hz the box's halfbands and dark loop are
         // flat, and at this rate they'd darken the lows every pass; only the 13 bits stay.
