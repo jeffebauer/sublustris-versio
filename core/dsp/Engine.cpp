@@ -29,10 +29,8 @@ float approach(float now, float target, float step)
 } // namespace
 
 #ifndef IV_FIXED_VOICINGS
-void Engine::setFitPrototype(bool halfTank, int swellTaps, int earlyTaps)
+void Engine::setEarlyTapPrototype(int earlyTaps)
 {
-    halfTank_ = halfTank;
-    fitSwellTaps_ = swellTaps;
     fitEarlyTaps_ = earlyTaps;
     prepare(sampleRate_, maxBlockSize_);
 }
@@ -84,18 +82,15 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     ready_ &= twinSwell_.prepare(large_, sampleRate);
     twinSwell_.setSCurve(true); // eases in, then settles (owner, renders/swell_curve)
 #ifndef IV_FIXED_VOICINGS
-    swell_.setTapCount(fitSwellTaps_);
-    twinSwell_.setTapCount(fitSwellTaps_);
     fdn_.setEarlyTapCount(fitEarlyTaps_);
     twinFdn_.setEarlyTapCount(fitEarlyTaps_);
     lowFdn_.setEarlyTapCount(fitEarlyTaps_);
-    ready_ &= fdn_.prepare(large_, halfTank_ ? 0.5f * sampleRate : sampleRate, 0x1D5A7u);
-#else
-    ready_ &= fdn_.prepare(large_, sampleRate, 0x1D5A7u);
 #endif
+    // The tank and its twin at half the rate (v1.0.35, ADR 0026; dsp/HalfRate.h).
+    ready_ &= fdn_.prepare(large_, 0.5f * sampleRate, 0x1D5A7u);
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
     ready_ &= shimmer_.prepare(large_, sampleRate);
-    ready_ &= twinFdn_.prepare(large_, sampleRate, 0x7A1Eu);
+    ready_ &= twinFdn_.prepare(large_, 0.5f * sampleRate, 0x7A1Eu);
     ready_ &= lowFdn_.prepare(large_, sampleRate / float(kLowDecimate), 0x10F7u);
     lowFdn_.setGovernorLeader(&fdn_);
     {
@@ -142,6 +137,7 @@ IV_SIZE_OPT void Engine::reset()
     twinIn_ = twinInStep_ = 0.0f;
     twinMean_ = twinSpread_ = -1.0f;
     twinFdn_.reset();
+    twinHalf_.reset();
     twinPlate_.reset();
     twinSwell_.reset();
     for (auto& d : twinDiffuser_) d.clear();
@@ -163,11 +159,8 @@ IV_SIZE_OPT void Engine::reset()
     for (auto& c : xoZ_) for (auto& z : c) z[0] = z[1] = 0.0f;
     lowPhase_ = 0;
     lowPrev_[0] = lowPrev_[1] = lowCur_[0] = lowCur_[1] = 0.0f;
-#ifndef IV_FIXED_VOICINGS
-    for (auto& h : hbDown_) h.reset();
-    for (auto& h : hbUp_) h.reset();
-    hbPhase_ = hbQn_ = 0;
-#endif
+    tankHalf_.reset();
+    twinHalf_.reset();
     plate_.reset();
     shimmer_.reset();
     tilt_.reset();
@@ -253,6 +246,7 @@ void Engine::onGesture(GestureReader::Event e)
         if (!twinActive_) {
             twinFdn_.setInLoopDiffusion(activeSpace_ == 2 ? 1.0f : 0.0f); // before the reset, so it starts there
             twinFdn_.reset();
+            twinHalf_.reset();
             twinPlate_.reset();
             for (auto& d : twinDiffuser_) d.clear();
             twinSwell_.setAttackSeconds(activeSpace_ == 2
@@ -667,6 +661,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
             // (a jump in their amount rang on in them for ~100 ms, past the fade back in).
             applySpace(true, n, false);
             fdn_.reset();
+            tankHalf_.reset();
             lowFdn_.reset();
             plate_.reset();
             swell_.reset();
@@ -677,6 +672,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
             twinActive_ = false;
             twinIn_ = twinInStep_ = 0.0f;
             twinFdn_.reset();
+            twinHalf_.reset();
             twinPlate_.reset();
             twinSwell_.reset();
             for (auto& d : twinDiffuser_) d.clear();
@@ -822,7 +818,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         // The twin first, so painting can send it into the pad.
         if (twinActive_) {
             if (activeSpace_ == 0) twinPlate_.process(twinInL_, twinInR_, twinL_, twinR_, n);
-            else twinFdn_.process(twinInL_, twinInR_, twinL_, twinR_, n);
+            else twinHalf_.process(twinFdn_, twinInL_, twinInR_, twinL_, twinR_, n);
             const float lvl = activeSpace_ == 0 ? twinPlate_.levelDb() : twinFdn_.levelDb();
             if (!gesture_.frozen() && twinIn_ == 0.0f && lvl < -100.0f) twinActive_ = false;
             // Painting (holding) copies a little of the twin into the pad: what you played becomes a layer of it.
@@ -836,7 +832,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
 
         prof::mark(prof::kTwin);
         if (activeSpace_ == 0) plate_.process(bufL_, bufR_, wetL_, wetR_, n);
-        else if (!lowTank_) fdn_.process(bufL_, bufR_, wetL_, wetR_, n); // the test hook's one tank
+        else if (!lowTank_) tankHalf_.process(fdn_, bufL_, bufR_, wetL_, wetR_, n); // the test hook's one tank
         else processTwoTanks(n);
         prof::mark(prof::kTank);
 
@@ -914,47 +910,7 @@ void Engine::processTwoTanks(int n)
         if (lowPhase_ == 0) ++k;
         lowPhase_ = (lowPhase_ + 1) % kLowDecimate;
     }
-#ifndef IV_FIXED_VOICINGS
-    if (halfTank_) {
-        // The highs down to 24 kHz in pairs, through the tank, back up: two out per pair, queued (a chunk
-        // can end mid-pair).
-        int h = 0;
-        for (int i = 0; i < n; ++i) {
-            if (hbPhase_ == 0) {
-                hbFirst_[0] = bufL_[i];
-                hbFirst_[1] = bufR_[i];
-            } else {
-                halfInL_[h] = hbDown_[0].down(hbFirst_[0], bufL_[i]);
-                halfInR_[h] = hbDown_[1].down(hbFirst_[1], bufR_[i]);
-                halfOutL_[h] = halfOutR_[h] = 0.0f;
-                ++h;
-            }
-            hbPhase_ ^= 1;
-        }
-        if (h > 0) fdn_.process(halfInL_, halfInR_, halfOutL_, halfOutR_, h);
-        for (int j = 0; j < h; ++j) {
-            float a, b;
-            hbUp_[0].up(halfOutL_[j], a, b);
-            hbQ_[0][hbQn_] = a;
-            hbQ_[0][hbQn_ + 1] = b;
-            hbUp_[1].up(halfOutR_[j], a, b);
-            hbQ_[1][hbQn_] = a;
-            hbQ_[1][hbQn_ + 1] = b;
-            hbQn_ += 2;
-        }
-        const int out = hbQn_ < n ? hbQn_ : n, lead = n - out; // the very first chunk can be a sample short
-        for (int i = 0; i < n; ++i) {
-            wetL_[i] = i < lead ? 0.0f : hbQ_[0][i - lead];
-            wetR_[i] = i < lead ? 0.0f : hbQ_[1][i - lead];
-        }
-        for (int i = out; i < hbQn_; ++i) {
-            hbQ_[0][i - out] = hbQ_[0][i];
-            hbQ_[1][i - out] = hbQ_[1][i];
-        }
-        hbQn_ -= out;
-    } else
-#endif
-    fdn_.process(bufL_, bufR_, wetL_, wetR_, n);
+    tankHalf_.process(fdn_, bufL_, bufR_, wetL_, wetR_, n);
     for (int j = 0; j < k; ++j) lowOutL_[j] = lowOutR_[j] = 0.0f;
     if (k > 0) lowFdn_.process(lowInL_, lowInR_, lowOutL_, lowOutR_, k);
     lowPhase_ = phase0;

@@ -105,7 +105,6 @@ private:
     float xfAllpass(int i, float x, float g, bool old);
     float xfOldAllpass(int i, int k, float x, float d);
     void  xfOldTaps(float& el, float& er);
-    void  warm(int m);
     void controlInLoop(float dt, int n, float slew, bool pending);
     uint32_t apTargetLength(int i, int k) const;
 
@@ -157,7 +156,6 @@ private:
     float     xfRest_ = 0.0f, xfTrim_ = 1.0f, xfOld_ = 0.0f, xfNew_ = 1.0f, xfRotC_ = 1.0f, xfRotS_ = 0.0f;
     float     xfOO_[kN] = {}, xfNN_[kN] = {}, xfON_[kN] = {}, xfK_[kN] = {}; // the reads' powers, their agreement, the fade's gain
     AbsorbMemo absorbMemo_[kN]; // each line's loss filter, worked out again only when its inputs change
-    volatile float warmSink_ = 0.0f; // warm()'s loads land here, so they aren't optimised away
     Memo1     floorCoeffMemo_, glide80Memo_, glideXfMemo_; // per-block smoothing coefficients, worked out once per dt
     float     xfLastInLoop_ = 0.0f, xfAbsOld_[kN][3] = {}; // the loss filter (b1, gain, pole) at the fade's start
     float     xfCos_ = -1.0f, xfSin_ = 0.0f; // the fade's angle (twice it): xfNew_ = (1 - cos) / 2

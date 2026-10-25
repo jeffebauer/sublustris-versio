@@ -67,28 +67,6 @@ float lerpRead(const ExactLine& l, float d)
 
 } // namespace
 
-// Before a block's sample loop: the cache lines its reads will touch, fetched in one go (as Fdn::warm;
-// reads only, the sound can't change).
-IV_NOINLINE IV_SIZE_OPT void Plate::warm(int m, float k)
-{
-    float acc = 0.0f;
-    for (Branch& br : b_) {
-        acc += br.ap1.warm(br.ap1Len + br.modNow, br.ap1Len + br.modNow + float(m) * br.modStep, m);
-        acc += br.d1.warm(br.d1Len + br.longNow[0], br.d1Len + br.longNow[0] + float(m) * br.longStep[0], m);
-        acc += br.ap2.warm(br.ap2Len, br.ap2Len, m);
-        acc += br.d2.warm(br.d2Len + br.longNow[1], br.d2Len + br.longNow[1] + float(m) * br.longStep[1], m);
-    }
-    for (const Tap* side : {kLeft, kRight})
-        for (int j = 0; j < kTapsPerSide; ++j) {
-            const Tap& t = side[j];
-            const Branch& br = b_[t.branch];
-            const ExactLine& line = t.element == 0 ? br.d1 : (t.element == 1 ? br.ap2 : br.d2);
-            const float d = 1.0f + t.offset * k;
-            acc += line.warm(d, d, m);
-        }
-    warmSink_ = acc;
-}
-
 IV_SIZE_OPT bool Plate::prepare(Arena& arena, float sampleRate, float maxScale, bool colour, uint32_t seed)
 {
     sampleRate_ = sampleRate;
@@ -224,8 +202,6 @@ void Plate::process(const float* inL, const float* inR, float* outL, float* outR
         prof::mark(prof::kTankCtl);
         const float k = scaleNow_ * sampleRate_ / kPaperRate;
         const float outGain = kOutputGain * levelGain_;
-        warm(m, k);
-        prof::mark(prof::kTankWarm);
         for (int s = start; s < start + m; ++s) {
             const float in[2] = {inL[s], inR[s]};
             float next[2];

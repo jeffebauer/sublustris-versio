@@ -22,7 +22,7 @@
 #include "dsp/Fdn.h"
 #include "dsp/Memory.h"
 #include "dsp/Output.h"
-#include "dsp/Oversampler.h"
+#include "dsp/HalfRate.h"
 #include "dsp/Plate.h"
 #include "dsp/Shimmer.h"
 #include "dsp/Swell.h"
@@ -48,9 +48,9 @@ public:
     // Floats of each memory kind the Engine needs at this sample rate.
     static constexpr size_t largeFloats(float sampleRate)
     {
-        return dsp::Fdn::memoryFloats(sampleRate) + 2 * dsp::Swell::memoryFloats(sampleRate) // the tank's swell and the twin's
+        return dsp::Fdn::memoryFloats(0.5f * sampleRate) + 2 * dsp::Swell::memoryFloats(sampleRate) // the tank (at half the rate), the tank's swell and the twin's
              + dsp::Shimmer::memoryFloats(sampleRate) + 2 * dsp::Plate::memoryFloats(sampleRate, voicing::kPlateMaxScale, true)
-             + dsp::Fdn::memoryFloats(sampleRate) // the freeze twin
+             + dsp::Fdn::memoryFloats(0.5f * sampleRate) // the freeze twin (half the rate too)
              + dsp::Fdn::memoryFloats(sampleRate / float(kLowDecimate)) // still lows' low tank
              + 2 * dsp::nextPow2(size_t(voicing::kPredelayMaxSeconds * sampleRate) + 4)
              + dsp::Arena::skewRoom(); // each line's start staggered across the cache's sets
@@ -103,10 +103,9 @@ public:
     // 0..1 × kInLoopCoeff, fading out by SIZE noon).
     void  setHallInLoopDiffusion(float a) { hallInLoop_ = a; }
 #ifndef IV_FIXED_VOICINGS
-    // PROTOTYPES (fitting the module's CPU, M3 round 8; renders/fit_cpu): the HALL / MASSIVE tank at
-    // half the rate (24 kHz, halfbands either side), BLOOM's swell with fewer points per side, the tanks
-    // with fewer early taps per line. Re-prepares the Engine (the memory's layout changes).
-    void  setFitPrototype(bool halfTank, int swellTaps, int earlyTaps);
+    // PROTOTYPE (renders/fit_cpu's D, held back: "reduce the early reflections to 1 instead of 3 if
+    // needed"): the tanks with fewer early taps per line. Re-prepares the Engine.
+    void  setEarlyTapPrototype(int earlyTaps);
 #endif
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
@@ -183,13 +182,9 @@ private:
     float             lowPrev_[2] = {}, lowCur_[2] = {};
     float             lowInL_[kChunk / kLowDecimate + 2] = {}, lowInR_[kChunk / kLowDecimate + 2] = {};
     float             lowOutL_[kChunk / kLowDecimate + 2] = {}, lowOutR_[kChunk / kLowDecimate + 2] = {};
+    dsp::HalfRate<kChunk> tankHalf_, twinHalf_; // fdn_ and twinFdn_ run at half the rate (v1.0.35, ADR 0026)
 #ifndef IV_FIXED_VOICINGS
-    bool              halfTank_ = false;                  // setFitPrototype
-    int               fitSwellTaps_ = 0, fitEarlyTaps_ = 0; // 0 = as today
-    dsp::Halfband     hbDown_[2], hbUp_[2];
-    float             hbFirst_[2] = {}, halfInL_[kChunk] = {}, halfInR_[kChunk] = {}, halfOutL_[kChunk] = {}, halfOutR_[kChunk] = {};
-    float             hbQ_[2][2 * kChunk + 4] = {};
-    int               hbPhase_ = 0, hbQn_ = 0;
+    int               fitEarlyTaps_ = 0; // setEarlyTapPrototype; 0 = as built
 #endif
     dsp::Plate        twinPlate_;
     dsp::Diffuser<4>  twinDiffuser_[2];

@@ -13,6 +13,7 @@
 // an octave up doubles every frequency, and above 12 kHz that passes 24 kHz and folds back as
 // inharmonic tones, what a sample-rate reducer does (round 1-2's "bit crushing").
 #include "dsp/Memory.h"
+#include "dsp/SizeOpt.h"
 #include "params/SpaceVoicing.h"
 
 #include <cmath>
@@ -29,7 +30,7 @@ public:
         return 2 * nextPow2(size_t(maxDelaySeconds() * sampleRate) + 8);
     }
 
-    bool prepare(Arena& arena, float sampleRate)
+    IV_SIZE_OPT bool prepare(Arena& arena, float sampleRate) // set-up: built for size (flash)
     {
         window_ = voicing::kShimmerWindowSeconds * sampleRate;
         const size_t n = size_t(maxDelaySeconds() * sampleRate) + 8;

@@ -468,3 +468,35 @@ E_all_three   B, C and D together" > renders/fit_cpu/README.txt
     python3 tools/review/make_review.py renders/fit_cpu --title "Fitting the module: three ways" --level-match --dry $SRC --wet-only > /dev/null
     echo "renders/fit_cpu/index.html"
 fi
+
+if on swell_points; then
+    # A correction (25 Oct 2026): fit_cpu's "C, 12 swell points" didn't render 12 points: the main swell
+    # had laid out its 24 before the prototype's count arrived, so only its smear took the 12-point
+    # spacing (24 points, a longer smear; MASSIVE NORMAL didn't change). Re-listen, all with the tank at
+    # 24 kHz (built, v1.0.35): A today's 24 points, B what was picked, C a true 12 points (the CPU saving).
+    # IV_REF_RENDER: a build of 60d296d (the prototypes); IV_RENDER: the v1.0.35 build.
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in pad vibes skank keys; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page swell_points
+    NEW=$R
+    for t in "1_plate_bloom:PLATE:BLOOM" "2_hall_bloom:HALL:BLOOM" "3_massive_bloom:MASSIVE:BLOOM" "4_massive_normal:MASSIVE:NORMAL"; do
+        IFS=: read col sp at <<< "$t"
+        set=(--set space=$sp --set attack=$at --set decay=0.6 --set size=0.6 --set time=0.6)
+        ( export IV_FIT_HALF_TANK=1; R=$IV_REF_RENDER; r swell_points $col A_today_24_points "" $set )
+        ( export IV_FIT_HALF_TANK=1 IV_FIT_SWELL_TAPS=12; R=$IV_REF_RENDER; r swell_points $col B_what_you_picked "" $set )
+        ( R=$NEW; r swell_points $col C_true_12_points "" $set )
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "A correction to the last page, sorry: its C (\"12 swell points\") didn't really have 12 points. Because of a bug in the prototype, the swell kept its 24 points and only its smear got longer, so that's what you picked. Here are the three side by side, all with the tank at 24 kHz (your pick, now built): A is today's swell, B is what you picked, C is a true 12-point swell (the one that saves ~12 % of the CPU with BLOOM). Level-matched; renders are 100 % wet, so use the MIX fader for the dry.
+
+1_plate_bloom      PLATE, BLOOM
+2_hall_bloom       HALL, BLOOM
+3_massive_bloom    MASSIVE, BLOOM
+4_massive_normal   MASSIVE, NORMAL (its built-in mass uses the swell's points)
+
+A_today_24_points    Today: 24 points per side
+B_what_you_picked    What you picked on the last page: 24 points, a longer smear
+C_true_12_points     12 points per side (the CPU saving)" > renders/swell_points/README.txt
+    python3 tools/review/make_review.py renders/swell_points --title "BLOOM's swell: 24 or 12 points" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/swell_points/index.html"
+fi

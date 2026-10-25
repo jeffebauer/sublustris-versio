@@ -29,3 +29,4 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0023](0023-massive-shortest-tail-six-trips.md) | MASSIVE's shortest tail lasts six trips round its lines | owner, 25 Oct 2026 |
 | [0024](0024-shimmer-replaces-reverse.md) | SHIMMER replaces REVERSE on ATTACK's third position | owner, 25 Oct 2026 |
 | [0025](0025-size-and-time-crossfade.md) | HALL's and MASSIVE's SIZE, and TIME's predelay, move by crossfade | owner, 25 Oct 2026 |
+| [0026](0026-fitting-the-cpu.md) | Fitting the CPU: the HALL / MASSIVE tank at 24 kHz, a 12-point swell | owner, 25 Oct 2026 |

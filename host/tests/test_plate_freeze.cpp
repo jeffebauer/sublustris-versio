@@ -239,6 +239,9 @@ void plate()
 // rose 0-0.9 dB and stays within ~0.2 dB of HALL on average. The SPACEs are matched on music
 // (ADR 0020); this check takes the white-noise offset off MASSIVE.
 constexpr double kMassiveWhiteNoiseOffsetDb = 3.8;
+// v1.0.35 (ADR 0026): HALL's and MASSIVE's tanks run at 24 kHz, so white noise (mostly treble) loses its
+// top octave there: 2.7 dB (HALL) and 1.9 dB (MASSIVE) quieter on these bursts, 0.2-0.9 dB on music.
+constexpr double kHalfRateWhiteNoiseOffsetDb = 2.3;
 // SPEC §7 M5: PLATE, HALL and MASSIVE loudness within ±1.5 dB.
 void loudness()
 {
@@ -252,7 +255,8 @@ void loudness()
             Setting s;
             s.space = space;
             s.size = z;
-            const double db = rmsDb(render(in, s), 0.0, 12.0) - (space == 2 ? kMassiveWhiteNoiseOffsetDb : 0.0);
+            const double db = rmsDb(render(in, s), 0.0, 12.0) - (space == 2 ? kMassiveWhiteNoiseOffsetDb : 0.0)
+                            + (space != 0 ? kHalfRateWhiteNoiseOffsetDb : 0.0);
             lo = std::fmin(lo, db);
             hi = std::fmax(hi, db);
             char buf[40];
@@ -322,7 +326,9 @@ void twin()
 void paint()
 {
     std::vector<float> in(size_t(60.0f * kSr));
-    for (auto& x : in) x = 0.25f * noise();
+    // 0.35 (was 0.25 until v1.0.35): the 24 kHz tank holds white noise's top octave no more, and at 0.25
+    // the pad froze under the floor, where painting may grow it to the floor + 1.5 dB by design.
+    for (auto& x : in) x = 0.35f * noise();
     Setting s;
     const Stereo out = render(in, s, {{1.0, true}, {1.1, false}, {30.0, true}, {45.0, false}});
     const double before = rmsDb(out, 26.0, 29.0), during = rmsDb(out, 40.0, 44.0), after = rmsDb(out, 55.0, 59.0);

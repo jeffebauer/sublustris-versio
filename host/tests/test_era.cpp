@@ -345,7 +345,10 @@ double lowBandDb(float sr)
 void notAliasing()
 {
     const double at48 = lowBandDb(kSr), at96 = lowBandDb(96000.0f);
-    check(at48 < -40.0 || at48 - at96 < 2.0,
+    // v1.0.35 (ADR 0026): the HALL tank runs at 24 kHz, so in its loop the 3rd harmonic (21 kHz) folds to
+    // 3 kHz: -38 dB here (was under -40). Accepted for the CPU (classic digital reverbs fold the same way);
+    // the limit for it is -36.
+    check(at48 < -36.0 || at48 - at96 < 2.0,
           "hot 7 kHz tone at the cassette stage: energy below 5 kHz " + std::to_string(int(at48)) + " dB re total at 48 kHz, " +
               std::to_string(int(at96)) + " at 96 kHz (< −40, or aliasing adds < 2 dB)");
 }

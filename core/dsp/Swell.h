@@ -1,6 +1,6 @@
 #pragma once
 // The swell stage (SPEC §4.5, ADR 0007, 0015): makes the tank's attack a
-// slab instead of a hit. The input reaches the tank through 24 taps of a
+// slab instead of a hit. The input reaches the tank through 12 taps of a
 // long delay, spread over the attack time A with rising gains, so the tank
 // is fed a little, then more, then most: the reverb builds over A and then
 // decays. Used for BLOOM (A = TIME) in every space and for MASSIVE's gentle
@@ -14,6 +14,7 @@
 // kDirectBelowSeconds the taps would bunch into a comb, so the stage hands
 // over to the direct path (crossfaded up to kTapsFromSeconds).
 #include "dsp/Memory.h"
+#include "dsp/SizeOpt.h"
 
 #include <cmath>
 #include <cstdint>
@@ -22,7 +23,11 @@ namespace iv::dsp {
 
 class Swell {
 public:
-    static constexpr int   kTaps = 24;
+    // 12 taps per side (v1.0.35, ADR 0026; owner's pick on renders/fit_cpu, was 24): half the SDRAM
+    // reads, ~12 % of the module's CPU with BLOOM. Their jitter comes from the same draws as the 24 did
+    // (kDraws a side, the first kTaps used), so it is the version the owner heard.
+    static constexpr int   kTaps = 12;
+    static constexpr int   kDraws = 24;
     static constexpr float kMaxSeconds = 7.6f; // BLOOM's 4 s × MASSIVE's mass 1.5 × kSpanPerAttack, plus jitter
     static constexpr float kDirectBelowSeconds = 0.04f;
     static constexpr float kTapsFromSeconds = 0.12f;
@@ -33,11 +38,7 @@ public:
     // the gap to the next instead of returning as a ghost hit.
     static constexpr int   kSmearStages = 3;
     static constexpr float kSmearRatio[kSmearStages] = {0.53f, 0.79f, 1.17f};
-#ifndef IV_FIXED_VOICINGS
-    static constexpr float kSmearMaxSeconds = kMaxSeconds / 12 * 1.2f; // room for setTapCount's wider spacing
-#else
     static constexpr float kSmearMaxSeconds = kMaxSeconds / kTaps * 1.2f;
-#endif
     static constexpr float kSmearSpanScale = 0.95f;
     static constexpr float kSmearGain = 0.5f;
     static constexpr size_t memoryFloats(float sampleRate)
@@ -46,7 +47,7 @@ public:
              + 2 * kSmearStages * nextPow2(size_t(kSmearMaxSeconds * sampleRate) + 4);
     }
 
-    bool prepare(Arena& arena, float sampleRate)
+    IV_SIZE_OPT bool prepare(Arena& arena, float sampleRate) // set-up: built for size (flash)
     {
         sampleRate_ = sampleRate;
         bool ok = line_[0].init(arena, size_t(kMaxSeconds * sampleRate)) && line_[1].init(arena, size_t(kMaxSeconds * sampleRate));
@@ -55,10 +56,11 @@ public:
         // Fixed jitter and signs from a seeded generator (deterministic).
         uint32_t s = 0x5EE11u;
         for (int c = 0; c < 2; ++c)
-            for (int k = 0; k < kTaps; ++k) {
+            for (int k = 0; k < kDraws; ++k) {
                 s = s * 1664525u + 1013904223u;
+                if (k >= kTaps) continue;
                 const float jitter = float(s >> 8) * (1.0f / 16777216.0f) - 0.5f; // ±half a slot
-                frac_[c][k] = k < count_ ? (float(k) + 0.5f + 0.8f * jitter) / float(count_) : 0.0f;
+                frac_[c][k] = (float(k) + 0.5f + 0.8f * jitter) / float(kTaps);
                 sign_[c][k] = (s & 0x80000000u) ? -1.0f : 1.0f;
             }
         setSCurve(sCurve_);
@@ -69,15 +71,14 @@ public:
     // The shape of the taps' rise, x = 0..1 over the span: linear (the tank's), or an
     // S-curve (raised cosine) that eases in and settles into place, MASSIVE's twin
     // (owner, renders/swell_curve: B on all 18 cards over linear, crescendo, RC).
-    void setSCurve(bool on)
+    IV_SIZE_OPT void setSCurve(bool on)
     {
         sCurve_ = on;
         float energy = 0.0f;
         for (int c = 0; c < 2; ++c)
             for (int k = 0; k < kTaps; ++k) {
-                const float x = (float(k) + 1.0f) / float(count_);
-                float g = sCurve_ ? 0.5f - 0.5f * std::cos(3.14159265f * x) : x; // rising: the slab builds
-                if (k >= count_) g = 0.0f; // setTapCount (prototype): the rest are silent
+                const float x = (float(k) + 1.0f) / float(kTaps);
+                const float g = sCurve_ ? 0.5f - 0.5f * std::cos(3.14159265f * x) : x; // rising: the slab builds
                 gain_[c][k] = g;
                 if (c == 0) energy += g * g;
             }
@@ -95,9 +96,6 @@ public:
         attackNow_ = attackTarget_;
     }
 
-    // PROTOTYPE (renders/fit_cpu): n taps per side over the same span (0 = kTaps), before prepare().
-    void setTapCount(int n) { count_ = n > 0 && n < kTaps ? n : kTaps; }
-
     // The attack time in seconds; glides (so TIME moves don't jump the taps).
     void setAttackSeconds(float a, bool snap = false)
     {
@@ -106,8 +104,8 @@ public:
         if (snap) attackNow_ = attackTarget_;
     }
 
-    // Once per control chunk of n samples.
-    void control(int n)
+    // Once per control chunk of n samples (built for size: flash).
+    IV_SIZE_OPT void control(int n)
     {
         const float c = 1.0f - std::exp(-float(n) / (0.15f * sampleRate_)); // 150 ms glide
         attackNow_ += c * (attackTarget_ - attackNow_);
@@ -122,7 +120,7 @@ public:
         const float span = kSpanPerAttack * a * sampleRate_ * (1.0f - (1.0f - kSmearSpanScale) * smearG_ / kSmearGain);
         const float maxLen = kSmearMaxSeconds * sampleRate_;
         for (int j = 0; j < kSmearStages; ++j) {
-            const float len = span / float(count_) * kSmearRatio[j];
+            const float len = span / float(kTaps) * kSmearRatio[j];
             smearLen_[j] = len < 1.0f ? 1u : uint32_t(len > maxLen ? maxLen : len);
         }
         for (int c2 = 0; c2 < 2; ++c2)
@@ -214,7 +212,6 @@ private:
     float     sampleRate_ = 48000.0f;
     DelayLine line_[2];
     float     frac_[2][kTaps] = {}, sign_[2][kTaps] = {}, gain_[2][kTaps] = {}, tapDelay_[2][kTaps] = {};
-    int       count_ = kTaps; // taps in use (setTapCount, a prototype); the rest have no gain
     float     attackNow_ = 0.0f, attackTarget_ = 0.0f, tapMix_ = 0.0f;
     bool      sCurve_ = false;
     DelayLine smear_[2][kSmearStages];

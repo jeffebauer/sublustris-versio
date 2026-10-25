@@ -15,8 +15,7 @@ namespace iv::prof {
 // Inside the tanks (M3 round 4): kTankCtl, each tank's once-a-block maths; kTankLoop, the FDN's lines
 // (read, in-loop allpasses, loss filter, ERA's in-loop stages); kTankOut, its output and early taps;
 // kTankMix, the Hadamard mix and the writes. kTank keeps the rest (the Plate's loop, the still-lows split).
-// kTankWarm: the FDN's lines fetched into the cache before each block (Fdn::warm).
-enum Section { kControl, kInput, kShimmer, kSwell, kTwin, kTank, kTankCtl, kTankWarm, kTankLoop, kTankOut, kTankMix, kEra, kOutput, kNumSections };
+enum Section { kControl, kInput, kShimmer, kSwell, kTwin, kTank, kTankCtl, kTankLoop, kTankOut, kTankMix, kEra, kOutput, kNumSections };
 
 #if defined(IV_PROFILE_HOOKS)
 // Set by the host (profile firmware) before audio starts; null = no timing.
