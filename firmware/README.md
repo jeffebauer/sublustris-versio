@@ -94,7 +94,8 @@ CORNER MASSIVE D1 S1 E1 (worst?)   avg  42.3% max  58.1% min  39.0% | mem 0 B | 
 - `mem` — bytes of delay memory the Engine uses (0 at M0).
 - `block` — audio block size (default 48). `make -C firmware MODE=profile PROFILE_BLOCK=96` compares a bigger block; the output filename doesn't change, so check this field.
 - `~N cyc/sample` — the average as cycles per sample (480 MHz ÷ 48 kHz ≈ 10,000).
-- `SPLIT` / `PEAK` — each section's share (`dsp/ProfileHook.h`: ctl, in, swell, tank, comp, era, out), averaged and in the worst single block. Zero until the Engine marks its sections (M1 on).
+- `SPLIT` / `PEAK` — each section's share (`dsp/ProfileHook.h`: ctl, in, shim, swell, twin, tank, era, out), averaged and in the worst single block. The marks cost ~1 % (a few per sample).
+- Timing (since 25 Oct 2026): the Engine runs in the main loop, block after block off the audio clock, each block timed by the cycle counter; the audio plays silence. A corner over 100 % still reports (timed in the callback, it starved the serial, M3 round 1).
 - `BENCH` (once per lap) — clock speed and whether the caches are on.
 
 On the module: **LED_0** brightens through the 24 corners; **LED_3 turns red** for good once any corner's `max` passes 75 %.
