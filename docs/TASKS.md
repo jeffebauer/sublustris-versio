@@ -4,7 +4,6 @@
 **Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Rescan in Ableton to see it.
 
 ## To do
-- [ ] **M3 CPU check, round 9b: v1.0.35 and the real limit.** Flash `dist/immensio_versio_profile_M3_round9b.bin` (round 9's headroom test stalled at its first step; fixed) and let it run a lap plus its headroom test (`HEADROOM` lines after the lap), then tell Claude.
 
 ### Decide
 
@@ -25,7 +24,7 @@
 
 ## Waiting on Claude
 
-- **CPU: after round 9.** Built (v1.0.35): the HALL / MASSIVE tank at 24 kHz and a true 12-point swell. Next depends on round 9's numbers: one early reflection (D) only if still over.
+- **CPU, after round 9b.** The real limit (your headroom test): no drop-outs up to 96 % at the worst block, late blocks from 101 %, so the target is ~90 % at peak (not 75 %). PLATE fits (59-69 % avg, ~88 % peak). HALL 101-123 % and MASSIVE 115-129 % avg (worst 122 % avg / 127 % peak live) need ~30 % more. Found: a SPACE change and big SIZE jumps spike to 150-210 % (drop-outs), most likely the prime-length search; fix that first (sound unchanged), then the one-early-reflection option and more tuning of the tank's loop.
 - **BLOOM's TIME and PLATE's SIZE by crossfade** (phase 2 of your pick C): they still slide; HALL and MASSIVE's SIZE and TIME's pre-delay are done (v1.0.34).
 - **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): build it for real. For 3 s after a flip both spaces hear the music while one crossfades into the other; it needs a second reverb running for those 3 s (the freeze's spare) and ~0.5-1 KB of flash, which has to be freed first (804 B left). A plan before building.
 - **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper; a later round if the shimmer is kept.
@@ -36,6 +35,7 @@
 
 ## Done
 
+- 25 Oct 2026: **M3 CPU check, round 9b** (your run of v1.0.35 + the headroom test): MASSIVE ~115-129 % avg (was ~165-180), HALL ~101-123 %, PLATE ~59-69 %; the swell ~15 %. Headroom: clean to 96 % peak, late from 101 %.
 - 25 Oct 2026: **BLOOM's swell: a true 12 points** (C on every card). Built with the tank at 24 kHz as v1.0.35 (ADR 0026); all tests pass. The page is deleted.
 - 25 Oct 2026: **Fitting the module: E (all three) everywhere, C for PLATE** ("Not a huge sonic difference, especially when not at 100% wet. Ideally we'd only reduce the early reflections to 1 instead of 3 if needed"). The page is deleted; building B and C is in Waiting on Claude, D held back.
 - 25 Oct 2026: **M3 CPU check, round 8: mostly arithmetic** (your run). The same small tank costs 4,049 cycles a sample with its memory on the chip and 6,925 in the external memory: the memory adds ~70 %, but the tank's sums alone are most of it, because this processor does about one step per cycle where a desktop does several. Speed-ups that keep the sound to the bit have got the worst case from ~2.6× to ~2.3× over budget; the rest needs choices that change the sound a little (Decide).
