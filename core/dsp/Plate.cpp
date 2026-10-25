@@ -29,9 +29,10 @@ struct Tap {
 // independent, so his signs made L ≈ 2·b1 − 3·b0 and R ≈ 2·b0 − 3·b1 where the taps cohere (the lows):
 // left and right lows nearly mirror images (vibes −0.86 correlation below 250 Hz; Valhalla's plates
 // +0.1 to +0.45). Added, the lows centre (vibes +0.14) and the highs stay wide.
-constexpr Tap kLeft[7]  = {{1, 0, 266, 1},  {1, 0, 2974, 1}, {1, 1, 1913, -1}, {1, 2, 1996, 1},
+constexpr int kTapsPerSide = 7;
+constexpr Tap kLeft[kTapsPerSide]  = {{1, 0, 266, 1},  {1, 0, 2974, 1}, {1, 1, 1913, -1}, {1, 2, 1996, 1},
                            {0, 0, 1990, 1}, {0, 1, 187, 1}, {0, 2, 1066, 1}};
-constexpr Tap kRight[7] = {{0, 0, 353, 1},  {0, 0, 3627, 1}, {0, 1, 1228, -1}, {0, 2, 2673, 1},
+constexpr Tap kRight[kTapsPerSide] = {{0, 0, 353, 1},  {0, 0, 3627, 1}, {0, 1, 1228, -1}, {0, 2, 2673, 1},
                            {1, 0, 2111, 1}, {1, 1, 335, 1}, {1, 2, 121, 1}};
 constexpr float elementLength(const Tap& t)
 {
@@ -65,6 +66,28 @@ float lerpRead(const ExactLine& l, float d)
 }
 
 } // namespace
+
+// Before a block's sample loop: the cache lines its reads will touch, fetched in one go (as Fdn::warm;
+// reads only, the sound can't change).
+IV_NOINLINE IV_SIZE_OPT void Plate::warm(int m, float k)
+{
+    float acc = 0.0f;
+    for (Branch& br : b_) {
+        acc += br.ap1.warm(br.ap1Len + br.modNow, br.ap1Len + br.modNow + float(m) * br.modStep, m);
+        acc += br.d1.warm(br.d1Len + br.longNow[0], br.d1Len + br.longNow[0] + float(m) * br.longStep[0], m);
+        acc += br.ap2.warm(br.ap2Len, br.ap2Len, m);
+        acc += br.d2.warm(br.d2Len + br.longNow[1], br.d2Len + br.longNow[1] + float(m) * br.longStep[1], m);
+    }
+    for (const Tap* side : {kLeft, kRight})
+        for (int j = 0; j < kTapsPerSide; ++j) {
+            const Tap& t = side[j];
+            const Branch& br = b_[t.branch];
+            const ExactLine& line = t.element == 0 ? br.d1 : (t.element == 1 ? br.ap2 : br.d2);
+            const float d = 1.0f + t.offset * k;
+            acc += line.warm(d, d, m);
+        }
+    warmSink_ = acc;
+}
 
 IV_SIZE_OPT bool Plate::prepare(Arena& arena, float sampleRate, float maxScale, bool colour, uint32_t seed)
 {
@@ -201,6 +224,8 @@ void Plate::process(const float* inL, const float* inR, float* outL, float* outR
         prof::mark(prof::kTankCtl);
         const float k = scaleNow_ * sampleRate_ / kPaperRate;
         const float outGain = kOutputGain * levelGain_;
+        warm(m, k);
+        prof::mark(prof::kTankWarm);
         for (int s = start; s < start + m; ++s) {
             const float in[2] = {inL[s], inR[s]};
             float next[2];

@@ -245,6 +245,37 @@ IV_NOINLINE IV_SIZE_OPT float Fdn::xfOldAllpass(int i, int k, float x, float d)
     return xfNew_ * d + xfOld_ * od;
 }
 
+// Before a block's sample loop: every cache line its reads will touch, fetched in one go (dsp/Memory.h
+// warmLines). Sample s reads delay d(s) at write position pos + s, so a stream whose delay runs from d0
+// to d1 over the block needs pos - max(d) - 1 .. pos + m - min(d) + 1.
+IV_NOINLINE IV_SIZE_OPT void Fdn::warm(int m)
+{
+    float acc = 0.0f;
+    auto span = [&](const DelayLine& l, float d0, float d1, int extra) {
+        const float lo = d0 < d1 ? d0 : d1, hi = d0 < d1 ? d1 : d0;
+        const uint32_t from = l.pos - uint32_t(hi) - 2u, to = l.pos + uint32_t(m) - uint32_t(lo) + uint32_t(extra);
+        acc += warmLines(l.buf, l.mask, from, to);
+    };
+    for (int i = 0; i < kN; ++i) {
+        const DelayLine& l = line_[i];
+        span(l, readNow_[i], readNow_[i] + float(m) * readStep_[i], 1);
+        if (xfLeft_ > 0) span(l, readNow_[i] + xfDelta_[i], readNow_[i] + xfDelta_[i] + float(m) * readStep_[i], 1);
+        if (earlyNow_ > 0.0f)
+            for (int k = 0; k < kEarlyTaps; ++k) {
+                const float d = 1.0f + earlyFrac_[i][k] * tapLen_[i];
+                span(l, d, d + earlyFrac_[i][k] * float(m) * tapStep_[i], 1);
+                if (xfLeft_ > 0) span(l, d + earlyFrac_[i][k] * xfDelta_[i], d + earlyFrac_[i][k] * xfDelta_[i], 1);
+            }
+        if (inLoopNow_ > 0.0f || xfLeft_ > 0)
+            for (int k = 0; k < 2; ++k) {
+                const float g = apLenGlide_[i][k];
+                if (g >= 1.0f) span(apLine_[i][k], g, g + float(m) * apLenStep_[i][k], 1);
+                if (xfLeft_ > 0 && apOld_[i][k] >= 1.0f) span(apLine_[i][k], apOld_[i][k], apOld_[i][k], 1);
+            }
+    }
+    warmSink_ = acc;
+}
+
 IV_NOINLINE IV_SIZE_OPT void Fdn::xfOldTaps(float& el, float& er)
 {
     float ol = 0.0f, orr = 0.0f;
@@ -429,6 +460,8 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
         prof::mark(prof::kTank);
         control(m);
         prof::mark(prof::kTankCtl);
+        warm(m);
+        prof::mark(prof::kTankWarm);
         // The level that follows SIZE (a longer loop holds the same energy over more samples) and the
         // trims go in with the input, so what's already in the loop comes out as it went in (on the
         // output, a SIZE jump stepped every held tail: an infinite MASSIVE +6 dB for SIZE 0 -> 0.7).

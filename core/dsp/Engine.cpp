@@ -190,7 +190,7 @@ void Engine::queueEdge(bool isButton, bool level, int offset)
     edges_[i] = {offset, isButton, level};
 }
 
-void Engine::handleEdges(int chunkStart, int chunkEnd)
+IV_SIZE_OPT void Engine::handleEdges(int chunkStart, int chunkEnd) // once per block: built for size (flash)
 {
     int used = 0;
     while (used < edgeCount_ && edges_[used].offset < chunkEnd) {

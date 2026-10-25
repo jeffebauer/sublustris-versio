@@ -145,6 +145,18 @@ private:
     }
 };
 
+// Loads one float from each cache line (32 B) of buf[from..to] (indices taken through mask), so the
+// lines are in the cache, fetched back to back, before a block's per-sample loop reads them. On the
+// module the tanks' streams in SDRAM were fetched several times over, pushed out between samples by
+// everything else (M3 round 6: ~4,500 cycles a sample for ~30 tap reads, against ~1,000 if each line
+// came once). Reads only: the sound can't change.
+IV_NOINLINE inline float warmLines(const float* buf, uint32_t mask, uint32_t from, uint32_t to)
+{
+    float acc = 0.0f;
+    for (uint32_t i = from; i - from <= to - from; i += 8) acc += buf[i & mask];
+    return acc + buf[to & mask];
+}
+
 // A ring buffer of exactly the length asked for (no power-of-two rounding),
 // for memory-tight places (the Plate and its twin, SPEC §5.2): the
 // wrap costs a compare instead of a mask.
@@ -176,6 +188,21 @@ struct ExactLine {
     }
     // d >= 1: the sample written d ticks ago.
     float read(uint32_t d) const { return at(int32_t(pos) - int32_t(d)); }
+    // As warmLines (above): the cache lines of the reads at delays d0..d1 over the next m writes.
+    IV_NOINLINE float warm(float d0, float d1, int m) const
+    {
+        const float lo = d0 < d1 ? d0 : d1, hi = d0 < d1 ? d1 : d0;
+        int32_t i = int32_t(pos) - int32_t(hi) - 2;
+        while (i < 0) i += int32_t(size);
+        const int32_t count = int32_t(hi) - int32_t(lo) + m + 4;
+        float acc = 0.0f;
+        for (int32_t c = 0; c < count; c += 8) {
+            acc += buf[i];
+            i += 8;
+            if (i >= int32_t(size)) i -= int32_t(size);
+        }
+        return acc;
+    }
     // Catmull-Rom cubic read at a fractional delay d >= 2.
     float readCubic(float d) const
     {

@@ -94,6 +94,8 @@ public:
 
 private:
     void control(int n);
+    void warm(int m, float k);
+    volatile float warmSink_ = 0.0f; // warm()'s loads land here
 
     // One branch of the figure 8.
     struct Branch {
