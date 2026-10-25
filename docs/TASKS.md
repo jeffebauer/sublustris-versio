@@ -6,7 +6,7 @@
 ## To do
 
 ### Decide
-- Nothing open: every pick so far is acted on.
+- [ ] **The overnight review's branch** (`review/overnight`, 26 Oct 2026): merge it into `claude/massive-air` once you've read `docs/research/review-2026-10-26.md`? Its merged changes are sound-neutral to the bit (55 renders) and all tests pass; four sound options and three bug fixes stay behind switches, off. Two of the fixes matter before the module is played with knobs: on the module **SIZE may never take effect in MASSIVE** (a wobbling knob keeps restarting its crossfade's rest timer; section 5.1 of the report), and the fix needs 248 B of flash that the tape at 2× (Listen, below) would free.
 
 ### Listen (after your notes)
 - Nothing open.
@@ -16,6 +16,7 @@
 - [ ] **ERA signatures** (out of date: it measures the old stacked ERA; Claude can re-measure it for the five eras; reference, nothing to pick; https://claude.ai/artifact/AiR2JXPAaLbT8GeJseK3Vj, opens on your phone anywhere): what each ERA stage does to the reverb, measured and drawn as charts (tone, how long each frequency rings, harmonics, grain, hiss, mirror tones, pitch wobble). `tools/era_reference.py` remeasures it.
 
 ### At the rack
+- [ ] **M3 CPU check, round 11: the overnight review's build** (this branch's TASKS list is the session-5 one; main's has rounds 1-10 under Done). Build the profile firmware yourself from the review worktree `.claude/worktrees/review-overnight` (`make -C firmware all-variants -j8`; nothing was built for installing), flash `firmware/build/immensio_versio_profile.bin`, run a lap (~5 min) and the headroom test, and send Claude the serial output. It carries every sound-neutral speed-up of the review (bit-identical to v1.0.36 on 55 renders), the Engine in fast memory, the tank's short delays in on-chip memory, a trial of a faster memory timing with a safety check (`SDRAMCHK`: it must read 0 before anything changes in the instrument), and new timings for the open questions (`firmware/README.md` explains every field; the report's section 8 says what to read first). Expected: MASSIVE with BLOOM ~85-100 % (was 115-129). Then, second, the `PROFILE_ITCM=1` build (untested; if it doesn't boot, flash the default back). Round 10's build (`dist/…round10.bin` on `claude/massive-air`) is superseded: it timed slower copies of the tape and radio than the instrument runs.
 - [ ] **M0 hardware check** (`docs/m0-hardware-check.md`): flash `firmware/build/immensio_versio_m0test.bin`, check the boot pattern, switches, button (USB session), then knobs, gate and a quick passthrough listen (rack session). Tell Claude the results.
 - [ ] **M3 CPU check** (after M0): flash `firmware/build/immensio_versio_profile.bin` and send Claude the serial CPU report, so the CPU budget is measured, not estimated. Include a frozen MASSIVE with ERA full, DRIFT fully CW and BLOOM (the heaviest case on the desktop: 4.5× a plain HALL), and leave it ringing out into a long silence too: the tank memory fills with vanishingly small numbers, which some processors handle slowly (the plugin flushes them; the firmware doesn't yet).
 
