@@ -7,7 +7,8 @@
 //                        (unity for small signals: only peaks and the highs change);
 //   light hysteresis:    a play operator (rate-independent backlash, the textbook hysteresis) whose width
 //                        follows the level (our own, unsourced as audio);
-//   the curve:           the asymmetric rational tanh (a third of v1.0.22's bias, v1.0.26), at 4x;
+//   the curve:           the asymmetric rational tanh (a third of v1.0.22's bias, v1.0.26), at 2x
+//                        (v1.0.38, owner on renders/tape_os: "no audible difference"; was 4x);
 //   de-emphasis:         the exact inverse shelf, then a 5 Hz DC blocker.
 #include "dsp/Oversampler.h"
 #include "dsp/SizeOpt.h"
@@ -23,14 +24,15 @@ public:
     {
         preLp_ = deLp_ = dc_ = play_ = rms_ = 0.0f;
         os1_.reset();
+#ifndef IV_FIXED_VOICINGS
         os2_.reset();
+#endif
     }
 
 #ifndef IV_FIXED_VOICINGS
-    // PROTOTYPE (overnight review, 26 Oct 2026; renders/tape_os): the curve at 2x (only the outer
-    // Oversampler runs) instead of 4x (both). 4 = as built. Desktop only: the firmware keeps 4x
-    // (IV_TAPE_OS2 builds it at 2x, for measuring flash and instruction counts only).
-    void setFactor(int f) { factor_ = f == 2 ? 2 : 4; }
+    // The curve at 2x (only the outer Oversampler runs) since v1.0.38 (overnight review, 26 Oct 2026;
+    // the owner's pick on renders/tape_os). setFactor(4): both, as before v1.0.38 (desktop only).
+    void setFactor(int f) { factor_ = f == 4 ? 4 : 2; }
 #endif
 
     // c: the cassette layer 0..1. Recomputes the coefficients only when c (or the rate) changes.
@@ -49,8 +51,8 @@ public:
         tb_ = th(b_);
     }
 
-#if defined(IV_FIXED_VOICINGS) && defined(IV_TAPE_OS2)
-    IV_NOINLINE // one shared copy (cost-era: inlined, GCC pasted it 4x into Engine::process)
+#if defined(IV_FIXED_VOICINGS)
+    IV_NOINLINE // one shared copy (inlined, GCC pasted it 4x into Engine::process: 1,766 vs 960 B)
 #endif
     float process(float x)
     {
@@ -64,14 +66,11 @@ public:
             if (play_ > u + width) play_ = u + width;
             return (th(play_ + b_) - tb_) / (1.0f - tb_ * tb_) / drive_;
         };
-        Oversampler& inner = os2_;
 #if !defined(IV_FIXED_VOICINGS)
-        float y = factor_ == 2 ? os1_.process(e, sat) : os1_.process(e, [&](float u) { return inner.process(u, sat); });
-#elif defined(IV_TAPE_OS2)
-        (void)inner;
-        float y = os1_.process(e, sat);
+        Oversampler& inner = os2_;
+        float y = factor_ == 4 ? os1_.process(e, [&](float u) { return inner.process(u, sat); }) : os1_.process(e, sat);
 #else
-        float y = os1_.process(e, [&](float u) { return inner.process(u, sat); });
+        float y = os1_.process(e, sat);
 #endif
         deLp_ += wDe_ * (y - deLp_);
         y = y + (1.0f / gEmph_ - 1.0f) * (y - deLp_);
@@ -92,9 +91,10 @@ private:
     float c_ = -1.0f, sr_ = 0.0f;
     float gEmph_ = 1.0f, drive_ = 1.0f, wPre_ = 0.0f, wDe_ = 0.0f, wRms_ = 0.0f, wDc_ = 0.0f, b_ = 0.0f, tb_ = 0.0f;
     float preLp_ = 0.0f, deLp_ = 0.0f, dc_ = 0.0f, play_ = 0.0f, rms_ = 0.0f;
-    Oversampler os1_, os2_;
+    Oversampler os1_;
 #ifndef IV_FIXED_VOICINGS
-    int factor_ = 4; // setFactor (a prototype)
+    Oversampler os2_; // setFactor(4) only
+    int factor_ = 2;  // setFactor
 #endif
 };
 

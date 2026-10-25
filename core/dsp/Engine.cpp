@@ -70,7 +70,7 @@ void Engine::setSwellSeedPrototype(uint32_t seed)
 
 void Engine::setTapeOversamplingPrototype(int factor)
 {
-    fitTapeOs_ = factor == 2 ? 2 : 4;
+    fitTapeOs_ = factor == 4 ? 4 : 2;
     prepare(sampleRate_, maxBlockSize_);
 }
 

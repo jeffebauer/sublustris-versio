@@ -134,7 +134,7 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     // made for it; stderr confirms what was built (a count set after prepare() once mislabelled a page).
     if (const char* to = std::getenv("IV_TAPE_OS")) {
         engine.setTapeOversamplingPrototype(std::atoi(to)); // renders/tape_os
-        std::fprintf(stderr, "iv_render: IV_TAPE_OS: tape out at %dx\n", std::atoi(to) == 2 ? 2 : 4);
+        std::fprintf(stderr, "iv_render: IV_TAPE_OS: tape out at %dx\n", std::atoi(to) == 4 ? 4 : 2);
     }
     if (const char* ld = std::getenv("IV_LOW_DECIMATE")) {
         engine.setLowDecimatePrototype(std::atoi(ld)); // renders/still_lows_rate

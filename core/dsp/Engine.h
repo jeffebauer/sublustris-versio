@@ -151,7 +151,8 @@ public:
     // unfreeze whatever DECAY was.
     void  setTwinStopFast(bool on) { twinStopFast_ = on; }
     // PROTOTYPES (overnight review, 26 Oct 2026; CPU options for the owner, behind renderer hooks):
-    // the tape out's oversampling, 2 or 4 (as built), renders/tape_os. Re-prepares the Engine.
+    // the tape out's oversampling, 2 (as built since v1.0.38, the owner's pick on renders/tape_os) or 4
+    // (before). Re-prepares the Engine.
     void  setTapeOversamplingPrototype(int factor);
     // The still lows' tank at 1/d of the rate, kLowDecimate (4, as built) .. kLowDecimateMax (8),
     // renders/still_lows_rate. Re-prepares the Engine (before the tank is laid out).
@@ -267,7 +268,7 @@ private:
     uint32_t          fitSwellSeed_ = 0; // setSwellSeedPrototype; 0 = as built
     bool              halfPrime_ = false; // setHalfRatePrime; false = as built
     bool              twinStopFast_ = true; // setTwinStopFast; false = before v1.0.37
-    int               fitTapeOs_ = 4;    // setTapeOversamplingPrototype; 4 = as built
+    int               fitTapeOs_ = 2;    // setTapeOversamplingPrototype; 4 = before v1.0.38
     int               fitSwellTaps_ = 0; // setSwellTapsPrototype; 0 = as built
     bool              shimmerLazy_ = false, shimmerArmed_ = true, shimmerResting_ = false; // setShimmerLazyPrototype
 #endif
