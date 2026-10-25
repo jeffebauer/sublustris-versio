@@ -1,11 +1,12 @@
 # Owner tasks
 
-**Last updated:** 25 Oct 2026, session 6 (SIZE and TIME: the slow crossfade picked; the alternatives page in progress).
+**Last updated:** 25 Oct 2026, session 6 (the ATTACK alternatives page: reverse x2, echo-verb x2, nonlinear x2 beside your shimmer pick).
 **Plugin installed:** `2a7d7b6` on branch `claude/massive-air` (v1.0.32: v1.0.30 plus MASSIVE's highs ringing as long as the body and its shortest tail lasting six trips; ERA's value names its era), 25 Oct 2026 11:40; AU check passed. Rescan in Ableton to see it.
 
 ## To do
 
 ### Decide
+- [ ] **ATTACK's third position: the alternatives** (http://192.168.1.100:8766/attack_alts2/index.html on the Wi-Fi; `renders/attack_alts2/index.html`): A your shimmer pick; B reverse into the reverb; C reversed tail; D echo-verb (a dub tape echo into the reverb; TIME the echo time, DECAY the repeats); E echo-verb with the reverb re-echoed; F nonlinear gate (level, then a sudden stop after TIME); G gated room (the full reverb, cut TIME after you stop). Which to keep refining.
 
 ### Listen (after your notes)
 - Nothing open.
@@ -26,7 +27,6 @@
 
 ## Waiting on Claude
 
-- **Next ATTACK ideas, after the shimmer** (your picks): echo-verb, nonlinear (gated), reverse done differently. Research, then a page.
 - **SIZE and TIME by crossfade, for real** (your pick C on `knob_moves`: the slow, 0.3 s crossfade): build it into the module and the plugin (now a renderer prototype). It adds code to the firmware, where ~0.8 KB of flash is left, so room has to be freed first: a plan comes before building. BLOOM's TIME and PLATE's SIZE still slide and get the same treatment.
 - **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): build it for real. For 3 s after a flip both spaces hear the music while one crossfades into the other; it needs a second reverb running for those 3 s (the freeze's spare) and ~0.5-1 KB of flash, which has to be freed first (804 B left). A plan before building.
 - **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper; a later round if the shimmer is kept.
