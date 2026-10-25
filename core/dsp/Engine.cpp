@@ -956,40 +956,70 @@ void Engine::processTwoTanks(int n)
         z[1] = c[2] * v - c[4] * y;
         return y;
     };
+    // The coefficients and states in locals for the chunk (overnight review, 26 Oct 2026): the stores
+    // through bufL_ / wetL_ could alias the members, so every sample reloaded all of them. The same
+    // sums in the same order (the same bits); the phase's % 4 as & 3 (it is never negative).
+    static_assert(kLowDecimate == 4, "the phase wraps with & (kLowDecimate - 1)");
     const int phase0 = lowPhase_;
     int k = 0;
+    float cL[5], cA[5], cH[5], z[2][3][2];
+    for (int j = 0; j < 5; ++j) {
+        cL[j] = xoL_[j];
+        cA[j] = aaL_[j];
+        cH[j] = xoH_[j];
+    }
+    for (int c = 0; c < 2; ++c)
+        for (int f = 0; f < 3; ++f) {
+            z[c][f][0] = xoZ_[c][f][0];
+            z[c][f][1] = xoZ_[c][f][1];
+        }
+    int ph = phase0;
     for (int i = 0; i < n; ++i) {
         float* buf[2] = {bufL_, bufR_};
         for (int c = 0; c < 2; ++c) {
             const float x = buf[c][i];
-            const float lo = bq(aaL_, xoZ_[c][1], bq(xoL_, xoZ_[c][0], x));
-            buf[c][i] = bq(xoH_, xoZ_[c][2], x);
-            if (lowPhase_ == 0) (c ? lowInR_ : lowInL_)[k] = lo;
+            const float lo = bq(cA, z[c][1], bq(cL, z[c][0], x));
+            buf[c][i] = bq(cH, z[c][2], x);
+            if (ph == 0) (c ? lowInR_ : lowInL_)[k] = lo;
         }
-        if (lowPhase_ == 0) ++k;
-        lowPhase_ = (lowPhase_ + 1) % kLowDecimate;
+        if (ph == 0) ++k;
+        ph = (ph + 1) & (kLowDecimate - 1);
     }
+    for (int c = 0; c < 2; ++c)
+        for (int f = 0; f < 3; ++f) {
+            xoZ_[c][f][0] = z[c][f][0];
+            xoZ_[c][f][1] = z[c][f][1];
+        }
     tankHalf_.process(fdn_, bufL_, bufR_, wetL_, wetR_, n);
     for (int j = 0; j < k; ++j) lowOutL_[j] = lowOutR_[j] = 0.0f;
     if (k > 0) lowFdn_.process(lowInL_, lowInR_, lowOutL_, lowOutR_, k);
-    lowPhase_ = phase0;
     int j = 0;
     double power = 0.0;
+    float zo[2][2] = {{xoZ_[0][4][0], xoZ_[0][4][1]}, {xoZ_[1][4][0], xoZ_[1][4][1]}};
+    float prev[2] = {lowPrev_[0], lowPrev_[1]}, cur[2] = {lowCur_[0], lowCur_[1]};
+    ph = phase0;
     for (int i = 0; i < n; ++i) {
-        if (lowPhase_ == 0) {
-            lowPrev_[0] = lowCur_[0]; lowPrev_[1] = lowCur_[1];
-            lowCur_[0] = lowOutL_[j]; lowCur_[1] = lowOutR_[j];
+        if (ph == 0) {
+            prev[0] = cur[0]; prev[1] = cur[1];
+            cur[0] = lowOutL_[j]; cur[1] = lowOutR_[j];
             ++j;
         }
-        const float t = float(lowPhase_) / float(kLowDecimate);
+        const float t = float(ph) / float(kLowDecimate);
         float* wet[2] = {wetL_, wetR_};
         for (int c = 0; c < 2; ++c) {
-            const float up = lowPrev_[c] + t * (lowCur_[c] - lowPrev_[c]);
-            const float y = bq(aaL_, xoZ_[c][4], up); // anti-image (linear interpolation's own sinc² helps)
+            const float up = prev[c] + t * (cur[c] - prev[c]);
+            const float y = bq(cA, zo[c], up); // anti-image (linear interpolation's own sinc² helps)
             wet[c][i] += y;
             power += 0.5 * double(y) * y;
         }
-        lowPhase_ = (lowPhase_ + 1) % kLowDecimate;
+        ph = (ph + 1) & (kLowDecimate - 1);
+    }
+    lowPhase_ = ph;
+    lowPrev_[0] = prev[0]; lowPrev_[1] = prev[1];
+    lowCur_[0] = cur[0]; lowCur_[1] = cur[1];
+    for (int c = 0; c < 2; ++c) {
+        xoZ_[c][4][0] = zo[c][0];
+        xoZ_[c][4][1] = zo[c][1];
     }
     fdn_.setExternalPower(float(power / double(n)));
 }
