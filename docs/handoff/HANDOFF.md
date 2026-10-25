@@ -57,6 +57,7 @@
 
 ## In flight
 
+- **The overnight review (26 Oct 2026) is on branch `review/overnight`** (worktree `.claude/worktrees/review-overnight`, off `claude/massive-air` `0bf5505`), not merged: `docs/research/review-2026-10-26.md` is the report (Summary and section 8 first). It merged a set of bit-identical speed-ups (the tank line by line, the twin's input side off when idle, the Plate's reads, ERA memos, the Engine in DTCM, the allpass lines in AXI SRAM: `tools/same_render.py` `SAME 55/55`, `100% tests passed out of 17`, release 112,484 B), left four sound options and three bug fixes behind renderer hooks (off), built two pick pages in its `renders/` (`tape_os`, `still_lows_rate`), and rebuilt the profile firmware as **round 11** for the owner to flash (`docs/TASKS.md`). The four prototype branches `review/p2-fdn`, `review/p2-neutral`, `review/p2-firmware`, `review/p2-sound` are merged into it and can be deleted. Found on the way: on the module SIZE may never take effect in MASSIVE (knob noise restarts the crossfade's rest timer; the fix is behind `IV_SIZE_HYST`), and the twin's swell ran 24 taps a sample forever after any MASSIVE freeze (fixed).
 - **Nothing running.**
 - **No branches kept:** the prototype branches `claude/era-dry` (7ec5af8), `claude/era-strength` (3608c89) and `claude/listen` (fbb283c) were deleted at the owner's request after the wrap; the decisions are in ADR 0004 and 0021.
 - `.claude/worktrees/serene-snyder-30d3a2` and `swell-curve`: old sessions' worktrees, already merged. The app cleans them.

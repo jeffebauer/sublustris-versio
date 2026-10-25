@@ -12,6 +12,7 @@
 - Nothing open.
 
 ### Listen (first time)
+- [ ] **Two CPU options from the overnight review** (pick pages; both in the review worktree's `renders/`, serve them with "review-pages-lan" pointed there, or copy the two folders into main's `renders/`): **`tape_os`** (ERA's cassette with its tape at 4× as built, or at 2×: saves 4-6 % of the module's CPU while the cassette is in and 808 B of flash; on music every band is within 0.2 dB, only a very loud, bright sound into a cassette PLATE gets a little more grit in the top octave) and **`still_lows_rate`** (the bass's own still tank at 12 kHz as built, or at 6 kHz: saves 7-10 % in MASSIVE and 5-8 % in HALL whenever they play; the same decay and level, but the bass resonances land on slightly different notes, so a held bass note can sit a few dB louder or quieter). Only needed if round 11 says the module is still short.
 - [ ] **ERA signatures** (out of date: it measures the old stacked ERA; Claude can re-measure it for the five eras; reference, nothing to pick; https://claude.ai/artifact/AiR2JXPAaLbT8GeJseK3Vj, opens on your phone anywhere): what each ERA stage does to the reverb, measured and drawn as charts (tone, how long each frequency rings, harmonics, grain, hiss, mirror tones, pitch wobble). `tools/era_reference.py` remeasures it.
 
 ### At the rack
