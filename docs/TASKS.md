@@ -6,6 +6,7 @@
 ## To do
 
 ### Decide
+- [ ] **CPU: how to fit the module** (it's ~2.3× over at worst). Claude's options: hear the tank at a lower internal sample rate (like classic digital reverbs: the tail's top end stops around 11-12 kHz), fewer swell points for BLOOM, fewer early reflections; each would come as a listening page, level-matched against today's sound.
 
 ### Listen (after your notes)
 - Nothing open.
@@ -17,7 +18,6 @@
 - [ ] **Play the plugin** (Immensio Versio, AU or VST3; rescan plug-ins first). It's v1.0.33 from branch `claude/massive-air`: everything in `main` plus MASSIVE's highs and shortest tail, ERA's era names, and **SHIMMER** on ATTACK's third position (TIME is how much). Notes welcome on anything; it goes into `main` when you say so.
 
 ### At the rack
-- [ ] **M3 CPU check, round 8: memory or arithmetic?** Flash `dist/immensio_versio_profile_M3_round8.bin` and tell Claude once it's running (the answer is in the first `MICRO` line, at the start of each lap).
 
 ### When convenient
 - [ ] **Re-record Supermassive's short settings at a feedback that sounds like a reverb** (your note: at 0 % and 12 % it's separate delays): about 5 % for Andromeda's 2 s, or skip 2 s and record the longer settings you like (15 s, 30 s, infinite). Also **re-export three clipped Valhalla takes about 6 dB lower**: Plate Chrome 15 s, Plate Lithium 15 s and Supermassive Andromeda 100 % (measure and music). Also check Supermassive's DELAY: its first sound came at different times between takes (Sagittarius 421 / 38 / 3 ms, Andromeda 1.1 / 0.7 / 0.65 s).
@@ -25,7 +25,7 @@
 
 ## Waiting on Claude
 
-- **CPU: the module is over budget, about 2.4× at worst** (M3 rounds 1-6). Done, sound unchanged (renders identical to the bit): the swell reads in runs, the lines spread across the cache, no wipe stalls, the memory groups writes; now also the per-block maths worked out only when a knob moves, and the tanks fetching each block's memory in one go before using it. Round 7 measures these. Still to do if needed: the short busy lines into the chip's own memory; then, if MASSIVE is still over, a sound choice as a listening page.
+- **CPU: the module is about 2.3× over budget at worst** (MASSIVE with BLOOM). The speed-ups that keep the sound identical are nearly used up (round 8: the tank is short of arithmetic, not just memory). Waiting on your choice of direction (Decide).
 - **BLOOM's TIME and PLATE's SIZE by crossfade** (phase 2 of your pick C): they still slide; HALL and MASSIVE's SIZE and TIME's pre-delay are done (v1.0.34).
 - **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): build it for real. For 3 s after a flip both spaces hear the music while one crossfades into the other; it needs a second reverb running for those 3 s (the freeze's spare) and ~0.5-1 KB of flash, which has to be freed first (804 B left). A plan before building.
 - **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper; a later round if the shimmer is kept.
@@ -36,6 +36,7 @@
 
 ## Done
 
+- 25 Oct 2026: **M3 CPU check, round 8: mostly arithmetic** (your run). The same small tank costs 4,049 cycles a sample with its memory on the chip and 6,925 in the external memory: the memory adds ~70 %, but the tank's sums alone are most of it, because this processor does about one step per cycle where a desktop does several. Speed-ups that keep the sound to the bit have got the worst case from ~2.6× to ~2.3× over budget; the rest needs choices that change the sound a little (Decide).
 - 25 Oct 2026: **M3 CPU check, round 7** (your run): fetching the tank's memory before each block cost ~30 % and saved little, so the averages didn't improve (MASSIVE ~171-185 %). Round 8 runs one small tank in the fast and in the slow memory to settle whether the tank waits on memory or on arithmetic.
 - 25 Oct 2026: **M3 CPU check, round 6: the building blocks** (your run). Cycles per operation: external memory (SDRAM) 10 for one steady stream, 33 for 32 streams at once (the tank's pattern), 48 for writes, ~100 for a delay line's read-and-write; the chip's own memory 3 for the same 32 streams. Maths calls: exp 112, sin 85, pow 209, log10 157. So the long delay lines in the external memory are the main cost, then the maths calls once a block. Averages now: PLATE 67-82 %, HALL 135-178 %, MASSIVE 161-180 %.
 - 25 Oct 2026: **M3 CPU check, round 5** (your run): the memory setting helped a little (PLATE ~66 %, HALL ~142-167 %); the tank's output and early taps still cost far more than their few reads should. Round 6 times the building blocks directly.
