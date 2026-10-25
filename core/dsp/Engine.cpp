@@ -5,10 +5,23 @@
 #include "params/Mappings.h"
 
 #include <cmath>
+#include <cstddef>
+#include <cstring>
 
 namespace iv {
 
 namespace {
+
+// The same bits in every field of an ERA mix as the bytes of one kept (memberwise, so +0 and -0
+// differ, and the padding after midiRound is skipped): then LoopEra::set would store what it holds.
+static_assert(sizeof(dsp::EraMix) == 15 * sizeof(float) && offsetof(dsp::EraMix, midiDark) == 11 * sizeof(float),
+              "sameEra compares EraMix's fields as two runs of floats around midiRound: update it with EraMix");
+bool sameEra(const unsigned char* kept, const dsp::EraMix& m)
+{
+    constexpr size_t kBool = offsetof(dsp::EraMix, midiRound), kTail = offsetof(dsp::EraMix, midiDark);
+    return std::memcmp(kept, &m, kBool) == 0 && std::memcmp(kept + kBool, &m.midiRound, sizeof(bool)) == 0
+        && std::memcmp(kept + kTail, &m.midiDark, sizeof(dsp::EraMix) - kTail) == 0;
+}
 
 // One-pole smoothing coefficient for a time constant, per control chunk.
 float chunkCoeff(float ms, float sampleRate, int n)
@@ -141,6 +154,7 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
 
 IV_SIZE_OPT void Engine::reset()
 {
+    eraSentOk_ = 0; // the tanks were prepared or reset: send them their ERA afresh
     buttonDown_ = false;
     gateHigh_   = false;
     edgeCount_  = 0;
@@ -331,7 +345,8 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
 
     // Freezing: loss → 0, highs kept (ratio → 1), the governor caps paint.
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
-    const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
+    const dsp::EraMix era = map::eraMix(smoothed(ParamId::Era)); // once a chunk (it was worked out twice)
+    const float toneRatio = map::toneHighT60Ratio(tone) * era.highRatioScale;
     const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(hallSize_) : 1.0f;
     const float rate = decayRate(decay, size) / sizeT60 * (1.0f - freezeMix_);
     const float spaceRatio = massive ? map::massiveHighRatio(toneRatio, decay) : toneRatio;
@@ -419,7 +434,6 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
 
     // ERA in the loop and DRIFT (SPEC §4.6, §4.7). Freezing glides the
     // in-loop colour out (the pad holds still, ADR 0009); DRIFT stays.
-    const dsp::EraMix era = map::eraMix(smoothed(ParamId::Era));
     // The bucket-brigade and the radio on the wet (ADR 0021); each runs only while it's in.
     bbdW_ = era.bbd;
     radioW_ = era.radio;
@@ -445,14 +459,16 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     const float over = std::fmin(tankLevelDb(), tankNowDb) - voicing::kCompressThresholdDb;
     const float compress = over > 0.0f ? keep * era.cassette * voicing::kCompressRatePerDb * over : 0.0f;
     if (plate) {
-        plate_.setEra(loopEra);
+        if (eraChanged(EraSentPlate, loopEra)) plate_.setEra(loopEra);
         plate_.setDrift(drift);
         plate_.setExtraRate(compress);
     } else {
-        fdn_.setEra(loopEra);
+        if (eraChanged(EraSentFdn, loopEra)) {
+            fdn_.setEra(loopEra);
+            lowFdn_.setEra(loopEra);
+        }
         fdn_.setDrift(drift);
         fdn_.setExtraRate(compress);
-        lowFdn_.setEra(loopEra);
         lowFdn_.setDrift(dsp::DriftAmounts{}); // still: no wow, flutter or Wander
         lowFdn_.setExtraRate(compress);
     }
@@ -514,7 +530,7 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
             twinPlate_.setDecayRate(tRate);
             twinPlate_.setHighT60Ratio(toneRatio);
             twinPlate_.setGovernor(0.0f);
-            twinPlate_.setEra(tEra);
+            if (eraChanged(EraSentTwinPlate, tEra)) twinPlate_.setEra(tEra);
             twinPlate_.setDrift(drift);
         } else {
             const float mean = massive ? map::massiveMeanSeconds(tSize) : map::hallMeanSeconds(tSize);
@@ -531,10 +547,22 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
             twinFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(tDecay, tSize)
                                            : voicing::kHallOutputTrim * map::hallSizeLevelTrim(tSize, tDecay));
             twinFdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
-            twinFdn_.setEra(tEra);
+            if (eraChanged(EraSentTwinFdn, tEra)) twinFdn_.setEra(tEra);
             twinFdn_.setDrift(drift);
         }
     }
+}
+
+// LoopEra::set works out two constants per line (an exp2 and an exp: ~16 libm calls a chunk per
+// tank) and stores the mix; with the same mix it would store the same again. So each tank is sent
+// its ERA only when it changed (overnight review, 26 Oct 2026; bit-identical).
+IV_SIZE_OPT bool Engine::eraChanged(int which, const dsp::EraMix& m)
+{
+    const unsigned bit = 1u << which;
+    if ((eraSentOk_ & bit) && sameEra(eraSent_[which], m)) return false;
+    std::memcpy(eraSent_[which], &m, sizeof m);
+    eraSentOk_ = uint8_t(eraSentOk_ | bit);
+    return true;
 }
 
 // PROTOTYPE (setDiffuserIndependent): lengths of their own for the right side, each shorter

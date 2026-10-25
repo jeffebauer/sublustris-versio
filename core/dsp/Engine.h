@@ -146,6 +146,9 @@ private:
     void applySpace(bool snap, int n = kChunk, bool snapInput = true);
     void setEarlyTapsForSpace();
     float decayRate(float decay, float size) const;
+    // ERA last sent to a tank (applySpace): true, keeping m, when m differs from it.
+    enum { EraSentFdn, EraSentPlate, EraSentTwinFdn, EraSentTwinPlate, EraSentCount };
+    bool eraChanged(int which, const dsp::EraMix& m);
     float smoothed(ParamId id) const { return smooth_[static_cast<size_t>(id)]; }
 
     float sampleRate_   = 48000.0f;
@@ -263,6 +266,9 @@ private:
     float twinInL_[kChunk] = {}, twinInR_[kChunk] = {}, twinL_[kChunk] = {}, twinR_[kChunk] = {};
     float chunkGain_[kChunk] = {}; // the tank's input gain (tankIn_ x flipGain_) per sample, kept for after the swell
     static_assert(kChunk <= dsp::Swell::kMaxBlock, "the swell runs a chunk at a time");
+    // The ERA each tank was sent last (eraChanged), as an EraMix's bytes; eraSentOk_: which are set.
+    unsigned char eraSent_[EraSentCount][sizeof(dsp::EraMix)];
+    uint8_t       eraSentOk_ = 0;
 };
 
 } // namespace iv
