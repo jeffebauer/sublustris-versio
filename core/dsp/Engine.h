@@ -53,7 +53,28 @@ public:
              + dsp::Fdn::memoryFloats(0.5f * sampleRate) // the freeze twin (half the rate too)
              + dsp::Fdn::memoryFloats(sampleRate / float(kLowDecimate)) // still lows' low tank
              + 2 * dsp::nextPow2(size_t(voicing::kPredelayMaxSeconds * sampleRate) + 4)
-             + dsp::Arena::skewRoom(); // each line's start staggered across the cache's sets
+             + dsp::Arena::skewRoom() // each line's start staggered across the cache's sets
+             - axiTankFloats(sampleRate); // the tank's and the low tank's allpasses: axiFloats()
+    }
+    // The in-loop allpass lines of the tank and the low tank (not the twin's), which the firmware keeps
+    // in AXI SRAM (overnight review, 26 Oct 2026): on chip and cached, ~11 cycles a line fill against
+    // SDRAM's ~200. 256 + 128 KB at 48 kHz, + the cache-set stagger. The twin's (256 KB) stay in SDRAM:
+    // all three don't fit the 512 KB.
+    static constexpr size_t axiTankFloats(float sampleRate)
+    {
+        return dsp::Fdn::apFloats(0.5f * sampleRate) + dsp::Fdn::apFloats(sampleRate / float(kLowDecimate));
+    }
+    static constexpr size_t axiFloats(float sampleRate)
+    {
+        // The stagger (dsp/Memory.h): the first slice needs up to kSkewLines - 1 lines of padding; when
+        // every slice is a whole number of cache ways (4 KB: the allpass lines at 24 and 12 kHz), each
+        // later one needs exactly kSkewStep lines; otherwise up to kSkewLines - 1 each.
+        constexpr size_t way = dsp::Arena::kSkewLines * dsp::Arena::kLineFloats, slices = 2 * dsp::Fdn::kApSlices;
+        const bool whole = dsp::Fdn::apLineFloats(0.5f * sampleRate) % way == 0
+                        && dsp::Fdn::apLineFloats(sampleRate / float(kLowDecimate)) % way == 0;
+        const size_t padLines = whole ? (dsp::Arena::kSkewLines - 1) + (slices - 1) * dsp::Arena::kSkewStep
+                                      : slices * (dsp::Arena::kSkewLines - 1);
+        return axiTankFloats(sampleRate) + padLines * dsp::Arena::kLineFloats;
     }
     static constexpr size_t fastFloats(float sampleRate)
     {
@@ -65,7 +86,10 @@ public:
         return n;
     }
 
-    void attachMemory(float* large, size_t largeCount, float* fast, size_t fastCount);
+    // axi: the in-loop allpass lines' memory (axiFloats(); the firmware's AXI SRAM). Desktop Hosts may
+    // skip it too. With IV_NO_HEAP and none attached, prepare() finds no room and the Engine stays dry.
+    void attachMemory(float* large, size_t largeCount, float* fast, size_t fastCount, float* axi = nullptr,
+                      size_t axiCount = 0);
 
     void prepare(float sampleRate, int maxBlockSize);
     void reset();
@@ -133,7 +157,7 @@ public:
     float limiterGain() const { return limiter_.gain(); }
     float duckAmount() const { return duck_; }
     // Bytes of delay memory the Engine uses (firmware serial report).
-    size_t memoryBytes() const { return (large_.used + fast_.used) * sizeof(float); }
+    size_t memoryBytes() const { return (large_.used + fast_.used + axi_.used) * sizeof(float); }
     // False when the attached memory was too small: the Engine then passes
     // the dry only.
     bool  ready() const { return ready_; }
@@ -187,7 +211,7 @@ private:
 
     dsp::Arena large_, fast_;
 #if !defined(IV_NO_HEAP)
-    std::vector<float> ownLarge_, ownFast_;
+    std::vector<float> ownLarge_, ownFast_, ownAxi_;
 #endif
     float* attachedLarge_ = nullptr;
     float* attachedFast_ = nullptr;
@@ -300,6 +324,12 @@ private:
     // The ERA each tank was sent last (eraChanged), as an EraMix's bytes; eraSentOk_: which are set.
     unsigned char eraSent_[EraSentCount][sizeof(dsp::EraMix)];
     uint8_t       eraSentOk_ = 0;
+
+    // The allpass lines' memory (attachMemory's axi): last, so no other member's offset moves (the
+    // per-sample code's load offsets, and with them its flash, stay as they were).
+    dsp::Arena axi_;
+    float*     attachedAxi_ = nullptr;
+    size_t     attachedAxiCount_ = 0;
 };
 
 } // namespace iv

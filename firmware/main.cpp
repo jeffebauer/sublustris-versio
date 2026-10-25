@@ -90,7 +90,13 @@ void SdramWriteAllocate()
 // flash and copied to RAM at startup, while zeroed .bss storage costs no
 // flash (128 KB budget, SPEC §5.3; Resilio measured ~7.9 KB for its Tank).
 // Never destroyed (main never returns).
-alignas(iv::Engine) unsigned char gEngineStorage[sizeof(iv::Engine)];
+// In DTCM (overnight review 26 Oct 2026, lit-m7 section 4.3): the Engine's own state (~24 KB, read
+// and written every sample) sat in cached AXI SRAM and fought the delay lines for the 16 KB data
+// cache; DTCM is zero-wait and never cached. .dtcmram_bss is NOLOAD, but `iv::Engine()` (value
+// initialisation) zeroes the whole object before constructing it (a memset in main), so nothing
+// depends on startup's .bss clear. DTCM budget (release map): gFast 36,864 + this 24,232 = 61,096 B
+// from 0x20000000; the stack grows down from _estack = 0x20020000, leaving ~68 KB for it.
+IV_DTCM alignas(iv::Engine) unsigned char gEngineStorage[sizeof(iv::Engine)];
 iv::Engine& engine = *reinterpret_cast<iv::Engine*>(gEngineStorage);
 
 // Delay memory (SPEC §5.2): the long lines (FDN, predelay) in SDRAM, the
@@ -102,6 +108,11 @@ constexpr size_t kLargeFloats = iv::Engine::largeFloats(48000.0f);
 constexpr size_t kFastFloats  = iv::Engine::fastFloats(48000.0f);
 DSY_SDRAM_BSS float gLarge[kLargeFloats];
 IV_DTCM float       gFast[kFastFloats];
+// The tank's and the low tank's in-loop allpass lines (Engine::axiFloats, ~424 KB at 48 kHz) in AXI
+// SRAM: a plain global, so libDaisy's .bss (the 512 KB SRAM at 0x24000000), zeroed by startup.
+// Overnight review, 26 Oct 2026: 32 of the tanks' ~80 SDRAM streams a tank sample come on chip.
+constexpr size_t kAxiFloats = iv::Engine::axiFloats(48000.0f);
+alignas(32) float gAxi[kAxiFloats];
 #endif
 
 // Panel pots P1..P7 (reading order: top to bottom, left to right) -> libDaisy
@@ -260,6 +271,9 @@ int main()
 #include "util/CpuLoadMeter.h"
 #include "dsp/ProfileHook.h"
 
+// STM32H750IB_flash_itcm.lds (PROFILE_ITCM=1): the ITCM code's place in ITCM and its copy in flash.
+extern "C" uint32_t _sitcm_text, _eitcm_text, _siitcm_text;
+
 namespace {
 
 using iv::ParamId;
@@ -330,21 +344,39 @@ void AppendFixed1(char*& p, const char* end, int tenths, int width)
 // Fraction (0..1) -> tenths of a percent, e.g. 0.583f -> 583 ("58.3").
 int FracToPercentTenths(float frac) { return int(frac * 1000.0f + 0.5f); }
 
-constexpr size_t kLineBufSize = 1100; // CORNER + SPLIT + PEAK (+ BENCH) lines, sent in one transmit
+void AppendHex(char*& p, const char* end, uint32_t v)
+{
+    AppendStr(p, end, "0x");
+    for (int s = 28; s >= 0 && p < end; s -= 4) *p++ = "0123456789abcdef"[(v >> s) & 0xFu];
+}
 
+constexpr size_t kLineBufSize  = 1100; // CORNER + SPLIT + PEAK lines, sent in one transmit
+constexpr size_t kBenchBufSize = 1600; // BENCH + SDRAM + MICRO (once a lap), its own transmit
+
+// The USB CDC send is non-blocking: it reads the buffer while the host polls (so the buffer must
+// outlive the call: callers pass static buffers) and refuses (busy) a send made while the last is
+// still going out. So: retry until the transport takes it, for at most 200 ms (no host listening:
+// the line is dropped, as before).
 void TransmitLine(const char* buf, size_t len)
 {
-    hw.seed.usb_handle.TransmitInternal(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(buf)), len);
+    const uint32_t t0 = System::GetNow();
+    while (hw.seed.usb_handle.TransmitInternal(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(buf)), len)
+               != UsbHandle::Result::OK
+           && System::GetNow() - t0 < 200u) {
+    }
 }
 
 // ---- Corner table (SPEC §5, §7 M3) -----------------------------------------
-// SPACE PLATE/HALL/MASSIVE x DECAY {0,1} x SIZE {0,1} x ERA {0,1} = 24
-// corners, all fully wet (MIX 1) so the meter sees the Engine, not the dry
-// mix. SPEC §5.1's worst case (MASSIVE, Era full, BLOOM) is flagged
-// "(worst?)" in the printed name; freeze + paint is added at M5.
+// SPACE PLATE/HALL/MASSIVE x SIZE {0,1} x ERA (5) = 30 corners, all fully wet (MIX 1) so the meter
+// sees the Engine, not the dry mix, then the worst cases no corner had measured (overnight review,
+// 26 Oct 2026: cost-tank 4.2 and cost-input findings 1, 8, 9): a frozen MASSIVE with the twin
+// playing, MASSIVE in SHIMMER, and a MASSIVE whose SIZE keeps moving (the 0.3 s crossfade).
+enum CornerKind { kPlain, kFrozen, kShimmerCorner, kSizeMove };
 struct Corner {
     int   spacePos; // 0/1/2 -> PLATE/HALL/MASSIVE (Switch3 encoding)
     float decay, size, era;
+    float seconds;  // how long it is measured
+    int   kind;     // CornerKind
     char  name[40];
 };
 
@@ -352,10 +384,16 @@ struct Corner {
 // AM radio), SIZE 0 / 1, DECAY full.
 constexpr float kCornerEras[5] = {0.1f, 0.3f, 0.5f, 0.7f, 0.9f};
 const char* const kEraNames[5] = {"neve", "midiverb", "bbd", "cassette", "radio"};
-constexpr int kNumCorners = 3 * 2 * 5;
+constexpr int kNumGridCorners = 3 * 2 * 5;
+constexpr int kHeaviestCorner = kNumGridCorners - 1; // MASSIVE S1 radio: the headroom test's corner
+constexpr int kNumCorners = kNumGridCorners + 3;
 Corner        gCorners[kNumCorners];
 
 const char* const kSpaceNames[3] = {"PLATE", "HALL", "MASSIVE"};
+
+// The SIZE-move corner flicks SIZE between these every kSizeMoveSeconds: each move starts a 0.3 s
+// crossfade once SIZE rests (ADR 0025), so one runs ~20 % of the time.
+constexpr float kSizeMoveLow = 0.3f, kSizeMoveHigh = 0.8f, kSizeMoveSeconds = 1.5f;
 
 void BuildCornerTable()
 {
@@ -368,6 +406,8 @@ void BuildCornerTable()
                 c.decay    = 1.0f;
                 c.size     = float(size);
                 c.era      = kCornerEras[era];
+                c.seconds  = 3.0f;
+                c.kind     = kPlain;
                 char*       p   = c.name;
                 const char* end = c.name + sizeof(c.name) - 1;
                 AppendStr(p, end, kSpaceNames[spacePos]);
@@ -379,11 +419,36 @@ void BuildCornerTable()
             }
         }
     }
+    // The extra corners: MASSIVE, Neve, DECAY full. Frozen: 6 s, so most of it is past the freeze's
+    // glide (the twin runs from the press on). The SIZE move: 6 s, four moves.
+    const struct {
+        float size, seconds;
+        int   kind;
+        const char* name;
+    } extra[3] = {
+        {1.0f, 6.0f, kFrozen, "MASSIVE S1 neve FROZEN+twin"},
+        {1.0f, 3.0f, kShimmerCorner, "MASSIVE S1 neve SHIMMER"},
+        {kSizeMoveLow, 6.0f, kSizeMove, "MASSIVE neve SIZE .3<>.8"},
+    };
+    for (const auto& e : extra) {
+        Corner& c  = gCorners[idx++];
+        c.spacePos = 2;
+        c.decay    = 1.0f;
+        c.size     = e.size;
+        c.era      = kCornerEras[0];
+        c.seconds  = e.seconds;
+        c.kind     = e.kind;
+        char*       p   = c.name;
+        const char* end = c.name + sizeof(c.name) - 1;
+        AppendStr(p, end, e.name);
+        *p = '\0';
+    }
 }
 
 void ApplyCorner(int idx)
 {
     const Corner& c = gCorners[idx];
+    const bool shimmer = c.kind == kShimmerCorner;
     engine.setParam(ParamId::Space, iv::switchToNormalised(c.spacePos));
     engine.setParam(ParamId::Decay, c.decay);
     engine.setParam(ParamId::Size, c.size);
@@ -391,14 +456,12 @@ void ApplyCorner(int idx)
     engine.setParam(ParamId::Mix, 1.0f);
     engine.setParam(ParamId::Tone, 1.0f);
     engine.setParam(ParamId::Drift, 1.0f);
-    engine.setParam(ParamId::Time, 1.0f);
-    engine.setParam(ParamId::Attack, iv::switchToNormalised(1)); // BLOOM
+    engine.setParam(ParamId::Time, shimmer ? 0.7f : 1.0f);
+    engine.setParam(ParamId::Attack, iv::switchToNormalised(shimmer ? 2 : 1)); // SHIMMER or BLOOM
 }
 
 // ---- Synthetic test signal: click every 500 ms + low-level seeded noise ---
-constexpr float kCornerSeconds      = 3.0f;
-size_t          gCornerSamples      = 0; // set once fs is known, in main()
-size_t          gClickPeriodSamples = 0;
+size_t          gClickPeriodSamples = 0; // set once fs is known, in main()
 size_t          gClickPhase         = 0;
 uint32_t        gNoiseState         = 0x9E3779B9u; // fixed seed: reproducible profiling runs
 
@@ -490,21 +553,140 @@ void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer ou
 // Micro-tests (M3 round 6), once at boot before the Engine takes its memory: what each building
 // block costs on this chip, in tenths of a cycle per operation. The reverb's sections cost ~10x what
 // their instructions should (round 4), so: is it the SDRAM (one stream, 32 at once, writes, a delay
-// line's read-then-write), internal RAM (AXI, DTCM), or the maths library?
+// line's read-then-write), internal RAM (AXI, DTCM), or the maths library? The overnight review
+// (26 Oct 2026) added the FPU's corners (subnormals, VDIV), a prefetch, the swell, a real-size
+// MASSIVE tank with its allpass lines in SDRAM or in AXI SRAM, and the same SDRAM tests again at
+// datasheet SDRAM timing ('t' names; see SdramSetTiming). Every read test sums into one register,
+// so none can beat the 3-cycle VADD latency: 3.0 means "as fast as the FPU's add", not "free".
 volatile float gSink = 0.0f;
-float          gAxiTest[32 * 512]; // 64 KB of AXI SRAM (.bss)
-constexpr int  kMicro = 20;
-int            gMicro[kMicro]{};
-const char* const kMicroNames[kMicro] = {"sdr1", "sdr32", "sdw32", "sdline8", "axi32", "dtcm32",
-                                         "exp", "sin", "pow", "log10", "div", "fdnAXI", "fdnSDRAM",
-                                         "tape/smp", "bbd/smp", "radio/smp", "bbdSet/blk", "radioSet/blk",
-                                         "loopNeve/smp", "loopMidi/smp"};
+// The AXI tests use gAxi, free until engine.prepare() (it had its own 64 KB array, gAxiTest, until the
+// overnight review found that GCC had removed it: never written, so its reads folded to 0.0f and
+// "axi32" timed a chain of dependent vadds, 3.0 cycles = the VADD latency, not AXI SRAM).
+enum Micro {
+    kSdr1, kSdr32, kSdw32, kSdline8, kAxi32, kDtcm32, kExp, kSin, kPow, kLog10, kDiv, kFdnAxi, kFdnSdram,
+    kTape, kBbd, kRadio, kBbdSet, kRadioSet, kLoopNeve, kLoopMidi,
+    // overnight review, 26 Oct 2026
+    kSub, kNorm, kSubX, kVdivDep, kVdivThr, kVdivIndep, kPld32, kSwell12, kSwellNS, kSwellW, kFdnMassive,
+    kFdnMassiveApAxi, kSdr1t, kSdr32t, kSdw32t, kSdline8t, kPld32t, kFdnSdramt, kFdnMassivet,
+    kFdnMassiveApAxit, kMicro
+};
+int               gMicro[kMicro]{};
+const char* const kMicroNames[] = {"sdr1", "sdr32", "sdw32", "sdline8", "axi32", "dtcm32",
+                                   "exp", "sin", "pow", "log10", "div", "fdnAXI", "fdnSDRAM",
+                                   "tape/smp", "bbd/smp", "radio/smp", "bbdSet/blk", "radioSet/blk",
+                                   "loopNeve/smp", "loopMidi/smp",
+                                   "sub", "norm", "subX", "vdivDep", "vdivThr", "vdivIndep", "pld32",
+                                   "swell12/blk", "swellNS/blk", "swellW/blk", "fdnMassive24k", "fdnMassiveApAxi",
+                                   "sdr1t", "sdr32t", "sdw32t", "sdline8t", "pld32t", "fdnSDRAMt",
+                                   "fdnMassive24kt", "fdnMassiveApAxit"};
+static_assert(sizeof(kMicroNames) / sizeof(kMicroNames[0]) == kMicro, "one name per micro-test, in order");
+
+// ---- FPU flush-to-zero (overnight review, lit-m7 4.5, arch F12) -------------------------------------
+// FZ (bit 24) in FPSCR for this thread (main loop: the corners) and in FPDSCR, the FPSCR every
+// interrupt's FP context starts from (the audio callback: the headroom test). Release doesn't set it;
+// IV_PROFILE_FZ (Makefile PROFILE_FZ, default 1) lets the owner compare.
+#ifndef IV_PROFILE_FZ
+#define IV_PROFILE_FZ 1
+#endif
+constexpr uint32_t kFzBit = 1u << 24;
+void SetFlushToZero(bool on)
+{
+    __set_FPSCR(on ? (__get_FPSCR() | kFzBit) : (__get_FPSCR() & ~kFzBit));
+    FPU->FPDSCR = on ? (FPU->FPDSCR | kFzBit) : (FPU->FPDSCR & ~kFzBit);
+    __ISB();
+}
+
+// ---- SDRAM timing (overnight review, lit-m7 4.3 Finding A) ----------------------------------------
+// libDaisy (src/dev/sdram.cpp) programs TRP 16 and TRCD 10 SDCLK cycles; the AS4C16M32MSA-6 needs
+// tRP = tRCD = 18 ns (2 cycles at the 100 MHz SDCLK this board runs, 3 at 120 MHz), so every change
+// of SDRAM row waits ~20 cycles too long, ~96 CPU cycles a line fill. The profile build tries 3 / 3
+// (FMC_SDTR1 TRCD bits 27:24, TRP 23:20, each stored as cycles - 1, RM0433 22.9.5); TRC (8), TWR (3)
+// and the rest stay libDaisy's, and RM0433's rules hold (TWR >= TRAS - TRCD, TWR >= TRC - TRCD - TRP,
+// TWR not > TRCD). Bank 2 is unused: FMC_SDTR2 stays at reset (RM0433: TWR 0xF for an unused bank),
+// and TRP / TRC live only in FMC_SDTR1. A precharge-all before and after (RM0433: before changing
+// RBURST/RPIPE, "to make sure ongoing operations are complete"), interrupts off, the D-cache cleaned
+// first so no write-back is in flight. The H7 has no SDSR busy flag: a PALL takes tRP (<= 16 SDCLK,
+// 160 ns), so a 2 us wait covers it. Release never runs this (the owner decides after SDRAMCHK).
+#ifndef IV_PROFILE_ITCM
+#define IV_PROFILE_ITCM 0
+#endif
+#ifndef IV_PROFILE_SDRAM_TIGHT
+#define IV_PROFILE_SDRAM_TIGHT 1 // keep 3 / 3 for the corner lap (0: back to libDaisy's after the tests)
+#endif
+constexpr uint32_t kTightTrp = 3, kTightTrcd = 3; // SDCLK cycles
+uint32_t           gSdtrLibDaisy = 0;             // FMC_SDTR1 as libDaisy left it
+
+void SdramPrechargeAll()
+{
+    __DSB();
+    FMC_Bank5_6_R->SDCMR = FMC_SDCMR_MODE_1 | FMC_SDCMR_CTB1; // MODE 010: PALL, bank 1, NRFS 0, MRD 0
+    __DSB();
+    const uint32_t t0 = DWT->CYCCNT;
+    while (DWT->CYCCNT - t0 < 1000u) { // ~2 us
+    }
+}
+
+void SdramSetTiming(uint32_t sdtr)
+{
+    __disable_irq();
+    SCB_CleanInvalidateDCache();
+    __DSB();
+    __ISB();
+    SdramPrechargeAll();
+    FMC_Bank5_6_R->SDTR[0] = sdtr;
+    __DSB();
+    SdramPrechargeAll();
+    __enable_irq();
+}
+
+uint32_t SdtrWith(uint32_t base, uint32_t trp, uint32_t trcd)
+{
+    return (base & ~(FMC_SDTRx_TRP_Msk | FMC_SDTRx_TRCD_Msk)) | ((trp - 1u) << FMC_SDTRx_TRP_Pos)
+         | ((trcd - 1u) << FMC_SDTRx_TRCD_Pos);
+}
+
+// SDRAMCHK: the integrity test for a timing. 8 MB at 24..32 MB of the SDRAM (gLarge ends at
+// ~23.8 MB; nothing else lives there), an address-derived pattern written in order and read back
+// scattered (every read a line fill from another SDRAM row: precharge + activate, the timings under
+// test), then its complement written scattered (write-allocate fills and dirty write-backs) and read
+// back in order. The D-cache is cleaned and invalidated between, so every check reads the chip.
+// Returns the number of 32-bit words that came back wrong (of 2 x kChkWords checked).
+constexpr uintptr_t kChkBase  = 0xC1800000u;
+constexpr uint32_t  kChkWords = (8u << 20) / 4u; // a power of two (the scatter is a permutation of it)
+
+uint32_t ChkPattern(uint32_t i)
+{
+    uint32_t x = i * 2654435761u;
+    return x ^ (x >> 15) ^ (i << 7);
+}
+
+uint32_t SdramCheck()
+{
+    auto* m = reinterpret_cast<volatile uint32_t*>(kChkBase);
+    constexpr uint32_t kScatter = 0x9E3779B1u; // odd: k -> k * kScatter mod 2^21 visits every word once
+    uint32_t errors = 0;
+    for (uint32_t i = 0; i < kChkWords; ++i) m[i] = ChkPattern(i);
+    SCB_CleanInvalidateDCache();
+    for (uint32_t k = 0; k < kChkWords; ++k) {
+        const uint32_t i = (k * kScatter) & (kChkWords - 1u);
+        errors += m[i] != ChkPattern(i);
+    }
+    for (uint32_t k = 0; k < kChkWords; ++k) {
+        const uint32_t i = (k * kScatter) & (kChkWords - 1u);
+        m[i] = ~ChkPattern(i);
+    }
+    SCB_CleanInvalidateDCache();
+    for (uint32_t i = 0; i < kChkWords; ++i) errors += m[i] != ~ChkPattern(i);
+    return errors;
+}
+uint32_t gChkLibDaisy = 0, gChkTight = 0, gChkLap = 0, gChkLaps = 0; // errors
 
 // The same small tank (an Fdn at 12 kHz: 0.1 s mean lines, in-loop diffusion and early taps on) run
 // with its memory in AXI SRAM and then in SDRAM, cycles per sample (M3 round 8): if they cost about
 // the same, the tank is short of arithmetic; if the SDRAM one is far slower, it's the memory.
 constexpr size_t kTestFdnFloats = iv::dsp::Fdn::memoryFloats(12000.0f, 0.25f);
-alignas(32) float gAxiArena[kTestFdnFloats + iv::dsp::Arena::kSkewLines * iv::dsp::Arena::kLineFloats];
+constexpr size_t kTestArenaFloats = kTestFdnFloats + iv::dsp::Arena::kSkewLines * iv::dsp::Arena::kLineFloats;
+static_assert(kTestArenaFloats <= kAxiFloats, "the AXI test tank lives in gAxi (before engine.prepare)");
 alignas(iv::dsp::Fdn) unsigned char gTestFdnStorage[sizeof(iv::dsp::Fdn)];
 
 int TimeTestFdn(float* mem, size_t floats, bool skew)
@@ -536,6 +718,55 @@ int TimeTestFdn(float* mem, size_t floats, bool skew)
     return tenths;
 }
 
+// A real-size MASSIVE tank alone (overnight review): an Fdn at 24 kHz (the Engine's fdn_ rate) with
+// kFdnMaxLineSeconds of room, 1.4 s mean lines (SIZE ~1), full in-loop diffusion, 4 early taps a line
+// (MASSIVE's), DECAY infinite with the governor (the corners' DECAY 1), Neve ERA; its lines in SDRAM,
+// its in-loop allpass lines either in SDRAM too (A, as release was) or in AXI SRAM (B, as now).
+// Cycles per tank sample (one tank sample = two output samples at 48 kHz).
+alignas(iv::dsp::Fdn) unsigned char gMassiveStorage[2][sizeof(iv::dsp::Fdn)];
+iv::dsp::Fdn* gMassive[2] = {};
+uint32_t      gMassiveRng = 1;
+
+iv::dsp::Fdn* PrepareMassive(int which, float* lines, size_t lineFloats, float* ap, size_t apFloats)
+{
+    auto* f = new (gMassiveStorage[which]) iv::dsp::Fdn();
+    iv::dsp::Arena a, b;
+    a.reset(lines, lineFloats, true);
+    if (ap) b.reset(ap, apFloats, true);
+    if (!f->prepare(a, 24000.0f, 0x1D5A7u, iv::voicing::kFdnMaxLineSeconds, ap ? &b : nullptr)) return nullptr;
+    f->setEarlyTapCount(4);
+    f->setMeanSeconds(1.4f, 1.0f, true);
+    f->setDecayRate(0.0f);
+    f->setGovernor(1.0f);
+    f->setInLoopDiffusion(1.0f);
+    f->setInLoopScale(1.0f);
+    f->setEarlyTaps(1.0f);
+    f->setEra(iv::map::eraMix(0.1f));
+    f->reset();
+    return f;
+}
+
+// n blocks of 32 tank samples of low noise (+ a click every 0.5 s); returns tenths of a cycle per
+// tank sample when timed.
+int RunMassive(iv::dsp::Fdn* f, int blocks)
+{
+    if (!f) return -10;
+    static float in[32], l[32], r[32];
+    uint32_t cycles = 0;
+    for (int b = 0; b < blocks; ++b) {
+        for (int i = 0; i < 32; ++i) {
+            gMassiveRng = gMassiveRng * 1664525u + 1013904223u;
+            in[i] = 0.05f * float(int32_t(gMassiveRng)) * (1.0f / 2147483648.0f) + ((b % 375) == 0 && i == 0 ? 0.8f : 0.0f);
+            l[i] = r[i] = 0.0f;
+        }
+        const uint32_t t0 = DWT->CYCCNT;
+        f->process(in, in, l, r, 32);
+        cycles += DWT->CYCCNT - t0;
+    }
+    gSink = l[0];
+    return int(float(cycles) * 10.0f / (float(blocks) * 32.0f));
+}
+
 template <typename F> int Tenths(int ops, F&& f)
 {
     const uint32_t t0 = DWT->CYCCNT;
@@ -543,42 +774,89 @@ template <typename F> int Tenths(int ops, F&& f)
     return int(float(DWT->CYCCNT - t0) * 10.0f / float(ops));
 }
 
-void RunMicroTests()
+// gLarge's layout during the tests (floats; all free until engine.prepare(), which zeroes it):
+//   0 .. 0.33 M     fdnSDRAM's tank (TimeTestFdn)       1.05 .. 2.30 M  sdr32 / pld32 (reads)
+//   1.50 .. 2.65 M  MASSIVE tank A (lines + allpasses)   3.00 .. 4.07 M  MASSIVE tank B (lines)
+//   3.15 .. 5.25 M  sdline8 (writes; after tank B is done)  4.19 .. 5.48 M  sdw32 (writes)
+//   4.60 .. 6.05 M  the swell (writes; before tank B)    beyond gLarge (24 MB): SDRAMCHK's 8 MB
+constexpr size_t kMassiveA = 1500000, kMassiveB = 3000000, kSwellAt = 4600000;
+constexpr size_t kMassiveFloats = iv::dsp::Fdn::memoryFloats(24000.0f) + 16 * iv::dsp::Arena::kSkewLines * iv::dsp::Arena::kLineFloats;
+static_assert(kMassiveA + kMassiveFloats <= kMassiveB, "tank A fits below tank B");
+static_assert(kMassiveB + kMassiveFloats <= kSwellAt, "tank B ends before the swell");
+static_assert(kSwellAt + iv::dsp::Swell::memoryFloats(48000.0f) + 8 * iv::dsp::Arena::kSkewLines * iv::dsp::Arena::kLineFloats
+                  <= kLargeFloats, "the swell fits gLarge");
+static_assert(sizeof(gLarge) <= kChkBase - 0xC0000000u, "SDRAMCHK's 8 MB lie beyond gLarge");
+static_assert(iv::dsp::Fdn::apFloats(24000.0f) + 16 * iv::dsp::Arena::kSkewLines * iv::dsp::Arena::kLineFloats <= kAxiFloats,
+              "tank B's allpasses fit gAxi");
+
+// The SDRAM read/write patterns (round 6), reused at the tight timing.
+float SdramReads(float* sd, bool prefetch)
 {
-    float* sd = gLarge; // all of it free until engine.prepare()
-    float  acc = 0.0f;
-    gMicro[0] = Tenths(1 << 18, [&] { for (int i = 0; i < (1 << 18); ++i) acc += sd[i]; });
+    float acc = 0.0f;
+    for (int s = 0; s < 4096; ++s) {
+        const bool pld = prefetch && (s & 7) == 0; // once per 8 floats a stream: its next cache line
+        for (int k = 0; k < 32; ++k) {
+            const float* q = sd + (1 << 20) + k * 40009 + s;
+            if (pld) __builtin_prefetch(q + 8);
+            acc += *q;
+        }
+    }
+    return acc;
+}
+
+void RunSdramTests(float* sd, float& acc, int sdr1, int sdr32, int sdw32, int sdline8, int pld32)
+{
+    gMicro[sdr1] = Tenths(1 << 18, [&] { for (int i = 0; i < (1 << 18); ++i) acc += sd[i]; });
     // 32 streams, each sequential, 160 KB apart (plus an odd offset), as a tank's reads.
-    gMicro[1] = Tenths(32 * 4096, [&] {
-        for (int s = 0; s < 4096; ++s)
-            for (int k = 0; k < 32; ++k) acc += sd[(1 << 20) + k * 40009 + s];
-    });
-    gMicro[2] = Tenths(32 * 4096, [&] {
+    gMicro[sdr32] = Tenths(32 * 4096, [&] { acc += SdramReads(sd, false); });
+    gMicro[sdw32] = Tenths(32 * 4096, [&] {
         for (int s = 0; s < 4096; ++s)
             for (int k = 0; k < 32; ++k) sd[(1 << 22) + k * 40009 + s] = float(s);
     });
     // 8 delay lines: read one place, write another (each 0.4 s apart), as the FDN's lines.
-    gMicro[3] = Tenths(8 * 4096, [&] {
+    gMicro[sdline8] = Tenths(8 * 4096, [&] {
         for (int s = 0; s < 4096; ++s)
             for (int k = 0; k < 8; ++k) {
-                float* line = sd + (3 << 20) + k * 262147; // within gLarge (~7.9 M floats)
+                float* line = sd + (3 << 20) + k * 262147; // within gLarge (~6.2 M floats)
                 line[s + 19200] = 0.5f * line[s];
             }
     });
-    gMicro[4] = Tenths(32 * 512, [&] {
+    // The same 32 reads with a PLD of each stream's next line (the overnight review: is a rolling,
+    // one-line-ahead prefetch worth it? Round 7 prefetched a whole block at once, a different thing).
+    gMicro[pld32] = Tenths(32 * 4096, [&] { acc += SdramReads(sd, true); });
+}
+
+// A one-pole decay (y += a (0 - y), three dependent FP ops a step) from y0, 1000 steps: from 1e-38
+// every operand and result is subnormal (FZ off) or zero (FZ on); from 1.0 all are normal.
+void OnePole(float y0)
+{
+    volatile float av = 0.015f, xv = 0.0f;
+    const float a = av, x = xv;
+    float y = y0;
+    for (int i = 0; i < 1000; ++i) y += a * (x - y);
+    gSink = y;
+}
+
+void RunMicroTests()
+{
+    float* sd = gLarge; // all of it free until engine.prepare()
+    float  acc = 0.0f;
+    gSdtrLibDaisy = FMC_Bank5_6_R->SDTR[0];
+    RunSdramTests(sd, acc, kSdr1, kSdr32, kSdw32, kSdline8, kPld32);
+    gMicro[kAxi32] = Tenths(32 * 512, [&] {
         for (int s = 0; s < 512; ++s)
-            for (int k = 0; k < 32; ++k) acc += gAxiTest[k * 512 + s];
+            for (int k = 0; k < 32; ++k) acc += gAxi[k * 512 + s];
     });
-    gMicro[5] = Tenths(32 * 256, [&] {
+    gMicro[kDtcm32] = Tenths(32 * 256, [&] {
         for (int s = 0; s < 256; ++s)
             for (int k = 0; k < 32; ++k) acc += gFast[k * 256 + s];
     });
     volatile float x = 0.37f;
-    gMicro[6] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::exp(x + float(i) * 1e-4f); });
-    gMicro[7] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::sin(x + float(i) * 1e-4f); });
-    gMicro[8] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::pow(x, 1.0f + float(i) * 1e-4f); });
-    gMicro[9] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::log10(x + float(i) * 1e-4f); });
-    gMicro[10] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += 1.0f / (x + float(i)); });
+    gMicro[kExp] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::exp(x + float(i) * 1e-4f); });
+    gMicro[kSin] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::sin(x + float(i) * 1e-4f); });
+    gMicro[kPow] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::pow(x, 1.0f + float(i) * 1e-4f); });
+    gMicro[kLog10] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::log10(x + float(i) * 1e-4f); });
+    gMicro[kDiv] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += 1.0f / (x + float(i)); });
     // ERA's stages alone (M3 round 10), stereo per sample (both channels) or per block's set():
     {
         static iv::dsp::TapeOut tape[2];
@@ -591,23 +869,117 @@ void RunMicroTests()
         radio.reset();
         radio.set(0.5f, 48000.0f, 32);
         float l = 0.1f, r = -0.1f;
-        gMicro[13] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) { l = tape[0].process(0.3f * NextNoise()); r = tape[1].process(0.3f * NextNoise()); acc += l + r; } });
-        gMicro[14] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) { acc += bbd.process(0.3f * NextNoise(), 0) + bbd.process(0.3f * NextNoise(), 1); } });
-        gMicro[15] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) { l = 0.3f * NextNoise(); r = 0.3f * NextNoise(); radio.process(l, r); acc += l + r; } });
-        gMicro[16] = Tenths(100, [&] { for (int i = 0; i < 100; ++i) bbd.set(0.5f + 1e-4f * float(i), 48000.0f); });
-        gMicro[17] = Tenths(100, [&] { for (int i = 0; i < 100; ++i) radio.set(0.5f, 48000.0f, 32); });
+        gMicro[kTape] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) { l = tape[0].process(0.3f * NextNoise()); r = tape[1].process(0.3f * NextNoise()); acc += l + r; } });
+        gMicro[kBbd] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) { acc += bbd.process(0.3f * NextNoise(), 0) + bbd.process(0.3f * NextNoise(), 1); } });
+        gMicro[kRadio] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) { l = 0.3f * NextNoise(); r = 0.3f * NextNoise(); radio.process(l, r); acc += l + r; } });
+        gMicro[kBbdSet] = Tenths(100, [&] { for (int i = 0; i < 100; ++i) bbd.set(0.5f + 1e-4f * float(i), 48000.0f); });
+        gMicro[kRadioSet] = Tenths(100, [&] { for (int i = 0; i < 100; ++i) radio.set(0.5f, 48000.0f, 32); });
         loop.prepare(48000.0f);
         loop.set(iv::map::eraMix(0.1f));
-        gMicro[18] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) acc += loop.process(0.3f * NextNoise()); });
+        gMicro[kLoopNeve] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) acc += loop.process(0.3f * NextNoise()); });
         loop.set(iv::map::eraMix(0.3f));
-        gMicro[19] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) acc += loop.process(0.3f * NextNoise()); });
+        gMicro[kLoopMidi] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) acc += loop.process(0.3f * NextNoise()); });
     }
-    gMicro[11] = TimeTestFdn(gAxiArena, sizeof(gAxiArena) / sizeof(float), false);
-    gMicro[12] = TimeTestFdn(gLarge, kLargeFloats, true);
+    gMicro[kFdnAxi] = TimeTestFdn(gAxi, kTestArenaFloats, false);
+    gMicro[kFdnSdram] = TimeTestFdn(gLarge, kLargeFloats, true);
+
+    // Subnormals: cycles per step (3 FP ops), as built ("FZ on/off" in BENCH) and with FZ flipped.
+    volatile float tiny = 1.0e-38f, one = 1.0f;
+    gMicro[kSub] = Tenths(1000, [&] { OnePole(tiny); });
+    gMicro[kNorm] = Tenths(1000, [&] { OnePole(one); });
+    SetFlushToZero(!IV_PROFILE_FZ);
+    gMicro[kSubX] = Tenths(1000, [&] { OnePole(tiny); });
+    SetFlushToZero(IV_PROFILE_FZ);
+    // VDIV.F32: a dependent chain (latency), independent divides (throughput), and independent
+    // divides each with 4 independent multiplies (if the divider blocks the FPU, vdivIndep is about
+    // vdivThr + 4-5; if independent work hides behind a divide, about vdivThr). Cycles per divide.
+    {
+        volatile float cv = 1.0001f, kv = 0.99999f, x0 = 0.7f;
+        gMicro[kVdivDep] = Tenths(1000, [&] {
+            const float c = cv;
+            float       q = x0;
+            for (int i = 0; i < 1000; ++i) q = c / q;
+            gSink = q;
+        });
+        gMicro[kVdivThr] = Tenths(1000, [&] {
+            const float c = cv;
+            float       b = 1.0f, s = 0.0f;
+            for (int i = 0; i < 1000; ++i) {
+                s += c / b;
+                b += 1.0f;
+            }
+            gSink = s;
+        });
+        gMicro[kVdivIndep] = Tenths(1000, [&] {
+            const float c = cv, k = kv;
+            float       b = 1.0f, s = 0.0f, m1 = 1.0f, m2 = 1.1f, m3 = 1.2f, m4 = 1.3f;
+            for (int i = 0; i < 1000; ++i) {
+                s += c / b;
+                b += 1.0f;
+                m1 *= k;
+                m2 *= k;
+                m3 *= k;
+                m4 *= k;
+            }
+            gSink = s + m1 + m2 + m3 + m4;
+        });
+    }
+    // The swell (BLOOM at MASSIVE S1: the longest span, 7.5 s), one processBlock of 32 samples, its
+    // 12 taps a side: without the smear, with it (BLOOM), and with no taps (the writes alone). The
+    // taps' part is swellNS - swellW; 24 taps would cost about swell12 + (swellNS - swellW).
+    {
+        static iv::dsp::Swell swell;
+        iv::dsp::Arena a;
+        a.reset(gLarge + kSwellAt, kLargeFloats - kSwellAt, true);
+        swell.prepare(a, 48000.0f);
+        swell.setAttackSeconds(iv::map::bloomSeconds(1.0f) * iv::map::massiveMass(1.0f), true);
+        static float l[32], r[32];
+        auto run = [&](int blocks) {
+            uint32_t cycles = 0;
+            for (int b = 0; b < blocks; ++b) {
+                for (int i = 0; i < 32; ++i) l[i] = r[i] = 0.1f * NextNoise();
+                swell.control(32);
+                const uint32_t t0 = DWT->CYCCNT;
+                swell.processBlock(l, r, 32);
+                cycles += DWT->CYCCNT - t0;
+            }
+            gSink = l[0];
+            return int(float(cycles) * 10.0f / float(blocks));
+        };
+        run(17000); // the line full (2^19 writes): the steady-state read path
+        gMicro[kSwellNS] = run(1000);
+        swell.setSmear(true);
+        run(3000); // the smear glides in (150 ms a step, ~2 s)
+        gMicro[kSwell12] = run(1000);
+        swell.setAttackSeconds(0.0f, true);
+        run(10);
+        gMicro[kSwellW] = run(1000);
+    }
+    // The real-size MASSIVE tank, allpasses in SDRAM (A) and in AXI SRAM (B). 4,500 blocks of warm-up
+    // (6 s: every line full, so the steady-state read path), then 375 blocks (0.5 s) timed.
+    gMassive[0] = PrepareMassive(0, gLarge + kMassiveA, kMassiveB - kMassiveA, nullptr, 0);
+    RunMassive(gMassive[0], 4500);
+    gMicro[kFdnMassive] = RunMassive(gMassive[0], 375);
+    gMassive[1] = PrepareMassive(1, gLarge + kMassiveB, kSwellAt - kMassiveB, gAxi, kAxiFloats);
+    RunMassive(gMassive[1], 4500);
+    gMicro[kFdnMassiveApAxi] = RunMassive(gMassive[1], 375);
+
+    // SDRAM at datasheet timing: the integrity check at libDaisy's timing (a control), then at 3 / 3,
+    // and every SDRAM test again there.
+    gChkLibDaisy = SdramCheck();
+    SdramSetTiming(SdtrWith(gSdtrLibDaisy, kTightTrp, kTightTrcd));
+    gChkTight = SdramCheck();
+    RunMassive(gMassive[0], 375); // the tanks run on, no new warm-up needed
+    gMicro[kFdnMassivet] = RunMassive(gMassive[0], 375);
+    RunMassive(gMassive[1], 375);
+    gMicro[kFdnMassiveApAxit] = RunMassive(gMassive[1], 375);
+    RunSdramTests(sd, acc, kSdr1t, kSdr32t, kSdw32t, kSdline8t, kPld32t);
+    gMicro[kFdnSdramt] = TimeTestFdn(gLarge, kLargeFloats, true);
+    if (!IV_PROFILE_SDRAM_TIGHT) SdramSetTiming(gSdtrLibDaisy);
     gSink = acc;
 }
 
-// One corner: kCornerSeconds of the test signal through the Engine, each block timed by the cycle
+// One corner: its `seconds` of the test signal through the Engine, each block timed by the cycle
 // counter against its share of the clock (480 MHz / 48 kHz = 10,000 cycles a sample).
 Result MeasureCorner(int index, float fs)
 {
@@ -619,7 +991,18 @@ Result MeasureCorner(int index, float fs)
     float sum = 0.0f;
     int blocks = 0;
     for (int k = 0; k < kNumSections; ++k) gProfAcc[k] = gProfPrev[k] = gProfPeak[k] = 0;
-    for (size_t done = 0; done < gCornerSamples; done += kBlockSize) {
+    const Corner& c = gCorners[index];
+    const int     nBlocks = int(c.seconds * fs) / kBlockSize;
+    const int     moveBlocks = int(kSizeMoveSeconds * fs) / kBlockSize;
+    for (int b = 0; b < nBlocks; ++b) {
+        if (c.kind == kFrozen) {
+            // A press freezes at once (GestureReader); released 10 blocks later. At the end, a tap
+            // (press, release a block later: under kTapMaxSeconds) unfreezes for the next corner.
+            if (b == 0 || b == nBlocks - 3) engine.button(true, 0);
+            if (b == 10 || b == nBlocks - 2) engine.button(false, 0);
+        }
+        if (c.kind == kSizeMove && b > 0 && b % moveBlocks == 0)
+            engine.setParam(ParamId::Size, (b / moveBlocks) % 2 ? kSizeMoveHigh : kSizeMoveLow);
         for (int i = 0; i < kBlockSize; ++i) {
             float x = 5.0e-4f * NextNoise(); // low-level noise: keeps loops busy between clicks
             if (gClickPhase == 0) x += 0.8f; // click
@@ -650,10 +1033,28 @@ Result MeasureCorner(int index, float fs)
     return r;
 }
 
+// PROFILE_ITCM=1 (STM32H750IB_flash_itcm.lds): the Core's hot code is linked to run from ITCM but
+// stored in flash; copy it there before anything calls it. Code in flash (main.o), word by word.
+#if IV_PROFILE_ITCM
+void CopyItcm()
+{
+    SCB->ITCMCR |= SCB_ITCMCR_EN_Msk; // on from reset on the H7; make sure
+    __DSB();
+    __ISB();
+    const volatile uint32_t* src = &_siitcm_text;
+    for (volatile uint32_t* dst = &_sitcm_text; dst < &_eitcm_text;) *dst++ = *src++;
+    __DSB();
+    __ISB();
+}
+#endif
+
 } // namespace
 
 int main()
 {
+#if IV_PROFILE_ITCM
+    CopyItcm(); // first: the Engine's constructor may live in Engine.o
+#endif
     new (gEngineStorage) iv::Engine(); // before anything touches it (see gEngineStorage)
     // DaisyVersio::Init minus the parts this build never uses (flash; Resilio's
     // flash study, 4 Oct 2026): the knob/CV ADC, the two switches, the button
@@ -674,17 +1075,17 @@ int main()
             hw.leds[i].Init(kLedPins[i][0], kLedPins[i][1], kLedPins[i][2], true);
     }
     hw.seed.SetAudioBlockSize(kBlockSize);
+    SetFlushToZero(IV_PROFILE_FZ); // before any FP work (the micro-tests flip it once and put it back)
 
     StartCycleCounter();
     RunMicroTests(); // before the Engine takes (and zeroes) its memory
-    engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats);
+    engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats, gAxi, kAxiFloats);
     engine.prepare(hw.AudioSampleRate(), kBlockSize);
     iv::prof::markHook = ProfMark;
     BuildCornerTable();
     ApplyCorner(0);
 
     const float fs      = hw.AudioSampleRate();
-    gCornerSamples      = size_t(kCornerSeconds * fs);
     gClickPeriodSamples = size_t(0.5f * fs); // click every 500 ms
 
     BootPattern();
@@ -707,7 +1108,7 @@ int main()
             const Corner& c = gCorners[r.index];
             const int cyclesPerSample = int(r.avg * 10000.0f + 0.5f); // SPEC §5: 480 MHz / 48 kHz ~= 10,000 cycles/sample
 
-            char        buf[kLineBufSize];
+            static char buf[kLineBufSize]; // static: the USB send reads it after TransmitLine returns
             char*       p   = buf;
             const char* end = buf + sizeof(buf);
             AppendStr(p, end, "CORNER ");
@@ -732,8 +1133,6 @@ int main()
             // (10,000 cycles per sample): cycles / (samples x 10) = tenths of a %.
             static const char* const kSectionNames[kNumSections] = {"ctl", "in", "shim", "swell", "twin", "tank",
                                                                     "tkctl", "tkloop", "tkout", "tkmix", "tape", "bbd", "radio", "out"};
-            // Same buffer, one transmit: the USB CDC send is non-blocking and
-            // drops a second call made while the first is still going out.
             AppendStr(p, end, "  SPLIT");
             for (int k = 0; k < kNumSections; ++k) {
                 AppendStr(p, end, " ");
@@ -751,14 +1150,56 @@ int main()
                 AppendFixed1(p, end, int(r.peak[k] / (uint32_t(kBlockSize) * 10u)), 5);
             }
             AppendStr(p, end, "\r\n");
+            TransmitLine(buf, size_t(p - buf));
             if (r.index == 0) { // once per pass through the corners: the chip runs as configured
+                static char bb[kBenchBufSize];
+                p   = bb;
+                end = bb + sizeof(bb);
                 AppendStr(p, end, "BENCH clock ");
                 AppendUInt(p, end, unsigned(SystemCoreClock / 1000000u));
                 AppendStr(p, end, " MHz icache ");
                 AppendStr(p, end, (SCB->CCR & SCB_CCR_IC_Msk) ? "on" : "OFF");
                 AppendStr(p, end, " dcache ");
                 AppendStr(p, end, (SCB->CCR & SCB_CCR_DC_Msk) ? "on" : "OFF");
-                AppendStr(p, end, "\r\nMICRO (cycles per op)");
+                // As the registers are now, not as built: FZ in this thread's FPSCR and in FPDSCR
+                // (the audio callback's), the SDRAM's TRP / TRCD in SDCLK cycles and the SDCLK.
+                AppendStr(p, end, " | FZ ");
+                AppendStr(p, end, (__get_FPSCR() & kFzBit) ? "on" : "off");
+                AppendStr(p, end, " (irq ");
+                AppendStr(p, end, (FPU->FPDSCR & kFzBit) ? "on" : "off");
+                const uint32_t sdtr = FMC_Bank5_6_R->SDTR[0];
+                AppendStr(p, end, ") | sdram TRP ");
+                AppendUInt(p, end, ((sdtr & FMC_SDTRx_TRP_Msk) >> FMC_SDTRx_TRP_Pos) + 1u);
+                AppendStr(p, end, " TRCD ");
+                AppendUInt(p, end, ((sdtr & FMC_SDTRx_TRCD_Msk) >> FMC_SDTRx_TRCD_Pos) + 1u);
+                AppendStr(p, end, sdtr == gSdtrLibDaisy ? " (libDaisy)" : " (tight)");
+                PLL2_ClocksTypeDef pll2;
+                HAL_RCCEx_GetPLL2ClockFreq(&pll2);
+                const uint32_t sdDiv = (FMC_Bank5_6_R->SDCR[0] >> 10) & 3u; // SDCLK: 2 or 3 FMC clocks
+                AppendStr(p, end, " sdclk ");
+                AppendUInt(p, end, sdDiv ? pll2.PLL2_R_Frequency / sdDiv / 1000000u : 0u);
+                AppendStr(p, end, " MHz | itcm ");
+#if IV_PROFILE_ITCM
+                AppendUInt(p, end, unsigned(uintptr_t(&_eitcm_text) - uintptr_t(&_sitcm_text)));
+                AppendStr(p, end, " B");
+#else
+                AppendStr(p, end, "off");
+#endif
+                AppendStr(p, end, " | engine ");
+                AppendHex(p, end, uint32_t(reinterpret_cast<uintptr_t>(gEngineStorage)));
+                AppendStr(p, end, " axi ");
+                AppendHex(p, end, uint32_t(reinterpret_cast<uintptr_t>(gAxi)));
+                AppendStr(p, end, "\r\nSDRAMCHK libdaisy ");
+                AppendUInt(p, end, gChkLibDaisy);
+                AppendStr(p, end, " tight ");
+                AppendUInt(p, end, gChkTight);
+                AppendStr(p, end, " laps ");
+                AppendUInt(p, end, gChkLap);
+                AppendStr(p, end, " in ");
+                AppendUInt(p, end, gChkLaps);
+                AppendStr(p, end, " (wrong words, of ");
+                AppendUInt(p, end, 2u * kChkWords);
+                AppendStr(p, end, " a check)\r\nMICRO (cycles per op)");
                 for (int k = 0; k < kMicro; ++k) {
                     AppendStr(p, end, " ");
                     AppendStr(p, end, kMicroNames[k]);
@@ -766,19 +1207,23 @@ int main()
                     AppendFixed1(p, end, gMicro[k], 1);
                 }
                 AppendStr(p, end, "\r\n");
+                TransmitLine(bb, size_t(p - bb));
             }
-            TransmitLine(buf, size_t(p - buf));
 
             if (r.max > 0.75f) everExceeded = true; // SPEC §5 target: <= 75 % peak worst case
         }
 
+        if (gCurrentCorner == 0) { // a lap done: the SDRAM check again, at the lap's timing (the module warm)
+            gChkLap += SdramCheck();
+            ++gChkLaps;
+        }
         if (gCurrentCorner == 0) { // a lap done: the headroom test, in real time
             // The heaviest corner as it is (pct -1: no padding), then the lightest stepped up with padding
             // until blocks come late twice: where drop-outs start.
             gPeriodCycles = uint32_t(float(SystemCoreClock) / fs * float(kBlockSize));
             int lateSteps = 0;
             for (int pct = -5; pct <= 100 && lateSteps < 2; pct += 5) {
-                const int corner = pct < 0 ? kNumCorners - 1 : 0;
+                const int corner = pct < 0 ? kHeaviestCorner : 0;
                 ApplyCorner(corner);
                 gPadCycles = pct < 0 ? 0u : uint32_t(float(gPeriodCycles) * float(pct) / 100.0f);
                 gLate = gBlocks = gMaxCycles = 0;
@@ -790,7 +1235,7 @@ int main()
                 System::Delay(5);
                 const float period = float(gPeriodCycles);
                 const float avg = gBlocks ? float(gSumCycles) / float(gBlocks) / period : 0.0f;
-                char        hb[160];
+                static char hb[160];
                 char*       p   = hb;
                 const char* end = hb + sizeof(hb);
                 AppendStr(p, end, "HEADROOM ");
@@ -1144,7 +1589,7 @@ int main()
     hw.Init(true); // boost to 480 MHz
     SdramWriteAllocate();
     hw.SetAudioBlockSize(kBlockSize);
-    engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats);
+    engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats, gAxi, kAxiFloats);
     engine.prepare(hw.AudioSampleRate(), kBlockSize);
 
     BootPattern(); // then metering

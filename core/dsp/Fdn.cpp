@@ -80,8 +80,9 @@ float uniform(uint32_t& s) // −1..1
 
 } // namespace
 
-IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed, float maxLineSeconds)
+IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed, float maxLineSeconds, Arena* apArena)
 {
+    Arena& ap = apArena ? *apArena : arena;
     if (!gSieved) sievePrimes();
     sampleRate_ = sampleRate;
     shelfK_ = lossShelfK(sampleRate);
@@ -91,7 +92,7 @@ IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed, flo
     for (int i = 0; i < kN; ++i)
         for (int k = 0; k < 2; ++k) {
             apLen_[i][k] = uint32_t(voicing::kInLoopSeconds[i][k] * sampleRate);
-            ready_ &= apLine_[i][k].init(arena, size_t(voicing::kInLoopMaxSeconds * sampleRate));
+            ready_ &= apLine_[i][k].init(ap, size_t(voicing::kInLoopMaxSeconds * sampleRate));
         }
     rng_ = seed ? seed : 1u;
     for (int i = 0; i < kN; ++i) {

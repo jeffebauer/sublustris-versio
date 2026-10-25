@@ -38,8 +38,19 @@ public:
         return size_t(kN) * (nextPow2(size_t(maxLineSeconds * sampleRate) + 4)
                              + 2 * nextPow2(size_t(voicing::kInLoopMaxSeconds * sampleRate) + 4));
     }
+    // The part of memoryFloats() that is the in-loop allpass lines (kN x 2 slices of apLineFloats()),
+    // which prepare() takes from apArena when one is given (the firmware's AXI SRAM: overnight review,
+    // 26 Oct 2026; 32 of the tank's SDRAM streams). Only addresses change, never a sample.
+    static constexpr size_t apLineFloats(float sampleRate)
+    {
+        return nextPow2(size_t(voicing::kInLoopMaxSeconds * sampleRate) + 4);
+    }
+    static constexpr size_t apFloats(float sampleRate) { return size_t(kN) * 2 * apLineFloats(sampleRate); }
+    static constexpr int    kApSlices = kN * 2;
 
-    bool prepare(Arena& arena, float sampleRate, uint32_t seed, float maxLineSeconds = voicing::kFdnMaxLineSeconds);
+    // apArena: where the in-loop allpass lines go (nullptr: the same arena as the lines).
+    bool prepare(Arena& arena, float sampleRate, uint32_t seed, float maxLineSeconds = voicing::kFdnMaxLineSeconds,
+                 Arena* apArena = nullptr);
     void reset();
 
     // Targets, read at the next control tick. meanSeconds: the lines' mean
