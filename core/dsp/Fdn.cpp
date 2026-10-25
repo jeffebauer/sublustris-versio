@@ -72,10 +72,23 @@ IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed, flo
     for (int i = 0; i < kN; ++i)
         for (int k = 0; k < kEarlyTaps; ++k) {
             (void)uniform(es);
-            earlyFrac_[i][k] = (float(k) + (float(i) + 0.5f) / float(kN)) / float(kEarlyTaps);
+            earlyFrac_[i][k] = (float(k) + (float(i) + 0.5f) / float(kN)) / float(earlyCount_);
             earlyGain_[i][k] = voicing::kEarlyTapLow + (1.0f - voicing::kEarlyTapLow) * earlyFrac_[i][k];
             if (uniform(es) < 0.0f) earlyGain_[i][k] = -earlyGain_[i][k];
+            if (k >= earlyCount_) earlyFrac_[i][k] = earlyGain_[i][k] = 0.0f; // setEarlyTapCount (prototype)
         }
+    if (earlyCount_ < kEarlyTaps) { // the same early energy from fewer taps
+        float full = 0.0f, used = 0.0f;
+        for (int i = 0; i < kN; ++i)
+            for (int k = 0; k < kEarlyTaps; ++k) {
+                const float fr = (float(k) + (float(i) + 0.5f) / float(kN)) / float(kEarlyTaps);
+                const float g = voicing::kEarlyTapLow + (1.0f - voicing::kEarlyTapLow) * fr;
+                full += g * g;
+                used += earlyGain_[i][k] * earlyGain_[i][k];
+            }
+        const float norm = std::sqrt(full / used);
+        for (auto& row : earlyGain_) for (auto& g : row) g *= norm;
+    }
     for (auto& t : lenTarget_) t = 0.0f;
     setMeanSeconds(0.1f, 1.0f, true);
     reset();

@@ -422,3 +422,49 @@ C_massive_large    SIZE fully CW" > renders/grainy_start/README.txt
     python3 tools/review/make_review.py renders/grainy_start --title "Immensio: do big spaces start grainy?" --level-match --showcase --dry $SRC --wet-only > /dev/null
     echo "renders/grainy_start/index.html"
 fi
+
+if on fit_cpu; then
+    # PROTOTYPES (M3 rounds 1-8, 25 Oct 2026): the module runs ~2.3x over its CPU budget at worst
+    # (MASSIVE with BLOOM); the speed-ups that keep the sound identical are nearly used up (round 8:
+    # the tank is short of arithmetic). Three ways to fit, each changing the sound a little:
+    # B the HALL / MASSIVE tank at 24 kHz (halfbands either side, the still-lows tank unchanged),
+    # C BLOOM's swell (and MASSIVE's built-in mass) with 12 points per side instead of 24, D one early
+    # reflection per line instead of three (the same early energy), E all three. Checked: level within
+    # 0.6 dB of today, T60 within 3 %, no clicks, infinite tails hold 3 min.
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in pad vibes skank keys; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page fit_cpu
+    B=IV_FIT_HALF_TANK=1; C=IV_FIT_SWELL_TAPS=12; D=IV_FIT_EARLY_TAPS=1
+    for t in "1_plate_bloom:PLATE:BLOOM:A C" "2_hall_normal:HALL:NORMAL:A B D E" "3_hall_bloom:HALL:BLOOM:A B C D E" \
+             "4_massive_normal:MASSIVE:NORMAL:A B C D E" "5_massive_bloom:MASSIVE:BLOOM:A B C D E"; do
+        IFS=: read col sp at vs <<< "$t"
+        for v in ${=vs}; do
+            case $v in
+                A) tag=A_today; e="" ;;
+                B) tag=B_tank_24k; e="$B" ;;
+                C) tag=C_swell_12; e="$C" ;;
+                D) tag=D_early_1; e="$D" ;;
+                E) tag=E_all_three; e="$B $C $D" ;;
+            esac
+            ( [ -n "$e" ] && export ${=e}; r fit_cpu $col $tag "" --set space=$sp --set attack=$at --set decay=0.6 --set size=0.6 --set time=0.6 )
+        done
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "Fitting the module (the M3 CPU checks): at worst, MASSIVE with BLOOM, the module needs about 2.3 times what it can give; the speed-ups that keep the sound identical are nearly used up. These are three ways to fit, each changing the sound a little. Level-matched; renders are 100 % wet, so use the page's MIX fader to blend the dry in.
+
+What each saves on the module (estimated from the measurements): B about 45-50 % in HALL and MASSIVE; C about 12 % wherever the swell runs (BLOOM, and MASSIVE's built-in mass); D about 8-15 %. Even E (all three) probably leaves MASSIVE with BLOOM around 90 %, against a 75 % target, so more would follow; PLATE gets under with C alone.
+
+1_plate_bloom      PLATE, BLOOM (only C applies)
+2_hall_normal      HALL, NORMAL
+3_hall_bloom       HALL, BLOOM
+4_massive_normal   MASSIVE, NORMAL (its built-in mass uses the swell)
+5_massive_bloom    MASSIVE, BLOOM
+
+A_today       Today
+B_tank_24k    The tank at 24 kHz, like classic digital reverbs: the tail's top end stops around 11-12 kHz (the dry and the attack keep everything)
+C_swell_12    The swell with 12 points per side instead of 24 (BLOOM and MASSIVE's mass)
+D_early_1     One early reflection per line instead of three (the same early energy)
+E_all_three   B, C and D together" > renders/fit_cpu/README.txt
+    python3 tools/review/make_review.py renders/fit_cpu --title "Fitting the module: three ways" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/fit_cpu/index.html"
+fi

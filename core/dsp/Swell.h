@@ -33,7 +33,11 @@ public:
     // the gap to the next instead of returning as a ghost hit.
     static constexpr int   kSmearStages = 3;
     static constexpr float kSmearRatio[kSmearStages] = {0.53f, 0.79f, 1.17f};
+#ifndef IV_FIXED_VOICINGS
+    static constexpr float kSmearMaxSeconds = kMaxSeconds / 12 * 1.2f; // room for setTapCount's wider spacing
+#else
     static constexpr float kSmearMaxSeconds = kMaxSeconds / kTaps * 1.2f;
+#endif
     static constexpr float kSmearSpanScale = 0.95f;
     static constexpr float kSmearGain = 0.5f;
     static constexpr size_t memoryFloats(float sampleRate)
@@ -54,7 +58,7 @@ public:
             for (int k = 0; k < kTaps; ++k) {
                 s = s * 1664525u + 1013904223u;
                 const float jitter = float(s >> 8) * (1.0f / 16777216.0f) - 0.5f; // ±half a slot
-                frac_[c][k] = (float(k) + 0.5f + 0.8f * jitter) / float(kTaps);
+                frac_[c][k] = k < count_ ? (float(k) + 0.5f + 0.8f * jitter) / float(count_) : 0.0f;
                 sign_[c][k] = (s & 0x80000000u) ? -1.0f : 1.0f;
             }
         setSCurve(sCurve_);
@@ -71,8 +75,9 @@ public:
         float energy = 0.0f;
         for (int c = 0; c < 2; ++c)
             for (int k = 0; k < kTaps; ++k) {
-                const float x = (float(k) + 1.0f) / float(kTaps);
-                const float g = sCurve_ ? 0.5f - 0.5f * std::cos(3.14159265f * x) : x; // rising: the slab builds
+                const float x = (float(k) + 1.0f) / float(count_);
+                float g = sCurve_ ? 0.5f - 0.5f * std::cos(3.14159265f * x) : x; // rising: the slab builds
+                if (k >= count_) g = 0.0f; // setTapCount (prototype): the rest are silent
                 gain_[c][k] = g;
                 if (c == 0) energy += g * g;
             }
@@ -89,6 +94,9 @@ public:
             for (auto& ap : side) ap.clear();
         attackNow_ = attackTarget_;
     }
+
+    // PROTOTYPE (renders/fit_cpu): n taps per side over the same span (0 = kTaps), before prepare().
+    void setTapCount(int n) { count_ = n > 0 && n < kTaps ? n : kTaps; }
 
     // The attack time in seconds; glides (so TIME moves don't jump the taps).
     void setAttackSeconds(float a, bool snap = false)
@@ -114,7 +122,7 @@ public:
         const float span = kSpanPerAttack * a * sampleRate_ * (1.0f - (1.0f - kSmearSpanScale) * smearG_ / kSmearGain);
         const float maxLen = kSmearMaxSeconds * sampleRate_;
         for (int j = 0; j < kSmearStages; ++j) {
-            const float len = span / float(kTaps) * kSmearRatio[j];
+            const float len = span / float(count_) * kSmearRatio[j];
             smearLen_[j] = len < 1.0f ? 1u : uint32_t(len > maxLen ? maxLen : len);
         }
         for (int c2 = 0; c2 < 2; ++c2)
@@ -206,6 +214,7 @@ private:
     float     sampleRate_ = 48000.0f;
     DelayLine line_[2];
     float     frac_[2][kTaps] = {}, sign_[2][kTaps] = {}, gain_[2][kTaps] = {}, tapDelay_[2][kTaps] = {};
+    int       count_ = kTaps; // taps in use (setTapCount, a prototype); the rest have no gain
     float     attackNow_ = 0.0f, attackTarget_ = 0.0f, tapMix_ = 0.0f;
     bool      sCurve_ = false;
     DelayLine smear_[2][kSmearStages];

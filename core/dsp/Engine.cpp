@@ -28,6 +28,16 @@ float approach(float now, float target, float step)
 
 } // namespace
 
+#ifndef IV_FIXED_VOICINGS
+void Engine::setFitPrototype(bool halfTank, int swellTaps, int earlyTaps)
+{
+    halfTank_ = halfTank;
+    fitSwellTaps_ = swellTaps;
+    fitEarlyTaps_ = earlyTaps;
+    prepare(sampleRate_, maxBlockSize_);
+}
+#endif
+
 IV_SIZE_OPT void Engine::attachMemory(float* large, size_t largeCount, float* fast, size_t fastCount)
 {
     attachedLarge_ = large;
@@ -73,7 +83,16 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     ready_ &= swell_.prepare(large_, sampleRate);
     ready_ &= twinSwell_.prepare(large_, sampleRate);
     twinSwell_.setSCurve(true); // eases in, then settles (owner, renders/swell_curve)
+#ifndef IV_FIXED_VOICINGS
+    swell_.setTapCount(fitSwellTaps_);
+    twinSwell_.setTapCount(fitSwellTaps_);
+    fdn_.setEarlyTapCount(fitEarlyTaps_);
+    twinFdn_.setEarlyTapCount(fitEarlyTaps_);
+    lowFdn_.setEarlyTapCount(fitEarlyTaps_);
+    ready_ &= fdn_.prepare(large_, halfTank_ ? 0.5f * sampleRate : sampleRate, 0x1D5A7u);
+#else
     ready_ &= fdn_.prepare(large_, sampleRate, 0x1D5A7u);
+#endif
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
     ready_ &= shimmer_.prepare(large_, sampleRate);
     ready_ &= twinFdn_.prepare(large_, sampleRate, 0x7A1Eu);
@@ -144,6 +163,11 @@ IV_SIZE_OPT void Engine::reset()
     for (auto& c : xoZ_) for (auto& z : c) z[0] = z[1] = 0.0f;
     lowPhase_ = 0;
     lowPrev_[0] = lowPrev_[1] = lowCur_[0] = lowCur_[1] = 0.0f;
+#ifndef IV_FIXED_VOICINGS
+    for (auto& h : hbDown_) h.reset();
+    for (auto& h : hbUp_) h.reset();
+    hbPhase_ = hbQn_ = 0;
+#endif
     plate_.reset();
     shimmer_.reset();
     tilt_.reset();
@@ -890,6 +914,46 @@ void Engine::processTwoTanks(int n)
         if (lowPhase_ == 0) ++k;
         lowPhase_ = (lowPhase_ + 1) % kLowDecimate;
     }
+#ifndef IV_FIXED_VOICINGS
+    if (halfTank_) {
+        // The highs down to 24 kHz in pairs, through the tank, back up: two out per pair, queued (a chunk
+        // can end mid-pair).
+        int h = 0;
+        for (int i = 0; i < n; ++i) {
+            if (hbPhase_ == 0) {
+                hbFirst_[0] = bufL_[i];
+                hbFirst_[1] = bufR_[i];
+            } else {
+                halfInL_[h] = hbDown_[0].down(hbFirst_[0], bufL_[i]);
+                halfInR_[h] = hbDown_[1].down(hbFirst_[1], bufR_[i]);
+                halfOutL_[h] = halfOutR_[h] = 0.0f;
+                ++h;
+            }
+            hbPhase_ ^= 1;
+        }
+        if (h > 0) fdn_.process(halfInL_, halfInR_, halfOutL_, halfOutR_, h);
+        for (int j = 0; j < h; ++j) {
+            float a, b;
+            hbUp_[0].up(halfOutL_[j], a, b);
+            hbQ_[0][hbQn_] = a;
+            hbQ_[0][hbQn_ + 1] = b;
+            hbUp_[1].up(halfOutR_[j], a, b);
+            hbQ_[1][hbQn_] = a;
+            hbQ_[1][hbQn_ + 1] = b;
+            hbQn_ += 2;
+        }
+        const int out = hbQn_ < n ? hbQn_ : n, lead = n - out; // the very first chunk can be a sample short
+        for (int i = 0; i < n; ++i) {
+            wetL_[i] = i < lead ? 0.0f : hbQ_[0][i - lead];
+            wetR_[i] = i < lead ? 0.0f : hbQ_[1][i - lead];
+        }
+        for (int i = out; i < hbQn_; ++i) {
+            hbQ_[0][i - out] = hbQ_[0][i];
+            hbQ_[1][i - out] = hbQ_[1][i];
+        }
+        hbQn_ -= out;
+    } else
+#endif
     fdn_.process(bufL_, bufR_, wetL_, wetR_, n);
     for (int j = 0; j < k; ++j) lowOutL_[j] = lowOutR_[j] = 0.0f;
     if (k > 0) lowFdn_.process(lowInL_, lowInR_, lowOutL_, lowOutR_, k);

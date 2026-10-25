@@ -125,6 +125,12 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* to = std::getenv("IV_TAPE_OUT")) engine.setTapeOut(std::atoi(to) != 0);
     if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
     if (const char* dm = std::getenv("IV_DECAY_MAKEUP")) engine.setDecayMakeup(float(std::atof(dm)));
+    { // renders/fit_cpu prototypes (re-prepare the Engine)
+        const char* ht = std::getenv("IV_FIT_HALF_TANK");
+        const char* st = std::getenv("IV_FIT_SWELL_TAPS");
+        const char* et = std::getenv("IV_FIT_EARLY_TAPS");
+        if (ht || st || et) engine.setFitPrototype(ht && std::atoi(ht) != 0, st ? std::atoi(st) : 0, et ? std::atoi(et) : 0);
+    }
     if (!presetPath.empty()) {
         iv::json::Value preset;
         if (!iv::json::loadFile(presetPath, preset, error)) return false;

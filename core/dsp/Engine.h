@@ -102,6 +102,12 @@ public:
     // Test/demo override of HALL's in-loop diffusion amount (default kHallInLoopDiffusion, v1.0.17;
     // 0..1 × kInLoopCoeff, fading out by SIZE noon).
     void  setHallInLoopDiffusion(float a) { hallInLoop_ = a; }
+#ifndef IV_FIXED_VOICINGS
+    // PROTOTYPES (fitting the module's CPU, M3 round 8; renders/fit_cpu): the HALL / MASSIVE tank at
+    // half the rate (24 kHz, halfbands either side), BLOOM's swell with fewer points per side, the tanks
+    // with fewer early taps per line. Re-prepares the Engine (the memory's layout changes).
+    void  setFitPrototype(bool halfTank, int swellTaps, int earlyTaps);
+#endif
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.
@@ -177,6 +183,14 @@ private:
     float             lowPrev_[2] = {}, lowCur_[2] = {};
     float             lowInL_[kChunk / kLowDecimate + 2] = {}, lowInR_[kChunk / kLowDecimate + 2] = {};
     float             lowOutL_[kChunk / kLowDecimate + 2] = {}, lowOutR_[kChunk / kLowDecimate + 2] = {};
+#ifndef IV_FIXED_VOICINGS
+    bool              halfTank_ = false;                  // setFitPrototype
+    int               fitSwellTaps_ = 0, fitEarlyTaps_ = 0; // 0 = as today
+    dsp::Halfband     hbDown_[2], hbUp_[2];
+    float             hbFirst_[2] = {}, halfInL_[kChunk] = {}, halfInR_[kChunk] = {}, halfOutL_[kChunk] = {}, halfOutR_[kChunk] = {};
+    float             hbQ_[2][2 * kChunk + 4] = {};
+    int               hbPhase_ = 0, hbQn_ = 0;
+#endif
     dsp::Plate        twinPlate_;
     dsp::Diffuser<4>  twinDiffuser_[2];
     float             twinMean_ = -1.0f, twinSpread_ = -1.0f;

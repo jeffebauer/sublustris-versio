@@ -79,6 +79,8 @@ public:
     // "too much delay before the reverb starts swelling") and every pass is
     // denser. Output only: the loop itself is unchanged.
     void setEarlyTaps(float amount) { earlyTarget_ = amount; }
+    // PROTOTYPE (renders/fit_cpu): n early taps per line over the same span, the same energy, before prepare().
+    void setEarlyTapCount(int n) { earlyCount_ = n > 0 && n < kEarlyTaps ? n : kEarlyTaps; }
     void setAir(float air) { air_ = air; } // 1/T60 in 1/s: see absorbent() (v1.0.25)
     // The modulation floor's depth × modDepth (Engine::setModulationScale, a test hook).
     void setModDepth(float k) { modDepth_ = k; }
@@ -139,6 +141,7 @@ private:
     float     apScale_ = 1.0f;
     static constexpr int kEarlyTaps = voicing::kEarlyTaps;
     float     earlyFrac_[kN][kEarlyTaps] = {}, earlyGain_[kN][kEarlyTaps] = {};
+    int       earlyCount_ = kEarlyTaps; // taps per line in use (setEarlyTapCount, a prototype)
     float     earlyTarget_ = 0.0f, earlyNow_ = 0.0f;
     float     inLoopOld_ = 0.0f; // the in-loop amount fading out during a SIZE crossfade
     float     inLoopTarget_ = 0.0f, inLoopNow_ = 0.0f, outputTrim_ = 1.0f, levelGain_ = 1.0f;
