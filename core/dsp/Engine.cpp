@@ -268,6 +268,9 @@ void Engine::onGesture(GestureReader::Event e)
         // The big tank keeps the SIZE and DECAY it had; the knobs move to
         // the twin. Its input closes, its colour glides out.
         heldSize_ = smoothed(ParamId::Size);
+#ifndef IV_FIXED_VOICINGS
+        if (sizeHyst_ > 0.0f && sizeHeld_ >= 0.0f) heldSize_ = sizeHeld_; // the SIZE the tank has (setSizeHysteresis)
+#endif
         heldDecay_ = smoothed(ParamId::Decay);
         padFloorDb_ = 0.0f; // no cap until the pad has settled (controlTick)
         padCaptured_ = false;
@@ -316,6 +319,21 @@ void Engine::onGesture(GestureReader::Event e)
 
 // ---- Voicing -------------------------------------------------------------------
 
+#ifndef IV_FIXED_VOICINGS
+// setSizeHysteresis: in HALL and MASSIVE, SIZE moves on (held) only once the mean line length it means
+// would move by more than sizeHyst_ of the last one; everything SIZE sets follows the held value, so
+// nothing in the tank sees the knob's noise (the lines' targets, MASSIVE's in-loop diffusion and
+// pre-delay, which each restarted a rest timer). snap or held < 0: take SIZE as it is. The PLATE glides
+// its scale (no rest timer): SIZE as it is.
+float Engine::hysteresisSize(float size, float& held, bool snap) const
+{
+    if (sizeHyst_ <= 0.0f) return size;
+    auto mean = [this](float v) { return activeSpace_ == 2 ? map::massiveMeanSeconds(v) : map::hallMeanSeconds(v); };
+    if (snap || held < 0.0f || activeSpace_ == 0 || std::fabs(mean(size) - mean(held)) > sizeHyst_ * mean(held)) held = size;
+    return held;
+}
+#endif
+
 // DECAY's loss rate for the SPACE in use (MASSIVE's shortest tail follows SIZE, v1.0.21).
 float Engine::decayRate(float decay, float size) const
 {
@@ -329,7 +347,11 @@ float Engine::decayRate(float decay, float size) const
 IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once per block: built for size (flash)
 {
     const bool frozen = gesture_.frozen();
+#ifndef IV_FIXED_VOICINGS
+    const float size = frozen ? heldSize_ : hysteresisSize(smoothed(ParamId::Size), sizeHeld_, snap);
+#else
     const float size = frozen ? heldSize_ : smoothed(ParamId::Size);
+#endif
     // HALL's SIZE also sets its T60 scale, output trim and in-loop diffusion, which act at once (the
     // lines' lengths glide on their own): they follow a ~80 ms glide of SIZE, so a SIZE jump (CV, or an
     // unfreeze after SIZE moved) doesn't step the loop's gains (soak audit).
@@ -519,7 +541,12 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // DECAY play it while frozen (at the freeze they're where the pad froze, so it starts as the
     // pad's twin); it always fades within kTwinMaxT60. Full in-loop diffusion in MASSIVE, like the pad.
     if (twinActive_) {
-        const float tSize = smoothed(ParamId::Size), tDecay = smoothed(ParamId::Decay);
+#ifndef IV_FIXED_VOICINGS
+        const float tSize = hysteresisSize(smoothed(ParamId::Size), twinSizeHeld_, snap || twinMean_ < 0.0f);
+#else
+        const float tSize = smoothed(ParamId::Size);
+#endif
+        const float tDecay = smoothed(ParamId::Decay);
         twinSwell_.setAttackSeconds(massive ? map::massiveNormalAttackSeconds(tDecay, tSize) : 0.0f, snap);
         const float tT60 = activeSpace_ == 1 ? map::hallT60Scale(tSize) : 1.0f;
         const float tRate = std::fmax(decayRate(tDecay, tSize) / tT60, 1.0f / voicing::kTwinMaxT60);

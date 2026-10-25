@@ -109,6 +109,12 @@ public:
     // PROTOTYPE (renders/swell_seed, owner: "the 12 points seemed to accentuate the mids"): the swell's
     // jitter and signs from another seed (0 = as built). Re-prepares the Engine.
     void  setSwellSeedPrototype(uint32_t seed);
+    // PROTOTYPE, a bug fix behind a hook (overnight review, 26 Oct 2026, arch F1): SIZE moves on only
+    // when the mean line length it means has moved by more than rel of the last one (0 = as built:
+    // every move). A noisy knob reading moved the lines' targets (and MASSIVE's in-loop diffusion) a
+    // little every block, which restarted the FDN's rest timer (kSizeRestSeconds), so SIZE never took
+    // effect in MASSIVE (and in HALL from ±2e-4 of noise). Suggested rel: 1e-3 (1.7 cents).
+    void  setSizeHysteresis(float rel) { sizeHyst_ = rel; }
 #endif
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
@@ -146,6 +152,9 @@ private:
     void applySpace(bool snap, int n = kChunk, bool snapInput = true);
     void setEarlyTapsForSpace();
     float decayRate(float decay, float size) const;
+#ifndef IV_FIXED_VOICINGS
+    float hysteresisSize(float size, float& held, bool snap) const; // setSizeHysteresis
+#endif
     // ERA last sent to a tank (applySpace): true, keeping m, when m differs from it.
     enum { EraSentFdn, EraSentPlate, EraSentTwinFdn, EraSentTwinPlate, EraSentCount };
     bool eraChanged(int which, const dsp::EraMix& m);
@@ -193,6 +202,8 @@ private:
 #ifndef IV_FIXED_VOICINGS
     int               fitEarlyTaps_ = 0; // setEarlyTapPrototype; 0 = as built
     uint32_t          fitSwellSeed_ = 0; // setSwellSeedPrototype; 0 = as built
+    float             sizeHyst_ = 0.0f;  // setSizeHysteresis; 0 = as built
+    float             sizeHeld_ = -1.0f, twinSizeHeld_ = -1.0f; // the SIZE the tank and the twin have (< 0: none yet)
 #endif
     dsp::Plate        twinPlate_;
     dsp::Diffuser<4>  twinDiffuser_[2];
