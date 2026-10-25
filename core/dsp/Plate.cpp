@@ -126,7 +126,7 @@ IV_SIZE_OPT void Plate::setScale(float scale, bool snap)
     if (snap) scaleNow_ = scale;
 }
 
-void Plate::control(int n)
+IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash; it shares Fdn::control's helpers)
 {
     const float dt = float(n) / sampleRate_;
     const float slew = kScaleSlewPerSecond * dt;

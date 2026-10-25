@@ -15,7 +15,7 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0009](0009-freeze-tap-latches-pad-holds-still.md) | Freeze: a tap latches, the pad holds still, unfreeze glides | 10, 25, 26 |
 | [0010](0010-hold-to-paint.md) | Hold to paint into the frozen pad | 11 |
 | [0011](0011-gate-mirrors-the-button.md) | The gate mirrors the button: one gesture reader | 12, 13 |
-| [0012](0012-mix-size-tone-drift.md) | MIX, SIZE, TONE and DRIFT | 14, 15, 18, 20 |
+| [0012](0012-mix-size-tone-drift.md) | MIX, SIZE, TONE and DRIFT | 14, 15, 18, 20, 25 |
 | [0013](0013-space-crossfade-and-true-stereo-in.md) | SPACE flips crossfade; true stereo in | 17, 23 |
 | [0014](0014-ducking-is-always-darken.md) | Ducking is always DARKEN, growing with DECAY (amended v1.0.17: 4:1 compression of the wet) | 16, 24, 27 |
 | [0015](0015-time-and-attack.md) | P7 is TIME, SW1 is ATTACK (NORMAL / BLOOM / REVERSE) | 27, 28, 29, 30 (supersedes 19) |
@@ -28,3 +28,4 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0022](0022-massive-highs-ring-with-the-body.md) | MASSIVE's highs ring as long as its body | owner, 25 Oct 2026 |
 | [0023](0023-massive-shortest-tail-six-trips.md) | MASSIVE's shortest tail lasts six trips round its lines | owner, 25 Oct 2026 |
 | [0024](0024-shimmer-replaces-reverse.md) | SHIMMER replaces REVERSE on ATTACK's third position | owner, 25 Oct 2026 |
+| [0025](0025-size-and-time-crossfade.md) | HALL's and MASSIVE's SIZE, and TIME's predelay, move by crossfade | owner, 25 Oct 2026 |

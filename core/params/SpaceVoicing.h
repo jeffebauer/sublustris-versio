@@ -35,6 +35,13 @@ constexpr float kHallInLoopUntilSize = 0.5f; // fades to 0 by SIZE noon (the own
 // second per second, which is at most a semitone of bend (2^(1/12) − 1).
 // SPEC §4.3, ADR 0012.
 constexpr float kSizeSlewPerSecond = 0.0595f;
+// SIZE and TIME (NORMAL's pre-delay) move by crossfade, not by sliding (v1.0.34, ADR 0025; owner's pick
+// C on renders/knob_moves): once the knob has rested kSizeRestSeconds the delays jump and the old
+// ones fade out over kSizeCrossfadeSeconds (in the loop: summing to one where the two reads agree,
+// keeping their power where they don't). kSizeSlewPerSecond still glides HALL's
+// in-loop allpasses when they come in or go out without a SIZE move.
+constexpr float kSizeCrossfadeSeconds = 0.3f;
+constexpr float kSizeRestSeconds      = 0.05f;
 
 // Modulation floor (SPEC §2.3 rule 1, CONTEXT "Modulation floor"): every
 // line's read wanders slowly at random. Depth in seconds of delay (0.46 ms

@@ -43,7 +43,7 @@ public:
     // Targets, read at the next control tick. meanSeconds: the lines' mean
     // length; decayRate: 1/T60 in 1/s (0 = infinite); highT60Ratio: the
     // high end's T60 over the low end's (TONE). snap = jump straight there
-    // (at prepare/reset), else SIZE glides (kSizeSlewPerSecond).
+    // (at prepare/reset), else SIZE crossfades once it rests (kSizeCrossfadeSeconds, ADR 0025).
     // spread: how far the lines' lengths fan out from the mean, 0..1
     // (Supermassive's Warp: near 0 they're almost equal and the tail is a
     // train of echoes; at 1 they're kFdnRatios apart, a wash).
@@ -80,10 +80,6 @@ public:
     // denser. Output only: the loop itself is unchanged.
     void setEarlyTaps(float amount) { earlyTarget_ = amount; }
     void setAir(float air) { air_ = air; } // 1/T60 in 1/s: see absorbent() (v1.0.25)
-#ifndef IV_FIXED_VOICINGS
-    void setSizeCatchUp(float seconds) { sizeCatchUp_ = seconds; } // prototype (Fdn::control): 0 = the semitone limit
-    void setSizeCrossfade(float seconds) { sizeXfade_ = seconds; } // prototype: SIZE by crossfade, 0 = glide
-#endif
     // The modulation floor's depth × modDepth (Engine::setModulationScale, a test hook).
     void setModDepth(float k) { modDepth_ = k; }
     // Extra output level for a voicing (MASSIVE's loudness match).
@@ -102,7 +98,12 @@ public:
 
 private:
     void control(int n);
-    void controlInLoop(float dt, int n, float slew);
+    void  xfLines(float* xs, float* xo);
+    float xfMix(int i, float nw, float od, float gOld);
+    float xfAllpass(int i, float x, float g, bool old);
+    float xfOldAllpass(int i, int k, float x, float d);
+    void  xfOldTaps(float& el, float& er);
+    void controlInLoop(float dt, int n, float slew, bool pending);
     uint32_t apTargetLength(int i, int k) const;
 
     float     sampleRate_ = 48000.0f;
@@ -138,27 +139,22 @@ private:
     static constexpr int kEarlyTaps = voicing::kEarlyTaps;
     float     earlyFrac_[kN][kEarlyTaps] = {}, earlyGain_[kN][kEarlyTaps] = {};
     float     earlyTarget_ = 0.0f, earlyNow_ = 0.0f;
+    float     inLoopOld_ = 0.0f; // the in-loop amount fading out during a SIZE crossfade
     float     inLoopTarget_ = 0.0f, inLoopNow_ = 0.0f, outputTrim_ = 1.0f, levelGain_ = 1.0f;
     float     outputTrimNow_ = 1.0f; // glides to outputTrim_ (~50 ms): it follows SIZE and DECAY, which can jump (soak audit)
     FloorGovernor governor_;
     const Fdn* leader_ = nullptr;
     float     externalPower_ = 0.0f;
-#ifndef IV_FIXED_VOICINGS
-    float     sizeCatchUp_ = 0.0f, sizeXfade_ = 0.0f, xfDelta_[kN] = {};
-    int       xfLen_ = 1, xfLeft_ = 0;
-    float     xfLastTarget_[kN] = {}, xfRest_ = 0.0f, interpOld_[kN] = {}, apOld_[kN][2] = {};
-    float     xfLnGain_[kN] = {}, xfHold_[kN] = {};
-    int       xfSince_ = -1; // samples since a crossfade started, -1 when no correction runs
-    float     xfTrim_ = 1.0f;   // the output trim the lines are at (moves at a crossfade's start)
-    // The level correction for a read `hold` samples long after a jump: full for the trip, then eased out.
-    float xfCorrection(float lnGain, float hold) const
-    {
-        const float s = float(xfSince_);
-        if (s < hold) return std::exp(lnGain);
-        const float r = (s - hold) / float(xfLen_);
-        return r >= 1.0f ? 1.0f : std::exp(lnGain * (1.0f - r));
-    }
-#endif
+    // SIZE by crossfade (Fdn::control, ADR 0025): the old lengths, the fade (old/new gains stepped by
+    // a rotation), the rest before it starts, the trip's level corrections (per block), the held trim.
+    float     xfDelta_[kN] = {}, xfLastTarget_[kN] = {}, interpOld_[kN] = {}, apOld_[kN][2] = {};
+    float     xfLnGain_[kN] = {}, xfHold_[kN] = {}, xfLineCorr_[kN] = {};
+    float     xfTapCorr_[kN][kEarlyTaps] = {}, tapGainNow_[kN][kEarlyTaps] = {}; // tapGainNow_: earlyGain_ x the correction
+    float     xfRest_ = 0.0f, xfTrim_ = 1.0f, xfOld_ = 0.0f, xfNew_ = 1.0f, xfRotC_ = 1.0f, xfRotS_ = 0.0f;
+    float     xfOO_[kN] = {}, xfNN_[kN] = {}, xfON_[kN] = {}, xfK_[kN] = {}; // the reads' powers, their agreement, the fade's gain
+    float     xfLastInLoop_ = 0.0f, xfAbsOld_[kN][3] = {}; // the loss filter (b1, gain, pole) at the fade's start
+    float     xfCos_ = -1.0f, xfSin_ = 0.0f; // the fade's angle (twice it): xfNew_ = (1 - cos) / 2
+    int       xfLen_ = 1, xfLeft_ = 0, xfSince_ = -1; // samples; xfSince_: since the start, -1 when no correction runs
     bool      ready_ = false;
 };
 

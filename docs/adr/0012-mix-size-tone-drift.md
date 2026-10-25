@@ -42,3 +42,5 @@
 - **Tape (left) is unchanged.** Wander uses the same random generator, but quicker, with no flutter and the lines spread wider, so the two sides stay distinct.
 
 **Amendment (24 Oct 2026, owner's picks on `renders/valhalla_round2`; SPEC v1.0.25):** HALL's modulation floor is three times deeper, which smooths a long HALL's resonances toward Valhalla Room's with almost no audible pitch movement. HALL's and PLATE's highs now fade by "air", a steady extra loss of a few dB per second at every finite DECAY, instead of a fixed share of the decay. Short tails stay bright, as in a real room, and long PLATEs lose some top end. TONE still scales it. MASSIVE keeps the share.
+
+**Amendment (25 Oct 2026, owner's pick on `renders/knob_moves`; SPEC v1.0.34, ADR 0025):** HALL's and MASSIVE's SIZE no longer glide. Once the knob rests, the new lengths take over and the old ones fade out over 0.3 s, so a held note keeps its pitch. PLATE's SIZE still glides at a semitone of bend.

@@ -158,7 +158,10 @@ IV_SIZE_OPT void Engine::reset()
     hissLp_[0] = hissLp_[1] = 0.0f;
     noiseSeed_ = 0xA11CEu;
     shimmerMix_ = shimmerTarget_;
-    predelayStep_ = 0.0f;
+    pdXfLeft_ = 0;
+    pdOldG_ = 0.0f;
+    pdNewG_ = 1.0f;
+    pdRest_ = 0.0f;
     const auto g = map::mixGains(smoothed(ParamId::Mix));
     dryNow_ = g.dry;
     wetNow_ = g.wet;
@@ -270,7 +273,7 @@ float Engine::decayRate(float decay, float size) const
 // frozen, the big tank keeps the SIZE and DECAY it froze with and its loss
 // glides to none (freezeMix_); the knobs play the twin. snap: jump
 // straight there (reset, a SPACE flip).
-void Engine::applySpace(bool snap, int n, bool snapInput)
+IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once per block: built for size (flash)
 {
     const bool frozen = gesture_.frozen();
     const float size = frozen ? heldSize_ : smoothed(ParamId::Size);
@@ -507,6 +510,23 @@ void Engine::setDiffuserIndependent(bool on)
     }
 }
 
+// TIME's pre-delay crossfade (ADR 0025), only while one runs: the old delay fading out (gains stepped
+// by a rotation). Out of line, so the per-sample input loop stays as before (flash).
+IV_NOINLINE IV_SIZE_OPT void Engine::predelayCrossfade(float l, float r, float& pl, float& pr)
+{
+    const float d = std::fmax(pdOld_, 2.0f);
+    const float ol = pdOld_ > 0.0f ? predelay_[0].readCubic(d) : l, orr = pdOld_ > 0.0f ? predelay_[1].readCubic(d) : r;
+    pl = pdOldG_ * ol + pdNewG_ * pl;
+    pr = pdOldG_ * orr + pdNewG_ * pr;
+    const float o = pdOldG_;
+    pdOldG_ = o * pdRotC_ - pdNewG_ * pdRotS_;
+    pdNewG_ = pdNewG_ * pdRotC_ + o * pdRotS_;
+    if (--pdXfLeft_ == 0) {
+        pdOldG_ = 0.0f;
+        pdNewG_ = 1.0f;
+    }
+}
+
 void Engine::controlTick(int n)
 {
     // Ducking (ADR 0014, amended v1.0.17): 4:1 compression of the wet, keyed by the input's
@@ -651,30 +671,24 @@ void Engine::controlTick(int n)
     applySpace(false, n);
     swell_.control(n);
     twinSwell_.control(n);
-    // The predelay moves at most half a sample per sample (the input read at 0.5x-1.5x speed): a jump
-    // in its target (ATTACK switched with TIME up, MASSIVE's SIZE jumping, a SPACE flip) used to
-    // sweep it across in one control chunk, a burst of sped-up sound (soak audit). TIME's own knob
-    // glide stays as it was unless it's faster than that.
-    predelayStep_ = (predelayTarget_ - predelayNow_) / float(n);
-    if (predelayStep_ > kPredelayMaxSpeed) predelayStep_ = kPredelayMaxSpeed;
-    if (predelayStep_ < -kPredelayMaxSpeed) predelayStep_ = -kPredelayMaxSpeed;
-#ifndef IV_FIXED_VOICINGS
-    // PROTOTYPE (owner, plugin: "changing TIME rapidly also creates a large wash of noise"; measured:
-    // a held note's energy away from its pitch -24 dB steady, -1 dB while TIME moves; picked: C on
-    // knob_moves, 0.3 s): the pre-delay jumps and the old delay crossfades out (equal power) instead
-    // of sliding, which swept the input by up to an octave. Once TIME has rested 50 ms (as SIZE): back
-    // to back, each flick jumped the reverb's input back and forth in time, a stutter.
-    if (predelayXfade_ > 0.0f) {
-        predelayStep_ = 0.0f;
-        pdRest_ = std::fabs(predelayTarget_ - pdLastTarget_) > 0.5f ? 0.0f : pdRest_ + float(n) / sampleRate_;
-        pdLastTarget_ = predelayTarget_;
-        if (pdXfLeft_ <= 0 && pdRest_ >= 0.05f && std::fabs(predelayTarget_ - predelayNow_) > 0.5f) {
-            pdOld_ = predelayNow_;
-            predelayNow_ = predelayTarget_;
-            pdXfLen_ = pdXfLeft_ = int(predelayXfade_ * sampleRate_);
-        }
+    // TIME's pre-delay by crossfade (v1.0.34, ADR 0025; owner's pick C on renders/knob_moves): it jumps
+    // and the old delay fades out over kSizeCrossfadeSeconds, equal power, instead of sliding, which swept
+    // the input by up to an octave ("a large wash of noise"; a held note's energy away from its pitch -24
+    // dB steady, -1 dB while TIME moved). Once TIME has rested kSizeRestSeconds: back to back, each flick
+    // jumped the reverb's input back and forth in time, a stutter. (Sliding, it was capped at half a
+    // sample per sample after the soak audit: a jump in its target swept it across in one block.)
+    pdRest_ = std::fabs(predelayTarget_ - pdLastTarget_) > 0.5f ? 0.0f : pdRest_ + float(n) / sampleRate_;
+    pdLastTarget_ = predelayTarget_;
+    if (pdXfLeft_ <= 0 && pdRest_ >= voicing::kSizeRestSeconds && std::fabs(predelayTarget_ - predelayNow_) > 0.5f) {
+        pdOld_ = predelayNow_;
+        predelayNow_ = predelayTarget_;
+        pdXfLeft_ = int(voicing::kSizeCrossfadeSeconds * sampleRate_);
+        const float step = 1.5707963f / float(pdXfLeft_);
+        pdRotC_ = std::cos(step);
+        pdRotS_ = std::sin(step);
+        pdOldG_ = 1.0f;
+        pdNewG_ = 0.0f;
     }
-#endif
 
     const auto g = map::mixGains(smoothed(ParamId::Mix));
     dryStep_ = (g.dry - dryNow_) / float(n);
@@ -709,7 +723,6 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             inputPower_ += 0.002f * (0.5f * (l * l + r * r) - inputPower_); // ~10 ms follower
             predelay_[0].write(l);
             predelay_[1].write(r);
-            predelayNow_ += predelayStep_;
             float pl = l, pr = r;
             if (predelayNow_ >= 2.0f) {
                 pl = predelay_[0].readCubic(predelayNow_);
@@ -719,14 +732,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                 pl += t * (predelay_[0].readCubic(2.0f) - pl);
                 pr += t * (predelay_[1].readCubic(2.0f) - pr);
             }
-#ifndef IV_FIXED_VOICINGS
-            if (pdXfLeft_ > 0) { // the old pre-delay fading out
-                const float d = std::fmax(pdOld_, 2.0f), g = 1.5707963f * float(pdXfLeft_--) / float(pdXfLen_);
-                const float ol = pdOld_ > 0.0f ? predelay_[0].readCubic(d) : l, orr = pdOld_ > 0.0f ? predelay_[1].readCubic(d) : r;
-                pl = std::sin(g) * ol + std::cos(g) * pl;
-                pr = std::sin(g) * orr + std::cos(g) * pr;
-            }
-#endif
+            if (pdXfLeft_ > 0) predelayCrossfade(l, r, pl, pr);
             pl = diffuser_[0].process(pl);
             pr = diffuser_[1].process(pr);
             // SHIMMER: the diffused input, an octave up, joins it into the tank (always recording, so

@@ -87,23 +87,6 @@ public:
     // Test hook: how much of DECAY's level make-up applies (1 = v1.0.28; 0 = none, shorter tails
     // quieter, as v1.0.27), for demos.
     void  setDecayMakeup(float k) { decayMakeup_ = k; }
-#ifndef IV_FIXED_VOICINGS
-    // PROTOTYPES (owner's pick C on knob_moves: SIZE and TIME by a 0.3 s crossfade, not sliding):
-    // SIZE trials: the FDN tanks catch up with SIZE within this many seconds (0 = the semitone limit).
-    void  setSizeCatchUp(float seconds)
-    {
-        fdn_.setSizeCatchUp(seconds);
-        lowFdn_.setSizeCatchUp(seconds);
-        twinFdn_.setSizeCatchUp(seconds);
-    }
-    void  setPredelayCrossfade(float seconds) { predelayXfade_ = seconds; } // TIME (NORMAL's pre-delay)
-    void  setSizeCrossfade(float seconds)
-    {
-        fdn_.setSizeCrossfade(seconds);
-        lowFdn_.setSizeCrossfade(seconds);
-        twinFdn_.setSizeCrossfade(seconds);
-    }
-#endif
     // Test hook: false = no tape out (ERA's cassette stage without its output tape), for measuring.
     void  setTapeOut(bool on) { tapeOn_ = on; }
     // Test hook: false = one tank, the lows moving too (before v1.0.18), for demos.
@@ -148,10 +131,10 @@ private:
     void handleEdges(int chunkStart, int chunkEnd);
     void onGesture(GestureReader::Event e);
     void controlTick(int n);
+    void predelayCrossfade(float l, float r, float& pl, float& pr);
     // snap: jump to the targets (reset, a SPACE flip); snapInput: the input diffusers' amount and
     // the shimmer's recording too (not on a flip, where they keep running and glide).
     void applySpace(bool snap, int n = kChunk, bool snapInput = true);
-    static constexpr float kPredelayMaxSpeed = 0.5f; // samples per sample
     float decayRate(float decay, float size) const;
     float smoothed(ParamId id) const { return smooth_[static_cast<size_t>(id)]; }
 
@@ -171,7 +154,7 @@ private:
     size_t attachedLargeCount_ = 0, attachedFastCount_ = 0;
 
     dsp::DelayLine    predelay_[2];
-    float             predelayNow_ = 0.0f, predelayStep_ = 0.0f, predelayTarget_ = 0.0f; // samples
+    float             predelayNow_ = 0.0f, predelayTarget_ = 0.0f; // samples
     dsp::Diffuser<4>  diffuser_[2];
     dsp::Swell        swell_;
     dsp::Swell        twinSwell_; // MASSIVE's twin swells like its tank (owner: no repeats over a frozen MASSIVE)
@@ -218,10 +201,10 @@ private:
     // frozen. shimmerAmount_: TIME, how much shimmer.
     float shimmerMix_ = 0.0f, shimmerTarget_ = 0.0f, shimmerAmount_ = 0.0f;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
-#ifndef IV_FIXED_VOICINGS
-    float predelayXfade_ = 0.0f, pdOld_ = 0.0f, pdLastTarget_ = 0.0f, pdRest_ = 0.0f; // prototypes
-    int   pdXfLen_ = 1, pdXfLeft_ = 0;
-#endif
+    // TIME's pre-delay crossfade (Engine::controlTick, ADR 0025): the old delay, the rest before it
+    // starts, the fade's gains (stepped by a rotation).
+    float pdOld_ = 0.0f, pdLastTarget_ = 0.0f, pdRest_ = 0.0f, pdOldG_ = 0.0f, pdNewG_ = 1.0f, pdRotC_ = 1.0f, pdRotS_ = 0.0f;
+    int   pdXfLeft_ = 0;
     dsp::BbdStage   bbd_;   // ERA's bucket-brigade and radio, on the wet (ADR 0021, dsp/EraStages.h)
     dsp::RadioStage radio_;
     float bbdW_ = 0, radioW_ = 0;
