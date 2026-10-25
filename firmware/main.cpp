@@ -450,9 +450,37 @@ struct Result {
 // main loop instead, one block after another off the audio clock, so a corner over 100 % still
 // reports (timed inside the callback, one over 100 % starved the main loop and the serial stopped,
 // M3 round 1, 25 Oct 2026). The callback and USB interrupts still land inside the timed blocks.
+// The headroom test (M3 round 9, the owner's idea: find the load where drop-outs really start, not
+// SPEC's 75 % guess): after each lap, the heaviest corner runs in the audio callback itself, with
+// gPadCycles of busy waiting added, stepped up 5 % at a time. A block that takes longer than its
+// period is late: what the codec plays then is a stale half-buffer, a drop-out.
+volatile bool     gRealtime = false;
+volatile uint32_t gPadCycles = 0, gPeriodCycles = 1, gLate = 0, gBlocks = 0, gMaxCycles = 0;
+volatile uint64_t gSumCycles = 0;
+
 void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer out, size_t size)
 {
-    for (size_t i = 0; i < size; ++i) out[0][i] = out[1][i] = 0.0f;
+    if (!gRealtime) {
+        for (size_t i = 0; i < size; ++i) out[0][i] = out[1][i] = 0.0f;
+        return;
+    }
+    const uint32_t t0 = DWT->CYCCNT;
+    static float buf[kBlockSize];
+    for (size_t i = 0; i < size; ++i) {
+        float x = 5.0e-4f * NextNoise();
+        if (gClickPhase == 0) x += 0.8f;
+        if (++gClickPhase >= gClickPeriodSamples) gClickPhase = 0;
+        buf[i] = x;
+    }
+    engine.process(buf, buf, out[0], out[1], int(size));
+    const uint32_t pad0 = DWT->CYCCNT;
+    while (DWT->CYCCNT - pad0 < gPadCycles) {
+    }
+    const uint32_t d = DWT->CYCCNT - t0;
+    if (d > gMaxCycles) gMaxCycles = d;
+    if (d > gPeriodCycles) ++gLate;
+    gSumCycles = gSumCycles + d;
+    ++gBlocks;
 }
 
 // Micro-tests (M3 round 6), once at boot before the Engine takes its memory: what each building
@@ -713,6 +741,46 @@ int main()
             TransmitLine(buf, size_t(p - buf));
 
             if (r.max > 0.75f) everExceeded = true; // SPEC §5 target: <= 75 % peak worst case
+        }
+
+        if (gCurrentCorner == 0) { // a lap done: the headroom test, in real time
+            // The heaviest corner as it is (pct -1: no padding), then the lightest stepped up with padding
+            // until blocks come late twice: where drop-outs start.
+            gPeriodCycles = uint32_t(float(SystemCoreClock) / fs * float(kBlockSize));
+            int lateSteps = 0;
+            for (int pct = -5; pct <= 100 && lateSteps < 2; pct += 5) {
+                const int corner = pct < 0 ? kNumCorners - 1 : 0;
+                ApplyCorner(corner);
+                gPadCycles = pct < 0 ? 0u : uint32_t(float(gPeriodCycles) * float(pct) / 100.0f);
+                gLate = gBlocks = gMaxCycles = 0;
+                gSumCycles = 0;
+                gRealtime = true;
+                System::Delay(3000);
+                gRealtime = false;
+                System::Delay(5);
+                const float period = float(gPeriodCycles);
+                const float avg = gBlocks ? float(gSumCycles) / float(gBlocks) / period : 0.0f;
+                char        hb[160];
+                char*       p   = hb;
+                const char* end = hb + sizeof(hb);
+                AppendStr(p, end, "HEADROOM ");
+                AppendStr(p, end, gCorners[corner].name);
+                AppendStr(p, end, " +");
+                AppendInt(p, end, pct < 0 ? 0 : pct);
+                AppendStr(p, end, "% padding: avg ");
+                AppendFixed1(p, end, FracToPercentTenths(avg), 5);
+                AppendStr(p, end, "% max ");
+                AppendFixed1(p, end, FracToPercentTenths(float(gMaxCycles) / period), 5);
+                AppendStr(p, end, "% | late blocks ");
+                AppendUInt(p, end, unsigned(gLate));
+                AppendStr(p, end, " of ");
+                AppendUInt(p, end, unsigned(gBlocks));
+                AppendStr(p, end, "\r\n");
+                TransmitLine(hb, size_t(p - hb));
+                if (pct >= 0 && gLate > 0) ++lateSteps;
+            }
+            gPadCycles = 0;
+            ApplyCorner(gCurrentCorner);
         }
 
         // LED_0: progress through the corner table (brightness = index / count).
