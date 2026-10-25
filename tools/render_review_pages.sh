@@ -536,3 +536,35 @@ E_24_points    The old 24 points, for reference (costs about 12 % more CPU)" > r
     python3 tools/review/make_review.py renders/swell_seed --title "BLOOM's swell: other seeds" --level-match --dry $SRC --wet-only > /dev/null
     echo "renders/swell_seed/index.html"
 fi
+
+if on early_hits; then
+    # fit_cpu's D (one early reflection per line instead of six; the page said three, wrongly) was
+    # picked as part of E "if needed", but those six were the owner's v1.0.21 pick (renders/knob_feel)
+    # against a dip before a MASSIVE hit's tail ("uneven on Hits"). Measured on a click, deepest dip
+    # before the peak: MASSIVE SIZE 1 six 1.9 dB, four 2.9, three 4.6, two 6.0, one 16.9; HALL SIZE 1
+    # six 0.7, two 0.9, one 2.8. On hits, by ear: A today, B HALL 2 / MASSIVE 4, C one everywhere.
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in skank stabs drums; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page early_hits
+    for t in "1_hall_size_half:HALL:0.5:2" "2_hall_size_full:HALL:1.0:2" "3_massive_size_half:MASSIVE:0.5:4" "4_massive_size_full:MASSIVE:1.0:4"; do
+        IFS=: read col sp sz mid <<< "$t"
+        set=(--set space=$sp --set attack=NORMAL --set decay=0.6 --set size=$sz)
+        r early_hits $col A_today_six "" $set
+        ( export IV_FIT_EARLY_TAPS=$mid; r early_hits $col B_middle_${mid} "" $set )
+        ( export IV_FIT_EARLY_TAPS=1; r early_hits $col C_one "" $set )
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "Early reflections on hits. Each line of HALL's and MASSIVE's tank has six early reflections: your v1.0.21 pick, which filled the hole between a hit and its tail in MASSIVE (\"uneven on Hits\"). Fewer saves CPU (one per line: roughly 10 %), but the hole comes back: measured on a click, the deepest dip before the tail's peak at SIZE full is MASSIVE 1.9 dB with six, 2.9 with four, 16.9 with one; HALL 0.7 with six, 0.9 with two, 2.8 with one. (The last page said one instead of three; it's one instead of six, sorry.) Level-matched; all with the tank at 24 kHz; 100 % wet, so use the MIX fader for the dry.
+
+1_hall_size_half      HALL, SIZE noon
+2_hall_size_full      HALL, SIZE full
+3_massive_size_half   MASSIVE, SIZE noon
+4_massive_size_full   MASSIVE, SIZE full
+
+A_today_six   Six early reflections per line (today)
+B_middle_2    Two per line (HALL's middle ground)
+B_middle_4    Four per line (MASSIVE's middle ground)
+C_one         One per line (fit_cpu's D)" > renders/early_hits/README.txt
+    python3 tools/review/make_review.py renders/early_hits --title "Early reflections on hits" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/early_hits/index.html"
+fi
