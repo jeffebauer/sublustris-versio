@@ -120,7 +120,13 @@ public:
     // longer leaves a one-sample hole in the HALL / MASSIVE wet; the wet is then one sample late from
     // the start. Takes effect at the next reset().
     void  setHalfRatePrime(bool on) { halfPrime_ = on; }
+    // PROTOTYPE behind a hook (overnight review, 26 Oct 2026, lit-plate finding 6): the twin stops when
+    // its 50 ms level is under -100 dB, not its 1.5 s level. That smoother falls only 2.9 dB a second
+    // once the tail is gone, so the twin (a second tank) ran 26-30 s after every unfreeze whatever
+    // DECAY was. Not bit-identical: the twin's last output under -100 dB is no longer added.
+    void  setTwinStopFast(bool on) { twinStopFast_ = on; }
 #endif
+    bool  twinActive() const { return twinActive_; } // read-only view for tests
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.
@@ -217,6 +223,7 @@ private:
     float             sizeHyst_ = 0.0f;  // setSizeHysteresis; 0 = as built
     float             sizeHeld_ = -1.0f, twinSizeHeld_ = -1.0f; // the SIZE the tank and the twin have (< 0: none yet)
     bool              halfPrime_ = false; // setHalfRatePrime; false = as built
+    bool              twinStopFast_ = false; // setTwinStopFast; false = as built
 #endif
     dsp::Plate        twinPlate_;
     dsp::Diffuser<4>  twinDiffuser_[2];

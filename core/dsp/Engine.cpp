@@ -903,7 +903,10 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         if (twinActive_) {
             if (activeSpace_ == 0) twinPlate_.process(twinInL_, twinInR_, twinL_, twinR_, n);
             else twinHalf_.process(twinFdn_, twinInL_, twinInR_, twinL_, twinR_, n);
-            const float lvl = activeSpace_ == 0 ? twinPlate_.levelDb() : twinFdn_.levelDb();
+            float lvl = activeSpace_ == 0 ? twinPlate_.levelDb() : twinFdn_.levelDb();
+#ifndef IV_FIXED_VOICINGS
+            if (twinStopFast_) lvl = activeSpace_ == 0 ? twinPlate_.fastLevelDb() : twinFdn_.fastLevelDb(); // setTwinStopFast
+#endif
             if (!gesture_.frozen() && twinIn_ == 0.0f && lvl < -100.0f) twinActive_ = false;
             // Painting (holding) copies a little of the twin into the pad: what you played becomes a layer of it.
             const float pg = paint_ * paintRoom_ * voicing::kPaintLevel;

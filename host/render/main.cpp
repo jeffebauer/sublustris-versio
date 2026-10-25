@@ -129,6 +129,7 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* ss = std::getenv("IV_SWELL_SEED")) engine.setSwellSeedPrototype(uint32_t(std::strtoul(ss, nullptr, 0))); // swell_seed
     if (const char* sh = std::getenv("IV_SIZE_HYST")) engine.setSizeHysteresis(float(std::atof(sh))); // overnight review, arch F1
     if (const char* hp = std::getenv("IV_HALFRATE_PRIME")) engine.setHalfRatePrime(std::atoi(hp) != 0); // overnight review, arch F2
+    if (const char* ts = std::getenv("IV_TWIN_STOP_FAST")) engine.setTwinStopFast(std::atoi(ts) != 0); // overnight review, lit-plate 6
     if (!presetPath.empty()) {
         iv::json::Value preset;
         if (!iv::json::loadFile(presetPath, preset, error)) return false;
