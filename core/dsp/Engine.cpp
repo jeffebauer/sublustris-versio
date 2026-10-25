@@ -34,6 +34,12 @@ void Engine::setEarlyTapPrototype(int earlyTaps)
     fitEarlyTaps_ = earlyTaps;
     prepare(sampleRate_, maxBlockSize_);
 }
+
+void Engine::setSwellSeedPrototype(uint32_t seed)
+{
+    fitSwellSeed_ = seed;
+    prepare(sampleRate_, maxBlockSize_);
+}
 #endif
 
 IV_SIZE_OPT void Engine::attachMemory(float* large, size_t largeCount, float* fast, size_t fastCount)
@@ -78,6 +84,10 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
             const float s = voicing::kDiffuserSeconds[k] * (c ? voicing::kDiffuserRightScale : 1.0f);
             ready_ &= diffuser_[c].stage[k].init(fast_, uint32_t(s * sampleRate), voicing::kDiffuserCoeff[k]);
         }
+#ifndef IV_FIXED_VOICINGS
+    swell_.setSeed(fitSwellSeed_); // before prepare(): it lays the taps out from the seed
+    twinSwell_.setSeed(fitSwellSeed_);
+#endif
     ready_ &= swell_.prepare(large_, sampleRate);
     ready_ &= twinSwell_.prepare(large_, sampleRate);
     twinSwell_.setSCurve(true); // eases in, then settles (owner, renders/swell_curve)

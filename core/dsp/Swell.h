@@ -54,7 +54,7 @@ public:
         for (auto& side : smear_)
             for (auto& ap : side) ok = ok && ap.init(arena, size_t(kSmearMaxSeconds * sampleRate));
         // Fixed jitter and signs from a seeded generator (deterministic).
-        uint32_t s = 0x5EE11u;
+        uint32_t s = seed_;
         for (int c = 0; c < 2; ++c)
             for (int k = 0; k < kDraws; ++k) {
                 s = s * 1664525u + 1013904223u;
@@ -95,6 +95,9 @@ public:
             for (auto& ap : side) ap.clear();
         attackNow_ = attackTarget_;
     }
+
+    // PROTOTYPE (renders/swell_seed): the jitter and signs' seed, before prepare() lays the taps out.
+    void setSeed(uint32_t s) { seed_ = s ? s : 0x5EE11u; }
 
     // The attack time in seconds; glides (so TIME moves don't jump the taps).
     void setAttackSeconds(float a, bool snap = false)
@@ -212,6 +215,7 @@ private:
     float     sampleRate_ = 48000.0f;
     DelayLine line_[2];
     float     frac_[2][kTaps] = {}, sign_[2][kTaps] = {}, gain_[2][kTaps] = {}, tapDelay_[2][kTaps] = {};
+    uint32_t  seed_ = 0x5EE11u; // the jitter and signs' generator (setSeed, a prototype)
     float     attackNow_ = 0.0f, attackTarget_ = 0.0f, tapMix_ = 0.0f;
     bool      sCurve_ = false;
     DelayLine smear_[2][kSmearStages];

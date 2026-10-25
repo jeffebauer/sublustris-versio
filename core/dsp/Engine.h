@@ -106,6 +106,9 @@ public:
     // PROTOTYPE (renders/fit_cpu's D, held back: "reduce the early reflections to 1 instead of 3 if
     // needed"): the tanks with fewer early taps per line. Re-prepares the Engine.
     void  setEarlyTapPrototype(int earlyTaps);
+    // PROTOTYPE (renders/swell_seed, owner: "the 12 points seemed to accentuate the mids"): the swell's
+    // jitter and signs from another seed (0 = as built). Re-prepares the Engine.
+    void  setSwellSeedPrototype(uint32_t seed);
 #endif
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
@@ -185,6 +188,7 @@ private:
     dsp::HalfRate<kChunk> tankHalf_, twinHalf_; // fdn_ and twinFdn_ run at half the rate (v1.0.35, ADR 0026)
 #ifndef IV_FIXED_VOICINGS
     int               fitEarlyTaps_ = 0; // setEarlyTapPrototype; 0 = as built
+    uint32_t          fitSwellSeed_ = 0; // setSwellSeedPrototype; 0 = as built
 #endif
     dsp::Plate        twinPlate_;
     dsp::Diffuser<4>  twinDiffuser_[2];

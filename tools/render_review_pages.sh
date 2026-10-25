@@ -500,3 +500,39 @@ C_true_12_points     12 points per side (the CPU saving)" > renders/swell_points
     python3 tools/review/make_review.py renders/swell_points --title "BLOOM's swell: 24 or 12 points" --level-match --dry $SRC --wet-only > /dev/null
     echo "renders/swell_points/index.html"
 fi
+
+if on swell_seed; then
+    # Owner (via the spec session, confirmed here): "the 12 points seemed to accentuate the mids more than
+    # the 24 point versions. Adjusting the seed to create a more even sonic balance would be good."
+    # Measured first: on pink noise 12 and 24 points are within ~1 dB in every third-octave band; note by
+    # note both are about equally uneven (~5.3 dB, the comb any set of copies makes), and other seeds
+    # range 5.05-5.76 (today's 5.44). B-D: the three most even of 1,500 seeds (4.98-5.01), by ear.
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in pad vibes keys skank; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page swell_seed
+    NEW=$R
+    for t in "1_plate_bloom:PLATE:BLOOM" "2_hall_bloom:HALL:BLOOM" "3_massive_bloom:MASSIVE:BLOOM" "4_massive_normal:MASSIVE:NORMAL"; do
+        IFS=: read col sp at <<< "$t"
+        set=(--set space=$sp --set attack=$at --set decay=0.6 --set size=0.6 --set time=0.6)
+        ( R=$NEW; r swell_seed $col A_today "" $set )
+        ( export IV_SWELL_SEED=0xE02DE8EF; R=$NEW; r swell_seed $col B_seed_1 "" $set )
+        ( export IV_SWELL_SEED=0xB650EBD2; R=$NEW; r swell_seed $col C_seed_2 "" $set )
+        ( export IV_SWELL_SEED=0x2C341331; R=$NEW; r swell_seed $col D_seed_3 "" $set )
+        ( export IV_FIT_HALF_TANK=1; R=$IV_REF_RENDER; r swell_seed $col E_24_points "" $set )
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "BLOOM's swell: other seeds for its 12 points (your note: \"the 12 points seemed to accentuate the mids more than the 24 point versions\"). The seed decides where each of the 12 copies falls and whether it's flipped. Measured first: on noise, 12 and 24 points are just as even (within about 1 dB everywhere); on music, each version boosts some notes and dips others by a few dB, like a fine comb, and which notes moves with TIME and with the seed. B, C and D are the three most even of 1,500 seeds, a little more even than today on average; E is the old 24 points (12 % more CPU), for reference. Level-matched; all with the tank at 24 kHz; renders are 100 % wet, so use the MIX fader for the dry.
+
+1_plate_bloom      PLATE, BLOOM
+2_hall_bloom       HALL, BLOOM
+3_massive_bloom    MASSIVE, BLOOM
+4_massive_normal   MASSIVE, NORMAL (its built-in mass uses the swell's points)
+
+A_today        Today's 12 points
+B_seed_1       12 points, another seed (the most even of 1,500)
+C_seed_2       12 points, another seed (second)
+D_seed_3       12 points, another seed (third)
+E_24_points    The old 24 points, for reference (costs about 12 % more CPU)" > renders/swell_seed/README.txt
+    python3 tools/review/make_review.py renders/swell_seed --title "BLOOM's swell: other seeds" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/swell_seed/index.html"
+fi
