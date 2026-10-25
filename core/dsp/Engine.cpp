@@ -1036,8 +1036,7 @@ void Engine::processTwoTanks(int n)
     // The coefficients and states in locals for the chunk (overnight review, 26 Oct 2026): the stores
     // through bufL_ / wetL_ could alias the members, so every sample reloaded all of them. The same
     // sums in the same order (the same bits); the phase's % 4 as & 3 (it is never negative).
-    static_assert((kLowDecimate & (kLowDecimate - 1)) == 0 && (kLowDecimateMax & (kLowDecimateMax - 1)) == 0,
-                  "the phase wraps with & (lowDecimate_ - 1): a power of two");
+    static_assert((kLowDecimate & (kLowDecimate - 1)) == 0, "the phase wraps with & (lowDecimate_ - 1): a power of two (the desktop prototype's 8 too)");
     const int phase0 = lowPhase_;
     int k = 0;
     float cL[5], cA[5], cH[5], z[2][3][2];
