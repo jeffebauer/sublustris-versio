@@ -145,6 +145,10 @@ MICRO (cycles per op) sdr1 10.0 sdr32 33.0 ... fdnMassiveApAxit 4321.0
 | `fdnMassiveApAxi` | the same tank with its in-loop allpass lines in AXI SRAM, as release is now | cycles a tank sample |
 | `sdr1t` `sdr32t` `sdw32t` `sdline8t` `pld32t` `fdnSDRAMt` `fdnMassive24kt` `fdnMassiveApAxit` | the same tests again at SDRAM 3 / 3 | as above |
 
+**Profile link order (fixed in the overnight review).** Since round 10 the profile's micro-tests call the ERA stages (and now the swell) from `main.cpp`, which is built `-Os`. Inline functions from the Core's headers get one copy per object and the linker keeps the first: with `main.o` first, the Engine itself ran `main.o`'s `-Os` copies of `Swell::processBlock` (596 B against release's 1,658), `TapeOut::process` (248 against 1,766) and `RadioStage::process` / `set`. The profile now links the Core first, so it runs release's code; the `.bin` grew ~3.8 KB to 124.6 KB (95 %: the `all-variants` warning is expected for profile). **Round 10's cassette and radio numbers (`tape`, `radio` in SPLIT, `tape/smp`, `radio/smp`) were measured on the slower `-Os` code, so expect them lower now for that reason alone.** (`bbd/smp`, `loopNeve/smp` and `loopMidi/smp` still time out-of-line `-Os` copies that only the micro-tests use; the Engine inlines its own.)
+
+**ITCM trial (`make -C firmware MODE=profile PROFILE_ITCM=1` → `immensio_versio_profile-itcm.bin`, 124,904 B). Untested on hardware: flash it after the default profile build has given its numbers.** `Engine.o`, `Fdn.o` and `Plate.o` (52.5 KB of code, with the swell, tape and radio stages they use) run from ITCM (`firmware/STM32H750IB_flash_itcm.lds`, ITCM from 0x400) instead of flash through the 16 KB instruction cache, copied there first thing in `main()`. BENCH says `itcm 52472 B` (else `itcm off`). If the module doesn't boot (no boot pattern, no serial), flash the default profile `.bin` back. lit-m7 expects 3–6 points off the heavy corners.
+
 To halve a tank-sample figure into the share of the 10,000-cycle budget: `fdnMassive24k` / 2 / 100 = % of the budget for one tank (the Engine also runs the low tank, the swell, etc.).
 
 ## Memory

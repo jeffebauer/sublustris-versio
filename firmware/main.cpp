@@ -271,6 +271,9 @@ int main()
 #include "util/CpuLoadMeter.h"
 #include "dsp/ProfileHook.h"
 
+// STM32H750IB_flash_itcm.lds (PROFILE_ITCM=1): the ITCM code's place in ITCM and its copy in flash.
+extern "C" uint32_t _sitcm_text, _eitcm_text, _siitcm_text;
+
 namespace {
 
 using iv::ParamId;
@@ -604,6 +607,9 @@ void SetFlushToZero(bool on)
 // RBURST/RPIPE, "to make sure ongoing operations are complete"), interrupts off, the D-cache cleaned
 // first so no write-back is in flight. The H7 has no SDSR busy flag: a PALL takes tRP (<= 16 SDCLK,
 // 160 ns), so a 2 us wait covers it. Release never runs this (the owner decides after SDRAMCHK).
+#ifndef IV_PROFILE_ITCM
+#define IV_PROFILE_ITCM 0
+#endif
 #ifndef IV_PROFILE_SDRAM_TIGHT
 #define IV_PROFILE_SDRAM_TIGHT 1 // keep 3 / 3 for the corner lap (0: back to libDaisy's after the tests)
 #endif
@@ -1027,10 +1033,28 @@ Result MeasureCorner(int index, float fs)
     return r;
 }
 
+// PROFILE_ITCM=1 (STM32H750IB_flash_itcm.lds): the Core's hot code is linked to run from ITCM but
+// stored in flash; copy it there before anything calls it. Code in flash (main.o), word by word.
+#if IV_PROFILE_ITCM
+void CopyItcm()
+{
+    SCB->ITCMCR |= SCB_ITCMCR_EN_Msk; // on from reset on the H7; make sure
+    __DSB();
+    __ISB();
+    const volatile uint32_t* src = &_siitcm_text;
+    for (volatile uint32_t* dst = &_sitcm_text; dst < &_eitcm_text;) *dst++ = *src++;
+    __DSB();
+    __ISB();
+}
+#endif
+
 } // namespace
 
 int main()
 {
+#if IV_PROFILE_ITCM
+    CopyItcm(); // first: the Engine's constructor may live in Engine.o
+#endif
     new (gEngineStorage) iv::Engine(); // before anything touches it (see gEngineStorage)
     // DaisyVersio::Init minus the parts this build never uses (flash; Resilio's
     // flash study, 4 Oct 2026): the knob/CV ADC, the two switches, the button
@@ -1154,7 +1178,14 @@ int main()
                 const uint32_t sdDiv = (FMC_Bank5_6_R->SDCR[0] >> 10) & 3u; // SDCLK: 2 or 3 FMC clocks
                 AppendStr(p, end, " sdclk ");
                 AppendUInt(p, end, sdDiv ? pll2.PLL2_R_Frequency / sdDiv / 1000000u : 0u);
-                AppendStr(p, end, " MHz | engine ");
+                AppendStr(p, end, " MHz | itcm ");
+#if IV_PROFILE_ITCM
+                AppendUInt(p, end, unsigned(uintptr_t(&_eitcm_text) - uintptr_t(&_sitcm_text)));
+                AppendStr(p, end, " B");
+#else
+                AppendStr(p, end, "off");
+#endif
+                AppendStr(p, end, " | engine ");
                 AppendHex(p, end, uint32_t(reinterpret_cast<uintptr_t>(gEngineStorage)));
                 AppendStr(p, end, " axi ");
                 AppendHex(p, end, uint32_t(reinterpret_cast<uintptr_t>(gAxi)));
