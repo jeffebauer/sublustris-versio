@@ -17,7 +17,7 @@
 - [ ] **Play the plugin** (Immensio Versio, AU or VST3; rescan plug-ins first). It's v1.0.33 from branch `claude/massive-air`: everything in `main` plus MASSIVE's highs and shortest tail, ERA's era names, and **SHIMMER** on ATTACK's third position (TIME is how much). Notes welcome on anything; it goes into `main` when you say so.
 
 ### At the rack
-- [ ] **M3 CPU check, round 5: the memory setting.** Flash `dist/immensio_versio_profile_M3_round5.bin`, let it run one full lap, and tell Claude.
+- [ ] **M3 CPU check, round 6: the building blocks.** Flash `dist/immensio_versio_profile_M3_round6.bin` and tell Claude once the first lap has printed (its first lines now include a `MICRO` line).
 
 ### When convenient
 - [ ] **Re-record Supermassive's short settings at a feedback that sounds like a reverb** (your note: at 0 % and 12 % it's separate delays): about 5 % for Andromeda's 2 s, or skip 2 s and record the longer settings you like (15 s, 30 s, infinite). Also **re-export three clipped Valhalla takes about 6 dB lower**: Plate Chrome 15 s, Plate Lithium 15 s and Supermassive Andromeda 100 % (measure and music). Also check Supermassive's DELAY: its first sound came at different times between takes (Sagittarius 421 / 38 / 3 ms, Andromeda 1.1 / 0.7 / 0.65 s).
@@ -36,6 +36,7 @@
 
 ## Done
 
+- 25 Oct 2026: **M3 CPU check, round 5** (your run): the memory setting helped a little (PLATE ~66 %, HALL ~142-167 %); the tank's output and early taps still cost far more than their few reads should. Round 6 times the building blocks directly.
 - 25 Oct 2026: **M3 CPU check, round 4** (your run): inside HALL's tank, the lines take 26-55 %, the output and early taps 38-49 % (only ~30 reads a sample, so they're waiting on the external memory), the per-block maths 10-16 %, the mixing ~4 %. Round 5 tries one memory setting (writes grouped into bursts).
 - 25 Oct 2026: **M3 CPU check, round 3** (your run): the SPACE-change stall is gone and the swell's share fell from ~47 % to ~26-32 %; the tank didn't move (PLATE ~28 %, MASSIVE 112-127 %). Average now PLATE 75-92 %, MASSIVE ~178 %. Round 4 looks inside the tank.
 - 25 Oct 2026: **M3 CPU check, round 2: where the time goes** (your run). Average load: PLATE 93-105 %, HALL 158-192 %, MASSIVE ~191-195 % (target ≤ 75 % at peak). The BLOOM swell takes ~47 % in every space, the tank 23-28 % (PLATE) and 77-127 % (HALL, MASSIVE), the per-block control 4-12 %, ERA 8 % when full, the rest ~15 %. A SPACE change stalls the audio ~130 ms (the tanks' memory is wiped in one go); a freeze likely stalls too (it wipes the twin). Plan in Waiting on Claude.
