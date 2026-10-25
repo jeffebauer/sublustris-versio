@@ -246,6 +246,8 @@ private:
     // Scratch for one chunk.
     float bufL_[kChunk] = {}, bufR_[kChunk] = {}, wetL_[kChunk] = {}, wetR_[kChunk] = {};
     float twinInL_[kChunk] = {}, twinInR_[kChunk] = {}, twinL_[kChunk] = {}, twinR_[kChunk] = {};
+    float chunkGain_[kChunk] = {}; // the tank's input gain (tankIn_ x flipGain_) per sample, kept for after the swell
+    static_assert(kChunk <= dsp::Swell::kMaxBlock, "the swell runs a chunk at a time");
 };
 
 } // namespace iv

@@ -124,6 +124,51 @@ public:
             }
     }
 
+    static constexpr int kMaxBlock = 64;
+
+    // A block of n <= kMaxBlock samples in place, the same as n calls of process() (the same sums in
+    // the same order, so the same output to the bit), but tap by tap: each tap reads its n samples in
+    // a row instead of every tap hopping to its own place in SDRAM each sample. Per sample, the 48
+    // taps' hops were ~47 % of the module's CPU (M3 round 2, 25 Oct 2026). The taps' delays only
+    // change at control(), once a chunk.
+    void processBlock(float* l, float* r, int n)
+    {
+        for (int s = 0; s < n; ++s) {
+            line_[0].write(l[s]);
+            line_[1].write(r[s]);
+        }
+        if (tapMix_ <= 0.0f) return;
+        float sum[2][kMaxBlock];
+        float* io[2] = {l, r};
+        for (int c = 0; c < 2; ++c) {
+            for (int s = 0; s < n; ++s) sum[c][s] = 0.0f;
+            const DelayLine& line = line_[c];
+            for (int k = 0; k < kTaps; ++k) {
+                const float    d  = tapDelay_[c][k];
+                const auto     di = uint32_t(d);
+                const float    t  = d - float(di), g = gain_[c][k];
+                // Sample s was written n-1-s writes before the last: its read sits that much further back.
+                const uint32_t i0 = line.pos - (di < 1 ? 1u : di) - uint32_t(n - 1), i1 = line.pos - (di + 1) - uint32_t(n - 1);
+                for (int s = 0; s < n; ++s) {
+                    const float a0 = line.buf[(i0 + uint32_t(s)) & line.mask], a1 = line.buf[(i1 + uint32_t(s)) & line.mask];
+                    sum[c][s] += g * (a0 + t * (a1 - a0));
+                }
+            }
+        }
+        for (int s = 0; s < n; ++s) {
+            float v2[2] = {sum[0][s], sum[1][s]};
+            if (smearG_ > 0.0f)
+                for (int c = 0; c < 2; ++c)
+                    for (int j = 0; j < kSmearStages; ++j) {
+                        const float d = smear_[c][j].read(smearLen_[j]);
+                        const float v = v2[c] + smearG_ * d;
+                        smear_[c][j].write(v);
+                        v2[c] = d - smearG_ * v;
+                    }
+            for (int c = 0; c < 2; ++c) io[c][s] += tapMix_ * (v2[c] - io[c][s]);
+        }
+    }
+
     void process(float& l, float& r)
     {
         line_[0].write(l);

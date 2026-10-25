@@ -758,11 +758,20 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             twinInR_[i] = twinDiffuser_[1].process(twinIn_ * r);
             // MASSIVE's twin swells as its tank does, so what you play over a frozen MASSIVE
             // arrives as a wash, not two distinct repeats first (owner, 22 Oct 2026).
-            twinSwell_.process(twinInL_[i], twinInR_[i]);
             twinL_[i] = twinR_[i] = 0.0f;
             prof::mark(prof::kTwin);
-            swell_.process(pl, pr);
-            prof::mark(prof::kSwell);
+            bufL_[i] = pl; // the swell's input; it runs over the whole chunk below
+            bufR_[i] = pr;
+            chunkGain_[i] = tankIn_ * flipGain_;
+            wetL_[i] = wetR_[i] = 0.0f;
+            prof::mark(prof::kInput);
+        }
+        twinSwell_.processBlock(twinInL_, twinInR_, n);
+        prof::mark(prof::kTwin);
+        swell_.processBlock(bufL_, bufR_, n);
+        prof::mark(prof::kSwell);
+        for (int i = 0; i < n; ++i) {
+            float pl = bufL_[i], pr = bufR_[i];
             if (hissGain_ > 0.0f || crackleChance_ > 0.0f) {
                 // ERA's noise into the tank: soft (3 kHz) hiss, sparse crackle.
                 for (int c = 0; c < 2; ++c) {
@@ -779,11 +788,10 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                     pr += (noiseSeed_ & 2u) ? a : -a;
                 }
             }
-            const float g = tankIn_ * flipGain_;
+            const float g = chunkGain_[i];
             bufL_[i] = g * pl;
             bufR_[i] = g * pr;
             tankInPower_ += 0.002f * (0.5f * (bufL_[i] * bufL_[i] + bufR_[i] * bufR_[i]) - tankInPower_);
-            wetL_[i] = wetR_[i] = 0.0f;
             prof::mark(prof::kInput);
         }
 
