@@ -186,6 +186,9 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
 IV_SIZE_OPT void Engine::reset()
 {
     eraSentOk_ = 0; // the tanks were prepared or reset: send them their ERA afresh
+#ifndef IV_FIXED_VOICINGS
+    eraIdx_ = -1; // setEraSwitchPrototype: take the knob's era afresh
+#endif
     buttonDown_ = false;
     gateHigh_   = false;
     edgeCount_  = 0;
@@ -363,6 +366,27 @@ float Engine::hysteresisSize(float size, float& held, bool snap) const
     return held;
 }
 
+#ifndef IV_FIXED_VOICINGS
+// setEraSwitchPrototype: the era is the knob's fifth, held until the knob is kSticky past the boundary;
+// the weights move linearly to the new era over eraSwitch_ seconds (they sum to 1 all the way).
+dsp::EraMix Engine::switchedEra(float v, int n, bool snap)
+{
+    constexpr int   kCount  = voicing::kEraCount;
+    constexpr float kSticky = 0.004f; // the knobs' wobble stays inside 0.0005 (rack check, 26 Oct 2026)
+    const int raw = std::min(kCount - 1, std::max(0, int(v * float(kCount))));
+    const bool fresh = eraIdx_ < 0 || snap;
+    if (fresh) eraIdx_ = raw;
+    else if (raw > eraIdx_ && v > float(eraIdx_ + 1) / float(kCount) + kSticky) eraIdx_ = raw;
+    else if (raw < eraIdx_ && v < float(eraIdx_) / float(kCount) - kSticky) eraIdx_ = raw;
+    const float step = float(n) / (eraSwitch_ * sampleRate_);
+    for (int i = 0; i < kCount; ++i) {
+        const float target = i == eraIdx_ ? 1.0f : 0.0f;
+        eraW_[i] = fresh ? target : approach(eraW_[i], target, step);
+    }
+    return map::eraMixFromWeights(v, eraW_);
+}
+#endif
+
 // DECAY's loss rate for the SPACE in use (MASSIVE's shortest tail follows SIZE, v1.0.21).
 float Engine::decayRate(float decay, float size) const
 {
@@ -392,7 +416,12 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
 
     // Freezing: loss → 0, highs kept (ratio → 1), the governor caps paint.
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
+#ifndef IV_FIXED_VOICINGS
+    dsp::EraMix era = map::eraMix(smoothed(ParamId::Era)); // once a chunk (it was worked out twice)
+    if (eraSwitch_ > 0.0f) era = switchedEra(smoothed(ParamId::Era), n, snap);
+#else
     const dsp::EraMix era = map::eraMix(smoothed(ParamId::Era)); // once a chunk (it was worked out twice)
+#endif
     const float toneRatio = map::toneHighT60Ratio(tone) * era.highRatioScale;
     const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(hallSize_) : 1.0f;
     const float rate = decayRate(decay, size) / sizeT60 * (1.0f - freezeMix_);

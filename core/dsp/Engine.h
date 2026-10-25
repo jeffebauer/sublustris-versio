@@ -163,6 +163,16 @@ public:
     // The shimmer records only while ATTACK is on SHIMMER (frozen too) or its send is still fading
     // (cost-input c1): switching in, its first grains have only what was played since.
     void  setShimmerLazyPrototype(bool on) { shimmerLazy_ = on; }
+    // PROTOTYPE (owner, 26 Oct 2026: "even with the overlap ... a hard transition between tape and
+    // radio"; renders/era_switch): ERA without the overlaps. Each era plays alone across its whole fifth;
+    // crossing a boundary crossfades to the next over `seconds` (0 = as built: the overlaps). A small
+    // sticky zone at each boundary keeps a resting knob from flipping. Only one era's stage runs outside
+    // a crossfade.
+    void  setEraSwitchPrototype(float seconds)
+    {
+        eraSwitch_ = seconds;
+        eraIdx_    = -1;
+    }
     int   lowDecimate() const { return lowDecimate_; }
     int   swellTaps() const { return swell_.tapCount(); }
 #endif
@@ -217,6 +227,9 @@ private:
 #endif
     }
     float hysteresisSize(float size, float& held, bool snap) const; // SIZE's hysteresis (v1.0.37)
+#ifndef IV_FIXED_VOICINGS
+    dsp::EraMix switchedEra(float v, int n, bool snap); // setEraSwitchPrototype
+#endif
     float sizeHyst_ = voicing::kSizeHysteresis; // setSizeHysteresis
     float sizeHeld_ = -1.0f, twinSizeHeld_ = -1.0f; // the SIZE the tank and the twin have (< 0: none yet)
     // ERA last sent to a tank (applySpace): true, keeping m, when m differs from it.
@@ -271,6 +284,9 @@ private:
     int               fitTapeOs_ = 2;    // setTapeOversamplingPrototype; 4 = before v1.0.38
     int               fitSwellTaps_ = 0; // setSwellTapsPrototype; 0 = as built
     bool              shimmerLazy_ = false, shimmerArmed_ = true, shimmerResting_ = false; // setShimmerLazyPrototype
+    float             eraSwitch_ = 0.0f; // setEraSwitchPrototype; 0 = as built
+    int               eraIdx_ = -1;      // the era playing (< 0: none yet)
+    float             eraW_[voicing::kEraCount] = {}; // each era's weight, crossfading
 #endif
     dsp::Plate        twinPlate_;
     dsp::Diffuser<4>  twinDiffuser_[2];

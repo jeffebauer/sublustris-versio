@@ -145,6 +145,10 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         engine.setSwellTapsPrototype(std::atoi(st));
         std::fprintf(stderr, "iv_render: IV_SWELL_TAPS: %d swell points a side\n", engine.swellTaps());
     }
+    if (const char* es = std::getenv("IV_ERA_SWITCH")) { // renders/era_switch
+        engine.setEraSwitchPrototype(float(std::atof(es)));
+        std::fprintf(stderr, "iv_render: IV_ERA_SWITCH: ERA without overlaps, %.0f ms switch\n", 1000.0 * std::atof(es));
+    }
     if (const char* sz = std::getenv("IV_SHIMMER_LAZY")) {
         engine.setShimmerLazyPrototype(std::atoi(sz) != 0);
         std::fprintf(stderr, "iv_render: IV_SHIMMER_LAZY: shimmer records %s\n", std::atoi(sz) != 0 ? "only in SHIMMER" : "always");

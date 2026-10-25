@@ -130,19 +130,16 @@ inline float layer(float v, float from, float to)
     const float t = clamp01((v - from) / (to - from));
     return t * t * (3.0f - 2.0f * t);
 }
-// ERA (P4; ADR 0021): five eras from sweet to gritty, each on its own over the Neve's warmth, in equal
-// stretches (EraVoicing.h). An era comes in over the first third of its stretch (the one before goes as
-// it comes); the BBD's and radio's intensity runs from their sweet end to their gritty end across theirs.
-inline dsp::EraMix eraMix(float v)
+// ERA's mix from each era's weight w (eraMix's crossfades, or a prototype's): the eras' own settings
+// (the BBD's and radio's intensity across their stretch) still follow the knob v.
+inline dsp::EraMix eraMixFromWeights(float v, const float (&w)[voicing::kEraCount])
 {
     using namespace voicing;
-    float w[kEraCount], t[kEraCount];
+    float t[kEraCount];
     for (int i = 0; i < kEraCount; ++i) {
         const float span = 1.0f / kEraCount, from = float(i) * span;
-        w[i] = i == 0 ? 1.0f : layer(v, from, from + kEraFadeShare * span);
         t[i] = clamp01((v - from) / span);
     }
-    for (int i = 0; i < kEraCount - 1; ++i) w[i] *= 1.0f - w[i + 1];
     dsp::EraMix m;
     m.neve = 1.0f; // the base, under every era (owner, era_v2: "a clear winner")
     m.midiverb = w[1];
@@ -159,6 +156,21 @@ inline dsp::EraMix eraMix(float v)
     const float makeupDb = kMakeupNeveDb + kMakeupCassetteDb * m.cassette + kMakeupMidiverbDb * m.midiverb;
     m.makeup = std::pow(10.0f, makeupDb / 20.0f);
     return m;
+}
+
+// ERA (P4; ADR 0021): five eras from sweet to gritty, each on its own over the Neve's warmth, in equal
+// stretches (EraVoicing.h). An era comes in over the first third of its stretch (the one before goes as
+// it comes); the BBD's and radio's intensity runs from their sweet end to their gritty end across theirs.
+inline dsp::EraMix eraMix(float v)
+{
+    using namespace voicing;
+    float w[kEraCount];
+    for (int i = 0; i < kEraCount; ++i) {
+        const float span = 1.0f / kEraCount, from = float(i) * span;
+        w[i] = i == 0 ? 1.0f : layer(v, from, from + kEraFadeShare * span);
+    }
+    for (int i = 0; i < kEraCount - 1; ++i) w[i] *= 1.0f - w[i + 1];
+    return eraMixFromWeights(v, w);
 }
 
 // The floor governor's weight across DECAY's crossover (ADR 0008): 0 while
