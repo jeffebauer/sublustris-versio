@@ -52,6 +52,35 @@ using namespace daisy;
 namespace {
 
 DaisyVersio hw;
+
+// The SDRAM as write-back WITH write-allocate (ST AN4839, "Level 1 cache on STM32F7 and STM32H7":
+// the attribute for external memory that is read and written a lot). libDaisy's System::ConfigureMpu
+// makes it write-back without write-allocate (TEX 0, C, B), so every write to a line not in the cache
+// goes out to the SDRAM on its own: the tanks write ~35 scattered samples a sample, and the tank's
+// reads queued behind them (M3 round 4: its output and early taps, ~30 reads, cost ~4,500 cycles a
+// sample). With write-allocate a line's 8 writes merge in the cache and go out as one burst. Nothing
+// DMAs to or from the SDRAM, so no coherency changes. Called right after hw.Init(), before any SDRAM use.
+void SdramWriteAllocate()
+{
+    SCB_CleanDCache();
+    HAL_MPU_Disable();
+    MPU_Region_InitTypeDef r{};
+    r.Enable           = MPU_REGION_ENABLE;
+    r.Number           = MPU_REGION_NUMBER1; // libDaisy's SDRAM region, redefined
+    r.BaseAddress      = 0xC0000000;
+    r.Size             = MPU_REGION_SIZE_64MB;
+    r.AccessPermission = MPU_REGION_FULL_ACCESS;
+    r.TypeExtField     = MPU_TEX_LEVEL1; // TEX 1 + C + B: write-back, read and write allocate
+    r.IsCacheable      = MPU_ACCESS_CACHEABLE;
+    r.IsBufferable     = MPU_ACCESS_BUFFERABLE;
+    r.IsShareable      = MPU_ACCESS_NOT_SHAREABLE;
+    r.SubRegionDisable = 0x00;
+    r.DisableExec      = MPU_INSTRUCTION_ACCESS_ENABLE;
+    HAL_MPU_ConfigRegion(&r);
+    HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
+    __DSB();
+    __ISB();
+}
 #if !defined(IV_MODE_M0TEST)
 // The Engine is built at boot (placement new at the top of main), not as a
 // plain global: an object with default member values is .data, stored in
@@ -165,6 +194,7 @@ int Milli(float v) { return int(v * 1000.0f + 0.5f); }
 int main()
 {
     hw.Init(true); // boost to 480 MHz
+    SdramWriteAllocate();
     hw.SetAudioBlockSize(kBlockSize);
     BootPattern();
 
@@ -480,6 +510,7 @@ int main()
     // it the CPU measurement, is unchanged.
     hw.seed.Configure();
     hw.seed.Init(true); // boost to 480 MHz
+    SdramWriteAllocate();
     {
         constexpr Pin kLedPins[DaisyVersio::LED_LAST][3] = {
             {seed::D10, seed::D3, seed::D4},
@@ -910,6 +941,7 @@ int main()
 {
     new (gEngineStorage) iv::Engine(); // before anything touches it (see gEngineStorage)
     hw.Init(true); // boost to 480 MHz
+    SdramWriteAllocate();
     hw.SetAudioBlockSize(kBlockSize);
     engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats);
     engine.prepare(hw.AudioSampleRate(), kBlockSize);
