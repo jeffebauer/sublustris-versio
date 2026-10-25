@@ -1,12 +1,13 @@
 # Owner tasks
 
-**Last updated:** 25 Oct 2026, session 6 (MASSIVE's highs: D built on `claude/massive-air` and installed in Ableton).
-**Plugin installed:** `18cadab` on branch `claude/massive-air` (v1.0.31: v1.0.30 plus MASSIVE's highs ringing as long as the body; ERA's value names its era, e.g. "Cassette 40 %"), 25 Oct 2026 11:03; AU check passed. Rescan in Ableton to see it.
+**Last updated:** 25 Oct 2026, session 6 (E built and installed; pages for REVERSE's replacements and SPACE-flip tails).
+**Plugin installed:** `2a7d7b6` on branch `claude/massive-air` (v1.0.32: v1.0.30 plus MASSIVE's highs ringing as long as the body and its shortest tail lasting six trips; ERA's value names its era), 25 Oct 2026 11:40; AU check passed. Rescan in Ableton to see it.
 
 ## To do
 
 ### Decide
-- [ ] **MASSIVE: the drop after the music stops** (http://192.168.1.100:8766/massive_drop/index.html on the Wi-Fi; `renders/massive_drop/index.html`): your note on the highs page. A is today; B fades the first trip round the lines as it goes; C gives a short MASSIVE a smaller space (still 5 s; turning DECAY bends pitch a little, heard in the third column); D is B and C together (measured smoothest); E won't go as short (the shortest tail at SIZE 0.7 becomes ~9.5 s). Pick per column. Prototypes on branch `claude/massive-air`.
+- [ ] **Instead of REVERSE: shimmer, sub, grains** (http://192.168.1.100:8766/alt_attack/index.html on the Wi-Fi; `renders/alt_attack/index.html`): A is today's REVERSE; B shimmer up; C sub shimmer; D grains. HALL at a low and a high TIME, MASSIVE at mid TIME. First passes: picks and what you'd change.
+- [ ] **SPACE flips: what happens to the tail** (http://192.168.1.100:8766/space_flip/index.html; `renders/space_flip/index.html`): A today (the old tail fades in 0.1 s); B rings out fully; C fades over ~3 s; D a 3 s morph (both spaces hear the music while one crossfades into the other). Not level-matched.
 
 ### Listen (after your notes)
 - Nothing open.
@@ -27,8 +28,6 @@
 
 ## Waiting on Claude
 
-- **SPACE flips keep the tail** (your question, 25 Oct): possible. The freeze's spare reverbs already hold the memory; two reverbs run while the old tail rings out (as a frozen MASSIVE with playing over it); flash is the limit (~800 B left on the branch, the ring-out ~0.5-1.5 KB), so it needs room freed first, planned with REVERSE's replacement. Your call: ring out fully, or fade over a few seconds.
-- **Alternatives to REVERSE** (your question, 25 Oct): shimmer (octave up), sub shimmer (octave down), granular cloud, gated. Waiting on which ones you'd like on a demo page; research first, then a page. TIME's name follows (it's pre-delay only in NORMAL).
 - **The rest of the Valhalla comparison** (`docs/research/valhalla-comparison.md`): the loudness one is done (v1.0.28); MASSIVE's highs are on a page to pick from (above). Still to come: Supermassive moves more in pitch at long settings (a DRIFT comparison). Found on the way: the Immensio beside Valhalla page's MASSIVE settings now ring longer than labelled (a 21 Oct 2026 DECAY change, v1.0.21: "15 s" rings ~20 s, "2 s" ~4.7 s); DECAY 0.08 / 0.33 give 5 / 15 s at SIZE 0.7, and 2 s is below MASSIVE's shortest at that SIZE.
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
@@ -36,6 +35,7 @@
 
 ## Done
 
+- 25 Oct 2026: **MASSIVE's shortest tail lasts six trips round its lines** (your pick E on the drop page: "solves the abrupt level drop… truly MASSIVE"; SPEC v1.0.32, ADR 0023): no more drop after the music stops at short DECAYs; the shortest MASSIVE is ~5 s at noon SIZE, 12 s at full. On `claude/massive-air`, installed in Ableton, all tests pass, flash unchanged. The page is deleted.
 - 25 Oct 2026: **MASSIVE's highs ring as long as its body** (D on every card, 5 s and 15 s; SPEC v1.0.31, ADR 0022), as Supermassive's Andromeda and Sagittarius. Built on branch `claude/massive-air` (all tests pass; release flash 111,836 B) and installed in Ableton; not in `main` until you OK it. Its page is deleted (rebuildable from commit `b93139f`).
 - 25 Oct 2026: **The new ERA is in `main`** (SPEC v1.0.30, ADR 0021; with the ERA click fix, v1.0.29): "Era sweep test sounds excellent", "M6 also sounding excellent. Merge." All 15 tests pass; release flash 111,572 B (1 KB under budget). ERA's default is now 0.1 (the middle of the Neve). Both pages are deleted.
 - 25 Oct 2026: **The new ERA, round 3** (B across the board): the bucket-brigade's grit reaching round 2's B at two-thirds wins; the round-3 radio wins without its whistles and polar flutter ("they read as slow rhythmic delays rather than dropouts"). The sampler goes (the BBD is gritty enough). Built as the module's ERA on branch `claude/era-v2` (SPEC v1.0.30, ADR 0021): five eras, the Neve under all; μ-law, vintage reads and stacking removed. On the way the radio got an AGC that follows the station (aiming at a fixed level made sparse music 6 dB louder) and a slow level hold (a held tail drained 6 dB through its band in six minutes). The stronger-ERA page is superseded (it was built on the stacked ERA); its branch was later deleted. The round pages are deleted.
