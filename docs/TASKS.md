@@ -17,7 +17,7 @@
 - [ ] **Play the plugin** (Immensio Versio, AU or VST3; rescan plug-ins first). It's v1.0.33 from branch `claude/massive-air`: everything in `main` plus MASSIVE's highs and shortest tail, ERA's era names, and **SHIMMER** on ATTACK's third position (TIME is how much). Notes welcome on anything; it goes into `main` when you say so.
 
 ### At the rack
-- [ ] **M3 CPU check, round 7** (after the next speed-ups): Claude will name the file.
+- [ ] **M3 CPU check, round 7.** Flash `dist/immensio_versio_profile_M3_round7.bin`, let it run one full lap, and tell Claude.
 
 ### When convenient
 - [ ] **Re-record Supermassive's short settings at a feedback that sounds like a reverb** (your note: at 0 % and 12 % it's separate delays): about 5 % for Andromeda's 2 s, or skip 2 s and record the longer settings you like (15 s, 30 s, infinite). Also **re-export three clipped Valhalla takes about 6 dB lower**: Plate Chrome 15 s, Plate Lithium 15 s and Supermassive Andromeda 100 % (measure and music). Also check Supermassive's DELAY: its first sound came at different times between takes (Sagittarius 421 / 38 / 3 ms, Andromeda 1.1 / 0.7 / 0.65 s).
@@ -25,7 +25,7 @@
 
 ## Waiting on Claude
 
-- **CPU: the module is over budget, about 2.4× at worst** (M3 rounds 1-6). Done, sound unchanged: the swell reads in runs, the lines spread across the cache, no wipe stalls, the memory groups writes. Found (round 6): the external memory costs ~10-30× the chip's own per read. Next, sound unchanged: the maths calls worked out only when a knob changes; the short, busy lines (PLATE's tank, the in-loop allpasses, the predelay) moved into the chip's own memory; the long lines read and written in runs. Then measure. If MASSIVE's long lines are still too slow, a choice that changes the sound (e.g. those lines at a lower internal sample rate), as a listening page first.
+- **CPU: the module is over budget, about 2.4× at worst** (M3 rounds 1-6). Done, sound unchanged (renders identical to the bit): the swell reads in runs, the lines spread across the cache, no wipe stalls, the memory groups writes; now also the per-block maths worked out only when a knob moves, and the tanks fetching each block's memory in one go before using it. Round 7 measures these. Still to do if needed: the short busy lines into the chip's own memory; then, if MASSIVE is still over, a sound choice as a listening page.
 - **BLOOM's TIME and PLATE's SIZE by crossfade** (phase 2 of your pick C): they still slide; HALL and MASSIVE's SIZE and TIME's pre-delay are done (v1.0.34).
 - **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): build it for real. For 3 s after a flip both spaces hear the music while one crossfades into the other; it needs a second reverb running for those 3 s (the freeze's spare) and ~0.5-1 KB of flash, which has to be freed first (804 B left). A plan before building.
 - **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper; a later round if the shimmer is kept.
