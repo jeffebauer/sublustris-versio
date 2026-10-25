@@ -4,11 +4,12 @@
 **Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Rescan in Ableton to see it.
 
 ## To do
+- [ ] **M3 CPU check, round 9: v1.0.35 and the real limit.** Flash `dist/immensio_versio_profile_M3_round9.bin` and let it run a lap plus its headroom test (about 4 minutes; `HEADROOM` lines at the end of the lap), then tell Claude.
 
 ### Decide
 
 ### Listen (after your notes)
-- [ ] **BLOOM's swell: 24 or 12 points** (a correction, sorry: the last page's C didn't really have 12 points; a prototype bug left 24 points with a longer smear, so that's what you picked). http://192.168.1.238:8766/swell_points/index.html: A today's 24, B what you picked, C a true 12 (the CPU saving); all with the tank at 24 kHz, which is built.
+- Nothing open.
 
 ### Listen (first time)
 - [ ] **ERA signatures** (out of date: it measures the old stacked ERA; Claude can re-measure it for the five eras; reference, nothing to pick; https://claude.ai/artifact/AiR2JXPAaLbT8GeJseK3Vj, opens on your phone anywhere): what each ERA stage does to the reverb, measured and drawn as charts (tone, how long each frequency rings, harmonics, grain, hiss, mirror tones, pitch wobble). `tools/era_reference.py` remeasures it.
@@ -24,7 +25,7 @@
 
 ## Waiting on Claude
 
-- **CPU: build your fit_cpu picks** (E everywhere, C for PLATE; "reduce the early reflections to 1 instead of 3 if needed"): the HALL / MASSIVE tank at 24 kHz (B) and 12 swell points (C) for real, then measure on the module (round 9); one early reflection (D) only if still over. Round 9 also measures the real limit (your idea): extra load in the audio callback, step by step, counting late blocks, so the target is where drop-outs start rather than SPEC's 75 % guess.
+- **CPU: after round 9.** Built (v1.0.35): the HALL / MASSIVE tank at 24 kHz and a true 12-point swell. Next depends on round 9's numbers: one early reflection (D) only if still over.
 - **BLOOM's TIME and PLATE's SIZE by crossfade** (phase 2 of your pick C): they still slide; HALL and MASSIVE's SIZE and TIME's pre-delay are done (v1.0.34).
 - **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): build it for real. For 3 s after a flip both spaces hear the music while one crossfades into the other; it needs a second reverb running for those 3 s (the freeze's spare) and ~0.5-1 KB of flash, which has to be freed first (804 B left). A plan before building.
 - **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper; a later round if the shimmer is kept.
@@ -35,6 +36,7 @@
 
 ## Done
 
+- 25 Oct 2026: **BLOOM's swell: a true 12 points** (C on every card). Built with the tank at 24 kHz as v1.0.35 (ADR 0026); all tests pass. The page is deleted.
 - 25 Oct 2026: **Fitting the module: E (all three) everywhere, C for PLATE** ("Not a huge sonic difference, especially when not at 100% wet. Ideally we'd only reduce the early reflections to 1 instead of 3 if needed"). The page is deleted; building B and C is in Waiting on Claude, D held back.
 - 25 Oct 2026: **M3 CPU check, round 8: mostly arithmetic** (your run). The same small tank costs 4,049 cycles a sample with its memory on the chip and 6,925 in the external memory: the memory adds ~70 %, but the tank's sums alone are most of it, because this processor does about one step per cycle where a desktop does several. Speed-ups that keep the sound to the bit have got the worst case from ~2.6× to ~2.3× over budget; the rest needs choices that change the sound a little (Decide).
 - 25 Oct 2026: **M3 CPU check, round 7** (your run): fetching the tank's memory before each block cost ~30 % and saved little, so the averages didn't improve (MASSIVE ~171-185 %). Round 8 runs one small tank in the fast and in the slow memory to settle whether the tank waits on memory or on arithmetic.
