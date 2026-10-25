@@ -6,7 +6,6 @@
 ## To do
 
 ### Decide
-- [ ] **CPU: how to fit the module** (it's ~2.3× over at worst). Listen: http://192.168.1.238:8766/fit_cpu/index.html (`renders/fit_cpu`): B the tank at 24 kHz, C 12 swell points, D one early reflection per line, E all three, level-matched against today. Even E probably leaves MASSIVE with BLOOM near 90 % (target 75 %), so more work follows whichever you pick.
 
 ### Listen (after your notes)
 - Nothing open.
@@ -25,7 +24,7 @@
 
 ## Waiting on Claude
 
-- **CPU: the module is about 2.3× over budget at worst** (MASSIVE with BLOOM). The speed-ups that keep the sound identical are nearly used up (round 8: the tank is short of arithmetic, not just memory). Waiting on your choice of direction (Decide).
+- **CPU: build your fit_cpu picks** (E everywhere, C for PLATE; "reduce the early reflections to 1 instead of 3 if needed"): the HALL / MASSIVE tank at 24 kHz (B) and 12 swell points (C) for real, then measure on the module (round 9); one early reflection (D) only if still over. Round 9 also measures the real limit (your idea): extra load in the audio callback, step by step, counting late blocks, so the target is where drop-outs start rather than SPEC's 75 % guess.
 - **BLOOM's TIME and PLATE's SIZE by crossfade** (phase 2 of your pick C): they still slide; HALL and MASSIVE's SIZE and TIME's pre-delay are done (v1.0.34).
 - **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): build it for real. For 3 s after a flip both spaces hear the music while one crossfades into the other; it needs a second reverb running for those 3 s (the freeze's spare) and ~0.5-1 KB of flash, which has to be freed first (804 B left). A plan before building.
 - **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper; a later round if the shimmer is kept.
@@ -36,6 +35,7 @@
 
 ## Done
 
+- 25 Oct 2026: **Fitting the module: E (all three) everywhere, C for PLATE** ("Not a huge sonic difference, especially when not at 100% wet. Ideally we'd only reduce the early reflections to 1 instead of 3 if needed"). The page is deleted; building B and C is in Waiting on Claude, D held back.
 - 25 Oct 2026: **M3 CPU check, round 8: mostly arithmetic** (your run). The same small tank costs 4,049 cycles a sample with its memory on the chip and 6,925 in the external memory: the memory adds ~70 %, but the tank's sums alone are most of it, because this processor does about one step per cycle where a desktop does several. Speed-ups that keep the sound to the bit have got the worst case from ~2.6× to ~2.3× over budget; the rest needs choices that change the sound a little (Decide).
 - 25 Oct 2026: **M3 CPU check, round 7** (your run): fetching the tank's memory before each block cost ~30 % and saved little, so the averages didn't improve (MASSIVE ~171-185 %). Round 8 runs one small tank in the fast and in the slow memory to settle whether the tank waits on memory or on arithmetic.
 - 25 Oct 2026: **M3 CPU check, round 6: the building blocks** (your run). Cycles per operation: external memory (SDRAM) 10 for one steady stream, 33 for 32 streams at once (the tank's pattern), 48 for writes, ~100 for a delay line's read-and-write; the chip's own memory 3 for the same 32 streams. Maths calls: exp 112, sin 85, pow 209, log10 157. So the long delay lines in the external memory are the main cost, then the maths calls once a block. Averages now: PLATE 67-82 %, HALL 135-178 %, MASSIVE 161-180 %.
