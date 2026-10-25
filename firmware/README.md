@@ -185,7 +185,7 @@ The owner played v1.0.37: crackle in MASSIVE with SIZE and DECAY high (now and t
 - **Release, to try: a knob deadband.** A knob's value goes to the Engine only once it has moved more than 0.0005 from the last value sent, or reaches an end stop (exact 0 / 1), so a still knob is still to the Engine and the memos work. Moves come in steps of 0.05 % of the travel. Release 112,500 B (+88; 140 B left).
 
 ```
-REALTIME MASSIVE knobs high neve FROZEN     still  avg  95.0% max 101.2% | late blocks 12 of 6000
+REALTIME <setting>                          still|jitter avg  <%> max  <%> | late blocks <n> of <blocks>
 ```
 
 ## Memory
