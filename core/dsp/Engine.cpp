@@ -170,7 +170,7 @@ IV_SIZE_OPT void Engine::reset()
     twinIn_ = twinInStep_ = 0.0f;
     twinMean_ = twinSpread_ = -1.0f;
     twinFdn_.reset();
-    twinHalf_.reset();
+    resetHalf(twinHalf_);
     twinPlate_.reset();
     twinSwell_.reset();
     for (auto& d : twinDiffuser_) d.clear();
@@ -193,8 +193,8 @@ IV_SIZE_OPT void Engine::reset()
     for (auto& c : xoZ_) for (auto& z : c) z[0] = z[1] = 0.0f;
     lowPhase_ = 0;
     lowPrev_[0] = lowPrev_[1] = lowCur_[0] = lowCur_[1] = 0.0f;
-    tankHalf_.reset();
-    twinHalf_.reset();
+    resetHalf(tankHalf_);
+    resetHalf(twinHalf_);
     plate_.reset();
     shimmer_.reset();
     tilt_.reset();
@@ -283,7 +283,7 @@ void Engine::onGesture(GestureReader::Event e)
         if (!twinActive_) {
             twinFdn_.setInLoopDiffusion(activeSpace_ == 2 ? 1.0f : 0.0f); // before the reset, so it starts there
             twinFdn_.reset();
-            twinHalf_.reset();
+            resetHalf(twinHalf_);
             twinPlate_.reset();
             for (auto& d : twinDiffuser_) d.clear();
             twinSwell_.setAttackSeconds(activeSpace_ == 2
@@ -737,7 +737,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
             // (a jump in their amount rang on in them for ~100 ms, past the fade back in).
             applySpace(true, n, false);
             fdn_.reset();
-            tankHalf_.reset();
+            resetHalf(tankHalf_);
             lowFdn_.reset();
             plate_.reset();
             swell_.reset();
@@ -748,7 +748,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
             twinActive_ = false;
             twinIn_ = twinInStep_ = 0.0f;
             twinFdn_.reset();
-            twinHalf_.reset();
+            resetHalf(twinHalf_);
             twinPlate_.reset();
             twinSwell_.reset();
             for (auto& d : twinDiffuser_) d.clear();

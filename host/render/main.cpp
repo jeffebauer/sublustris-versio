@@ -128,6 +128,7 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* et = std::getenv("IV_FIT_EARLY_TAPS")) engine.setEarlyTapPrototype(std::atoi(et)); // fit_cpu's D (re-prepares)
     if (const char* ss = std::getenv("IV_SWELL_SEED")) engine.setSwellSeedPrototype(uint32_t(std::strtoul(ss, nullptr, 0))); // swell_seed
     if (const char* sh = std::getenv("IV_SIZE_HYST")) engine.setSizeHysteresis(float(std::atof(sh))); // overnight review, arch F1
+    if (const char* hp = std::getenv("IV_HALFRATE_PRIME")) engine.setHalfRatePrime(std::atoi(hp) != 0); // overnight review, arch F2
     if (!presetPath.empty()) {
         iv::json::Value preset;
         if (!iv::json::loadFile(presetPath, preset, error)) return false;

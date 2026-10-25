@@ -115,6 +115,11 @@ public:
     // little every block, which restarted the FDN's rest timer (kSizeRestSeconds), so SIZE never took
     // effect in MASSIVE (and in HALL from ±2e-4 of noise). Suggested rel: 1e-3 (1.7 cents).
     void  setSizeHysteresis(float rel) { sizeHyst_ = rel; }
+    // PROTOTYPE, a bug fix behind a hook (overnight review, 26 Oct 2026, arch F2): the half-rate stages
+    // start primed with one silent sample (dsp/HalfRate.h), so a host's first odd block mid-stream no
+    // longer leaves a one-sample hole in the HALL / MASSIVE wet; the wet is then one sample late from
+    // the start. Takes effect at the next reset().
+    void  setHalfRatePrime(bool on) { halfPrime_ = on; }
 #endif
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
@@ -152,6 +157,13 @@ private:
     void applySpace(bool snap, int n = kChunk, bool snapInput = true);
     void setEarlyTapsForSpace();
     float decayRate(float decay, float size) const;
+    void  resetHalf(dsp::HalfRate<kChunk>& h) const
+    {
+        h.reset();
+#ifndef IV_FIXED_VOICINGS
+        if (halfPrime_) h.prime(); // setHalfRatePrime
+#endif
+    }
 #ifndef IV_FIXED_VOICINGS
     float hysteresisSize(float size, float& held, bool snap) const; // setSizeHysteresis
 #endif
@@ -204,6 +216,7 @@ private:
     uint32_t          fitSwellSeed_ = 0; // setSwellSeedPrototype; 0 = as built
     float             sizeHyst_ = 0.0f;  // setSizeHysteresis; 0 = as built
     float             sizeHeld_ = -1.0f, twinSizeHeld_ = -1.0f; // the SIZE the tank and the twin have (< 0: none yet)
+    bool              halfPrime_ = false; // setHalfRatePrime; false = as built
 #endif
     dsp::Plate        twinPlate_;
     dsp::Diffuser<4>  twinDiffuser_[2];
