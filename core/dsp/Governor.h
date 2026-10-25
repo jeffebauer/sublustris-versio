@@ -6,6 +6,7 @@
 // stays <= 1, SPEC §2.3 rule 2). darken() tells the tank how much of its
 // infinite high-end fade to keep: all of it above the floor, none of it once
 // the tail is down at the floor, so the tail stops darkening and holds.
+#include "dsp/SizeOpt.h"
 #include "params/SpaceVoicing.h"
 
 #include <cmath>
@@ -50,9 +51,15 @@ struct FloorGovernor {
     void control(int n, float sampleRate)
     {
         const float dt = float(n) / sampleRate;
-        power_ += (1.0f - std::exp(-dt / voicing::kGovernorSeconds)) * (block_ / float(n) - power_);
-        slow_ += (1.0f - std::exp(-dt / voicing::kHoldSeconds)) * (block_ / float(n) - slow_);
-        fast_ += (1.0f - std::exp(-dt / voicing::kGovernorFallSeconds)) * (block_ / float(n) - fast_);
+        if (dt != dt_) { // the same every block: worked out once (std::exp ~110 cycles on the M7)
+            dt_ = dt;
+            cPower_ = 1.0f - std::exp(-dt / voicing::kGovernorSeconds);
+            cSlow_ = 1.0f - std::exp(-dt / voicing::kHoldSeconds);
+            cFast_ = 1.0f - std::exp(-dt / voicing::kGovernorFallSeconds);
+        }
+        power_ += cPower_ * (block_ / float(n) - power_);
+        slow_ += cSlow_ * (block_ / float(n) - slow_);
+        fast_ += cFast_ * (block_ / float(n) - fast_);
         block_ = 0.0f;
         levelDb = 10.0f * std::log10(power_ + 1e-20f);
         slowLevelDb = 10.0f * std::log10(slow_ + 1e-20f);
@@ -89,6 +96,7 @@ struct FloorGovernor {
 
 private:
     float power_ = 0.0f, slow_ = 0.0f, block_ = 0.0f, fast_ = 0.0f;
+    float dt_ = -1.0f, cPower_ = 0.0f, cSlow_ = 0.0f, cFast_ = 0.0f; // the smoothing coefficients for dt_
 };
 
 // A tank segment's absorbent filter (Jot): a first-order shelf crossing at
@@ -114,7 +122,41 @@ inline float lossShelfK(float sampleRate) { return bilinearK(voicing::kLossShelf
 
 // air (1/T60 in 1/s; v1.0.25): the highs lose this much more than the lows at every finite DECAY, as
 // air does in a room, scaled by TONE's ratio against noon. 0 = a fixed share of the decay (MASSIVE).
-inline Absorb absorbent(float seconds, float lowRate, float highRatio, float darken, float shelfK, float air = 0.0f)
+inline Absorb absorbent(float seconds, float lowRate, float highRatio, float darken, float shelfK, float air = 0.0f);
+
+// absorbent() for one line, worked out again only when one of its inputs has changed: its two powf
+// calls (~210 cycles each on the M7, M3 round 6) ran for every line every block, where most blocks
+// ask the same. The same inputs give the same coefficients, to the bit.
+struct AbsorbMemo {
+    float  in[6] = {-1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    Absorb out{};
+    IV_NOINLINE IV_SIZE_OPT const Absorb& get(float seconds, float lowRate, float highRatio, float darken, float shelfK, float air)
+    {
+        const float x[6] = {seconds, lowRate, highRatio, darken, shelfK, air};
+        bool same = true;
+        for (int k = 0; k < 6; ++k) same = same && x[k] == in[k];
+        if (!same) {
+            for (int k = 0; k < 6; ++k) in[k] = x[k];
+            out = absorbent(seconds, lowRate, highRatio, darken, shelfK, air);
+        }
+        return out;
+    }
+};
+
+// One-argument maths (std::exp and the like) worked out again only when its argument changes.
+struct Memo1 {
+    float x = 3.0e38f, y = 0.0f;
+    template <typename F> float get(float arg, F&& f)
+    {
+        if (arg != x) {
+            x = arg;
+            y = f(arg);
+        }
+        return y;
+    }
+};
+
+inline Absorb absorbent(float seconds, float lowRate, float highRatio, float darken, float shelfK, float air)
 {
     float highRate = air > 0.0f && lowRate > 0.0f ? lowRate + air * (voicing::kDampingHighT60Ratio / highRatio)
                                                   : lowRate / highRatio;

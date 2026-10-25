@@ -152,6 +152,8 @@ private:
     float     xfTapCorr_[kN][kEarlyTaps] = {}, tapGainNow_[kN][kEarlyTaps] = {}; // tapGainNow_: earlyGain_ x the correction
     float     xfRest_ = 0.0f, xfTrim_ = 1.0f, xfOld_ = 0.0f, xfNew_ = 1.0f, xfRotC_ = 1.0f, xfRotS_ = 0.0f;
     float     xfOO_[kN] = {}, xfNN_[kN] = {}, xfON_[kN] = {}, xfK_[kN] = {}; // the reads' powers, their agreement, the fade's gain
+    AbsorbMemo absorbMemo_[kN]; // each line's loss filter, worked out again only when its inputs change
+    Memo1     floorCoeffMemo_, glide80Memo_, glideXfMemo_; // per-block smoothing coefficients, worked out once per dt
     float     xfLastInLoop_ = 0.0f, xfAbsOld_[kN][3] = {}; // the loss filter (b1, gain, pole) at the fade's start
     float     xfCos_ = -1.0f, xfSin_ = 0.0f; // the fade's angle (twice it): xfNew_ = (1 - cos) / 2
     int       xfLen_ = 1, xfLeft_ = 0, xfSince_ = -1; // samples; xfSince_: since the start, -1 when no correction runs

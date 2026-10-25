@@ -528,7 +528,7 @@ IV_NOINLINE IV_SIZE_OPT void Engine::predelayCrossfade(float l, float r, float& 
     }
 }
 
-void Engine::controlTick(int n)
+IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (flash)
 {
     // Ducking (ADR 0014, amended v1.0.17): 4:1 compression of the wet, keyed by the input's
     // ~10 ms power, × how far into infinite DECAY is; not while frozen (playing over a pad

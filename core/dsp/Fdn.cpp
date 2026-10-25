@@ -17,11 +17,14 @@ constexpr float kInR[8]  = {1, -1, 1, -1, 1, -1, 1, -1};
 constexpr float kOutL[8] = {1, 1, -1, -1, 1, 1, -1, -1};
 constexpr float kOutR[8] = {1, -1, -1, 1, 1, -1, -1, 1};
 
+// Trial division over 2, 3 and then 6k ± 1 only: the same answers, ~6x fewer divisions (a SIZE move
+// asks for 16 lines' primes every block, up to ~300 divisions each on the M7's slow integer divide).
 bool isPrime(uint32_t n)
 {
-    if (n < 2) return false;
-    for (uint32_t d = 2; d * d <= n; ++d)
-        if (n % d == 0) return false;
+    if (n < 4) return n >= 2;
+    if (n % 2 == 0 || n % 3 == 0) return false;
+    for (uint32_t d = 5; d * d <= n; d += 6)
+        if (n % d == 0 || n % (d + 2) == 0) return false;
     return true;
 }
 
@@ -158,7 +161,7 @@ IV_SIZE_OPT void Fdn::controlInLoop(float dt, int n, float slew, bool pending)
     // While a SIZE move waits for its crossfade the amount holds too, and jumps with the lengths at its
     // start, the old amount fading out with the old lengths (followed on its own, it disagreed with
     // the held lengths: a small HALL jumped across noon clicked at the crossfade's start).
-    if (!pending) inLoopNow_ += (1.0f - std::exp(-dt / 0.08f)) * (inLoopTarget_ - inLoopNow_);
+    if (!pending) inLoopNow_ += glide80Memo_.get(dt, [](float t) { return 1.0f - std::exp(-t / 0.08f); }) * (inLoopTarget_ - inLoopNow_);
     bool shrunk = true;
     for (int i = 0; i < kN; ++i) shrunk &= apLenGlide_[i][0] <= 0.0f && apLenGlide_[i][1] <= 0.0f;
     // Out of the loop: at once when a SIZE crossfade has taken them out (their coefficient faded with it).
@@ -267,7 +270,7 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     const float dt = float(n) / sampleRate_;
     const float slew = voicing::kSizeSlewPerSecond * float(n); // samples of length per block
     const float floorDepth = voicing::kFloorDepthSeconds * sampleRate_ * modDepth_;
-    const float floorCoeff = 1.0f - std::exp(-2.0f * 3.14159265f * 0.3f * dt);
+    const float floorCoeff = floorCoeffMemo_.get(dt, [](float t) { return 1.0f - std::exp(-2.0f * 3.14159265f * 0.3f * t); });
 
     // The floor governor's extra loss (ADR 0008).
     governor_.control(n, sampleRate_);
@@ -279,7 +282,7 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     bool pending = (inLoopTarget_ > 0.0f) != (inLoopNow_ > 0.0f);
     for (int i = 0; i < kN; ++i) pending |= std::fabs(lenTarget_[i] - lenNow_[i]) > 0.5f;
     controlInLoop(dt, n, slew, pending);
-    earlyNow_ += (1.0f - std::exp(-dt / 0.08f)) * (earlyTarget_ - earlyNow_);
+    earlyNow_ += glide80Memo_.get(dt, [](float t) { return 1.0f - std::exp(-t / 0.08f); }) * (earlyTarget_ - earlyNow_);
     if (earlyNow_ < 1e-4f && earlyTarget_ == 0.0f) earlyNow_ = 0.0f;
     float meanLen = 0.0f;
     for (int i = 0; i < kN; ++i) meanLen += lenNow_[i];
@@ -302,7 +305,7 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     // move is pending (following the knob, a flicked HALL's level flickered); with the length-following
     // level it glides over the crossfade.
     if (!pending) xfTrim_ = outputTrim_;
-    const float glideK = 1.0f - std::exp(-dt / (0.5f * voicing::kSizeCrossfadeSeconds));
+    const float glideK = glideXfMemo_.get(dt, [](float t) { return 1.0f - std::exp(-t / (0.5f * voicing::kSizeCrossfadeSeconds)); });
     outputTrimNow_ += glideK * (xfTrim_ - outputTrimNow_);
     if (std::fabs(outputTrim_ - outputTrimNow_) < 1e-6f) outputTrimNow_ = outputTrim_;
     levelGain_ += glideK * (outputTrimNow_ * std::sqrt(meanLen / voicing::kFdnLevelRefSeconds) - levelGain_);
@@ -402,8 +405,8 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
         // highRatio; at infinite the highs fade until the tail reaches its
         // floor, then it holds (ADR 0008).
         const float apSeconds = inLoopNow_ > 0.0f ? (apLenGlide_[i][0] + apLenGlide_[i][1]) / sampleRate_ : 0.0f;
-        const Absorb a = absorbent(lenNow_[i] / sampleRate_ + apSeconds, rate, highRatio_,
-                                   gov.darken, shelfK_, air_);
+        const Absorb& a = absorbMemo_[i].get(lenNow_[i] / sampleRate_ + apSeconds, rate, highRatio_,
+                                             gov.darken, shelfK_, air_);
         // While SIZE crossfades the loss filter goes from the old length's to the new one's with the fade
         // (switched at its start, the old read, all of the mix then, stepped to the new trip's loss: a click).
         const float o = xfLeft_ > 0 ? xfOld_ : 0.0f, w = 1.0f - o;
