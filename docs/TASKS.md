@@ -1,10 +1,10 @@
 # Owner tasks
 
-**Last updated:** 26 Oct 2026, session 8: round 11 read (`docs/research/m3-round11.log` on `claude/massive-air`), round 12 read (`m3-round12.log`), the ITCM build and the jitter check to flash.
+**Last updated:** 26 Oct 2026, session 8: round 11 read (`docs/research/m3-round11.log` on `claude/massive-air`), round 12 read (`m3-round12.log`), the ITCM build read (`m3-round12-itcm.log`), the jitter check to flash.
 **Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Not yet in it: v1.0.35-36 (the 24 kHz tank, 12-point swell, fewer early reflections) and the review's speed-ups; say when you'd like it installed (Ableton closed).
 
 ## To do
-- [ ] **M3 CPU check: the ITCM build.** Flash `/Users/jesse/Documents/Sites/immensio-versio/.claude/worktrees/massive-air/firmware/build/immensio_versio_profile-itcm.bin` (124,260 B), screen's log on (Ctrl-A, Shift-H), one full lap plus the headroom test (~6 min), then tell Claude. It runs the reverb's code from the chip's fastest memory; expected 3-6 points off the heavy tests. Untested: if there's no boot pattern and no serial, flash `immensio_versio_profile.bin` back. And, any time, the **knob-jitter check**: flash `/Users/jesse/Documents/Sites/immensio-versio/.claude/worktrees/massive-air/firmware/build/immensio_versio_m0test.bin`, leave each knob somewhere mid-travel and hands off for ~10 s while the serial monitor runs, and send Claude the `JPP` / `JCHG` / `JRUN` / `JHYS` lines (`firmware/README.md` explains them). It decides how urgent the SIZE fix below is.
+- [ ] **Knob-jitter check**: flash `/Users/jesse/Documents/Sites/immensio-versio/.claude/worktrees/massive-air/firmware/build/immensio_versio_m0test.bin`, leave each knob somewhere mid-travel and hands off for ~10 s while the serial monitor runs, and send Claude the `JPP` / `JCHG` / `JRUN` / `JHYS` lines (`firmware/README.md` explains them). It decides how urgent the SIZE fix below is.
 
 ### Decide
 - [ ] **Merge `claude/massive-air` into main?** It holds everything since v1.0.33 (SIZE/TIME crossfade, the CPU work, v1.0.34-36, the profile builds, and now the overnight review's speed-ups and report), all tests passing. Your OK first.
@@ -40,6 +40,7 @@
 - **M2: install the plugin** when you'd like to play it in Ableton (`tools/install_plugin.sh`), with Ableton closed for the AU check.
 
 ## Done
+- [x] **M3 ITCM build** (26 Oct 2026): boots and works; 2.5-3.5 points off everywhere (a frozen MASSIVE 99 → 96 % average, 104 → 100 % peak; the SIZE crossfade 110 → 106 %). It costs ~380 B of flash the playing build doesn't have yet.
 - [x] **M3 round 12** (26 Oct 2026): measured clean, SHIMMER is 77 % and SIZE moves 74 % on average, and the module plays MASSIVE without a drop-out in real time (headroom test: 70 %, no late blocks). Still over 100 % for single moments: a SIZE crossfade in MASSIVE (110-118 % for one block) and a frozen MASSIVE (100 % average, 104 % peak). With the twin-stop fix, the freeze's second reverb stopped 6 s after the unfreeze.
 - [x] **M3 round 11** (26 Oct 2026): everyday MASSIVE 61-80 % average (was 115-129 %), HALL 57-75 %, PLATE 44-60 %; the faster SDRAM timing passed its check (0 errors) and halves memory reads, so it's now in the playing build; the module plays without a drop-out up to ~99 % load. SHIMMER, SIZE moves and the headroom test were inflated by the freeze's second reverb (round 12 re-measures them).
 
