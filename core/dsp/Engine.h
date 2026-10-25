@@ -100,6 +100,20 @@ public:
     // filtered out: 8 clean, 9 clean + drift (both fed from the wet), 10 clean from the input only,
     // 11 clean and darker from the wet.
     void  setAltAttack(int mode) { altMode_ = mode; }
+    // SIZE trials: the FDN tanks catch up with SIZE within this many seconds (0 = the semitone limit).
+    void  setSizeCatchUp(float seconds)
+    {
+        fdn_.setSizeCatchUp(seconds);
+        lowFdn_.setSizeCatchUp(seconds);
+        twinFdn_.setSizeCatchUp(seconds);
+    }
+    void  setPredelayCrossfade(float seconds) { predelayXfade_ = seconds; } // TIME trials (NORMAL's pre-delay)
+    void  setSizeCrossfade(float seconds)
+    {
+        fdn_.setSizeCrossfade(seconds);
+        lowFdn_.setSizeCrossfade(seconds);
+        twinFdn_.setSizeCrossfade(seconds);
+    }
     // Round 3 trials: the clean shimmers' shifter heads and window (re-prepares them).
     void  setShimmerShape(int heads, float windowSeconds)
     {
@@ -272,6 +286,8 @@ private:
 #ifndef IV_FIXED_VOICINGS
     int   altMode_ = 0;
     float altTarget_ = 0.0f, altMix_ = 0.0f, altTime_ = 0.0f;
+    float predelayXfade_ = 0.0f, pdOld_ = 0.0f;
+    int   pdXfLen_ = 1, pdXfLeft_ = 0;
     float shimSrcL_[kChunk] = {}, shimSrcR_[kChunk] = {}; // the last chunk's tank wet
     dsp::proto::Shimmer shimUp_, shimDown_, shimSmooth_, shimMoving_, shimEvolving_; // round 1; round 2 (4 .. 6)
     dsp::proto::Shimmer shimClean_, shimCleanMoving_, shimInput_, shimCleanDark_; // round 3 (8 .. 11)

@@ -390,6 +390,62 @@ E_input_only          Your input an octave up, no feedback" > renders/shimmer3/R
     echo "renders/shimmer3/index.html"
 fi
 
+if on knob_moves; then
+    # PROTOTYPES (owner, plugin): MASSIVE's SIZE "moves too slowly causing slow pitch shifts that make
+    # it sound really out of tune"; "changing TIME rapidly also creates a large wash of noise"; HALL's
+    # SIZE moved rapidly has "a brief moment of aliasing-like sound". One cause: delays that slide
+    # sweep the sound's pitch, and inside the loop retune the whole tail (0.3 -> 0.8 at a fast glide:
+    # an octave flat). Measured on a held note, energy away from it during rapid moves: TIME -1..-6 dB,
+    # HALL SIZE -0.6 (steady -24..-25). Crossfades instead (PASP): the delays jump and the old setting
+    # fades out (equal power). SIZE: once the knob rests 50 ms, the lines, early taps and HALL's in-loop
+    # allpasses together, the level that follows the length gliding; TIME: back to back, before the tank.
+    # Measured: tail pitch within 2 cents; TIME -34 dB, HALL SIZE -41 dB during moves; infinite holds;
+    # no clicks (24 MASSIVE renders).
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in pad vibes keys voice skank stabs; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    for m in $MATERIALS; do
+        .venv/bin/python - "$SRC/$m.wav" "$SRC" "$m" <<'PY'
+import sys, json, numpy as np, soundfile as sf
+x, sr = sf.read(sys.argv[1], always_2d=True)
+src, m = sys.argv[2], sys.argv[3]
+on = np.nonzero(np.abs(x).max(axis=1) > 1e-3)[0]
+a, b = on[0] / sr, on[-1] / sr
+mid = a + 0.4 * (b - a)
+def k(key, t, v): return {"t": round(t, 3), "key": key, "value": v}
+def dump(name, bp): json.dump({"breakpoints": bp}, open(f"{src}/{name}_{m}.json", "w"))
+dump("sizeplay", [k("size", 0, 0.3), k("size", mid, 0.3), k("size", mid + 2, 0.8), k("size", mid + 6, 0.8), k("size", mid + 7, 0.45)])
+dump("sizetail", [k("size", 0, 0.3), k("size", b + 1, 0.3), k("size", b + 3, 0.8)])
+def rapid(key, lo, hi):
+    bp, t = [k(key, 0, lo), k(key, mid, lo)], mid
+    for v in (hi, lo, hi, lo, hi): t += 0.3; bp.append(k(key, t, v))
+    return bp
+dump("sizerapid", rapid("size", 0.15, 0.85))
+dump("timerapid", rapid("time", 0.1, 0.9))
+PY
+    done
+    page knob_moves
+    for t in "1_massive_size_while_playing:sizeplay:MASSIVE" "2_massive_size_in_the_tail:sizetail:MASSIVE" "3_hall_size_rapid:sizerapid:HALL" "4_time_rapid:timerapid:HALL"; do
+        IFS=: read col auto sp <<< "$t"
+        for v in "A_today:" "B_crossfade_quick:IV_SIZE_XFADE=0.1 IV_PREDELAY_XFADE=0.1" "C_crossfade_slow:IV_SIZE_XFADE=0.3 IV_PREDELAY_XFADE=0.3"; do
+            tag=${v%%:*}; e=${v#*:}
+            ( [ -n "$e" ] && export ${=e}; r knob_moves $col $tag "$auto" --set space=$sp --set decay=0.5 --set size=0.3 --set attack=NORMAL )
+        done
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "Moving SIZE and TIME (your notes from the plugin: MASSIVE's SIZE sounding out of tune for a long time after a move; TIME turned quickly making a wash of noise; HALL's SIZE turned quickly sounding briefly like aliasing). All three have one cause: when a delay changes length by sliding, it bends the pitch of everything passing through it, and inside a reverb's loop it retunes the whole tail for the rest of its life (a faster slide only makes a bigger bend: an octave flat for column 1's move). B and C stop sliding: the delays jump to the new setting and the old one fades out (in 0.1 s for B, 0.3 s for C), so nothing is retuned and nothing is swept; you hear the space change rather than bend. Measured: the tail stays within 2 cents of its pitch; quick TIME and HALL SIZE moves no longer add noise; no clicks. Not level-matched.
+
+1_massive_size_while_playing   MASSIVE, SIZE 0.3 to 0.8 and back to 0.45 while the music plays
+2_massive_size_in_the_tail     MASSIVE, SIZE 0.3 to 0.8 after the music stops (the tail only)
+3_hall_size_rapid              HALL, SIZE flicked between 0.15 and 0.85 five times in 1.5 s
+4_time_rapid                   HALL, TIME (pre-delay) flicked between 0.1 and 0.9 five times in 1.5 s
+
+A_today             Today: the delays slide (pitch bends, the tail retuned)
+B_crossfade_quick   No sliding: the old setting fades out in 0.1 s
+C_crossfade_slow    No sliding: the old setting fades out in 0.3 s" > renders/knob_moves/README.txt
+    python3 tools/review/make_review.py renders/knob_moves --title "Moving SIZE and TIME" --no-level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/knob_moves/index.html"
+fi
+
 if on era_sweep; then
     # ERA turned from fully left to fully right over 40 s while the music loops (renders/_material_sweep,
     # 40 s loops + 12 s of tail), then the tail at ERA 1; chaptered at each era's start (ADR 0021).

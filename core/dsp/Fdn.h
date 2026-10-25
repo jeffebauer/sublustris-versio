@@ -79,6 +79,10 @@ public:
     // denser. Output only: the loop itself is unchanged.
     void setEarlyTaps(float amount) { earlyTarget_ = amount; }
     void setAir(float air) { air_ = air; } // 1/T60 in 1/s: see absorbent() (v1.0.25)
+#ifndef IV_FIXED_VOICINGS
+    void setSizeCatchUp(float seconds) { sizeCatchUp_ = seconds; } // prototype (Fdn::control): 0 = the semitone limit
+    void setSizeCrossfade(float seconds) { sizeXfade_ = seconds; } // prototype: SIZE by crossfade, 0 = glide
+#endif
     // The modulation floor's depth × modDepth (Engine::setModulationScale, a test hook).
     void setModDepth(float k) { modDepth_ = k; }
     // Extra output level for a voicing (MASSIVE's loudness match).
@@ -138,6 +142,11 @@ private:
     FloorGovernor governor_;
     const Fdn* leader_ = nullptr;
     float     externalPower_ = 0.0f;
+#ifndef IV_FIXED_VOICINGS
+    float     sizeCatchUp_ = 0.0f, sizeXfade_ = 0.0f, xfDelta_[kN] = {};
+    int       xfLen_ = 1, xfLeft_ = 0;
+    float     xfLastTarget_[kN] = {}, xfRest_ = 0.0f, interpOld_[kN] = {}, apOld_[kN][2] = {};
+#endif
     bool      ready_ = false;
 };
 

@@ -708,6 +708,20 @@ void Engine::controlTick(int n)
     predelayStep_ = (predelayTarget_ - predelayNow_) / float(n);
     if (predelayStep_ > kPredelayMaxSpeed) predelayStep_ = kPredelayMaxSpeed;
     if (predelayStep_ < -kPredelayMaxSpeed) predelayStep_ = -kPredelayMaxSpeed;
+#ifndef IV_FIXED_VOICINGS
+    // PROTOTYPE (owner, plugin: "changing TIME rapidly also creates a large wash of noise"; measured:
+    // a held note's energy away from its pitch -24 dB steady, -1 dB while TIME moves): the pre-delay
+    // jumps and the old delay crossfades out (equal power) instead of sliding, which swept the input
+    // by up to an octave. Before the tank, so a dip can't stay in the loop: crossfades run back to back.
+    if (predelayXfade_ > 0.0f) {
+        predelayStep_ = 0.0f;
+        if (pdXfLeft_ <= 0 && std::fabs(predelayTarget_ - predelayNow_) > 0.5f) {
+            pdOld_ = predelayNow_;
+            predelayNow_ = predelayTarget_;
+            pdXfLen_ = pdXfLeft_ = int(predelayXfade_ * sampleRate_);
+        }
+    }
+#endif
 
     const auto g = map::mixGains(smoothed(ParamId::Mix));
     dryStep_ = (g.dry - dryNow_) / float(n);
@@ -759,6 +773,14 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                 pl += t * (predelay_[0].readCubic(2.0f) - pl);
                 pr += t * (predelay_[1].readCubic(2.0f) - pr);
             }
+#ifndef IV_FIXED_VOICINGS
+            if (pdXfLeft_ > 0) { // the old pre-delay fading out
+                const float d = std::fmax(pdOld_, 2.0f), g = 1.5707963f * float(pdXfLeft_--) / float(pdXfLen_);
+                const float ol = pdOld_ > 0.0f ? predelay_[0].readCubic(d) : l, orr = pdOld_ > 0.0f ? predelay_[1].readCubic(d) : r;
+                pl = std::sin(g) * ol + std::cos(g) * pl;
+                pr = std::sin(g) * orr + std::cos(g) * pr;
+            }
+#endif
             pl = diffuser_[0].process(pl);
             pr = diffuser_[1].process(pr);
             // REVERSE's taps hear the same diffused input as the tank (always recording), faded with

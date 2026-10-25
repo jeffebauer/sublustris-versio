@@ -150,6 +150,10 @@ IV_SIZE_OPT void Fdn::controlInLoop(float dt, int n, float slew)
             if (std::fabs(d) < 1e-3f) { // there: the exact integer read again
                 glide = float(apLenNow_[i][k]);
                 apLenStep_[i][k] = 0.0f;
+#ifndef IV_FIXED_VOICINGS
+            } else if (sizeXfade_ > 0.0f && !joining) { // held; they jump with the lines at a crossfade's start
+                apLenStep_[i][k] = 0.0f;
+#endif
             } else {
                 apLenStep_[i][k] = (d > slew ? slew : (d < -slew ? -slew : d)) / float(n);
             }
@@ -177,11 +181,64 @@ void Fdn::control(int n)
     meanLen /= float(kN) * sampleRate_;
     outputTrimNow_ += (1.0f - std::exp(-dt / 0.05f)) * (outputTrim_ - outputTrimNow_);
     if (std::fabs(outputTrim_ - outputTrimNow_) < 1e-6f) outputTrimNow_ = outputTrim_;
+#ifndef IV_FIXED_VOICINGS
+    if (sizeXfade_ > 0.0f) { // the lengths jump, so the level that follows them glides over the crossfade
+        const float target = outputTrimNow_ * std::sqrt(meanLen / voicing::kFdnLevelRefSeconds);
+        levelGain_ += (1.0f - std::exp(-dt / (0.5f * sizeXfade_))) * (target - levelGain_);
+    } else
+#endif
     levelGain_ = outputTrimNow_ * std::sqrt(meanLen / voicing::kFdnLevelRefSeconds);
+#ifndef IV_FIXED_VOICINGS
+    // PROTOTYPE: SIZE by crossfade (PASP "Delay-line interpolation": crossfade between the two delay
+    // settings rather than glide; a glide in a loop retunes everything circulating by the length
+    // ratio, for the rest of its tail). When no crossfade runs and SIZE has moved, every line jumps
+    // to its new length and the old read fades out over sizeXfade_ seconds.
+    // One crossfade per move, once SIZE has rested 50 ms: back-to-back crossfades while it turned each
+    // dipped the level a little, the loop kept every dip, and an infinite MASSIVE drained 45 dB in a
+    // minute of sweeping.
+    if (sizeXfade_ > 0.0f) {
+        float still = 0.0f;
+        for (int i = 0; i < kN; ++i) still = std::fmax(still, std::fabs(lenTarget_[i] - xfLastTarget_[i]));
+        for (int i = 0; i < kN; ++i) xfLastTarget_[i] = lenTarget_[i];
+        xfRest_ = still > 0.5f ? 0.0f : xfRest_ + dt;
+    }
+    if (sizeXfade_ > 0.0f && xfLeft_ <= 0 && xfRest_ >= 0.05f) {
+        bool moved = false;
+        for (int i = 0; i < kN; ++i) moved |= std::fabs(lenTarget_[i] - lenNow_[i]) > 0.5f;
+        if (moved) {
+            xfLen_ = xfLeft_ = int(sizeXfade_ * sampleRate_);
+            for (int i = 0; i < kN; ++i) {
+                xfDelta_[i] = lenNow_[i] - lenTarget_[i]; // old minus new
+                lenNow_[i] = lenTarget_[i];
+                readNow_[i] -= xfDelta_[i];
+                interpOld_[i] = interp_[i]; // the old read carries on exactly as it was (allpass, its own state)
+                // ...and the new read starts from what it would have given a sample ago at its new length
+                // (its state is the previous output); the old position's state there rang at Nyquist.
+                interp_[i] = line_[i].readCubic(readNow_[i] + 1.0f);
+                for (int k = 0; k < 2; ++k) { // HALL's in-loop allpasses jump too, their old length fading out
+                    apOld_[i][k] = apLenGlide_[i][k];
+                    apLenGlide_[i][k] = float(apLenNow_[i][k]);
+                }
+                tapLen_[i] = lenNow_[i]; // the early taps jump too, their old positions crossfading out
+            }
+        }
+    }
+#endif
     for (int i = 0; i < kN; ++i) {
         // SIZE glides toward its target, at most a semitone of bend.
         const float diff = lenTarget_[i] - lenNow_[i];
+#ifndef IV_FIXED_VOICINGS
+        // PROTOTYPE (owner, plugin: MASSIVE's SIZE "moves too slowly causing slow pitch shifts that
+        // make it sound really out of tune"; a full sweep took ~40 s at the semitone limit): catch up
+        // within sizeCatchUp_ seconds, never faster than half a sample per sample (an octave of
+        // swoop; a line shrinking faster than 1 would read backwards).
+        float lineSlew = slew;
+        if (sizeCatchUp_ > 0.0f) lineSlew = std::fmin(std::fmax(slew, std::fabs(diff) * dt / sizeCatchUp_), 0.5f * float(n));
+        if (sizeXfade_ > 0.0f) lineSlew = 0.0f; // lengths only jump, at a crossfade's start (gliding between retuned the tail)
+        lenNow_[i] += diff > lineSlew ? lineSlew : (diff < -lineSlew ? -lineSlew : diff);
+#else
         lenNow_[i] += diff > slew ? slew : (diff < -slew ? -slew : diff);
+#endif
 
         // Modulation floor: a new random target every ~1.7–3.1 s per line.
         floorCountdown_[i] -= dt;
@@ -199,6 +256,10 @@ void Fdn::control(int n)
         if (target > maxLen_) target = maxLen_;
         readStep_[i] = (target - readNow_[i]) / float(n);
         tapStep_[i] = (lenNow_[i] - tapLen_[i]) / float(n); // the early taps glide with SIZE, sample by sample
+#ifndef IV_FIXED_VOICINGS
+        // Not slid over the crossfade: ~1 s of length in 0.3 s read 3x faster than real time and crackled.
+        if (sizeXfade_ > 0.0f) tapStep_[i] = 0.0f;
+#endif
 
         // Loss per pass from this line's own length (Jot): the low end
         // decays at decayRate (+ the governor), the high end at that /
@@ -228,6 +289,14 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
             for (int i = 0; i < kN; ++i) {
                 readNow_[i] += readStep_[i];
                 float x = line_[i].readAllpass(readNow_[i], interp_[i]);
+#ifndef IV_FIXED_VOICINGS
+                if (xfLeft_ > 0) { // the old length fading out, equal power (the reads are mostly unrelated)
+                    const float g = 1.5707963f * float(xfLeft_) / float(xfLen_);
+                    // Read the old position the way it was read before (allpass, carrying its state): a cubic
+                    // read there differed by a hair from the allpass read the sample before: a click at the start.
+                    x = std::sin(g) * line_[i].readAllpass(readNow_[i] + xfDelta_[i], interpOld_[i]) + std::cos(g) * x;
+                }
+#endif
                 if (apG > 0.0f)
                     for (int k = 0; k < 2; ++k) { // in-loop diffusion (MASSIVE, a small HALL)
                         float d;
@@ -241,6 +310,20 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                             const float a0 = apLine_[i][k].read(di), a1 = apLine_[i][k].read(di + 1);
                             d = a0 + t * (a1 - a0);
                         }
+#ifndef IV_FIXED_VOICINGS
+                        if (xfLeft_ > 0 && apOld_[i][k] != glide) { // the old length fading out
+                            const float g = 1.5707963f * float(xfLeft_) / float(xfLen_);
+                            const float ol = apOld_[i][k];
+                            float od = x;
+                            if (ol >= 1.0f) {
+                                const auto oi = uint32_t(ol);
+                                const float ot = ol - float(oi);
+                                const float o0 = apLine_[i][k].read(oi), o1 = apLine_[i][k].read(oi + 1);
+                                od = o0 + ot * (o1 - o0);
+                            }
+                            d = std::cos(g) * d + std::sin(g) * od;
+                        }
+#endif
                         const float v = x + apG * d;
                         apLine_[i][k].write(v);
                         x = d - apG * v;
@@ -266,13 +349,27 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                         const auto  di = uint32_t(d);
                         const float t  = d - float(di);
                         const float a0 = line_[i].read(di), a1 = line_[i].read(di + 1);
-                        e += earlyGain_[i][k] * (a0 + t * (a1 - a0));
+                        float v = a0 + t * (a1 - a0);
+#ifndef IV_FIXED_VOICINGS
+                        if (xfLeft_ > 0) { // the tap's old position, fading out with the line's old read
+                            const float g = 1.5707963f * float(xfLeft_) / float(xfLen_);
+                            const float od = 1.0f + earlyFrac_[i][k] * (tapLen_[i] + xfDelta_[i]);
+                            const auto  oi = uint32_t(od);
+                            const float ot = od - float(oi);
+                            const float b0 = line_[i].read(oi), b1 = line_[i].read(oi + 1);
+                            v = std::cos(g) * v + std::sin(g) * (b0 + ot * (b1 - b0));
+                        }
+#endif
+                        e += earlyGain_[i][k] * v;
                     }
                     l += earlyG * kOutL[j] * e;
                     r += earlyG * kOutR[j] * e;
                 }
             outL[s] += outGain * l;
             outR[s] += outGain * r;
+#ifndef IV_FIXED_VOICINGS
+            if (xfLeft_ > 0) --xfLeft_;
+#endif
 
             // Fast Walsh–Hadamard transform: 24 adds for the 8×8 mix.
             for (int span = 1; span < kN; span <<= 1)
