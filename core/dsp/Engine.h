@@ -149,6 +149,20 @@ public:
     // once the tail is gone, so the twin (a second tank) ran 26-30 s after every unfreeze whatever
     // DECAY was. Not bit-identical: the twin's last output under -100 dB is no longer added.
     void  setTwinStopFast(bool on) { twinStopFast_ = on; }
+    // PROTOTYPES (overnight review, 26 Oct 2026; CPU options for the owner, behind renderer hooks):
+    // the tape out's oversampling, 2 or 4 (as built), renders/tape_os. Re-prepares the Engine.
+    void  setTapeOversamplingPrototype(int factor);
+    // The still lows' tank at 1/d of the rate, kLowDecimate (4, as built) .. kLowDecimateMax (8),
+    // renders/still_lows_rate. Re-prepares the Engine (before the tank is laid out).
+    void  setLowDecimatePrototype(int d);
+    // The swell's points per side, Swell::kTaps (12, as built) .. Swell::kDraws (24, before v1.0.35),
+    // for the swell and the twin's. Re-prepares the Engine.
+    void  setSwellTapsPrototype(int taps);
+    // The shimmer records only while ATTACK is on SHIMMER (frozen too) or its send is still fading
+    // (cost-input c1): switching in, its first grains have only what was played since.
+    void  setShimmerLazyPrototype(bool on) { shimmerLazy_ = on; }
+    int   lowDecimate() const { return lowDecimate_; }
+    int   swellTaps() const { return swell_.tapCount(); }
 #endif
     bool  twinActive() const { return twinActive_; } // read-only view for tests
     bool  buttonDown() const { return buttonDown_; }
@@ -175,6 +189,12 @@ public:
 private:
     static constexpr int kChunk = dsp::Fdn::kControlBlock;
     static constexpr int kLowDecimate = 4; // still lows' low tank runs at 12 kHz
+#ifndef IV_FIXED_VOICINGS
+    static constexpr int kLowDecimateMax = 8; // setLowDecimatePrototype; the chunk buffers below fit any d >= 4
+    int lowDecimate_ = kLowDecimate;
+#else
+    static constexpr int lowDecimate_ = kLowDecimate;
+#endif
     static constexpr int kMaxEdges = 16;
 
     void queueEdge(bool isButton, bool level, int offset);
@@ -248,6 +268,9 @@ private:
     float             sizeHeld_ = -1.0f, twinSizeHeld_ = -1.0f; // the SIZE the tank and the twin have (< 0: none yet)
     bool              halfPrime_ = false; // setHalfRatePrime; false = as built
     bool              twinStopFast_ = false; // setTwinStopFast; false = as built
+    int               fitTapeOs_ = 4;    // setTapeOversamplingPrototype; 4 = as built
+    int               fitSwellTaps_ = 0; // setSwellTapsPrototype; 0 = as built
+    bool              shimmerLazy_ = false, shimmerArmed_ = true, shimmerResting_ = false; // setShimmerLazyPrototype
 #endif
     dsp::Plate        twinPlate_;
     dsp::Diffuser<4>  twinDiffuser_[2];

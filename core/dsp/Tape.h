@@ -10,6 +10,7 @@
 //   the curve:           the asymmetric rational tanh (a third of v1.0.22's bias, v1.0.26), at 4x;
 //   de-emphasis:         the exact inverse shelf, then a 5 Hz DC blocker.
 #include "dsp/Oversampler.h"
+#include "dsp/SizeOpt.h"
 #include "params/EraVoicing.h"
 
 #include <cmath>
@@ -24,6 +25,13 @@ public:
         os1_.reset();
         os2_.reset();
     }
+
+#ifndef IV_FIXED_VOICINGS
+    // PROTOTYPE (overnight review, 26 Oct 2026; renders/tape_os): the curve at 2x (only the outer
+    // Oversampler runs) instead of 4x (both). 4 = as built. Desktop only: the firmware keeps 4x
+    // (IV_TAPE_OS2 builds it at 2x, for measuring flash and instruction counts only).
+    void setFactor(int f) { factor_ = f == 2 ? 2 : 4; }
+#endif
 
     // c: the cassette layer 0..1. Recomputes the coefficients only when c (or the rate) changes.
     void set(float c, float sampleRate)
@@ -41,6 +49,9 @@ public:
         tb_ = th(b_);
     }
 
+#if defined(IV_FIXED_VOICINGS) && defined(IV_TAPE_OS2)
+    IV_NOINLINE // one shared copy (cost-era: inlined, GCC pasted it 4x into Engine::process)
+#endif
     float process(float x)
     {
         preLp_ += wPre_ * (x - preLp_);
@@ -54,7 +65,14 @@ public:
             return (th(play_ + b_) - tb_) / (1.0f - tb_ * tb_) / drive_;
         };
         Oversampler& inner = os2_;
+#if !defined(IV_FIXED_VOICINGS)
+        float y = factor_ == 2 ? os1_.process(e, sat) : os1_.process(e, [&](float u) { return inner.process(u, sat); });
+#elif defined(IV_TAPE_OS2)
+        (void)inner;
+        float y = os1_.process(e, sat);
+#else
         float y = os1_.process(e, [&](float u) { return inner.process(u, sat); });
+#endif
         deLp_ += wDe_ * (y - deLp_);
         y = y + (1.0f / gEmph_ - 1.0f) * (y - deLp_);
         dc_ += wDc_ * (y - dc_);
@@ -75,6 +93,9 @@ private:
     float gEmph_ = 1.0f, drive_ = 1.0f, wPre_ = 0.0f, wDe_ = 0.0f, wRms_ = 0.0f, wDc_ = 0.0f, b_ = 0.0f, tb_ = 0.0f;
     float preLp_ = 0.0f, deLp_ = 0.0f, dc_ = 0.0f, play_ = 0.0f, rms_ = 0.0f;
     Oversampler os1_, os2_;
+#ifndef IV_FIXED_VOICINGS
+    int factor_ = 4; // setFactor (a prototype)
+#endif
 };
 
 } // namespace iv::dsp

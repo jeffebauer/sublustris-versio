@@ -130,6 +130,25 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* sh = std::getenv("IV_SIZE_HYST")) engine.setSizeHysteresis(float(std::atof(sh))); // overnight review, arch F1
     if (const char* hp = std::getenv("IV_HALFRATE_PRIME")) engine.setHalfRatePrime(std::atoi(hp) != 0); // overnight review, arch F2
     if (const char* ts = std::getenv("IV_TWIN_STOP_FAST")) engine.setTwinStopFast(std::atoi(ts) != 0); // overnight review, lit-plate 6
+    // The overnight review's CPU options (26 Oct 2026), each re-preparing the Engine so the layout is
+    // made for it; stderr confirms what was built (a count set after prepare() once mislabelled a page).
+    if (const char* to = std::getenv("IV_TAPE_OS")) {
+        engine.setTapeOversamplingPrototype(std::atoi(to)); // renders/tape_os
+        std::fprintf(stderr, "iv_render: IV_TAPE_OS: tape out at %dx\n", std::atoi(to) == 2 ? 2 : 4);
+    }
+    if (const char* ld = std::getenv("IV_LOW_DECIMATE")) {
+        engine.setLowDecimatePrototype(std::atoi(ld)); // renders/still_lows_rate
+        std::fprintf(stderr, "iv_render: IV_LOW_DECIMATE: still lows' tank at 1/%d (%.0f Hz)\n", engine.lowDecimate(),
+                     double(sampleRate) / engine.lowDecimate());
+    }
+    if (const char* st = std::getenv("IV_SWELL_TAPS")) {
+        engine.setSwellTapsPrototype(std::atoi(st));
+        std::fprintf(stderr, "iv_render: IV_SWELL_TAPS: %d swell points a side\n", engine.swellTaps());
+    }
+    if (const char* sz = std::getenv("IV_SHIMMER_LAZY")) {
+        engine.setShimmerLazyPrototype(std::atoi(sz) != 0);
+        std::fprintf(stderr, "iv_render: IV_SHIMMER_LAZY: shimmer records %s\n", std::atoi(sz) != 0 ? "only in SHIMMER" : "always");
+    }
     if (!presetPath.empty()) {
         iv::json::Value preset;
         if (!iv::json::loadFile(presetPath, preset, error)) return false;

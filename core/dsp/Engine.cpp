@@ -67,6 +67,24 @@ void Engine::setSwellSeedPrototype(uint32_t seed)
     fitSwellSeed_ = seed;
     prepare(sampleRate_, maxBlockSize_);
 }
+
+void Engine::setTapeOversamplingPrototype(int factor)
+{
+    fitTapeOs_ = factor == 2 ? 2 : 4;
+    prepare(sampleRate_, maxBlockSize_);
+}
+
+void Engine::setLowDecimatePrototype(int d)
+{
+    lowDecimate_ = d < kLowDecimate ? kLowDecimate : (d > kLowDecimateMax ? kLowDecimateMax : d);
+    prepare(sampleRate_, maxBlockSize_);
+}
+
+void Engine::setSwellTapsPrototype(int taps)
+{
+    fitSwellTaps_ = taps;
+    prepare(sampleRate_, maxBlockSize_);
+}
 #endif
 
 IV_SIZE_OPT void Engine::attachMemory(float* large, size_t largeCount, float* fast, size_t fastCount, float* axi,
@@ -124,6 +142,9 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
 #ifndef IV_FIXED_VOICINGS
     swell_.setSeed(fitSwellSeed_); // before prepare(): it lays the taps out from the seed
     twinSwell_.setSeed(fitSwellSeed_);
+    swell_.setTapCount(fitSwellTaps_); // likewise the count (0 = as built)
+    twinSwell_.setTapCount(fitSwellTaps_);
+    for (auto& t : tape_) t.setFactor(fitTapeOs_);
 #endif
     ready_ &= swell_.prepare(large_, sampleRate);
     ready_ &= twinSwell_.prepare(large_, sampleRate);
@@ -133,7 +154,7 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
     ready_ &= shimmer_.prepare(large_, sampleRate);
     ready_ &= twinFdn_.prepare(large_, 0.5f * sampleRate, 0x7A1Eu);
-    ready_ &= lowFdn_.prepare(large_, sampleRate / float(kLowDecimate), 0x10F7u, voicing::kFdnMaxLineSeconds, &axi_);
+    ready_ &= lowFdn_.prepare(large_, sampleRate / float(lowDecimate_), 0x10F7u, voicing::kFdnMaxLineSeconds, &axi_);
     lowFdn_.setGovernorLeader(&fdn_);
     {
         // The split: a 2nd-order Butterworth pair (bilinear). The two tanks' outputs are uncorrelated,
@@ -544,6 +565,9 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // SHIMMER (ADR 0024): TIME is how much; it rests while frozen (as REVERSE did, ADR 0015).
     shimmerAmount_ = time;
     shimmerTarget_ = attack == 2 && !frozen ? 1.0f : 0.0f;
+#ifndef IV_FIXED_VOICINGS
+    shimmerArmed_ = attack == 2; // setShimmerLazyPrototype: recording while SHIMMER is selected
+#endif
 
     const float pd = predelay * sampleRate_;
     if (snap) predelayNow_ = pd;
@@ -858,7 +882,18 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             shimmerMix_ = approach(shimmerMix_, shimmerTarget_, attackStep);
             {
                 float sl = flipGain_ * pl, sr = flipGain_ * pr;
+#ifndef IV_FIXED_VOICINGS
+                if (shimmerLazy_ && !shimmerArmed_ && shimmerMix_ <= 0.0f) { // the prototype: resting
+                    sl = sr = 0.0f;
+                    shimmerResting_ = true;
+                } else {
+                    if (shimmerResting_) shimmer_.restart();
+                    shimmerResting_ = false;
+                    shimmer_.process(sl, sr, shimmerMix_ > 0.0f);
+                }
+#else
                 shimmer_.process(sl, sr, shimmerMix_ > 0.0f);
+#endif
                 const float send = shimmerMix_ * voicing::kShimmerSend * shimmerAmount_;
                 pl += send * sl;
                 pr += send * sr;
@@ -1001,7 +1036,8 @@ void Engine::processTwoTanks(int n)
     // The coefficients and states in locals for the chunk (overnight review, 26 Oct 2026): the stores
     // through bufL_ / wetL_ could alias the members, so every sample reloaded all of them. The same
     // sums in the same order (the same bits); the phase's % 4 as & 3 (it is never negative).
-    static_assert(kLowDecimate == 4, "the phase wraps with & (kLowDecimate - 1)");
+    static_assert((kLowDecimate & (kLowDecimate - 1)) == 0 && (kLowDecimateMax & (kLowDecimateMax - 1)) == 0,
+                  "the phase wraps with & (lowDecimate_ - 1): a power of two");
     const int phase0 = lowPhase_;
     int k = 0;
     float cL[5], cA[5], cH[5], z[2][3][2];
@@ -1025,7 +1061,7 @@ void Engine::processTwoTanks(int n)
             if (ph == 0) (c ? lowInR_ : lowInL_)[k] = lo;
         }
         if (ph == 0) ++k;
-        ph = (ph + 1) & (kLowDecimate - 1);
+        ph = (ph + 1) & (lowDecimate_ - 1); // 4 or 8: a power of two
     }
     for (int c = 0; c < 2; ++c)
         for (int f = 0; f < 3; ++f) {
@@ -1046,7 +1082,7 @@ void Engine::processTwoTanks(int n)
             cur[0] = lowOutL_[j]; cur[1] = lowOutR_[j];
             ++j;
         }
-        const float t = float(ph) / float(kLowDecimate);
+        const float t = float(ph) / float(lowDecimate_);
         float* wet[2] = {wetL_, wetR_};
         for (int c = 0; c < 2; ++c) {
             const float up = prev[c] + t * (cur[c] - prev[c]);
@@ -1054,7 +1090,7 @@ void Engine::processTwoTanks(int n)
             wet[c][i] += y;
             power += 0.5 * double(y) * y;
         }
-        ph = (ph + 1) & (kLowDecimate - 1);
+        ph = (ph + 1) & (lowDecimate_ - 1);
     }
     lowPhase_ = ph;
     lowPrev_[0] = prev[0]; lowPrev_[1] = prev[1];
