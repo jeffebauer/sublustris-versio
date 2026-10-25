@@ -109,7 +109,24 @@ public:
     // PROTOTYPE (renders/swell_seed, owner: "the 12 points seemed to accentuate the mids"): the swell's
     // jitter and signs from another seed (0 = as built). Re-prepares the Engine.
     void  setSwellSeedPrototype(uint32_t seed);
+    // PROTOTYPE, a bug fix behind a hook (overnight review, 26 Oct 2026, arch F1): SIZE moves on only
+    // when the mean line length it means has moved by more than rel of the last one (0 = as built:
+    // every move). A noisy knob reading moved the lines' targets (and MASSIVE's in-loop diffusion) a
+    // little every block, which restarted the FDN's rest timer (kSizeRestSeconds), so SIZE never took
+    // effect in MASSIVE (and in HALL from ±2e-4 of noise). Suggested rel: 1e-3 (1.7 cents).
+    void  setSizeHysteresis(float rel) { sizeHyst_ = rel; }
+    // PROTOTYPE, a bug fix behind a hook (overnight review, 26 Oct 2026, arch F2): the half-rate stages
+    // start primed with one silent sample (dsp/HalfRate.h), so a host's first odd block mid-stream no
+    // longer leaves a one-sample hole in the HALL / MASSIVE wet; the wet is then one sample late from
+    // the start. Takes effect at the next reset().
+    void  setHalfRatePrime(bool on) { halfPrime_ = on; }
+    // PROTOTYPE behind a hook (overnight review, 26 Oct 2026, lit-plate finding 6): the twin stops when
+    // its 50 ms level is under -100 dB, not its 1.5 s level. That smoother falls only 2.9 dB a second
+    // once the tail is gone, so the twin (a second tank) ran 26-30 s after every unfreeze whatever
+    // DECAY was. Not bit-identical: the twin's last output under -100 dB is no longer added.
+    void  setTwinStopFast(bool on) { twinStopFast_ = on; }
 #endif
+    bool  twinActive() const { return twinActive_; } // read-only view for tests
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.
@@ -146,6 +163,19 @@ private:
     void applySpace(bool snap, int n = kChunk, bool snapInput = true);
     void setEarlyTapsForSpace();
     float decayRate(float decay, float size) const;
+    void  resetHalf(dsp::HalfRate<kChunk>& h) const
+    {
+        h.reset();
+#ifndef IV_FIXED_VOICINGS
+        if (halfPrime_) h.prime(); // setHalfRatePrime
+#endif
+    }
+#ifndef IV_FIXED_VOICINGS
+    float hysteresisSize(float size, float& held, bool snap) const; // setSizeHysteresis
+#endif
+    // ERA last sent to a tank (applySpace): true, keeping m, when m differs from it.
+    enum { EraSentFdn, EraSentPlate, EraSentTwinFdn, EraSentTwinPlate, EraSentCount };
+    bool eraChanged(int which, const dsp::EraMix& m);
     float smoothed(ParamId id) const { return smooth_[static_cast<size_t>(id)]; }
 
     float sampleRate_   = 48000.0f;
@@ -190,6 +220,10 @@ private:
 #ifndef IV_FIXED_VOICINGS
     int               fitEarlyTaps_ = 0; // setEarlyTapPrototype; 0 = as built
     uint32_t          fitSwellSeed_ = 0; // setSwellSeedPrototype; 0 = as built
+    float             sizeHyst_ = 0.0f;  // setSizeHysteresis; 0 = as built
+    float             sizeHeld_ = -1.0f, twinSizeHeld_ = -1.0f; // the SIZE the tank and the twin have (< 0: none yet)
+    bool              halfPrime_ = false; // setHalfRatePrime; false = as built
+    bool              twinStopFast_ = false; // setTwinStopFast; false = as built
 #endif
     dsp::Plate        twinPlate_;
     dsp::Diffuser<4>  twinDiffuser_[2];
@@ -263,6 +297,9 @@ private:
     float twinInL_[kChunk] = {}, twinInR_[kChunk] = {}, twinL_[kChunk] = {}, twinR_[kChunk] = {};
     float chunkGain_[kChunk] = {}; // the tank's input gain (tankIn_ x flipGain_) per sample, kept for after the swell
     static_assert(kChunk <= dsp::Swell::kMaxBlock, "the swell runs a chunk at a time");
+    // The ERA each tank was sent last (eraChanged), as an EraMix's bytes; eraSentOk_: which are set.
+    unsigned char eraSent_[EraSentCount][sizeof(dsp::EraMix)];
+    uint8_t       eraSentOk_ = 0;
 };
 
 } // namespace iv

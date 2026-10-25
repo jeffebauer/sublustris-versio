@@ -5,10 +5,23 @@
 #include "params/Mappings.h"
 
 #include <cmath>
+#include <cstddef>
+#include <cstring>
 
 namespace iv {
 
 namespace {
+
+// The same bits in every field of an ERA mix as the bytes of one kept (memberwise, so +0 and -0
+// differ, and the padding after midiRound is skipped): then LoopEra::set would store what it holds.
+static_assert(sizeof(dsp::EraMix) == 15 * sizeof(float) && offsetof(dsp::EraMix, midiDark) == 11 * sizeof(float),
+              "sameEra compares EraMix's fields as two runs of floats around midiRound: update it with EraMix");
+bool sameEra(const unsigned char* kept, const dsp::EraMix& m)
+{
+    constexpr size_t kBool = offsetof(dsp::EraMix, midiRound), kTail = offsetof(dsp::EraMix, midiDark);
+    return std::memcmp(kept, &m, kBool) == 0 && std::memcmp(kept + kBool, &m.midiRound, sizeof(bool)) == 0
+        && std::memcmp(kept + kTail, &m.midiDark, sizeof(dsp::EraMix) - kTail) == 0;
+}
 
 // One-pole smoothing coefficient for a time constant, per control chunk.
 float chunkCoeff(float ms, float sampleRate, int n)
@@ -141,6 +154,7 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
 
 IV_SIZE_OPT void Engine::reset()
 {
+    eraSentOk_ = 0; // the tanks were prepared or reset: send them their ERA afresh
     buttonDown_ = false;
     gateHigh_   = false;
     edgeCount_  = 0;
@@ -156,7 +170,7 @@ IV_SIZE_OPT void Engine::reset()
     twinIn_ = twinInStep_ = 0.0f;
     twinMean_ = twinSpread_ = -1.0f;
     twinFdn_.reset();
-    twinHalf_.reset();
+    resetHalf(twinHalf_);
     twinPlate_.reset();
     twinSwell_.reset();
     for (auto& d : twinDiffuser_) d.clear();
@@ -179,8 +193,8 @@ IV_SIZE_OPT void Engine::reset()
     for (auto& c : xoZ_) for (auto& z : c) z[0] = z[1] = 0.0f;
     lowPhase_ = 0;
     lowPrev_[0] = lowPrev_[1] = lowCur_[0] = lowCur_[1] = 0.0f;
-    tankHalf_.reset();
-    twinHalf_.reset();
+    resetHalf(tankHalf_);
+    resetHalf(twinHalf_);
     plate_.reset();
     shimmer_.reset();
     tilt_.reset();
@@ -254,6 +268,9 @@ void Engine::onGesture(GestureReader::Event e)
         // The big tank keeps the SIZE and DECAY it had; the knobs move to
         // the twin. Its input closes, its colour glides out.
         heldSize_ = smoothed(ParamId::Size);
+#ifndef IV_FIXED_VOICINGS
+        if (sizeHyst_ > 0.0f && sizeHeld_ >= 0.0f) heldSize_ = sizeHeld_; // the SIZE the tank has (setSizeHysteresis)
+#endif
         heldDecay_ = smoothed(ParamId::Decay);
         padFloorDb_ = 0.0f; // no cap until the pad has settled (controlTick)
         padCaptured_ = false;
@@ -266,7 +283,7 @@ void Engine::onGesture(GestureReader::Event e)
         if (!twinActive_) {
             twinFdn_.setInLoopDiffusion(activeSpace_ == 2 ? 1.0f : 0.0f); // before the reset, so it starts there
             twinFdn_.reset();
-            twinHalf_.reset();
+            resetHalf(twinHalf_);
             twinPlate_.reset();
             for (auto& d : twinDiffuser_) d.clear();
             twinSwell_.setAttackSeconds(activeSpace_ == 2
@@ -302,6 +319,23 @@ void Engine::onGesture(GestureReader::Event e)
 
 // ---- Voicing -------------------------------------------------------------------
 
+#ifndef IV_FIXED_VOICINGS
+// setSizeHysteresis: in HALL and MASSIVE, SIZE moves on (held) only once the mean line length it means
+// would move by more than sizeHyst_ (relative, in log terms); everything SIZE sets follows the held
+// value, so nothing in the tank sees the knob's noise (the lines' targets, MASSIVE's in-loop diffusion
+// and pre-delay, which each restarted a rest timer). SIZE sets the mean exponentially (expLerp), so
+// log(mean) moves by log(hi / lo) per unit of SIZE: the test is on SIZE itself (no maths a chunk).
+// snap or held < 0: take SIZE as it is. The PLATE glides its scale (no rest timer): SIZE as it is.
+float Engine::hysteresisSize(float size, float& held, bool snap) const
+{
+    if (sizeHyst_ <= 0.0f) return size;
+    const float perUnit = activeSpace_ == 2 ? std::log(2.0f / 0.35f) // map::massiveMeanSeconds
+                                            : std::log(voicing::kHallMeanMaxMs / voicing::kHallMeanMinMs); // map::hallMeanSeconds
+    if (snap || held < 0.0f || activeSpace_ == 0 || std::fabs(size - held) * perUnit > sizeHyst_) held = size;
+    return held;
+}
+#endif
+
 // DECAY's loss rate for the SPACE in use (MASSIVE's shortest tail follows SIZE, v1.0.21).
 float Engine::decayRate(float decay, float size) const
 {
@@ -315,7 +349,11 @@ float Engine::decayRate(float decay, float size) const
 IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once per block: built for size (flash)
 {
     const bool frozen = gesture_.frozen();
+#ifndef IV_FIXED_VOICINGS
+    const float size = frozen ? heldSize_ : hysteresisSize(smoothed(ParamId::Size), sizeHeld_, snap);
+#else
     const float size = frozen ? heldSize_ : smoothed(ParamId::Size);
+#endif
     // HALL's SIZE also sets its T60 scale, output trim and in-loop diffusion, which act at once (the
     // lines' lengths glide on their own): they follow a ~80 ms glide of SIZE, so a SIZE jump (CV, or an
     // unfreeze after SIZE moved) doesn't step the loop's gains (soak audit).
@@ -331,7 +369,8 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
 
     // Freezing: loss → 0, highs kept (ratio → 1), the governor caps paint.
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
-    const float toneRatio = map::toneHighT60Ratio(tone) * map::eraMix(smoothed(ParamId::Era)).highRatioScale;
+    const dsp::EraMix era = map::eraMix(smoothed(ParamId::Era)); // once a chunk (it was worked out twice)
+    const float toneRatio = map::toneHighT60Ratio(tone) * era.highRatioScale;
     const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(hallSize_) : 1.0f;
     const float rate = decayRate(decay, size) / sizeT60 * (1.0f - freezeMix_);
     const float spaceRatio = massive ? map::massiveHighRatio(toneRatio, decay) : toneRatio;
@@ -419,7 +458,6 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
 
     // ERA in the loop and DRIFT (SPEC §4.6, §4.7). Freezing glides the
     // in-loop colour out (the pad holds still, ADR 0009); DRIFT stays.
-    const dsp::EraMix era = map::eraMix(smoothed(ParamId::Era));
     // The bucket-brigade and the radio on the wet (ADR 0021); each runs only while it's in.
     bbdW_ = era.bbd;
     radioW_ = era.radio;
@@ -445,14 +483,16 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     const float over = std::fmin(tankLevelDb(), tankNowDb) - voicing::kCompressThresholdDb;
     const float compress = over > 0.0f ? keep * era.cassette * voicing::kCompressRatePerDb * over : 0.0f;
     if (plate) {
-        plate_.setEra(loopEra);
+        if (eraChanged(EraSentPlate, loopEra)) plate_.setEra(loopEra);
         plate_.setDrift(drift);
         plate_.setExtraRate(compress);
     } else {
-        fdn_.setEra(loopEra);
+        if (eraChanged(EraSentFdn, loopEra)) {
+            fdn_.setEra(loopEra);
+            lowFdn_.setEra(loopEra);
+        }
         fdn_.setDrift(drift);
         fdn_.setExtraRate(compress);
-        lowFdn_.setEra(loopEra);
         lowFdn_.setDrift(dsp::DriftAmounts{}); // still: no wow, flutter or Wander
         lowFdn_.setExtraRate(compress);
     }
@@ -503,7 +543,12 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // DECAY play it while frozen (at the freeze they're where the pad froze, so it starts as the
     // pad's twin); it always fades within kTwinMaxT60. Full in-loop diffusion in MASSIVE, like the pad.
     if (twinActive_) {
-        const float tSize = smoothed(ParamId::Size), tDecay = smoothed(ParamId::Decay);
+#ifndef IV_FIXED_VOICINGS
+        const float tSize = hysteresisSize(smoothed(ParamId::Size), twinSizeHeld_, snap || twinMean_ < 0.0f);
+#else
+        const float tSize = smoothed(ParamId::Size);
+#endif
+        const float tDecay = smoothed(ParamId::Decay);
         twinSwell_.setAttackSeconds(massive ? map::massiveNormalAttackSeconds(tDecay, tSize) : 0.0f, snap);
         const float tT60 = activeSpace_ == 1 ? map::hallT60Scale(tSize) : 1.0f;
         const float tRate = std::fmax(decayRate(tDecay, tSize) / tT60, 1.0f / voicing::kTwinMaxT60);
@@ -514,7 +559,7 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
             twinPlate_.setDecayRate(tRate);
             twinPlate_.setHighT60Ratio(toneRatio);
             twinPlate_.setGovernor(0.0f);
-            twinPlate_.setEra(tEra);
+            if (eraChanged(EraSentTwinPlate, tEra)) twinPlate_.setEra(tEra);
             twinPlate_.setDrift(drift);
         } else {
             const float mean = massive ? map::massiveMeanSeconds(tSize) : map::hallMeanSeconds(tSize);
@@ -531,10 +576,22 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
             twinFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(tDecay, tSize)
                                            : voicing::kHallOutputTrim * map::hallSizeLevelTrim(tSize, tDecay));
             twinFdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
-            twinFdn_.setEra(tEra);
+            if (eraChanged(EraSentTwinFdn, tEra)) twinFdn_.setEra(tEra);
             twinFdn_.setDrift(drift);
         }
     }
+}
+
+// LoopEra::set works out two constants per line (an exp2 and an exp: ~16 libm calls a chunk per
+// tank) and stores the mix; with the same mix it would store the same again. So each tank is sent
+// its ERA only when it changed (overnight review, 26 Oct 2026; bit-identical).
+IV_SIZE_OPT bool Engine::eraChanged(int which, const dsp::EraMix& m)
+{
+    const unsigned bit = 1u << which;
+    if ((eraSentOk_ & bit) && sameEra(eraSent_[which], m)) return false;
+    std::memcpy(eraSent_[which], &m, sizeof m);
+    eraSentOk_ = uint8_t(eraSentOk_ | bit);
+    return true;
 }
 
 // PROTOTYPE (setDiffuserIndependent): lengths of their own for the right side, each shorter
@@ -682,7 +739,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
             // (a jump in their amount rang on in them for ~100 ms, past the fade back in).
             applySpace(true, n, false);
             fdn_.reset();
-            tankHalf_.reset();
+            resetHalf(tankHalf_);
             lowFdn_.reset();
             plate_.reset();
             swell_.reset();
@@ -693,7 +750,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
             twinActive_ = false;
             twinIn_ = twinInStep_ = 0.0f;
             twinFdn_.reset();
-            twinHalf_.reset();
+            resetHalf(twinHalf_);
             twinPlate_.reset();
             twinSwell_.reset();
             for (auto& d : twinDiffuser_) d.clear();
@@ -754,7 +811,11 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         handleEdges(start, start + n);
         controlTick(n);
         prof::mark(prof::kControl);
-
+        // The twin's input side runs only while there is a twin (overnight review, 26 Oct 2026). The bits
+        // are the same: without a twin its input is shut (twinIn_ 0: only a freeze opens it, and that
+        // starts a twin), a freeze clears its diffusers and swell before it starts one (onGesture), and
+        // their output is read only while it runs.
+        const bool twinRuns = twinActive_;
 
         // Input side: predelay, diffusion; the swell feeds the big tank; the
         // twin hears the input through its own diffusers.
@@ -795,8 +856,10 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             prof::mark(prof::kShimmer);
             // The twin hears the input itself, through its own diffusion: no predelay; in MASSIVE, its own swell.
             twinIn_ = clamp01(twinIn_ + twinInStep_);
-            twinInL_[i] = twinDiffuser_[0].process(twinIn_ * l);
-            twinInR_[i] = twinDiffuser_[1].process(twinIn_ * r);
+            if (twinRuns) { // no twin, nothing to hear: a freeze clears them before it starts (onGesture)
+                twinInL_[i] = twinDiffuser_[0].process(twinIn_ * l);
+                twinInR_[i] = twinDiffuser_[1].process(twinIn_ * r);
+            }
             // MASSIVE's twin swells as its tank does, so what you play over a frozen MASSIVE
             // arrives as a wash, not two distinct repeats first (owner, 22 Oct 2026).
             twinL_[i] = twinR_[i] = 0.0f;
@@ -807,7 +870,9 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             wetL_[i] = wetR_[i] = 0.0f;
             prof::mark(prof::kInput);
         }
-        twinSwell_.processBlock(twinInL_, twinInR_, n);
+        // Its swell too: after a MASSIVE freeze its attack stayed set, and with no twin it read 24 taps
+        // a sample from a ring of silence until power-off (overnight review, 26 Oct 2026).
+        if (twinRuns) twinSwell_.processBlock(twinInL_, twinInR_, n);
         prof::mark(prof::kTwin);
         swell_.processBlock(bufL_, bufR_, n);
         prof::mark(prof::kSwell);
@@ -840,7 +905,10 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         if (twinActive_) {
             if (activeSpace_ == 0) twinPlate_.process(twinInL_, twinInR_, twinL_, twinR_, n);
             else twinHalf_.process(twinFdn_, twinInL_, twinInR_, twinL_, twinR_, n);
-            const float lvl = activeSpace_ == 0 ? twinPlate_.levelDb() : twinFdn_.levelDb();
+            float lvl = activeSpace_ == 0 ? twinPlate_.levelDb() : twinFdn_.levelDb();
+#ifndef IV_FIXED_VOICINGS
+            if (twinStopFast_) lvl = activeSpace_ == 0 ? twinPlate_.fastLevelDb() : twinFdn_.fastLevelDb(); // setTwinStopFast
+#endif
             if (!gesture_.frozen() && twinIn_ == 0.0f && lvl < -100.0f) twinActive_ = false;
             // Painting (holding) copies a little of the twin into the pad: what you played becomes a layer of it.
             const float pg = paint_ * paintRoom_ * voicing::kPaintLevel;
@@ -920,40 +988,70 @@ void Engine::processTwoTanks(int n)
         z[1] = c[2] * v - c[4] * y;
         return y;
     };
+    // The coefficients and states in locals for the chunk (overnight review, 26 Oct 2026): the stores
+    // through bufL_ / wetL_ could alias the members, so every sample reloaded all of them. The same
+    // sums in the same order (the same bits); the phase's % 4 as & 3 (it is never negative).
+    static_assert(kLowDecimate == 4, "the phase wraps with & (kLowDecimate - 1)");
     const int phase0 = lowPhase_;
     int k = 0;
+    float cL[5], cA[5], cH[5], z[2][3][2];
+    for (int j = 0; j < 5; ++j) {
+        cL[j] = xoL_[j];
+        cA[j] = aaL_[j];
+        cH[j] = xoH_[j];
+    }
+    for (int c = 0; c < 2; ++c)
+        for (int f = 0; f < 3; ++f) {
+            z[c][f][0] = xoZ_[c][f][0];
+            z[c][f][1] = xoZ_[c][f][1];
+        }
+    int ph = phase0;
     for (int i = 0; i < n; ++i) {
         float* buf[2] = {bufL_, bufR_};
         for (int c = 0; c < 2; ++c) {
             const float x = buf[c][i];
-            const float lo = bq(aaL_, xoZ_[c][1], bq(xoL_, xoZ_[c][0], x));
-            buf[c][i] = bq(xoH_, xoZ_[c][2], x);
-            if (lowPhase_ == 0) (c ? lowInR_ : lowInL_)[k] = lo;
+            const float lo = bq(cA, z[c][1], bq(cL, z[c][0], x));
+            buf[c][i] = bq(cH, z[c][2], x);
+            if (ph == 0) (c ? lowInR_ : lowInL_)[k] = lo;
         }
-        if (lowPhase_ == 0) ++k;
-        lowPhase_ = (lowPhase_ + 1) % kLowDecimate;
+        if (ph == 0) ++k;
+        ph = (ph + 1) & (kLowDecimate - 1);
     }
+    for (int c = 0; c < 2; ++c)
+        for (int f = 0; f < 3; ++f) {
+            xoZ_[c][f][0] = z[c][f][0];
+            xoZ_[c][f][1] = z[c][f][1];
+        }
     tankHalf_.process(fdn_, bufL_, bufR_, wetL_, wetR_, n);
     for (int j = 0; j < k; ++j) lowOutL_[j] = lowOutR_[j] = 0.0f;
     if (k > 0) lowFdn_.process(lowInL_, lowInR_, lowOutL_, lowOutR_, k);
-    lowPhase_ = phase0;
     int j = 0;
     double power = 0.0;
+    float zo[2][2] = {{xoZ_[0][4][0], xoZ_[0][4][1]}, {xoZ_[1][4][0], xoZ_[1][4][1]}};
+    float prev[2] = {lowPrev_[0], lowPrev_[1]}, cur[2] = {lowCur_[0], lowCur_[1]};
+    ph = phase0;
     for (int i = 0; i < n; ++i) {
-        if (lowPhase_ == 0) {
-            lowPrev_[0] = lowCur_[0]; lowPrev_[1] = lowCur_[1];
-            lowCur_[0] = lowOutL_[j]; lowCur_[1] = lowOutR_[j];
+        if (ph == 0) {
+            prev[0] = cur[0]; prev[1] = cur[1];
+            cur[0] = lowOutL_[j]; cur[1] = lowOutR_[j];
             ++j;
         }
-        const float t = float(lowPhase_) / float(kLowDecimate);
+        const float t = float(ph) / float(kLowDecimate);
         float* wet[2] = {wetL_, wetR_};
         for (int c = 0; c < 2; ++c) {
-            const float up = lowPrev_[c] + t * (lowCur_[c] - lowPrev_[c]);
-            const float y = bq(aaL_, xoZ_[c][4], up); // anti-image (linear interpolation's own sinc² helps)
+            const float up = prev[c] + t * (cur[c] - prev[c]);
+            const float y = bq(cA, zo[c], up); // anti-image (linear interpolation's own sinc² helps)
             wet[c][i] += y;
             power += 0.5 * double(y) * y;
         }
-        lowPhase_ = (lowPhase_ + 1) % kLowDecimate;
+        ph = (ph + 1) & (kLowDecimate - 1);
+    }
+    lowPhase_ = ph;
+    lowPrev_[0] = prev[0]; lowPrev_[1] = prev[1];
+    lowCur_[0] = cur[0]; lowCur_[1] = cur[1];
+    for (int c = 0; c < 2; ++c) {
+        xoZ_[c][4][0] = zo[c][0];
+        xoZ_[c][4][1] = zo[c][1];
     }
     fdn_.setExternalPower(float(power / double(n)));
 }

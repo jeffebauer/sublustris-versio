@@ -18,9 +18,19 @@ public:
         for (auto& h : up_) h.reset();
         phase_ = queued_ = 0;
     }
+    // After reset(), a prototype behind Engine::setHalfRatePrime (overnight review, 26 Oct 2026, arch F2):
+    // start with one silent sample queued, the state the first odd block would leave anyway. As built,
+    // the first odd block after a reset is a sample short: mid-stream (a host that sends 48s, then a 17)
+    // that is a one-sample hole in the tail, a click, and the wet one sample late from then on. Primed,
+    // the tank's output is one sample (21 µs) late from the start and never starves.
+    void prime()
+    {
+        queue_[0][0] = queue_[1][0] = 0.0f;
+        queued_ = 1;
+    }
 
     // n <= kMaxBlock samples in; the tank's output added into outL / outR. A block can end mid-pair, so
-    // what comes back is queued and the very first block can be a sample short.
+    // what comes back is queued and the very first block can be a sample short (unless primed).
     // Out of line: one copy for the tank and the twin (inlined in both, +2.6 KB of flash).
     template <class Tank>
     IV_NOINLINE void process(Tank& tank, const float* inL, const float* inR, float* outL, float* outR, int n)

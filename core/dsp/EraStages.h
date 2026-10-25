@@ -18,20 +18,34 @@
 
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 
 namespace iv::dsp {
 
 // Simper's trapezoidal state-variable filter (low, band, high from one state).
 struct EraSvf {
     float ic1 = 0, ic2 = 0, a1 = 1, a2 = 0, a3 = 0, k = 1.4f;
-    IV_SIZE_OPT void set(float fc, float q, float sr)
+    IV_SIZE_OPT void set(float fc, float q, float sr) { setGain(gain(fc, sr), q); }
+    // set() in two halves, so filters at one frequency share the sin and cos (the same bits).
+    IV_SIZE_OPT static float gain(float fc, float sr)
     {
         const float w = 3.14159265f * std::fmin(fc, 0.45f * sr) / sr;
-        const float g = std::sin(w) / std::cos(w); // not std::tan: it pulled 2.7 KB of maths into the firmware
+        return std::sin(w) / std::cos(w); // not std::tan: it pulled 2.7 KB of maths into the firmware
+    }
+    IV_SIZE_OPT void setGain(float g, float q)
+    {
         k = 1.0f / q;
         a1 = 1.0f / (1.0f + g * (g + k));
         a2 = g * a1;
         a3 = g * a2;
+    }
+    // Another filter's coefficients (its state stays).
+    void copyCoefficients(const EraSvf& o)
+    {
+        a1 = o.a1;
+        a2 = o.a2;
+        a3 = o.a3;
+        k = o.k;
     }
     void reset() { ic1 = ic2 = 0.0f; }
     // Returns the low-pass; band and high through the references.
@@ -48,6 +62,15 @@ struct EraSvf {
     float hp(float x) { float b, h; tick(x, b, h); return h; }
 };
 
+// The same bits (not ==, which takes -0 for +0), for the set() early-outs below.
+inline bool sameBits(float a, float b)
+{
+    uint32_t x, y;
+    std::memcpy(&x, &a, sizeof x);
+    std::memcpy(&y, &b, sizeof y);
+    return x == y;
+}
+
 struct EraRng {
     uint32_t s = 0x2545F491u;
     float next() { s = s * 1664525u + 1013904223u; return float(int32_t(s)) * (1.0f / 2147483648.0f); } // -1..1
@@ -56,13 +79,27 @@ struct EraRng {
 class BbdStage {
 public:
     IV_SIZE_OPT void reset() { for (int c = 0; c < 2; ++c) { aa_[c].reset(); rc1_[c].reset(); rc2_[c].reset(); p1_[c] = p2_[c] = envY_[c] = envZ_[c] = held_[c] = 0; } }
+    // Everything here follows t and the rate alone, so it is worked out again only when they move
+    // (overnight review, 26 Oct 2026: 6 sin + 6 cos, 3 exp, 2 pow a chunk for a value that rests).
     IV_SIZE_OPT void set(float t, float sr)
     {
+        if (setOk_ && sameBits(t, setT_) && sameBits(sr, setSr_)) return;
+        setOk_ = true;
+        setT_ = t;
+        setSr_ = sr;
         const float g = t / voicing::kBbdGritAt; // grit: 1 at two-thirds, 1.5 at the end
         aliasMix_ = std::fmin(1.0f, g);
         t *= 0.5f / voicing::kBbdGritAt;          // the line's darkness and drive grow more slowly
         const float fc = 7000.0f * std::pow(2200.0f / 7000.0f, t);
-        for (int c = 0; c < 2; ++c) { aa_[c].set(fc, 1.0f, sr); rc1_[c].set(fc, 0.707f, sr); rc2_[c].set(fc, 1.0f, sr); }
+        // All six filters sit at fc: one sin and cos; aa_ and rc2_ are the same filter.
+        const float gf = EraSvf::gain(fc, sr);
+        aa_[0].setGain(gf, 1.0f);
+        rc1_[0].setGain(gf, 0.707f);
+        for (int c = 0; c < 2; ++c) {
+            aa_[c].copyCoefficients(aa_[0]);
+            rc1_[c].copyCoefficients(rc1_[0]);
+            rc2_[c].copyCoefficients(aa_[0]);
+        }
         wp_ = 1.0f - std::exp(-6.2831853f * fc / sr);
         a_ = (0.02f + 0.06f * t) * (1.0f + g);
         b_ = (0.01f + 0.03f * t) * (1.0f + g);
@@ -96,6 +133,8 @@ private:
     float  wp_ = 1, a_ = 0, b_ = 0, noise_ = 0, wc_ = 0, we_ = 0, clock_ = 0, clockInc_ = 0.5f, aliasMix_ = 0;
     bool   tick_ = false;
     EraRng rng_;
+    bool   setOk_ = false; // set()'s last t and rate (set while setOk_)
+    float  setT_, setSr_;
 };
 
 class RadioStage {
@@ -110,18 +149,44 @@ public:
     }
     IV_SIZE_OPT void set(float t, float sr, int blockLen)
     {
+        // What follows t and the rate alone is worked out again only when they move (overnight review,
+        // 26 Oct 2026; the same bits): 6 pow, 6 exp, 2 sqrt and the high-pass's sin and cos a chunk.
+        // The wanders, the drift-offs and what follows them still run every chunk.
+        if (!setOk_ || !sameBits(t, t_) || !sameBits(sr, sr_)) {
+            setOk_ = true;
+            const float kDb = 10.0f - 7.0f * t;
+            steady_ = std::sqrt(std::pow(10.0f, kDb / 10.0f) * (2.0f / 3.0f));
+            gNorm_ = std::sqrt(steady_ * steady_ + 2.0f / 3.0f);
+            gFloor_ = std::pow(10.0f, (-12.0f - 8.0f * t) / 20.0f);
+            hum_ = t > 0.5f ? 0.08f * (t - 0.5f) : 0.0f; // 0 -> 4 %
+            humStep_ = 100.0f / sr;
+            lpTop_ = 4500.0f * std::pow(2400.0f / 4500.0f, t);
+            hp_[0].set(200.0f + 200.0f * t, 0.707f, sr);
+            hp_[1].copyCoefficients(hp_[0]);
+            hiss_ = std::pow(10.0f, (-52.0f + 14.0f * t) / 20.0f);
+            wHiss_ = 1.0f - std::exp(-6.2831853f * (1200.0f + 1000.0f * t) / sr);
+            crackleLvl_ = std::pow(10.0f, (-48.0f + 16.0f * t) / 20.0f);
+            alpha_ = 2.5f - t;
+            wNfast_ = 1.0f - std::exp(-6.2831853f * (3.0f + 9.0f * t) / sr);
+            wa_ = 1.0f - std::exp(-1.0f / (0.005f * sr));
+            wd_ = 1.0f - std::exp(-1.0f / ((0.5f - 0.25f * t) * sr));
+            ws_ = 1.0f - std::exp(-1.0f / (0.5f * sr));
+            maxBoost_ = std::pow(10.0f, (6.0f + 9.0f * t) / 20.0f);
+            makeup_ = std::pow(10.0f, kMakeupDb / 20.0f);
+            wHold_ = 1.0f - std::exp(-1.0f / (8.0f * sr));
+        }
         sr_ = sr;
         t_ = t;
         const float dt = float(blockLen) / sr;
         wander(storm_[0], storm_[1], storm_[2], storm_[3], 0.02f, dt); // storm activity, about a minute
         const float storm = 0.65f + 0.35f * storm_[1];
         // The station's fade (Rician): K 10 -> 3 dB, spread 0.08 -> 0.5 Hz, floor -12 -> -20 dB.
-        const float sigma = 0.08f + 0.42f * t, kDb = 10.0f - 7.0f * t;
+        const float sigma = 0.08f + 0.42f * t;
         wander(fi_[0], fi_[1], fi_[2], fi_[3], sigma, dt);
         wander(fq_[0], fq_[1], fq_[2], fq_[3], sigma, dt);
-        const float steady = std::sqrt(std::pow(10.0f, kDb / 10.0f) * (2.0f / 3.0f));
-        float g = std::sqrt((steady + fi_[1]) * (steady + fi_[1]) + fq_[1] * fq_[1]) / std::sqrt(steady * steady + 2.0f / 3.0f);
-        g = std::fmax(g, std::pow(10.0f, (-12.0f - 8.0f * t) / 20.0f));
+        const float steady = steady_;
+        float g = std::sqrt((steady + fi_[1]) * (steady + fi_[1]) + fq_[1] * fq_[1]) / gNorm_;
+        g = std::fmax(g, gFloor_);
         // Detune: a slow wander, plus at the gritty end rare drift-offs (raised-cosine bumps).
         wander(dt_[0], dt_[1], dt_[2], dt_[3], 0.03f + 0.07f * t, dt);
         float detune = (0.075f + 0.175f * t) * (1.0f + dt_[1]);
@@ -144,34 +209,30 @@ public:
         gStep_ = (g * (1.0f - 0.8f * bump) - gNow_) / float(blockLen > 0 ? blockLen : 1);
         mEff_ = (0.9f + 0.5f * t) * (1.0f + 0.6f * detune) * (1.0f + 0.5f * (1.0f - g)); // distortion breathes with the fade
         fl_ = (0.02f + 0.13f * t) * detune;                                               // slope flutter on the skirt
-        hum_ = t > 0.5f ? 0.08f * (t - 0.5f) : 0.0f;                                      // 0 -> 4 %
-        const float lpHz = 4500.0f * std::pow(2400.0f / 4500.0f, t) * (1.0f - (0.1f + 0.25f * t) * detune);
-        for (int c = 0; c < 2; ++c) { hp_[c].set(200.0f + 200.0f * t, 0.707f, sr); lp1_[c].set(lpHz, 0.54f, sr); lp2_[c].set(lpHz, 1.31f, sr); }
+        const float lpHz = lpTop_ * (1.0f - (0.1f + 0.25f * t) * detune);
+        // Both sides' low-passes at lpHz, both dips at one frequency: one sin and cos each.
+        const float gl = EraSvf::gain(lpHz, sr);
+        lp1_[0].setGain(gl, 0.54f);
+        lp2_[0].setGain(gl, 1.31f);
+        lp1_[1].copyCoefficients(lp1_[0]);
+        lp2_[1].copyCoefficients(lp2_[0]);
         wander(notch_[0], notch_[1], notch_[2], notch_[3], 0.1f + 0.4f * t, dt); // the wandering dip
-        for (int c = 0; c < 2; ++c) dip_[c].set(300.0f * std::pow(10.0f, 0.5f + 0.5f * notch_[1]), 1.5f + 1.5f * t, sr);
+        dip_[0].set(300.0f * std::pow(10.0f, 0.5f + 0.5f * notch_[1]), 1.5f + 1.5f * t, sr);
+        dip_[1].copyCoefficients(dip_[0]);
         dipGain_ = std::pow(10.0f, (-4.0f - 14.0f * t) * (1.0f + 0.5f * (1.0f - g)) / 20.0f);
-        hiss_ = std::pow(10.0f, (-52.0f + 14.0f * t) / 20.0f);
-        wHiss_ = 1.0f - std::exp(-6.2831853f * (1200.0f + 1000.0f * t) / sr);
         crackleP_ = (3.0f + 37.0f * t) * storm / sr;
-        crackleLvl_ = std::pow(10.0f, (-48.0f + 16.0f * t) / 20.0f);
-        alpha_ = 2.5f - t;
         crashMean_ = (25.0f - 20.0f * t) / storm;
-        wNfast_ = 1.0f - std::exp(-6.2831853f * (3.0f + 9.0f * t) / sr);
-        wa_ = 1.0f - std::exp(-1.0f / (0.005f * sr));
-        wd_ = 1.0f - std::exp(-1.0f / ((0.5f - 0.25f * t) * sr));
-        ws_ = 1.0f - std::exp(-1.0f / (0.5f * sr));
-        maxBoost_ = std::pow(10.0f, (6.0f + 9.0f * t) / 20.0f);
-        makeup_ = std::pow(10.0f, kMakeupDb / 20.0f);
-        wHold_ = 1.0f - std::exp(-1.0f / (8.0f * sr));
     }
     void process(float& l, float& r)
     {
         constexpr float carrier = 0.25f; // -12 dBFS is full modulation
         slow_ += ws_ * (0.5f * (std::fabs(l) + std::fabs(r)) - slow_); // the station, measured before any fade
         gNow_ += gStep_;
-        phHum_ += 100.0f / sr_;
+        phHum_ += humStep_;
         phHum_ -= float(int(phHum_));
-        const float humMod = 1.0f + hum_ * std::sin(6.2831853f * phHum_); // mains hum rides on the signal
+        // The mains hum rides on the signal. Without it (t up to 0.5) humMod is exactly 1 (1 + ±0), so
+        // the sin is skipped (overnight review, 26 Oct 2026; the same bits).
+        const float humMod = hum_ != 0.0f ? 1.0f + hum_ * std::sin(6.2831853f * phHum_) : 1.0f;
         nfast_ += wNfast_ * (rng_.next() - nfast_);
         const float prop = gNow_ * (1.0f + fl_ * nfast_ * 8.0f);
         // The receiver's noise (mono), not faded with the station.
@@ -250,6 +311,8 @@ private:
     float  driftGap_ = 8, driftLen_ = 1, driftPeak_ = 0, driftPos_ = -1;
     float  gNow_ = 1, gStep_ = 0, mEff_ = 1, fl_ = 0, hum_ = 0, nfast_ = 0, wNfast_ = 0;
     float  dipGain_ = 1, wa_ = 0, wd_ = 0, ws_ = 0, phHum_ = 0;
+    bool   setOk_ = false; // set()'s t-and-rate part is in place for t_ and sr_ (and these set)
+    float  steady_, gNorm_, gFloor_, humStep_, lpTop_;
 };
 
 } // namespace iv::dsp
