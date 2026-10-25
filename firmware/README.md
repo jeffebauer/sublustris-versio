@@ -38,6 +38,7 @@ The M0 release figure is the platform's floor before any DSP: libDaisy, the HAL,
 | M5 (PLATE, companion, gesture reader, freeze, paint) | 75,044 (57 %) | 76,112 | 82,356 |
 | M6 (ERA, DRIFT, soft saturation, μ-law, Midiverb box) | 84,100 (64 %) | 85,088 | 82,356 |
 | M7 (DARKEN, limiter) | 85,076 (64 %) | 86,008 | 82,356 |
+| Knob-jitter readout (26 Oct 2026) | 112,484 (86 %) | 123,684 | 83,420 |
 
 Memory at M5: `gLarge` 16 MB in SDRAM (FDN lines and in-loop allpasses, the PLATE, swell, REVERSE segments, predelay), `gFast` 100.6 KB of DTCM's 128 KB (the companion plate and the input diffusers), the Engine object in AXI SRAM. M3 decides whether the PLATE moves from SDRAM to AXI SRAM (SPEC §5.2).
 
@@ -82,6 +83,17 @@ P  500  250 1000    0  500  500  200 | SW 1 0 | BTN 0 3 | GATE 0 7
 ```
 
 `P` = pots P1–P7 in panel order (× 1000), `SW` = SPACE and ATTACK positions (0 left, 1 centre, 2 right), `BTN` = held now + presses counted, `GATE` = high now + rising edges counted.
+
+Plus, once a second, the **knob jitter** (overnight review section 5.1: a reading that never rests keeps restarting SIZE's 50 ms rest timer, and defeats every "skip it while the knob is still" saving). Each knob is read once per audio block, exactly as the release build reads it, over 1,000 blocks (1 s); columns are P1–P7 in panel order:
+
+```
+JPP     12    40     9    15   180    11     8
+JCHG    40   310    22    35   990    30    18
+JRUN   210    35   400   180     2   250   600
+JHYS     0     0     0     0    14     0     0
+```
+
+`JPP` = peak-to-peak of the reading × 100,000 (one 16-bit ADC step ≈ 1.5; the SIZE fix's 0.1 % ≈ 100). `JCHG` = blocks (of 1,000) whose reading differed at all from the block before. `JRUN` = the longest run of identical readings, in blocks (1 block = 1 ms); SIZE's rest timer needs 50. `JHYS` = times the reading left a ±0.001 band around its last accepted value, a stand-in for the SIZE fix (0 = the fix would hold SIZE still; the real fix measures in line-length terms, so this is approximate). Hands off the knobs while reading it, and read it at a few positions (the ends read exact 0 / 1 in the release build, so mid-travel is what matters). On USB power alone (the only way to read serial, see above) the noise may differ from rack power.
 
 **profile**, every ~3 s, one corner:
 

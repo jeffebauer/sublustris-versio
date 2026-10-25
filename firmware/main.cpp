@@ -170,6 +170,18 @@ int SwitchPosition(int sw, bool invert)
 //           must not be connected at the same time)
 // - Controls -> USB serial, 10 times a second, exact values (x1000), pots
 //   in panel order P1..P7.
+// - Knob jitter -> USB serial, once a second (overnight review 26 Oct 2026,
+//   section 5.1: a reading that never rests defeats SIZE's rest timer and every
+//   memo keyed on exact float equality). Read once per audio block, as the
+//   release build reads them (same block size, same libDaisy smoothing), over
+//   1 s = 1,000 blocks, pots in panel order P1..P7, hands off the knobs:
+//     JPP  peak-to-peak of the reading, x100000 (one 16-bit ADC step ~1.5;
+//          the SIZE fix's 0.1 % is ~100)
+//     JCHG blocks whose reading differed at all from the block before (of 1000)
+//     JRUN longest run of identical readings, in blocks (= ms); SIZE's rest
+//          timer needs 50
+//     JHYS times the reading left a +-0.001 band around its last accepted value
+//          (an approximation of the SIZE fix: 0 = the fix would hold still)
 
 namespace {
 
@@ -178,6 +190,64 @@ constexpr int kBlockSize = 48;
 volatile int      gateEdges      = 0;
 volatile int      buttonPresses  = 0;
 volatile uint32_t gateFlashUntil = 0;
+
+constexpr int   kJitterBlocks = 1000; // 1 s at 48 kHz / 48
+constexpr float kJitterBand   = 0.001f;
+
+struct Jitter {
+    uint32_t pp[DaisyVersio::KNOB_LAST];   // x100000
+    uint16_t chg[DaisyVersio::KNOB_LAST];
+    uint16_t run[DaisyVersio::KNOB_LAST];
+    uint16_t hys[DaisyVersio::KNOB_LAST];
+};
+Jitter            gJitter;        // the last full second, written by the callback
+volatile uint32_t gJitterSeq = 0; // odd while the callback writes gJitter
+
+// Called once per block from the audio callback.
+void MeasureJitter()
+{
+    static float    last[DaisyVersio::KNOB_LAST], lo[DaisyVersio::KNOB_LAST], hi[DaisyVersio::KNOB_LAST];
+    static float    held[DaisyVersio::KNOB_LAST];
+    static uint16_t chg[DaisyVersio::KNOB_LAST], run[DaisyVersio::KNOB_LAST], best[DaisyVersio::KNOB_LAST];
+    static uint16_t hys[DaisyVersio::KNOB_LAST];
+    static int      blocks = -1; // -1: first call, take the readings as they are
+
+    for (int i = 0; i < DaisyVersio::KNOB_LAST; ++i) {
+        const float v = hw.GetKnobValue(kPotKnob[i]);
+        if (blocks < 0) {
+            last[i] = lo[i] = hi[i] = held[i] = v;
+            continue;
+        }
+        if (v != last[i]) {
+            ++chg[i];
+            run[i] = 0;
+        } else if (++run[i] > best[i]) {
+            best[i] = run[i];
+        }
+        if (std::fabs(v - held[i]) > kJitterBand) {
+            held[i] = v;
+            ++hys[i];
+        }
+        lo[i]   = std::min(lo[i], v);
+        hi[i]   = std::max(hi[i], v);
+        last[i] = v;
+    }
+    if (++blocks < kJitterBlocks) return;
+
+    gJitterSeq = gJitterSeq + 1;
+    __asm__ volatile("" ::: "memory"); // keep gJitter's writes between the two counts
+    for (int i = 0; i < DaisyVersio::KNOB_LAST; ++i) {
+        gJitter.pp[i]  = uint32_t((hi[i] - lo[i]) * 100000.0f + 0.5f);
+        gJitter.chg[i] = chg[i];
+        gJitter.run[i] = uint16_t(best[i] + 1); // a run of n repeats is n + 1 identical blocks
+        gJitter.hys[i] = hys[i];
+        lo[i] = hi[i] = last[i];
+        chg[i] = run[i] = best[i] = hys[i] = 0;
+    }
+    __asm__ volatile("" ::: "memory");
+    gJitterSeq = gJitterSeq + 1;
+    blocks     = 0;
+}
 
 void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, size_t size)
 {
@@ -194,6 +264,7 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
     if (hw.tap.RisingEdge()) {
         ++buttonPresses;
     }
+    MeasureJitter();
 
     for (size_t i = 0; i < size; ++i) {
         out[0][i] = in[0][i];
@@ -245,6 +316,26 @@ int main()
             hw.seed.PrintLine("P %4d %4d %4d %4d %4d %4d %4d | SW %d %d | BTN %d %d | GATE %d %d",
                               Milli(p[0]), Milli(p[1]), Milli(p[2]), Milli(p[3]), Milli(p[4]), Milli(p[5]), Milli(p[6]),
                               space, attack, int(hw.tap.Pressed()), buttonPresses, int(hw.Gate()), gateEdges);
+        }
+
+        static uint32_t printedSeq = 0;
+        const uint32_t  seq        = gJitterSeq;
+        if (seq != printedSeq && (seq & 1u) == 0) {
+            __asm__ volatile("" ::: "memory");
+            const Jitter j = gJitter;
+            __asm__ volatile("" ::: "memory");
+            if (gJitterSeq == seq) { // not overwritten while copying
+                printedSeq = seq;
+                hw.seed.PrintLine("JPP  %5lu %5lu %5lu %5lu %5lu %5lu %5lu", (unsigned long)j.pp[0],
+                                  (unsigned long)j.pp[1], (unsigned long)j.pp[2], (unsigned long)j.pp[3],
+                                  (unsigned long)j.pp[4], (unsigned long)j.pp[5], (unsigned long)j.pp[6]);
+                hw.seed.PrintLine("JCHG %5d %5d %5d %5d %5d %5d %5d", j.chg[0], j.chg[1], j.chg[2], j.chg[3],
+                                  j.chg[4], j.chg[5], j.chg[6]);
+                hw.seed.PrintLine("JRUN %5d %5d %5d %5d %5d %5d %5d", j.run[0], j.run[1], j.run[2], j.run[3],
+                                  j.run[4], j.run[5], j.run[6]);
+                hw.seed.PrintLine("JHYS %5d %5d %5d %5d %5d %5d %5d", j.hys[0], j.hys[1], j.hys[2], j.hys[3],
+                                  j.hys[4], j.hys[5], j.hys[6]);
+            }
         }
         System::Delay(1);
     }
