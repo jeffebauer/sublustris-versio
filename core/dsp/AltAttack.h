@@ -295,3 +295,117 @@ private:
 };
 
 } // namespace iv::dsp::proto
+
+namespace iv::dsp::proto {
+
+// REVERSE, done differently (round 2 of the alternatives; docs: Valhalla FutureVerb's reversed
+// granular delays, US9899013B1's overlapping reverse buffers, Mutable Beads' reversed grains). One
+// channel: overlapping reversed grains of what came in, Hann windows, 4 at a time on average, each
+// grain's length random (±12 %) and its start jittered (±20 %), read speed slightly detuned, so the
+// seams never fall into a rhythm (round 1-2's chunks: fixed lengths, 2 readers).
+class ReverseGrains {
+public:
+    static constexpr int kReaders = 8;
+    void prepare(float sampleRate, uint32_t seed, float detuneCents)
+    {
+        sr_ = sampleRate;
+        buf_.assign(1u << 18, 0.0f); // 5.4 s: a 2.2 s grain reads back up to twice its length
+        mask_ = buf_.size() - 1;
+        seed_ = seed;
+        speed_ = 2.0f + 2.0f * (std::exp2(detuneCents / 1200.0f) - 1.0f);
+        fbLp_.set(6000.0f, sampleRate);
+    }
+    // lengthSeconds: the grain length (TIME); feedback 0..0.4 (reversed again, darker).
+    float process(float x, float lengthSeconds, float feedback)
+    {
+        buf_[pos_ & mask_] = x + feedback * fbLp_.lp(last_);
+        if (--untilNext_ <= 0) {
+            const int len = int(lengthSeconds * sr_ * (0.88f + 0.24f * rnd01(seed_)));
+            for (auto& g : g_)
+                if (g.left <= 0) {
+                    g.len = g.left = len > 64 ? len : 64;
+                    g.d = 1.0f;
+                    break;
+                }
+            untilNext_ = int(0.25f * float(len) * (0.8f + 0.4f * rnd01(seed_)));
+        }
+        float y = 0.0f;
+        for (auto& g : g_) {
+            if (g.left <= 0) continue;
+            const float k = 1.0f - float(g.left) / float(g.len);
+            const float s = std::sin(3.14159265f * k);
+            const auto  di = uint32_t(g.d);
+            const float t = g.d - float(di);
+            const float a = buf_[(pos_ - di) & mask_], b = buf_[(pos_ - di - 1) & mask_];
+            y += s * s * (a + t * (b - a));
+            g.d += speed_; // backwards through what was recorded
+            --g.left;
+        }
+        ++pos_;
+        last_ = 0.5f * y; // 4 Hann windows overlapping sum to 2
+        return last_;
+    }
+
+private:
+    struct Grain {
+        int   left = 0, len = 1;
+        float d = 1.0f;
+    };
+    std::vector<float> buf_;
+    size_t   mask_ = 0, pos_ = 0;
+    Grain    g_[kReaders];
+    int      untilNext_ = 0;
+    float    sr_ = 48000.0f, speed_ = 2.0f, last_ = 0.0f;
+    OnePole  fbLp_;
+    uint32_t seed_ = 1;
+};
+
+// ECHO-VERB "Tubby" (round 2 of the alternatives): a mono tape echo before the reverb; each repeat
+// through a 150 Hz high-pass (2 poles), a 3 kHz low-pass and a soft saturator, so repeats get darker
+// and thinner (Brainmodular's tape echo, Strymon Volante's Low Cut / Wear, King Tubby's high-pass on
+// the returns); a little wow and flutter on the read; its time glides like tape (~0.3 s), the classic
+// dub pitch bend (Arnardottir, Abel & Smith's Echoplex model; Supermassive's EchoVerb modes).
+class TapeEcho {
+public:
+    void prepare(float sampleRate)
+    {
+        sr_ = sampleRate;
+        buf_.assign(1u << 16, 0.0f); // 1.36 s
+        mask_ = buf_.size() - 1;
+        hp1_.set(150.0f, sampleRate);
+        hp2_.set(150.0f, sampleRate);
+        lp_.set(3000.0f, sampleRate);
+        glide_ = 1.0f - std::exp(-1.0f / (0.3f * sampleRate));
+    }
+    // seconds: the echo time (TIME); feedback < 1 (DECAY). Returns the echoes (every repeat).
+    float process(float x, float seconds, float feedback)
+    {
+        if (d_ <= 0.0f) d_ = seconds * sr_;
+        d_ += glide_ * (seconds * sr_ - d_);
+        wow_ += 0.6f / sr_;
+        if (wow_ >= 1.0f) wow_ -= 1.0f;
+        flut_ += 7.0f / sr_;
+        if (flut_ >= 1.0f) flut_ -= 1.0f;
+        const float d = d_ + 0.0006f * sr_ * std::sin(6.2831853f * wow_) + 0.00005f * sr_ * std::sin(6.2831853f * flut_);
+        const auto  di = uint32_t(d);
+        const float t = d - float(di);
+        const float a = buf_[(pos_ - di) & mask_], b = buf_[(pos_ - di - 1) & mask_];
+        const float y = a + t * (b - a);
+        // What goes onto the tape, the input and every repeat, goes through the heads' colour (a real
+        // tape echo's first repeat is already softer: an unfiltered first echo returned every sharp
+        // chord as a crisp new attack, 17 flagged on the skank).
+        float r = lp_.lp(hp2_.hp(hp1_.hp(x + feedback * y)));
+        r = r * (27.0f + r * r) / (27.0f + 9.0f * r * r); // soft saturation (a tanh-like rational)
+        buf_[pos_ & mask_] = r;
+        ++pos_;
+        return y;
+    }
+
+private:
+    std::vector<float> buf_;
+    size_t  mask_ = 0, pos_ = 0;
+    float   sr_ = 48000.0f, d_ = 0.0f, glide_ = 0.0f, wow_ = 0.0f, flut_ = 0.3f;
+    OnePole hp1_, hp2_, lp_;
+};
+
+} // namespace iv::dsp::proto

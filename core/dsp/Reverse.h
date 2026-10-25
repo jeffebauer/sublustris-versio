@@ -63,6 +63,29 @@ public:
         lengthNow_ = lengthTarget_;
     }
 
+#ifndef IV_FIXED_VOICINGS
+    // PROTOTYPE (alternatives round 2, NONLINEAR "gate"): the same taps, an even level that sags ~4 dB
+    // to 85 % of the length, then a raised-cosine fall over the last 15 % (AMS RMX16 Nonlin 2
+    // "decays only very slightly ... then dies away very rapidly"; Strymon BigSky's level-independent
+    // Gate, a tap generator feeding the late reverb). false: REVERSE's rising taps again.
+    void setGateShape(bool gate)
+    {
+        float energy = 0.0f;
+        for (int c = 0; c < 2; ++c)
+            for (int k = 0; k < kTaps; ++k) {
+                const float f = frac_[c][k];
+                float g = gate ? std::pow(10.0f, -4.0f * (f < 0.85f ? f / 0.85f : 1.0f) / 20.0f)
+                               : std::pow(10.0f, -voicing::kReverseRiseDb * (1.0f - f) / 20.0f);
+                if (gate && f > 0.85f) g *= 0.5f + 0.5f * std::cos(3.14159265f * (f - 0.85f) / 0.15f);
+                gain_[c][k] = gain_[c][k] < 0.0f ? -g : g;
+                if (c == 0) energy += g * g;
+            }
+        const float norm = 1.0f / std::sqrt(energy);
+        for (int c = 0; c < 2; ++c)
+            for (int k = 0; k < kTaps; ++k) gain_[c][k] *= norm;
+    }
+#endif
+
     // The swell's length in seconds (TIME); glides unless snap.
     void setSeconds(float s, bool snap = false)
     {

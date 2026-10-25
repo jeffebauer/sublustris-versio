@@ -100,7 +100,11 @@ public:
     // filtered out: 8 clean, 9 clean + drift (both fed from the wet), 10 clean from the input only,
     // 11 clean and darker from the wet. Round 4, random grain onsets (no comb on certain notes):
     // 12 input only (8 heads, 400 ms), 13 fed back, 14 fed back and darker (8 heads, 800 ms).
-    void  setAltAttack(int mode) { altMode_ = mode; }
+    void  setAltAttack(int mode)
+    {
+        altMode_ = mode;
+        reverse_.setGateShape(mode == 19); // NONLINEAR gate: REVERSE's taps, a flat-then-cut curve
+    }
     // SIZE trials: the FDN tanks catch up with SIZE within this many seconds (0 = the semitone limit).
     void  setSizeCatchUp(float seconds)
     {
@@ -293,6 +297,14 @@ private:
     dsp::proto::Shimmer shimUp_, shimDown_, shimSmooth_, shimMoving_, shimEvolving_; // round 1; round 2 (4 .. 6)
     dsp::proto::Shimmer shimClean_, shimCleanMoving_, shimInput_, shimCleanDark_; // round 3 (8 .. 11)
     dsp::proto::Shimmer shimInputR4_, shimFeedR4_, shimFeedDarkR4_; // round 4 (12 .. 14): random onsets
+    // Alternatives round 2: 15 reverse into the tank, 16 reversed tail, 17 echo-verb, 18 echo-verb with
+    // the tank fed back into the echo.
+    dsp::proto::ReverseGrains revA_[2], revB_[2];
+    dsp::proto::TapeEcho      echo_;
+    float echoTapL_[kChunk] = {}, echoTapR_[kChunk] = {}, altFb_ = 0.5f;
+    // 19 NONLINEAR gate (REVERSE's taps re-shaped); 20 GATED ROOM (the main wet gated by the input).
+    float gateRamp_ = 0.0f;
+    int   gateHold_ = 0;
     dsp::proto::Grains  grains_;
 #endif
 };

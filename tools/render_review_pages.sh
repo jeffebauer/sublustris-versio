@@ -481,6 +481,46 @@ D_fed_back_darker      Fed back and darker, random onsets" > renders/shimmer4/RE
     echo "renders/shimmer4/index.html"
 fi
 
+if on attack_alts2; then
+    # PROTOTYPES, ATTACK's third position, round 2 (owner: shimmer B picked; "I still want to hear the
+    # other alternatives"): IV_ALT_ATTACK 12 shimmer (input only, the pick); 15 reverse into the tank
+    # (FutureVerb's reversed granular delays as a predelay: 4-8 overlapping Hann grains, random lengths,
+    # +-4 cents); 16 reversed tail (a short reverb, T60 ~ TIME, played backwards in grains); 17 echo-verb
+    # "Tubby" (a mono tape echo before the tank: 150 Hz HP, 3 kHz LP, soft saturation per pass, wow and
+    # flutter, TIME 80 ms - 1 s, DECAY the repeats); 18 the same with the reverb re-echoed (Supermassive's
+    # EchoVerb); 19 nonlinear gate (REVERSE's taps flat then cut: AMS RMX16 Nonlin, BigSky Gate; TIME
+    # 0.1-0.8 s); 20 gated room (the main wet keyed by the input: open while playing, held TIME, 40 ms
+    # close; Padgham, SPX90). Checked: no clicks, no build-up (5 min infinite holds), loudness within
+    # ~1.5 dB of NORMAL except the echo-verbs (+1.5 to +3.4: level-matched here).
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in skank stabs drums vibes pad voice; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page attack_alts2
+    for t in "1_hall_time_low:HALL:0.3" "2_hall_time_high:HALL:0.7" "3_massive_time_mid:MASSIVE:0.5"; do
+        IFS=: read col sp tm <<< "$t"
+        for v in "A_shimmer_your_pick:12" "B_reverse_into_the_reverb:15" "C_reversed_tail:16" "D_echo_verb:17" \
+                 "E_echo_verb_reverb_re_echoed:18" "F_nonlinear_gate:19" "G_gated_room:20"; do
+            tag=${v%%:*}; mode=${v##*:}
+            IV_ALT_ATTACK=$mode r attack_alts2 $col $tag "" --set space=$sp --set attack=REVERSE --set decay=0.5 --set time=$tm
+        done
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "The other alternatives for ATTACK's third position, each built the way established units do it, beside your shimmer pick (A). B, reverse into the reverb: what you play comes back reversed in overlapping slices (random lengths, slightly detuned, so no rhythm of seams), and the reverb smooths it (Valhalla FutureVerb's reverse). C, reversed tail: a short reverb's own tail is played backwards, so each note swells up into a cut (the studio 'pre-verb' sound, live). D, echo-verb: a dub tape echo in front of the reverb; each repeat darker and thinner with a little tape wobble, the reverb growing out of the echoes; TIME is the echo time, DECAY how many repeats (King Tubby, the Space Echo). E is D with the reverb fed back into the echo, so the wash itself echoes (Supermassive's EchoVerb). F, nonlinear gate: a dense burst that stays level, then stops dead after TIME (the AMS RMX16 'Nonlin', Strymon's Gate); it never chops a sustained sound. G, gated room: the full reverb, cut short TIME after you stop playing (the 80s gated drum sound). TIME is low in column 1, high in column 2. Level-matched. Picks and notes on which to keep refining.
+
+1_hall_time_low      HALL, TIME 0.3 (DECAY 0.5)
+2_hall_time_high     HALL, TIME 0.7
+3_massive_time_mid   MASSIVE, TIME 0.5
+
+A_shimmer_your_pick            Shimmer, input only (your pick)
+B_reverse_into_the_reverb      Reverse: reversed slices into the reverb
+C_reversed_tail                Reverse: the tail played backwards
+D_echo_verb                    Echo-verb: a dub tape echo into the reverb
+E_echo_verb_reverb_re_echoed   Echo-verb, the reverb fed back into the echo
+F_nonlinear_gate               Nonlinear: level, then a sudden stop
+G_gated_room                   Gated room: the full reverb, cut after you stop" > renders/attack_alts2/README.txt
+    python3 tools/review/make_review.py renders/attack_alts2 --title "ATTACK's third position: the alternatives" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/attack_alts2/index.html"
+fi
+
 if on era_sweep; then
     # ERA turned from fully left to fully right over 40 s while the music loops (renders/_material_sweep,
     # 40 s loops + 12 s of tail), then the tail at ERA 1; chaptered at each era's start (ADR 0021).

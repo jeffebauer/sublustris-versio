@@ -88,6 +88,11 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     shimCleanMoving_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::CleanMoving);
     shimInput_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::Clean);
     shimCleanDark_.prepare(sampleRate, false, dsp::proto::Shimmer::Style::CleanDark);
+    for (int c = 0; c < 2; ++c) {
+        revA_[c].prepare(sampleRate, 0xA11u + 13u * uint32_t(c), c ? -4.0f : 4.0f);
+        revB_[c].prepare(sampleRate, 0xB22u + 17u * uint32_t(c), c ? 4.0f : -4.0f);
+    }
+    echo_.prepare(sampleRate);
     shimInputR4_.setShape(8, 0.4f);
     shimFeedR4_.setShape(8, 0.8f);
     shimFeedDarkR4_.setShape(8, 0.8f);
@@ -500,7 +505,13 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
 #ifndef IV_FIXED_VOICINGS
     // A prototype on ATTACK's third position: REVERSE stays out; the prototype rests while frozen.
     altTarget_ = attack == 2 && altMode_ > 0 && !frozen ? 1.0f : 0.0f;
-    reverseTarget_ = attack == 2 && altMode_ == 0 && !frozen ? 1.0f : 0.0f;
+    reverseTarget_ = attack == 2 && (altMode_ == 0 || altMode_ == 16 || altMode_ == 19) && !frozen ? 1.0f : 0.0f;
+    if (altMode_ == 19) altTarget_ = 0.0f; // the gate rides REVERSE's own crossfade
+    // Gate length 0.1 -> 0.8 s (RMX16 / FutureVerb / BigSky ranges; 100-700 ms the classic drum gate).
+    if (altMode_ == 19) reverse_.setSeconds(map::expLerp(0.1f, 0.8f, time), snap && snapInput);
+    if (altMode_ == 16) altTarget_ = 0.0f; // the reversed tail rides REVERSE's own crossfade into the wet
+    // Reversed tail: the short reverb rings about as long as a grain (TIME), so a hit's tail reverses whole.
+    if (altMode_ == 16) reverseFdn_.setDecayRate(1.0f / map::reverseSeconds(time));
 #else
     reverseTarget_ = attack == 2 && !frozen ? 1.0f : 0.0f; // REVERSE rests while frozen (ADR 0015)
 #endif
@@ -757,6 +768,8 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         controlTick(n);
 #ifndef IV_FIXED_VOICINGS
         altTime_ = smoothed(ParamId::Time);
+        // Echo-verb: DECAY sets the repeats (feedback 0.35 -> 0.85, about 2 to 12 audible), capped below 1.
+        altFb_ = 0.35f + 0.5f * map::clamp01(smoothed(ParamId::Decay) / 0.8f);
 #endif
 
         // REVERSE runs while it's on or fading; its short reverb restarts clean next time.
@@ -792,12 +805,28 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                 pr = std::sin(g) * orr + std::cos(g) * pr;
             }
 #endif
+#ifndef IV_FIXED_VOICINGS
+            echoTapL_[i] = echoTapR_[i] = 0.0f;
+            if (altMode_ == 17 || altMode_ == 18) {
+                // The echo before the reverb (replacing the pre-delay's role); the reverb grows from the
+                // echoes and the first repeats are also heard directly (-6 dB).
+                float m = 0.5f * (pl + pr);
+                if (altMode_ == 18) m += 0.15f * 0.5f * (shimSrcL_[i] + shimSrcR_[i]); // the reverb re-echoed
+                const float e = altMix_ * echo_.process(m, map::expLerp(0.08f, 1.0f, altTime_), altFb_);
+                pl += e;
+                pr += e;
+                echoTapL_[i] = echoTapR_[i] = 0.35f * e; // -9 dB (at -6 the mode was 2-4.5 dB over NORMAL)
+            }
+#endif
             pl = diffuser_[0].process(pl);
             pr = diffuser_[1].process(pr);
             // REVERSE's taps hear the same diffused input as the tank (always recording), faded with
             // a SPACE flip as the tank's is: the input side jumps at the flip's silent point.
             revInL_[i] = flipGain_ * pl;
             revInR_[i] = flipGain_ * pr;
+#ifndef IV_FIXED_VOICINGS
+            if (altMode_ != 16) // the reversed tail hears the input itself, not REVERSE's rising taps
+#endif
             reverse_.process(revInL_[i], revInR_[i], reverseOn);
             // The taps fade into the short reverb as REVERSE comes in (an ATTACK switch, an unfreeze):
             // a restarted reverb fed the full swell at once clicked when it first came round its lines,
@@ -816,7 +845,15 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
 #ifndef IV_FIXED_VOICINGS
             if (altMode_ > 0) {
                 altMix_ = approach(altMix_, altTarget_, reverseStep);
-                if (altMode_ == 3) {
+                if (altMode_ == 15) {
+                    // Reverse into the tank: reversed grains of what you play (TIME long) feed the reverb.
+                    const float len = map::reverseSeconds(altTime_);
+                    const float rl = revA_[0].process(pl, len, 0.25f), rr = revA_[1].process(pr, len, 0.25f);
+                    pl += altMix_ * (0.25f * pl + 1.4f * rl - pl);
+                    pr += altMix_ * (0.25f * pr + 1.4f * rr - pr);
+                } else if (altMode_ == 17 || altMode_ == 18 || altMode_ == 16 || altMode_ == 19 || altMode_ == 20) {
+                    // handled before the diffusers (echo) or after the short reverb (reversed tail)
+                } else if (altMode_ == 3) {
                     // Grains of the last ~2.7 s feed the tank in place of most of the direct input.
                     float gl = 0.0f, gr = 0.0f;
                     grains_.process(pl, pr, gl, gr, altTime_ * altTime_ * 2.0f + 0.05f);
@@ -891,21 +928,54 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         }
 #endif
         if (reverseOn) reverseFdn_.process(revInL_, revInR_, revL_, revR_, n);
+#ifndef IV_FIXED_VOICINGS
+        if (altMode_ == 16) { // the short reverb's tail, played backwards in overlapping grains
+            const float len = map::reverseSeconds(altTime_);
+            for (int i = 0; i < n; ++i) {
+                revL_[i] = revB_[0].process(revL_[i], len, 0.0f);
+                revR_[i] = revB_[1].process(revR_[i], len, 0.0f);
+            }
+        }
+#endif
 
         for (int i = 0; i < n; ++i) {
             // REVERSE: the swell replaces the forward wet, crossfaded over ~50 ms.
             // DECAY's level make-up (v1.0.28) on the forward wet, the twin and REVERSE, ~40 ms glides.
             decayGainNow_ += 0.0005f * (decayGain_ - decayGainNow_);
             reverseGainNow_ += 0.0005f * (reverseGain_ - reverseGainNow_);
+#ifndef IV_FIXED_VOICINGS
+            // The reversed tail hears the input itself, much louder than REVERSE's taps (+15.5 dB trim).
+            const float rg = (altMode_ == 16 ? 8.0f : voicing::kReverseLevel) * reverseGainNow_; // 16: +18 dB, measured
+#else
             const float rg = voicing::kReverseLevel * reverseGainNow_;
+#endif
             const float rl = rg * revL_[i], rr = rg * revR_[i];
             reverseMix_ = approach(reverseMix_, reverseTarget_, reverseStep);
             // The twin fades with a SPACE flip too (it stops at the flip's silent point).
-            const float fl = decayGainNow_ * wetL_[i], fr = decayGainNow_ * wetR_[i];
+            float fl = decayGainNow_ * wetL_[i], fr = decayGainNow_ * wetR_[i];
+#ifndef IV_FIXED_VOICINGS
+            if (altMode_ == 20) {
+                // GATED ROOM (Padgham's keyed gate; Yamaha SPX90 Reverb & Gate): open while there's input
+                // (~10 ms follower above -50 dB), held TIME (0.1 -> 0.8 s) after it stops, then shut over a
+                // 40 ms cosine; any new note opens it again within 2 ms.
+                if (inputPower_ > 1e-5f) gateHold_ = int(map::expLerp(0.1f, 0.8f, altTime_) * sampleRate_);
+                else if (gateHold_ > 0) --gateHold_;
+                const bool open = gateHold_ > 0 || altMix_ < 1.0f;
+                gateRamp_ = open ? std::fmin(1.0f, gateRamp_ + 1.0f / (0.002f * sampleRate_))
+                                 : std::fmax(0.0f, gateRamp_ - 1.0f / (0.04f * sampleRate_));
+                const float gg = 1.0f - altMix_ * (1.0f - (0.5f - 0.5f * std::cos(3.14159265f * gateRamp_)));
+                fl *= gg;
+                fr *= gg;
+            }
+#endif
             const float tl = decayGainNow_ * voicing::kTwinLevel * twinL_[i];
             const float tr = decayGainNow_ * voicing::kTwinLevel * twinR_[i];
             float wl = (fl + reverseMix_ * (rl - fl) + tl) * flipGain_;
             float wr = (fr + reverseMix_ * (rr - fr) + tr) * flipGain_;
+#ifndef IV_FIXED_VOICINGS
+            wl += echoTapL_[i] * flipGain_; // echo-verb: the first repeats heard directly
+            wr += echoTapR_[i] * flipGain_;
+#endif
             wl *= eraMakeup_;
             wr *= eraMakeup_;
             // ERA's tape out (v1.0.27, dsp/Tape.h), faded in and out over ~20 ms as the cassette layer
