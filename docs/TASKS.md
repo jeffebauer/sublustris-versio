@@ -1,7 +1,7 @@
 # Owner tasks
 
 **Last updated:** 25 Oct 2026, session 6 (SHIMMER built into the module and plugin, installed).
-**Plugin installed:** `ef625f7` on branch `claude/massive-air` (v1.0.33: v1.0.30 plus MASSIVE's highs and shortest tail, ERA's era names, and SHIMMER on ATTACK's third position in place of REVERSE), 25 Oct 2026 14:51; AU check passed. Rescan in Ableton to see it.
+**Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Rescan in Ableton to see it.
 
 ## To do
 
@@ -25,7 +25,7 @@
 
 ## Waiting on Claude
 
-- **SIZE and TIME by crossfade, for real** (your pick C on `knob_moves`: the slow, 0.3 s crossfade): build it into the module and the plugin (now a renderer prototype). It adds code to the firmware, where ~0.8 KB of flash is left, so room has to be freed first: a plan comes before building. BLOOM's TIME and PLATE's SIZE still slide and get the same treatment.
+- **BLOOM's TIME and PLATE's SIZE by crossfade** (phase 2 of your pick C): they still slide; HALL and MASSIVE's SIZE and TIME's pre-delay are done (v1.0.34).
 - **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): build it for real. For 3 s after a flip both spaces hear the music while one crossfades into the other; it needs a second reverb running for those 3 s (the freeze's spare) and ~0.5-1 KB of flash, which has to be freed first (804 B left). A plan before building.
 - **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper; a later round if the shimmer is kept.
 - **The rest of the Valhalla comparison** (`docs/research/valhalla-comparison.md`): the loudness one is done (v1.0.28); MASSIVE's highs are on a page to pick from (above). Still to come: Supermassive moves more in pitch at long settings (a DRIFT comparison). Found on the way: the Immensio beside Valhalla page's MASSIVE settings now ring longer than labelled (a 21 Oct 2026 DECAY change, v1.0.21: "15 s" rings ~20 s, "2 s" ~4.7 s); DECAY 0.08 / 0.33 give 5 / 15 s at SIZE 0.7, and 2 s is below MASSIVE's shortest at that SIZE.
@@ -35,6 +35,7 @@
 
 ## Done
 
+- 25 Oct 2026: **SIZE and TIME by crossfade are built** (SPEC v1.0.34, ADR 0025; your pick C): in HALL and MASSIVE a SIZE move no longer bends pitch, and TIME's pre-delay changes without the noise wash. Once the knob rests, the old setting fades into the new over 0.3 s; fast flicks don't click or drop out. Settings you don't touch sound exactly as before. Release flash 110,764 B (1,876 B under budget). Installed in Ableton.
 - 25 Oct 2026: **M0 hardware check passed** (your report: "everything worked as expected"): boot pattern, switches, button, knobs, gate and passthrough on the Versio. Next at the rack: the M3 CPU check.
 - 25 Oct 2026: **SHIMMER is built** (SPEC v1.0.33, ADR 0024): REVERSE removed, the picked shimmer in its place in the module and the plugin; the switch reads NORMAL / BLOOM / SHIMMER. All tests pass (new ones: the octave added and even across notes, TIME 0 is the plain reverb, no clicks, rests while frozen); release flash 112,060 B (+224, 580 B under budget). Installed in Ableton.
 - 25 Oct 2026: **ATTACK's third position: SHIMMER** ("Shimmer wins hands-down" against reverse into the reverb, reversed tail, echo-verb, echo-verb re-echoed, nonlinear gate and gated room). The page is deleted.
