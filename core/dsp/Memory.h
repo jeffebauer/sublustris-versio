@@ -85,6 +85,16 @@ struct DelayLine {
         pos = (pos + 1) & mask;
         if (fill <= mask) ++fill;
     }
+    // The line as it will stand s writes from now (its head and fill moved on, nothing written): the
+    // line-major tank (Fdn::runBlock) reads sample s of a block through it, exactly where the
+    // sample-by-sample loop read.
+    DelayLine ahead(uint32_t s) const
+    {
+        DelayLine v = *this;
+        v.pos = (pos + s) & mask;
+        v.fill = fill + s > mask ? mask + 1 : fill + s;
+        return v;
+    }
     // d >= 1: the sample written d ticks ago (d = 1 is the last write).
     float read(uint32_t d) const { return full() ? buf[(pos - d) & mask] : ago(d); }
     // Catmull-Rom cubic (Hermite) read at a fractional delay d >= 2.

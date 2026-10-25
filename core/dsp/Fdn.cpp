@@ -5,6 +5,15 @@
 
 #include <cmath>
 
+// The tank's rare paths (lineSlow, tapsMoving, tapsOld) are built for size, with the small DelayLine and
+// LoopEra steps inlined into them: called out of line from -Os code, every read and write paid a call
+// (~5 more a line-sample while SIZE crossfades). +160 B of flash for the three.
+#if defined(__GNUC__)
+#define IV_FLATTEN __attribute__((flatten))
+#else
+#define IV_FLATTEN
+#endif
+
 namespace iv::dsp {
 
 namespace {
@@ -242,20 +251,6 @@ IV_SIZE_OPT void Fdn::controlInLoop(float dt, int n, float slew, bool pending)
         }
 }
 
-// SIZE's crossfade (ADR 0025), only while one runs: the old length faded out against the new read x.
-// Out of line, so the everyday per-sample loop stays as tight as before (inlined, -O3 copied these
-// into every unrolled pass: +2 KB of flash).
-IV_NOINLINE IV_SIZE_OPT void Fdn::xfLines(float* xs, float* xo)
-{
-    for (int i = 0; i < kN; ++i) {
-        readNow_[i] += readStep_[i];
-        xs[i] = line_[i].readAllpass(readNow_[i], interp_[i]) * xfLineCorr_[i];
-        // The old length, read the way it was before (allpass, its own state: a cubic read there differed
-        // by a hair from the sample before, a click at the start), on the old timeline (no correction).
-        xo[i] = line_[i].readAllpass(readNow_[i] + xfDelta_[i], interpOld_[i]);
-    }
-}
-
 // The new read and the old mixed, with the gain for their agreement (control). The old one first runs
 // through the in-loop allpasses it had when they're leaving (gOld > 0).
 IV_NOINLINE IV_SIZE_OPT float Fdn::xfMix(int i, float nw, float od, float gOld)
@@ -300,26 +295,6 @@ IV_NOINLINE IV_SIZE_OPT float Fdn::xfOldAllpass(int i, int k, float x, float d)
         od = o0 + ot * (o1 - o0);
     }
     return xfNew_ * d + xfOld_ * od;
-}
-
-IV_NOINLINE IV_SIZE_OPT void Fdn::xfOldTaps(float& el, float& er)
-{
-    float ol = 0.0f, orr = 0.0f;
-    for (int i = 0; i < kN; ++i) {
-        const int j = (i + 3) & (kN - 1);
-        float e = 0.0f;
-        for (int k = 0; k < earlyCount_; ++k) { // the old positions, on the old timeline (no correction)
-            const float od = 1.0f + earlyFrac_[i][k] * (tapLen_[i] + xfDelta_[i]);
-            const auto  oi = uint32_t(od);
-            const float ot = od - float(oi);
-            const float b0 = line_[i].read(oi), b1 = line_[i].read(oi + 1);
-            e += earlyGain_[i][k] * (b0 + ot * (b1 - b0));
-        }
-        ol += kOutL[j] * e;
-        orr += kOutR[j] * e;
-    }
-    el = xfNew_ * el + xfOld_ * ol;
-    er = xfNew_ * er + xfOld_ * orr;
 }
 
 IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
@@ -477,121 +452,349 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     }
 }
 
+// Line by line (overnight review, 26 Oct 2026). Each line runs its whole block in one go (its read, in-loop
+// allpasses, loss filter and ERA, its state in registers), then the mix runs sample by sample from the
+// lines' outputs, then the writes, then the early taps tap by tap. Sample by sample, every line's state went
+// to memory and back every sample, and each line's reads were 8-way interleaved with the others'. Every
+// float operation is the one the sample-by-sample loop did, in the same order for each sample (the same
+// sums, the same Hadamard butterflies, the governor fed sample by sample), so the output is the same to
+// the bit (tools/same_render.py). What makes it legal: a line's read at sample s of a block only hears what
+// was written before the block when it sits further back than the block is long (blockFits), and the
+// taps, reading after the block's writes, read where they would have.
 void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, int n)
 {
     if (!ready_) return;
-    constexpr float kNorm = 0.35355339f; // 1 / sqrt(8): keeps the Hadamard mix energy-preserving
     for (int start = 0; start < n; start += kControlBlock) {
         const int m = (n - start) < kControlBlock ? (n - start) : kControlBlock;
         prof::mark(prof::kTank);
         control(m);
         prof::mark(prof::kTankCtl);
-        // The level that follows SIZE (a longer loop holds the same energy over more samples) and the
-        // trims go in with the input, so what's already in the loop comes out as it went in (on the
-        // output, a SIZE jump stepped every held tail: an infinite MASSIVE +6 dB for SIZE 0 -> 0.7).
-        const float outGain = voicing::kFdnOutputGain * kNorm;
-        const float inGain = kNorm * levelGain_;
-        // ERA's in-loop stages (bits, saturation) aren't linear: they hear the loop at the level they did
-        // with the gain on the output (in, it shortened a Midiverb HALL's T60 9 %).
-        const float eraIn = 1.0f / levelGain_, eraOut = levelGain_;
-        const float apG = voicing::kInLoopCoeff * inLoopNow_;
-        const float apGOld = xfLeft_ > 0 ? voicing::kInLoopCoeff * inLoopOld_ : 0.0f;
-        const float earlyG = voicing::kEarlyTapLevel * earlyNow_;
-        for (int s = start; s < start + m; ++s) {
-            float y[kN], xs[kN], xo[kN];
-            if (xfLeft_ > 0) xfLines(xs, xo); // one call a sample while SIZE crossfades (nothing writes these lines before)
-            for (int i = 0; i < kN; ++i) {
-                float x;
-                if (xfLeft_ > 0) {
-                    x = xs[i];
-                    if (apG > 0.0f && apGOld == 0.0f) x = xfAllpass(i, x, apG, false); // joining: on the new read
-                    x = xfMix(i, x, xo[i], apG == 0.0f ? apGOld : 0.0f);               // leaving: on the old
-                } else {
-                    readNow_[i] += readStep_[i];
-                    x = line_[i].readAllpass(readNow_[i], interp_[i]) * xfLineCorr_[i];
-                }
-                if (apG > 0.0f && (xfLeft_ <= 0 || apGOld > 0.0f))
-                    for (int k = 0; k < 2; ++k) { // in-loop diffusion (MASSIVE, a small HALL)
-                        float d;
-                        const float glide = (apLenGlide_[i][k] += apLenStep_[i][k]);
-                        if (glide == float(apLenNow_[i][k]) && glide >= 1.0f) d = apLine_[i][k].read(apLenNow_[i][k]);
-                        else if (glide < 1.0f) { // joining or leaving the loop: between no delay (the input) and one sample
-                            d = glide > 0.0f ? x + glide * (apLine_[i][k].read(1) - x) : x;
-                        } else { // gliding: linear between samples (the buffer has room for the longest)
-                            const auto  di = uint32_t(glide);
-                            const float t = glide - float(di);
-                            const float a0 = apLine_[i][k].read(di), a1 = apLine_[i][k].read(di + 1);
-                            d = a0 + t * (a1 - a0);
-                        }
-                        float g = apG;
-                        if (xfLeft_ > 0) { // in the loop before and after: its length and amount crossfade
-                            if (apOld_[i][k] != glide) d = xfOldAllpass(i, k, x, d);
-                            g = xfNew_ * apG + xfOld_ * apGOld;
-                        }
-                        const float v = x + g * d;
-                        apLine_[i][k].write(v);
-                        x = d - g * v;
-                    }
-                absorbY_[i] = gain_[i] * x + b1_[i] * absorbX_[i] + pole_[i] * absorbY_[i];
-                absorbX_[i] = x;
-                y[i] = eraOut * era_[i].process(eraIn * absorbY_[i]);
-            }
-            prof::mark(prof::kTankLoop);
-            float l = 0.0f, r = 0.0f;
-            for (int i = 0; i < kN; ++i) {
-                l += kOutL[i] * y[i];
-                r += kOutR[i] * y[i];
-            }
-            governor_.add(0.5f * outGain * outGain * (l * l + r * r) + externalPower_); // the tank's own level (+ a low tank's), before the taps
-            for (int i = 0; i < kN; ++i) tapLen_[i] += tapStep_[i]; // v1.0.25: no per-block steps on SIZE moves
-            if (earlyG > 0.0f) {
-                float el = 0.0f, er = 0.0f;
-                for (int i = 0; i < kN; ++i) {
-                    // Each line's taps go out with another line's signs, so they decorrelate from the ends.
-                    const int j = (i + 3) & (kN - 1);
-                    float e = 0.0f;
-                    for (int k = 0; k < earlyCount_; ++k) {
-                        const float d  = 1.0f + earlyFrac_[i][k] * tapLen_[i];
-                        const auto  di = uint32_t(d);
-                        const float t  = d - float(di);
-                        const float a0 = line_[i].read(di), a1 = line_[i].read(di + 1);
-                        e += tapGainNow_[i][k] * (a0 + t * (a1 - a0)); // the tap's gain x the trip's correction (per block)
-                    }
-                    el += kOutL[j] * e;
-                    er += kOutR[j] * e;
-                }
-                if (xfLeft_ > 0) xfOldTaps(el, er); // one call a sample while SIZE crossfades
-                l += earlyG * el;
-                r += earlyG * er;
-            }
-            outL[s] += outGain * l;
-            outR[s] += outGain * r;
-            if (xfLeft_ > 0) { // the fade's next step (a rotation by the angle per sample), exact at the end
-                const float c = xfCos_;
-                xfCos_ = c * xfRotC_ - xfSin_ * xfRotS_;
-                xfSin_ = xfSin_ * xfRotC_ + c * xfRotS_;
-                xfNew_ = 0.5f - 0.5f * xfCos_;
-                xfOld_ = 1.0f - xfNew_;
-                if (--xfLeft_ == 0) {
-                    xfOld_ = 0.0f;
-                    xfNew_ = 1.0f;
-                }
-            }
-            if (xfSince_ >= 0) ++xfSince_;
-            prof::mark(prof::kTankOut);
+        // Any real line fits (the shortest read is ~250 samples); else the block runs a sample at a time.
+        const int step = blockFits(m) ? m : 1;
+        for (int s = start; s < start + m; s += step) runBlock(inL + s, inR + s, outL + s, outR + s, step);
+    }
+}
 
-            // Fast Walsh–Hadamard transform: 24 adds for the 8×8 mix.
-            for (int span = 1; span < kN; span <<= 1)
-                for (int i = 0; i < kN; i += 2 * span)
-                    for (int j = i; j < i + span; ++j) {
-                        const float a = y[j], b = y[j + span];
-                        y[j] = a + b;
-                        y[j + span] = a - b;
-                    }
-            const float xl = inL[s] * inGain, xr = inR[s] * inGain;
-            for (int i = 0; i < kN; ++i) line_[i].write(y[i] * kNorm + kInL[i] * xl + kInR[i] * xr);
-            prof::mark(prof::kTankMix);
+// Every line's reads over the next m samples (and the old ones, while SIZE crossfades) sit at least m + 4
+// back, so they only hear what was written before the block; and nothing a read or a tap reaches is
+// overwritten by the block's own writes.
+IV_SIZE_OPT bool Fdn::blockFits(int m) const
+{
+    const float fm = float(m);
+    for (int i = 0; i < kN; ++i) {
+        const float r0 = readNow_[i] + readStep_[i], r1 = readNow_[i] + fm * readStep_[i];
+        const float t0 = tapLen_[i] + tapStep_[i], t1 = tapLen_[i] + fm * tapStep_[i];
+        float lo = std::fmin(r0, r1), hi = std::fmax(std::fmax(r0, r1), std::fmax(t0, t1));
+        if (xfLeft_ > 0) {
+            lo = std::fmin(lo, lo + xfDelta_[i]);
+            hi = std::fmax(hi, hi + xfDelta_[i]);
         }
+        if (lo < fm + 4.0f || hi + fm + 4.0f > float(line_[i].mask)) return false;
+    }
+    return true;
+}
+
+// m samples on this control block's values (m = the block, or 1 when it doesn't fit).
+IV_NO_UNSWITCH void Fdn::runBlock(const float* inL, const float* inR, float* outL, float* outR, int m)
+{
+    constexpr float kNorm = 0.35355339f; // 1 / sqrt(8): keeps the Hadamard mix energy-preserving
+    // The level that follows SIZE (a longer loop holds the same energy over more samples) and the
+    // trims go in with the input, so what's already in the loop comes out as it went in (on the
+    // output, a SIZE jump stepped every held tail: an infinite MASSIVE +6 dB for SIZE 0 -> 0.7).
+    const float outGain = voicing::kFdnOutputGain * kNorm;
+    const float inGain = kNorm * levelGain_;
+    // ERA's in-loop stages (bits, saturation) aren't linear: they hear the loop at the level they did
+    // with the gain on the output (in, it shortened a Midiverb HALL's T60 9 %).
+    const float eraIn = 1.0f / levelGain_, eraOut = levelGain_;
+    const float apG = voicing::kInLoopCoeff * inLoopNow_;
+    const float apGOld = xfLeft_ > 0 ? voicing::kInLoopCoeff * inLoopOld_ : 0.0f;
+    const float earlyG = voicing::kEarlyTapLevel * earlyNow_;
+
+    // While SIZE crossfades: the fade's gains for the first q samples (a rotation by the angle per
+    // sample, exact at the end), stepped ahead here; nothing else in the block moves them.
+    float xn[kControlBlock], xo[kControlBlock];
+    int q = 0;
+    for (; q < m && xfLeft_ > 0; ++q) {
+        xn[q] = xfNew_;
+        xo[q] = xfOld_;
+        const float c = xfCos_;
+        xfCos_ = c * xfRotC_ - xfSin_ * xfRotS_;
+        xfSin_ = xfSin_ * xfRotC_ + c * xfRotS_;
+        xfNew_ = 0.5f - 0.5f * xfCos_;
+        xfOld_ = 1.0f - xfNew_;
+        if (--xfLeft_ == 0) {
+            xfOld_ = 0.0f;
+            xfNew_ = 1.0f;
+        }
+    }
+    const float endNew = xfNew_, endOld = xfOld_;
+
+    // The lines, each over the block: the fast path, or (crossfading, an allpass gliding or filling) the
+    // sample loop's own steps.
+    DelayLine was[kN]; // each line as it stood at the block's start
+    float y[kN][kControlBlock];
+    for (int i = 0; i < kN; ++i) {
+        was[i] = line_[i];
+        if (q > 0 || !lineFast(i, m, apG, eraIn, eraOut, y[i])) lineSlow(i, m, q, xn, xo, apG, apGOld, eraIn, eraOut, y[i]);
+    }
+    xfNew_ = endNew;
+    xfOld_ = endOld;
+    prof::mark(prof::kTankLoop);
+
+    // The mix, sample by sample: the outputs, the governor (fed in sample order), the Hadamard.
+    float in[kN][kControlBlock], ls[kControlBlock], rs[kControlBlock];
+    for (int s = 0; s < m; ++s) {
+        float l = 0.0f, r = 0.0f;
+        for (int i = 0; i < kN; ++i) {
+            l += kOutL[i] * y[i][s];
+            r += kOutR[i] * y[i][s];
+        }
+        governor_.add(0.5f * outGain * outGain * (l * l + r * r) + externalPower_); // the tank's own level (+ a low tank's), before the taps
+        ls[s] = l;
+        rs[s] = r;
+        // Fast Walsh–Hadamard transform: 24 adds for the 8×8 mix, on locals (as a loop, GCC kept it on the stack).
+        const float a0 = y[0][s] + y[1][s], a1 = y[0][s] - y[1][s], a2 = y[2][s] + y[3][s], a3 = y[2][s] - y[3][s];
+        const float a4 = y[4][s] + y[5][s], a5 = y[4][s] - y[5][s], a6 = y[6][s] + y[7][s], a7 = y[6][s] - y[7][s];
+        const float b0 = a0 + a2, b2 = a0 - a2, b1 = a1 + a3, b3 = a1 - a3;
+        const float b4 = a4 + a6, b6 = a4 - a6, b5 = a5 + a7, b7 = a5 - a7;
+        const float c[kN] = {b0 + b4, b1 + b5, b2 + b6, b3 + b7, b0 - b4, b1 - b5, b2 - b6, b3 - b7};
+        const float xl = inL[s] * inGain, xr = inR[s] * inGain;
+        for (int i = 0; i < kN; ++i) in[i][s] = c[i] * kNorm + kInL[i] * xl + kInR[i] * xr;
+    }
+    for (int i = 0; i < kN; ++i)
+        for (int s = 0; s < m; ++s) line_[i].write(in[i][s]);
+    prof::mark(prof::kTankMix);
+
+    // The early taps, after the writes: the tap at sample s reads where it did before sample s's write
+    // (what it reaches was written before it, and nothing it reaches was overwritten: blockFits).
+    float e[kN][kControlBlock], ol[kControlBlock], orr[kControlBlock]; // each line's taps; the old ones' sums
+    for (int s = 0; s < q; ++s) ol[s] = orr[s] = 0.0f;
+    for (int i = 0; i < kN; ++i) {
+        float tl[kControlBlock];
+        float len = tapLen_[i];
+        const float step = tapStep_[i];
+        for (int s = 0; s < m; ++s) tl[s] = (len += step); // v1.0.25: no per-block steps on SIZE moves
+        tapLen_[i] = len;
+        if (!(earlyG > 0.0f)) continue;
+        for (int s = 0; s < m; ++s) e[i][s] = 0.0f;
+        const DelayLine& w = was[i];
+        if (step == 0.0f) { // still (always, but after a snap): each tap one stream, a0 the next sample's a1
+            int k = 0;
+            if (w.full()) // two taps a pass, each sample's sum in a register (still in k order)
+                for (; k + 1 < earlyCount_; k += 2) {
+                    const float    g0 = tapGainNow_[i][k], g1 = tapGainNow_[i][k + 1];
+                    const float    d0 = 1.0f + earlyFrac_[i][k] * tl[0], d1 = 1.0f + earlyFrac_[i][k + 1] * tl[0];
+                    const auto     i0 = uint32_t(d0), i1 = uint32_t(d1);
+                    const float    t0 = d0 - float(i0), t1 = d1 - float(i1);
+                    const uint32_t p0 = w.pos - i0, p1 = w.pos - i1;
+                    float b0 = w.buf[(p0 - 1u) & w.mask], b1 = w.buf[(p1 - 1u) & w.mask];
+                    for (int s = 0; s < m; ++s) {
+                        const float a0 = w.buf[(p0 + uint32_t(s)) & w.mask], a1 = w.buf[(p1 + uint32_t(s)) & w.mask];
+                        float sum = e[i][s];
+                        sum += g0 * (a0 + t0 * (b0 - a0));
+                        sum += g1 * (a1 + t1 * (b1 - a1));
+                        e[i][s] = sum;
+                        b0 = a0;
+                        b1 = a1;
+                    }
+                }
+            for (; k < earlyCount_; ++k) {
+                const float g  = tapGainNow_[i][k]; // the tap's gain x the trip's correction (per block)
+                const float d  = 1.0f + earlyFrac_[i][k] * tl[0];
+                const auto  di = uint32_t(d);
+                const float t  = d - float(di);
+                // DelayLine::read sample by sample: silence until a clear()'s writes reach the tap.
+                const int      lag = w.full() ? -1 : int(di) - int(w.fill);
+                const uint32_t p   = w.pos - di;
+                float a1 = lag < 0 ? w.buf[(p - 1u) & w.mask] : 0.0f;
+                for (int s = 0; s < m; ++s) {
+                    const float a0 = s >= lag ? w.buf[(p + uint32_t(s)) & w.mask] : 0.0f;
+                    e[i][s] += g * (a0 + t * (a1 - a0));
+                    a1 = a0;
+                }
+            }
+        } else {
+            tapsMoving(i, m, tl, w, e[i]);
+        }
+        if (q > 0) tapsOld(i, q, tl, w, ol, orr);
+    }
+    for (int s = 0; s < m; ++s) {
+        float l = ls[s], r = rs[s];
+        if (earlyG > 0.0f) {
+            float tapL = 0.0f, tapR = 0.0f;
+            for (int i = 0; i < kN; ++i) {
+                // Each line's taps go out with another line's signs, so they decorrelate from the ends.
+                const int j = (i + 3) & (kN - 1);
+                tapL += kOutL[j] * e[i][s];
+                tapR += kOutR[j] * e[i][s];
+            }
+            if (s < q) { // the old positions fade out with the lines
+                tapL = xn[s] * tapL + xo[s] * ol[s];
+                tapR = xn[s] * tapR + xo[s] * orr[s];
+            }
+            l += earlyG * tapL;
+            r += earlyG * tapR;
+        }
+        outL[s] += outGain * l;
+        outR[s] += outGain * r;
+    }
+    if (xfSince_ >= 0) xfSince_ += m;
+    prof::mark(prof::kTankOut);
+}
+
+// One line over the block, the everyday case: full or filling, its in-loop allpasses (if any) at their
+// exact length all block. Its state in locals; ERA after, over the block. False: lineSlow's case.
+IV_NO_UNSWITCH bool Fdn::lineFast(int i, int m, float apG, float eraIn, float eraOut, float* y)
+{
+    float*   apBuf[2];
+    uint32_t apPos[2], apMask[2], apL[2];
+    for (int k = 0; k < 2; ++k) {
+        const DelayLine& a = apLine_[i][k];
+        if (apG > 0.0f && !(apLenStep_[i][k] == 0.0f && apLenGlide_[i][k] == float(apLenNow_[i][k])
+                            && apLenGlide_[i][k] >= 1.0f && a.full()))
+            return false;
+        apBuf[k] = a.buf;
+        apPos[k] = a.pos;
+        apMask[k] = a.mask;
+        apL[k] = apLenNow_[i][k];
+    }
+    const DelayLine& line = line_[i];
+    const float*   buf = line.buf;
+    const uint32_t mask = line.mask, pos0 = line.pos, fill0 = line.fill;
+    const bool     full = line.full();
+    const float    step = readStep_[i], corr = xfLineCorr_[i], gain = gain_[i], b1 = b1_[i], pole = pole_[i];
+    float read = readNow_[i], state = interp_[i], ay = absorbY_[i], ax = absorbX_[i];
+    // A read that holds still (the low tank: no modulation) has one position all block (read + 0 is read),
+    // so its coefficient and its divide are worked out once.
+    const bool still = step == 0.0f;
+    uint32_t   di  = 0;
+    float      eta = 0.0f;
+    if (still) {
+        di = uint32_t(int32_t(read - 0.5f));
+        const float f = read - float(di);
+        eta = (1.0f - f) / (1.0f + f);
+    }
+    for (int s = 0; s < m; ++s) {
+        // DelayLine::readAllpass as it stood at sample s (filling: through ago(), silence before the clear).
+        const uint32_t pos = pos0 + uint32_t(s), fill = fill0 + uint32_t(s);
+        if (!still) {
+            read += step;
+            di = uint32_t(int32_t(read - 0.5f));
+            const float f = read - float(di);
+            eta = (1.0f - f) / (1.0f + f);
+        }
+        float a, b;
+        if (full || di + 1 <= fill) {
+            a = buf[(pos - di) & mask];
+            b = buf[(pos - di - 1) & mask];
+        } else {
+            a = di <= fill ? buf[(pos - di) & mask] : 0.0f;
+            b = 0.0f;
+        }
+        state = b + eta * (a - state);
+        float x = state * corr;
+        if (apG > 0.0f)
+            for (int k = 0; k < 2; ++k) { // in-loop diffusion (MASSIVE, a small HALL): read(L) and write()
+                const float d = apBuf[k][(apPos[k] - apL[k]) & apMask[k]];
+                const float v = x + apG * d;
+                apBuf[k][apPos[k]] = v;
+                apPos[k] = (apPos[k] + 1) & apMask[k];
+                x = d - apG * v;
+            }
+        ay = gain * x + b1 * ax + pole * ay;
+        ax = x;
+        y[s] = ay;
+    }
+    era_[i].run(y, m, eraIn, eraOut);
+    if (apG > 0.0f)
+        for (int k = 0; k < 2; ++k) apLine_[i][k].pos = apPos[k];
+    readNow_[i] = read;
+    interp_[i] = state;
+    absorbY_[i] = ay;
+    absorbX_[i] = ax;
+    return true;
+}
+
+// One line over the block, the sample loop's own steps: SIZE crossfading (its first q samples), an
+// allpass gliding, joining or leaving, or filling after a clear(). Rare, so built for size (flash).
+IV_NOINLINE IV_SIZE_OPT IV_FLATTEN void Fdn::lineSlow(int i, int m, int q, const float* xn, const float* xo, float apG,
+                                          float apGOld, float eraIn, float eraOut, float* y)
+{
+    for (int s = 0; s < m; ++s) {
+        const DelayLine v = line_[i].ahead(uint32_t(s)); // as it stood at sample s (its writes come after)
+        const bool xf = s < q;
+        if (xf) {
+            xfNew_ = xn[s];
+            xfOld_ = xo[s];
+        }
+        readNow_[i] += readStep_[i];
+        float x = v.readAllpass(readNow_[i], interp_[i]) * xfLineCorr_[i];
+        if (xf) {
+            // The old length, read the way it was before (allpass, its own state: a cubic read there differed
+            // by a hair from the sample before, a click at the start), on the old timeline (no correction).
+            const float od = v.readAllpass(readNow_[i] + xfDelta_[i], interpOld_[i]);
+            if (apG > 0.0f && apGOld == 0.0f) x = xfAllpass(i, x, apG, false); // joining: on the new read
+            x = xfMix(i, x, od, apG == 0.0f ? apGOld : 0.0f);                  // leaving: on the old
+        }
+        if (apG > 0.0f && (!xf || apGOld > 0.0f))
+            for (int k = 0; k < 2; ++k) { // in-loop diffusion (MASSIVE, a small HALL)
+                float d;
+                const float glide = (apLenGlide_[i][k] += apLenStep_[i][k]);
+                if (glide == float(apLenNow_[i][k]) && glide >= 1.0f) d = apLine_[i][k].read(apLenNow_[i][k]);
+                else if (glide < 1.0f) { // joining or leaving the loop: between no delay (the input) and one sample
+                    d = glide > 0.0f ? x + glide * (apLine_[i][k].read(1) - x) : x;
+                } else { // gliding: linear between samples (the buffer has room for the longest)
+                    const auto  di = uint32_t(glide);
+                    const float t = glide - float(di);
+                    const float a0 = apLine_[i][k].read(di), a1 = apLine_[i][k].read(di + 1);
+                    d = a0 + t * (a1 - a0);
+                }
+                float g = apG;
+                if (xf) { // in the loop before and after: its length and amount crossfade
+                    if (apOld_[i][k] != glide) d = xfOldAllpass(i, k, x, d);
+                    g = xfNew_ * apG + xfOld_ * apGOld;
+                }
+                const float v = x + g * d;
+                apLine_[i][k].write(v);
+                x = d - g * v;
+            }
+        absorbY_[i] = gain_[i] * x + b1_[i] * absorbX_[i] + pole_[i] * absorbY_[i];
+        absorbX_[i] = x;
+        y[s] = eraOut * era_[i].process(eraIn * absorbY_[i]);
+    }
+}
+
+// A line's early taps while they move (the block after a snap), each read as it stood at its sample.
+IV_NOINLINE IV_SIZE_OPT IV_FLATTEN void Fdn::tapsMoving(int i, int m, const float* tl, const DelayLine& was, float* e) const
+{
+    for (int k = 0; k < earlyCount_; ++k)
+        for (int s = 0; s < m; ++s) {
+            const DelayLine v  = was.ahead(uint32_t(s));
+            const float     d  = 1.0f + earlyFrac_[i][k] * tl[s];
+            const auto      di = uint32_t(d);
+            const float     t  = d - float(di);
+            const float a0 = v.read(di), a1 = v.read(di + 1);
+            e[s] += tapGainNow_[i][k] * (a0 + t * (a1 - a0));
+        }
+}
+
+// SIZE's crossfade, its first q samples: a line's early taps at the old positions, on the old timeline
+// (no correction), summed into the old taps' output with the line's signs.
+IV_NOINLINE IV_SIZE_OPT IV_FLATTEN void Fdn::tapsOld(int i, int q, const float* tl, const DelayLine& was, float* ol, float* orr) const
+{
+    const int j = (i + 3) & (kN - 1);
+    for (int s = 0; s < q; ++s) {
+        const DelayLine v = was.ahead(uint32_t(s));
+        float e = 0.0f;
+        for (int k = 0; k < earlyCount_; ++k) {
+            const float od = 1.0f + earlyFrac_[i][k] * (tl[s] + xfDelta_[i]);
+            const auto  oi = uint32_t(od);
+            const float ot = od - float(oi);
+            const float b0 = v.read(oi), b1 = v.read(oi + 1);
+            e += earlyGain_[i][k] * (b0 + ot * (b1 - b0));
+        }
+        ol[s] += kOutL[j] * e;
+        orr[s] += kOutR[j] * e;
     }
 }
 

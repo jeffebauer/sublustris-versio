@@ -11,7 +11,9 @@
 // damping sits in the loop.
 //
 // Control work (SIZE slew, modulation, gains) runs every kControlBlock
-// samples; the per-sample loop only reads, filters, mixes and writes.
+// samples; the per-sample work only reads, filters, mixes and writes, and
+// runs line by line over the block (each line's whole block in one go, then
+// the mix), the same sums in the same order as sample by sample.
 #include "dsp/Drift.h"
 #include "dsp/Era.h"
 #include "dsp/Governor.h"
@@ -101,11 +103,17 @@ public:
 
 private:
     void control(int n);
-    void  xfLines(float* xs, float* xo);
+    // The tank line by line (Fdn.cpp, "Line by line"): m samples on one control block's values.
+    bool blockFits(int m) const;
+    void runBlock(const float* inL, const float* inR, float* outL, float* outR, int m);
+    bool lineFast(int i, int m, float apG, float eraIn, float eraOut, float* y);
+    void lineSlow(int i, int m, int q, const float* xn, const float* xo, float apG, float apGOld, float eraIn,
+                  float eraOut, float* y);
+    void tapsMoving(int i, int m, const float* tl, const DelayLine& was, float* e) const;
+    void tapsOld(int i, int q, const float* tl, const DelayLine& was, float* ol, float* orr) const;
     float xfMix(int i, float nw, float od, float gOld);
     float xfAllpass(int i, float x, float g, bool old);
     float xfOldAllpass(int i, int k, float x, float d);
-    void  xfOldTaps(float& el, float& er);
     void  layoutEarly();
     void controlInLoop(float dt, int n, float slew, bool pending);
     uint32_t apTargetLength(int i, int k) const;
