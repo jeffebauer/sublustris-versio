@@ -242,7 +242,7 @@ int SwitchPosition(int sw, bool invert)
 // - Jitter mode, for rack power (on USB power alone the knob circuits aren't powered and every knob
 //   reads full scale): SW0 left and SW1 right turn the LEDs into the jitter readout below. A knob's
 //   channel (LED_0 R/G/B = P1-P3, LED_1 R/G/B = P4-P6, LED_2 R = P7) lights if its reading never
-//   stayed still for 50 ms in the last second; LED_3 is green if no knob left the +-0.001 band (the
+//   stayed still for 50 ms in the last second; LED_3 is green if no knob left the +-0.0005 band (the
 //   SIZE fix would hold still), red if one did, dim blue for the first second.
 // - Knob jitter -> USB serial, once a second (overnight review 26 Oct 2026,
 //   section 5.1: a reading that never rests defeats SIZE's rest timer and every
@@ -254,8 +254,8 @@ int SwitchPosition(int sw, bool invert)
 //     JCHG blocks whose reading differed at all from the block before (of 1000)
 //     JRUN longest run of identical readings, in blocks (= ms); SIZE's rest
 //          timer needs 50
-//     JHYS times the reading left a +-0.001 band around its last accepted value
-//          (an approximation of the SIZE fix: 0 = the fix would hold still)
+//     JHYS times the reading left a +-0.0005 band around its last accepted value
+//          (the SIZE fix's band in HALL, its tightest: 0 = the fix would hold still)
 
 namespace {
 
@@ -266,7 +266,9 @@ volatile int      buttonPresses  = 0;
 volatile uint32_t gateFlashUntil = 0;
 
 constexpr int   kJitterBlocks = 1000; // 1 s at 48 kHz / 48
-constexpr float kJitterBand   = 0.001f;
+// The SIZE fix's band in knob units: voicing::kSizeHysteresis (1e-3 of log mean length) / log(260 / 35)
+// in HALL = 0.000499, the tighter of HALL and MASSIVE (1e-3 / log(2 / 0.35) = 0.000574).
+constexpr float kJitterBand   = 0.0005f;
 
 struct Jitter {
     uint32_t pp[DaisyVersio::KNOB_LAST];   // x100000
@@ -388,7 +390,7 @@ int main()
         if (attack == 2 && space == 0) {
             // Jitter mode (SW0 left, SW1 right; readable on rack power, where serial is off limits): per
             // knob, its LED channel lit if its reading never stayed still for 50 ms in the last second
-            // (SIZE's rest timer, kSizeRestSeconds); LED_3 green if no knob left the SIZE fix's +-0.001
+            // (SIZE's rest timer, kSizeRestSeconds); LED_3 green if no knob left the SIZE fix's +-0.0005
             // band in the last second, red if one did, dim blue until the first second is in.
             float u[DaisyVersio::KNOB_LAST];
             bool  crossed = false;
