@@ -15,13 +15,21 @@
 
 MODE ?= release
 PROFILE_BLOCK ?= 48
+# Profile-only switches (overnight review, 26 Oct 2026; firmware/README.md "profile"):
+#   PROFILE_FZ=0          the profile build without flush-to-zero (FPSCR/FPDSCR.FZ)
+#   PROFILE_SDRAM_TIGHT=0 the corner lap at libDaisy's SDRAM timing (the micro-tests still try 3 / 3)
+# A non-default value gets its own object directory and .bin name (immensio_versio_profile-nofz.bin, ...).
+PROFILE_FZ ?= 1
+PROFILE_SDRAM_TIGHT ?= 1
+PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)
 
 ifeq ($(MODE),m0test)
   TARGET    = immensio_versio_m0test
   MODE_DEFS = -DIV_MODE_M0TEST
 else ifeq ($(MODE),profile)
-  TARGET    = immensio_versio_profile
-  MODE_DEFS = -DIV_MODE_PROFILE -DIV_PROFILE_HOOKS
+  TARGET    = immensio_versio_profile$(PROFILE_TAG)
+  MODE_DEFS = -DIV_MODE_PROFILE -DIV_PROFILE_HOOKS -DIV_PROFILE_FZ=$(PROFILE_FZ) \
+              -DIV_PROFILE_SDRAM_TIGHT=$(PROFILE_SDRAM_TIGHT)
 else ifeq ($(MODE),release)
   TARGET    = immensio_versio
   MODE_DEFS = -DIV_MODE_RELEASE
@@ -61,7 +69,7 @@ OPT = -O3
 # combination gets its own scratch dir under build/, and the final artifacts
 # are copied up to build/<TARGET>.* (flat) once linked, so the three .bin
 # files always sit side by side under distinct, unambiguous names.
-override BUILD_DIR = build/obj-$(MODE)-$(PROFILE_BLOCK)
+override BUILD_DIR = build/obj-$(MODE)-$(PROFILE_BLOCK)$(if $(filter profile,$(MODE)),$(PROFILE_TAG))
 # libDaisy's own $(BUILD_DIR) rule is a plain `mkdir $@`, which fails for a
 # nested path when build/ doesn't exist yet; pre-create it here (mkdir -p).
 $(shell mkdir -p $(BUILD_DIR))
