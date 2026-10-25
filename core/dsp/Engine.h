@@ -52,7 +52,8 @@ public:
              + dsp::Shimmer::memoryFloats(sampleRate) + 2 * dsp::Plate::memoryFloats(sampleRate, voicing::kPlateMaxScale, true)
              + dsp::Fdn::memoryFloats(sampleRate) // the freeze twin
              + dsp::Fdn::memoryFloats(sampleRate / float(kLowDecimate)) // still lows' low tank
-             + 2 * dsp::nextPow2(size_t(voicing::kPredelayMaxSeconds * sampleRate) + 4);
+             + 2 * dsp::nextPow2(size_t(voicing::kPredelayMaxSeconds * sampleRate) + 4)
+             + dsp::Arena::skewRoom(); // each line's start staggered across the cache's sets
     }
     static constexpr size_t fastFloats(float sampleRate)
     {

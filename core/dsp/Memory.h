@@ -11,19 +11,36 @@ namespace iv::dsp {
 // A bump allocator over one float array. take() hands out zeroed slices
 // in order; prepare() starts over with reset().
 struct Arena {
-    float* base = nullptr;
-    size_t size = 0, used = 0;
+    // Cache-set staggering for the SDRAM arena (M3 round 2, 25 Oct 2026). The STM32H750's data cache
+    // is 16 KB, 4-way, 32-byte lines: 128 sets, picked by address bits 5-11. The power-of-two lines,
+    // laid end to end, all started on the same set, and they all write at the same position each
+    // sample, so every write of every line fought for the same 4 places and went out to SDRAM. Each
+    // slice now starts on its own set (kSkewStep apart), at most kSkewLines lines of padding a slice.
+    static constexpr size_t kSkewLines = 128, kLineFloats = 8, kSkewStep = 37;
+    static constexpr size_t kMaxSlices = 256; // the room largeFloats() adds for the padding
+    static constexpr size_t skewRoom() { return kMaxSlices * kSkewLines * kLineFloats; }
 
-    void reset(float* b, size_t n)
+    float* base = nullptr;
+    size_t size = 0, used = 0, slices = 0;
+    bool   skew = false;
+
+    void reset(float* b, size_t n, bool staggered = false)
     {
         base = b;
         size = n;
         used = 0;
+        slices = 0;
+        skew = staggered;
     }
     // nullptr when the arena is too small (the Engine then stays silent
     // rather than writing out of bounds).
     float* take(size_t n)
     {
+        if (skew && base) {
+            const size_t line = (reinterpret_cast<uintptr_t>(base + used) / (kLineFloats * sizeof(float))) % kSkewLines;
+            const size_t want = (slices++ * kSkewStep) % kSkewLines;
+            used += ((want + kSkewLines - line) % kSkewLines) * kLineFloats;
+        }
         if (!base || used + n > size) return nullptr;
         float* p = base + used;
         used += n;

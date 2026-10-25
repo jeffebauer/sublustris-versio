@@ -60,7 +60,7 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
         fastCount = ownFast_.size();
     }
 #endif
-    large_.reset(large, largeCount);
+    large_.reset(large, largeCount, true); // SDRAM: each line on its own cache set (dsp/Memory.h)
     fast_.reset(fast, fastCount);
 
     ready_ = true;
