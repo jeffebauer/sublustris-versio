@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 26 Oct 2026, session 8: round 11 read (`docs/research/m3-round11.log` on `claude/massive-air`), round 12 read (`m3-round12.log`), the ITCM build read; v1.0.37 played (crackle in MASSIVE); round 13 read (`m3-round13.log`); v1.0.38 (tape at 2×, knob deadband) to try; the ERA overlaps to decide.
+**Last updated:** 26 Oct 2026, session 8: round 11 read (`docs/research/m3-round11.log` on `claude/massive-air`), round 12 read (`m3-round12.log`), the ITCM build read; v1.0.37 played (crackle in MASSIVE); round 13 read (`m3-round13.log`); v1.0.38 (tape at 2×, knob deadband) to try; the ERA overlaps on a page (`era_switch`).
 **Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Not yet in it: v1.0.35-36 (the 24 kHz tank, 12-point swell, fewer early reflections) and the review's speed-ups; say when you'd like it installed (Ableton closed).
 
 ## To do
@@ -13,6 +13,7 @@
 - [ ] **BLOOM's swell: other seeds** (your note: the 12 points "seemed to accentuate the mids"): http://192.168.1.238:8766/swell_seed/index.html. Measured: 12 and 24 points are equally even on noise and note by note; which notes stand out moves with TIME and the seed. B-D are the three most even seeds; E the old 24 points for reference.
 
 ### Listen (first time)
+- [ ] **ERA: today's overlaps, or a clean switch at each boundary** (pick page; your note: the tape → radio transition is hard even with the overlap): http://192.168.1.238:8766/era_switch/index.html. ERA sweeps from the Neve to the radio over 16 s, crossing all four boundaries (about 1.5, 5.4, 9.3 and 13.1 s), in MASSIVE and HALL. A is today; B has each era alone across its stretch and a 50 ms swap at each boundary (no clicks measured; the tape's sparkle arrives at once at bucket-brigade → cassette). B also means only one era runs at a time, which removes the module's dearest spot on the knob.
 - [ ] **ERA signatures** (out of date: it measures the old stacked ERA; Claude can re-measure it for the five eras; reference, nothing to pick; https://claude.ai/artifact/AiR2JXPAaLbT8GeJseK3Vj, opens on your phone anywhere): what each ERA stage does to the reverb, measured and drawn as charts (tone, how long each frequency rings, harmonics, grain, hiss, mirror tones, pitch wobble). `tools/era_reference.py` remeasures it.
 
 ### Try in Ableton
