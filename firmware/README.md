@@ -41,6 +41,8 @@ The M0 release figure is the platform's floor before any DSP: libDaisy, the HAL,
 
 Memory at M5: `gLarge` 16 MB in SDRAM (FDN lines and in-loop allpasses, the PLATE, swell, REVERSE segments, predelay), `gFast` 100.6 KB of DTCM's 128 KB (the companion plate and the input diffusers), the Engine object in AXI SRAM. M3 decides whether the PLATE moves from SDRAM to AXI SRAM (SPEC §5.2).
 
+Memory since the overnight review (26 Oct 2026, release map): the Engine object (24,232 B) in DTCM with `gFast` (36,864 B): 61,096 B of 128 KB from 0x20000000, the stack grows down from 0x20020000 (~68 KB for it). `gAxi` (433,984 B, `Engine::axiFloats`) in AXI SRAM's `.bss`: the in-loop allpass lines of the tank and the low tank (16 × 16 KB + 16 × 8 KB, staggered across the cache's sets); AXI SRAM 452,024 B used of 512 KB. The twin's allpasses stay in SDRAM (all three tanks' don't fit). `gLarge` 24.9 MB in SDRAM.
+
 ### Flash-budget techniques in use (from Resilio's flash study, SPEC §5.3)
 
 All in `firmware/` (no changes inside `libs/libDaisy`):
@@ -96,9 +98,54 @@ CORNER MASSIVE D1 S1 E1 (worst?)   avg  42.3% max  58.1% min  39.0% | mem 0 B | 
 - `~N cyc/sample` — the average as cycles per sample (480 MHz ÷ 48 kHz ≈ 10,000).
 - `SPLIT` / `PEAK` — each section's share (`dsp/ProfileHook.h`: ctl, in, shim, swell, twin, tank, era, out), averaged and in the worst single block. The marks cost ~1 % (a few per sample).
 - Timing (since 25 Oct 2026): the Engine runs in the main loop, block after block off the audio clock, each block timed by the cycle counter; the audio plays silence. A corner over 100 % still reports (timed in the callback, it starved the serial, M3 round 1).
-- `BENCH` (once per lap) — clock speed and whether the caches are on.
+- `BENCH` (once per lap) — clock speed and whether the caches are on; see below for the rest of the line.
 
-On the module: **LED_0** brightens through the 24 corners; **LED_3 turns red** for good once any corner's `max` passes 75 %.
+On the module: **LED_0** brightens through the corners; **LED_3 turns red** for good once any corner's `max` passes 75 %.
+
+### Profile additions from the overnight review (26 Oct 2026)
+
+**Boot takes ~15–20 s before the first line** (the micro-tests below run once, before the Engine starts). A lap is the 30 corners of round 10, then three new ones, then the headroom test: about 3 minutes.
+
+New corners (MASSIVE, Neve, DECAY full, BLOOM unless named):
+
+| Corner | What it measures |
+|---|---|
+| `MASSIVE S1 neve FROZEN+twin` | 6 s. The button is pressed at its start (freeze at once), released 10 ms later; the input keeps coming, so the twin plays over the frozen pad all the way. A tap at the end unfreezes it for the next corner. The suspected worst case (cost-tank, cost-input: ~1.5–2× MASSIVE). |
+| `MASSIVE S1 neve SHIMMER` | ATTACK = SHIMMER, TIME 0.7. Never profiled before. |
+| `MASSIVE neve SIZE .3<>.8` | 6 s, SIZE flicked between 0.3 and 0.8 every 1.5 s: each move starts the 0.3 s SIZE crossfade once SIZE rests, so one runs ~20 % of the time. **Read `max`** (the crossfade blocks) as well as `avg`. |
+
+The headroom test still uses `MASSIVE S1 radio`. No round-10 corner was dropped (the lap stays under 5 min).
+
+Two more lines follow `BENCH` once a lap:
+
+```
+BENCH clock 480 MHz icache on dcache on | FZ on (irq on) | sdram TRP 3 TRCD 3 (tight) sdclk 100 MHz | engine 0x20009000 axi 0x240006e0
+SDRAMCHK libdaisy 0 tight 0 laps 0 in 2 (wrong words, of 4194304 a check)
+MICRO (cycles per op) sdr1 10.0 sdr32 33.0 ... fdnMassiveApAxit 4321.0
+```
+
+- `FZ on/off (irq on/off)` — flush-to-zero, read from the FPU now: this thread's FPSCR (the corners run here) and FPDSCR (what the audio interrupt starts with: the headroom test). On by default in the profile build only; `make -C firmware MODE=profile PROFILE_FZ=0` builds `immensio_versio_profile-nofz.bin` to compare.
+- `sdram TRP n TRCD n (libDaisy|tight)` — the SDRAM's precharge and row-to-column waits in SDRAM clock cycles, read from the FMC now. libDaisy sets 16 / 10; the profile build tries **3 / 3** (the AS4C16M32MSA-6 datasheet needs 18 ns each: 2 cycles at 100 MHz) and **keeps it for the corner lap** by default. `PROFILE_SDRAM_TIGHT=0` builds `immensio_versio_profile-sdlibdaisy.bin`, whose corners run at libDaisy's timing (its micro-tests still try 3 / 3 and then put 16 / 10 back). `sdclk` is the SDRAM clock worked out from PLL2 and the FMC divider. **The release build never changes the timing.**
+- `engine` / `axi` — where the Engine object (DTCM: 0x2000xxxx) and the allpass lines' array (AXI SRAM: 0x240xxxxx) landed.
+- `SDRAMCHK` — **read this before trusting the tight timing.** 8 MB of SDRAM nobody else uses (24–32 MB) written with a pattern, read back scattered (every read opens another SDRAM row, which is what TRP / TRCD time), then the opposite pattern written scattered and read back in order: 4,194,304 words checked each time. `libdaisy` = at boot at 16 / 10 (the control), `tight` = at boot at 3 / 3, `laps` = wrong words summed over every lap so far, at the lap's timing (the module warming up: leave it running a while). **Every number should be 0.** Anything else: the tight timing is not safe on this module; don't use it.
+- `MICRO` — what each building block costs, in cycles per operation (one decimal), measured once at boot. Round 6–10's entries keep their names and meaning, except **`axi32`**, which until now timed nothing (the compiler had removed its array; 3.0 was the adder's latency) and now really reads AXI SRAM. New entries:
+
+| Name | What | Unit |
+|---|---|---|
+| `sub` / `norm` | a one-pole decay (3 dependent FP operations a step) on subnormal numbers (1e-38 and down) / on normal ones, with FZ as built | cycles a step |
+| `subX` | `sub` with FZ flipped (so a default build shows the cost without FZ here) | cycles a step |
+| `vdivDep` | 1000 divides, each needing the last (VDIV latency) | cycles a divide |
+| `vdivThr` | 1000 independent divides (VDIV throughput) | cycles a divide |
+| `vdivIndep` | `vdivThr` plus 4 independent multiplies each: ≈ `vdivThr` means other work hides behind a divide; ≈ `vdivThr` + 5 means a divide blocks the FPU | cycles a divide |
+| `pld32` | `sdr32` with a prefetch (PLD) of each stream's next cache line | cycles a float |
+| `swell12/blk` | the swell (BLOOM at MASSIVE S1, 7.5 s span, 12 taps a side, smear on), one 32-sample block | cycles a block |
+| `swellNS/blk` | the same without the smear | cycles a block |
+| `swellW/blk` | the same with no taps (writes only). The taps' part = `swellNS` − `swellW`; 24 taps ≈ `swell12` + that again | cycles a block |
+| `fdnMassive24k` | a real-size MASSIVE tank alone (24 kHz, 1.4 s mean, in-loop diffusion, 4 early taps a line, DECAY infinite, Neve): everything in SDRAM, as release was | cycles a tank sample (= 2 output samples) |
+| `fdnMassiveApAxi` | the same tank with its in-loop allpass lines in AXI SRAM, as release is now | cycles a tank sample |
+| `sdr1t` `sdr32t` `sdw32t` `sdline8t` `pld32t` `fdnSDRAMt` `fdnMassive24kt` `fdnMassiveApAxit` | the same tests again at SDRAM 3 / 3 | as above |
+
+To halve a tank-sample figure into the share of the 10,000-cycle budget: `fdnMassive24k` / 2 / 100 = % of the budget for one tank (the Engine also runs the low tank, the swell, etc.).
 
 ## Memory
 
