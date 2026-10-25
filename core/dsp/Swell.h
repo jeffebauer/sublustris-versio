@@ -149,10 +149,17 @@ public:
                 const float    t  = d - float(di), g = gain_[c][k];
                 // Sample s was written n-1-s writes before the last: its read sits that much further back.
                 const uint32_t i0 = line.pos - (di < 1 ? 1u : di) - uint32_t(n - 1), i1 = line.pos - (di + 1) - uint32_t(n - 1);
-                for (int s = 0; s < n; ++s) {
-                    const float a0 = line.buf[(i0 + uint32_t(s)) & line.mask], a1 = line.buf[(i1 + uint32_t(s)) & line.mask];
-                    sum[c][s] += g * (a0 + t * (a1 - a0));
-                }
+                if (line.full())
+                    for (int s = 0; s < n; ++s) {
+                        const float a0 = line.buf[(i0 + uint32_t(s)) & line.mask], a1 = line.buf[(i1 + uint32_t(s)) & line.mask];
+                        sum[c][s] += g * (a0 + t * (a1 - a0));
+                    }
+                else // since a clear(): what's older reads as silence (DelayLine::ago)
+                    for (int s = 0; s < n; ++s) {
+                        const uint32_t back = uint32_t(n - 1 - s);
+                        const float a0 = line.ago((di < 1 ? 1u : di) + back), a1 = line.ago(di + 1 + back);
+                        sum[c][s] += g * (a0 + t * (a1 - a0));
+                    }
             }
         }
         for (int s = 0; s < n; ++s) {
