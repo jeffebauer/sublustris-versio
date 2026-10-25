@@ -8,6 +8,7 @@
 ### Decide
 
 ### Listen (after your notes)
+- [ ] **Early reflections on hits** (one per line brings back MASSIVE's hole before the tail, your v1.0.21 fix: 16.9 dB at SIZE full, against 1.9 with six): http://192.168.1.238:8766/early_hits/index.html. A today's six, B a middle ground (HALL 2, MASSIVE 4), C one. Then Claude builds your pick and makes round 10.
 - [ ] **BLOOM's swell: other seeds** (your note: the 12 points "seemed to accentuate the mids"): http://192.168.1.238:8766/swell_seed/index.html. Measured: 12 and 24 points are equally even on noise and note by note; which notes stand out moves with TIME and the seed. B-D are the three most even seeds; E the old 24 points for reference.
 
 ### Listen (first time)
@@ -24,7 +25,7 @@
 
 ## Waiting on Claude
 
-- **CPU, after round 9b.** The real limit (your headroom test): no drop-outs up to 96 % at the worst block, late blocks from 101 %, so the target is ~90 % at peak (not 75 %). PLATE fits (59-69 % avg, ~88 % peak). HALL 101-123 % and MASSIVE 115-129 % avg (worst 122 % avg / 127 % peak live) need ~30 % more. Found: a SPACE change and big SIZE jumps spike to 150-210 % (drop-outs), most likely the prime-length search; fix that first (sound unchanged), then the one-early-reflection option and more tuning of the tank's loop.
+- **CPU, after round 9b.** The real limit (your headroom test): no drop-outs up to 96 % at the worst block, late blocks from 101 %, so the target is ~90 % at peak (not 75 %). PLATE fits (59-69 % avg, ~88 % peak). HALL 101-123 % and MASSIVE 115-129 % avg (worst 122 % avg / 127 % peak live) need ~30 % more. The spikes at a SPACE change and big SIZE jumps (150-210 %) are fixed (a prime table, sound unchanged; to confirm in round 10). Next: your early_hits pick, then more tuning of the tank's loop.
 - **BLOOM's TIME and PLATE's SIZE by crossfade** (phase 2 of your pick C): they still slide; HALL and MASSIVE's SIZE and TIME's pre-delay are done (v1.0.34).
 - **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): build it for real. For 3 s after a flip both spaces hear the music while one crossfades into the other; it needs a second reverb running for those 3 s (the freeze's spare) and ~0.5-1 KB of flash, which has to be freed first (804 B left). A plan before building.
 - **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper; a later round if the shimmer is kept.
