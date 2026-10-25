@@ -75,6 +75,11 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     ready_ &= fdn_.prepare(large_, sampleRate, 0x1D5A7u);
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
     ready_ &= reverse_.prepare(large_, sampleRate);
+#ifndef IV_FIXED_VOICINGS
+    shimUp_.prepare(sampleRate, false);
+    shimDown_.prepare(sampleRate, true);
+    grains_.prepare(sampleRate);
+#endif
     ready_ &= twinFdn_.prepare(large_, sampleRate, 0x7A1Eu);
     ready_ &= lowFdn_.prepare(large_, sampleRate / float(kLowDecimate), 0x10F7u);
     lowFdn_.setGovernorLeader(&fdn_);
@@ -467,7 +472,13 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
     reverseFdn_.setHighT60Ratio(toneRatio);
     reverseFdn_.setEra(loopEra);
     reverseFdn_.setDrift(drift);
+#ifndef IV_FIXED_VOICINGS
+    // A prototype on ATTACK's third position: REVERSE stays out; the prototype rests while frozen.
+    altTarget_ = attack == 2 && altMode_ > 0 && !frozen ? 1.0f : 0.0f;
+    reverseTarget_ = attack == 2 && altMode_ == 0 && !frozen ? 1.0f : 0.0f;
+#else
     reverseTarget_ = attack == 2 && !frozen ? 1.0f : 0.0f; // REVERSE rests while frozen (ADR 0015)
+#endif
 
     const float pd = predelay * sampleRate_;
     if (snap) predelayNow_ = pd;
@@ -701,6 +712,9 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         const int n = (numSamples - start) < kChunk ? (numSamples - start) : kChunk;
         handleEdges(start, start + n);
         controlTick(n);
+#ifndef IV_FIXED_VOICINGS
+        altTime_ = smoothed(ParamId::Time);
+#endif
 
         // REVERSE runs while it's on or fading; its short reverb restarts clean next time.
         const bool reverseOn = reverseTarget_ > 0.0f || reverseMix_ > 0.0f;
@@ -748,6 +762,25 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             // arrives as a wash, not two distinct repeats first (owner, 22 Oct 2026).
             twinSwell_.process(twinInL_[i], twinInR_[i]);
             twinL_[i] = twinR_[i] = 0.0f;
+#ifndef IV_FIXED_VOICINGS
+            if (altMode_ > 0) {
+                altMix_ = approach(altMix_, altTarget_, reverseStep);
+                if (altMode_ == 3) {
+                    // Grains of the last ~2.7 s feed the tank in place of most of the direct input.
+                    float gl = 0.0f, gr = 0.0f;
+                    grains_.process(pl, pr, gl, gr, altTime_ * altTime_ * 2.0f + 0.05f);
+                    pl += altMix_ * (0.3f * pl + gl - pl);
+                    pr += altMix_ * (0.3f * pr + gr - pr);
+                } else if (altMix_ > 0.0f) {
+                    // Shimmer: the last chunk's wet, an octave up (or down), back into the tank.
+                    float sl = shimSrcL_[i], sr2 = shimSrcR_[i];
+                    (altMode_ == 1 ? shimUp_ : shimDown_).process(sl, sr2);
+                    const float send = altMix_ * (altMode_ == 1 ? 0.6f : 0.45f) * altTime_;
+                    pl += send * sl;
+                    pr += send * sr2;
+                }
+            }
+#endif
             swell_.process(pl, pr);
             if (hissGain_ > 0.0f || crackleChance_ > 0.0f) {
                 // ERA's noise into the tank: soft (3 kHz) hiss, sparse crackle.
@@ -791,6 +824,12 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         else if (!lowTank_) fdn_.process(bufL_, bufR_, wetL_, wetR_, n); // the test hook's one tank
         else processTwoTanks(n);
         for (int i = 0; i < n; ++i) revL_[i] = revR_[i] = 0.0f;
+#ifndef IV_FIXED_VOICINGS
+        for (int i = 0; i < n; ++i) { // the shimmer's source for the next chunk
+            shimSrcL_[i] = wetL_[i];
+            shimSrcR_[i] = wetR_[i];
+        }
+#endif
         if (reverseOn) reverseFdn_.process(revInL_, revInR_, revL_, revR_, n);
 
         for (int i = 0; i < n; ++i) {

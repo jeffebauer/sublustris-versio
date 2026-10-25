@@ -27,6 +27,9 @@
 #include "dsp/Reverse.h"
 #include "dsp/Swell.h"
 #include "dsp/Tape.h"
+#ifndef IV_FIXED_VOICINGS
+#include "dsp/AltAttack.h" // prototypes: REVERSE's replacements (desktop only)
+#endif
 #include "params/GestureReader.h"
 #include "params/ParamSpec.h"
 
@@ -88,6 +91,11 @@ public:
     // Test hook: how much of DECAY's level make-up applies (1 = v1.0.28; 0 = none, shorter tails
     // quieter, as v1.0.27), for demos.
     void  setDecayMakeup(float k) { decayMakeup_ = k; }
+#ifndef IV_FIXED_VOICINGS
+    // PROTOTYPES (desktop only): what ATTACK's third position plays instead of REVERSE.
+    // 0 = REVERSE, 1 = shimmer up, 2 = sub shimmer, 3 = grains (dsp/AltAttack.h).
+    void  setAltAttack(int mode) { altMode_ = mode; }
+#endif
     // Test hook: false = no tape out (ERA's cassette stage without its output tape), for measuring.
     void  setTapeOut(bool on) { tapeOn_ = on; }
     // Test hook: false = one tank, the lows moving too (before v1.0.18), for demos.
@@ -247,6 +255,13 @@ private:
     float bufL_[kChunk] = {}, bufR_[kChunk] = {}, wetL_[kChunk] = {}, wetR_[kChunk] = {};
     float twinInL_[kChunk] = {}, twinInR_[kChunk] = {}, twinL_[kChunk] = {}, twinR_[kChunk] = {};
     float revInL_[kChunk] = {}, revInR_[kChunk] = {}, revL_[kChunk] = {}, revR_[kChunk] = {};
+#ifndef IV_FIXED_VOICINGS
+    int   altMode_ = 0;
+    float altTarget_ = 0.0f, altMix_ = 0.0f, altTime_ = 0.0f;
+    float shimSrcL_[kChunk] = {}, shimSrcR_[kChunk] = {}; // the last chunk's tank wet
+    dsp::proto::Shimmer shimUp_, shimDown_;
+    dsp::proto::Grains  grains_;
+#endif
 };
 
 } // namespace iv

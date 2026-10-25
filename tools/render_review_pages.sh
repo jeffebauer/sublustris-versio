@@ -295,6 +295,37 @@ C_supermassive_andromeda      Valhalla Supermassive, Andromeda" > renders/valhal
     echo "renders/valhalla_compare/index.html"
 fi
 
+if on alt_attack; then
+    # PROTOTYPES (branch claude/massive-air; desktop only, dsp/AltAttack.h): what ATTACK's third
+    # position could play instead of REVERSE (owner, 25 Oct 2026: "shimmer up, sub shimmer, granular").
+    # IV_ALT_ATTACK 1 shimmer up, 2 sub shimmer, 3 grains; TIME is the shimmer's send / how far back
+    # the grains reach. Checked: no build-up at TIME full (every SPACE, DECAY 0.5 / 0.78 / infinite),
+    # grains click-free and no more flicker than NORMAL.
+    saved=("${MATERIALS[@]}"); MATERIALS=()
+    for m in skank vibes stabs pad lead keys voice; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
+    page alt_attack
+    for t in "1_hall_time_low:HALL:0.3" "2_hall_time_high:HALL:0.8" "3_massive_time_mid:MASSIVE:0.55"; do
+        IFS=: read col sp tm <<< "$t"
+        for v in "A_reverse_today:0" "B_shimmer_up:1" "C_sub_shimmer:2" "D_grains:3"; do
+            tag=${v%%:*}; mode=${v##*:}
+            IV_ALT_ATTACK=$mode r alt_attack $col $tag "" --set space=$sp --set attack=REVERSE --set decay=0.6 --set time=$tm
+        done
+    done
+    MATERIALS=("${saved[@]}")
+    print -r -- "What could ATTACK's third position play instead of REVERSE? A is today's REVERSE; B, C and D are first prototypes built from how Valhalla Shimmer, Strymon BigSky, Mutable Instruments' Clouds and Beads and the Microcosm do it. B, shimmer: the reverb's own sound is shifted an octave up and fed back in, so each trip round climbs an octave; TIME is how much (a faint halo low, cascading octaves high). C, sub shimmer: the same an octave down, filtered so it stays a dark undertow rather than mud. D, grains: small overlapping slices (80-200 ms) of what you just played, scattered in time and very slightly in pitch, feed the reverb, which smooths them into a cloud; TIME is how far back the slices reach (just now, low; up to 2 s ago, high). All rest while frozen. Versions are level-matched (the grains come out 3-5 dB quieter). These are first passes: say what you like and what you'd change.
+
+1_hall_time_low      HALL, TIME 0.3 (DECAY 0.6)
+2_hall_time_high     HALL, TIME 0.8
+3_massive_time_mid   MASSIVE, TIME 0.55
+
+A_reverse_today   Today's REVERSE
+B_shimmer_up      Shimmer, an octave up
+C_sub_shimmer     Sub shimmer, an octave down
+D_grains          Granular: grains of what you played, smoothed by the reverb" > renders/alt_attack/README.txt
+    python3 tools/review/make_review.py renders/alt_attack --title "Instead of REVERSE: shimmer, sub, grains" --level-match --dry $SRC --wet-only > /dev/null
+    echo "renders/alt_attack/index.html"
+fi
+
 if on era_sweep; then
     # ERA turned from fully left to fully right over 40 s while the music loops (renders/_material_sweep,
     # 40 s loops + 12 s of tail), then the tail at ERA 1; chaptered at each era's start (ADR 0021).
