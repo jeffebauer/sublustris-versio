@@ -56,12 +56,15 @@ void Engine::setSwellSeedPrototype(uint32_t seed)
 }
 #endif
 
-IV_SIZE_OPT void Engine::attachMemory(float* large, size_t largeCount, float* fast, size_t fastCount)
+IV_SIZE_OPT void Engine::attachMemory(float* large, size_t largeCount, float* fast, size_t fastCount, float* axi,
+                                      size_t axiCount)
 {
     attachedLarge_ = large;
     attachedLargeCount_ = largeCount;
     attachedFast_ = fast;
     attachedFastCount_ = fastCount;
+    attachedAxi_ = axi;
+    attachedAxiCount_ = axiCount;
 }
 
 IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
@@ -75,7 +78,8 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
 
     float* large = attachedLarge_;
     float* fast = attachedFast_;
-    size_t largeCount = attachedLargeCount_, fastCount = attachedFastCount_;
+    float* axi = attachedAxi_;
+    size_t largeCount = attachedLargeCount_, fastCount = attachedFastCount_, axiCount = attachedAxiCount_;
 #if !defined(IV_NO_HEAP)
     if (!large) {
         ownLarge_.assign(largeFloats(sampleRate), 0.0f);
@@ -87,9 +91,15 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
         fast = ownFast_.data();
         fastCount = ownFast_.size();
     }
+    if (!axi) {
+        ownAxi_.assign(axiFloats(sampleRate), 0.0f);
+        axi = ownAxi_.data();
+        axiCount = ownAxi_.size();
+    }
 #endif
     large_.reset(large, largeCount, true); // SDRAM: each line on its own cache set (dsp/Memory.h)
     fast_.reset(fast, fastCount);
+    axi_.reset(axi, axiCount, true); // AXI SRAM is cached too: the same stagger
 
     ready_ = true;
     for (auto& p : predelay_) ready_ &= p.init(large_, size_t(voicing::kPredelayMaxSeconds * sampleRate));
@@ -106,11 +116,11 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     ready_ &= twinSwell_.prepare(large_, sampleRate);
     twinSwell_.setSCurve(true); // eases in, then settles (owner, renders/swell_curve)
     // The tank and its twin at half the rate (v1.0.35, ADR 0026; dsp/HalfRate.h).
-    ready_ &= fdn_.prepare(large_, 0.5f * sampleRate, 0x1D5A7u);
+    ready_ &= fdn_.prepare(large_, 0.5f * sampleRate, 0x1D5A7u, voicing::kFdnMaxLineSeconds, &axi_);
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
     ready_ &= shimmer_.prepare(large_, sampleRate);
     ready_ &= twinFdn_.prepare(large_, 0.5f * sampleRate, 0x7A1Eu);
-    ready_ &= lowFdn_.prepare(large_, sampleRate / float(kLowDecimate), 0x10F7u);
+    ready_ &= lowFdn_.prepare(large_, sampleRate / float(kLowDecimate), 0x10F7u, voicing::kFdnMaxLineSeconds, &axi_);
     lowFdn_.setGovernorLeader(&fdn_);
     {
         // The split: a 2nd-order Butterworth pair (bilinear). The two tanks' outputs are uncorrelated,

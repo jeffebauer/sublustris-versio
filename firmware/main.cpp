@@ -108,6 +108,11 @@ constexpr size_t kLargeFloats = iv::Engine::largeFloats(48000.0f);
 constexpr size_t kFastFloats  = iv::Engine::fastFloats(48000.0f);
 DSY_SDRAM_BSS float gLarge[kLargeFloats];
 IV_DTCM float       gFast[kFastFloats];
+// The tank's and the low tank's in-loop allpass lines (Engine::axiFloats, ~424 KB at 48 kHz) in AXI
+// SRAM: a plain global, so libDaisy's .bss (the 512 KB SRAM at 0x24000000), zeroed by startup.
+// Overnight review, 26 Oct 2026: 32 of the tanks' ~80 SDRAM streams a tank sample come on chip.
+constexpr size_t kAxiFloats = iv::Engine::axiFloats(48000.0f);
+alignas(32) float gAxi[kAxiFloats];
 #endif
 
 // Panel pots P1..P7 (reading order: top to bottom, left to right) -> libDaisy
@@ -498,7 +503,9 @@ void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer ou
 // their instructions should (round 4), so: is it the SDRAM (one stream, 32 at once, writes, a delay
 // line's read-then-write), internal RAM (AXI, DTCM), or the maths library?
 volatile float gSink = 0.0f;
-float          gAxiTest[32 * 512]; // 64 KB of AXI SRAM (.bss)
+// The AXI tests use gAxi, free until engine.prepare() (it had its own 64 KB array, gAxiTest, until the
+// overnight review found that GCC had removed it: never written, so its reads folded to 0.0f and
+// "axi32" timed a chain of dependent vadds, 3.0 cycles = the VADD latency, not AXI SRAM).
 constexpr int  kMicro = 20;
 int            gMicro[kMicro]{};
 const char* const kMicroNames[kMicro] = {"sdr1", "sdr32", "sdw32", "sdline8", "axi32", "dtcm32",
@@ -510,7 +517,8 @@ const char* const kMicroNames[kMicro] = {"sdr1", "sdr32", "sdw32", "sdline8", "a
 // with its memory in AXI SRAM and then in SDRAM, cycles per sample (M3 round 8): if they cost about
 // the same, the tank is short of arithmetic; if the SDRAM one is far slower, it's the memory.
 constexpr size_t kTestFdnFloats = iv::dsp::Fdn::memoryFloats(12000.0f, 0.25f);
-alignas(32) float gAxiArena[kTestFdnFloats + iv::dsp::Arena::kSkewLines * iv::dsp::Arena::kLineFloats];
+constexpr size_t kTestArenaFloats = kTestFdnFloats + iv::dsp::Arena::kSkewLines * iv::dsp::Arena::kLineFloats;
+static_assert(kTestArenaFloats <= kAxiFloats, "the AXI test tank lives in gAxi (before engine.prepare)");
 alignas(iv::dsp::Fdn) unsigned char gTestFdnStorage[sizeof(iv::dsp::Fdn)];
 
 int TimeTestFdn(float* mem, size_t floats, bool skew)
@@ -573,7 +581,7 @@ void RunMicroTests()
     });
     gMicro[4] = Tenths(32 * 512, [&] {
         for (int s = 0; s < 512; ++s)
-            for (int k = 0; k < 32; ++k) acc += gAxiTest[k * 512 + s];
+            for (int k = 0; k < 32; ++k) acc += gAxi[k * 512 + s];
     });
     gMicro[5] = Tenths(32 * 256, [&] {
         for (int s = 0; s < 256; ++s)
@@ -608,7 +616,7 @@ void RunMicroTests()
         loop.set(iv::map::eraMix(0.3f));
         gMicro[19] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) acc += loop.process(0.3f * NextNoise()); });
     }
-    gMicro[11] = TimeTestFdn(gAxiArena, sizeof(gAxiArena) / sizeof(float), false);
+    gMicro[11] = TimeTestFdn(gAxi, kTestArenaFloats, false);
     gMicro[12] = TimeTestFdn(gLarge, kLargeFloats, true);
     gSink = acc;
 }
@@ -683,7 +691,7 @@ int main()
 
     StartCycleCounter();
     RunMicroTests(); // before the Engine takes (and zeroes) its memory
-    engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats);
+    engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats, gAxi, kAxiFloats);
     engine.prepare(hw.AudioSampleRate(), kBlockSize);
     iv::prof::markHook = ProfMark;
     BuildCornerTable();
@@ -1150,7 +1158,7 @@ int main()
     hw.Init(true); // boost to 480 MHz
     SdramWriteAllocate();
     hw.SetAudioBlockSize(kBlockSize);
-    engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats);
+    engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats, gAxi, kAxiFloats);
     engine.prepare(hw.AudioSampleRate(), kBlockSize);
 
     BootPattern(); // then metering
