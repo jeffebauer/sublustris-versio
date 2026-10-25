@@ -295,48 +295,6 @@ C_supermassive_andromeda      Valhalla Supermassive, Andromeda" > renders/valhal
     echo "renders/valhalla_compare/index.html"
 fi
 
-if on massive_drop; then
-    # PROTOTYPES (branch claude/massive-air): the drop after the input stops in a short MASSIVE at a
-    # big SIZE (owner, massive_highs 5 s: "an audible and visible drop in amplitude after the input
-    # stops"). The first pass round ~1.2 s lines holds (early taps rising along each line), then the
-    # next comes ~14 dB lower. IV_EARLY_SPREAD: the early taps carry their share of each pass's loss
-    # (Dattorro's decay multipliers, Jot). IV_PASS_CAP: the mean line ≤ T60 / cap (a short MASSIVE gets
-    # a smaller space). IV_MIN_PASSES: the shortest T60 lasts this many mean lines (today 3).
-    saved=("${MATERIALS[@]}"); MATERIALS=()
-    for m in skank vibes stabs pad lead keys voice; do [ -f $SRC/$m.wav ] && MATERIALS+=($m); done
-    for m in $MATERIALS; do # DECAY turned up and back down while the music plays
-        print -r -- '{ "breakpoints": [ {"t": 0, "key": "decay", "value": 0.077}, {"t": 6, "key": "decay", "value": 0.45}, {"t": 12, "key": "decay", "value": 0.077} ] }' > $SRC/decayturn_$m.json
-    done
-    page massive_drop
-    for t in "1_05s::0.7:0.077" "2_full_size::1:0" "3_decay_turned:decayturn:0.7:0.077"; do
-        IFS=: read col auto sz d <<< "$t"
-        for v in "A_today:" "B_fade_along_the_first_trip:IV_EARLY_SPREAD=1" "C_smaller_space_when_short:IV_PASS_CAP=8" \
-                 "D_both:IV_EARLY_SPREAD=1 IV_PASS_CAP=8" "E_at_least_6_trips:IV_MIN_PASSES=6"; do
-            tag=${v%%:*}; e=${v#*:}
-            ( [ -n "$e" ] && export ${=e}; r massive_drop $col $tag "$auto" --set space=MASSIVE --set size=$sz --set decay=$d )
-        done
-    done
-    MATERIALS=("${saved[@]}")
-    print -r -- "A short MASSIVE at a big SIZE holds for about a second after the music stops, then drops (your note on the highs page). Why: its delay lines are about 1.2 s long, and a 5 s tail loses about 14 dB each time round them, so the sound holds for one trip, then the next trip comes in much quieter. Supermassive does the same, harder. Four ways to smooth it, beside today (all with the new highs):
-B fades the first trip as it goes instead of holding it (each early reflection carries its share of the trip's loss).
-C gives a short MASSIVE a smaller space: when DECAY is short its lines get shorter, so each trip loses less; it's still 5 s long, but less vast. Turning DECAY bends the pitch a little while the lines change length, as SIZE does: the third column turns DECAY up and back down while the music plays.
-D is B and C together (measured smoothest).
-E keeps the space but won't go as short: the shortest DECAY lasts at least 6 trips, so at SIZE 0.7 the shortest tail is about 9.5 s, not 5 (DECAY's knob reaches less short).
-Versions are level-matched (B and D are 2-4 dB quieter at the shortest DECAYs; a real version would make that up). Listen to the moment the music stops (Tail only helps), and in the third column to the pitch while DECAY moves.
-
-1_05s            About 5 s at SIZE 0.7 (DECAY 0.08)
-2_full_size      MASSIVE's shortest at full SIZE (DECAY 0: about 6 s today)
-3_decay_turned   DECAY turned from 0.08 up to 0.45 and back over 12 s while the music plays (SIZE 0.7)
-
-A_today                        Today (with the new highs)
-B_fade_along_the_first_trip    The first trip fades as it goes
-C_smaller_space_when_short     A short MASSIVE gets a smaller space
-D_both                         B and C together
-E_at_least_6_trips             The shortest DECAY lasts at least 6 trips (longer shortest tails at big SIZEs)" > renders/massive_drop/README.txt
-    python3 tools/review/make_review.py renders/massive_drop --title "MASSIVE: the drop after the music stops" --level-match --dry $SRC --wet-only > /dev/null
-    echo "renders/massive_drop/index.html"
-fi
-
 if on era_sweep; then
     # ERA turned from fully left to fully right over 40 s while the music loops (renders/_material_sweep,
     # 40 s loops + 12 s of tail), then the tail at ERA 1; chaptered at each era's start (ADR 0021).

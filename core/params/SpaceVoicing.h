@@ -116,9 +116,12 @@ constexpr int   kEarlyTaps     = 6;
 constexpr float kEarlyTapLow   = 0.3f;
 constexpr float kEarlyTapLevel = 0.5f * 0.71f;
 // MASSIVE's shortest DECAY rings at least this many passes of its mean line
-// (v1.0.21, knob_feel): at 2 s and a 0.84 s line one pass lost 25 dB, so DECAY's
-// first notch jumped from "the build and one echo" to a real tail.
-constexpr float kMassiveMinPasses = 3.0f;
+// (v1.0.21, knob_feel: 3; at 2 s and a 0.84 s line one pass lost 25 dB, so DECAY's
+// first notch jumped from "the build and one echo" to a real tail). 6 since v1.0.32
+// (owner's pick E on renders/massive_drop): at 3 a short MASSIVE at a big SIZE lost ~14 dB a
+// pass, held one pass after the input stopped and then dropped; at 6 (≤10 dB a pass) it fades
+// smoothly, and the shortest MASSIVE is longer at big SIZEs (~7 s at SIZE 0.7, 12 s at full).
+constexpr float kMassiveMinPasses = 6.0f;
 
 // In-loop diffusion (MASSIVE, ADR 0007): two allpasses inside each line,
 // coefficient kInLoopCoeff × SIZE's diffusion, so long lines blur into a

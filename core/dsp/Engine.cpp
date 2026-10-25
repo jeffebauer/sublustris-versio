@@ -268,7 +268,7 @@ void Engine::onGesture(GestureReader::Event e)
 // DECAY's loss rate for the SPACE in use (MASSIVE's shortest tail follows SIZE, v1.0.21).
 float Engine::decayRate(float decay, float size) const
 {
-    return activeSpace_ == 2 ? map::massiveDecayRate(decay, size, massiveMinPasses_) : map::decayRate(decay, activeSpace_);
+    return activeSpace_ == 2 ? map::massiveDecayRate(decay, size) : map::decayRate(decay, activeSpace_);
 }
 
 // Sets every voicing target for the SPACE in use (activeSpace_). While
@@ -338,10 +338,7 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
         plate_.setHoldDb(holdDb);
         plate_.setAir(voicing::kAirPlateDbPerSecond / 60.0f); // v1.0.25
     } else {
-        float mean = massive ? map::massiveMeanSeconds(size) : map::hallMeanSeconds(size);
-        // PROTOTYPE (massive_drop): a short MASSIVE gets a smaller space, its mean line at most
-        // T60 / massivePassCap_ (the knob's T60, so DECAY still means the same length).
-        if (massive && massivePassCap_ > 0.0f && rate > 0.0f) mean = std::fmin(mean, 1.0f / (rate * massivePassCap_));
+        const float mean = massive ? map::massiveMeanSeconds(size) : map::hallMeanSeconds(size);
         const float spread = massive ? map::massiveSpread(size) : 1.0f;
         if (snap || std::fabs(mean - lastMean_) > 1e-6f || std::fabs(spread - lastSpread_) > 1e-6f) {
             lastMean_ = mean;
@@ -368,7 +365,6 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
         fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decay, size)
                                    : voicing::kHallOutputTrim * map::hallSizeLevelTrim(hallSize_, decay));
         fdn_.setEarlyTaps(1.0f); // HALL too (v1.0.25: no gap after the note, its "slap-back")
-        fdn_.setEarlySpread(massive ? massiveEarlySpread_ : 0.0f);
         fdn_.setAir(massive ? 0.0f : voicing::kAirHallDbPerSecond / 60.0f); // v1.0.25
         // The floor glides out with the freeze (v1.0.22, A3; Costello: mod depth to 0 for a freeze).
         fdn_.setModDepth(modScale_ * (massive ? 1.0f : voicing::kHallFloorScale) * (1.0f - freezeMix_));
@@ -383,7 +379,6 @@ void Engine::applySpace(bool snap, int n, bool snapInput)
         lowFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decay, size)
                                       : voicing::kHallOutputTrim * map::hallSizeLevelTrim(hallSize_, decay));
         lowFdn_.setEarlyTaps(1.0f);
-        lowFdn_.setEarlySpread(massive ? massiveEarlySpread_ : 0.0f);
         lowFdn_.setModDepth(0.0f);
     }
 

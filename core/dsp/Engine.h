@@ -88,11 +88,6 @@ public:
     // Test hook: how much of DECAY's level make-up applies (1 = v1.0.28; 0 = none, shorter tails
     // quieter, as v1.0.27), for demos.
     void  setDecayMakeup(float k) { decayMakeup_ = k; }
-    // PROTOTYPES (massive_drop): MASSIVE's early taps carry this share of each pass's loss
-    // (Fdn::setEarlySpread); its shortest T60 lasts this many mean lines (kMassiveMinPasses).
-    void  setMassiveEarlySpread(float k) { massiveEarlySpread_ = k; }
-    void  setMassiveMinPasses(float p) { massiveMinPasses_ = p; }
-    void  setMassivePassCap(float p) { massivePassCap_ = p; } // mean line ≤ T60 / p (0 = off)
     // Test hook: false = no tape out (ERA's cassette stage without its output tape), for measuring.
     void  setTapeOut(bool on) { tapeOn_ = on; }
     // Test hook: false = one tank, the lows moving too (before v1.0.18), for demos.
@@ -208,7 +203,6 @@ private:
     float reverseMix_ = 0.0f, reverseTarget_ = 0.0f, reverseFeed_ = 0.0f; // reverseFeed_: the taps into the short reverb
     bool  reverseRunning_ = false;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
-    float massiveEarlySpread_ = 0.0f, massiveMinPasses_ = voicing::kMassiveMinPasses, massivePassCap_ = 0.0f; // prototypes
     dsp::BbdStage   bbd_;   // ERA's bucket-brigade and radio, on the wet (ADR 0021, dsp/EraStages.h)
     dsp::RadioStage radio_;
     float bbdW_ = 0, radioW_ = 0;

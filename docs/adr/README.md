@@ -26,3 +26,4 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0020](0020-decay-keeps-the-loudness.md) | DECAY keeps the loudness | owner, 24 Oct 2026 |
 | [0021](0021-era-sweet-to-gritty.md) | ERA runs from sweet to gritty: five eras, each on its own, over the Neve | owner, 25 Oct 2026 |
 | [0022](0022-massive-highs-ring-with-the-body.md) | MASSIVE's highs ring as long as its body | owner, 25 Oct 2026 |
+| [0023](0023-massive-shortest-tail-six-trips.md) | MASSIVE's shortest tail lasts six trips round its lines | owner, 25 Oct 2026 |
