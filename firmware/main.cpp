@@ -546,8 +546,8 @@ int main()
 
             // Where the time goes, each section as % of the whole budget
             // (10,000 cycles per sample): cycles / (samples x 10) = tenths of a %.
-            static const char* const kSectionNames[kNumSections] = {"ctl", "in", "shim", "swell", "twin",
-                                                                    "tank", "era", "out"};
+            static const char* const kSectionNames[kNumSections] = {"ctl", "in", "shim", "swell", "twin", "tank",
+                                                                    "tkctl", "tkloop", "tkout", "tkmix", "era", "out"};
             // Same buffer, one transmit: the USB CDC send is non-blocking and
             // drops a second call made while the first is still going out.
             AppendStr(p, end, "  SPLIT");

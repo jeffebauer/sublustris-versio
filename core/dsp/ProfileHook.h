@@ -12,7 +12,10 @@ namespace iv::prof {
 
 // Immensio's sections, in signal order (SPEC §4.1, §5.1).
 // kTwin: the twin's input side (diffusers, swell) and the twin tank; kShimmer: its recording and heads.
-enum Section { kControl, kInput, kShimmer, kSwell, kTwin, kTank, kEra, kOutput, kNumSections };
+// Inside the tanks (M3 round 4): kTankCtl, each tank's once-a-block maths; kTankLoop, the FDN's lines
+// (read, in-loop allpasses, loss filter, ERA's in-loop stages); kTankOut, its output and early taps;
+// kTankMix, the Hadamard mix and the writes. kTank keeps the rest (the Plate's loop, the still-lows split).
+enum Section { kControl, kInput, kShimmer, kSwell, kTwin, kTank, kTankCtl, kTankLoop, kTankOut, kTankMix, kEra, kOutput, kNumSections };
 
 #if defined(IV_PROFILE_HOOKS)
 // Set by the host (profile firmware) before audio starts; null = no timing.

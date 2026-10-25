@@ -1,4 +1,5 @@
 #include "dsp/Plate.h"
+#include "dsp/ProfileHook.h"
 
 #include "dsp/SizeOpt.h"
 
@@ -195,7 +196,9 @@ void Plate::process(const float* inL, const float* inR, float* outL, float* outR
     if (!ready_) return;
     for (int start = 0; start < n; start += kControlBlock) {
         const int m = (n - start) < kControlBlock ? (n - start) : kControlBlock;
+        prof::mark(prof::kTank);
         control(m);
+        prof::mark(prof::kTankCtl);
         const float k = scaleNow_ * sampleRate_ / kPaperRate;
         const float outGain = kOutputGain * levelGain_;
         for (int s = start; s < start + m; ++s) {

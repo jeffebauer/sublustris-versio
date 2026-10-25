@@ -1,4 +1,5 @@
 #include "dsp/Fdn.h"
+#include "dsp/ProfileHook.h"
 
 #include "dsp/SizeOpt.h"
 
@@ -422,7 +423,9 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
     constexpr float kNorm = 0.35355339f; // 1 / sqrt(8): keeps the Hadamard mix energy-preserving
     for (int start = 0; start < n; start += kControlBlock) {
         const int m = (n - start) < kControlBlock ? (n - start) : kControlBlock;
+        prof::mark(prof::kTank);
         control(m);
+        prof::mark(prof::kTankCtl);
         // The level that follows SIZE (a longer loop holds the same energy over more samples) and the
         // trims go in with the input, so what's already in the loop comes out as it went in (on the
         // output, a SIZE jump stepped every held tail: an infinite MASSIVE +6 dB for SIZE 0 -> 0.7).
@@ -473,6 +476,7 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                 absorbX_[i] = x;
                 y[i] = eraOut * era_[i].process(eraIn * absorbY_[i]);
             }
+            prof::mark(prof::kTankLoop);
             float l = 0.0f, r = 0.0f;
             for (int i = 0; i < kN; ++i) {
                 l += kOutL[i] * y[i];
@@ -514,6 +518,7 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                 }
             }
             if (xfSince_ >= 0) ++xfSince_;
+            prof::mark(prof::kTankOut);
 
             // Fast Walsh–Hadamard transform: 24 adds for the 8×8 mix.
             for (int span = 1; span < kN; span <<= 1)
@@ -525,6 +530,7 @@ void Fdn::process(const float* inL, const float* inR, float* outL, float* outR, 
                     }
             const float xl = inL[s] * inGain, xr = inR[s] * inGain;
             for (int i = 0; i < kN; ++i) line_[i].write(y[i] * kNorm + kInL[i] * xl + kInR[i] * xr);
+            prof::mark(prof::kTankMix);
         }
     }
 }
