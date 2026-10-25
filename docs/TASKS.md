@@ -4,11 +4,11 @@
 **Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Rescan in Ableton to see it.
 
 ## To do
+- [ ] **M3 CPU check, round 10: v1.0.36 and every era.** Flash `dist/immensio_versio_profile_M3_round10.bin`, let it run a lap (30 settings, ~3 min) plus the headroom test, then tell Claude. It times each era and ERA's cassette and radio stages on their own, for your question about what in them costs most.
 
 ### Decide
 
 ### Listen (after your notes)
-- [ ] **Early reflections on hits** (one per line brings back MASSIVE's hole before the tail, your v1.0.21 fix: 16.9 dB at SIZE full, against 1.9 with six): http://192.168.1.238:8766/early_hits/index.html. A today's six, B a middle ground (HALL 2, MASSIVE 4), C one. Then Claude builds your pick and makes round 10.
 - [ ] **BLOOM's swell: other seeds** (your note: the 12 points "seemed to accentuate the mids"): http://192.168.1.238:8766/swell_seed/index.html. Measured: 12 and 24 points are equally even on noise and note by note; which notes stand out moves with TIME and the seed. B-D are the three most even seeds; E the old 24 points for reference.
 
 ### Listen (first time)
@@ -36,6 +36,7 @@
 
 ## Done
 
+- 25 Oct 2026: **Early reflections: HALL 2, MASSIVE 4** (B; "I'd prefer to keep the smoother profile"). Built as v1.0.36 with the spike fix (a prime table); all tests pass. The page is deleted.
 - 25 Oct 2026: **M3 CPU check, round 9b** (your run of v1.0.35 + the headroom test): MASSIVE ~115-129 % avg (was ~165-180), HALL ~101-123 %, PLATE ~59-69 %; the swell ~15 %. Headroom: clean to 96 % peak, late from 101 %.
 - 25 Oct 2026: **BLOOM's swell: a true 12 points** (C on every card). Built with the tank at 24 kHz as v1.0.35 (ADR 0026); all tests pass. The page is deleted.
 - 25 Oct 2026: **Fitting the module: E (all three) everywhere, C for PLATE** ("Not a huge sonic difference, especially when not at 100% wet. Ideally we'd only reduce the early reflections to 1 instead of 3 if needed"). The page is deleted; building B and C is in Waiting on Claude, D held back.
