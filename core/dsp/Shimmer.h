@@ -66,6 +66,20 @@ public:
         seed_ = 0x5A1A7u;
     }
 
+#ifndef IV_FIXED_VOICINGS
+    // PROTOTYPE (overnight review, 26 Oct 2026; cost-input c1): recording starts again after a rest
+    // (the Engine skipped process() outside SHIMMER). What was recorded before the rest is forgotten
+    // (a lazy clear: no memory is touched) and the feed filter starts from rest, so the first grains
+    // after the switch have only what was played since (up to a window and its scatter, ~0.8 s).
+    void restart()
+    {
+        line_[0].clear();
+        line_[1].clear();
+        for (int c = 0; c < 2; ++c)
+            for (int k = 0; k < 4; ++k) z_[c][k][0] = z_[c][k][1] = 0.0f;
+    }
+#endif
+
     // Always records (cheap); with shift, also returns the octave in l and r.
     void process(float& l, float& r, bool shift)
     {

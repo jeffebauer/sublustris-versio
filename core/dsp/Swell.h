@@ -28,6 +28,15 @@ public:
     // (kDraws a side, the first kTaps used), so it is the version the owner heard.
     static constexpr int   kTaps = 12;
     static constexpr int   kDraws = 24;
+#ifndef IV_FIXED_VOICINGS
+    // PROTOTYPE (overnight review, 26 Oct 2026): the points per side, kTaps (as built) .. kDraws (24:
+    // the version before v1.0.35, the same draws and spacing), set before prepare() lays them out.
+    static constexpr int kTapSlots = kDraws;
+    void setTapCount(int n) { taps_ = n < 1 ? kTaps : (n > kDraws ? kDraws : n); }
+    int  tapCount() const { return taps_; }
+#else
+    static constexpr int kTapSlots = kTaps;
+#endif
     static constexpr float kMaxSeconds = 7.6f; // BLOOM's 4 s × MASSIVE's mass 1.5 × kSpanPerAttack, plus jitter
     static constexpr float kDirectBelowSeconds = 0.04f;
     static constexpr float kTapsFromSeconds = 0.12f;
@@ -58,9 +67,9 @@ public:
         for (int c = 0; c < 2; ++c)
             for (int k = 0; k < kDraws; ++k) {
                 s = s * 1664525u + 1013904223u;
-                if (k >= kTaps) continue;
+                if (k >= taps_) continue;
                 const float jitter = float(s >> 8) * (1.0f / 16777216.0f) - 0.5f; // ±half a slot
-                frac_[c][k] = (float(k) + 0.5f + 0.8f * jitter) / float(kTaps);
+                frac_[c][k] = (float(k) + 0.5f + 0.8f * jitter) / float(taps_);
                 sign_[c][k] = (s & 0x80000000u) ? -1.0f : 1.0f;
             }
         setSCurve(sCurve_);
@@ -76,15 +85,15 @@ public:
         sCurve_ = on;
         float energy = 0.0f;
         for (int c = 0; c < 2; ++c)
-            for (int k = 0; k < kTaps; ++k) {
-                const float x = (float(k) + 1.0f) / float(kTaps);
+            for (int k = 0; k < taps_; ++k) {
+                const float x = (float(k) + 1.0f) / float(taps_);
                 const float g = sCurve_ ? 0.5f - 0.5f * std::cos(3.14159265f * x) : x; // rising: the slab builds
                 gain_[c][k] = g;
                 if (c == 0) energy += g * g;
             }
         const float norm = 1.0f / std::sqrt(energy);
         for (int c = 0; c < 2; ++c)
-            for (int k = 0; k < kTaps; ++k) gain_[c][k] *= norm * sign_[c][k];
+            for (int k = 0; k < taps_; ++k) gain_[c][k] *= norm * sign_[c][k];
     }
 
     void reset()
@@ -123,11 +132,11 @@ public:
         const float span = kSpanPerAttack * a * sampleRate_ * (1.0f - (1.0f - kSmearSpanScale) * smearG_ / kSmearGain);
         const float maxLen = kSmearMaxSeconds * sampleRate_;
         for (int j = 0; j < kSmearStages; ++j) {
-            const float len = span / float(kTaps) * kSmearRatio[j];
+            const float len = span / float(taps_) * kSmearRatio[j];
             smearLen_[j] = len < 1.0f ? 1u : uint32_t(len > maxLen ? maxLen : len);
         }
         for (int c2 = 0; c2 < 2; ++c2)
-            for (int k = 0; k < kTaps; ++k) {
+            for (int k = 0; k < taps_; ++k) {
                 const float d = 1.0f + frac_[c2][k] * span;
                 tapDelay_[c2][k] = d;
             }
@@ -152,7 +161,7 @@ public:
         for (int c = 0; c < 2; ++c) {
             for (int s = 0; s < n; ++s) sum[c][s] = 0.0f;
             const DelayLine& line = line_[c];
-            for (int k = 0; k < kTaps; ++k) {
+            for (int k = 0; k < taps_; ++k) {
                 const float    d  = tapDelay_[c][k];
                 const auto     di = uint32_t(d);
                 const float    t  = d - float(di), g = gain_[c][k];
@@ -192,7 +201,7 @@ public:
         if (tapMix_ <= 0.0f) return;
         float sum[2] = {0.0f, 0.0f};
         for (int c = 0; c < 2; ++c)
-            for (int k = 0; k < kTaps; ++k) {
+            for (int k = 0; k < taps_; ++k) {
                 const float d  = tapDelay_[c][k];
                 const auto  di = uint32_t(d);
                 const float t  = d - float(di);
@@ -214,7 +223,12 @@ public:
 private:
     float     sampleRate_ = 48000.0f;
     DelayLine line_[2];
-    float     frac_[2][kTaps] = {}, sign_[2][kTaps] = {}, gain_[2][kTaps] = {}, tapDelay_[2][kTaps] = {};
+    float     frac_[2][kTapSlots] = {}, sign_[2][kTapSlots] = {}, gain_[2][kTapSlots] = {}, tapDelay_[2][kTapSlots] = {};
+#ifndef IV_FIXED_VOICINGS
+    int       taps_ = kTaps; // setTapCount (a prototype)
+#else
+    static constexpr int taps_ = kTaps;
+#endif
     uint32_t  seed_ = 0x5EE11u; // the jitter and signs' generator (setSeed, a prototype)
     float     attackNow_ = 0.0f, attackTarget_ = 0.0f, tapMix_ = 0.0f;
     bool      sCurve_ = false;

@@ -54,6 +54,24 @@ void Engine::setSwellSeedPrototype(uint32_t seed)
     fitSwellSeed_ = seed;
     prepare(sampleRate_, maxBlockSize_);
 }
+
+void Engine::setTapeOversamplingPrototype(int factor)
+{
+    fitTapeOs_ = factor == 2 ? 2 : 4;
+    prepare(sampleRate_, maxBlockSize_);
+}
+
+void Engine::setLowDecimatePrototype(int d)
+{
+    lowDecimate_ = d < kLowDecimate ? kLowDecimate : (d > kLowDecimateMax ? kLowDecimateMax : d);
+    prepare(sampleRate_, maxBlockSize_);
+}
+
+void Engine::setSwellTapsPrototype(int taps)
+{
+    fitSwellTaps_ = taps;
+    prepare(sampleRate_, maxBlockSize_);
+}
 #endif
 
 IV_SIZE_OPT void Engine::attachMemory(float* large, size_t largeCount, float* fast, size_t fastCount)
@@ -101,6 +119,9 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
 #ifndef IV_FIXED_VOICINGS
     swell_.setSeed(fitSwellSeed_); // before prepare(): it lays the taps out from the seed
     twinSwell_.setSeed(fitSwellSeed_);
+    swell_.setTapCount(fitSwellTaps_); // likewise the count (0 = as built)
+    twinSwell_.setTapCount(fitSwellTaps_);
+    for (auto& t : tape_) t.setFactor(fitTapeOs_);
 #endif
     ready_ &= swell_.prepare(large_, sampleRate);
     ready_ &= twinSwell_.prepare(large_, sampleRate);
@@ -110,7 +131,7 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
     ready_ &= shimmer_.prepare(large_, sampleRate);
     ready_ &= twinFdn_.prepare(large_, 0.5f * sampleRate, 0x7A1Eu);
-    ready_ &= lowFdn_.prepare(large_, sampleRate / float(kLowDecimate), 0x10F7u);
+    ready_ &= lowFdn_.prepare(large_, sampleRate / float(lowDecimate_), 0x10F7u);
     lowFdn_.setGovernorLeader(&fdn_);
     {
         // The split: a 2nd-order Butterworth pair (bilinear). The two tanks' outputs are uncorrelated,
@@ -494,6 +515,9 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // SHIMMER (ADR 0024): TIME is how much; it rests while frozen (as REVERSE did, ADR 0015).
     shimmerAmount_ = time;
     shimmerTarget_ = attack == 2 && !frozen ? 1.0f : 0.0f;
+#ifndef IV_FIXED_VOICINGS
+    shimmerArmed_ = attack == 2; // setShimmerLazyPrototype: recording while SHIMMER is selected
+#endif
 
     const float pd = predelay * sampleRate_;
     if (snap) predelayNow_ = pd;
@@ -787,7 +811,18 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             shimmerMix_ = approach(shimmerMix_, shimmerTarget_, attackStep);
             {
                 float sl = flipGain_ * pl, sr = flipGain_ * pr;
+#ifndef IV_FIXED_VOICINGS
+                if (shimmerLazy_ && !shimmerArmed_ && shimmerMix_ <= 0.0f) { // the prototype: resting
+                    sl = sr = 0.0f;
+                    shimmerResting_ = true;
+                } else {
+                    if (shimmerResting_) shimmer_.restart();
+                    shimmerResting_ = false;
+                    shimmer_.process(sl, sr, shimmerMix_ > 0.0f);
+                }
+#else
                 shimmer_.process(sl, sr, shimmerMix_ > 0.0f);
+#endif
                 const float send = shimmerMix_ * voicing::kShimmerSend * shimmerAmount_;
                 pl += send * sl;
                 pr += send * sr;
@@ -931,7 +966,7 @@ void Engine::processTwoTanks(int n)
             if (lowPhase_ == 0) (c ? lowInR_ : lowInL_)[k] = lo;
         }
         if (lowPhase_ == 0) ++k;
-        lowPhase_ = (lowPhase_ + 1) % kLowDecimate;
+        lowPhase_ = (lowPhase_ + 1) % lowDecimate_;
     }
     tankHalf_.process(fdn_, bufL_, bufR_, wetL_, wetR_, n);
     for (int j = 0; j < k; ++j) lowOutL_[j] = lowOutR_[j] = 0.0f;
@@ -945,7 +980,7 @@ void Engine::processTwoTanks(int n)
             lowCur_[0] = lowOutL_[j]; lowCur_[1] = lowOutR_[j];
             ++j;
         }
-        const float t = float(lowPhase_) / float(kLowDecimate);
+        const float t = float(lowPhase_) / float(lowDecimate_);
         float* wet[2] = {wetL_, wetR_};
         for (int c = 0; c < 2; ++c) {
             const float up = lowPrev_[c] + t * (lowCur_[c] - lowPrev_[c]);
@@ -953,7 +988,7 @@ void Engine::processTwoTanks(int n)
             wet[c][i] += y;
             power += 0.5 * double(y) * y;
         }
-        lowPhase_ = (lowPhase_ + 1) % kLowDecimate;
+        lowPhase_ = (lowPhase_ + 1) % lowDecimate_;
     }
     fdn_.setExternalPower(float(power / double(n)));
 }
