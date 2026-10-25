@@ -1,13 +1,13 @@
 # Owner tasks
 
-**Last updated:** 25 Oct 2026, session 6 (shimmer round 2 page; SPACE flips: the morph picked).
+**Last updated:** 25 Oct 2026, session 6 (shimmer round 3; SIZE and TIME moves by crossfade).
 **Plugin installed:** `2a7d7b6` on branch `claude/massive-air` (v1.0.32: v1.0.30 plus MASSIVE's highs ringing as long as the body and its shortest tail lasting six trips; ERA's value names its era), 25 Oct 2026 11:40; AU check passed. Rescan in Ableton to see it.
 
 ## To do
 
 ### Decide
-- [ ] **Shimmer, round 2** (http://192.168.1.100:8766/shimmer2/index.html on the Wi-Fi; `renders/shimmer2/index.html`): A is round 1 (what you heard as "bit crushing": it fluttered 14-25 dB, 23 times a second); B a clean, steady octave; C clean and slowly wandering, a little wide; D moving, darker, breathing. HALL low TIME, MASSIVE high TIME, PLATE mid. Picks and notes.
-- [ ] **More ideas for ATTACK's third position**: which to prototype next (Claude's list in the session; also in "Waiting on Claude").
+- [ ] **Shimmer, round 3** (http://192.168.1.100:8766/shimmer3/index.html on the Wi-Fi; `renders/shimmer3/index.html`): the "bit crushing" traced to three causes and fixed (fold-back above 12 kHz, crossfade sidebands piling up when fed back, the reverb's own movement re-applied each trip). A round 2; B fed back; C fed back and wandering; D fed back and darker (cleanest); E your input an octave up, no feedback.
+- [ ] **Moving SIZE and TIME** (http://192.168.1.100:8766/knob_moves/index.html; `renders/knob_moves/index.html`): your plugin notes (MASSIVE out of tune after a SIZE move, TIME's wash of noise, HALL SIZE's aliasing-like moment). A today (the delays slide); B and C jump and crossfade (0.1 s, 0.3 s): no retuned tail, no noise. MASSIVE SIZE while playing and in the tail, HALL SIZE flicked, TIME flicked.
 
 ### Listen (after your notes)
 - Nothing open.
@@ -28,6 +28,8 @@
 
 ## Waiting on Claude
 
+- **Next ATTACK ideas, after the shimmer** (your picks): echo-verb, nonlinear (gated), reverse done differently. Research, then a page.
+- **BLOOM's TIME and PLATE's SIZE** still slide when moved (same noise as TIME and HALL had); they get the crossfade treatment once the knob_moves page is judged.
 - **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): build it for real. For 3 s after a flip both spaces hear the music while one crossfades into the other; it needs a second reverb running for those 3 s (the freeze's spare) and ~0.5-1 KB of flash, which has to be freed first (804 B left). A plan before building.
 - **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper; a later round if the shimmer is kept.
 - **The rest of the Valhalla comparison** (`docs/research/valhalla-comparison.md`): the loudness one is done (v1.0.28); MASSIVE's highs are on a page to pick from (above). Still to come: Supermassive moves more in pitch at long settings (a DRIFT comparison). Found on the way: the Immensio beside Valhalla page's MASSIVE settings now ring longer than labelled (a 21 Oct 2026 DECAY change, v1.0.21: "15 s" rings ~20 s, "2 s" ~4.7 s); DECAY 0.08 / 0.33 give 5 / 15 s at SIZE 0.7, and 2 s is below MASSIVE's shortest at that SIZE.
@@ -37,6 +39,7 @@
 
 ## Done
 
+- 25 Oct 2026: **Shimmer, round 2** (your note): "none of those shimmers sound right… different flavours of bit crushing". Measured: shifting up folded everything above 12 kHz back down, and every version shared that; round 3 fixes it. The page is deleted.
 - 25 Oct 2026: **REVERSE's replacements, round 1** (your notes): shimmer up "too static… almost like bit crushing" (measured: its splices fluttered the octave 14-25 dB at 23 Hz; round 2 on its page); sub shimmer "a bit muddy"; grains "more like modulation than grains" and delayed repeats. The page is deleted.
 - 25 Oct 2026: **SPACE flips: the 3 s morph wins** (over today's quick fade, a full ring-out and a 3 s fade). Emulated with two renders; the page is deleted. Building it is in Waiting on Claude.
 - 25 Oct 2026: **MASSIVE's shortest tail lasts six trips round its lines** (your pick E on the drop page: "solves the abrupt level drop… truly MASSIVE"; SPEC v1.0.32, ADR 0023): no more drop after the music stops at short DECAYs; the shortest MASSIVE is ~5 s at noon SIZE, 12 s at full. On `claude/massive-air`, installed in Ableton, all tests pass, flash unchanged. The page is deleted.
