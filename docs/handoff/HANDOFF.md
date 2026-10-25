@@ -10,7 +10,7 @@
 |---|---|
 | Spec | v1.0 frozen, plus build amendments **v1.0.1–v1.0.30** (SPEC changelog). This session: v1.0.28–v1.0.30, below |
 | M0 desktop / firmware | Built |
-| M0 hardware | **Owner check pending** (`docs/m0-hardware-check.md`) |
+| M0 hardware | **Passed** (owner, 25 Oct 2026: "everything worked as expected") |
 | M1 Hall, M4 MASSIVE, M5 PLATE | Built and listened |
 | M2 | Criteria pass. **Not installed** in Ableton |
 | M3 | Needs the owner at the rack (CPU). New wet stages since the last estimate: the BBD and the radio |
@@ -63,7 +63,7 @@
 
 ## Next steps
 
-1. **Owner at the rack: M0, then M3.** Profile the heaviest cases, which now include the new wet stages:
+1. **Owner at the rack: M3** (M0 passed 25 Oct 2026). Profile the heaviest cases, which now include the new wet stages:
    - a frozen MASSIVE, DRIFT CW, BLOOM, ERA at the radio (0.9–1.0), and at the BBD (0.5);
    - the cassette with tape out at 4×;
    - a long silent tail, for subnormals (the firmware doesn't flush to zero).
@@ -77,7 +77,7 @@
 ## Waiting on the owner (all in `docs/TASKS.md`)
 
 - No picks or pages waiting.
-- **At the rack:** M0, then M3.
+- **At the rack:** M3 (M0 passed).
 - **Recordings:**
   - re-export three clipped Valhalla takes 6 dB lower;
   - re-record Supermassive's short settings;

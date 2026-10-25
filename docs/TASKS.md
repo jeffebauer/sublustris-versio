@@ -17,8 +17,7 @@
 - [ ] **Play the plugin** (Immensio Versio, AU or VST3; rescan plug-ins first). It's v1.0.33 from branch `claude/massive-air`: everything in `main` plus MASSIVE's highs and shortest tail, ERA's era names, and **SHIMMER** on ATTACK's third position (TIME is how much). Notes welcome on anything; it goes into `main` when you say so.
 
 ### At the rack
-- [ ] **M0 hardware check** (`docs/m0-hardware-check.md`): flash `firmware/build/immensio_versio_m0test.bin`, check the boot pattern, switches, button (USB session), then knobs, gate and a quick passthrough listen (rack session). Tell Claude the results.
-- [ ] **M3 CPU check** (after M0): flash `firmware/build/immensio_versio_profile.bin` and send Claude the serial CPU report, so the CPU budget is measured, not estimated. Include a frozen MASSIVE with ERA full, DRIFT fully CW and BLOOM (the heaviest case on the desktop: 4.5× a plain HALL), and leave it ringing out into a long silence too: the tank memory fills with vanishingly small numbers, which some processors handle slowly (the plugin flushes them; the firmware doesn't yet).
+- [ ] **M3 CPU check** (next, now that M0 has passed): flash `firmware/build/immensio_versio_profile.bin` and send Claude the serial CPU report, so the CPU budget is measured, not estimated. Include a frozen MASSIVE with ERA full, DRIFT fully CW and BLOOM (the heaviest case on the desktop: 4.5× a plain HALL), and leave it ringing out into a long silence too: the tank memory fills with vanishingly small numbers, which some processors handle slowly (the plugin flushes them; the firmware doesn't yet).
 
 ### When convenient
 - [ ] **Re-record Supermassive's short settings at a feedback that sounds like a reverb** (your note: at 0 % and 12 % it's separate delays): about 5 % for Andromeda's 2 s, or skip 2 s and record the longer settings you like (15 s, 30 s, infinite). Also **re-export three clipped Valhalla takes about 6 dB lower**: Plate Chrome 15 s, Plate Lithium 15 s and Supermassive Andromeda 100 % (measure and music). Also check Supermassive's DELAY: its first sound came at different times between takes (Sagittarius 421 / 38 / 3 ms, Andromeda 1.1 / 0.7 / 0.65 s).
@@ -36,6 +35,7 @@
 
 ## Done
 
+- 25 Oct 2026: **M0 hardware check passed** (your report: "everything worked as expected"): boot pattern, switches, button, knobs, gate and passthrough on the Versio. Next at the rack: the M3 CPU check.
 - 25 Oct 2026: **SHIMMER is built** (SPEC v1.0.33, ADR 0024): REVERSE removed, the picked shimmer in its place in the module and the plugin; the switch reads NORMAL / BLOOM / SHIMMER. All tests pass (new ones: the octave added and even across notes, TIME 0 is the plain reverb, no clicks, rests while frozen); release flash 112,060 B (+224, 580 B under budget). Installed in Ableton.
 - 25 Oct 2026: **ATTACK's third position: SHIMMER** ("Shimmer wins hands-down" against reverse into the reverb, reversed tail, echo-verb, echo-verb re-echoed, nonlinear gate and gated room). The page is deleted.
 - 25 Oct 2026: **Moving SIZE and TIME: C wins** ("Option C: Crossfade slow is the winner"): no sliding; the delays jump and the old setting fades out over 0.3 s, the level corrected for one trip. The page is deleted; building it is in Waiting on Claude.
