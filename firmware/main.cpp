@@ -152,6 +152,63 @@ void CopyItcm()
     __ISB();
 }
 #endif
+
+#if defined(IV_MODE_PROFILE) || IV_RELEASE_DIAG
+// ---- Hand-rolled serial line formatting (flash budget, SPEC §5.3) ---------
+// No printf/vsnprintf/std::snprintf in this build: the nano-newlib printf
+// family costs ~2.1 KB of flash once pulled in (Resilio measured), all for
+// one line every ~3 s. This firmware links --specs=nano.specs without
+// `-u _printf_float` anyway, so float formats wouldn't print. Integer maths
+// here; output goes straight to the USB CDC transport (hw.seed.usb_handle).
+void AppendStr(char*& p, const char* end, const char* s)
+{
+    while (*s && p < end) *p++ = *s++;
+}
+
+void AppendUInt(char*& p, const char* end, unsigned v)
+{
+    char digits[10];
+    int  n = 0;
+    do {
+        digits[n++] = char('0' + v % 10);
+        v /= 10;
+    } while (v && n < int(sizeof(digits)));
+    while (n > 0 && p < end) *p++ = digits[--n];
+}
+
+// Right-justifies "value.d" (one decimal digit) into `width` characters,
+// e.g. AppendFixed1(p, end, 583, 5) -> " 58.3" (value is the number x10).
+void AppendFixed1(char*& p, const char* end, int tenths, int width)
+{
+    if (tenths < 0) tenths = 0;
+    char digits[8];
+    int  n      = 0;
+    int  whole  = tenths / 10;
+    int  frac   = tenths % 10;
+    digits[n++] = char('0' + frac);
+    digits[n++] = '.';
+    do {
+        digits[n++] = char('0' + whole % 10);
+        whole /= 10;
+    } while (whole && n < int(sizeof(digits)));
+    int pad = width - n;
+    while (pad-- > 0 && p < end) *p++ = ' ';
+    while (n > 0 && p < end) *p++ = digits[--n];
+}
+
+// The USB CDC send is non-blocking: it reads the buffer while the host polls (so the buffer must
+// outlive the call: callers pass static buffers) and refuses (busy) a send made while the last is
+// still going out. So: retry until the transport takes it, for at most 200 ms (no host listening:
+// the line is dropped, as before).
+void TransmitLine(const char* buf, size_t len)
+{
+    const uint32_t t0 = System::GetNow();
+    while (hw.seed.usb_handle.TransmitInternal(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(buf)), len)
+               != UsbHandle::Result::OK
+           && System::GetNow() - t0 < 200u) {
+    }
+}
+#endif
 #endif
 #if !defined(IV_MODE_M0TEST)
 // The Engine is built at boot (placement new at the top of main), not as a
@@ -475,17 +532,6 @@ using iv::ParamId;
 
 constexpr int kBlockSize = IV_PROFILE_BLOCK;
 
-// ---- Hand-rolled serial line formatting (flash budget, SPEC §5.3) ---------
-// No printf/vsnprintf/std::snprintf in this build: the nano-newlib printf
-// family costs ~2.1 KB of flash once pulled in (Resilio measured), all for
-// one line every ~3 s. This firmware links --specs=nano.specs without
-// `-u _printf_float` anyway, so float formats wouldn't print. Integer maths
-// here; output goes straight to the USB CDC transport (hw.seed.usb_handle).
-void AppendStr(char*& p, const char* end, const char* s)
-{
-    while (*s && p < end) *p++ = *s++;
-}
-
 void AppendPadRight(char*& p, const char* end, const char* s, int width)
 {
     int n = 0;
@@ -499,41 +545,10 @@ void AppendPadRight(char*& p, const char* end, const char* s, int width)
     }
 }
 
-void AppendUInt(char*& p, const char* end, unsigned v)
-{
-    char digits[10];
-    int  n = 0;
-    do {
-        digits[n++] = char('0' + v % 10);
-        v /= 10;
-    } while (v && n < int(sizeof(digits)));
-    while (n > 0 && p < end) *p++ = digits[--n];
-}
-
 void AppendInt(char*& p, const char* end, int v)
 {
     if (v < 0 && p < end) *p++ = '-';
     AppendUInt(p, end, unsigned(v < 0 ? -v : v));
-}
-
-// Right-justifies "value.d" (one decimal digit) into `width` characters,
-// e.g. AppendFixed1(p, end, 583, 5) -> " 58.3" (value is the number x10).
-void AppendFixed1(char*& p, const char* end, int tenths, int width)
-{
-    if (tenths < 0) tenths = 0;
-    char digits[8];
-    int  n      = 0;
-    int  whole  = tenths / 10;
-    int  frac   = tenths % 10;
-    digits[n++] = char('0' + frac);
-    digits[n++] = '.';
-    do {
-        digits[n++] = char('0' + whole % 10);
-        whole /= 10;
-    } while (whole && n < int(sizeof(digits)));
-    int pad = width - n;
-    while (pad-- > 0 && p < end) *p++ = ' ';
-    while (n > 0 && p < end) *p++ = digits[--n];
 }
 
 // Fraction (0..1) -> tenths of a percent, e.g. 0.583f -> 583 ("58.3").
@@ -547,19 +562,6 @@ void AppendHex(char*& p, const char* end, uint32_t v)
 
 constexpr size_t kLineBufSize  = 1100; // CORNER + SPLIT + PEAK lines, sent in one transmit
 constexpr size_t kBenchBufSize = 1600; // BENCH + SDRAM + MICRO (once a lap), its own transmit
-
-// The USB CDC send is non-blocking: it reads the buffer while the host polls (so the buffer must
-// outlive the call: callers pass static buffers) and refuses (busy) a send made while the last is
-// still going out. So: retry until the transport takes it, for at most 200 ms (no host listening:
-// the line is dropped, as before).
-void TransmitLine(const char* buf, size_t len)
-{
-    const uint32_t t0 = System::GetNow();
-    while (hw.seed.usb_handle.TransmitInternal(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(buf)), len)
-               != UsbHandle::Result::OK
-           && System::GetNow() - t0 < 200u) {
-    }
-}
 
 // ---- Corner table (SPEC §5, §7 M3) -----------------------------------------
 // SPACE PLATE/HALL/MASSIVE x SIZE {0,1} x ERA (5) = 30 corners, all fully wet (MIX 1) so the meter
@@ -1562,6 +1564,9 @@ int main()
 
 #include "LedMeter.h"
 #include "PotEndStops.h"
+#if IV_RELEASE_DIAG
+#include "dsp/ProfileHook.h"
+#endif
 
 namespace {
 
@@ -1615,6 +1620,56 @@ volatile float gLimiterGain      = 1.0f; // lowest Engine::limiterGain() since l
 // LED red for a late block, amber for a near one, so a crackle with a flash is the CPU, one without
 // isn't.
 volatile uint32_t gLateBlocks = 0, gNearBlocks = 0;
+
+#if IV_RELEASE_DIAG
+// RELEASE_DIAG=1 (diagnostic, 26 Oct 2026): the playing build on USB power, reporting over serial. The
+// knobs are held at noon and SPACE at MASSIVE, ATTACK NORMAL (on USB power the knob circuits read full
+// scale); the input is made here, changing every 10 s: silence, fast notes (8 a second, decaying saws
+// at 0.5), the profile's test signal (quiet noise and a click every 500 ms). Once a second: the
+// callback's and the Engine's average and worst block (% of the 1 ms period), late / near blocks, and
+// each section's worst block (prof::Section, as the profile's PEAK line).
+constexpr int     kDiagInputs = 3;
+const char* const kDiagInputNames[kDiagInputs] = {"silence", "fast notes", "test signal"};
+volatile int      gDiagInput = 0;
+volatile uint32_t gDiagCbMax = 0, gDiagEngMax = 0, gDiagBlocks = 0;
+volatile uint64_t gDiagCbSum = 0, gDiagEngSum = 0;
+uint32_t          gDiagSecPeak[iv::prof::kNumSections];
+uint32_t          gDiagSecAcc[iv::prof::kNumSections], gDiagLast = 0;
+void DiagMark(int section)
+{
+    const uint32_t now = DWT->CYCCNT;
+    gDiagSecAcc[section] += now - gDiagLast;
+    gDiagLast = now;
+}
+uint32_t gDiagRng = 0x1234567u;
+float DiagNoise()
+{
+    gDiagRng ^= gDiagRng << 13;
+    gDiagRng ^= gDiagRng >> 17;
+    gDiagRng ^= gDiagRng << 5;
+    return float(gDiagRng) * (2.0f / 4294967296.0f) - 1.0f;
+}
+// One input sample. Fast notes: a new note every 6,000 samples, a saw at a pitch from a fixed list,
+// decaying with a 60 ms time constant.
+float DiagInput(int kind)
+{
+    static uint32_t n = 0, sinceNote = 0, note = 0;
+    static float    phase = 0.0f, env = 0.0f;
+    ++n;
+    if (kind == 0) return 0.0f;
+    if (kind == 2) return 5.0e-4f * DiagNoise() + (n % 24000u == 0 ? 0.8f : 0.0f);
+    constexpr float kHz[8] = {110.0f, 220.0f, 165.0f, 330.0f, 247.0f, 440.0f, 196.0f, 587.0f};
+    if (++sinceNote >= 6000u) {
+        sinceNote = 0;
+        note      = (note + 3u) % 8u;
+        env       = 0.5f;
+    }
+    phase += kHz[note] / 48000.0f;
+    if (phase >= 1.0f) phase -= 1.0f;
+    env *= 0.99965f; // ~60 ms
+    return env * (2.0f * phase - 1.0f);
+}
+#endif
 volatile bool  gFrozen           = false; // Engine::frozen() as of the last block
 volatile bool  gPainting         = false; // Engine::painting() as of the last block
 
@@ -1837,27 +1892,53 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
     constexpr float kKnobDeadband = 0.0005f;
     static float    sent[DaisyVersio::KNOB_LAST] = {-1, -1, -1, -1, -1, -1, -1};
     for (int p = 0; p < DaisyVersio::KNOB_LAST; ++p) {
+#if IV_RELEASE_DIAG
+        const float v = 0.5f; // every knob at noon
+#else
         const float v = ivpot::endStops(hw.GetKnobValue(kPotKnob[p])); // exact 0 / 1 at the stops
+#endif
         if (std::fabs(v - sent[p]) > kKnobDeadband || ((v == 0.0f || v == 1.0f) && v != sent[p])) {
             sent[p] = v;
             engine.setParam(kPotParams[p], v);
         }
     }
 
+#if IV_RELEASE_DIAG
+    engine.setParam(iv::ParamId::Space, iv::switchToNormalised(2));
+    engine.setParam(iv::ParamId::Attack, iv::switchToNormalised(0));
+    static float dl[kBlockSize], dr[kBlockSize];
+    const int    kind = gDiagInput;
+    for (size_t i = 0; i < size; ++i) dl[i] = dr[i] = DiagInput(kind);
+    const float* srcL = dl;
+    const float* srcR = dr;
+#else
     engine.setParam(iv::ParamId::Space,
                     iv::switchToNormalised(SwitchPosition(DaisyVersio::SW_0, kSpaceSwitchInverted)));
     engine.setParam(iv::ParamId::Attack,
                     iv::switchToNormalised(SwitchPosition(DaisyVersio::SW_1, kAttackSwitchInverted)));
+    const float* srcL = in[0];
+    const float* srcR = in[1];
+#endif
 
     // Meters: only a per-block abs peak per channel here; all smoothing and
     // colour maths runs in the main loop.
     float inL = 0.0f, inR = 0.0f;
     for (size_t i = 0; i < size; ++i) {
-        inL = std::max(inL, std::fabs(in[0][i]));
-        inR = std::max(inR, std::fabs(in[1][i]));
+        inL = std::max(inL, std::fabs(srcL[i]));
+        inR = std::max(inR, std::fabs(srcR[i]));
     }
 
-    engine.process(in[0], in[1], out[0], out[1], int(size));
+#if IV_RELEASE_DIAG
+    for (int k = 0; k < iv::prof::kNumSections; ++k) gDiagSecAcc[k] = 0;
+    const uint32_t e0 = DWT->CYCCNT;
+    gDiagLast = e0;
+#endif
+    engine.process(srcL, srcR, out[0], out[1], int(size));
+#if IV_RELEASE_DIAG
+    const uint32_t eng = DWT->CYCCNT - e0;
+    for (int k = 0; k < iv::prof::kNumSections; ++k)
+        if (gDiagSecAcc[k] > gDiagSecPeak[k]) gDiagSecPeak[k] = gDiagSecAcc[k];
+#endif
     float outL = 0.0f, outR = 0.0f;
     for (size_t i = 0; i < size; ++i) {
         out[0][i] *= kOutputTrim;
@@ -1878,6 +1959,13 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
     const uint32_t d      = DWT->CYCCNT - t0;
     if (d > period) gLateBlocks = gLateBlocks + 1;
     else if (d > period / 10u * 9u) gNearBlocks = gNearBlocks + 1;
+#if IV_RELEASE_DIAG
+    if (d > gDiagCbMax) gDiagCbMax = d;
+    if (eng > gDiagEngMax) gDiagEngMax = eng;
+    gDiagCbSum   = gDiagCbSum + d;
+    gDiagEngSum  = gDiagEngSum + eng;
+    gDiagBlocks  = gDiagBlocks + 1;
+#endif
 }
 
 } // namespace
@@ -1899,6 +1987,11 @@ int main()
     BootPattern(); // then metering
 
     hw.StartAdc();
+#if IV_RELEASE_DIAG
+    hw.seed.usb_handle.Init(daisy::UsbHandle::FS_INTERNAL); // serial without the logger's printf (as profile)
+    iv::prof::markHook = DiagMark;
+    uint32_t diagNext = System::GetNow() + 1000u, diagSeconds = 0;
+#endif
     hw.StartAudio(AudioCallback);
 
     // Our own PWM from here on (see LedPwm); libDaisy's is only the fallback.
@@ -1959,6 +2052,47 @@ int main()
         }
         if (ledDma) gLedPwm.flush();
         else hw.UpdateLeds();
+#if IV_RELEASE_DIAG
+        if (System::GetNow() >= diagNext) {
+            diagNext += 1000u;
+            const uint32_t blocks = gDiagBlocks ? gDiagBlocks : 1u;
+            const float    per    = 480000.0f * float(kBlockSize) / 48.0f / 100.0f; // cycles per 1 % of a block
+            auto t = [per](float cycles) { return int(cycles / per * 10.0f + 0.5f); }; // tenths of a %
+            static char line[400];
+            char*       q   = line;
+            const char* end = line + sizeof(line);
+            AppendStr(q, end, "DIAG ");
+            AppendStr(q, end, kDiagInputNames[gDiagInput]);
+            AppendStr(q, end, " | cb avg");
+            AppendFixed1(q, end, t(float(gDiagCbSum / blocks)), 6);
+            AppendStr(q, end, " max");
+            AppendFixed1(q, end, t(float(gDiagCbMax)), 6);
+            AppendStr(q, end, " | engine avg");
+            AppendFixed1(q, end, t(float(gDiagEngSum / blocks)), 6);
+            AppendStr(q, end, " max");
+            AppendFixed1(q, end, t(float(gDiagEngMax)), 6);
+            AppendStr(q, end, " | late ");
+            AppendUInt(q, end, unsigned(gLateBlocks));
+            AppendStr(q, end, " near ");
+            AppendUInt(q, end, unsigned(gNearBlocks));
+            AppendStr(q, end, "\r\n  PEAK");
+            static const char* const kSec[iv::prof::kNumSections] = {"ctl", "in", "shim", "swell", "twin", "tank", "tkctl",
+                                                                     "tkloop", "tkout", "tkmix", "tape", "bbd", "radio", "out"};
+            for (int k = 0; k < iv::prof::kNumSections; ++k) {
+                AppendStr(q, end, " ");
+                AppendStr(q, end, kSec[k]);
+                AppendFixed1(q, end, t(float(gDiagSecPeak[k])), 5);
+                gDiagSecPeak[k] = 0;
+            }
+            AppendStr(q, end, "\r\n");
+            TransmitLine(line, size_t(q - line));
+            gDiagCbMax = gDiagEngMax = 0;
+            gDiagCbSum = gDiagEngSum = 0;
+            gDiagBlocks = 0;
+            gLateBlocks = gNearBlocks = 0;
+            if (++diagSeconds % 10u == 0) gDiagInput = (gDiagInput + 1) % kDiagInputs;
+        }
+#endif
         System::Delay(1);
     }
 }

@@ -28,7 +28,10 @@ PROFILE_ITCM ?= 1
 # Release-only switch (diagnostic, 26 Oct 2026): RELEASE_SDRAM_TIGHT=0 keeps libDaisy's SDRAM timing
 # (immensio_versio-sdlibdaisy.bin), to tell a timing fault on rack power from a CPU overrun.
 RELEASE_SDRAM_TIGHT ?= 1
-RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)
+# RELEASE_DIAG=1: the playing build on USB power, knobs held at noon, its own test input, a serial report
+# (immensio_versio-diag.bin; main.cpp "RELEASE_DIAG").
+RELEASE_DIAG ?= 0
+RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)
 PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)
 
 ifeq ($(MODE),m0test)
@@ -43,7 +46,8 @@ else ifeq ($(MODE),profile)
   endif
 else ifeq ($(MODE),release)
   TARGET    = immensio_versio$(RELEASE_TAG)
-  MODE_DEFS = -DIV_MODE_RELEASE -DIV_ITCM=1 -DIV_RELEASE_SDRAM_TIGHT=$(RELEASE_SDRAM_TIGHT)
+  MODE_DEFS = -DIV_MODE_RELEASE -DIV_ITCM=1 -DIV_RELEASE_SDRAM_TIGHT=$(RELEASE_SDRAM_TIGHT) \
+              -DIV_RELEASE_DIAG=$(RELEASE_DIAG) $(if $(filter 1,$(RELEASE_DIAG)),-DIV_PROFILE_HOOKS)
   LDSCRIPT  = STM32H750IB_flash_itcm.lds
 else
   $(error Unknown MODE '$(MODE)': use m0test, profile, or release)

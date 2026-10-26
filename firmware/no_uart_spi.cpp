@@ -154,7 +154,7 @@ daisy::QSPIHandle::Result daisy::QSPIHandle::Init(const daisy::QSPIHandle::Confi
 // handle keeps the handler's `if (hpcd_USB_OTG_HS.Instance)` guard false,
 // and the interrupt is never enabled in release anyway. Profile (USB
 // serial) and m0test (Logger) keep the real stack.
-#if defined(IV_MODE_RELEASE)
+#if defined(IV_MODE_RELEASE) && !IV_RELEASE_DIAG // RELEASE_DIAG reports over USB serial
 extern "C" {
 PCD_HandleTypeDef hpcd_USB_OTG_HS;
 void HAL_PCD_IRQHandler(PCD_HandleTypeDef*) {}

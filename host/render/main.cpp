@@ -19,6 +19,10 @@
 #include "Sweep.h"
 #include "Wav.h"
 #include "dsp/Engine.h"
+#if defined(IV_PROFILE_HOOKS)
+#include "dsp/ProfileHook.h"
+#include <chrono>
+#endif
 
 #include <algorithm>
 #include <cmath>
@@ -91,6 +95,22 @@ Audio renderWithAutomation(iv::Engine& engine, const Audio& in, int block, const
         for (const auto& [t, down] : autom->buttonEvents) buttonSamples.emplace_back(size_t(std::lround(t * double(sr))), down);
     size_t nextButton = 0;
     const int microBlock = autom ? std::min(block, 16) : block;
+#if defined(IV_PROFILE_HOOKS)
+    // Per-block, per-section timing on the desktop (a build with -DIV_PROFILE_HOOKS only; env
+    // IV_BLOCK_PROFILE=<file.csv>): one row a block, the ns each prof::Section took. Desktop timings are
+    // a relative guide to the module's (which block spikes, and in which section), not its numbers.
+    static FILE* profFile = nullptr;
+    static std::chrono::steady_clock::time_point profLast;
+    static double profNs[iv::prof::kNumSections];
+    if (const char* pf = std::getenv("IV_BLOCK_PROFILE")) {
+        profFile = std::fopen(pf, "w");
+        iv::prof::markHook = [](int sec) {
+            const auto now = std::chrono::steady_clock::now();
+            profNs[sec] += double(std::chrono::duration_cast<std::chrono::nanoseconds>(now - profLast).count());
+            profLast = now;
+        };
+    }
+#endif
     for (size_t pos = 0; pos < frames; pos += size_t(microBlock)) {
         const int n = int(std::min<size_t>(size_t(microBlock), frames - pos));
         if (autom) {
@@ -108,8 +128,24 @@ Audio renderWithAutomation(iv::Engine& engine, const Audio& in, int block, const
             engine.button(buttonSamples[nextButton].second, int(at - pos));
             ++nextButton;
         }
+#if defined(IV_PROFILE_HOOKS)
+        if (profFile) {
+            for (double& v : profNs) v = 0.0;
+            profLast = std::chrono::steady_clock::now();
+        }
+#endif
         engine.process(srcL.data() + pos, srcR.data() + pos, out.channels[0].data() + pos, dstR + pos, n);
+#if defined(IV_PROFILE_HOOKS)
+        if (profFile) {
+            std::fprintf(profFile, "%zu", pos);
+            for (double v : profNs) std::fprintf(profFile, ",%.0f", v);
+            std::fprintf(profFile, "\n");
+        }
+#endif
     }
+#if defined(IV_PROFILE_HOOKS)
+    if (profFile) std::fclose(profFile);
+#endif
     return out;
 }
 
