@@ -1,0 +1,768 @@
+  PEAK  ctl  6.6 in 12.0 shim 19.1 swell 14.1 twin 17.6 tank  6.2 tkctl 21.2 tkloop 53.4 tkout 52.0 tkmix  4.2 tape  2.1 bbd  1.8 radio  1.7 out  3.3
+  PEAK  ctl  5.3 in  7.1 shim  4.3 swell 12.7 twin  2.0 tank 15.4 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.1 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  5.4 in  7.5 shim  4.4 swell 12.7 twin  2.0 tank 18.0 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  6.2 in  7.5 shim  4.3 swell 12.9 twin  1.9 tank 17.8 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  5.8 radio  1.7 out  3.3
+  PEAK  ctl  6.4 in  7.5 shim  4.4 swell 12.7 twin  2.0 tank 15.8 tkctl  3.3 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.9 bbd  5.8 radio  1.7 out  3.2
+  PEAK  ctl  8.5 in  7.5 shim  4.4 swell 12.8 twin  2.0 tank 15.5 tkctl  3.5 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.4 bbd  1.7 radio  7.2 out  3.3
+  PEAK  ctl  7.2 in  7.5 shim  4.3 swell 12.7 twin  1.9 tank 17.5 tkctl  3.5 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.0 bbd  5.6 radio  6.7 out  3.3
+  PEAK  ctl  5.3 in  7.5 shim  4.4 swell 12.7 twin  2.0 tank 17.9 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.8 radio  1.7 out  3.3
+  PEAK  ctl  6.3 in  7.5 shim  4.3 swell 12.8 twin  1.9 tank 17.3 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  5.8 radio  1.7 out  3.3
+  PEAK  ctl  6.5 in  7.5 shim  4.4 swell 12.8 twin  2.0 tank 15.6 tkctl  4.1 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.8 bbd  5.7 radio  1.7 out  3.2
+  PEAK  ctl  8.7 in  7.4 shim  4.4 swell 12.7 twin  2.0 tank 15.5 tkctl  4.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.3 bbd  1.7 radio  7.3 out  3.3
+  PEAK  ctl 10.0 in  7.4 shim  4.3 swell 12.5 twin  2.0 tank 17.4 tkctl  8.3 tkloop 24.9 tkout  7.4 tkmix  2.8 tape 18.1 bbd  5.7 radio  5.7 out  3.3
+  PEAK  ctl  7.4 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.3 tkctl  8.2 tkloop 18.0 tkout  7.5 tkmix  2.9 tape  2.1 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  6.8 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl  8.2 tkloop 17.7 tkout  7.1 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.6 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl 11.7 tkloop 14.0 tkout  7.2 tkmix  2.8 tape 17.8 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl 10.7 in  6.9 shim  4.3 swell 12.6 twin  2.0 tank  4.4 tkctl 10.4 tkloop 13.8 tkout  7.2 tkmix  2.9 tape 18.3 bbd  1.7 radio  7.1 out  3.4
+  PEAK  ctl 10.7 in  6.8 shim  4.3 swell 12.6 twin  2.0 tank  4.4 tkctl 11.7 tkloop 35.5 tkout 18.0 tkmix  2.8 tape 18.3 bbd  5.7 radio  6.9 out  3.3
+  PEAK  ctl  7.5 in  6.9 shim  4.3 swell 12.6 twin  1.9 tank  4.3 tkctl  9.2 tkloop 15.4 tkout  7.3 tkmix  2.8 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.2 in  6.8 shim  4.3 swell 12.6 twin  2.0 tank  4.4 tkctl  7.9 tkloop 15.3 tkout  7.2 tkmix  2.8 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.5 in  6.9 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.4 tkloop 11.5 tkout  7.2 tkmix  2.8 tape 17.9 bbd  5.8 radio  1.7 out  3.4
+  PEAK  ctl 10.7 in  6.9 shim  4.3 swell 12.7 twin  1.9 tank  4.3 tkctl 11.4 tkloop 11.4 tkout  7.2 tkmix  2.9 tape 18.5 bbd  1.8 radio  7.0 out  3.3
+  PEAK  ctl 13.5 in  6.8 shim  4.4 swell 12.5 twin  2.0 tank  4.4 tkctl 10.0 tkloop 22.7 tkout 11.9 tkmix  2.9 tape 18.1 bbd  4.5 radio  6.8 out  3.3
+  PEAK  ctl  7.3 in  7.0 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl  8.4 tkloop 18.1 tkout 11.9 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  6.8 shim  4.3 swell 14.1 twin  2.0 tank  4.4 tkctl  8.4 tkloop 17.7 tkout 11.5 tkmix  2.9 tape  2.1 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.5 in  6.9 shim  4.4 swell 14.2 twin  2.0 tank  4.4 tkctl 11.8 tkloop 14.0 tkout 11.7 tkmix  2.9 tape 17.8 bbd  5.9 radio  1.7 out  3.2
+  PEAK  ctl 10.7 in  6.9 shim  4.3 swell 12.6 twin  2.0 tank  4.4 tkctl 11.7 tkloop 13.8 tkout 11.6 tkmix  2.9 tape 18.2 bbd  1.7 radio  7.1 out  3.3
+  PEAK  ctl 10.5 in  8.9 shim  4.5 swell 12.7 twin  2.1 tank  4.4 tkctl 13.3 tkloop 34.7 tkout 31.0 tkmix  2.9 tape 17.9 bbd  4.4 radio  6.9 out  3.4
+  PEAK  ctl  7.4 in  8.3 shim  4.4 swell 12.7 twin  2.0 tank  4.3 tkctl 10.6 tkloop 17.9 tkout 11.9 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.2 in  8.2 shim  4.3 swell 12.8 twin  2.0 tank  4.4 tkctl  8.4 tkloop 17.8 tkout 11.8 tkmix  2.8 tape  2.1 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.2 in  8.2 shim  4.4 swell 12.7 twin  2.1 tank  4.4 tkctl 11.7 tkloop 14.0 tkout 12.0 tkmix  2.9 tape 17.8 bbd  5.9 radio  1.7 out  3.2
+  PEAK  ctl 10.6 in  8.1 shim  4.4 swell 12.7 twin  2.0 tank  4.4 tkctl 11.9 tkloop 13.9 tkout 12.0 tkmix  2.9 tape 18.4 bbd  1.7 radio  7.0 out  3.4
+  PEAK  ctl 11.2 in  8.3 shim  4.4 swell 12.7 twin 16.0 tank  4.9 tkctl 19.0 tkloop 33.7 tkout 19.3 tkmix  4.2 tape 18.1 bbd  5.7 radio  7.1 out  3.4
+  PEAK  ctl  6.5 in  8.0 shim 19.6 swell 12.8 twin 16.1 tank  4.9 tkctl 13.0 tkloop 22.5 tkout 19.3 tkmix  4.2 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  7.7 in 12.2 shim 19.3 swell 14.1 twin 17.6 tank  4.9 tkctl 21.2 tkloop 53.3 tkout 51.9 tkmix  4.2 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  5.2 in  7.1 shim  4.3 swell 12.9 twin  2.0 tank 15.4 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  5.4 in  7.5 shim  4.3 swell 12.8 twin  2.1 tank 17.9 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.1 bbd  1.7 radio  1.7 out  3.2
+  PEAK  ctl  6.3 in  7.5 shim  4.3 swell 13.0 twin  1.9 tank 17.4 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  5.9 radio  1.7 out  3.2
+  PEAK  ctl  6.3 in  7.5 shim  4.3 swell 12.9 twin  2.0 tank 15.7 tkctl  3.3 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.9 bbd  5.7 radio  1.7 out  3.2
+  PEAK  ctl  8.6 in  7.5 shim  4.4 swell 12.8 twin  2.0 tank 15.8 tkctl  4.1 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.5 bbd  1.8 radio  7.1 out  3.3
+  PEAK  ctl  7.2 in  7.4 shim  4.3 swell 12.9 twin  2.0 tank 17.1 tkctl  4.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.2 bbd  5.6 radio  5.9 out  3.3
+  PEAK  ctl  5.3 in  7.5 shim  4.4 swell 12.9 twin  2.0 tank 17.7 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.1 bbd  1.7 radio  1.8 out  3.3
+  PEAK  ctl  6.3 in  7.4 shim  4.3 swell 12.8 twin  1.9 tank 17.1 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  5.8 radio  1.7 out  3.3
+  PEAK  ctl  6.5 in  7.5 shim  4.4 swell 12.8 twin  2.0 tank 15.9 tkctl  3.4 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.9 bbd  5.9 radio  1.7 out  3.2
+  PEAK  ctl  8.7 in  7.4 shim  4.4 swell 12.8 twin  2.0 tank 15.5 tkctl  4.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.4 bbd  1.8 radio  7.2 out  3.3
+  PEAK  ctl 10.1 in  7.4 shim  4.4 swell 12.7 twin  2.0 tank 15.7 tkctl  8.3 tkloop 24.9 tkout  7.4 tkmix  2.9 tape 18.2 bbd  5.8 radio  5.7 out  3.3
+  PEAK  ctl  7.4 in  6.9 shim  4.3 swell 14.3 twin  2.0 tank  4.3 tkctl  8.2 tkloop 18.0 tkout  7.5 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.7 out  3.4
+  PEAK  ctl  8.3 in  6.9 shim  4.3 swell 14.3 twin  2.0 tank  4.4 tkctl  8.3 tkloop 17.7 tkout  7.3 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.5 in  6.9 shim  4.4 swell 14.3 twin  1.9 tank  4.4 tkctl 11.7 tkloop 14.0 tkout  7.2 tkmix  2.8 tape 17.9 bbd  5.7 radio  1.7 out  3.2
+  PEAK  ctl 10.7 in  6.9 shim  4.3 swell 12.8 twin  2.0 tank  4.4 tkctl 11.6 tkloop 13.8 tkout  7.1 tkmix  3.0 tape 18.4 bbd  1.7 radio  7.1 out  3.4
+  PEAK  ctl  9.4 in  6.9 shim  4.3 swell 12.8 twin  2.0 tank  4.4 tkctl 11.7 tkloop 35.4 tkout 17.9 tkmix  2.8 tape 17.9 bbd  5.8 radio  6.9 out  3.3
+  PEAK  ctl  7.5 in  6.9 shim  4.3 swell 12.8 twin  2.0 tank  4.3 tkctl  9.2 tkloop 15.4 tkout  7.1 tkmix  2.9 tape  2.1 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  6.9 shim  4.3 swell 12.8 twin  2.0 tank  4.4 tkctl  7.9 tkloop 15.2 tkout  7.2 tkmix  2.8 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.5 in  6.9 shim  4.4 swell 12.9 twin  2.0 tank  4.4 tkctl 11.2 tkloop 11.5 tkout  7.1 tkmix  2.8 tape 17.8 bbd  5.8 radio  1.7 out  3.2
+  PEAK  ctl 10.7 in  6.8 shim  4.3 swell 12.8 twin  2.0 tank  4.4 tkctl 11.4 tkloop 11.4 tkout  7.3 tkmix  2.9 tape 18.6 bbd  1.7 radio  7.1 out  3.3
+  PEAK  ctl 13.4 in  6.9 shim  4.3 swell 12.6 twin  2.0 tank  4.4 tkctl 11.2 tkloop 22.6 tkout 12.0 tkmix  2.9 tape 18.1 bbd  5.7 radio  6.8 out  3.3
+  PEAK  ctl  7.3 in  6.9 shim  4.3 swell 14.2 twin  1.9 tank  4.4 tkctl  8.3 tkloop 18.0 tkout 12.0 tkmix  2.8 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  6.9 shim  4.3 swell 14.3 twin  2.0 tank  4.4 tkctl  8.4 tkloop 17.8 tkout 11.6 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.4 in  6.9 shim  4.4 swell 14.3 twin  2.0 tank  4.4 tkctl 11.8 tkloop 13.9 tkout 11.5 tkmix  2.9 tape 17.9 bbd  5.8 radio  1.7 out  3.2
+  PEAK  ctl 10.6 in  6.8 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.8 tkloop 13.8 tkout 11.6 tkmix  2.9 tape 18.4 bbd  1.7 radio  7.0 out  3.4
+  PEAK  ctl 10.6 in  8.9 shim  4.4 swell 12.8 twin  1.9 tank  4.4 tkctl 13.2 tkloop 34.5 tkout 30.8 tkmix  3.0 tape 17.9 bbd  4.5 radio  5.7 out  3.4
+  PEAK  ctl  7.3 in  8.3 shim  4.4 swell 12.8 twin  2.1 tank  4.4 tkctl 10.5 tkloop 17.9 tkout 12.0 tkmix  2.9 tape  2.0 bbd  1.8 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  8.2 shim  4.4 swell 12.8 twin  2.1 tank  4.4 tkctl  8.4 tkloop 17.8 tkout 11.9 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.4 in  8.2 shim  4.4 swell 12.8 twin  1.9 tank  4.4 tkctl 11.9 tkloop 13.9 tkout 11.9 tkmix  2.9 tape 17.8 bbd  5.8 radio  1.7 out  3.3
+  PEAK  ctl 10.6 in  8.3 shim  4.5 swell 12.8 twin  2.1 tank  4.4 tkctl 11.8 tkloop 13.8 tkout 12.0 tkmix  2.9 tape 18.4 bbd  1.7 radio  7.0 out  3.3
+  PEAK  ctl 12.1 in  8.4 shim  4.4 swell 12.9 twin 15.9 tank  4.9 tkctl 17.7 tkloop 33.8 tkout 19.2 tkmix  4.3 tape 18.0 bbd  5.7 radio  5.7 out  3.3
+  PEAK  ctl  6.5 in  8.1 shim 20.1 swell 12.9 twin 16.1 tank  4.9 tkctl 14.1 tkloop 22.5 tkout 19.3 tkmix  4.2 tape  2.1 bbd  1.8 radio  1.8 out  3.4
+  PEAK  ctl  6.6 in 12.1 shim 19.5 swell 14.1 twin 17.6 tank  6.2 tkctl 21.1 tkloop 53.2 tkout 51.9 tkmix  4.2 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  5.3 in  7.1 shim  4.3 swell 12.8 twin  2.0 tank 15.6 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.2
+  PEAK  ctl  5.3 in  7.5 shim  4.4 swell 12.7 twin  2.0 tank 18.0 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  6.3 in  7.6 shim  4.3 swell 12.7 twin  2.0 tank 17.5 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl  6.7 in  7.5 shim  4.4 swell 12.7 twin  2.0 tank 16.1 tkctl  3.3 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.9 bbd  5.7 radio  1.7 out  3.2
+  PEAK  ctl  8.7 in  7.4 shim  4.4 swell 12.8 twin  2.0 tank 15.7 tkctl  3.3 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.1 bbd  1.7 radio  7.3 out  3.3
+  PEAK  ctl  8.6 in  7.4 shim  4.3 swell 12.7 twin  1.9 tank 17.5 tkctl  4.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.9 bbd  5.7 radio  7.0 out  3.2
+  PEAK  ctl  5.3 in  7.5 shim  4.4 swell 12.8 twin  2.0 tank 18.1 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  6.2 in  7.5 shim  4.4 swell 12.8 twin  2.0 tank 17.2 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  5.8 radio  1.7 out  3.2
+  PEAK  ctl  6.4 in  7.5 shim  4.4 swell 12.8 twin  2.0 tank 15.8 tkctl  3.3 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.9 bbd  5.7 radio  1.7 out  3.2
+  PEAK  ctl  8.5 in  7.4 shim  4.4 swell 12.9 twin  2.0 tank 15.7 tkctl  4.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.3 bbd  1.8 radio  7.1 out  3.3
+  PEAK  ctl 10.0 in  7.5 shim  4.3 swell 12.6 twin  1.9 tank 16.9 tkctl  8.3 tkloop 24.9 tkout  7.5 tkmix  2.9 tape 17.9 bbd  5.7 radio  5.7 out  3.3
+  PEAK  ctl  7.5 in  6.9 shim  4.4 swell 14.2 twin  2.0 tank  4.4 tkctl  8.2 tkloop 18.0 tkout  7.6 tkmix  2.8 tape  2.1 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl  8.3 tkloop 17.8 tkout  7.3 tkmix  2.8 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.4 in  6.9 shim  4.4 swell 14.2 twin  2.0 tank  4.4 tkctl 11.8 tkloop 13.9 tkout  7.2 tkmix  2.9 tape 17.8 bbd  5.9 radio  1.7 out  3.2
+  PEAK  ctl 10.8 in  6.8 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.7 tkloop 13.9 tkout  7.2 tkmix  3.0 tape 18.4 bbd  1.7 radio  7.1 out  3.4
+  PEAK  ctl  9.5 in  6.9 shim  4.4 swell 12.7 twin  2.0 tank  4.4 tkctl 11.7 tkloop 35.4 tkout 17.8 tkmix  2.8 tape 18.0 bbd  5.8 radio  5.8 out  3.3
+  PEAK  ctl  7.4 in  6.9 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl  9.2 tkloop 15.4 tkout  7.2 tkmix  2.8 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  6.6 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl  7.9 tkloop 15.3 tkout  7.1 tkmix  2.8 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.5 in  6.9 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.3 tkloop 11.4 tkout  7.1 tkmix  2.8 tape 17.9 bbd  5.8 radio  1.7 out  3.2
+  PEAK  ctl 10.7 in  6.9 shim  4.3 swell 12.7 twin  2.0 tank  4.3 tkctl 11.5 tkloop 11.4 tkout  7.3 tkmix  2.9 tape 18.4 bbd  1.8 radio  7.1 out  3.4
+  PEAK  ctl 14.8 in  6.9 shim  4.4 swell 12.7 twin  2.0 tank  4.4 tkctl 11.2 tkloop 22.3 tkout 12.0 tkmix  2.9 tape 18.0 bbd  5.8 radio  5.7 out  3.3
+  PEAK  ctl  7.3 in  7.0 shim  4.3 swell 14.2 twin  1.9 tank  4.3 tkctl  8.3 tkloop 18.0 tkout 12.1 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.7 out  3.4
+  PEAK  ctl  8.2 in  6.9 shim  4.4 swell 14.3 twin  2.0 tank  4.4 tkctl  8.3 tkloop 17.8 tkout 11.6 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.4 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl 11.9 tkloop 13.9 tkout 11.7 tkmix  2.9 tape 17.8 bbd  5.8 radio  1.7 out  3.3
+  PEAK  ctl 10.7 in  6.8 shim  4.3 swell 12.8 twin  2.0 tank  4.4 tkctl 11.8 tkloop 13.9 tkout 11.6 tkmix  2.9 tape 18.4 bbd  1.8 radio  7.0 out  3.3
+  PEAK  ctl 10.5 in  9.0 shim  4.4 swell 12.8 twin  2.0 tank  4.4 tkctl 13.3 tkloop 34.5 tkout 30.7 tkmix  2.9 tape 17.9 bbd  5.7 radio  6.7 out  3.3
+  PEAK  ctl  7.4 in  8.2 shim  4.4 swell 12.7 twin  2.1 tank  4.3 tkctl 10.6 tkloop 17.9 tkout 11.9 tkmix  2.9 tape  2.0 bbd  1.8 radio  1.7 out  3.3
+  PEAK  ctl  8.2 in  8.2 shim  4.4 swell 12.7 twin  2.1 tank  4.4 tkctl  8.4 tkloop 17.8 tkout 11.9 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.5 in  8.2 shim  4.4 swell 12.7 twin  2.0 tank  4.4 tkctl 11.7 tkloop 14.0 tkout 11.9 tkmix  2.9 tape 17.8 bbd  5.8 radio  1.7 out  3.2
+  PEAK  ctl 10.7 in  8.2 shim  4.4 swell 12.7 twin  2.0 tank  4.4 tkctl 11.8 tkloop 13.8 tkout 11.9 tkmix  3.0 tape 18.3 bbd  1.7 radio  7.0 out  3.4
+  PEAK  ctl 12.0 in  8.3 shim  4.4 swell 12.8 twin 16.0 tank  4.9 tkctl 18.9 tkloop 33.8 tkout 19.3 tkmix  4.2 tape 18.1 bbd  5.8 radio  6.8 out  3.4
+  PEAK  ctl  6.5 in  8.1 shim 19.6 swell 12.8 twin 16.1 tank  4.9 tkctl 14.1 tkloop 22.4 tkout 19.3 tkmix  4.1 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  6.6 in 12.1 shim 19.7 swell 14.1 twin 17.6 tank  4.9 tkctl 21.1 tkloop 53.3 tkout 51.9 tkmix  4.2 tape  2.1 bbd  1.8 radio  1.7 out  3.4
+  PEAK  ctl  5.2 in  7.1 shim  4.3 swell 12.8 twin  1.9 tank 15.5 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  5.3 in  7.5 shim  4.4 swell 12.7 twin  2.0 tank 18.6 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  6.3 in  7.5 shim  4.3 swell 12.7 twin  2.0 tank 17.4 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl  6.1 in  7.5 shim  4.4 swell 12.7 twin  2.0 tank 16.1 tkctl  3.3 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.9 bbd  5.7 radio  1.7 out  3.2
+  PEAK  ctl  8.7 in  7.4 shim  4.4 swell 12.7 twin  2.0 tank 15.7 tkctl  4.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.4 bbd  1.7 radio  7.1 out  3.3
+  PEAK  ctl  8.5 in  7.5 shim  4.3 swell 12.7 twin  1.9 tank 17.2 tkctl  3.6 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.0 bbd  5.7 radio  5.8 out  3.2
+  PEAK  ctl  5.3 in  7.5 shim  4.4 swell 12.7 twin  2.0 tank 17.4 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  6.3 in  7.5 shim  4.3 swell 12.7 twin  1.9 tank 17.3 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  5.9 radio  1.7 out  3.2
+  PEAK  ctl  6.4 in  7.5 shim  4.4 swell 12.7 twin  2.0 tank 15.6 tkctl  4.1 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.9 bbd  5.8 radio  1.7 out  3.2
+  PEAK  ctl  8.5 in  7.3 shim  4.4 swell 12.7 twin  2.0 tank 15.3 tkctl  4.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.3 bbd  1.7 radio  7.2 out  3.3
+  PEAK  ctl 10.0 in  7.4 shim  4.3 swell 12.6 twin  1.9 tank 15.4 tkctl  8.2 tkloop 24.9 tkout  7.6 tkmix  2.9 tape 17.9 bbd  5.7 radio  7.0 out  3.3
+  PEAK  ctl  7.5 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.3 tkctl  8.2 tkloop 18.1 tkout  7.5 tkmix  2.9 tape  2.1 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  6.8 shim  4.4 swell 14.2 twin  2.0 tank  4.4 tkctl  8.3 tkloop 17.8 tkout  7.1 tkmix  3.0 tape  2.2 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.5 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl 11.7 tkloop 13.9 tkout  7.2 tkmix  2.8 tape 17.8 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl 10.8 in  6.6 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.7 tkloop 13.8 tkout  7.2 tkmix  2.8 tape 18.3 bbd  1.7 radio  7.0 out  3.3
+  PEAK  ctl 10.6 in  6.9 shim  4.3 swell 12.6 twin  2.0 tank  4.3 tkctl 11.7 tkloop 35.5 tkout 17.9 tkmix  2.9 tape 17.9 bbd  5.7 radio  5.7 out  3.4
+  PEAK  ctl  7.6 in  6.9 shim  4.3 swell 12.6 twin  2.0 tank  4.3 tkctl  9.2 tkloop 15.4 tkout  7.2 tkmix  2.8 tape  2.1 bbd  1.7 radio  1.7 out  3.4
+  PEAK  ctl  8.3 in  6.8 shim  4.3 swell 12.6 twin  2.0 tank  4.4 tkctl  7.9 tkloop 15.2 tkout  7.1 tkmix  2.8 tape  2.0 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl  8.5 in  6.9 shim  4.3 swell 12.6 twin  2.0 tank  4.4 tkctl 11.4 tkloop 11.5 tkout  7.1 tkmix  2.8 tape 17.9 bbd  5.8 radio  1.7 out  3.2
+  PEAK  ctl 10.7 in  6.8 shim  4.4 swell 12.7 twin  1.9 tank  4.4 tkctl 11.5 tkloop 11.4 tkout  7.2 tkmix  2.9 tape 18.3 bbd  1.7 radio  7.2 out  3.3
+  PEAK  ctl 13.5 in  6.8 shim  4.3 swell 12.5 twin  2.0 tank  4.4 tkctl 10.0 tkloop 22.6 tkout 12.0 tkmix  2.9 tape 17.9 bbd  5.8 radio  7.0 out  3.4
+  PEAK  ctl  7.3 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl  8.3 tkloop 18.0 tkout 12.0 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.8 out  3.4
+  PEAK  ctl  8.3 in  6.8 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl  8.3 tkloop 17.7 tkout 11.7 tkmix  2.8 tape  2.1 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.4 in  6.9 shim  4.3 swell 14.1 twin  2.0 tank  4.4 tkctl 11.8 tkloop 13.9 tkout 11.5 tkmix  2.8 tape 17.8 bbd  5.8 radio  1.7 out  3.2
+  PEAK  ctl 10.7 in  6.9 shim  4.4 swell 12.6 twin  2.0 tank  4.4 tkctl 11.7 tkloop 13.8 tkout 11.7 tkmix  2.9 tape 18.3 bbd  1.7 radio  7.0 out  3.4
+  PEAK  ctl  9.3 in  8.8 shim  4.4 swell 12.7 twin  2.0 tank  4.4 tkctl 13.2 tkloop 34.6 tkout 30.9 tkmix  2.9 tape 17.9 bbd  5.7 radio  6.9 out  3.4
+  PEAK  ctl  7.5 in  8.3 shim  4.3 swell 12.7 twin  2.1 tank  4.4 tkctl 10.6 tkloop 17.9 tkout 11.9 tkmix  2.9 tape  2.1 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  8.1 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl  8.4 tkloop 17.7 tkout 11.9 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.4 in  8.2 shim  4.4 swell 12.7 twin  2.1 tank  4.4 tkctl 11.7 tkloop 14.0 tkout 11.9 tkmix  2.9 tape 17.9 bbd  5.8 radio  1.7 out  3.3
+  PEAK  ctl 10.7 in  8.3 shim  4.4 swell 12.8 twin  2.1 tank  4.4 tkctl 11.8 tkloop 13.9 tkout 11.9 tkmix  3.0 tape 18.4 bbd  1.7 radio  7.0 out  3.3
+  PEAK  ctl 12.1 in  8.3 shim  4.3 swell 12.7 twin 16.0 tank  4.9 tkctl 18.9 tkloop 33.7 tkout 19.2 tkmix  4.2 tape 17.9 bbd  5.8 radio  5.7 out  3.4
+  PEAK  ctl  6.5 in  8.1 shim 19.9 swell 12.8 twin 16.2 tank  4.9 tkctl 13.0 tkloop 22.5 tkout 19.2 tkmix  4.2 tape  2.1 bbd  1.7 radio  1.7 out  3.4
+  PEAK  ctl  6.6 in 12.1 shim 19.2 swell 14.1 twin 17.6 tank  5.0 tkctl 21.1 tkloop 53.4 tkout 52.0 tkmix  4.2 tape  2.1 bbd  1.7 radio  1.8 out  3.3
+  PEAK  ctl  5.3 in  7.1 shim  4.3 swell 12.9 twin  1.9 tank 16.5 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  5.3 in  7.5 shim  4.3 swell 12.9 twin  2.0 tank 17.9 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  6.3 in  7.5 shim  4.4 swell 12.8 twin  2.0 tank 17.4 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl  6.2 in  7.4 shim  4.4 swell 12.8 twin  2.0 tank 15.8 tkctl  4.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.9 bbd  5.8 radio  1.7 out  3.2
+  PEAK  ctl  8.6 in  7.4 shim  4.4 swell 12.8 twin  2.0 tank 15.5 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.4 bbd  1.8 radio  7.2 out  3.3
+  PEAK  ctl  7.2 in  7.4 shim  4.3 swell 12.8 twin  1.9 tank 17.1 tkctl  4.1 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.0 bbd  5.7 radio  5.8 out  3.3
+  PEAK  ctl  5.3 in  7.5 shim  4.4 swell 12.8 twin  2.0 tank 17.8 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  6.2 in  7.5 shim  4.4 swell 12.8 twin  2.0 tank 17.1 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl  6.3 in  7.4 shim  4.4 swell 12.9 twin  2.0 tank 15.5 tkctl  3.3 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.9 bbd  5.8 radio  1.7 out  3.3
+  PEAK  ctl  8.6 in  7.4 shim  4.4 swell 12.9 twin  2.0 tank 15.4 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.4 bbd  1.8 radio  7.1 out  3.4
+  PEAK  ctl 10.0 in  7.5 shim  4.3 swell 12.7 twin  2.0 tank 15.8 tkctl  9.0 tkloop 24.8 tkout  7.5 tkmix  2.9 tape 17.8 bbd  5.8 radio  5.7 out  3.3
+  PEAK  ctl  7.4 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.3 tkctl  8.2 tkloop 18.1 tkout  7.5 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.7 out  3.4
+  PEAK  ctl  8.3 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl  8.3 tkloop 17.7 tkout  7.1 tkmix  2.9 tape  2.0 bbd  6.0 radio  1.7 out  3.4
+  PEAK  ctl  8.5 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl 11.6 tkloop 14.0 tkout  7.2 tkmix  2.8 tape 17.8 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl 10.6 in  7.0 shim  4.4 swell 12.8 twin  2.0 tank  4.4 tkctl 11.6 tkloop 13.8 tkout  7.3 tkmix  2.9 tape 18.3 bbd  1.7 radio  7.2 out  3.4
+  PEAK  ctl  9.5 in  6.8 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.7 tkloop 35.5 tkout 17.9 tkmix  2.9 tape 17.8 bbd  5.8 radio  5.8 out  3.3
+  PEAK  ctl  7.4 in  6.9 shim  4.4 swell 12.8 twin  1.9 tank  4.3 tkctl  9.2 tkloop 15.4 tkout  7.2 tkmix  2.9 tape  2.1 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  6.8 shim  4.3 swell 12.8 twin  1.9 tank  4.4 tkctl  7.9 tkloop 15.2 tkout  7.1 tkmix  2.9 tape  2.0 bbd  6.0 radio  1.7 out  3.3
+  PEAK  ctl  8.5 in  6.8 shim  4.4 swell 12.7 twin  2.0 tank  4.3 tkctl 11.4 tkloop 11.5 tkout  7.2 tkmix  2.8 tape 17.9 bbd  5.8 radio  1.7 out  3.3
+  PEAK  ctl 10.7 in  6.9 shim  4.4 swell 12.8 twin  2.0 tank  4.4 tkctl 11.2 tkloop 11.5 tkout  7.1 tkmix  2.9 tape 18.4 bbd  1.7 radio  7.0 out  3.4
+  PEAK  ctl 13.5 in  6.8 shim  4.3 swell 12.6 twin  2.0 tank  4.4 tkctl 11.2 tkloop 22.4 tkout 12.0 tkmix  2.9 tape 17.8 bbd  5.8 radio  5.7 out  3.4
+  PEAK  ctl  7.3 in  7.0 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl  8.3 tkloop 18.0 tkout 12.0 tkmix  3.0 tape  2.0 bbd  1.7 radio  1.7 out  3.4
+  PEAK  ctl  8.3 in  6.9 shim  4.3 swell 14.3 twin  2.0 tank  4.4 tkctl  8.4 tkloop 17.7 tkout 11.6 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.8 out  3.4
+  PEAK  ctl  8.4 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl 11.8 tkloop 13.9 tkout 11.7 tkmix  3.0 tape 17.8 bbd  5.8 radio  1.7 out  3.3
+  PEAK  ctl 10.6 in  6.9 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.8 tkloop 13.7 tkout 11.7 tkmix  3.0 tape 18.4 bbd  1.7 radio  7.1 out  3.4
+  PEAK  ctl  9.7 in  8.9 shim  4.3 swell 12.8 twin  1.9 tank  4.4 tkctl 13.3 tkloop 34.6 tkout 30.8 tkmix  3.0 tape 18.2 bbd  5.8 radio  5.8 out  3.3
+  PEAK  ctl  7.3 in  8.2 shim  4.3 swell 12.8 twin  2.1 tank  4.4 tkctl 10.6 tkloop 17.8 tkout 11.9 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  8.1 shim  4.3 swell 12.8 twin  2.1 tank  4.4 tkctl  8.4 tkloop 17.7 tkout 11.9 tkmix  3.0 tape  2.1 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.3 in  8.2 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.6 tkloop 13.9 tkout 12.0 tkmix  2.9 tape 17.8 bbd  5.8 radio  1.8 out  3.2
+  PEAK  ctl 10.7 in  8.1 shim  4.4 swell 12.8 twin  1.9 tank  4.4 tkctl 11.7 tkloop 13.9 tkout 12.1 tkmix  2.9 tape 18.4 bbd  1.7 radio  7.0 out  3.4
+  PEAK  ctl 12.0 in  8.3 shim  4.4 swell 12.8 twin 16.0 tank  4.9 tkctl 19.0 tkloop 33.8 tkout 19.4 tkmix  4.1 tape 18.1 bbd  5.7 radio  7.0 out  3.4
+  PEAK  ctl  6.6 in  8.1 shim 19.6 swell 12.8 twin 16.1 tank  4.9 tkctl 13.1 tkloop 22.5 tkout 19.2 tkmix  4.1 tape  2.1 bbd  1.8 radio  1.7 out  3.3
+  PEAK  ctl  7.5 in 12.1 shim 19.2 swell 14.1 twin 17.6 tank  6.2 tkctl 21.2 tkloop 53.4 tkout 52.0 tkmix  4.1 tape  2.0 bbd  1.8 radio  1.8 out  3.4
+  PEAK  ctl  5.3 in  7.1 shim  4.3 swell 12.8 twin  1.9 tank 15.3 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  5.4 in  7.5 shim  4.3 swell 12.8 twin  2.0 tank 17.8 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.2
+  PEAK  ctl  6.3 in  7.5 shim  4.3 swell 12.8 twin  2.0 tank 17.1 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.1 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl  6.6 in  7.5 shim  4.4 swell 12.8 twin  2.0 tank 15.7 tkctl  4.1 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.9 bbd  5.7 radio  1.7 out  3.2
+  PEAK  ctl  8.7 in  7.4 shim  4.4 swell 12.8 twin  2.0 tank 15.9 tkctl  4.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.4 bbd  1.8 radio  7.2 out  3.3
+  PEAK  ctl  8.6 in  7.4 shim  4.3 swell 12.9 twin  1.9 tank 17.2 tkctl  3.6 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.2 bbd  5.8 radio  5.7 out  3.3
+  PEAK  ctl  5.3 in  7.5 shim  4.4 swell 12.7 twin  2.0 tank 17.3 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  6.3 in  7.5 shim  4.3 swell 12.8 twin  2.0 tank 17.8 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl  6.5 in  7.4 shim  4.4 swell 12.7 twin  1.9 tank 16.0 tkctl  3.3 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.8 bbd  5.9 radio  1.7 out  3.2
+  PEAK  ctl  8.7 in  7.3 shim  4.4 swell 12.9 twin  2.0 tank 15.4 tkctl  3.3 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.3 bbd  1.7 radio  7.1 out  3.3
+  PEAK  ctl 10.0 in  7.4 shim  4.3 swell 12.6 twin  1.9 tank 16.9 tkctl  8.3 tkloop 24.9 tkout  7.5 tkmix  2.8 tape 18.1 bbd  5.6 radio  6.9 out  3.3
+  PEAK  ctl  7.4 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl  8.2 tkloop 18.1 tkout  7.5 tkmix  2.9 tape  2.1 bbd  1.7 radio  1.8 out  3.3
+  PEAK  ctl  8.3 in  6.8 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl  8.2 tkloop 17.8 tkout  7.1 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.6 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl 11.5 tkloop 14.0 tkout  7.1 tkmix  2.8 tape 17.8 bbd  5.9 radio  1.7 out  3.2
+  PEAK  ctl 10.8 in  6.9 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.8 tkloop 14.0 tkout  7.2 tkmix  2.9 tape 18.4 bbd  1.7 radio  7.0 out  3.3
+  PEAK  ctl  9.4 in  6.9 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.7 tkloop 35.5 tkout 18.1 tkmix  2.8 tape 18.0 bbd  5.8 radio  5.8 out  3.3
+  PEAK  ctl  7.5 in  6.9 shim  4.3 swell 12.7 twin  2.0 tank  4.3 tkctl  9.2 tkloop 15.4 tkout  7.1 tkmix  2.8 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  6.8 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl  7.9 tkloop 15.3 tkout  7.2 tkmix  2.8 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.5 in  6.9 shim  4.4 swell 12.7 twin  2.0 tank  4.4 tkctl 11.3 tkloop 11.5 tkout  7.1 tkmix  2.8 tape 17.8 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl 10.8 in  6.9 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.3 tkloop 11.4 tkout  7.2 tkmix  2.9 tape 18.3 bbd  1.7 radio  7.1 out  3.4
+  PEAK  ctl 13.6 in  6.8 shim  4.3 swell 12.6 twin  2.0 tank  4.4 tkctl 11.2 tkloop 22.7 tkout 12.0 tkmix  2.9 tape 18.2 bbd  4.5 radio  5.7 out  3.3
+  PEAK  ctl  7.4 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl  8.3 tkloop 18.0 tkout 12.1 tkmix  2.9 tape  2.1 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl  8.3 tkloop 17.7 tkout 11.6 tkmix  2.8 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.4 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl 11.8 tkloop 13.9 tkout 11.6 tkmix  2.8 tape 17.8 bbd  5.8 radio  1.8 out  3.2
+  PEAK  ctl 10.6 in  7.0 shim  4.3 swell 12.6 twin  2.0 tank  4.4 tkctl 11.8 tkloop 14.0 tkout 11.6 tkmix  2.9 tape 18.3 bbd  1.7 radio  7.1 out  3.4
+  PEAK  ctl 10.5 in  8.9 shim  4.3 swell 12.8 twin  2.1 tank  4.4 tkctl 13.2 tkloop 34.5 tkout 30.8 tkmix  2.9 tape 18.2 bbd  5.8 radio  7.0 out  3.3
+  PEAK  ctl  7.4 in  8.2 shim  4.4 swell 12.7 twin  1.9 tank  4.4 tkctl 10.6 tkloop 17.8 tkout 11.9 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.8 out  3.4
+  PEAK  ctl  8.2 in  8.0 shim  4.3 swell 12.7 twin  2.1 tank  4.4 tkctl  8.4 tkloop 17.8 tkout 11.8 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.4 in  8.2 shim  4.3 swell 12.7 twin  2.1 tank  4.4 tkctl 11.7 tkloop 13.9 tkout 11.9 tkmix  2.9 tape 17.8 bbd  5.9 radio  1.7 out  3.2
+  PEAK  ctl 10.6 in  8.3 shim  4.4 swell 12.7 twin  2.1 tank  4.4 tkctl 11.8 tkloop 13.9 tkout 11.9 tkmix  2.9 tape 18.3 bbd  1.7 radio  7.1 out  3.3
+  PEAK  ctl 12.1 in  8.5 shim  4.3 swell 12.9 twin 16.0 tank  4.9 tkctl 19.0 tkloop 33.7 tkout 19.3 tkmix  4.2 tape 18.0 bbd  5.7 radio  6.8 out  3.4
+  PEAK  ctl  6.5 in  8.1 shim 20.4 swell 12.8 twin 16.1 tank  4.9 tkctl 13.4 tkloop 22.4 tkout 19.2 tkmix  4.1 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  6.6 in 12.3 shim 19.2 swell 14.0 twin 17.6 tank  5.0 tkctl 20.8 tkloop 53.3 tkout 51.9 tkmix  4.2 tape  2.0 bbd  1.7 radio  1.7 out  3.4
+  PEAK  ctl  5.3 in  7.0 shim  4.3 swell 12.7 twin  1.9 tank 15.5 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  5.3 in  7.5 shim  4.4 swell 12.7 twin  2.1 tank 18.1 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  6.3 in  7.4 shim  4.4 swell 12.7 twin  2.0 tank 17.3 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl  6.1 in  7.5 shim  4.4 swell 12.8 twin  2.0 tank 15.8 tkctl  4.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.9 bbd  5.7 radio  1.7 out  3.2
+  PEAK  ctl  8.6 in  7.5 shim  4.4 swell 12.8 twin  2.1 tank 15.6 tkctl  4.1 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.3 bbd  1.7 radio  7.2 out  3.3
+  PEAK  ctl  7.3 in  7.5 shim  4.4 swell 12.7 twin  1.9 tank 18.5 tkctl  3.5 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.2 bbd  5.7 radio  5.8 out  3.3
+  PEAK  ctl  5.3 in  7.5 shim  4.3 swell 12.7 twin  2.0 tank 17.8 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  6.3 in  7.4 shim  4.3 swell 12.7 twin  2.0 tank 17.8 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl  6.2 in  7.4 shim  4.3 swell 12.7 twin  2.0 tank 15.8 tkctl  4.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.8 bbd  5.8 radio  1.7 out  3.2
+  PEAK  ctl  8.6 in  7.5 shim  4.4 swell 12.8 twin  2.0 tank 15.4 tkctl  4.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.4 bbd  1.8 radio  7.1 out  3.3
+  PEAK  ctl  9.9 in  7.4 shim  4.3 swell 12.6 twin  2.0 tank 15.4 tkctl  8.2 tkloop 24.9 tkout  7.5 tkmix  2.8 tape 18.2 bbd  5.8 radio  5.8 out  3.4
+  PEAK  ctl  7.5 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.3 tkctl  8.2 tkloop 18.1 tkout  7.5 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.7 out  3.4
+  PEAK  ctl  8.4 in  6.8 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl  8.3 tkloop 17.8 tkout  7.2 tkmix  2.9 tape  2.1 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.5 in  6.9 shim  4.3 swell 14.1 twin  2.0 tank  4.4 tkctl 11.7 tkloop 13.9 tkout  7.2 tkmix  2.8 tape 17.8 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl 10.7 in  6.8 shim  4.3 swell 12.6 twin  2.0 tank  4.4 tkctl 11.7 tkloop 13.8 tkout  7.2 tkmix  2.8 tape 18.4 bbd  1.7 radio  7.0 out  3.3
+  PEAK  ctl 10.7 in  6.8 shim  4.3 swell 12.6 twin  2.0 tank  4.3 tkctl 11.8 tkloop 35.4 tkout 17.9 tkmix  2.9 tape 18.1 bbd  5.7 radio  6.9 out  3.4
+  PEAK  ctl  7.5 in  6.9 shim  4.3 swell 12.6 twin  2.0 tank  4.3 tkctl  9.2 tkloop 15.5 tkout  7.2 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.7 out  3.4
+  PEAK  ctl  8.3 in  6.9 shim  4.3 swell 12.6 twin  2.0 tank  4.4 tkctl  7.9 tkloop 15.2 tkout  7.1 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.4 in  6.8 shim  4.3 swell 12.6 twin  2.0 tank  4.3 tkctl 11.3 tkloop 11.5 tkout  7.3 tkmix  2.9 tape 17.8 bbd  5.8 radio  1.7 out  3.3
+  PEAK  ctl 10.7 in  6.8 shim  4.3 swell 12.6 twin  2.0 tank  4.4 tkctl 11.4 tkloop 11.4 tkout  7.2 tkmix  2.8 tape 18.3 bbd  1.7 radio  7.0 out  3.4
+  PEAK  ctl 13.4 in  6.9 shim  4.3 swell 12.5 twin  2.0 tank  4.4 tkctl 11.2 tkloop 22.5 tkout 12.0 tkmix  2.9 tape 17.9 bbd  4.6 radio  5.7 out  3.4
+  PEAK  ctl  7.4 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl  8.3 tkloop 18.0 tkout 12.1 tkmix  2.9 tape  2.0 bbd  1.8 radio  1.8 out  3.3
+  PEAK  ctl  8.2 in  7.0 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl  8.4 tkloop 17.8 tkout 11.5 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.4 in  6.9 shim  4.3 swell 14.1 twin  2.0 tank  4.4 tkctl 11.8 tkloop 14.0 tkout 11.6 tkmix  2.9 tape 17.8 bbd  5.8 radio  1.7 out  3.3
+  PEAK  ctl 10.6 in  6.9 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.7 tkloop 13.8 tkout 11.7 tkmix  2.9 tape 18.3 bbd  1.7 radio  7.1 out  3.4
+  PEAK  ctl 10.6 in  8.9 shim  4.4 swell 12.8 twin  2.1 tank  4.4 tkctl 13.3 tkloop 34.7 tkout 30.8 tkmix  2.9 tape 18.0 bbd  5.8 radio  7.1 out  3.3
+  PEAK  ctl  7.4 in  8.2 shim  4.3 swell 12.7 twin  2.1 tank  4.4 tkctl 10.5 tkloop 17.9 tkout 11.9 tkmix  2.9 tape  2.1 bbd  1.7 radio  1.7 out  3.4
+  PEAK  ctl  8.3 in  8.2 shim  4.3 swell 12.7 twin  2.1 tank  4.4 tkctl  8.4 tkloop 17.7 tkout 11.9 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.2 in  8.2 shim  4.3 swell 12.7 twin  2.1 tank  4.4 tkctl 11.8 tkloop 13.9 tkout 12.0 tkmix  2.9 tape 17.9 bbd  5.8 radio  1.7 out  3.3
+  PEAK  ctl 10.7 in  8.3 shim  4.4 swell 12.7 twin  2.1 tank  4.4 tkctl 11.8 tkloop 13.9 tkout 12.0 tkmix  3.0 tape 18.4 bbd  1.7 radio  7.1 out  3.3
+  PEAK  ctl 12.1 in  8.3 shim  4.3 swell 12.8 twin 16.0 tank  4.9 tkctl 19.0 tkloop 34.0 tkout 19.2 tkmix  4.1 tape 18.1 bbd  5.8 radio  5.8 out  3.3
+  PEAK  ctl  6.5 in  8.1 shim 19.6 swell 12.9 twin 16.1 tank  4.9 tkctl 13.0 tkloop 22.5 tkout 19.3 tkmix  4.1 tape  2.0 bbd  1.7 radio  1.7 out  3.4
+  PEAK  ctl  6.6 in 12.1 shim 19.5 swell 14.1 twin 17.6 tank  5.0 tkctl 21.1 tkloop 53.3 tkout 51.9 tkmix  4.2 tape  2.1 bbd  1.7 radio  1.7 out  3.4
+  PEAK  ctl  5.4 in  7.5 shim  4.4 swell 12.9 twin  2.0 tank 17.5 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.2
+  PEAK  ctl  6.2 in  7.4 shim  4.3 swell 12.9 twin  2.0 tank 16.9 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.1 bbd  5.8 radio  1.7 out  3.2
+  PEAK  ctl  6.4 in  7.4 shim  4.3 swell 12.9 twin  2.0 tank 15.5 tkctl  3.3 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.7 bbd  5.8 radio  1.7 out  3.2
+  PEAK  ctl  8.7 in  7.4 shim  4.3 swell 12.9 twin  2.0 tank 15.4 tkctl  4.1 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.2 bbd  1.8 radio  7.2 out  3.3
+  PEAK  ctl  9.8 in  7.5 shim  4.3 swell 12.7 twin  2.0 tank 16.0 tkctl  8.2 tkloop 24.8 tkout  7.5 tkmix  2.9 tape 18.1 bbd  4.6 radio  5.7 out  3.3
+  PEAK  ctl  7.4 in  7.0 shim  4.3 swell 14.3 twin  1.9 tank  4.3 tkctl  8.2 tkloop 18.1 tkout  7.4 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  6.8 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl  8.3 tkloop 17.8 tkout  7.1 tkmix  2.8 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.5 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl 11.7 tkloop 14.0 tkout  7.1 tkmix  2.8 tape 17.7 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl 10.8 in  7.0 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.7 tkloop 13.8 tkout  7.2 tkmix  2.9 tape 18.2 bbd  1.7 radio  7.1 out  3.3
+  PEAK  ctl  9.5 in  6.9 shim  4.3 swell 12.8 twin  2.0 tank  4.3 tkctl 11.9 tkloop 35.3 tkout 17.9 tkmix  2.8 tape 17.9 bbd  5.8 radio  6.8 out  3.3
+  PEAK  ctl  7.4 in  6.9 shim  4.3 swell 12.7 twin  1.9 tank  4.3 tkctl  9.2 tkloop 15.4 tkout  7.2 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  6.8 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl  7.9 tkloop 15.1 tkout  7.3 tkmix  2.8 tape  2.0 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl  8.5 in  6.9 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.3 tkloop 11.5 tkout  7.1 tkmix  2.8 tape 17.8 bbd  5.8 radio  1.7 out  3.3
+  PEAK  ctl 10.7 in  6.9 shim  4.3 swell 12.8 twin  2.0 tank  4.4 tkctl 11.4 tkloop 11.4 tkout  7.1 tkmix  2.9 tape 18.2 bbd  1.8 radio  7.0 out  3.4
+  PEAK  ctl 13.3 in  6.8 shim  4.3 swell 12.6 twin  2.0 tank  4.4 tkctl 11.2 tkloop 22.7 tkout 12.1 tkmix  2.9 tape 18.0 bbd  5.8 radio  5.8 out  3.3
+  PEAK  ctl  7.3 in  6.9 shim  4.2 swell 14.2 twin  1.9 tank  4.3 tkctl  8.3 tkloop 18.0 tkout 12.0 tkmix  2.9 tape  2.1 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.2 in  6.9 shim  4.3 swell 14.3 twin  2.0 tank  4.4 tkctl  8.4 tkloop 17.8 tkout 11.6 tkmix  2.8 tape  2.0 bbd  5.8 radio  1.7 out  3.4
+  PEAK  ctl  8.6 in  7.0 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl 11.8 tkloop 13.9 tkout 11.6 tkmix  2.8 tape 17.8 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl 10.7 in  6.9 shim  4.4 swell 12.7 twin  1.9 tank  4.4 tkctl 11.8 tkloop 13.7 tkout 11.6 tkmix  2.9 tape 18.3 bbd  1.7 radio  7.0 out  3.3
+  PEAK  ctl 10.8 in  8.9 shim  4.3 swell 12.8 twin  2.1 tank  4.4 tkctl 13.2 tkloop 34.5 tkout 30.8 tkmix  2.8 tape 18.0 bbd  5.8 radio  5.7 out  3.3
+  PEAK  ctl  7.4 in  8.2 shim  4.3 swell 12.8 twin  2.1 tank  4.4 tkctl 10.6 tkloop 17.8 tkout 11.9 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.6 out  3.2
+  PEAK  ctl  8.3 in  8.2 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl  8.4 tkloop 17.8 tkout 11.9 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl  8.5 in  8.2 shim  4.4 swell 12.7 twin  2.0 tank  4.4 tkctl 11.9 tkloop 13.9 tkout 12.0 tkmix  2.9 tape 17.8 bbd  5.8 radio  1.7 out  3.3
+  PEAK  ctl 10.6 in  8.1 shim  4.4 swell 12.7 twin  2.1 tank  4.4 tkctl 11.8 tkloop 13.9 tkout 11.9 tkmix  2.9 tape 18.2 bbd  1.7 radio  6.9 out  3.3
+  PEAK  ctl 10.8 in  8.2 shim 19.5 swell 13.0 twin  2.0 tank  4.4 tkctl 11.8 tkloop 17.8 tkout 12.1 tkmix  2.9 tape 18.0 bbd  5.7 radio  5.6 out  3.3
+  PEAK  ctl  5.9 in 10.8 shim 19.3 swell 12.8 twin  2.1 tank  4.4 tkctl 13.7 tkloop 30.7 tkout 30.9 tkmix  2.9 tape  2.1 bbd  1.8 radio  1.7 out  3.3
+  PEAK  ctl  6.8 in  8.1 shim  4.3 swell 13.0 twin 16.1 tank  5.0 tkctl 17.4 tkloop 26.2 tkout 18.9 tkmix  4.2 tape  2.0 bbd  1.8 radio  1.7 out  3.3
+  PEAK  ctl  5.2 in  7.1 shim  4.3 swell 12.9 twin  1.9 tank 15.5 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  5.3 in  7.5 shim  4.3 swell 12.8 twin  1.9 tank 17.9 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.6 out  3.3
+  PEAK  ctl  6.3 in  7.4 shim  4.3 swell 12.7 twin  1.9 tank 17.6 tkctl  3.3 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  5.8 radio  1.7 out  3.2
+  PEAK  ctl  6.1 in  7.5 shim  4.3 swell 12.7 twin  2.0 tank 15.7 tkctl  4.1 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.7 bbd  5.7 radio  1.7 out  3.2
+  PEAK  ctl  8.6 in  7.4 shim  4.3 swell 12.8 twin  2.0 tank 15.5 tkctl  4.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.3 bbd  1.8 radio  7.0 out  3.3
+  PEAK  ctl  7.2 in  7.4 shim  4.3 swell 12.8 twin  2.0 tank 17.5 tkctl  3.5 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.1 bbd  5.8 radio  5.8 out  3.2
+  PEAK  ctl  5.4 in  7.5 shim  4.3 swell 12.8 twin  2.0 tank 17.6 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.6 out  3.2
+  PEAK  ctl  6.3 in  7.5 shim  4.3 swell 12.8 twin  2.0 tank 17.2 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  5.9 radio  1.7 out  3.2
+  PEAK  ctl  6.5 in  7.4 shim  4.3 swell 12.8 twin  1.9 tank 15.5 tkctl  4.1 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.7 bbd  5.8 radio  1.6 out  3.2
+  PEAK  ctl  8.5 in  7.5 shim  4.3 swell 12.8 twin  2.0 tank 15.2 tkctl  4.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.2 bbd  1.7 radio  7.2 out  3.3
+  PEAK  ctl  9.9 in  7.4 shim  4.3 swell 12.7 twin  2.0 tank 15.8 tkctl  8.3 tkloop 24.9 tkout  7.5 tkmix  2.8 tape 17.9 bbd  4.5 radio  5.8 out  3.3
+  PEAK  ctl  7.3 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.3 tkctl  8.2 tkloop 18.0 tkout  7.5 tkmix  2.8 tape  2.1 bbd  1.7 radio  1.6 out  3.3
+  PEAK  ctl  8.3 in  6.9 shim  4.2 swell 14.2 twin  1.9 tank  4.4 tkctl  8.3 tkloop 17.8 tkout  7.2 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl  8.5 in  7.0 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl 11.5 tkloop 14.0 tkout  7.3 tkmix  3.0 tape 17.7 bbd  5.7 radio  1.7 out  3.3
+  PEAK  ctl 10.8 in  7.0 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.8 tkloop 13.8 tkout  7.3 tkmix  2.9 tape 18.2 bbd  1.7 radio  7.0 out  3.4
+  PEAK  ctl  9.9 in  6.7 shim  4.4 swell 12.6 twin  2.0 tank  4.3 tkctl 11.8 tkloop 35.3 tkout 18.0 tkmix  2.8 tape 18.0 bbd  5.7 radio  5.8 out  3.3
+  PEAK  ctl  7.4 in  6.9 shim  4.3 swell 12.7 twin  1.9 tank  4.3 tkctl  9.3 tkloop 15.4 tkout  7.2 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.7 out  3.4
+  PEAK  ctl  8.3 in  6.8 shim  4.3 swell 12.8 twin  2.1 tank  4.4 tkctl  7.9 tkloop 15.4 tkout  7.3 tkmix  3.0 tape  2.0 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl  8.5 in  6.9 shim  4.3 swell 12.7 twin  1.9 tank  4.3 tkctl 11.3 tkloop 11.4 tkout  7.1 tkmix  2.8 tape 17.9 bbd  5.6 radio  1.7 out  3.3
+  PEAK  ctl 10.8 in  7.0 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.4 tkloop 11.3 tkout  7.2 tkmix  2.9 tape 18.2 bbd  1.7 radio  7.0 out  3.4
+  PEAK  ctl 13.4 in  6.8 shim  4.3 swell 12.6 twin  1.9 tank  4.3 tkctl 11.3 tkloop 22.6 tkout 12.0 tkmix  2.9 tape 18.3 bbd  4.5 radio  5.7 out  3.3
+  PEAK  ctl  7.3 in  7.0 shim  4.3 swell 14.1 twin  1.9 tank  4.3 tkctl  8.3 tkloop 18.0 tkout 11.9 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  6.8 shim  4.3 swell 14.1 twin  2.0 tank  4.4 tkctl  8.4 tkloop 17.8 tkout 11.6 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl  8.5 in  6.9 shim  4.3 swell 14.2 twin  2.0 tank  4.4 tkctl 11.8 tkloop 13.9 tkout 11.7 tkmix  2.8 tape 17.7 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl 10.7 in  7.0 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.8 tkloop 13.9 tkout 11.8 tkmix  2.9 tape 18.2 bbd  1.7 radio  7.1 out  3.4
+  PEAK  ctl  9.3 in  8.8 shim  4.3 swell 12.8 twin  2.1 tank  4.4 tkctl 13.3 tkloop 34.5 tkout 30.7 tkmix  2.9 tape 18.1 bbd  5.8 radio  6.9 out  3.3
+  PEAK  ctl  7.4 in  8.2 shim  4.3 swell 12.8 twin  2.0 tank  4.3 tkctl 10.5 tkloop 17.9 tkout 11.9 tkmix  3.0 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  8.2 shim  4.3 swell 12.8 twin  2.0 tank  4.4 tkctl  8.3 tkloop 17.8 tkout 12.0 tkmix  3.0 tape  2.0 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  8.1 shim  4.3 swell 12.8 twin  2.1 tank  4.4 tkctl 11.7 tkloop 13.9 tkout 11.9 tkmix  2.9 tape 17.9 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl 10.7 in  8.3 shim  4.4 swell 12.8 twin  2.1 tank  4.4 tkctl 11.8 tkloop 13.8 tkout 12.0 tkmix  3.0 tape 18.3 bbd  1.7 radio  7.0 out  3.4
+  PEAK  ctl 10.5 in  8.1 shim 19.4 swell 13.0 twin  2.0 tank  4.4 tkctl 11.8 tkloop 17.7 tkout 12.0 tkmix  2.9 tape 18.0 bbd  5.8 radio  5.8 out  3.3
+  PEAK  ctl  6.4 in 10.7 shim 18.8 swell 12.8 twin  2.1 tank  4.4 tkctl 13.7 tkloop 30.7 tkout 30.8 tkmix  2.9 tape  2.1 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  6.8 in  8.1 shim  4.3 swell 12.9 twin 16.0 tank  4.9 tkctl 15.8 tkloop 26.4 tkout 18.9 tkmix  4.2 tape  2.1 bbd  1.8 radio  1.7 out  3.3
+  PEAK  ctl  5.2 in  7.1 shim  4.3 swell 12.7 twin  2.0 tank 15.5 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.8 radio  1.6 out  3.3
+  PEAK  ctl  5.3 in  7.5 shim  4.3 swell 12.7 twin  2.0 tank 18.0 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.8 out  3.3
+  PEAK  ctl  6.2 in  7.5 shim  4.3 swell 12.7 twin  2.0 tank 17.5 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  5.8 radio  1.6 out  3.2
+  PEAK  ctl  6.4 in  7.4 shim  4.3 swell 12.7 twin  2.0 tank 15.9 tkctl  3.3 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.9 bbd  5.9 radio  1.6 out  3.2
+  PEAK  ctl  8.6 in  7.5 shim  4.3 swell 12.8 twin  2.0 tank 15.8 tkctl  4.1 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.3 bbd  1.8 radio  7.2 out  3.3
+  PEAK  ctl  7.7 in  7.4 shim  4.3 swell 12.7 twin  2.0 tank 17.2 tkctl  3.5 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.0 bbd  5.8 radio  7.4 out  3.3
+  PEAK  ctl  5.3 in  7.5 shim  4.3 swell 12.7 twin  2.0 tank 17.7 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.8 out  3.3
+  PEAK  ctl  6.3 in  7.4 shim  4.3 swell 12.7 twin  1.9 tank 17.5 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  5.8 radio  1.7 out  3.2
+  PEAK  ctl  6.2 in  7.4 shim  4.3 swell 12.7 twin  1.9 tank 15.3 tkctl  3.4 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.7 bbd  5.9 radio  1.6 out  3.2
+  PEAK  ctl  8.7 in  7.4 shim  4.3 swell 12.8 twin  2.0 tank 16.7 tkctl  4.1 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 18.3 bbd  1.7 radio  7.0 out  3.3
+  PEAK  ctl  9.9 in  7.4 shim  4.3 swell 12.5 twin  2.0 tank 17.1 tkctl  8.3 tkloop 24.9 tkout  7.4 tkmix  2.8 tape 18.0 bbd  5.7 radio  7.0 out  3.3
+  PEAK  ctl  7.5 in  6.9 shim  4.2 swell 14.1 twin  2.0 tank  4.4 tkctl  8.2 tkloop 18.1 tkout  7.5 tkmix  2.9 tape  2.0 bbd  1.8 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  7.0 shim  4.3 swell 14.2 twin  1.9 tank  4.4 tkctl  8.3 tkloop 17.7 tkout  7.2 tkmix  2.8 tape  2.1 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.5 in  7.0 shim  4.4 swell 14.2 twin  2.0 tank  4.4 tkctl 11.7 tkloop 13.9 tkout  7.2 tkmix  2.9 tape 17.7 bbd  5.8 radio  1.7 out  3.3
+  PEAK  ctl 10.8 in  6.9 shim  4.3 swell 12.7 twin  2.0 tank  4.4 tkctl 11.6 tkloop 13.8 tkout  7.4 tkmix  2.9 tape 18.2 bbd  1.7 radio  7.1 out  3.3
+  PEAK  ctl  9.4 in  6.9 shim  4.3 swell 12.7 twin  1.9 tank  4.3 tkctl 11.6 tkloop 35.3 tkout 17.9 tkmix  2.8 tape 18.0 bbd  5.7 radio  5.7 out  3.3
+  PEAK  ctl  7.5 in  6.9 shim  4.3 swell 12.6 twin  2.0 tank  4.3 tkctl  9.4 tkloop 15.4 tkout  7.2 tkmix  2.8 tape  2.0 bbd  1.8 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  6.8 shim  4.3 swell 12.7 twin  1.9 tank  4.4 tkctl  7.9 tkloop 15.3 tkout  7.2 tkmix  2.8 tape  2.0 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl  8.4 in  6.9 shim  4.3 swell 12.6 twin  2.0 tank  4.3 tkctl 11.2 tkloop 11.4 tkout  7.2 tkmix  2.8 tape 17.8 bbd  5.6 radio  1.7 out  3.3
+  PEAK  ctl 10.8 in  6.9 shim  4.4 swell 12.6 twin  2.0 tank  4.4 tkctl 11.4 tkloop 11.3 tkout  7.2 tkmix  2.9 tape 18.3 bbd  1.8 radio  7.0 out  3.3
+  PEAK  ctl 13.4 in  6.9 shim  4.3 swell 12.5 twin  2.0 tank  4.4 tkctl 11.2 tkloop 22.6 tkout 11.9 tkmix  2.9 tape 18.1 bbd  5.8 radio  5.7 out  3.3
+  PEAK  ctl  7.3 in  7.0 shim  4.3 swell 14.1 twin  1.9 tank  4.4 tkctl  8.3 tkloop 18.0 tkout 12.0 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.6 out  3.3
+  PEAK  ctl  8.4 in  6.8 shim  4.3 swell 14.1 twin  2.0 tank  4.4 tkctl  8.4 tkloop 17.7 tkout 11.6 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.7 out  3.4
+  PEAK  ctl  8.5 in  6.9 shim  4.3 swell 14.1 twin  2.0 tank  4.4 tkctl 11.8 tkloop 14.0 tkout 11.6 tkmix  2.8 tape 17.7 bbd  5.8 radio  1.6 out  3.3
+  PEAK  ctl 10.7 in  6.9 shim  4.3 swell 12.7 twin  1.9 tank  4.4 tkctl 11.7 tkloop 13.8 tkout 11.6 tkmix  2.9 tape 18.3 bbd  1.8 radio  7.0 out  3.3
+  PEAK  ctl 10.6 in  8.9 shim  4.3 swell 12.8 twin  2.0 tank  4.4 tkctl 13.3 tkloop 34.5 tkout 30.7 tkmix  2.9 tape 18.0 bbd  5.8 radio  5.8 out  3.3
+  PEAK  ctl  7.3 in  8.2 shim  4.3 swell 12.8 twin  2.1 tank  4.3 tkctl 10.7 tkloop 17.9 tkout 11.9 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.6 out  3.3
+  PEAK  ctl  8.3 in  8.2 shim  4.4 swell 12.8 twin  1.9 tank  4.4 tkctl  8.4 tkloop 17.8 tkout 11.7 tkmix  2.9 tape  2.0 bbd  5.9 radio  1.7 out  3.3
+  PEAK  ctl  8.3 in  8.3 shim  4.4 swell 12.7 twin  2.0 tank  4.4 tkctl 11.9 tkloop 13.9 tkout 11.9 tkmix  2.9 tape 17.8 bbd  5.8 radio  1.7 out  3.3
+  PEAK  ctl 10.7 in  8.2 shim  4.4 swell 12.8 twin  2.0 tank  4.4 tkctl 11.8 tkloop 13.8 tkout 11.9 tkmix  2.9 tape 18.1 bbd  1.7 radio  7.1 out  3.4
+  PEAK  ctl 10.7 in  8.1 shim 19.3 swell 12.8 twin  2.0 tank  4.3 tkctl 11.6 tkloop 17.7 tkout 12.0 tkmix  2.9 tape 18.1 bbd  5.8 radio  5.7 out  3.4
+  PEAK  ctl  6.4 in 10.8 shim 18.9 swell 12.9 twin  2.1 tank  4.4 tkctl 13.7 tkloop 30.7 tkout 30.8 tkmix  2.9 tape  2.0 bbd  1.7 radio  1.7 out  3.3
+  PEAK  ctl  6.7 in  8.1 shim  4.3 swell 13.1 twin 16.1 tank  4.9 tkctl 15.8 tkloop 26.4 tkout 18.9 tkmix  4.3 tape  2.0 bbd  1.7 radio  1.7 out  3.2
+  PEAK  ctl  5.3 in  7.3 shim  4.2 swell 12.8 twin  1.9 tank 16.6 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  5.8 in  7.3 shim  4.2 swell 12.7 twin  1.9 tank 15.2 tkctl  3.6 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.6 in  7.1 shim  4.2 swell 12.7 twin  1.9 tank 15.2 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.6 bbd  1.6 radio  6.7 out  3.2
+  PEAK  ctl  8.6 in  7.3 shim  4.2 swell 12.6 twin  1.9 tank 16.5 tkctl  7.7 tkloop 24.5 tkout  7.3 tkmix  2.7 tape 17.6 bbd  5.6 radio  5.3 out  3.1
+  PEAK  ctl  6.5 in  6.8 shim  4.2 swell 14.0 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.6 tkout  7.4 tkmix  2.8 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  6.8 shim  4.2 swell 14.0 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.3 tkout  7.0 tkmix  2.7 tape  1.9 bbd  5.6 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  6.7 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.6 tkout  6.9 tkmix  2.7 tape 17.5 bbd  5.6 radio  1.6 out  3.1
+  PEAK  ctl  9.4 in  6.6 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.4 tkout  7.0 tkmix  2.7 tape 17.6 bbd  1.6 radio  6.7 out  3.2
+  PEAK  ctl  8.2 in  6.7 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 11.2 tkloop 34.9 tkout 17.7 tkmix  2.7 tape 17.7 bbd  5.4 radio  5.4 out  3.1
+  PEAK  ctl  6.4 in  6.8 shim  4.1 swell 12.5 twin  1.8 tank  3.8 tkctl  8.6 tkloop 15.0 tkout  7.1 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.7 out  3.1
+  PEAK  ctl  7.2 in  6.8 shim  4.1 swell 12.5 twin  1.8 tank  3.8 tkctl  7.3 tkloop 14.9 tkout  7.1 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  6.7 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 10.8 tkloop 11.1 tkout  7.0 tkmix  2.6 tape 17.6 bbd  5.6 radio  1.6 out  3.2
+  PEAK  ctl  9.4 in  6.7 shim  4.1 swell 12.5 twin  1.8 tank  3.8 tkctl 10.9 tkloop 10.9 tkout  7.0 tkmix  2.7 tape 17.7 bbd  1.6 radio  6.8 out  3.2
+  PEAK  ctl 12.1 in  6.7 shim  4.2 swell 12.3 twin  1.8 tank  3.8 tkctl 10.8 tkloop 22.2 tkout 11.9 tkmix  2.7 tape 17.6 bbd  5.5 radio  5.3 out  3.2
+  PEAK  ctl  6.3 in  6.8 shim  4.2 swell 13.9 twin  1.9 tank  3.8 tkctl  7.7 tkloop 17.6 tkout 11.9 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.2
+  PEAK  ctl  7.1 in  6.7 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.3 tkout 11.3 tkmix  2.7 tape  1.9 bbd  5.6 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  6.7 shim  4.2 swell 14.0 twin  1.8 tank  3.8 tkctl 11.1 tkloop 13.5 tkout 11.4 tkmix  2.7 tape 17.6 bbd  5.5 radio  1.6 out  3.2
+  PEAK  ctl  9.3 in  6.7 shim  4.2 swell 12.4 twin  1.9 tank  3.8 tkctl 11.1 tkloop 13.4 tkout 11.4 tkmix  2.7 tape 17.7 bbd  1.6 radio  6.7 out  3.2
+  PEAK  ctl  8.1 in  8.6 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 12.8 tkloop 34.0 tkout 30.6 tkmix  2.8 tape 17.7 bbd  5.5 radio  5.3 out  3.2
+  PEAK  ctl  6.4 in  8.1 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  9.9 tkloop 17.4 tkout 11.8 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.2
+  PEAK  ctl  7.2 in  8.0 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  7.8 tkloop 17.4 tkout 11.7 tkmix  2.7 tape  1.9 bbd  5.6 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  8.0 shim  4.2 swell 12.6 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.5 tkout 11.7 tkmix  2.7 tape 17.7 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.3 in  8.0 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.5 tkout 11.7 tkmix  2.7 tape 17.8 bbd  1.6 radio  6.7 out  3.2
+  PEAK  ctl  9.3 in  8.0 shim 19.2 swell 12.6 twin  1.9 tank  3.8 tkctl 11.1 tkloop 17.4 tkout 11.9 tkmix  2.7 tape 17.7 bbd  5.5 radio  5.3 out  3.1
+  PEAK  ctl  4.7 in 10.0 shim 18.8 swell 12.6 twin  1.8 tank  3.8 tkctl 13.2 tkloop 30.2 tkout 30.6 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.5 in  8.0 shim  4.2 swell 12.8 twin 15.5 tank  4.4 tkctl 15.4 tkloop 25.7 tkout 18.8 tkmix  4.0 tape  1.9 bbd  1.7 radio  1.7 out  3.1
+  PEAK  ctl  4.5 in  6.9 shim  4.2 swell 12.6 twin  1.9 tank 15.4 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  2.0 bbd  1.7 radio  1.6 out  3.1
+  PEAK  ctl  4.6 in  7.3 shim  4.2 swell 12.6 twin  1.9 tank 17.4 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.4 in  7.3 shim  4.2 swell 12.5 twin  1.9 tank 17.3 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  5.6 radio  1.6 out  3.1
+  PEAK  ctl  5.5 in  7.2 shim  4.2 swell 12.5 twin  1.9 tank 15.8 tkctl  3.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.6 bbd  5.6 radio  1.6 out  3.2
+  PEAK  ctl  7.6 in  7.2 shim  4.2 swell 12.6 twin  1.9 tank 15.0 tkctl  3.7 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.4 bbd  1.6 radio  6.6 out  3.2
+  PEAK  ctl  7.6 in  7.3 shim  4.2 swell 12.5 twin  1.9 tank 17.1 tkctl  3.1 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.7 bbd  5.6 radio  5.3 out  3.2
+  PEAK  ctl  4.5 in  7.3 shim  4.2 swell 12.6 twin  1.9 tank 17.0 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.4 in  7.3 shim  4.2 swell 12.6 twin  1.9 tank 16.8 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  5.6 radio  1.6 out  3.1
+  PEAK  ctl  5.5 in  7.3 shim  4.2 swell 12.6 twin  1.9 tank 15.3 tkctl  3.7 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.5 in  7.2 shim  4.2 swell 12.7 twin  1.9 tank 14.8 tkctl  3.6 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.7 bbd  1.6 radio  6.7 out  3.2
+  PEAK  ctl  8.7 in  7.3 shim  4.2 swell 12.3 twin  1.9 tank 16.8 tkctl  7.7 tkloop 24.4 tkout  7.3 tkmix  2.8 tape 17.6 bbd  4.3 radio  5.4 out  3.1
+  PEAK  ctl  6.5 in  6.8 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.6 tkout  7.4 tkmix  2.9 tape  1.9 bbd  1.6 radio  1.6 out  3.2
+  PEAK  ctl  7.2 in  6.7 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.3 tkout  7.0 tkmix  2.8 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.6 in  6.7 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl 11.1 tkloop 13.6 tkout  7.0 tkmix  2.8 tape 17.5 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.4 in  6.7 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.6 tkout  7.0 tkmix  2.8 tape 17.6 bbd  1.6 radio  6.6 out  3.2
+  PEAK  ctl  9.4 in  6.8 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 11.1 tkloop 34.9 tkout 17.8 tkmix  2.8 tape 17.7 bbd  5.5 radio  5.4 out  3.1
+  PEAK  ctl  6.4 in  6.8 shim  4.2 swell 12.6 twin  1.8 tank  3.8 tkctl  8.5 tkloop 15.0 tkout  7.0 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  6.8 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  7.3 tkloop 14.9 tkout  7.0 tkmix  2.7 tape  1.9 bbd  5.6 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  6.7 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 10.8 tkloop 11.1 tkout  7.1 tkmix  2.7 tape 17.6 bbd  5.6 radio  1.6 out  3.1
+  PEAK  ctl  9.4 in  6.7 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 10.9 tkloop 11.0 tkout  7.1 tkmix  2.9 tape 17.7 bbd  1.6 radio  6.7 out  3.2
+  PEAK  ctl 12.2 in  6.7 shim  4.2 swell 12.3 twin  1.8 tank  3.8 tkctl 10.7 tkloop 22.2 tkout 11.9 tkmix  2.7 tape 17.6 bbd  4.3 radio  5.4 out  3.1
+  PEAK  ctl  6.4 in  6.8 shim  4.2 swell 13.9 twin  1.9 tank  3.8 tkctl  7.7 tkloop 17.6 tkout 11.9 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.2
+  PEAK  ctl  7.1 in  6.8 shim  4.2 swell 14.0 twin  1.8 tank  3.8 tkctl  7.8 tkloop 17.3 tkout 11.4 tkmix  2.7 tape  1.9 bbd  5.6 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  6.7 shim  4.2 swell 14.0 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.6 tkout 11.4 tkmix  2.8 tape 17.6 bbd  5.5 radio  1.6 out  3.2
+  PEAK  ctl  9.3 in  6.7 shim  4.2 swell 12.4 twin  1.8 tank  3.9 tkctl 11.2 tkloop 13.5 tkout 11.3 tkmix  2.7 tape 17.7 bbd  1.6 radio  6.7 out  3.1
+  PEAK  ctl  9.3 in  8.7 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 12.8 tkloop 34.0 tkout 30.7 tkmix  2.7 tape 17.8 bbd  4.3 radio  5.3 out  3.1
+  PEAK  ctl  6.4 in  8.1 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 10.0 tkloop 17.4 tkout 11.9 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.2
+  PEAK  ctl  7.2 in  8.0 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  7.8 tkloop 17.4 tkout 11.7 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  8.0 shim  4.2 swell 12.6 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.5 tkout 11.8 tkmix  2.7 tape 17.7 bbd  5.5 radio  1.6 out  3.2
+  PEAK  ctl  9.4 in  7.9 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 11.1 tkloop 13.5 tkout 11.7 tkmix  2.8 tape 17.7 bbd  1.6 radio  6.7 out  3.2
+  PEAK  ctl  8.0 in  8.2 shim 19.2 swell 12.7 twin  1.9 tank  3.8 tkctl 11.1 tkloop 17.3 tkout 12.0 tkmix  2.7 tape 17.7 bbd  5.5 radio  5.3 out  3.2
+  PEAK  ctl  5.4 in 10.0 shim 18.7 swell 12.7 twin  1.9 tank  3.9 tkctl 13.1 tkloop 30.3 tkout 30.6 tkmix  2.7 tape  1.9 bbd  1.7 radio  1.6 out  3.2
+  PEAK  ctl  5.5 in  7.9 shim  4.2 swell 12.8 twin 15.5 tank  4.4 tkctl 15.1 tkloop 25.8 tkout 18.8 tkmix  4.0 tape  1.9 bbd  1.7 radio  1.6 out  3.1
+  PEAK  ctl  4.5 in  6.9 shim  4.2 swell 12.6 twin  1.9 tank 15.0 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  1.7 radio  1.6 out  3.2
+  PEAK  ctl  4.6 in  7.3 shim  4.2 swell 12.5 twin  1.9 tank 17.4 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.3 in  7.2 shim  4.2 swell 12.5 twin  1.9 tank 17.2 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.6 in  7.3 shim  4.2 swell 12.7 twin  1.9 tank 15.4 tkctl  3.8 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.4 bbd  1.6 radio  6.6 out  3.1
+  PEAK  ctl  6.3 in  7.4 shim  4.2 swell 12.7 twin  1.9 tank 17.4 tkctl  3.7 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.7 bbd  5.5 radio  5.3 out  3.1
+  PEAK  ctl  4.6 in  7.4 shim  4.2 swell 12.7 twin  1.9 tank 17.1 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.3 in  7.4 shim  4.2 swell 12.7 twin  1.9 tank 16.8 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  5.4 in  7.3 shim  4.2 swell 12.8 twin  1.9 tank 15.6 tkctl  3.7 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.6 in  7.3 shim  4.2 swell 12.7 twin  1.9 tank 15.4 tkctl  3.8 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.3 bbd  1.6 radio  6.6 out  3.1
+  PEAK  ctl  8.7 in  7.3 shim  4.2 swell 12.5 twin  1.9 tank 16.6 tkctl  7.6 tkloop 24.4 tkout  7.3 tkmix  2.7 tape 17.6 bbd  5.4 radio  6.6 out  3.1
+  PEAK  ctl  6.4 in  6.8 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl  7.6 tkloop 17.6 tkout  7.4 tkmix  2.8 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  6.8 shim  4.2 swell 14.0 twin  1.8 tank  3.8 tkctl  7.6 tkloop 17.4 tkout  7.0 tkmix  2.8 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  6.8 shim  4.2 swell 14.0 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.7 tkout  7.1 tkmix  2.7 tape 17.5 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.4 in  6.7 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.5 tkout  7.1 tkmix  2.7 tape 17.7 bbd  1.6 radio  6.6 out  3.1
+  PEAK  ctl  8.2 in  6.8 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 11.2 tkloop 35.1 tkout 17.6 tkmix  2.7 tape 17.7 bbd  5.5 radio  5.3 out  3.1
+  PEAK  ctl  6.4 in  6.8 shim  4.2 swell 12.6 twin  1.8 tank  3.8 tkctl  8.5 tkloop 15.0 tkout  7.0 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  6.8 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  7.3 tkloop 14.9 tkout  7.1 tkmix  2.8 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  6.8 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 10.8 tkloop 11.1 tkout  7.1 tkmix  2.7 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.4 in  6.7 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 10.9 tkloop 10.9 tkout  7.1 tkmix  2.8 tape 17.7 bbd  1.6 radio  6.7 out  3.1
+  PEAK  ctl 12.2 in  6.7 shim  4.2 swell 12.3 twin  1.8 tank  3.8 tkctl 10.8 tkloop 22.2 tkout 12.0 tkmix  2.7 tape 17.6 bbd  5.5 radio  5.3 out  3.1
+  PEAK  ctl  6.4 in  6.8 shim  4.2 swell 14.0 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.6 tkout 11.8 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.1 in  6.8 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.3 tkout 11.4 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  6.8 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl 11.3 tkloop 13.5 tkout 11.3 tkmix  2.7 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.3 in  6.7 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.4 tkout 11.4 tkmix  2.7 tape 17.6 bbd  1.6 radio  6.7 out  3.1
+  PEAK  ctl  9.4 in  8.7 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 12.7 tkloop 34.0 tkout 30.5 tkmix  2.7 tape 17.7 bbd  5.4 radio  5.3 out  3.1
+  PEAK  ctl  6.4 in  8.1 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  9.8 tkloop 17.4 tkout 11.8 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  8.1 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.3 tkout 11.7 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  8.1 shim  4.2 swell 12.5 twin  1.9 tank  3.8 tkctl 11.2 tkloop 13.5 tkout 11.7 tkmix  2.7 tape 17.7 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.4 in  7.9 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 11.3 tkloop 13.4 tkout 11.7 tkmix  2.8 tape 17.6 bbd  1.6 radio  6.6 out  3.1
+  PEAK  ctl  9.3 in  8.1 shim 19.3 swell 12.7 twin  1.9 tank  3.8 tkctl 11.2 tkloop 17.3 tkout 11.8 tkmix  2.8 tape 17.7 bbd  5.4 radio  5.4 out  3.1
+  PEAK  ctl  4.8 in 10.0 shim 18.9 swell 12.7 twin  1.8 tank  3.8 tkctl 13.1 tkloop 30.2 tkout 30.5 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.5 in  7.9 shim  4.2 swell 12.7 twin 15.5 tank  4.3 tkctl 15.3 tkloop 25.8 tkout 18.8 tkmix  3.9 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  9.2 in  7.9 shim  4.2 swell 12.4 twin  1.9 tank 26.9 tkctl 11.2 tkloop 17.3 tkout 11.3 tkmix  1.5 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  4.6 in  7.4 shim  4.2 swell 14.1 twin  1.9 tank 17.4 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.3 in  7.4 shim  4.2 swell 14.2 twin  1.9 tank 17.2 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  5.5 in  7.3 shim  4.2 swell 14.1 twin  1.9 tank 16.2 tkctl  3.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.6 in  7.3 shim  4.2 swell 12.7 twin  1.9 tank 15.7 tkctl  3.8 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.7 bbd  1.6 radio  6.6 out  3.1
+  PEAK  ctl  6.3 in  7.3 shim  4.2 swell 12.7 twin  1.9 tank 17.3 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.7 bbd  5.5 radio  5.3 out  3.1
+  PEAK  ctl  4.5 in  7.4 shim  4.2 swell 12.6 twin  1.8 tank 17.3 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.3 in  7.4 shim  4.2 swell 12.7 twin  1.8 tank 17.1 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  5.5 in  7.3 shim  4.2 swell 12.6 twin  1.9 tank 15.6 tkctl  3.8 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.5 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.6 in  7.3 shim  4.2 swell 12.7 twin  1.9 tank 15.3 tkctl  3.8 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.4 bbd  1.6 radio  6.6 out  3.1
+  PEAK  ctl  8.8 in  7.3 shim  4.2 swell 12.6 twin  1.8 tank 15.7 tkctl  7.6 tkloop 24.4 tkout  7.3 tkmix  2.8 tape 17.6 bbd  4.3 radio  6.6 out  3.1
+  PEAK  ctl  6.5 in  6.8 shim  4.2 swell 13.8 twin  1.8 tank  3.8 tkctl  7.6 tkloop 17.6 tkout  7.3 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  6.8 shim  4.2 swell 13.8 twin  1.8 tank  3.8 tkctl  7.6 tkloop 17.3 tkout  7.0 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  6.8 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.5 tkout  7.1 tkmix  2.7 tape 17.5 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.4 in  6.7 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.5 tkout  7.0 tkmix  2.6 tape 17.6 bbd  1.6 radio  6.7 out  3.1
+  PEAK  ctl  9.4 in  6.7 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 11.2 tkloop 35.1 tkout 17.8 tkmix  2.7 tape 17.7 bbd  4.3 radio  6.5 out  3.1
+  PEAK  ctl  6.5 in  6.8 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl  8.5 tkloop 14.9 tkout  7.0 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  6.8 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl  7.3 tkloop 14.8 tkout  7.1 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.4 in  6.7 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 10.9 tkloop 11.0 tkout  7.1 tkmix  2.7 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.4 in  6.7 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 10.8 tkloop 11.0 tkout  7.1 tkmix  2.7 tape 17.7 bbd  1.6 radio  6.6 out  3.1
+  PEAK  ctl 12.2 in  6.7 shim  4.2 swell 12.3 twin  1.8 tank  3.8 tkctl  9.6 tkloop 22.2 tkout 11.8 tkmix  2.8 tape 17.6 bbd  4.3 radio  6.6 out  3.1
+  PEAK  ctl  6.5 in  6.8 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.6 tkout 11.8 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.1 in  6.7 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.4 tkout 11.4 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  6.8 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.5 tkout 11.3 tkmix  2.7 tape 17.5 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.3 in  6.7 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.5 tkout 11.4 tkmix  2.7 tape 17.6 bbd  1.6 radio  6.7 out  3.1
+  PEAK  ctl  9.3 in  8.6 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 12.7 tkloop 34.0 tkout 30.6 tkmix  2.8 tape 17.7 bbd  5.5 radio  5.3 out  3.1
+  PEAK  ctl  6.4 in  8.1 shim  4.2 swell 12.6 twin  1.8 tank  3.8 tkctl  9.9 tkloop 17.4 tkout 11.8 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  8.1 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.4 tkout 11.7 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  8.0 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 11.3 tkloop 13.5 tkout 11.9 tkmix  2.7 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.4 in  7.9 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 11.3 tkloop 13.4 tkout 11.7 tkmix  2.7 tape 17.7 bbd  1.6 radio  6.7 out  3.1
+  PEAK  ctl  8.1 in  8.0 shim 19.4 swell 12.7 twin  1.9 tank  3.8 tkctl 10.1 tkloop 17.3 tkout 11.8 tkmix  2.7 tape 17.7 bbd  5.5 radio  5.3 out  3.1
+  PEAK  ctl  4.8 in 10.0 shim 18.7 swell 12.7 twin  1.8 tank  3.8 tkctl 13.1 tkloop 30.4 tkout 30.5 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.5 in  7.9 shim  4.2 swell 12.8 twin 15.4 tank  4.3 tkctl 15.1 tkloop 25.8 tkout 18.8 tkmix  3.9 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  9.2 in  8.0 shim  4.2 swell 12.5 twin  1.9 tank 26.9 tkctl 12.4 tkloop 17.3 tkout 11.2 tkmix  2.4 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  4.6 in  7.4 shim  4.2 swell 14.1 twin  1.8 tank 17.6 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.4 in  7.3 shim  4.2 swell 14.1 twin  1.9 tank 17.5 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  5.5 in  7.3 shim  4.2 swell 14.1 twin  1.9 tank 16.0 tkctl  3.7 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.5 in  7.3 shim  4.2 swell 12.6 twin  1.9 tank 16.0 tkctl  3.8 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.4 bbd  1.6 radio  6.6 out  3.1
+  PEAK  ctl  6.9 in  7.4 shim  4.2 swell 12.6 twin  1.9 tank 17.0 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.7 bbd  4.3 radio  5.4 out  3.1
+  PEAK  ctl  4.6 in  7.4 shim  4.2 swell 12.6 twin  1.9 tank 17.2 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.4 in  7.3 shim  4.2 swell 12.7 twin  1.9 tank 17.8 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  5.5 in  7.3 shim  4.2 swell 12.6 twin  1.9 tank 15.7 tkctl  3.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.5 in  7.3 shim  4.2 swell 12.6 twin  1.9 tank 15.8 tkctl  3.8 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.3 bbd  1.6 radio  6.7 out  3.1
+  PEAK  ctl  8.7 in  7.3 shim  4.2 swell 12.4 twin  1.9 tank 16.8 tkctl  7.6 tkloop 24.4 tkout  7.4 tkmix  2.8 tape 17.6 bbd  5.5 radio  5.3 out  3.1
+  PEAK  ctl  6.5 in  6.8 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl  7.6 tkloop 17.6 tkout  7.4 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  6.8 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl  7.6 tkloop 17.3 tkout  7.0 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.4 in  6.8 shim  4.2 swell 13.8 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.5 tkout  7.1 tkmix  2.7 tape 17.5 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.4 in  6.7 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 11.1 tkloop 13.4 tkout  7.0 tkmix  2.7 tape 17.7 bbd  1.6 radio  6.7 out  3.1
+  PEAK  ctl  9.4 in  6.8 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 11.2 tkloop 35.1 tkout 17.7 tkmix  2.7 tape 17.7 bbd  4.3 radio  5.4 out  3.1
+  PEAK  ctl  6.4 in  6.8 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl  8.5 tkloop 15.0 tkout  7.0 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  6.8 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl  7.3 tkloop 14.8 tkout  7.1 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  6.8 shim  4.2 swell 12.3 twin  1.8 tank  3.8 tkctl 10.8 tkloop 11.1 tkout  7.2 tkmix  2.7 tape 17.5 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.4 in  6.7 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 10.8 tkloop 11.0 tkout  7.0 tkmix  2.7 tape 17.7 bbd  1.6 radio  6.6 out  3.1
+  PEAK  ctl 12.2 in  6.7 shim  4.2 swell 12.2 twin  1.8 tank  3.8 tkctl 10.8 tkloop 22.2 tkout 11.8 tkmix  2.8 tape 17.6 bbd  5.4 radio  6.5 out  3.1
+  PEAK  ctl  6.4 in  6.8 shim  4.2 swell 13.8 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.6 tkout 11.8 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  6.7 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.4 tkout 11.4 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  6.8 shim  4.2 swell 13.8 twin  1.8 tank  3.8 tkctl 11.3 tkloop 13.6 tkout 11.4 tkmix  2.7 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.4 in  6.7 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 11.3 tkloop 13.5 tkout 11.4 tkmix  2.7 tape 17.6 bbd  1.6 radio  6.7 out  3.1
+  PEAK  ctl  8.1 in  8.7 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 12.7 tkloop 34.0 tkout 30.6 tkmix  2.7 tape 17.6 bbd  5.5 radio  6.6 out  3.1
+  PEAK  ctl  6.3 in  8.2 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  9.9 tkloop 17.4 tkout 11.6 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  8.1 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.3 tkout 11.6 tkmix  2.8 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  8.1 shim  4.2 swell 12.4 twin  1.9 tank  3.8 tkctl 11.3 tkloop 13.5 tkout 11.8 tkmix  2.7 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.4 in  8.1 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.4 tkout 11.7 tkmix  2.8 tape 17.7 bbd  1.6 radio  6.6 out  3.1
+  PEAK  ctl  9.3 in  8.2 shim 19.2 swell 12.9 twin  1.9 tank  3.8 tkctl 11.2 tkloop 17.3 tkout 11.8 tkmix  2.7 tape 17.6 bbd  5.5 radio  6.6 out  3.1
+  PEAK  ctl  4.8 in 10.1 shim 18.7 swell 12.8 twin  1.8 tank  3.8 tkctl 13.1 tkloop 30.2 tkout 30.5 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.5 in  7.9 shim  4.2 swell 12.8 twin 15.5 tank  4.3 tkctl 15.3 tkloop 25.7 tkout 18.8 tkmix  4.1 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl 10.4 in  8.0 shim  4.2 swell 12.5 twin  1.9 tank 26.1 tkctl 12.4 tkloop 17.2 tkout 11.3 tkmix  1.5 tape 17.7 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  4.6 in  7.4 shim  4.2 swell 14.2 twin  1.9 tank 17.6 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.3 in  7.4 shim  4.2 swell 14.3 twin  1.9 tank 17.2 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  5.5 in  7.3 shim  4.2 swell 14.3 twin  1.9 tank 15.8 tkctl  3.7 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.6 in  7.3 shim  4.2 swell 12.7 twin  1.9 tank 15.7 tkctl  3.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.7 bbd  1.6 radio  6.7 out  3.1
+  PEAK  ctl  7.5 in  7.4 shim  4.2 swell 12.7 twin  1.9 tank 17.1 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.7 bbd  5.5 radio  5.3 out  3.1
+  PEAK  ctl  4.6 in  7.4 shim  4.2 swell 12.7 twin  1.9 tank 17.9 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.4 in  7.3 shim  4.2 swell 12.8 twin  1.9 tank 16.6 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  5.5 in  7.3 shim  4.2 swell 12.8 twin  1.9 tank 16.0 tkctl  3.7 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.5 in  7.3 shim  4.2 swell 12.8 twin  1.9 tank 15.3 tkctl  3.8 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.7 bbd  1.6 radio  6.7 out  3.1
+  PEAK  ctl  8.8 in  7.3 shim  4.2 swell 12.5 twin  1.8 tank 16.3 tkctl  7.6 tkloop 24.5 tkout  7.3 tkmix  2.7 tape 17.6 bbd  4.2 radio  6.5 out  3.1
+  PEAK  ctl  6.5 in  6.8 shim  4.2 swell 14.0 twin  1.8 tank  3.8 tkctl  7.6 tkloop 17.6 tkout  7.4 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  6.8 shim  4.2 swell 14.0 twin  1.8 tank  3.8 tkctl  7.6 tkloop 17.3 tkout  7.1 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.4 in  6.8 shim  4.2 swell 14.0 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.6 tkout  7.0 tkmix  2.8 tape 17.5 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.4 in  6.8 shim  4.2 swell 12.6 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.5 tkout  7.0 tkmix  2.8 tape 17.4 bbd  1.6 radio  6.7 out  3.1
+  PEAK  ctl  8.2 in  6.7 shim  4.2 swell 12.6 twin  1.8 tank  3.8 tkctl 11.2 tkloop 35.2 tkout 17.7 tkmix  2.7 tape 17.7 bbd  5.5 radio  5.3 out  3.1
+  PEAK  ctl  6.4 in  6.8 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  8.5 tkloop 15.0 tkout  7.1 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  6.8 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  7.3 tkloop 14.8 tkout  7.0 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  6.7 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 10.8 tkloop 11.1 tkout  7.0 tkmix  2.8 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.4 in  6.7 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 10.8 tkloop 11.0 tkout  7.1 tkmix  2.8 tape 17.6 bbd  1.6 radio  6.6 out  3.1
+  PEAK  ctl 12.2 in  6.7 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 10.8 tkloop 22.2 tkout 11.9 tkmix  2.8 tape 17.6 bbd  4.3 radio  6.5 out  3.1
+  PEAK  ctl  6.4 in  6.8 shim  4.2 swell 14.1 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.6 tkout 11.9 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.1 in  6.7 shim  4.2 swell 14.0 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.3 tkout 11.4 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  6.8 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl 11.3 tkloop 13.6 tkout 11.4 tkmix  2.7 tape 17.6 bbd  5.4 radio  1.6 out  3.1
+  PEAK  ctl  9.3 in  6.8 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 11.3 tkloop 13.5 tkout 11.4 tkmix  2.7 tape 17.7 bbd  1.6 radio  6.7 out  3.1
+  PEAK  ctl  8.1 in  8.6 shim  4.2 swell 12.6 twin  1.9 tank  3.8 tkctl 12.7 tkloop 34.1 tkout 30.6 tkmix  2.7 tape 17.7 bbd  5.5 radio  5.3 out  3.1
+  PEAK  ctl  6.4 in  8.1 shim  4.2 swell 12.6 twin  1.8 tank  3.8 tkctl  9.9 tkloop 17.4 tkout 11.7 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  8.0 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.2 tkout 11.7 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  8.0 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.5 tkout 11.8 tkmix  2.7 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.3 in  8.0 shim  4.2 swell 12.6 twin  1.8 tank  3.8 tkctl 11.3 tkloop 13.4 tkout 11.7 tkmix  2.7 tape 17.7 bbd  1.6 radio  6.6 out  3.1
+  PEAK  ctl  9.3 in  8.1 shim 19.3 swell 12.8 twin  1.9 tank  3.8 tkctl 11.3 tkloop 17.3 tkout 11.9 tkmix  2.8 tape 17.7 bbd  5.5 radio  6.5 out  3.2
+  PEAK  ctl  4.8 in 10.1 shim 18.9 swell 12.6 twin  1.9 tank  3.8 tkctl 13.1 tkloop 30.2 tkout 30.6 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.5 in  7.9 shim  4.2 swell 12.8 twin 15.4 tank  4.3 tkctl 15.1 tkloop 25.8 tkout 18.8 tkmix  4.0 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  9.2 in  7.5 shim  4.2 swell 12.5 twin  1.9 tank 26.3 tkctl 12.4 tkloop 17.2 tkout 11.1 tkmix  1.5 tape 17.6 bbd  5.5 radio  1.6 out  3.2
+  PEAK  ctl  4.6 in  7.4 shim  4.2 swell 14.2 twin  1.9 tank 17.8 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.4 in  7.4 shim  4.2 swell 14.1 twin  1.8 tank 17.1 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  5.5 in  7.3 shim  4.2 swell 14.1 twin  1.9 tank 16.2 tkctl  3.0 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.6 in  7.3 shim  4.2 swell 12.6 twin  1.9 tank 15.5 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.7 bbd  1.6 radio  6.6 out  3.1
+  PEAK  ctl  7.5 in  7.3 shim  4.2 swell 12.7 twin  1.8 tank 17.6 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.7 bbd  5.4 radio  6.6 out  3.1
+  PEAK  ctl  4.6 in  7.4 shim  4.2 swell 12.7 twin  1.9 tank 17.2 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.4 in  7.4 shim  4.2 swell 12.7 twin  1.9 tank 16.8 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  5.5 in  7.3 shim  4.2 swell 12.8 twin  1.9 tank 15.9 tkctl  3.7 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.6 in  7.3 shim  4.2 swell 12.7 twin  1.9 tank 15.5 tkctl  3.8 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 17.4 bbd  1.6 radio  6.7 out  3.1
+  PEAK  ctl  8.7 in  7.3 shim  4.2 swell 12.5 twin  1.9 tank 15.3 tkctl  7.6 tkloop 24.4 tkout  7.4 tkmix  2.8 tape 17.7 bbd  5.5 radio  6.5 out  3.1
+  PEAK  ctl  6.5 in  6.8 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl  7.6 tkloop 17.6 tkout  7.4 tkmix  2.8 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  6.8 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl  7.6 tkloop 17.3 tkout  7.0 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.6 in  6.8 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.5 tkout  7.1 tkmix  2.7 tape 17.5 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.4 in  6.8 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.5 tkout  7.1 tkmix  2.7 tape 17.7 bbd  1.6 radio  6.6 out  3.1
+  PEAK  ctl  9.4 in  6.8 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 11.2 tkloop 35.1 tkout 17.9 tkmix  2.7 tape 17.7 bbd  5.5 radio  5.4 out  3.1
+  PEAK  ctl  6.4 in  6.8 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl  8.5 tkloop 14.9 tkout  7.1 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  6.8 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  7.3 tkloop 14.8 tkout  7.1 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.4 in  6.7 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 10.8 tkloop 11.1 tkout  7.0 tkmix  2.6 tape 17.6 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.4 in  6.8 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 10.8 tkloop 11.0 tkout  7.0 tkmix  2.7 tape 17.7 bbd  1.6 radio  6.6 out  3.1
+  PEAK  ctl 12.2 in  6.7 shim  4.2 swell 12.2 twin  1.8 tank  3.8 tkctl 10.8 tkloop 22.2 tkout 11.8 tkmix  2.7 tape 17.7 bbd  5.5 radio  5.3 out  3.1
+  PEAK  ctl  6.3 in  6.8 shim  4.2 swell 13.8 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.6 tkout 11.9 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.1 in  6.7 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.3 tkout 11.4 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.3 in  6.8 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl 11.3 tkloop 13.6 tkout 11.4 tkmix  2.7 tape 17.6 bbd  5.4 radio  1.6 out  3.1
+  PEAK  ctl  9.3 in  6.7 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.4 tkout 11.4 tkmix  2.7 tape 17.7 bbd  1.6 radio  6.7 out  3.1
+  PEAK  ctl  8.1 in  8.6 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 12.7 tkloop 34.1 tkout 30.6 tkmix  2.8 tape 17.7 bbd  5.5 radio  5.3 out  3.2
+  PEAK  ctl  6.4 in  8.1 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  9.9 tkloop 17.4 tkout 11.7 tkmix  2.8 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  7.2 in  8.1 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.4 tkout 11.7 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  7.5 in  8.0 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 11.3 tkloop 13.6 tkout 11.7 tkmix  2.8 tape 17.7 bbd  5.5 radio  1.6 out  3.1
+  PEAK  ctl  9.3 in  8.0 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.4 tkout 11.7 tkmix  2.7 tape 17.7 bbd  1.6 radio  6.6 out  3.1
+  PEAK  ctl  8.1 in  8.1 shim 19.6 swell 12.7 twin  1.9 tank  3.8 tkctl 11.3 tkloop 17.3 tkout 11.8 tkmix  2.7 tape 17.7 bbd  5.5 radio  5.3 out  3.1
+  PEAK  ctl  4.8 in 10.1 shim 19.5 swell 12.6 twin  1.8 tank  3.8 tkctl 13.1 tkloop 30.2 tkout 30.5 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+  PEAK  ctl  5.5 in  7.9 shim  4.2 swell 12.8 twin 15.5 tank  4.3 tkctl 15.2 tkloop 25.6 tkout 18.8 tkmix  4.0 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+DIAG test signal | cb avg  62.9 max  63.5 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.8 | engine avg  61.7 max  62.6 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.7 | engine avg  61.7 max  62.5 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.7 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.8 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  62.8 max  63.5 | engine avg  61.8 max  62.5 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  62.9 max  63.7 | engine avg  61.9 max  62.7 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.1 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.7 | engine avg  62.1 max  62.7 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.9 | engine avg  62.2 max  62.9 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.1 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.1 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  64.0 | engine avg  62.1 max  63.0 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.4 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.1 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.7 | engine avg  62.1 max  62.7 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.9 | engine avg  62.1 max  62.9 | late 0 near 0
+  PEAK ctl  4.2 in  6.6 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.9 | engine avg  62.1 max  62.9 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.3 max  64.1 | engine avg  61.8 max  62.6 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  64.0 | engine avg  61.7 max  62.5 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.8 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.9 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.8 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.5 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.8 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.8 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  64.0 | engine avg  61.7 max  62.5 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.9 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.9 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.1 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.5 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.5 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.5 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.8 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.5 | engine avg  61.7 max  62.2 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  63.0 max  63.6 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.1 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.5 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  62.8 max  63.5 | engine avg  61.8 max  62.5 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.5 tkout 10.3 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  62.9 max  63.6 | engine avg  61.9 max  62.6 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.2 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.1 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.6 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.7 | engine avg  62.1 max  62.7 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.5 tkout 10.1 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.1 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.1 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.1 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.7 | engine avg  62.1 max  62.7 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.1 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.1 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.6 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.9 | engine avg  62.1 max  62.9 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.3 max  64.3 | engine avg  61.8 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.8 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.9 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.8 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  64.0 | engine avg  61.6 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  64.0 | engine avg  61.6 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.3 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.9 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.8 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.1 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.8 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.9 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.5 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.5 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.5 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.1 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.5 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.7 | engine avg  61.7 max  62.5 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.9 | engine avg  61.7 max  62.7 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  62.8 max  63.5 | engine avg  61.8 max  62.5 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.1 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  62.9 max  63.6 | engine avg  61.9 max  62.6 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.1 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.1 max  62.9 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.1 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.1 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.9 | engine avg  62.2 max  62.9 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.2 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.5 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.1 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.1 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.2 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.6 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.1 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.9 | engine avg  62.2 max  62.9 | late 0 near 0
+  PEAK ctl  4.2 in  6.6 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.3 max  64.2 | engine avg  61.8 max  62.7 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.9 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  64.0 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.8 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.8 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.8 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.1 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.8 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.8 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.5 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  64.0 | engine avg  61.7 max  62.5 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.2 max  63.9 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.5 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.5 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.5 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.7 | engine avg  61.7 max  62.5 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.8 | engine avg  61.7 max  62.5 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.6 | engine avg  61.7 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG test signal | cb avg  62.9 max  63.5 | engine avg  61.7 max  62.3 | late 0 near 0
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  62.8 max  63.4 | engine avg  61.8 max  62.4 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  62.9 max  63.7 | engine avg  61.9 max  62.7 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.1 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.1 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.1 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.1 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.1 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.5 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.1 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.1 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.1 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.1 max  63.8 | engine avg  62.1 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG silence | cb avg  63.2 max  63.8 | engine avg  62.2 max  62.8 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  9.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.1 tkmix  1.5 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+DIAG fast notes | cb avg  63.3 max  64.2 | engine avg  61.8 max  62.7 | late 0 near 0
+  PEAK ctl  4.2 in  6.5 shim  2.9 swell  8.9 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.2 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
