@@ -12,7 +12,6 @@
 - [ ] **Merge `claude/massive-air` into main?** It holds everything since v1.0.33 (SIZE/TIME crossfade, the CPU work, v1.0.34-36, the profile builds, and now the overnight review's speed-ups and report), all tests passing. Your OK first.
 
 ### Listen (after your notes)
-- [ ] **`drift_rethink`: DRIFT's ends and its right side** (pick one): `/Users/jesse/Documents/Sites/immensio-versio/renders/drift_rethink/index.html`. Judged in a mix (a dub track, keys over drums and bass) and on a solo chord. A today; B stronger ends (×1.4); C strongest (×1.8); D a fast sine on the right (1.5-5.5 Hz, every line on one rate with spread phases, so the chord doesn't sway); E a slower sine (1-2 Hz). Flash: D or E free; B or C as shaped +120-168 B (over the 92 B spare), or free if the growth starts earlier on the knob.
 - [ ] **`size_moves`: how gradually SIZE settles** (pick one): `/Users/jesse/Documents/Sites/immensio-versio/renders/size_moves/index.html`. The drop-outs come from a cassette SIZE move at a large SIZE (~106 %), not from crossfades piling up. Spreading the crossfade over more groups lowers the peak: B today (2 groups, settles in ~0.6 s), C 4 groups (~1.2 s, est. ~99 % with the cassette), D 8 groups (~2.4 s, ~95 %). No version bends pitch; what changes is how gradually the room grows or shrinks after a move. Does C or D still feel like the knob does what you asked? Optional at the rack: `/Users/jesse/Documents/Sites/immensio-versio/dist/immensio_versio-latelight-sizegroups4.bin` / `-sizegroups8.bin`.
 - [ ] **BLOOM's swell: other seeds** (your note: the 12 points "seemed to accentuate the mids"): http://192.168.1.238:8766/swell_seed/index.html. Measured: 12 and 24 points are equally even on noise and note by note; which notes stand out moves with TIME and the seed. B-D are the three most even seeds; E the old 24 points for reference.
 
@@ -30,6 +29,7 @@
 
 ## Waiting on Claude
 
+- **MOTION (was DRIFT), the page rebuilt** (your notes: the options were confusing with no card descriptions; the tape side gets lost in the diffuse reverb; add crinkle and dropouts near the extreme). Research first, then a tape "transport" on the reverb's output (one wobble moving the whole tail together, as a tape machine does) with crinkle and dropouts toward full left, and the page split into a left (tape) group and a right (movement) group with descriptions on every card. In progress.
 - **TONE's resonant tilt as the default** (v1.0.44, your pick A): on `claude/tone-character`, then joined with WEAR and the room.
 - **A rumble at endless DECAY with TONE bright** (found on the way): PLATE (and HALL, less) at DECAY 1 and TONE fully CW slowly turns into sub-20 Hz rumble over ~10 minutes while the audible tail fades ~40 dB. In today's sound too; to look at.
 - **v1.0.42 (WEAR, starting clean) and v1.0.43 (the small room) are built** on `claude/era-wear`, with the new panel names (BLEND, DEPTH, ONSET: NATURAL · BLOOM · SHIMMER, MOTION, WEAR, FREEZE / PAINT): 18 of 18 tests pass, saved sets keep loading, release 105,364 B (7.3 KB spare). At its defaults the reverb is bit-identical to v1.0.41's. Waiting on your `room_level` pick before the spec lines.
