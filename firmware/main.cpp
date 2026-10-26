@@ -1620,6 +1620,10 @@ volatile float gLimiterGain      = 1.0f; // lowest Engine::limiterGain() since l
 // LED red for a late block, amber for a near one, so a crackle with a flash is the CPU, one without
 // isn't.
 volatile uint32_t gLateBlocks = 0, gNearBlocks = 0;
+// Knob sends (diagnostic, 26 Oct 2026): how often SIZE's and TIME's readings get past the deadband,
+// with the reverb, the codec and the LEDs' DMA all running (the rack jitter check ran in m0test, without
+// them). The main loop flashes the rightmost LED blue for SIZE, green for TIME: hands off, never.
+volatile uint32_t gSizeSends = 0, gTimeSends = 0;
 
 #if IV_RELEASE_DIAG
 // RELEASE_DIAG=1 (diagnostic, 26 Oct 2026): the playing build on USB power, reporting over serial. The
@@ -1898,6 +1902,8 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
         const float v = ivpot::endStops(hw.GetKnobValue(kPotKnob[p])); // exact 0 / 1 at the stops
 #endif
         if (std::fabs(v - sent[p]) > kKnobDeadband || ((v == 0.0f || v == 1.0f) && v != sent[p])) {
+            if (kPotParams[p] == iv::ParamId::Size && sent[p] >= 0.0f) gSizeSends = gSizeSends + 1;
+            if (kPotParams[p] == iv::ParamId::Time && sent[p] >= 0.0f) gTimeSends = gTimeSends + 1;
             sent[p] = v;
             engine.setParam(kPotParams[p], v);
         }
@@ -2034,19 +2040,26 @@ int main()
         }
         const bool frozen = gFrozen, painting = gPainting;
         // Late / near blocks (diagnostic): the rightmost LED red / amber for 150 ms after one.
-        static uint32_t seenLate = 0, seenNear = 0;
-        static float    lateUntil = -1.0f, nearUntil = -1.0f;
-        const uint32_t  late = gLateBlocks, near = gNearBlocks;
+        static uint32_t seenLate = 0, seenNear = 0, seenSize = 0, seenTime = 0;
+        static float    lateUntil = -1.0f, nearUntil = -1.0f, sizeUntil = -1.0f, timeUntil = -1.0f;
+        const uint32_t  late = gLateBlocks, near = gNearBlocks, sizeSends = gSizeSends, timeSends = gTimeSends;
         if (late != seenLate) lateUntil = clock + 0.15f;
         if (near != seenNear) nearUntil = clock + 0.15f;
+        if (sizeSends != seenSize) sizeUntil = clock + 0.15f;
+        if (timeSends != seenTime) timeUntil = clock + 0.15f;
         seenLate = late;
         seenNear = near;
-        if (lateUntil > clock + 1.0f || nearUntil > clock + 1.0f) lateUntil = nearUntil = -1.0f; // clock wrapped
+        seenSize = sizeSends;
+        seenTime = timeSends;
+        if (lateUntil > clock + 1.0f || nearUntil > clock + 1.0f || sizeUntil > clock + 1.0f || timeUntil > clock + 1.0f)
+            lateUntil = nearUntil = sizeUntil = timeUntil = -1.0f; // clock wrapped
         for (int m = 0; m < kNumMeters; ++m) {
             ivled::Rgb c = meters[m].colour();
             if (m == kOutL || m == kOutR) c = ivled::withFreezeTint(c, frozen, painting, clock);
             if (kMeterLed[m] == DaisyVersio::LED_3 && clock < lateUntil) c = {1.0f, 0.0f, 0.0f};
             else if (kMeterLed[m] == DaisyVersio::LED_3 && clock < nearUntil) c = {1.0f, 0.4f, 0.0f};
+            else if (kMeterLed[m] == DaisyVersio::LED_3 && clock < sizeUntil) c = {0.0f, 0.0f, 1.0f};
+            else if (kMeterLed[m] == DaisyVersio::LED_3 && clock < timeUntil) c = {0.0f, 1.0f, 0.0f};
             if (ledDma) gLedPwm.set(int(kMeterLed[m]), c);
             else hw.SetLed(kMeterLed[m], c.r, c.g, c.b);
         }
