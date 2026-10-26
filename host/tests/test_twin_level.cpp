@@ -1,17 +1,18 @@
-// The freeze twin's level against the frozen pad (v1.0.41, the owner's pick on renders/twin_louder: "Let's
-// shoot for 8db under the pad"). The twin's tail stops within kTwinMaxT60 (8 s) while HALL's and MASSIVE's run
-// to 14 s or infinite, so at kTwinLevel alone it sat 12-15 dB (A-weighted, on music) under a pad; its level now
-// comes back by the square root of how much shorter it is, up to kTwinFdnGain (+5.4 dB). A twin that isn't cut
-// short (a short HALL) and PLATE's are as before.
+// The freeze twin's level against the frozen pad. v1.0.41 (the owner's pick on renders/twin_louder: "Let's shoot
+// for 8db under the pad") set HALL's and MASSIVE's twin tank there; v1.0.43 (the owner's pick E on
+// renders/small_room) replaced it with a small room at the page's gains (voicing::kTwinRoomHallDb /
+// kTwinRoomMassiveDb), matched to v1.0.41's twin at the page's setting, SIZE 0.9 and DECAY 0.9. PLATE's twin
+// (a second Plate) is as before.
 //
-// Two runs per setting: the pad (noise 0-3 s, a tap at 2.5 s, then silence) and the twin (silence frozen at
-// 2.5 s, the same noise played over it from 3 s). Their output levels over 5-9 s, twin minus pad, broadband
-// white noise (so not the A-weighted music figures: on noise the twin reads a few dB lower).
+// Two runs per setting: the pad (music 0-3 s, a tap at 2.5 s, then silence) and the twin (silence frozen at
+// 2.5 s, the same music played over it from 3 s). Their K-weighted levels over 5-9 s (BS.1770's filters, as
+// test_era's loudness), twin minus pad, on the dub skank (test_audio/stimulus/04_skank.wav).
 //
-// Asserted: each setting within 1.5 dB of the level it measured when v1.0.41 was set (printed), the long HALL /
-// MASSIVE tails 3-7 dB louder than they were before v1.0.41 (the lift), and the short HALL within 0.2 dB of its
-// pre-v1.0.41 value (no lift).
+// Asserted: at the page's setting, HALL's and MASSIVE's room within 1.5 dB of where v1.0.41's twin sat (its figure
+// measured by this test against v1.0.41); PLATE's twin within 0.2 dB of v1.0.41's. Printed for the record: the
+// room against v1.0.41's twin elsewhere (away from the page's setting the room sits louder against the pad).
 
+#include "Wav.h"
 #include "dsp/Engine.h"
 
 #include <cmath>
@@ -30,72 +31,94 @@ void check(bool ok, const std::string& what)
     if (!ok) ++failures;
 }
 
-float uniform(uint32_t& s)
-{
-    s = s * 1664525u + 1013904223u;
-    return float(int32_t(s)) * (1.0f / 2147483648.0f);
-}
-
 constexpr float kSr = 48000.0f;
 constexpr int   kBlock = 48;
 
-// Output power (dB) over 5-9 s: the pad (padRun) or the twin.
-double level(int space, float size, float decay, bool padRun)
+// BS.1770's K-weighting at 48 kHz (the head's shelf, then the RLB high-pass), dB of the mean power.
+double kWeightedDb(const std::vector<float>& l, const std::vector<float>& r)
+{
+    double sum = 0.0;
+    for (const auto* ch : {&l, &r}) {
+        double a1 = 0, a2 = 0, b1 = 0, b2 = 0;
+        for (float x : *ch) {
+            const double w = x + 1.69065929318241 * a1 - 0.73248077421585 * a2;
+            const double y = 1.53512485958697 * w - 2.69169618940638 * a1 + 1.19839281085285 * a2;
+            a2 = a1; a1 = w;
+            const double v = y + 1.99004745483398 * b1 - 0.99007225036621 * b2;
+            const double k = v - 2.0 * b1 + b2;
+            b2 = b1; b1 = v;
+            sum += k * k;
+        }
+    }
+    return 10.0 * std::log10(sum / double(2 * l.size()) + 1e-30) - 0.691;
+}
+
+// K-weighted level (dB) over 5-9 s: the pad (padRun) or the twin.
+double level(const std::vector<float>& music, int space, float size, float decay, bool padRun)
 {
     auto e = std::make_unique<iv::Engine>();
     e->prepare(kSr, kBlock);
     e->setParam(iv::ParamId::Space, iv::switchToNormalised(space));
     e->setParam(iv::ParamId::Size, size);
     e->setParam(iv::ParamId::Decay, decay);
-    e->setParam(iv::ParamId::Era, 0.1f);
+    e->setParam(iv::ParamId::Era, 0.0f); // the Neve alone (as the pages)
     e->setParam(iv::ParamId::Mix, 1.0f);
     e->reset();
     const int blocks = int(9.0f * kSr) / kBlock, press = int(2.5f * kSr) / kBlock, tap = int(0.1f * kSr) / kBlock;
-    std::vector<float> l(kBlock), r(kBlock), ol(kBlock), orr(kBlock);
-    uint32_t s = 7;
-    double sum = 0.0;
-    long count = 0;
+    std::vector<float> l(kBlock), ol(kBlock), orr(kBlock), keepL, keepR;
     for (int b = 0; b < blocks; ++b) {
-        const float t = float(b * kBlock) / kSr;
-        const bool on = padRun ? t < 3.0f : t >= 3.0f;
+        const size_t at = size_t(b * kBlock);
+        const float t = float(at) / kSr;
         for (int i = 0; i < kBlock; ++i) {
-            const float a = uniform(s), c = uniform(s); // the same noise either way
-            l[size_t(i)] = on ? 0.2f * a : 0.0f;
-            r[size_t(i)] = on ? 0.2f * c : 0.0f;
+            const size_t k = padRun ? at + size_t(i) : at + size_t(i) - size_t(3.0f * kSr); // the twin run: from 3 s
+            const bool on = padRun ? t < 3.0f : t >= 3.0f;
+            l[size_t(i)] = on && k < music.size() ? music[k] : 0.0f;
         }
         if (b == press) e->button(true, 0);
         if (b == press + tap) e->button(false, 0);
-        e->process(l.data(), r.data(), ol.data(), orr.data(), kBlock);
-        if (t >= 5.0f)
-            for (int i = 0; i < kBlock; ++i, ++count) sum += 0.5 * (double(ol[size_t(i)]) * ol[size_t(i)] + double(orr[size_t(i)]) * orr[size_t(i)]);
+        e->process(l.data(), l.data(), ol.data(), orr.data(), kBlock);
+        if (t >= 5.0f) {
+            keepL.insert(keepL.end(), ol.begin(), ol.end());
+            keepR.insert(keepR.end(), orr.begin(), orr.end());
+        }
     }
-    return 10.0 * std::log10(sum / double(count) + 1e-30);
+    return kWeightedDb(keepL, keepR);
 }
 
 } // namespace
 
 int main()
 {
+    iv::wav::Audio a;
+    std::string error;
+    bool read = false;
+    for (const char* prefix : {"../test_audio/stimulus/", "test_audio/stimulus/"})
+        if (!read) read = iv::wav::read(std::string(prefix) + "04_skank.wav", a, error);
+    if (!read) {
+        check(false, "twin level: test_audio/stimulus/04_skank.wav (python3 tools/make_stimulus.py)");
+        return 1;
+    }
+    const std::vector<float>& music = a.channels[0];
     struct Case {
         const char* name;
         int space;
         float size, decay;
-        double expect, before; // twin - pad, dB: at v1.0.41; and before it (v1.0.40, this test built against it)
+        double v1041; // twin - pad, dB, measured by this test against v1.0.41 (the twin tank)
+        double limit; // asserted within this of it (0: printed only)
     };
     const Case cases[] = {
-        {"MASSIVE S0.9 D0.9", 2, 0.9f, 0.9f, -8.28, -13.67},
-        {"MASSIVE S0.3 D1.0", 2, 0.3f, 1.0f, -9.81, -15.21},
-        {"MASSIVE S0.9 D0.6", 2, 0.9f, 0.6f, -7.06, -12.44},
-        {"HALL S0.9 D0.9", 1, 0.9f, 0.9f, -12.52, -17.92},
-        {"HALL S0.3 D0.6 (not cut short)", 1, 0.3f, 0.6f, -6.89, -6.89},
-        {"PLATE S0.9 D0.9", 0, 0.9f, 0.9f, -7.08, -7.08},
+        {"MASSIVE S0.9 D0.9 (the page's)", 2, 0.9f, 0.9f, -4.04, 1.5},
+        {"HALL S0.9 D0.9 (the page's)", 1, 0.9f, 0.9f, -8.29, 1.5},
+        {"PLATE S0.9 D0.9", 0, 0.9f, 0.9f, -10.00, 0.2},
+        {"MASSIVE S0.5 D0.5", 2, 0.5f, 0.5f, -1.51, 0.0},
+        {"MASSIVE S0.0 D0.9", 2, 0.0f, 0.9f, -4.84, 0.0},
+        {"HALL S0.5 D0.5", 1, 0.5f, 0.5f, -9.13, 0.0},
+        {"HALL S0.0 D0.9", 1, 0.0f, 0.9f, -5.11, 0.0},
     };
     for (const auto& c : cases) {
-        const double d = level(c.space, c.size, c.decay, false) - level(c.space, c.size, c.decay, true);
-        std::printf("%-32s twin - pad %+6.2f dB (v1.0.41 %+.1f, before %+.1f)\n", c.name, d, c.expect, c.before);
-        check(std::fabs(d - c.expect) <= 1.5, std::string(c.name) + ": within 1.5 dB of v1.0.41's level");
-        if (c.expect != c.before) check(d - c.before >= 3.0 && d - c.before <= 7.0, std::string(c.name) + ": 3-7 dB louder than before v1.0.41");
-        else check(std::fabs(d - c.before) <= 0.2, std::string(c.name) + ": as before v1.0.41 (no lift)");
+        const double d = level(music, c.space, c.size, c.decay, false) - level(music, c.space, c.size, c.decay, true);
+        std::printf("%-32s twin - pad %+6.2f dB (v1.0.41's twin %+.2f, %+.1f)\n", c.name, d, c.v1041, d - c.v1041);
+        if (c.limit > 0.0) check(std::fabs(d - c.v1041) <= c.limit, std::string(c.name) + ": within " + std::to_string(c.limit).substr(0, 3) + " dB of v1.0.41's twin");
     }
     std::printf("%d failure(s)\n", failures);
     return failures ? 1 : 0;

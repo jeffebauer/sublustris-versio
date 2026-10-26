@@ -52,6 +52,7 @@ struct Setting {
     float decay = 0.5f, size = 0.5f, mix = 1.0f, time = 0.0f;
     float mod = 1.0f;  // the tanks' own modulation (Engine::setModulationScale)
     float era = -1.0f; // < 0: ERA's default
+    bool  layerSolo = false; // the twin alone (Engine::setLayerSoloPrototype: the pad out of the wet)
 };
 
 // knobAt: optional {seconds, SIZE, DECAY} change while running.
@@ -73,6 +74,7 @@ Stereo render(const std::vector<float>& in, const Setting& s, const std::vector<
     e.setParam(iv::ParamId::Time, s.time);
     if (s.era >= 0.0f) e.setParam(iv::ParamId::Era, s.era);
     e.setModulationScale(s.mod);
+    e.setLayerSoloPrototype(s.layerSolo);
     e.reset();
     Stereo out{std::vector<float>(in.size()), std::vector<float>(in.size())};
     size_t pi = 0, mi = 0;
@@ -324,19 +326,41 @@ void twin()
     check(early > -60.0 && longTail > shortTail + 6.0 && gone < early - 40.0, msg);
 }
 
+// Paint (ADR 0010): holding while frozen copies a little of the twin into the pad, which grows while held,
+// at most kPaintHeadroomDb (1.5 dB) over its frozen level, and stays after. The pad is judged alone: the
+// twin's own layer (playing all along, from v1.0.43 HALL's and MASSIVE's small room) is rendered by itself
+// (the pad out of the wet) and its power taken off the whole (the two are uncorrelated noise). Then the
+// whole, twin and all: never dominant (under the pad's ceiling + the twin's own layer).
 void paint()
 {
     std::vector<float> in(size_t(60.0f * kSr));
     // 0.35 (was 0.25 until v1.0.35): the 24 kHz tank holds white noise's top octave no more, and at 0.25
     // the pad froze under the floor, where painting may grow it to the floor + 1.5 dB by design.
-    for (auto& x : in) x = 0.35f * noise();
-    Setting s;
-    const Stereo out = render(in, s, {{1.0, true}, {1.1, false}, {30.0, true}, {45.0, false}});
-    const double before = rmsDb(out, 26.0, 29.0), during = rmsDb(out, 40.0, 44.0), after = rmsDb(out, 55.0, 59.0);
-    char msg[200];
-    std::snprintf(msg, sizeof msg, "paint: a quiet layer grows into the pad while held (%.1f -> %.1f dBFS, more than +0.3 dB, "
-                                   "at most +1.5 dB + the twin: never dominant) and stays after (%.1f)", before, during, after);
-    check(finite(out) && during > before + 0.3 && during < before + 3.0 && after > before, msg);
+    for (auto& x : in) x = noise();
+    for (int space : {1, 2, 0}) {
+        // HALL and MASSIVE louder (0.9): at 0.35 their pads froze under the floor, where painting may grow them
+        // to the floor + 1.5 dB by design (+3-5 dB here, v1.0.41's twin as the room), so the ceiling wasn't what was judged.
+        const float amp = space == 0 ? 0.35f : 0.9f;
+        std::vector<float> in1(in.size());
+        for (size_t i = 0; i < in.size(); ++i) in1[i] = amp * in[i];
+        Setting s;
+        s.space = space;
+        const std::vector<Press> presses = {{1.0, true}, {1.1, false}, {30.0, true}, {45.0, false}};
+        const Stereo out = render(in1, s, presses);
+        s.layerSolo = true;
+        const Stereo twin = render(in1, s, presses);
+        auto padDb = [&](double t0, double t1) {
+            const double all = std::pow(10.0, rmsDb(out, t0, t1) / 10.0), layer = std::pow(10.0, rmsDb(twin, t0, t1) / 10.0);
+            return 10.0 * std::log10(std::fmax(all - layer, 1e-30));
+        };
+        const double before = padDb(26.0, 29.0), during = padDb(40.0, 44.0), after = padDb(55.0, 59.0);
+        const double wholeBefore = rmsDb(out, 26.0, 29.0), wholeDuring = rmsDb(out, 40.0, 44.0);
+        char msg[260];
+        std::snprintf(msg, sizeof msg, "SPACE %d paint: the pad grows while held (%.1f -> %.1f dBFS: more than +0.3, at most +1.5 dB) "
+                                       "and stays after (%.1f); the whole, twin and all, %.1f -> %.1f", space, before, during, after,
+                      wholeBefore, wholeDuring);
+        check(finite(out) && during > before + 0.3 && during < before + 1.5 + 0.1 && after > before && wholeDuring < wholeBefore + 3.0, msg);
+    }
 }
 
 void clickFree()
