@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 26 Oct 2026, session 8: round 11 read (`docs/research/m3-round11.log` on `claude/massive-air`), round 12 read (`m3-round12.log`), the ITCM build read; v1.0.39 built (SIZE's crossfade staggered, your pick); round 15 and the rack test next; the ERA overlaps on a page (`era_switch`).
+**Last updated:** 26 Oct 2026, session 8: round 11 read (`docs/research/m3-round11.log` on `claude/massive-air`), round 12 read (`m3-round12.log`), the ITCM build read; v1.0.39 built (SIZE's crossfade staggered, your pick); round 15 and the rack test next; ERA's overlaps kept (your `era_switch` note).
 **Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Not yet in it: v1.0.35-36 (the 24 kHz tank, 12-point swell, fewer early reflections) and the review's speed-ups; say when you'd like it installed (Ableton closed).
 
 ## To do
@@ -13,7 +13,6 @@
 - [ ] **BLOOM's swell: other seeds** (your note: the 12 points "seemed to accentuate the mids"): http://192.168.1.238:8766/swell_seed/index.html. Measured: 12 and 24 points are equally even on noise and note by note; which notes stand out moves with TIME and the seed. B-D are the three most even seeds; E the old 24 points for reference.
 
 ### Listen (first time)
-- [ ] **ERA: today's overlaps, or a clean switch at each boundary** (pick page; your note: the tape → radio transition is hard even with the overlap): http://192.168.1.238:8766/era_switch/index.html. ERA sweeps from the Neve to the radio over 16 s, crossing all four boundaries (about 1.5, 5.4, 9.3 and 13.1 s), in MASSIVE and HALL. A is today; B has each era alone across its stretch and a 50 ms swap at each boundary (no clicks measured; the tape's sparkle arrives at once at bucket-brigade → cassette). B also means only one era runs at a time, which removes the module's dearest spot on the knob.
 - [ ] **ERA signatures** (out of date: it measures the old stacked ERA; Claude can re-measure it for the five eras; reference, nothing to pick; https://claude.ai/artifact/AiR2JXPAaLbT8GeJseK3Vj, opens on your phone anywhere): what each ERA stage does to the reverb, measured and drawn as charts (tone, how long each frequency rings, harmonics, grain, hiss, mirror tones, pitch wobble). `tools/era_reference.py` remeasures it.
 
 ### Try in Ableton
@@ -39,6 +38,7 @@
 - **M2: install the plugin** when you'd like to play it in Ableton (`tools/install_plugin.sh`), with Ableton closed for the AU check.
 
 ## Done
+- [x] **ERA overlaps** (26 Oct 2026, `era_switch`: no pick per card; "Prefer the smoothly crossfaded versions, which would help smooth out when modulating with CV. Let's keep if we can, although I feel we could narrow the crossover areas, or only trigger a crossfade when the knob/CV value passes the intersection between ERAs"): the overlaps stay as built for now.
 - [x] **SIZE's crossfade staggered** (26 Oct 2026, `size_stagger`: B on five of six cards; "A sounds slightly smoother [on MASSIVE keys], but it's a subtle difference"): built as v1.0.39 in the reverb itself, so the plugin gets it too (not installed). Three clicks found and fixed in the prototype before it reached you.
 - [x] **M3 round 14** (26 Oct 2026): building the SIZE crossfade's code for speed took only 1-2.5 points off its peak (106 → 105 %) for 2.9 KB of flash, so it's reverted: the crossfade's cost is memory (every line read twice), not code. The tape at 2× shows: MASSIVE with the cassette 77.5 → 70.6 %, frozen with the cassette 111 → 104.5 %.
 - [x] **Crackle hunt** (26 Oct 2026): your audio was getting into the knob readings and moving SIZE (and TIME), each move starting a costly crossfade in MASSIVE. Fixed in the playing build by smoothing the knobs (10 ms) and a 0.3 % deadband for SIZE and TIME. Ruled out on the way: the gate, the memory timing, input level, the LEDs. What's left: the SIZE crossfade itself right after a move.
