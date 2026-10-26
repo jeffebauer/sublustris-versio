@@ -717,8 +717,11 @@ IV_NO_UNSWITCH bool Fdn::lineFast(int i, int m, float apG, float eraIn, float er
 }
 
 // One line over the block, the sample loop's own steps: SIZE crossfading (its first q samples), an
-// allpass gliding, joining or leaving, or filling after a clear(). Rare, so built for size (flash).
-IV_NOINLINE IV_SIZE_OPT IV_FLATTEN void Fdn::lineSlow(int i, int m, int q, const float* xn, const float* xo, float apG,
+// allpass gliding, joining or leaving, or filling after a clear(). Rare, but it runs when the load
+// peaks (a SIZE crossfade in MASSIVE reached ~110 % of the module's CPU, and the owner heard the
+// drop-outs, 26 Oct 2026), so it is built for speed (-O3, +2.9 KB of flash: M3 round 14 measures it;
+// it was IV_SIZE_OPT). Same operations in the same order either way.
+IV_NOINLINE IV_FLATTEN void Fdn::lineSlow(int i, int m, int q, const float* xn, const float* xo, float apG,
                                           float apGOld, float eraIn, float eraOut, float* y)
 {
     for (int s = 0; s < m; ++s) {
