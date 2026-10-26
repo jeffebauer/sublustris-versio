@@ -172,14 +172,6 @@ public:
     // crossing a boundary crossfades to the next over `seconds` (0 = as built: the overlaps). A small
     // sticky zone at each boundary keeps a resting knob from flipping. Only one era's stage runs outside
     // a crossfade.
-    // SIZE's crossfade in two groups of lines (v1.0.39, Fdn::setStagger), in every FDN (the tank, the twin,
-    // the still lows); 1: all lines together, as before v1.0.39.
-    void  setSizeStagger(int groups)
-    {
-        fdn_.setStagger(groups);
-        twinFdn_.setStagger(groups);
-        lowFdn_.setStagger(groups);
-    }
     // PROTOTYPE (renders/era_overlap; the owner, on era_switch: keep the overlaps, "although I feel we could
     // narrow the crossover areas"): each era fades in over `share` of its stretch (kEraFadeShare, a fifth
     // since v1.0.40; a third before).
@@ -224,6 +216,16 @@ public:
     }
     int   lowDecimate() const { return lowDecimate_; }
     int   swellTaps() const { return swell_.tapCount(); }
+#endif
+#if !defined(IV_FIXED_VOICINGS) || defined(IV_PROFILE_HOOKS) // the profile firmware's SIZEHAND lines too
+    // SIZE's crossfade in two groups of lines (v1.0.39, Fdn::setStagger), in every FDN (the tank, the twin,
+    // the still lows); 1: all lines together, as before v1.0.39; 4 or 8: the size_moves prototypes.
+    void  setSizeStagger(int groups)
+    {
+        fdn_.setStagger(groups);
+        twinFdn_.setStagger(groups);
+        lowFdn_.setStagger(groups);
+    }
 #endif
     bool  twinActive() const { return twinActive_; } // read-only view for tests
     bool  buttonDown() const { return buttonDown_; }

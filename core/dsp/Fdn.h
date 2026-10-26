@@ -117,10 +117,11 @@ public:
     // 6 crossfade first and 1, 3, 5, 7 straight after (two fades of kSizeCrossfadeSeconds back to back), so
     // only half the lines read twice at once. Where a small HALL's in-loop diffusion joins or leaves with
     // the move, all lines fade together. 1: all together, as before v1.0.39.
-    void setStagger(int groups) { xfStagger_ = groups == 1 ? 1 : 2; }
+    // PROTOTYPE (renders/size_moves): 4 or 8 groups, lines g, g + 4 (g + 8), a quarter (an eighth) reading twice.
+    void setStagger(int groups) { xfStagger_ = groups == 1 || groups == 4 || groups == 8 ? groups : 2; }
 
 private:
-    bool staggered() const { return xfStagger_ == 2; }
+    bool staggered() const { return xfStagger_ > 1; }
     void control(int n);
     // The tank line by line (Fdn.cpp, "Line by line"): m samples on one control block's values.
     bool blockFits(int m) const;

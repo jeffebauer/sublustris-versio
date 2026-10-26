@@ -31,6 +31,7 @@
 #include "dsp/Tape.h"
 #include "params/Mappings.h"
 #include "params/ParamSpec.h"
+#include "PotEndStops.h"
 #endif
 
 #include <algorithm>
@@ -735,6 +736,28 @@ float NextJitter() // its own xorshift32, -1..1, so the input noise's sequence s
     return float(gJitterState) * (2.0f / 4294967296.0f) - 1.0f;
 }
 
+// The size_moves hunt (26 Oct 2026; the owner, v1.0.40: drop-outs and the red late light "generally when
+// changing size in MASSIVE", slow sweeps and quick turns alike): SIZE turned by a scripted hand, read the
+// way release reads the knob (its 10 ms one-pole, the 0.003 deadband from the last value sent, the end
+// stops), one block = 1 ms. gSizeHand: the move (-1: off). 0 a sweep, 0.2 -> 1 in 2 s and back (5 s);
+// 1 quick twists, 0.5 <-> 0.9 in 0.15 s, 0.2 s apart; 2 a slow creep 0.7 -> 1 over 6 s (a 0.003 step every
+// ~60 ms: past SIZE's 50 ms rest, so every step crossfades).
+volatile int gSizeHand = -1;
+float Ease(float a, float b, float u) { u = u < 0.0f ? 0.0f : (u > 1.0f ? 1.0f : u); return a + (b - a) * u * u * (3.0f - 2.0f * u); }
+float SizeHand(int kind, uint32_t block)
+{
+    const float t = float(block) * float(kBlockSize) / 48000.0f;
+    if (kind == 0) {
+        const float u = t - 5.0f * float(int(t / 5.0f));
+        return u < 2.5f ? Ease(0.2f, 1.0f, (u - 0.5f) / 2.0f) : Ease(1.0f, 0.2f, (u - 3.0f) / 2.0f);
+    }
+    if (kind == 1) {
+        const float u = t - 0.7f * float(int(t / 0.7f));
+        return u < 0.35f ? Ease(0.5f, 0.9f, u / 0.15f) : Ease(0.9f, 0.5f, (u - 0.35f) / 0.15f);
+    }
+    return 0.7f + 0.3f * (t / 6.0f > 1.0f ? 1.0f : t / 6.0f);
+}
+
 void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer out, size_t size)
 {
     if (!gRealtime) {
@@ -751,6 +774,17 @@ void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer ou
             const float v = gKnobBase[k] + gJitterAmp * NextJitter();
             engine.setParam(kKnobParams[k], v < 0.0f ? 0.0f : (v > 1.0f ? 1.0f : v));
         }
+    if (gSizeHand >= 0) { // release's knob path (AudioCallback, IV_MODE_RELEASE)
+        static float smooth = -1.0f, sent = -1.0f;
+        if (gBlocks == 0) smooth = sent = -1.0f;
+        const float raw = SizeHand(gSizeHand, gBlocks);
+        smooth = smooth < 0.0f ? raw : smooth + (1.0f / 11.0f) * (raw - smooth);
+        const float v = ivpot::endStops(smooth);
+        if (std::fabs(v - sent) > 0.003f || ((v == 0.0f || v == 1.0f) && v != sent)) {
+            sent = v;
+            engine.setParam(ParamId::Size, v);
+        }
+    }
     static float buf[kBlockSize];
     for (size_t i = 0; i < size; ++i) {
         float x = 5.0e-4f * NextNoise();
@@ -1532,6 +1566,71 @@ int main()
                     }
                 }
             }
+
+            // The size_moves hunt: SIZE turned by hand (SizeHand) in MASSIVE with the knobs high, Neve and
+            // cassette, with the crossfade in 2 groups (as built, v1.0.39), 4 and 8 (the prototypes). Three
+            // states: playing; frozen (the pad holds its SIZE, the twin follows the knob and crossfades); just
+            // unfrozen (the pad jumps to the knob's SIZE and crossfades while the twin rings on and crossfades
+            // too; the owner: drop-outs mostly frozen, "very occasionally when unfrozen too"). The frozen ones
+            // the sweep and the twists, just unfrozen the twists.
+            static const char* const kHandNames[3] = {"sweep", "twists", "creep"};
+            static const char* const kStateNames[3] = {"", "FROZEN ", "UNFROZE "};
+            static const int kGroups[3] = {2, 4, 8};
+            auto tap = [&](int hold) { // a press, released `hold` blocks later
+                engine.button(true, 0);
+                RunUntimed(hold, fs);
+                engine.button(false, 0);
+            };
+            for (int state = 0; state < 3; ++state)
+                for (int era = 0; era < 2; ++era)
+                    for (int hand = 0; hand < 3; ++hand)
+                        for (int gi = 0; gi < 3; ++gi) {
+                            if ((state > 0 && hand == 2) || (state == 2 && hand == 0)) continue;
+                            ApplyRealtime(era ? 0.7f : 0.1f);
+                            engine.setSizeStagger(kGroups[gi]);
+                            engine.setParam(ParamId::Size, ivpot::endStops(SizeHand(hand, 0)));
+                            RunUntimed(int(3.0f * fs) / kBlockSize, fs); // the move to the start, its crossfades done
+                            if (state > 0) { // freeze (the twin starts), let the freeze's glide settle
+                                tap(10);
+                                RunUntimed(int(2.0f * fs) / kBlockSize, fs);
+                            }
+                            if (state == 2) tap(1); // unfreeze: the twin rings on through the timed moves
+                            gLate = gBlocks = gMaxCycles = 0;
+                            gSumCycles = 0;
+                            gStepBlocks = uint32_t((hand == 2 ? 6.0f : 5.0f) * fs / float(kBlockSize));
+                            gSizeHand = hand;
+                            gRealtime = true;
+                            while (gRealtime) {
+                            }
+                            gSizeHand = -1;
+                            System::Delay(5);
+                            const bool twin = engine.twinActive();
+                            if (state == 1) tap(1); // unfreeze
+                            if (state > 0) RunUntimed(-1, fs); // run on until the twin stops
+                            const float period = float(gPeriodCycles);
+                            const float avg = gBlocks ? float(gSumCycles) / float(gBlocks) / period : 0.0f;
+                            static char sb[160];
+                            char*       p   = sb;
+                            const char* end = sb + sizeof(sb);
+                            AppendStr(p, end, "SIZEHAND MASSIVE ");
+                            AppendStr(p, end, kStateNames[state]);
+                            AppendStr(p, end, era ? "cassette " : "neve     ");
+                            AppendPadRight(p, end, kHandNames[hand], 7);
+                            AppendStr(p, end, " groups ");
+                            AppendInt(p, end, kGroups[gi]);
+                            AppendStr(p, end, " avg ");
+                            AppendFixed1(p, end, FracToPercentTenths(avg), 5);
+                            AppendStr(p, end, "% max ");
+                            AppendFixed1(p, end, FracToPercentTenths(float(gMaxCycles) / period), 5);
+                            AppendStr(p, end, "% | late blocks ");
+                            AppendUInt(p, end, unsigned(gLate));
+                            AppendStr(p, end, " of ");
+                            AppendUInt(p, end, unsigned(gBlocks));
+                            if (state == 2) AppendStr(p, end, twin ? " | twin still on" : " | twin stopped");
+                            AppendStr(p, end, "\r\n");
+                            TransmitLine(sb, size_t(p - sb));
+                        }
+            engine.setSizeStagger(2);
             ApplyCorner(gCurrentCorner);
         }
 
