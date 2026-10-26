@@ -27,6 +27,20 @@
 #include "dsp/Shimmer.h"
 #include "dsp/Swell.h"
 #include "dsp/Tape.h"
+// PROTOTYPE (renders/era_rethink): ERA as texture (Mappings.h eraLayoutMix, dsp/EraTexture.h). Desktop:
+// setEraLayoutPrototype. Firmware: IV_ERA_LAYOUT=1|2|3 builds that layout in place of today's eras (for
+// its flash, as it would ship; firmware/Makefile ERA_LAYOUT); unset, the firmware is as built.
+#if !defined(IV_FIXED_VOICINGS) || IV_ERA_LAYOUT
+#define IV_ERA_TEXTURE 1
+#include "dsp/EraTexture.h"
+#else
+#define IV_ERA_TEXTURE 0
+#endif
+#if defined(IV_FIXED_VOICINGS) && IV_ERA_LAYOUT
+#define IV_ERA_TODAY 0
+#else
+#define IV_ERA_TODAY 1
+#endif
 #include "params/GestureReader.h"
 #include "params/ParamSpec.h"
 #include "params/SpaceVoicing.h"
@@ -180,6 +194,9 @@ public:
     // narrow the crossover areas"): each era fades in over `share` of its stretch (kEraFadeShare, a fifth
     // since v1.0.40; a third before).
     void  setEraFadeSharePrototype(float share) { eraFadeShare_ = share > 0.0f && share <= 1.0f ? share : voicing::kEraFadeShare; }
+    // PROTOTYPE (renders/era_rethink): ERA's layout, 0 as built, 1 A grit path, 2 B saturation then
+    // texture, 3 C one wear amount (Mappings.h eraLayoutMix).
+    void  setEraLayoutPrototype(int layout) { eraLayout_ = layout >= 1 && layout <= 3 ? layout : 0; }
     void  setEraSwitchPrototype(float seconds)
     {
         eraSwitch_ = seconds;
@@ -338,6 +355,15 @@ private:
     bool  tapeOn_ = true; // test hook (setTapeOut)
     float tapeMix_ = 0.0f; // tape out's fade in/out
     dsp::TapeOut tape_[2]; // tape out (v1.0.27, dsp/Tape.h)
+#if IV_ERA_TEXTURE
+    dsp::EraTexture texture_; // PROTOTYPE (renders/era_rethink)
+    bool texOn_ = false;
+#if defined(IV_FIXED_VOICINGS)
+    static constexpr int eraLayout_ = IV_ERA_LAYOUT;
+#else
+    int eraLayout_ = 0; // setEraLayoutPrototype
+#endif
+#endif
     float diffMotionNow_ = 0.0f, diffMotionPhase_ = 0.0f; // the PLATE's wandering input allpass, samples
     float hallInLoop_ = voicing::kHallInLoopDiffusion; // setHallInLoopDiffusion overrides it (renders/hall_diffusion)
 

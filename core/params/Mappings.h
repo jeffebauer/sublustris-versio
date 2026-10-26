@@ -4,6 +4,9 @@
 // per milestone; numbers marked (start) in SPEC §3 are starting guesses.
 #include "dsp/Drift.h"
 #include "dsp/Era.h"
+#if !defined(IV_FIXED_VOICINGS) || IV_ERA_LAYOUT
+#include "dsp/EraTexture.h"
+#endif
 #include "params/EraVoicing.h"
 #include "params/SpaceVoicing.h"
 
@@ -185,6 +188,89 @@ inline dsp::EraMix eraMixShare(float v, float fadeShare)
     for (int i = 0; i < kEraCount - 1; ++i) w[i] *= 1.0f - w[i + 1];
     return eraMixFromWeights(v, w);
 }
+
+#if !defined(IV_FIXED_VOICINGS) || IV_ERA_LAYOUT
+// PROTOTYPE (renders/era_rethink; dsp/EraTexture.h): ERA as texture only, in three layouts. Every one keeps
+// the Neve in the loop as the base (its warmth and its ×0.7 highs, never darker with ERA), no cassette wow
+// or flutter (DRIFT's), and from ERA 0 sounds as today's ERA 0.
+//   1 A, grit path: separate characters in quarters, mild → gritty, each fading in over the first fifth
+//        of its quarter as the one before goes: tape (saturation, the in-loop compression, faint hiss) →
+//        Midiverb (13 → 11 bits truncated in the loop, no dark loop, crackle) → BBD (compander breathing,
+//        then its clock's grit) → radio (band-pass, over-modulation, the wandering dip).
+//   2 B, saturation, then texture on top: tape clean → driven over the first half, then kept; the BBD's
+//        breathing and clock 0.5 → 0.65, the grain 0.65 → 0.8 (each kept); the radio's band 0.8 → 1.
+//   3 C, one wear amount: the whole chain in from the start, every stage deepening with the knob.
+struct EraLayoutMix {
+    dsp::EraMix loop;  // the loop's ERA (the Neve, A's Midiverb box)
+    dsp::TexMix tex;   // the wet's (dsp/EraTexture.h)
+    float compress = 0, hiss = 0, crackle = 0; // the tape's in-loop compression, hiss and crackle, 0..1
+};
+inline EraLayoutMix eraLayoutMix(float v, int layout)
+{
+    using namespace voicing;
+    EraLayoutMix e;
+    dsp::EraMix& m = e.loop;
+    dsp::TexMix& x = e.tex;
+    m.neve = 1.0f;
+    m.highRatioScale = kNeveHighRatio;
+    m.even = kNeveEven;
+    m.midiBits = kMidiBitsStart;
+    m.midiDark = -1.0f; // the box without its dark loop or halfbands (Era.h)
+    float makeupDb = kMakeupNeveDb;
+    auto in = [](float v, float from) { return layer(v, from, from + 0.05f); }; // a twentieth of the knob
+    if (layout == 1) {
+        float w[4], t[4];
+        for (int k = 0; k < 4; ++k) {
+            w[k] = in(v, 0.25f * float(k));
+            t[k] = clamp01((v - 0.25f * float(k)) / 0.25f);
+        }
+        for (int k = 0; k < 3; ++k) w[k] *= 1.0f - w[k + 1];
+        x.tapeW = w[0];
+        x.tapeT = 0.3f + 0.7f * t[0];
+        e.compress = w[0] * t[0];
+        e.hiss = w[0];
+        m.midiverb = m.midiEngage = w[1];
+        m.midiBits = kMidiBitsStart - 2.0f * t[1];
+        e.crackle = w[1];
+        x.breathW = w[2];
+        x.breathT = t[2];
+        x.clockW = w[2] * clamp01(2.0f * t[2] - 0.6f); // the clock's grit only in its upper part
+        x.clockT = t[2];
+        x.bandW = w[3];
+        x.bandT = t[3];
+    } else if (layout == 2) {
+        const float s = in(v, 0.0f);
+        x.tapeW = s;
+        x.tapeT = clamp01(v / 0.5f);
+        e.compress = s * x.tapeT;
+        e.hiss = s * x.tapeT;
+        x.breathW = in(v, 0.5f);
+        x.breathT = clamp01((v - 0.5f) / 0.15f);
+        x.clockW = x.breathW * x.breathT;
+        x.clockT = 0.5f * x.breathT;
+        x.grainW = in(v, 0.65f);
+        x.grainT = clamp01((v - 0.65f) / 0.15f);
+        e.crackle = x.grainW;
+        x.bandW = in(v, 0.8f);
+        x.bandT = clamp01((v - 0.8f) / 0.2f);
+    } else {
+        const float s = in(v, 0.0f);
+        x.tapeW = x.breathW = x.grainW = s;
+        x.tapeT = x.breathT = x.grainT = v;
+        e.compress = e.hiss = e.crackle = s * v;
+        x.clockW = s * v;
+        x.clockT = v;
+        x.bandW = s * v * std::sqrt(v);
+        x.bandT = v;
+    }
+    // The chain's level: its own slow hold (EraTexture), and what it leaves on music (LUFS against the
+    // Neve base, HALL and MASSIVE: the skank, keys, the full mix's send): the band ~0.7 dB, A's box 0.5.
+    makeupDb += 0.7f * x.bandW + 0.5f * m.midiverb;
+    m.makeup = std::pow(10.0f, makeupDb / 20.0f);
+    x.makeup = 1.0f;
+    return e;
+}
+#endif
 
 // The floor governor's weight across DECAY's crossover (ADR 0008): 0 while
 // the tail is finite, 1 from infinite on.

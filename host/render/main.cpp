@@ -189,6 +189,11 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         engine.setEraFadeSharePrototype(float(std::atof(ef)));
         std::fprintf(stderr, "iv_render: IV_ERA_FADE_SHARE: each era fades in over %.3f of its stretch\n", std::atof(ef));
     }
+    if (const char* el = std::getenv("IV_ERA_LAYOUT")) { // renders/era_rethink: A, B, C (or 1, 2, 3)
+        const int layout = el[0] >= 'A' && el[0] <= 'C' ? el[0] - 'A' + 1 : std::atoi(el);
+        engine.setEraLayoutPrototype(layout);
+        std::fprintf(stderr, "iv_render: IV_ERA_LAYOUT: ERA layout %c (texture only)\n", layout >= 1 && layout <= 3 ? char('A' + layout - 1) : '0');
+    }
     if (const char* es = std::getenv("IV_ERA_SWITCH")) { // renders/era_switch
         engine.setEraSwitchPrototype(float(std::atof(es)));
         std::fprintf(stderr, "iv_render: IV_ERA_SWITCH: ERA without overlaps, %.0f ms switch\n", 1000.0 * std::atof(es));

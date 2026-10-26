@@ -137,7 +137,14 @@ private:
     {
         // Still lows' low tank (12 kHz, v1.0.18): below ~300 Hz the box's halfbands and dark loop are
         // flat, and at this rate they'd darken the lows every pass; only the 13 bits stay.
-        if (sampleRate_ < 18000.0f) return mix_.midiRound ? roundBits(x, midiStep_) : truncateBits(x, midiStep_);
+#if !defined(IV_FIXED_VOICINGS) || IV_ERA_LAYOUT
+        // PROTOTYPE (renders/era_rethink, Mappings.h eraLayoutMix): midiDark < 0 is the box's bits alone,
+        // without its dark loop or its halfbands (both low-pass the tail; TONE owns that).
+        if (sampleRate_ < 18000.0f || mix_.midiDark < 0.0f)
+#else
+        if (sampleRate_ < 18000.0f)
+#endif
+            return mix_.midiRound ? roundBits(x, midiStep_) : truncateBits(x, midiStep_);
         // The HALL / MASSIVE tank at 24 kHz (v1.0.35, ADR 0026) is already at the box's rate: its loop
         // low-pass and its bits, without the halfbands.
         if (sampleRate_ < 30000.0f) {
