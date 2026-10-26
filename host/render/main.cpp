@@ -189,6 +189,14 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         engine.setEraFadeSharePrototype(float(std::atof(ef)));
         std::fprintf(stderr, "iv_render: IV_ERA_FADE_SHARE: each era fades in over %.3f of its stretch\n", std::atof(ef));
     }
+    if (std::getenv("IV_DRIFT_GROW") || std::getenv("IV_DRIFT_RATE_GROW") || std::getenv("IV_DRIFT_SINE")) { // renders/drift_rethink
+        auto num = [](const char* k, float d) { const char* v = std::getenv(k); return v ? float(std::atof(v)) : d; };
+        const int sine = int(num("IV_DRIFT_SINE", 0.0f));
+        engine.setDriftPrototype(num("IV_DRIFT_GROW", 0.0f), num("IV_DRIFT_RATE_GROW", 0.0f), sine, num("IV_DRIFT_SINE_CENTS", 22.0f));
+        std::fprintf(stderr, "iv_render: IV_DRIFT: extremes depth x(1+%.2f), rates x(1+%.2f), right side %s, sine %.1f c\n",
+                     num("IV_DRIFT_GROW", 0.0f), num("IV_DRIFT_RATE_GROW", 0.0f),
+                     sine == 1 ? "sine 1.5-5.5 Hz" : sine == 2 ? "sine 1-2 Hz" : "Wander", num("IV_DRIFT_SINE_CENTS", 22.0f));
+    }
     if (const char* es = std::getenv("IV_ERA_SWITCH")) { // renders/era_switch
         engine.setEraSwitchPrototype(float(std::atof(es)));
         std::fprintf(stderr, "iv_render: IV_ERA_SWITCH: ERA without overlaps, %.0f ms switch\n", 1000.0 * std::atof(es));

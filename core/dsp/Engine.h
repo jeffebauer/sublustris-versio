@@ -185,6 +185,15 @@ public:
         eraSwitch_ = seconds;
         eraIdx_    = -1;
     }
+    // PROTOTYPE (renders/drift_rethink): DRIFT's extremes stronger and/or a sine right side
+    // (map::driftAmountsPrototype); all 0 = as built.
+    void  setDriftPrototype(float grow, float rateGrow, int sine, float sineCents)
+    {
+        driftGrow_ = grow;
+        driftRateGrow_ = rateGrow;
+        driftSine_ = sine;
+        driftSineCents_ = sineCents;
+    }
     int   lowDecimate() const { return lowDecimate_; }
     int   swellTaps() const { return swell_.tapCount(); }
 #endif
@@ -298,6 +307,8 @@ private:
     bool              shimmerLazy_ = false, shimmerArmed_ = true, shimmerResting_ = false; // setShimmerLazyPrototype
     float             eraSwitch_ = 0.0f; // setEraSwitchPrototype; 0 = as built
     float             eraFadeShare_ = voicing::kEraFadeShare; // setEraFadeSharePrototype
+    float             driftGrow_ = 0.0f, driftRateGrow_ = 0.0f, driftSineCents_ = 0.0f; // setDriftPrototype
+    int               driftSine_ = 0;
     int               eraIdx_ = -1;      // the era playing (< 0: none yet)
     float             eraW_[voicing::kEraCount] = {}; // each era's weight, crossfading
 #endif

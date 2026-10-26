@@ -527,7 +527,14 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     loopEra.even *= keep * (1.0f - map::governorWeight(decay));
     loopEra.drive = 1.0f + keep * (era.drive - 1.0f);
     loopEra.midiEngage *= keep;
+#ifndef IV_FIXED_VOICINGS
+    const dsp::DriftAmounts drift = driftGrow_ == 0.0f && driftRateGrow_ == 0.0f && driftSine_ == 0
+        ? map::driftAmounts(smoothed(ParamId::Drift), era.cassette)
+        : map::driftAmountsPrototype(smoothed(ParamId::Drift), era.cassette, driftGrow_, driftRateGrow_, driftSine_,
+                                     driftSineCents_); // setDriftPrototype
+#else
     const dsp::DriftAmounts drift = map::driftAmounts(smoothed(ParamId::Drift), era.cassette);
+#endif
     // The cassette's slow 2:1 compression: more loss above −18 dBFS.
     // Judged like the floor (the lower of its 1.5 s and 50 ms levels): on the 1.5 s level alone it
     // kept compressing for seconds after a loud input stopped, and an infinite tail plunged 20+ dB
