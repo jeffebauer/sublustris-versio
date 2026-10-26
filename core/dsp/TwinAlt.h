@@ -264,6 +264,7 @@ public:
             for (auto& a : side) a.clear();
         for (auto& l : line_) l.clear();
         for (int i = 0; i < kN; ++i) ay_[i] = ax_[i] = ap_[i] = 0.0f;
+        snap_ = true; // the next set() lands at once: the lines are empty
         for (auto& c : hz_)
             for (auto& z : c) z = 0.0f;
     }
@@ -274,9 +275,11 @@ public:
         const float longest = (0.008f + 0.042f * size) * sr_;
         const float ratio = highRatio * bright_;
         for (int i = 0; i < kN; ++i) {
-            len_[i] = std::fmax(8.0f, kRatio[i] * longest) + float(i);
-            ab_[i] = absorbent(len_[i] / sr_, rate, ratio < 0.02f ? 0.02f : ratio, 0.0f, shelfK_);
+            target_[i] = std::fmax(8.0f, kRatio[i] * longest) + float(i);
+            if (snap_) len_[i] = target_[i];
+            ab_[i] = absorbent(target_[i] / sr_, rate, ratio < 0.02f ? 0.02f : ratio, 0.0f, shelfK_);
         }
+        snap_ = false;
     }
     void process(const float* inL, const float* inR, float* outL, float* outR, int n)
     {
@@ -286,12 +289,14 @@ public:
         const float depth = kModSeconds * sr_;
         int   di[kN];
         float eta[kN];
+        bool  moving[kN];
         for (int i = 0; i < kN; ++i) { // keep the phasors on the unit circle (a first-order step, once a call)
             const float r = 1.5f - 0.5f * (c0_[i] * c0_[i] + s0_[i] * s0_[i]);
             c0_[i] *= r;
             s0_[i] *= r;
             // The read, fixed for the call (n <= 33 samples; the wander moves it ~0.01 sample in that time), through
             // a first-order allpass for its fraction, as the tank's reads: linear interpolation dulled every pass.
+            moving[i] = len_[i] != target_[i];
             const float d = len_[i] + depth * (1.0f + s0_[i]);
             di[i] = int(d);
             const float t = d - float(di[i]);
@@ -318,6 +323,14 @@ public:
                 const float c = c0_[j];
                 c0_[j] = c * rc_[j] - s0_[j] * rs_[j];
                 s0_[j] = s0_[j] * rc_[j] + c * rs_[j];
+                if (moving[j]) { // SIZE moved: the line glides there, at most a semitone's bend (as the tank's SIZE slew)
+                    const float step = target_[j] - len_[j];
+                    len_[j] = std::fabs(step) <= kSlew ? target_[j] : len_[j] + (step > 0.0f ? kSlew : -kSlew);
+                    const float d = len_[j] + depth * (1.0f + s0_[j]);
+                    di[j] = int(d);
+                    const float f = d - float(di[j]);
+                    eta[j] = (1.0f - f) / (1.0f + f);
+                }
                 const float r = eta[j] * line_[j].at(di[j]) + line_[j].at(di[j] + 1) - eta[j] * ap_[j];
                 ap_[j] = r;
                 const float a = ab_[j].gain * r + ab_[j].b1 * ax_[j] + ab_[j].pole * ay_[j]; // the tank's loss shelf
@@ -343,9 +356,11 @@ public:
 
 private:
     static constexpr float kMaxSeconds = 0.052f, kApCoeff = 0.6f, kModSeconds = 0.00015f;
+    static constexpr float kSlew = 0.0595f; // samples a sample: 2^(1/12) - 1, a semitone's bend at most
     static constexpr float kRatio[kN] = {0.31f, 0.42f, 0.51f, 0.60f, 0.70f, 0.79f, 0.90f, 1.0f};
     float sr_ = 24000.0f, gain_ = 1.0f, bright_ = 1.0f, shelfK_ = 0.0f;
-    bool  cut_ = false;
+    bool  cut_ = false, snap_ = true;
+    float target_[kN] = {};
     float hb_ = 0.0f, ha1_ = 0.0f, ha2_ = 0.0f, hz_[2][2] = {};
     twinalt::Ring<1360> line_[kN];
     twinalt::Ring<200>  inAp_[2][2];
