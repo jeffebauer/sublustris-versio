@@ -210,7 +210,7 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     }
     if (const char* st = std::getenv("IV_SIZE_STAGGER")) { // renders/size_stagger
         engine.setSizeStagger(std::atoi(st));
-        std::fprintf(stderr, "iv_render: IV_SIZE_STAGGER: SIZE crossfades in %d group(s)\n", std::atoi(st) == 1 || std::atoi(st) == 4 || std::atoi(st) == 8 ? std::atoi(st) : 2);
+        std::fprintf(stderr, "iv_render: IV_SIZE_STAGGER: SIZE crossfades in %d group(s)\n", std::atoi(st) == 1 || std::atoi(st) == 2 || std::atoi(st) == 8 ? std::atoi(st) : 4);
     }
     if (std::getenv("IV_ERA_LAYOUT") || std::getenv("IV_ERA_SWITCH") || std::getenv("IV_ERA_FADE_SHARE") || std::getenv("IV_TAPE_OUT")
         || std::getenv("IV_TAPE_OS")) // the ERA prototypes before v1.0.42: their eras are gone

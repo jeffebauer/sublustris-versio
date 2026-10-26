@@ -198,8 +198,8 @@ public:
     int   swellTaps() const { return swell_.tapCount(); }
 #endif
 #if !defined(IV_FIXED_VOICINGS) || defined(IV_PROFILE_HOOKS) // the profile firmware's SIZEHAND lines too
-    // SIZE's crossfade in two groups of lines (v1.0.39, Fdn::setStagger), in every FDN (the tank, the still
-    // lows); 1: all lines together, as before v1.0.39; 4 or 8: the size_moves prototypes.
+    // SIZE's crossfade in groups of lines (Fdn::setStagger: 4 since v1.0.45, 2 from v1.0.39), in every FDN (the tank,
+    // the still lows); 1: all lines together, as before v1.0.39; 2 or 8: the size_moves prototypes.
     void  setSizeStagger(int groups)
     {
         fdn_.setStagger(groups);

@@ -118,8 +118,10 @@ public:
     // 6 crossfade first and 1, 3, 5, 7 straight after (two fades of kSizeCrossfadeSeconds back to back), so
     // only half the lines read twice at once. Where a small HALL's in-loop diffusion joins or leaves with
     // the move, all lines fade together. 1: all together, as before v1.0.39.
-    // PROTOTYPE (renders/size_moves): 4 or 8 groups, lines g, g + 4 (g + 8), a quarter (an eighth) reading twice.
-    void setStagger(int groups) { xfStagger_ = groups == 1 || groups == 4 || groups == 8 ? groups : 2; }
+    // Four groups since v1.0.45 (the owner's pick C on renders/size_moves: "hardly perceptible difference from 2
+    // groups, whilst 8 groups introduces some slight staggering"): lines g, g + 4, a quarter reading twice at once.
+    // 1, 2 and 8 stay for the desktop's IV_SIZE_STAGGER and the profile's SIZEHAND lines.
+    void setStagger(int groups) { xfStagger_ = groups == 1 || groups == 2 || groups == 8 ? groups : 4; }
 
 private:
     bool staggered() const { return xfStagger_ > 1; }
@@ -192,9 +194,9 @@ private:
     float     xfCos_ = -1.0f, xfSin_ IV_ZI; // the fade's angle (twice it): xfNew_ = (1 - cos) / 2
     int       xfLen_ = 1, xfLeft_ IV_ZI, xfSince_ = -1; // samples; xfSince_: since the start, -1 when no correction runs
 #ifndef IV_SIZE_GROUPS
-#define IV_SIZE_GROUPS 2 // firmware trial (integration dry run): SIZE_GROUPS=8 in firmware/Makefile
+#define IV_SIZE_GROUPS 4 // v1.0.45 (firmware/Makefile SIZE_GROUPS=n builds another default, a trial)
 #endif
-    int       xfStagger_ = IV_SIZE_GROUPS, xfGroupNext_ IV_ZI; // setStagger; 2 since v1.0.39
+    int       xfStagger_ = IV_SIZE_GROUPS, xfGroupNext_ IV_ZI; // setStagger; 2 since v1.0.39, 4 since v1.0.45
     // Staggered (v1.0.39), all set by reset() before any use (no initialisers: flash, the constructor):
     bool      xfLine_[kN];   // the line fades in this crossfade
     float     xfOff_[kN];    // samples since the line's own trip began, ahead of xfSince_

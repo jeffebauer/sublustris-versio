@@ -1430,12 +1430,12 @@ void RunCandidateLap(float fs)
     static const int   kRoomHands[4] = {-1, 0, 1, 3};
     for (int room = 1; room <= 1; ++room) // the twin is the small room since v1.0.43
         for (int e = 0; e < 2; ++e)
-            for (int h : kRoomHands) RunCand({"TWINROOM", room != 0, 2, 0, e ? 0.7f : 0.1f, false, h, true, 5.0f}, fs);
+            for (int h : kRoomHands) RunCand({"TWINROOM", room != 0, 4, 0, e ? 0.7f : 0.1f, false, h, true, 5.0f}, fs);
     for (int lay = 0; lay <= 0; ++lay) { // one ERA since v1.0.42 (ERA_RUNTIME's layouts are gone)
-        RunCand({"WEAR", false, 2, lay, 0.5f, true, -1, false, 8.0f}, fs);
-        RunCand({"WEAR", false, 2, lay, 0.5f, true, -1, true, 8.0f}, fs);
+        RunCand({"WEAR", false, 4, lay, 0.5f, true, -1, false, 8.0f}, fs);
+        RunCand({"WEAR", false, 4, lay, 0.5f, true, -1, true, 8.0f}, fs);
         for (int fz = 0; fz < 2; ++fz)
-            for (float era : kEras) RunCand({"WEAR", false, 2, lay, era, false, -1, fz != 0, 3.0f}, fs);
+            for (float era : kEras) RunCand({"WEAR", false, 4, lay, era, false, -1, fz != 0, 3.0f}, fs);
     }
     static const int kGroups[3] = {2, 4, 8}, kTopHands[3] = {0, 3, 2};
     for (int g : kGroups)
@@ -1450,7 +1450,7 @@ void RunCandidateLap(float fs)
         RunCand({"TARGET", room, 8, lay, 0.7f, false, 0, false, 5.0f}, fs);
         RunCand({"TARGET", room, 8, lay, 0.7f, true, -1, false, 8.0f}, fs);
     }
-    engine.setSizeStagger(2);
+    engine.setSizeStagger(4); // the default (v1.0.45)
     ++gCandLaps;
     static char eb[160];
     char*       p   = eb;
@@ -1821,7 +1821,7 @@ int main()
                             AppendStr(p, end, "\r\n");
                             TransmitLine(sb, size_t(p - sb));
                         }
-            engine.setSizeStagger(2);
+            engine.setSizeStagger(4); // the default (v1.0.45)
             ApplyCorner(gCurrentCorner);
         }
 

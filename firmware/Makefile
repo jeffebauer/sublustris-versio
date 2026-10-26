@@ -35,7 +35,7 @@ RELEASE_DIAG ?= 0
 # (immensio_versio-latelight.bin; a diagnostic, not in the normal build: flash).
 RELEASE_LATE_LIGHT ?= 0
 # Integration dry run (trial switches, all off by default; each gets its own .bin name):
-#   SIZE_GROUPS=8 SIZE's crossfade in 8 groups as the default (Fdn.h IV_SIZE_GROUPS; -g8)
+#   SIZE_GROUPS=n SIZE's crossfade in n groups (1, 2 or 8) as the default instead of 4 (Fdn.h IV_SIZE_GROUPS; -gn)
 #   CANDIDATE=1   profile only: the candidate lap (main.cpp IV_PROFILE_CANDIDATE) in place of the corner lap,
 #                 the micro-tests and the size_moves hunt (-candidate)
 SIZE_GROUPS ?=
