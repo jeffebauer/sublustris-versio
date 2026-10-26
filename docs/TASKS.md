@@ -10,6 +10,7 @@
 - [ ] **Merge `claude/massive-air` into main?** It holds everything since v1.0.33 (SIZE/TIME crossfade, the CPU work, v1.0.34-36, the profile builds, and now the overnight review's speed-ups and report), all tests passing. Your OK first.
 
 ### Listen (after your notes)
+- [ ] **`frozen_twin`: a lighter twin while frozen** (pick one): `/Users/jesse/Documents/Sites/immensio-versio/renders/frozen_twin/index.html`. A frozen MASSIVE with the cassette crackles on the module (~105 % CPU); the twin (the layer over a frozen pad) is about 28 points of it. A is today; B should sound the same (saves ~5, not enough alone); C a plainer twin, a little more like distinct echoes (saves ~10-15); D a darker twin, top around 5 kHz (saves ~15-17). Listen for the playing over the pad, the button-hold (Paint) at 9-12 s and the fade after 13.5 s. Savings are estimates until a profile build of your pick is flashed.
 - [ ] **BLOOM's swell: other seeds** (your note: the 12 points "seemed to accentuate the mids"): http://192.168.1.238:8766/swell_seed/index.html. Measured: 12 and 24 points are equally even on noise and note by note; which notes stand out moves with TIME and the seed. B-D are the three most even seeds; E the old 24 points for reference.
 
 ### Listen (first time)
