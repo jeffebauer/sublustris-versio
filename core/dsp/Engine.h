@@ -185,6 +185,12 @@ public:
         eraSwitch_ = seconds;
         eraIdx_    = -1;
     }
+    // PROTOTYPE (renders/frozen_twin; round 15: a frozen MASSIVE with the cassette ran ~105 % of the
+    // module's CPU, the twin ~28 points of it): a lighter twin. 0 as built; 1 its swell at 24 kHz inside
+    // its half-rate stage; 2 that, no in-loop diffusion and two early taps a line; 3 its swell and tank
+    // at 12 kHz. Re-prepares the Engine.
+    void  setTwinLightPrototype(int mode);
+    int   twinLight() const { return twinLight_; }
     int   lowDecimate() const { return lowDecimate_; }
     int   swellTaps() const { return swell_.tapCount(); }
 #endif
@@ -295,6 +301,10 @@ private:
     bool              twinStopFast_ = true; // setTwinStopFast; false = before v1.0.37
     int               fitTapeOs_ = 2;    // setTapeOversamplingPrototype; 4 = before v1.0.38
     int               fitSwellTaps_ = 0; // setSwellTapsPrototype; 0 = as built
+    int               twinLight_ = 0;    // setTwinLightPrototype; 0 = as built
+    int               twinDivide() const { return twinLight_ == 3 ? 4 : (twinLight_ > 0 ? 2 : 1); } // the twin swell's rate, 1/d
+    dsp::HalfRate<kChunk> twinInner_;    // setTwinLightPrototype 3: 24 -> 12 kHz
+    void              processLightTwin(int n);
     bool              shimmerLazy_ = false, shimmerArmed_ = true, shimmerResting_ = false; // setShimmerLazyPrototype
     float             eraSwitch_ = 0.0f; // setEraSwitchPrototype; 0 = as built
     float             eraFadeShare_ = voicing::kEraFadeShare; // setEraFadeSharePrototype

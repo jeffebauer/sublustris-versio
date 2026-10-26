@@ -53,6 +53,9 @@ IV_SIZE_OPT void Engine::setEarlyTapsForSpace()
     fdn_.setEarlyTapCount(n);
     lowFdn_.setEarlyTapCount(n);
     twinFdn_.setEarlyTapCount(n);
+#ifndef IV_FIXED_VOICINGS
+    if (twinLight_ == 2 && n > 2) twinFdn_.setEarlyTapCount(2); // setTwinLightPrototype 2: HALL's two
+#endif
 }
 
 #ifndef IV_FIXED_VOICINGS
@@ -84,6 +87,50 @@ void Engine::setSwellTapsPrototype(int taps)
 {
     fitSwellTaps_ = taps;
     prepare(sampleRate_, maxBlockSize_);
+}
+
+void Engine::setTwinLightPrototype(int mode)
+{
+    twinLight_ = mode < 0 || mode > 3 ? 0 : mode;
+    prepare(sampleRate_, maxBlockSize_);
+}
+
+namespace {
+// setTwinLightPrototype: the twin's swell, then its tank, at the tank's rate (a HalfRate's "tank").
+struct TwinSwellTank {
+    dsp::Swell& swell;
+    dsp::Fdn&   fdn;
+    void process(const float* inL, const float* inR, float* outL, float* outR, int n)
+    {
+        float l[dsp::Swell::kMaxBlock], r[dsp::Swell::kMaxBlock];
+        for (int i = 0; i < n; ++i) {
+            l[i] = inL[i];
+            r[i] = inR[i];
+        }
+        swell.processBlock(l, r, n);
+        fdn.process(l, r, outL, outR, n);
+    }
+};
+// ... and once more at half that (12 kHz): a second halfband pair around it.
+template <class Half>
+struct TwinQuarter {
+    Half&          inner;
+    TwinSwellTank& st;
+    void process(const float* inL, const float* inR, float* outL, float* outR, int n) { inner.process(st, inL, inR, outL, outR, n); }
+};
+} // namespace
+
+// The light twins (renders/frozen_twin): 1 its swell at 24 kHz, inside the half-rate stage; 2 that, with
+// no in-loop diffusion and two early taps a line; 3 the swell and the tank at 12 kHz.
+void Engine::processLightTwin(int n)
+{
+    TwinSwellTank st{twinSwell_, twinFdn_};
+    if (twinLight_ == 3) {
+        TwinQuarter<dsp::HalfRate<kChunk>> q{twinInner_, st};
+        twinHalf_.process(q, twinInL_, twinInR_, twinL_, twinR_, n);
+    } else {
+        twinHalf_.process(st, twinInL_, twinInR_, twinL_, twinR_, n);
+    }
 }
 #endif
 
@@ -147,13 +194,21 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     for (auto& t : tape_) t.setFactor(fitTapeOs_);
 #endif
     ready_ &= swell_.prepare(large_, sampleRate);
+#ifndef IV_FIXED_VOICINGS
+    ready_ &= twinSwell_.prepare(large_, sampleRate / float(twinDivide())); // setTwinLightPrototype: at the twin's rate
+#else
     ready_ &= twinSwell_.prepare(large_, sampleRate);
+#endif
     twinSwell_.setSCurve(true); // eases in, then settles (owner, renders/swell_curve)
     // The tank and its twin at half the rate (v1.0.35, ADR 0026; dsp/HalfRate.h).
     ready_ &= fdn_.prepare(large_, 0.5f * sampleRate, 0x1D5A7u, voicing::kFdnMaxLineSeconds, &axi_);
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
     ready_ &= shimmer_.prepare(large_, sampleRate);
+#ifndef IV_FIXED_VOICINGS
+    ready_ &= twinFdn_.prepare(large_, (twinLight_ == 3 ? 0.25f : 0.5f) * sampleRate, 0x7A1Eu); // setTwinLightPrototype 3: 12 kHz
+#else
     ready_ &= twinFdn_.prepare(large_, 0.5f * sampleRate, 0x7A1Eu);
+#endif
     ready_ &= lowFdn_.prepare(large_, sampleRate / float(lowDecimate_), 0x10F7u, voicing::kFdnMaxLineSeconds, &axi_);
     lowFdn_.setGovernorLeader(&fdn_);
     {
@@ -205,6 +260,9 @@ IV_SIZE_OPT void Engine::reset()
     twinMean_ = twinSpread_ = -1.0f;
     twinFdn_.reset();
     resetHalf(twinHalf_);
+#ifndef IV_FIXED_VOICINGS
+    resetHalf(twinInner_); // setTwinLightPrototype
+#endif
     twinPlate_.reset();
     twinSwell_.reset();
     for (auto& d : twinDiffuser_) d.clear();
@@ -229,6 +287,9 @@ IV_SIZE_OPT void Engine::reset()
     lowPrev_[0] = lowPrev_[1] = lowCur_[0] = lowCur_[1] = 0.0f;
     resetHalf(tankHalf_);
     resetHalf(twinHalf_);
+#ifndef IV_FIXED_VOICINGS
+    resetHalf(twinInner_); // setTwinLightPrototype
+#endif
     plate_.reset();
     shimmer_.reset();
     tilt_.reset();
@@ -314,8 +375,14 @@ IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: 
         tankInStep_ = tankStep;
         if (!twinActive_) {
             twinFdn_.setInLoopDiffusion(activeSpace_ == 2 ? 1.0f : 0.0f); // before the reset, so it starts there
+#ifndef IV_FIXED_VOICINGS
+            if (twinLight_ == 2) twinFdn_.setInLoopDiffusion(0.0f); // setTwinLightPrototype 2: none
+#endif
             twinFdn_.reset();
             resetHalf(twinHalf_);
+#ifndef IV_FIXED_VOICINGS
+            resetHalf(twinInner_); // setTwinLightPrototype
+#endif
             twinPlate_.reset();
             for (auto& d : twinDiffuser_) d.clear();
             twinSwell_.setAttackSeconds(activeSpace_ == 2
@@ -625,6 +692,9 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
             twinFdn_.setHighT60Ratio(massive ? map::massiveHighRatio(toneRatio, tDecay) : toneRatio);
             twinFdn_.setGovernor(0.0f);
             twinFdn_.setInLoopDiffusion(massive ? 1.0f : 0.0f);
+#ifndef IV_FIXED_VOICINGS
+            if (twinLight_ == 2) twinFdn_.setInLoopDiffusion(0.0f); // setTwinLightPrototype 2: none
+#endif
             twinFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(tDecay, tSize)
                                            : voicing::kHallOutputTrim * map::hallSizeLevelTrim(tSize, tDecay));
             twinFdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
@@ -803,6 +873,9 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
             twinIn_ = twinInStep_ = 0.0f;
             twinFdn_.reset();
             resetHalf(twinHalf_);
+#ifndef IV_FIXED_VOICINGS
+            resetHalf(twinInner_); // setTwinLightPrototype
+#endif
             twinPlate_.reset();
             twinSwell_.reset();
             for (auto& d : twinDiffuser_) d.clear();
@@ -821,7 +894,11 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
 
     applySpace(false, n);
     swell_.control(n);
+#ifndef IV_FIXED_VOICINGS
+    twinSwell_.control(twinLight_ > 0 ? (n + twinDivide() - 1) / twinDivide() : n); // setTwinLightPrototype: its rate's samples
+#else
     twinSwell_.control(n);
+#endif
     // TIME's pre-delay by crossfade (v1.0.34, ADR 0025; owner's pick C on renders/knob_moves): it jumps
     // and the old delay fades out over kSizeCrossfadeSeconds, equal power, instead of sliding, which swept
     // the input by up to an octave ("a large wash of noise"; a held note's energy away from its pitch -24
@@ -935,7 +1012,11 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         }
         // Its swell too: after a MASSIVE freeze its attack stayed set, and with no twin it read 24 taps
         // a sample from a ring of silence until power-off (overnight review, 26 Oct 2026).
+#ifndef IV_FIXED_VOICINGS
+        if (twinRuns && twinLight_ == 0) twinSwell_.processBlock(twinInL_, twinInR_, n); // else at the twin's rate
+#else
         if (twinRuns) twinSwell_.processBlock(twinInL_, twinInR_, n);
+#endif
         prof::mark(prof::kTwin);
         swell_.processBlock(bufL_, bufR_, n);
         prof::mark(prof::kSwell);
@@ -967,6 +1048,9 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         // The twin first, so painting can send it into the pad.
         if (twinActive_) {
             if (activeSpace_ == 0) twinPlate_.process(twinInL_, twinInR_, twinL_, twinR_, n);
+#ifndef IV_FIXED_VOICINGS
+            else if (twinLight_ > 0) processLightTwin(n);
+#endif
             else twinHalf_.process(twinFdn_, twinInL_, twinInR_, twinL_, twinR_, n);
             // The twin stops on its 50 ms level (v1.0.37; overnight review, lit-plate 6): ~15-24 s sooner
             // after an unfreeze than on its 1.5 s level, which kept a silent second tank running.

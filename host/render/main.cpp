@@ -177,6 +177,11 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         std::fprintf(stderr, "iv_render: IV_LOW_DECIMATE: still lows' tank at 1/%d (%.0f Hz)\n", engine.lowDecimate(),
                      double(sampleRate) / engine.lowDecimate());
     }
+    if (const char* tl = std::getenv("IV_TWIN_LIGHT")) { // renders/frozen_twin
+        engine.setTwinLightPrototype(std::atoi(tl));
+        std::fprintf(stderr, "iv_render: IV_TWIN_LIGHT: twin %d (0 as built, 1 swell at 24 kHz, 2 + no in-loop diffusion, 2 taps, 3 at 12 kHz)\n",
+                     engine.twinLight());
+    }
     if (const char* st = std::getenv("IV_SWELL_TAPS")) {
         engine.setSwellTapsPrototype(std::atoi(st));
         std::fprintf(stderr, "iv_render: IV_SWELL_TAPS: %d swell points a side\n", engine.swellTaps());
