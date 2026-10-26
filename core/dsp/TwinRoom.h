@@ -80,6 +80,12 @@ public:
             for (auto& z : c) z = 0.0f;
     }
     void setGain(float g) { gain_ = g; }
+#ifndef IV_FIXED_VOICINGS
+    // PROTOTYPE (renders/room_motion): the reads' wander. 0 as built (0.15 ms on every line); 1 scaled with each line's
+    // length (kWanderShare of it), so the bend, which builds up pass after pass on short lines, stays a few cents at
+    // every SIZE; 2 off.
+    void setWanderPrototype(int mode) { wander_ = mode == 1 || mode == 2 ? mode : 0; }
+#endif
     // size 0..1 (SIZE), rate 1/T60 in 1/s (the twin's), highRatio the twin's TONE share (its highs' T60 over its lows').
     IV_SIZE_OPT void set(float size, float rate, float highRatio)
     {
@@ -102,16 +108,21 @@ public:
         constexpr float kOutS[2][kN] = {{1, 1, -1, -1, 1, 1, -1, -1}, {1, -1, -1, 1, 1, -1, -1, 1}};
         const float depth = kModSeconds * sr_;
         int   di[kN];
-        float eta[kN];
+        float eta[kN], dep[kN];
         bool  moving[kN];
         for (int i = 0; i < kN; ++i) { // keep the phasors on the unit circle (a first-order step, once a call)
+            dep[i] = depth;
+#ifndef IV_FIXED_VOICINGS
+            if (wander_ == 1) dep[i] = kWanderShare * len_[i];
+            else if (wander_ == 2) dep[i] = 0.0f;
+#endif
             const float r = 1.5f - 0.5f * (c0_[i] * c0_[i] + s0_[i] * s0_[i]);
             c0_[i] *= r;
             s0_[i] *= r;
             // The read, fixed for the call (n <= 33 samples; the wander moves it ~0.01 sample in that time), through
             // a first-order allpass for its fraction, as the tank's reads: linear interpolation dulled every pass.
             moving[i] = len_[i] != target_[i];
-            const float d = len_[i] + depth * (1.0f + s0_[i]);
+            const float d = len_[i] + dep[i] * (1.0f + s0_[i]);
             di[i] = int(d);
             const float t = d - float(di[i]);
             eta[i] = (1.0f - t) / (1.0f + t);
@@ -140,7 +151,7 @@ public:
                 if (moving[j]) { // SIZE moved: the line glides there, at most a semitone's bend (as the tank's SIZE slew)
                     const float step = target_[j] - len_[j];
                     len_[j] = std::fabs(step) <= kSlew ? target_[j] : len_[j] + (step > 0.0f ? kSlew : -kSlew);
-                    const float d = len_[j] + depth * (1.0f + s0_[j]);
+                    const float d = len_[j] + dep[j] * (1.0f + s0_[j]);
                     di[j] = int(d);
                     const float f = d - float(di[j]);
                     eta[j] = (1.0f - f) / (1.0f + f);
@@ -206,11 +217,15 @@ private:
 
     static constexpr float kMaxSeconds = 0.052f, kApCoeff = 0.6f, kModSeconds = 0.00015f;
     static constexpr float kApSeconds[2][2] = {{0.0033f, 0.0059f}, {0.0039f, 0.0067f}};
+    static constexpr float kWanderShare = 0.005f; // setWanderPrototype 1: the wander's depth x the line's length (today's 0.15 ms on a SIZE 0.9 line)
     static constexpr float kSlew = 0.0595f; // samples a sample: 2^(1/12) - 1, a semitone's bend at most
     static constexpr float kRatio[kN] = {0.31f, 0.42f, 0.51f, 0.60f, 0.70f, 0.79f, 0.90f, 1.0f};
     // IV_ZI (SizeOpt.h): a member of the Engine only, never a local; prepare() sets the rest.
     float sr_ = 24000.0f, gain_ = 1.0f, shelfK_ IV_ZI;
     bool  ok_ IV_ZI, snap_ = true;
+#ifndef IV_FIXED_VOICINGS
+    int   wander_ = 0; // setWanderPrototype
+#endif
     float target_[kN] IV_ZI;
     float hb_ IV_ZI, ha1_ IV_ZI, ha2_ IV_ZI, hz_[2][2] IV_ZI;
     Ring  line_[kN];

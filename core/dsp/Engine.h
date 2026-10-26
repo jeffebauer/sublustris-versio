@@ -164,6 +164,9 @@ public:
     // PROTOTYPE (renders/twin_alternatives, "the layer alone"): the tank (the frozen pad) is left out of the wet,
     // so only the twin is heard; the tank still runs and freezes as in use.
     void  setLayerSoloPrototype(bool on) { layerSolo_ = on; }
+    // PROTOTYPE (renders/room_motion): the small room's read wander, 0 as built, 1 scaled with each line's length, 2 off
+    // (dsp/TwinRoom.h setWanderPrototype).
+    void  setRoomWanderPrototype(int mode) { room_.setWanderPrototype(mode); }
     // PROTOTYPE (renders/freeze_moment; owner: "the frozen sound seems to jump in amplitude once frozen
     // compared to the swelling reverb"): the ducking (ADR 0014) at a freeze. 0 as built: let go in 50 ms
     // (at DECAY 0.9 a pad jumps up by the 2-4 dB the playing was ducking it); 1 the pad keeps the tap's
