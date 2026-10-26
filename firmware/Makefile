@@ -35,16 +35,13 @@ RELEASE_DIAG ?= 0
 # (immensio_versio-latelight.bin; a diagnostic, not in the normal build: flash).
 RELEASE_LATE_LIGHT ?= 0
 # Integration dry run (trial switches, all off by default; each gets its own .bin name):
-#   TWIN_ROOM=1   the voiced small room in place of HALL's and MASSIVE's twin tank (Engine.h IV_TWIN_ROOMV);
-#                 in the profile, both, chosen while it runs (-room)
 #   SIZE_GROUPS=8 SIZE's crossfade in 8 groups as the default (Fdn.h IV_SIZE_GROUPS; -g8)
 #   CANDIDATE=1   profile only: the candidate lap (main.cpp IV_PROFILE_CANDIDATE) in place of the corner lap,
 #                 the micro-tests and the size_moves hunt (-candidate)
-TWIN_ROOM ?=
 SIZE_GROUPS ?=
 CANDIDATE ?=
-TRIAL_TAG = $(if $(TWIN_ROOM),-room)$(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))
-TRIAL_DEFS = $(if $(TWIN_ROOM), -DIV_TWIN_ROOMV=1)$(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)
+TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))
+TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)
 RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)$(if $(filter 1,$(RELEASE_LATE_LIGHT)),-latelight)$(TRIAL_TAG)
 PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)
 

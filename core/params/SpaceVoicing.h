@@ -202,19 +202,18 @@ constexpr float kPaintLevel          = 0.5f;  // the twin's share sent into the 
 // few cents a pass into a seasick wobble (owner, M5 listening).
 constexpr float kFrozenPlateModDepth = 0.15f;
 // The freeze twin (ADR 0009, owner's picks on freeze_options and
-// freeze_twin): what you play over a pad goes into a twin of the frozen tank
-// (the same space, SIZE and DECAY playing it), heard as a quieter layer over
+// freeze_twin): what you play over a pad goes into a twin (PLATE: a second Plate; HALL and MASSIVE: a small
+// room since v1.0.43; SIZE and DECAY playing it), heard as a quieter layer over
 // the untouched pad, fading back out within kTwinMaxT60 so the pad returns
 // to what it was. No predelay or swell on its input ("too much
 // predelay... disjointed"). (start)
 constexpr float kTwinLevel     = 0.5f;  // −6 dB against the pad (was 0.3, −10.5 dB): "the sweet spot is between plus3 and plus6" (owner, renders/twin_level, v1.0.14)
 constexpr float kTwinMaxT60    = 8.0f;  // it always fades, even when DECAY is infinite
-// HALL's and MASSIVE's twin, on its output trim: up to +5.4 dB (v1.0.41, owner's pick on renders/twin_louder:
-// "Let's shoot for 8db under the pad"). Its tail stops within kTwinMaxT60 while theirs runs to 14 s or infinite,
-// so at kTwinLevel alone it sat 12-15 dB (A-weighted) under a frozen pad, not 6; the lift follows how much
-// shorter it is (Engine::applySpace), so a short HALL's twin, which isn't cut, stays where it was. PLATE's is at -6.
-constexpr float kTwinFdnGain      = 1.862f;
-constexpr float kTwinFdnGainInvSq = 1.0f / (kTwinFdnGain * kTwinFdnGain);
+// HALL's and MASSIVE's twin is a small room (v1.0.43, the owner's pick E on renders/small_room; dsp/TwinRoom.h), at
+// these gains on its output (dB, then kTwinLevel): matched on the page to v1.0.41's twin, which sat about 8 dB under
+// a frozen pad (owner, renders/twin_louder: "Let's shoot for 8db under the pad"). PLATE's twin is a second Plate.
+constexpr float kTwinRoomHallDb    = -8.63f;
+constexpr float kTwinRoomMassiveDb = -7.65f;
 constexpr float kTwinFadeSeconds = 0.02f; // its input opens / closes at freeze / unfreeze
 constexpr float kPaintHeadroomDb     = 1.5f;  // a painted pad may grow this far above its frozen level (or the floor)
 constexpr float kPaintFadeDb         = 1.0f;  // painting eases off over the last this-many dB below that

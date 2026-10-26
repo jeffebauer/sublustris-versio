@@ -230,11 +230,18 @@ iv::Engine& engine = *reinterpret_cast<iv::Engine*>(gEngineStorage);
 // startup doesn't zero them; the Engine's Arena zeroes what it takes. Sized
 // for 48 kHz: at any other rate the Engine finds too little memory and
 // passes the dry only (Engine::ready()).
+#if defined(IV_MODE_PROFILE)
+// The profile's SDRAM micro-tests are laid out over ~6.2 M floats (below), which gLarge was until the twin tank
+// left it (v1.0.43): the profile keeps that much, so they measure what they did.
+constexpr size_t kLargeFloats = iv::Engine::largeFloats(48000.0f) > 6200000 ? iv::Engine::largeFloats(48000.0f) : 6200000;
+#else
 constexpr size_t kLargeFloats = iv::Engine::largeFloats(48000.0f);
+#endif
 constexpr size_t kFastFloats  = iv::Engine::fastFloats(48000.0f);
 DSY_SDRAM_BSS float gLarge[kLargeFloats];
 IV_DTCM float       gFast[kFastFloats];
-// The tank's and the low tank's in-loop allpass lines (Engine::axiFloats, ~424 KB at 48 kHz) in AXI
+// The tank's and the low tank's in-loop allpass lines, and since v1.0.43 the twin's small room (Engine::axiFloats,
+// ~480 KB at 48 kHz), in AXI
 // SRAM: a plain global, so libDaisy's .bss (the 512 KB SRAM at 0x24000000), zeroed by startup.
 // Overnight review, 26 Oct 2026: 32 of the tanks' ~80 SDRAM streams a tank sample come on chip.
 constexpr size_t kAxiFloats = iv::Engine::axiFloats(48000.0f);
@@ -961,7 +968,7 @@ uint32_t gChkLibDaisy = 0, gChkTight = 0, gChkLap = 0, gChkLaps = 0; // errors
 constexpr size_t kTestFdnFloats = iv::dsp::Fdn::memoryFloats(12000.0f, 0.25f);
 constexpr size_t kTestArenaFloats = kTestFdnFloats + iv::dsp::Arena::kSkewLines * iv::dsp::Arena::kLineFloats;
 static_assert(kTestArenaFloats <= kAxiFloats, "the AXI test tank lives in gAxi (before engine.prepare)");
-alignas(iv::dsp::Fdn) unsigned char gTestFdnStorage[sizeof(iv::dsp::Fdn)];
+IV_DTCM alignas(iv::dsp::Fdn) unsigned char gTestFdnStorage[sizeof(iv::dsp::Fdn)]; // DTCM: see gMassiveStorage
 
 int TimeTestFdn(float* mem, size_t floats, bool skew)
 {
@@ -997,7 +1004,8 @@ int TimeTestFdn(float* mem, size_t floats, bool skew)
 // (MASSIVE's), DECAY infinite with the governor (the corners' DECAY 1), Neve ERA; its lines in SDRAM,
 // its in-loop allpass lines either in SDRAM too (A, as release was) or in AXI SRAM (B, as now).
 // Cycles per tank sample (one tank sample = two output samples at 48 kHz).
-alignas(iv::dsp::Fdn) unsigned char gMassiveStorage[2][sizeof(iv::dsp::Fdn)];
+// In DTCM, as the Engine's own tanks are (v1.0.43: AXI SRAM has the twin's room now, and no room for these).
+IV_DTCM alignas(iv::dsp::Fdn) unsigned char gMassiveStorage[2][sizeof(iv::dsp::Fdn)];
 iv::dsp::Fdn* gMassive[2] = {};
 uint32_t      gMassiveRng = 1;
 
@@ -1062,6 +1070,8 @@ static_assert(kMassiveB + kMassiveFloats <= kSwellAt, "tank B ends before the sw
 static_assert(kSwellAt + iv::dsp::Swell::memoryFloats(48000.0f) + 8 * iv::dsp::Arena::kSkewLines * iv::dsp::Arena::kLineFloats
                   <= kLargeFloats, "the swell fits gLarge");
 static_assert(sizeof(gLarge) <= kChkBase - 0xC0000000u, "SDRAMCHK's 8 MB lie beyond gLarge");
+static_assert((1u << 22) + 31u * 40009u + 4096u <= kLargeFloats && (3u << 20) + 7u * 262147u + 4096u + 19200u <= kLargeFloats,
+              "sdw32's and sdline8's writes stay within gLarge");
 static_assert(iv::dsp::Fdn::apFloats(24000.0f) + 16 * iv::dsp::Arena::kSkewLines * iv::dsp::Arena::kLineFloats <= kAxiFloats,
               "tank B's allpasses fit gAxi");
 
@@ -1327,7 +1337,7 @@ Result MeasureCorner(int index, float fs)
 // ("still", as release does) unless a hand turns SIZE or ERA.
 struct Cand {
     const char* family;
-    bool        room;     // the voiced small room in place of the twin tank (TWIN_ROOM=1 builds)
+    bool        room;     // unused since v1.0.43 (the small room is the twin; TWIN_ROOM=1 chose it); true
     int         groups;   // SIZE's crossfade groups
     int         layout;   // unused since v1.0.42 (ERA's layouts, ERA_RUNTIME=1 builds); 0
     float       era;      // ERA's knob (still runs)
@@ -1344,9 +1354,6 @@ void RunCand(const Cand& c, float fs)
 {
     static const char* const kHands[4] = {"sweep  ", "twists ", "creep  ", "twisthi"};
     engine.reset();
-#if IV_ROOM_FW
-    engine.setTwinRoomProfile(c.room);
-#endif
     engine.setSizeStagger(c.groups);
     ApplyRealtime(c.era);
     if (c.sizeHand >= 0) engine.setParam(ParamId::Size, ivpot::endStops(SizeHand(c.sizeHand, 0)));
@@ -1422,7 +1429,7 @@ void RunCandidateLap(float fs)
     gCandWorst = 0.0f;
     static const float kEras[5] = {0.1f, 0.3f, 0.5f, 0.7f, 0.9f};
     static const int   kRoomHands[4] = {-1, 0, 1, 3};
-    for (int room = 0; room <= IV_ROOM_FW; ++room)
+    for (int room = 1; room <= 1; ++room) // the twin is the small room since v1.0.43
         for (int e = 0; e < 2; ++e)
             for (int h : kRoomHands) RunCand({"TWINROOM", room != 0, 2, 0, e ? 0.7f : 0.1f, false, h, true, 5.0f}, fs);
     for (int lay = 0; lay <= 0; ++lay) { // one ERA since v1.0.42 (ERA_RUNTIME's layouts are gone)
@@ -1437,7 +1444,7 @@ void RunCandidateLap(float fs)
             for (int fz = 0; fz < 2; ++fz)
                 RunCand({"SIZEHAND", false, g, 0, 0.7f, false, h, fz != 0, h == 2 ? 6.0f : 5.0f}, fs);
     for (int lay = 0; lay <= 0; ++lay) {
-        const bool room = IV_ROOM_FW != 0;
+        const bool room = true;
         RunCand({"TARGET", room, 8, lay, 0.7f, false, -1, true, 5.0f}, fs);
         RunCand({"TARGET", room, 8, lay, 0.7f, false, 3, true, 5.0f}, fs);
         RunCand({"TARGET", room, 8, lay, 0.7f, true, -1, true, 8.0f}, fs);

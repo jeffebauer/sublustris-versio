@@ -9,8 +9,9 @@
 // tank → MIX (SPEC §4.1); in SHIMMER the diffused input, shifted an octave up, joins the input into
 // the tank (dsp/Shimmer.h, ADR 0024). The button and the gate feed one
 // gesture reader (ADR 0011): a tap freezes the big tank into a still pad and
-// moves the input to the twin, a second tank of the same space whose sound
-// fades back out over the pad (SIZE and DECAY play it); holding while frozen
+// moves the input to the twin (PLATE: a second Plate; HALL and MASSIVE: a
+// small room, v1.0.43) whose sound fades back out over the pad (SIZE, DECAY
+// and TONE play it); holding while frozen
 // paints a little of the twin into the pad (ADR 0010); a tap unfreezes and
 // the big tank glides back to the knobs (ADR 0009).
 //
@@ -27,16 +28,7 @@
 #include "dsp/Shimmer.h"
 #include "dsp/SizeOpt.h"
 #include "dsp/Swell.h"
-// PROTOTYPE, firmware only (integration dry run): IV_TWIN_ROOMV=1 builds the voiced small room (dsp/TwinAlt.h
-// TwinRoomV; renders/small_room C: the twin tank's loss, a 150 Hz low cut, at -8.1 dB in MASSIVE, -9.1 dB in
-// HALL) in place of HALL's and MASSIVE's twin tank, for its flash as it would ship (firmware/Makefile
-// TWIN_ROOM). In the profile build (IV_PROFILE_HOOKS) both stay in, chosen by setTwinRoomProfile.
-#if defined(IV_FIXED_VOICINGS) && IV_TWIN_ROOMV
-#define IV_ROOM_FW 1
-#include "dsp/TwinAlt.h"
-#else
-#define IV_ROOM_FW 0
-#endif
+#include "dsp/TwinRoom.h"
 #include "params/GestureReader.h"
 #include "params/ParamSpec.h"
 #include "params/SpaceVoicing.h"
@@ -47,10 +39,6 @@
 #include <cstdint>
 #if !defined(IV_NO_HEAP)
 #include <vector>
-#endif
-#if !defined(IV_FIXED_VOICINGS) && !defined(IV_NO_HEAP)
-#include "dsp/TwinAlt.h" // setTwinAltPrototype
-#include <memory>
 #endif
 
 namespace iv {
@@ -65,7 +53,6 @@ public:
     {
         return dsp::Fdn::memoryFloats(0.5f * sampleRate) + 2 * dsp::Swell::memoryFloats(sampleRate) // the tank (at half the rate), the tank's swell and the twin's
              + dsp::Shimmer::memoryFloats(sampleRate) + 2 * dsp::Plate::memoryFloats(sampleRate, voicing::kPlateMaxScale, true)
-             + dsp::Fdn::memoryFloats(0.5f * sampleRate) // the freeze twin (half the rate too)
              + dsp::Fdn::memoryFloats(sampleRate / float(kLowDecimate)) // still lows' low tank
              + 2 * dsp::nextPow2(size_t(voicing::kPredelayMaxSeconds * sampleRate) + 4)
              + dsp::Arena::skewRoom() // each line's start staggered across the cache's sets
@@ -89,7 +76,9 @@ public:
                         && dsp::Fdn::apLineFloats(sampleRate / float(kLowDecimate)) % way == 0;
         const size_t padLines = whole ? (dsp::Arena::kSkewLines - 1) + (slices - 1) * dsp::Arena::kSkewStep
                                       : slices * (dsp::Arena::kSkewLines - 1);
-        return axiTankFloats(sampleRate) + padLines * dsp::Arena::kLineFloats;
+        // The twin's small room (v1.0.43): one slice after them, up to kSkewLines - 1 lines of padding.
+        return axiTankFloats(sampleRate) + padLines * dsp::Arena::kLineFloats
+             + dsp::TwinRoom::memoryFloats(0.5f * sampleRate) + (dsp::Arena::kSkewLines - 1) * dsp::Arena::kLineFloats;
     }
     static constexpr size_t fastFloats(float sampleRate)
     {
@@ -172,21 +161,9 @@ public:
     // The shimmer records only while ATTACK is on SHIMMER (frozen too) or its send is still fading
     // (cost-input c1): switching in, its first grains have only what was played since.
     void  setShimmerLazyPrototype(bool on) { shimmerLazy_ = on; }
-    // PROTOTYPE (renders/frozen_twin; round 15: a frozen MASSIVE with the cassette ran ~105 % of the
-    // module's CPU, the twin ~28 points of it): a lighter twin. 0 as built; 1 its swell at 24 kHz inside
-    // its half-rate stage; 2 that, no in-loop diffusion and two early taps a line; 3 its swell and tank
-    // at 12 kHz. Re-prepares the Engine.
-    void  setTwinLightPrototype(int mode);
-    // PROTOTYPE (renders/twin_alternatives; owner: "a page with today's twin, blur and width, small room, and the
-    // twin without its swell, all at -8 dB"): in HALL and MASSIVE, instead of the twin's tank, 1 a blur (dsp/
-    // TwinAlt.h, no tail of its own), 2 a small room (8 short lines at 24 kHz, the twin's T60), 3 the twin without
-    // its swell; 4-6 the small room voiced (renders/small_room: its loss the twin tank's, a low cut of 150 Hz,
-    // 300 Hz, or 150 Hz and darker); gainDb its level (each matched to v1.0.41's twin). Call after prepare().
-    void  setTwinAltPrototype(int mode, float gainDb);
     // PROTOTYPE (renders/twin_alternatives, "the layer alone"): the tank (the frozen pad) is left out of the wet,
-    // so only the twin (or its alternative) is heard; the tank still runs and freezes as in use.
+    // so only the twin is heard; the tank still runs and freezes as in use.
     void  setLayerSoloPrototype(bool on) { layerSolo_ = on; }
-    int   twinLight() const { return twinLight_; }
     // PROTOTYPE (renders/freeze_moment; owner: "the frozen sound seems to jump in amplitude once frozen
     // compared to the swelling reverb"): the ducking (ADR 0014) at a freeze. 0 as built: let go in 50 ms
     // (at DECAY 0.9 a pad jumps up by the 2-4 dB the playing was ducking it); 1 the pad keeps the tap's
@@ -218,15 +195,11 @@ public:
     int   swellTaps() const { return swell_.tapCount(); }
 #endif
 #if !defined(IV_FIXED_VOICINGS) || defined(IV_PROFILE_HOOKS) // the profile firmware's SIZEHAND lines too
-#if IV_ROOM_FW && defined(IV_PROFILE_HOOKS)
-    void  setTwinRoomProfile(bool on) { twinAlt_ = on ? 4 : 0; } // takes effect at the twin's next start
-#endif
-    // SIZE's crossfade in two groups of lines (v1.0.39, Fdn::setStagger), in every FDN (the tank, the twin,
-    // the still lows); 1: all lines together, as before v1.0.39; 4 or 8: the size_moves prototypes.
+    // SIZE's crossfade in two groups of lines (v1.0.39, Fdn::setStagger), in every FDN (the tank, the still
+    // lows); 1: all lines together, as before v1.0.39; 4 or 8: the size_moves prototypes.
     void  setSizeStagger(int groups)
     {
         fdn_.setStagger(groups);
-        twinFdn_.setStagger(groups);
         lowFdn_.setStagger(groups);
     }
 #endif
@@ -286,7 +259,7 @@ private:
     float sizeHyst_ = voicing::kSizeHysteresis; // setSizeHysteresis
     float sizeHeld_ = -1.0f, twinSizeHeld_ = -1.0f; // the SIZE the tank and the twin have (< 0: none yet)
     // ERA last sent to a tank (applySpace): true, keeping m, when m differs from it.
-    enum { EraSentFdn, EraSentPlate, EraSentTwinFdn, EraSentTwinPlate, EraSentCount };
+    enum { EraSentFdn, EraSentPlate, EraSentTwinPlate, EraSentCount };
     bool eraChanged(int which, const dsp::EraMix& m);
     float smoothed(ParamId id) const { return smooth_[static_cast<size_t>(id)]; }
 
@@ -309,11 +282,9 @@ private:
     float             predelayNow_ IV_ZI, predelayTarget_ IV_ZI; // samples
     dsp::Diffuser<4>  diffuser_[2];
     dsp::Swell        swell_;
-    dsp::Swell        twinSwell_; // MASSIVE's twin swells like its tank (owner: no repeats over a frozen MASSIVE)
+    dsp::Swell        twinSwell_; // PLATE's twin's (with no attack); HALL's and MASSIVE's room has none (v1.0.43)
     dsp::Fdn          fdn_;
     dsp::Plate        plate_;
-    // The freeze twin: the frozen tank's space, with its own decay.
-    dsp::Fdn          twinFdn_;
     // Still lows (v1.0.18, ADR 0012 amendment; docs/research/still-lows.md): the HALL / MASSIVE tank's
     // input splits at kStillLowsHz (Butterworth); the highs go to fdn_, the lows to lowFdn_, an
     // unmodulated tank at 1/kLowDecimate the rate that follows fdn_'s SIZE, DECAY and governor
@@ -328,34 +299,31 @@ private:
     float             lowPrev_[2] IV_ZI, lowCur_[2] IV_ZI;
     float             lowInL_[kChunk / kLowDecimate + 2] IV_ZI, lowInR_[kChunk / kLowDecimate + 2] IV_ZI;
     float             lowOutL_[kChunk / kLowDecimate + 2] IV_ZI, lowOutR_[kChunk / kLowDecimate + 2] IV_ZI;
-    dsp::HalfRate<kChunk> tankHalf_, twinHalf_; // fdn_ and twinFdn_ run at half the rate (v1.0.35, ADR 0026)
+    dsp::HalfRate<kChunk> tankHalf_, twinHalf_; // fdn_ and the twin's room run at half the rate (v1.0.35, ADR 0026)
 #ifndef IV_FIXED_VOICINGS
     int               fitEarlyTaps_ IV_ZI; // setEarlyTapPrototype; 0 = as built
     uint32_t          fitSwellSeed_ IV_ZI; // setSwellSeedPrototype; 0 = as built
     bool              halfPrime_ IV_ZI; // setHalfRatePrime; false = as built
     bool              twinStopFast_ = true; // setTwinStopFast; false = before v1.0.37
     int               fitSwellTaps_ IV_ZI; // setSwellTapsPrototype; 0 = as built
-    int               twinLight_ = 0;    // setTwinLightPrototype; 0 = as built
-    int               twinAlt_ = 0;      // setTwinAltPrototype; 0 = as built
     bool              layerSolo_ = false; // setLayerSoloPrototype
-    float             altLevel_ = 0.0f;  // its output's 50 ms power (the twin stops on it)
-    std::unique_ptr<dsp::TwinBlur> twinBlur_;
-    std::unique_ptr<dsp::TwinRoom> twinRoom_;
-    std::unique_ptr<dsp::TwinRoomV> twinRoomV_; // setTwinAltPrototype 4-6
     int               freezeDuck_ = 0;   // setFreezeDuckPrototype; 0 = as built
     float             freezeDuckSeconds_ = 0.4f, duckAtFreeze_ = 0.0f;
     float             twinGain_ = 1.0f;  // setTwinGainPrototype; 1 = as built
     bool              twinOff_ = false;
-    int               twinDivide() const { return twinLight_ == 3 ? 4 : (twinLight_ > 0 ? 2 : 1); } // the twin swell's rate, 1/d
-    dsp::HalfRate<kChunk> twinInner_;    // setTwinLightPrototype 3: 24 -> 12 kHz
-    void              processLightTwin(int n);
     bool              shimmerLazy_ IV_ZI, shimmerArmed_ = true, shimmerResting_ IV_ZI; // setShimmerLazyPrototype
     float             driftGrow_ = 0.0f, driftRateGrow_ = 0.0f, driftSineCents_ = 0.0f; // setDriftPrototype
     int               driftSine_ = 0;
 #endif
-    dsp::Plate        twinPlate_;
+    dsp::Plate        twinPlate_; // PLATE's twin
+    // HALL's and MASSIVE's twin (v1.0.43, the owner's pick E on renders/small_room): the small room, its rings in
+    // AXI SRAM; its gain by SPACE (HALL, MASSIVE: ~8 dB under a frozen pad); its 50 ms power (the twin stops on
+    // it) and that one-pole's step for a block of roomStepN_; twinSized_: SIZE has reached it since it started.
+    dsp::TwinRoom     room_;
+    float             roomGain_[2] = {1.0f, 1.0f}, roomLevel_ IV_ZI, roomStep_ IV_ZI;
+    int               roomStepN_ = -1;
+    bool              twinSized_ IV_ZI;
     dsp::Diffuser<4>  twinDiffuser_[2];
-    float             twinMean_ = -1.0f, twinSpread_ = -1.0f;
     float             twinIn_ IV_ZI, twinInStep_ IV_ZI;
     bool              twinActive_ IV_ZI;
     dsp::Shimmer      shimmer_; // ATTACK's third position (ADR 0024)
@@ -385,15 +353,6 @@ private:
     float decayMakeup_ = 1.0f, decayGain_ = 1.0f, decayGainNow_ = 1.0f; // DECAY's level make-up (v1.0.28)
     dsp::EraTexture texture_; // ERA's wear on the wet (v1.0.42)
     bool texOn_ IV_ZI;
-#if IV_ROOM_FW
-    dsp::TwinRoomV roomFw_; // IV_TWIN_ROOMV: the voiced room in place of the twin tank
-    float roomLevel_ IV_ZI, roomCoef_ IV_ZI; // its 50 ms power (the twin stops on it), the one-pole's step
-#if defined(IV_PROFILE_HOOKS)
-    int twinAlt_ IV_ZI; // setTwinRoomProfile: 0 the twin tank, 4 the room
-#else
-    static constexpr int twinAlt_ = 4;
-#endif
-#endif
     float diffMotionNow_ IV_ZI, diffMotionPhase_ IV_ZI; // the PLATE's wandering input allpass, samples
     float hallInLoop_ = voicing::kHallInLoopDiffusion; // setHallInLoopDiffusion overrides it (renders/hall_diffusion)
 

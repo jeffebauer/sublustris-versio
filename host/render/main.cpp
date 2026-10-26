@@ -175,20 +175,12 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         std::fprintf(stderr, "iv_render: IV_LOW_DECIMATE: still lows' tank at 1/%d (%.0f Hz)\n", engine.lowDecimate(),
                      double(sampleRate) / engine.lowDecimate());
     }
-    if (const char* tl = std::getenv("IV_TWIN_LIGHT")) { // renders/frozen_twin
-        engine.setTwinLightPrototype(std::atoi(tl));
-        std::fprintf(stderr, "iv_render: IV_TWIN_LIGHT: twin %d (0 as built, 1 swell at 24 kHz, 2 + no in-loop diffusion, 2 taps, 3 at 12 kHz)\n",
-                     engine.twinLight());
-    }
     if (const char* ls = std::getenv("IV_LAYER_SOLO")) { // renders/twin_alternatives: the layer alone
         engine.setLayerSoloPrototype(std::atoi(ls) != 0);
         std::fprintf(stderr, "iv_render: IV_LAYER_SOLO: %s\n", std::atoi(ls) ? "the pad out of the wet" : "off");
     }
-    if (const char* ta = std::getenv("IV_TWIN_ALT")) { // renders/twin_alternatives: mode[:gainDb]
-        const char* colon = std::strchr(ta, ':');
-        engine.setTwinAltPrototype(std::atoi(ta), colon ? float(std::atof(colon + 1)) : 0.0f);
-        std::fprintf(stderr, "iv_render: IV_TWIN_ALT: %s (0 as built, 1 blur, 2 small room, 3 no swell)\n", ta);
-    }
+    if (std::getenv("IV_TWIN_ALT") || std::getenv("IV_TWIN_LIGHT")) // the twin prototypes before v1.0.43: the twin tank is gone
+        std::fprintf(stderr, "iv_render: IV_TWIN_ALT / IV_TWIN_LIGHT ignored: HALL's and MASSIVE's twin is the small room (E) since v1.0.43\n");
     if (const char* fd = std::getenv("IV_FREEZE_DUCK")) { // renders/freeze_moment: mode[:seconds]
         const char* colon = std::strchr(fd, ':');
         engine.setFreezeDuckPrototype(std::atoi(fd), colon ? float(std::atof(colon + 1)) : 0.0f);
