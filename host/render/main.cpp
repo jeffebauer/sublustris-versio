@@ -182,6 +182,16 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         std::fprintf(stderr, "iv_render: IV_TWIN_LIGHT: twin %d (0 as built, 1 swell at 24 kHz, 2 + no in-loop diffusion, 2 taps, 3 at 12 kHz)\n",
                      engine.twinLight());
     }
+    if (const char* fd = std::getenv("IV_FREEZE_DUCK")) { // renders/freeze_moment: mode[:seconds]
+        const char* colon = std::strchr(fd, ':');
+        engine.setFreezeDuckPrototype(std::atoi(fd), colon ? float(std::atof(colon + 1)) : 0.0f);
+        std::fprintf(stderr, "iv_render: IV_FREEZE_DUCK: %s (0 as built, 1 hold, 2 glide)\n", fd);
+    }
+    if (const char* tg = std::getenv("IV_TWIN_GAIN_DB")) { // renders/twin_louder: dB, or "off"
+        const bool off = std::strcmp(tg, "off") == 0;
+        engine.setTwinGainPrototype(off ? 0.0f : float(std::atof(tg)), off);
+        std::fprintf(stderr, "iv_render: IV_TWIN_GAIN_DB: %s\n", off ? "no twin" : tg);
+    }
     if (const char* st = std::getenv("IV_SWELL_TAPS")) {
         engine.setSwellTapsPrototype(std::atoi(st));
         std::fprintf(stderr, "iv_render: IV_SWELL_TAPS: %d swell points a side\n", engine.swellTaps());

@@ -191,6 +191,24 @@ public:
     // at 12 kHz. Re-prepares the Engine.
     void  setTwinLightPrototype(int mode);
     int   twinLight() const { return twinLight_; }
+    // PROTOTYPE (renders/freeze_moment; owner: "the frozen sound seems to jump in amplitude once frozen
+    // compared to the swelling reverb"): the ducking (ADR 0014) at a freeze. 0 as built: let go in 50 ms
+    // (at DECAY 0.9 a pad jumps up by the 2-4 dB the playing was ducking it); 1 the pad keeps the tap's
+    // reduction while frozen, let go over `seconds` after the unfreeze; 2 let go in a straight line (dB)
+    // over `seconds` after the tap.
+    void  setFreezeDuckPrototype(int mode, float seconds)
+    {
+        freezeDuck_ = mode < 0 || mode > 2 ? 0 : mode;
+        freezeDuckSeconds_ = seconds > 0.01f ? seconds : voicing::kDuckReleaseSeconds;
+    }
+    // PROTOTYPE (renders/twin_louder; owner: "even with the AS BUILT option, with wet at 100% i can hardly
+    // hear the secondary reverb"): the twin's level in HALL and MASSIVE, db above kTwinLevel (its output
+    // only: Paint sends what it did), or no twin at all while frozen (off).
+    void  setTwinGainPrototype(float db, bool off)
+    {
+        twinGain_ = std::pow(10.0f, db / 20.0f);
+        twinOff_ = off;
+    }
     int   lowDecimate() const { return lowDecimate_; }
     int   swellTaps() const { return swell_.tapCount(); }
 #endif
@@ -302,6 +320,10 @@ private:
     int               fitTapeOs_ = 2;    // setTapeOversamplingPrototype; 4 = before v1.0.38
     int               fitSwellTaps_ = 0; // setSwellTapsPrototype; 0 = as built
     int               twinLight_ = 0;    // setTwinLightPrototype; 0 = as built
+    int               freezeDuck_ = 0;   // setFreezeDuckPrototype; 0 = as built
+    float             freezeDuckSeconds_ = 0.4f, duckAtFreeze_ = 0.0f;
+    float             twinGain_ = 1.0f;  // setTwinGainPrototype; 1 = as built
+    bool              twinOff_ = false;
     int               twinDivide() const { return twinLight_ == 3 ? 4 : (twinLight_ > 0 ? 2 : 1); } // the twin swell's rate, 1/d
     dsp::HalfRate<kChunk> twinInner_;    // setTwinLightPrototype 3: 24 -> 12 kHz
     void              processLightTwin(int n);

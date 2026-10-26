@@ -368,12 +368,19 @@ IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: 
         padFloorDb_ = 0.0f; // no cap until the pad has settled (controlTick)
         padCaptured_ = false;
         frozeAt_ = clock_;
+#ifndef IV_FIXED_VOICINGS
+        duckAtFreeze_ = duckGrDb_; // setFreezeDuckPrototype 2: the glide's start
+#endif
         fdn_.resyncHoldLevel();
         lowFdn_.resyncHoldLevel();
         plate_.resyncHoldLevel();
         tankInTarget_ = 0.0f;
         tankInStep_ = tankStep;
+#ifndef IV_FIXED_VOICINGS
+        if (!twinActive_ && !twinOff_) { // setTwinGainPrototype: no twin at all
+#else
         if (!twinActive_) {
+#endif
             twinFdn_.setInLoopDiffusion(activeSpace_ == 2 ? 1.0f : 0.0f); // before the reset, so it starts there
 #ifndef IV_FIXED_VOICINGS
             if (twinLight_ == 2) twinFdn_.setInLoopDiffusion(0.0f); // setTwinLightPrototype 2: none
@@ -756,10 +763,22 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
         const float over = levelDb - voicing::kDuckThresholdDbfs;
         const float target = (over > 0.0f ? (1.0f - 1.0f / voicing::kDuckRatio) * over : 0.0f)
                            * map::governorWeight(smoothed(ParamId::Decay)) * (1.0f - freezeMix_);
+#ifndef IV_FIXED_VOICINGS
+        if (freezeDuck_ == 1 && gesture_.frozen()) {
+            // setFreezeDuckPrototype 1: the pad keeps the reduction it had at the tap
+        } else if (freezeDuck_ == 2 && gesture_.frozen()) { // 2: let go in a straight line (dB) over the glide
+            duckGrDb_ = std::fmax(0.0f, duckGrDb_ - duckAtFreeze_ * float(n) / (freezeDuckSeconds_ * sampleRate_));
+        } else {
+            const float secs = target > duckGrDb_ ? voicing::kDuckAttackSeconds
+                             : (freezeMix_ > 0.0f ? (freezeDuck_ == 1 ? freezeDuckSeconds_ : 0.05f) : voicing::kDuckReleaseSeconds);
+            duckGrDb_ += (1.0f - std::exp(-float(n) / (secs * sampleRate_))) * (target - duckGrDb_);
+        }
+#else
         // A freeze lets go quickly (50 ms), so a fresh pad doesn't swell up over the release.
         const float secs = target > duckGrDb_ ? voicing::kDuckAttackSeconds
                          : (freezeMix_ > 0.0f ? 0.05f : voicing::kDuckReleaseSeconds);
         duckGrDb_ += (1.0f - std::exp(-float(n) / (secs * sampleRate_))) * (target - duckGrDb_);
+#endif
         if (target == 0.0f && duckGrDb_ < 0.05f) duckGrDb_ = 0.0f; // fully let go (and exact unity)
         duckGainStep_ = (std::pow(10.0f, -duckGrDb_ / 20.0f) - duckGain_) / float(n);
         duck_ = map::clamp01(duckGrDb_ / voicing::kDuckFullDb);
@@ -1079,8 +1098,14 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             decayGainNow_ += 0.0005f * (decayGain_ - decayGainNow_);
             // The twin fades with a SPACE flip too (it stops at the flip's silent point).
             const float fl = decayGainNow_ * wetL_[i], fr = decayGainNow_ * wetR_[i];
+#ifndef IV_FIXED_VOICINGS
+            const float twinK = voicing::kTwinLevel * (activeSpace_ != 0 ? twinGain_ : 1.0f); // setTwinGainPrototype (1: exact)
+            const float tl = decayGainNow_ * twinK * twinL_[i];
+            const float tr = decayGainNow_ * twinK * twinR_[i];
+#else
             const float tl = decayGainNow_ * voicing::kTwinLevel * twinL_[i];
             const float tr = decayGainNow_ * voicing::kTwinLevel * twinR_[i];
+#endif
             float wl = (fl + tl) * flipGain_;
             float wr = (fr + tr) * flipGain_;
             wl *= eraMakeup_;
