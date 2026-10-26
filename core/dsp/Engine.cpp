@@ -588,6 +588,19 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
             twinPlate_.setDrift(drift);
         } else { // HALL and MASSIVE: the small room (v1.0.43) plays SIZE, DECAY and TONE, as the twin tank did
             room_.set(tSize, tRate, massive ? map::massiveHighRatio(toneRatio, tDecay) : toneRatio);
+#ifndef IV_FIXED_VOICINGS
+            if (roomLevel_proto_ > 0) { // setRoomLevelPrototype (renders/room_level): the room's level follows the pad
+                // v1.0.41's lift for a twin cut short (kTwinFdnGain 1.862), the twin tank's level trims (MASSIVE's DECAY,
+                // HALL's SIZE), and the room's line length against the page's SIZE 0.9: 1 at the page's setting.
+                const float over = tankRate * (1.862f * 1.862f) / tRate;
+                const float trim = map::governorWeight(tDecay) >= 1.0f ? 1.0f
+                                 : massive ? map::massiveDecayLevelTrim(tDecay, tSize) : map::hallSizeLevelTrim(tSize, tDecay);
+                const float dens = std::sqrt((0.008f + 0.042f * tSize) / (0.008f + 0.042f * 0.9f));
+                float k = trim * dens * (over > 1.0f ? 1.0f / std::sqrt(over) : 1.0f);
+                if (roomLevel_proto_ == 2) k = std::sqrt(k); // halfway, in dB
+                room_.setGain(roomGain_[massive ? 1 : 0] * k);
+            } else
+#endif
             room_.setGain(roomGain_[massive ? 1 : 0]); // the page's gain, at every SIZE and DECAY (as picked)
             twinSized_ = true; // (PLATE's twin takes SIZE as it comes, as before)
         }
