@@ -44,6 +44,9 @@ void usage(const char* argv0)
         "       %s --sweep sweep.json --out-dir DIR [--set key=value ...]\n"
         "       %s --analyze <in.wav> [--sidecar-out x.json] [--channel L|R|mix]\n",
         argv0, argv0, argv0);
+    std::fprintf(stderr, "keys (--set key=value, 0..1; the panel's name in brackets):");
+    for (const auto& p : iv::kParams) std::fprintf(stderr, " %s [%s]", p.key, p.name);
+    std::fprintf(stderr, "\n");
 }
 
 // Mono downmix used by every analysis metric (sum of channels / channel
@@ -201,7 +204,7 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     }
     if (std::getenv("IV_ERA_LAYOUT") || std::getenv("IV_ERA_SWITCH") || std::getenv("IV_ERA_FADE_SHARE") || std::getenv("IV_TAPE_OUT")
         || std::getenv("IV_TAPE_OS")) // the ERA prototypes before v1.0.42: their eras are gone
-        std::fprintf(stderr, "iv_render: IV_ERA_LAYOUT / _SWITCH / _FADE_SHARE, IV_TAPE_OUT / _OS ignored: ERA is one wear amount (layout C) since v1.0.42\n");
+        std::fprintf(stderr, "iv_render: IV_ERA_LAYOUT / _SWITCH / _FADE_SHARE, IV_TAPE_OUT / _OS ignored: WEAR (key \"era\") is one wear amount (layout C) since v1.0.42\n");
     if (std::getenv("IV_DRIFT_GROW") || std::getenv("IV_DRIFT_RATE_GROW") || std::getenv("IV_DRIFT_SINE")) { // renders/drift_rethink
         auto num = [](const char* k, float d) { const char* v = std::getenv(k); return v ? float(std::atof(v)) : d; };
         const int sine = int(num("IV_DRIFT_SINE", 0.0f));

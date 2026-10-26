@@ -89,7 +89,7 @@ void buttonAndGateEdgesArrive()
 
 void panelOrderMatchesAdr0017()
 {
-    const char* expected[] = {"MIX", "DECAY", "TONE", "ERA", "SIZE", "DRIFT", "TIME", "SPACE", "ATTACK"};
+    const char* expected[] = {"MIX", "DECAY", "TONE", "WEAR", "SIZE", "DRIFT", "TIME", "SPACE", "ATTACK"};
     bool ok = iv::kParams.size() == 9;
     for (size_t i = 0; ok && i < 9; ++i) ok &= std::string(iv::kParams[i].name) == expected[i];
     check(ok, "ParamSpec is in panel order P1-P7, SW0, SW1 (ADR 0017)");

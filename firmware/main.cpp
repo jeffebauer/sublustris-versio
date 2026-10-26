@@ -1393,8 +1393,7 @@ void RunCand(const Cand& c, float fs)
     AppendStr(p, end, c.room ? " room" : " twin");
     AppendStr(p, end, " g");
     AppendInt(p, end, c.groups);
-    AppendStr(p, end, " era ");
-    AppendStr(p, end, "wear ");
+    AppendStr(p, end, " WEAR ");
     if (c.eraSweep) AppendStr(p, end, " sweep");
     else {
         AppendStr(p, end, "   .");
@@ -1418,7 +1417,7 @@ void RunCand(const Cand& c, float fs)
 }
 
 // One lap, ~15 min: (1) TWINROOM today's twin vs the room, frozen, Neve and cassette, SIZE still / sweep /
-// twists / twists near the top; (2) ERALAYOUT (one ERA since v1.0.42) ERA swept playing and frozen, then
+// twists / twists near the top; (2) WEAR (the ERA knob, one wear amount since v1.0.42) swept playing and frozen, then
 // ERA's five centres playing and frozen; (3) SIZEHAND the cassette with SIZE near the top, 2 / 4 / 8 groups,
 // playing and frozen; (4) TARGET the room, 8 groups.
 void RunCandidateLap(float fs)
@@ -1433,10 +1432,10 @@ void RunCandidateLap(float fs)
         for (int e = 0; e < 2; ++e)
             for (int h : kRoomHands) RunCand({"TWINROOM", room != 0, 2, 0, e ? 0.7f : 0.1f, false, h, true, 5.0f}, fs);
     for (int lay = 0; lay <= 0; ++lay) { // one ERA since v1.0.42 (ERA_RUNTIME's layouts are gone)
-        RunCand({"ERALAYOUT", false, 2, lay, 0.5f, true, -1, false, 8.0f}, fs);
-        RunCand({"ERALAYOUT", false, 2, lay, 0.5f, true, -1, true, 8.0f}, fs);
+        RunCand({"WEAR", false, 2, lay, 0.5f, true, -1, false, 8.0f}, fs);
+        RunCand({"WEAR", false, 2, lay, 0.5f, true, -1, true, 8.0f}, fs);
         for (int fz = 0; fz < 2; ++fz)
-            for (float era : kEras) RunCand({"ERALAYOUT", false, 2, lay, era, false, -1, fz != 0, 3.0f}, fs);
+            for (float era : kEras) RunCand({"WEAR", false, 2, lay, era, false, -1, fz != 0, 3.0f}, fs);
     }
     static const int kGroups[3] = {2, 4, 8}, kTopHands[3] = {0, 3, 2};
     for (int g : kGroups)
@@ -1529,7 +1528,7 @@ int main()
 #if IV_PROFILE_CANDIDATE
     System::Delay(3000); // time to open the serial log
     while (true) {
-        static const char kHello[] = "CANDIDATE START (TWINROOM, ERALAYOUT, SIZEHAND, TARGET; ~15 min a lap)\r\n";
+        static const char kHello[] = "CANDIDATE START (TWINROOM, WEAR, SIZEHAND, TARGET; ~15 min a lap)\r\n";
         TransmitLine(kHello, sizeof(kHello) - 1);
         hw.SetLed(DaisyVersio::LED_0, 0.0f, 0.0f, 1.0f); // blue while a lap runs
         hw.UpdateLeds();
@@ -1806,7 +1805,7 @@ int main()
                             const char* end = sb + sizeof(sb);
                             AppendStr(p, end, "SIZEHAND MASSIVE ");
                             AppendStr(p, end, kStateNames[state]);
-                            AppendStr(p, end, era ? "cassette " : "neve     ");
+                            AppendStr(p, end, era ? "wear70   " : "wear10   ");
                             AppendPadRight(p, end, kHandNames[hand], 7);
                             AppendStr(p, end, " groups ");
                             AppendInt(p, end, kGroups[gi]);

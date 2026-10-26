@@ -55,7 +55,7 @@ inline constexpr std::array<ParamSpec, static_cast<size_t>(ParamId::Count)> kPar
     {ParamId::Mix,    "mix",    "MIX",    ParamKind::Knob,    0.5f, Smoothing::Snappy,   5.0f, {}},
     {ParamId::Decay,  "decay",  "DECAY",  ParamKind::Knob,    0.5f, Smoothing::Gliding, 80.0f, {}},
     {ParamId::Tone,   "tone",   "TONE",   ParamKind::Knob,    0.5f, Smoothing::Snappy,   5.0f, {}},
-    {ParamId::Era,    "era",    "ERA",    ParamKind::Knob,    0.1f, Smoothing::Gliding, 60.0f, {}}, // the middle of the Neve (ADR 0021)
+    {ParamId::Era,    "era",    "WEAR",   ParamKind::Knob,    0.0f, Smoothing::Gliding, 60.0f, {}}, // clean: the Neve alone (v1.0.42, owner: "Start Clean"); shown as WEAR, its key stays "era"
     {ParamId::Size,   "size",   "SIZE",   ParamKind::Knob,    0.5f, Smoothing::Slewed,  80.0f, {}},
     {ParamId::Drift,  "drift",  "DRIFT",  ParamKind::Knob,    0.5f, Smoothing::Gliding, 80.0f, {}},
     {ParamId::Time,   "time",   "TIME",   ParamKind::Knob,    0.2f, Smoothing::Gliding, 80.0f, {}},

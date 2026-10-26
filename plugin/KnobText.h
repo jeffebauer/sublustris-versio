@@ -1,7 +1,7 @@
 #pragma once
 // Knob value text, one place for the plugin window and the host's own parameter view (Ableton's
 // device panel, automation lanes): percent of travel; DRIFT as its side and amount (ADR 0012: left
-// tape wow/flutter, right wander, noon still); ERA as its amount of wear (v1.0.42, one wear amount over
+// tape wow/flutter, right wander, noon still); WEAR (ParamId::Era, key "era") as its amount (v1.0.42, one wear amount over
 // the Neve base: "Wear 40 %"; until then the era whose fifth it was in).
 #include "params/EraVoicing.h"
 #include "params/ParamSpec.h"
