@@ -12,7 +12,7 @@ namespace iv::dsp {
 template <int kMaxBlock>
 class HalfRate {
 public:
-    void reset()
+    IV_SIZE_OPT void reset()
     {
         for (auto& h : down_) h.reset();
         for (auto& h : up_) h.reset();

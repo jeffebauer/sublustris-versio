@@ -65,7 +65,7 @@ struct DelayLine {
     uint32_t mask = 0, pos = 0, fill = 0; // fill: writes since the last clear(), up to the length
 
     // Takes room for at least maxDelay + 4 samples (cubic needs 2 either side).
-    bool init(Arena& arena, size_t maxDelaySamples)
+    IV_SIZE_OPT bool init(Arena& arena, size_t maxDelaySamples)
     {
         const size_t n = nextPow2(maxDelaySamples + 4);
         buf = arena.take(n);
@@ -162,7 +162,7 @@ struct ExactLine {
     float*   buf  = nullptr;
     uint32_t size = 0, pos = 0, fill = 0; // fill: as DelayLine's (clear() is lazy)
 
-    bool init(Arena& arena, size_t maxDelaySamples)
+    IV_SIZE_OPT bool init(Arena& arena, size_t maxDelaySamples)
     {
         size = uint32_t(maxDelaySamples + 4);
         buf = arena.take(size);

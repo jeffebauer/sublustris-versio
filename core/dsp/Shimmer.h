@@ -51,7 +51,7 @@ public:
         return ok;
     }
 
-    void reset()
+    IV_SIZE_OPT void reset()
     {
         line_[0].clear();
         line_[1].clear();

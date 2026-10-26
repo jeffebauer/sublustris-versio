@@ -96,7 +96,7 @@ public:
             for (int k = 0; k < taps_; ++k) gain_[c][k] *= norm * sign_[c][k];
     }
 
-    void reset()
+    IV_SIZE_OPT void reset()
     {
         line_[0].clear();
         line_[1].clear();

@@ -68,7 +68,7 @@ inline float roundBits(float x, float step) { return std::round(x / step) * step
 class LoopEra {
 public:
     void prepare(float sampleRate) { sampleRate_ = sampleRate; reset(); }
-    void reset()
+    IV_SIZE_OPT void reset()
     {
         evenMean_ = 0.0f;
         down_.reset();
