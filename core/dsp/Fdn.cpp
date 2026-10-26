@@ -359,14 +359,18 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
         // the lines that waited rejoined it on stale allpass memory, a click; then all fade together.)
         unsigned sw = 0xFFu; // bit i: line i fades now
         if (staggered() && (inLoopTarget_ > 0.0f) == (inLoopNow_ > 0.0f)) {
-            constexpr unsigned kGroup[2] = {0x55u, 0xAAu}; // lines 0, 2, 4, 6 and 1, 3, 5, 7
-            int g = xfGroupNext_;
-            if (!(need & kGroup[g])) g ^= 1;
-            if (need & kGroup[g]) {
-                sw = kGroup[g];
-                xfGroupNext_ = g ^ 1;
+            // Group g: lines g, g + G, ... (G groups): 0x55 << g for two (0, 2, 4, 6 and 1, 3, 5, 7), 0x11 << g for four.
+            const unsigned base = 0xFFu / ((1u << xfStagger_) - 1u);
+            for (int t = 0; t < xfStagger_; ++t) {
+                const int g = (xfGroupNext_ + t) & (xfStagger_ - 1);
+                if (need & (base << g)) {
+                    sw = base << g;
+                    xfGroupNext_ = (g + 1) & (xfStagger_ - 1);
+                    break;
+                }
             }
         }
+        prof::countXfStart();
         const float elapsed = xfSince_ >= 0 ? float(xfSince_) : -1.0f;
         xfLen_ = xfLeft_ = int(voicing::kSizeCrossfadeSeconds * sampleRate_);
         xfSince_ = 0;
@@ -578,6 +582,7 @@ IV_NO_UNSWITCH void Fdn::runBlock(const float* inL, const float* inR, float* out
         // Staggered: each line on its own in-loop amount (one waiting for its fade keeps the old one).
         const float apGi = staggered() ? voicing::kInLoopCoeff * apAmtNow_[i] : apG;
         const float apGOldi = staggered() ? (qi > 0 ? voicing::kInLoopCoeff * apAmtOld_[i] : 0.0f) : apGOld;
+        if (qi > 0) prof::countXfLines(1);
         if (qi > 0 || !lineFast(i, m, apGi, eraIn, eraOut, y[i])) lineSlow(i, m, qi, xn, xo, apGi, apGOldi, eraIn, eraOut, y[i]);
     }
     xfNew_ = endNew;

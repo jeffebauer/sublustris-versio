@@ -25,8 +25,15 @@ inline void mark(Section s)
 {
     if (markHook) markHook(int(s));
 }
+// SIZE crossfade counters (the size_moves hunt, 26 Oct 2026), read and cleared by the host each block:
+// crossfades started, and line-blocks that read twice (a line crossfading over one control block).
+inline int xfStarts = 0, xfLineBlocks = 0;
+inline void countXfStart() { ++xfStarts; }
+inline void countXfLines(int n) { xfLineBlocks += n; }
 #else
 inline void mark(Section) {}
+inline void countXfStart() {}
+inline void countXfLines(int) {}
 #endif
 
 } // namespace iv::prof

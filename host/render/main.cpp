@@ -94,7 +94,7 @@ Audio renderWithAutomation(iv::Engine& engine, const Audio& in, int block, const
     if (autom)
         for (const auto& [t, down] : autom->buttonEvents) buttonSamples.emplace_back(size_t(std::lround(t * double(sr))), down);
     size_t nextButton = 0;
-    const int microBlock = autom ? std::min(block, 16) : block;
+    int microBlock = autom ? std::min(block, 16) : block;
 #if defined(IV_PROFILE_HOOKS)
     // Per-block, per-section timing on the desktop (a build with -DIV_PROFILE_HOOKS only; env
     // IV_BLOCK_PROFILE=<file.csv>): one row a block, the ns each prof::Section took. Desktop timings are
@@ -104,6 +104,7 @@ Audio renderWithAutomation(iv::Engine& engine, const Audio& in, int block, const
     static double profNs[iv::prof::kNumSections];
     if (const char* pf = std::getenv("IV_BLOCK_PROFILE")) {
         profFile = std::fopen(pf, "w");
+        microBlock = block; // the module's blocks (automation read once a block, as the release reads knobs)
         iv::prof::markHook = [](int sec) {
             const auto now = std::chrono::steady_clock::now();
             profNs[sec] += double(std::chrono::duration_cast<std::chrono::nanoseconds>(now - profLast).count());
@@ -139,6 +140,8 @@ Audio renderWithAutomation(iv::Engine& engine, const Audio& in, int block, const
         if (profFile) {
             std::fprintf(profFile, "%zu", pos);
             for (double v : profNs) std::fprintf(profFile, ",%.0f", v);
+            std::fprintf(profFile, ",%d,%d", iv::prof::xfStarts, iv::prof::xfLineBlocks); // SIZE crossfades
+            iv::prof::xfStarts = iv::prof::xfLineBlocks = 0;
             std::fprintf(profFile, "\n");
         }
 #endif
@@ -183,7 +186,7 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     }
     if (const char* st = std::getenv("IV_SIZE_STAGGER")) { // renders/size_stagger
         engine.setSizeStagger(std::atoi(st));
-        std::fprintf(stderr, "iv_render: IV_SIZE_STAGGER: SIZE crossfades in %d group(s)\n", std::atoi(st) == 1 ? 1 : 2);
+        std::fprintf(stderr, "iv_render: IV_SIZE_STAGGER: SIZE crossfades in %d group(s)\n", std::atoi(st) == 1 || std::atoi(st) == 4 || std::atoi(st) == 8 ? std::atoi(st) : 2);
     }
     if (const char* ef = std::getenv("IV_ERA_FADE_SHARE")) { // renders/era_overlap
         engine.setEraFadeSharePrototype(float(std::atof(ef)));
