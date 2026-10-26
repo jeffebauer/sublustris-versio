@@ -4,7 +4,6 @@
 **Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Not yet in it: v1.0.35-36 (the 24 kHz tank, 12-point swell, fewer early reflections) and the review's speed-ups; say when you'd like it installed (Ableton closed).
 
 ## To do
-- [ ] **Send your friend the plugin** (v1.0.41, Mac, plugin only): `/Users/jesse/Documents/Sites/immensio-versio/dist/release/v1.0.41-e99dfba/ImmensioVersio_v1.0.41-e99dfba.zip` (7.3 MB: VST3 + Audio Unit, Apple Silicon and Intel, the read-me with install steps, the licence files). Nothing was installed or published.
 - [ ] **Round 16: real SIZE turns on the module** (USB power only, rack power unplugged). Flash `/Users/jesse/Documents/Sites/immensio-versio/dist/immensio_versio_profile-sizemoves.bin`, screen's log on (Ctrl-A, Shift-H), and let it run one full lap until the last line `SIZEHAND MASSIVE UNFROZE cassette twists groups 8` prints (~15-20 min; knobs don't matter, every move is scripted). Then tell Claude. It measures SIZE sweeps, twists and creeps in MASSIVE (Neve and cassette), playing, frozen and just unfrozen, with SIZE's crossfade in 2, 4 or 8 groups.
 
 ### Decide
@@ -46,6 +45,7 @@
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 
 ## Done
+- [x] **The plugin sent to a friend** (26 Oct 2026): v1.0.41, Mac VST3 + AU, `dist/release/v1.0.41-e99dfba/` (built by `tools/make_release.sh` on branch `claude/friend-package-073b04`). Their feedback goes here when it comes.
 - [x] **The small room replaces today's twin** (26 Oct 2026, `renders/twin_alternatives`, MIX 50 %: "I quite like small room, but it sounds a little boomy and low-end heavy. If we can skew the frequencies to remove some lows and increase the highs a bit, I think this can replace today's twin"). Next: the room voiced with fewer lows and more top (a `small_room` page), and the flash found for it (it needs ~3.9 KB as first built). It would cut a frozen MASSIVE's CPU by ~20 points and keep a frozen SIZE move under the limit (estimates).
 - [x] **v1.0.40 at the rack** (26 Oct 2026, the late-light build: "It's sounding really good, although I'm still getting some dropouts the same as before (generally when changing size in MASSIVE mode). Era knob transitions feel good."; the light flashed red; slow sweeps and quick turns both). ERA's 20 % overlap is kept. The SIZE drop-outs are CPU over-runs that round 15's single scripted move didn't catch: a debug hunt is on it (Waiting on Claude).
 - [x] **The twin louder: 8 dB under the pad** (26 Oct 2026, `renders/twin_louder`, MIX 50 %: B "louder" on every card, the repeated cards agreeing; "Let's shoot for 8db under the pad"). In HALL and MASSIVE the layer over a frozen pad comes up from 12-15 dB under to about 8 dB under. Being built as v1.0.41 (Waiting on Claude; built as v1.0.41).
