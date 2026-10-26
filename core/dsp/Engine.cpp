@@ -317,9 +317,14 @@ IV_SIZE_OPT void Engine::reset()
     tilt_.set(smoothed(ParamId::Tone));
     tilt_.snap();
     limiter_.reset();
+#if IV_ERA_TODAY
     for (auto& t : tape_) t.reset();
     bbd_.reset();
     radio_.reset();
+#endif
+#if IV_ERA_TEXTURE
+    texture_.reset();
+#endif
     tapeMix_ = 0.0f;
     duck_ = duckGrDb_ = duckGainStep_ = 0.0f;
     duckGain_ = 1.0f;
@@ -521,6 +526,14 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     dsp::EraMix era = eraFadeShare_ == voicing::kEraFadeShare ? map::eraMix(smoothed(ParamId::Era)) // once a chunk
                                                                : map::eraMixShare(smoothed(ParamId::Era), eraFadeShare_);
     if (eraSwitch_ > 0.0f) era = switchedEra(smoothed(ParamId::Era), n, snap);
+    map::EraLayoutMix lay;
+    if (eraLayout_ > 0) {
+        lay = map::eraLayoutMix(smoothed(ParamId::Era), eraLayout_);
+        era = lay.loop;
+    }
+#elif IV_ERA_TEXTURE
+    const map::EraLayoutMix lay = map::eraLayoutMix(smoothed(ParamId::Era), eraLayout_);
+    const dsp::EraMix era = lay.loop;
 #else
     const dsp::EraMix era = map::eraMix(smoothed(ParamId::Era)); // once a chunk (it was worked out twice)
 #endif
@@ -613,14 +626,33 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // ERA in the loop and DRIFT (SPEC §4.6, §4.7). Freezing glides the
     // in-loop colour out (the pad holds still, ADR 0009); DRIFT stays.
     // The bucket-brigade and the radio on the wet (ADR 0021); each runs only while it's in.
+#if IV_ERA_TODAY
     bbdW_ = era.bbd;
     radioW_ = era.radio;
     if (bbdW_ > 0.0f) bbd_.set(era.bbdT, sampleRate_);
     if (radioW_ > 0.0f) radio_.set(era.radioT, sampleRate_, n);
+#endif
+#if IV_ERA_TEXTURE
+    // The tape's in-loop compression, its hiss and the crackle: the cassette's and the Midiverb's, or a
+    // layout's (renders/era_rethink).
+    float compressW = era.cassette, hissW = era.cassette, crackleW = era.midiverb;
+    if (eraLayout_ > 0) {
+        compressW = lay.compress;
+        hissW = lay.hiss;
+        crackleW = lay.crackle;
+        dsp::TexMix t = lay.tex;
+        t.bandW *= 1.0f - map::governorWeight(decay) * (1.0f - dsp::tex::kBandAtInfinite);
+        texOn_ = t.tapeW > 0.0f || t.breathW > 0.0f || t.clockW > 0.0f || t.grainW > 0.0f || t.bandW > 0.0f;
+        texture_.set(t, sampleRate_, n);
+    } else texOn_ = false;
+#endif
     dsp::EraMix loopEra = era;
     const float keep = 1.0f - freezeMix_;
     loopEra.midiRound = map::governorWeight(decay) >= 1.0f; // infinite: no systematic loss
     loopEra.midiDark = 1.0f - map::governorWeight(decay) * (1.0f - voicing::kMidiDarkAtInfinite); // v1.0.23
+#if IV_ERA_TEXTURE
+    if (eraLayout_ > 0) loopEra.midiDark = era.midiDark; // the bits alone
+#endif
     // Neve's even harmonics add energy in proportion to the level: harmless
     // while DECAY loses energy, a runaway in a lossless loop (measured: the
     // tail jumping 2-3 dB, then the governor overshooting into dips). So
@@ -635,7 +667,11 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // under the floor (soak audit). A steady tail measures the same.
     const float tankNowDb = activeSpace_ == 0 ? plate_.fastLevelDb() : fdn_.fastLevelDb();
     const float over = std::fmin(tankLevelDb(), tankNowDb) - voicing::kCompressThresholdDb;
+#if IV_ERA_TEXTURE
+    const float compress = over > 0.0f ? keep * compressW * voicing::kCompressRatePerDb * over : 0.0f;
+#else
     const float compress = over > 0.0f ? keep * era.cassette * voicing::kCompressRatePerDb * over : 0.0f;
+#endif
     if (plate) {
         if (eraChanged(EraSentPlate, loopEra)) plate_.setEra(loopEra);
         plate_.setDrift(drift);
@@ -651,17 +687,24 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         lowFdn_.setExtraRate(compress);
     }
     eraMakeup_ = era.makeup;
+#if IV_ERA_TODAY
     tapeDrive_ = era.cassette; // tape out (v1.0.22, E5)
     if (snap) tapeMix_ = tapeDrive_ > 0.0f && tapeOn_ ? 1.0f : 0.0f;
     for (auto& t : tape_) t.set(tapeDrive_, sampleRate_);
+#endif
 
     tilt_.set(smoothed(ParamId::Tone));
     // Hiss follows the input (none in silence, so an infinite tail doesn't
     // fill with noise, ADR 0005); crackle the same.
     const float inDb = 10.0f * std::log10(inputPower_ + 1e-20f);
     const float follow = map::clamp01((inDb - (voicing::kHissFollowFromDbfs - 30.0f)) / 30.0f);
+#if IV_ERA_TEXTURE
+    hissGain_ = hissW * follow * std::pow(10.0f, voicing::kHissDbfs / 20.0f);
+    crackleChance_ = crackleW * follow * voicing::kCracklePerSecond / sampleRate_;
+#else
     hissGain_ = era.cassette * follow * std::pow(10.0f, voicing::kHissDbfs / 20.0f);
     crackleChance_ = era.midiverb * follow * voicing::kCracklePerSecond / sampleRate_;
+#endif
     crackleGain_ = std::pow(10.0f, voicing::kCrackleDbfs / 20.0f);
 
     // The input diffusers' amount glides (~50 ms): it changes with a SPACE flip and with MASSIVE's SIZE,
@@ -991,7 +1034,9 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         return;
     }
     const float attackStep = 1.0f / (voicing::kAttackFadeSeconds * sampleRate_);
+#if IV_ERA_TODAY
     const float tapeStep = 1.0f / (0.02f * sampleRate_);
+#endif
     for (int start = 0; start < numSamples; start += kChunk) {
         const int n = (numSamples - start) < kChunk ? (numSamples - start) : kChunk;
         handleEdges(start, start + n);
@@ -1166,6 +1211,10 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             // appears and leaves: switched in one sample, its oversampling filters' phase stepped the wet
             // (a click turning ERA through 0.35, found 25 Oct 2026).
             prof::mark(prof::kOutput);
+#if IV_ERA_TEXTURE
+            if (texOn_) texture_.process(wl, wr); // PROTOTYPE (renders/era_rethink)
+#endif
+#if IV_ERA_TODAY
             tapeMix_ = approach(tapeMix_, tapeDrive_ > 0.0f && tapeOn_ ? 1.0f : 0.0f, tapeStep);
             if (tapeMix_ > 0.0f) {
                 const float tl2 = tape_[0].process(wl), tr2 = tape_[1].process(wr);
@@ -1185,6 +1234,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                 wl += radioW_ * (voicing::kEraRadioTrim * rl2 - wl);
                 wr += radioW_ * (voicing::kEraRadioTrim * rr2 - wr);
             }
+#endif
             prof::mark(prof::kEraRadio);
             tilt_.process(wl, wr);
             duckGain_ += duckGainStep_; // ducking (ADR 0014)
