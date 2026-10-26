@@ -28,7 +28,7 @@
 ## Waiting on Claude
 
 - **The twin at 8 dB under the pad** (v1.0.41, your pick): being built and checked; then a page to confirm it, or straight into the next flash.
-- **A lighter blur instead of the twin** (your question: allpass width and blur, the two videos): research first, then a page against today's twin if something fits. It would also free the frozen cassette's CPU.
+- **A lighter blur instead of the twin** (your go-ahead: "today's twin, blur and width, small room, and the twin without its swell, all at -8 dB. Skip the spring chirp"): the `twin_alternatives` page, after v1.0.41. Research: the light options would cost ~2-5 points of CPU against the twin's ~28 (estimates), enough to fix the frozen cassette; they lose the space's colour, and SIZE/DECAY play them less.
 - **CPU: a frozen MASSIVE with the cassette** (round 15: 104.8 % in real time, late on nearly every block; everything else fits). The levers: a lighter twin while frozen (a page), the block size (+1 ms latency, your call), and measuring the ERA overlap positions (never timed on the module). Close to the line too: the moment of freezing (100.6 % for one block), MASSIVE SHIMMER (99 %).
 - **ERA's tape → radio hand-over**, if it still sounds abrupt at 20 %: the tape's sparkle fades with the cassette's drive, early in the overlap; the drive's own curve is the next thing to try (a page).
 - **The playing build's flash**: 112,548 B, 92 B under the 110 KB budget. Anything new needs bytes found first.
