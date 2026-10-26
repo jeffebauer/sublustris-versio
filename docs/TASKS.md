@@ -12,7 +12,6 @@
 - [ ] **Merge `claude/massive-air` into main?** It holds everything since v1.0.33 (SIZE/TIME crossfade, the CPU work, v1.0.34-36, the profile builds, and now the overnight review's speed-ups and report), all tests passing. Your OK first.
 
 ### Listen (after your notes)
-- [ ] **`size_moves`: how gradually SIZE settles** (pick one): `/Users/jesse/Documents/Sites/immensio-versio/renders/size_moves/index.html`. The drop-outs come from a cassette SIZE move at a large SIZE (~106 %), not from crossfades piling up. Spreading the crossfade over more groups lowers the peak: B today (2 groups, settles in ~0.6 s), C 4 groups (~1.2 s, est. ~99 % with the cassette), D 8 groups (~2.4 s, ~95 %). No version bends pitch; what changes is how gradually the room grows or shrinks after a move. Does C or D still feel like the knob does what you asked? Optional at the rack: `/Users/jesse/Documents/Sites/immensio-versio/dist/immensio_versio-latelight-sizegroups4.bin` / `-sizegroups8.bin`.
 - [ ] **BLOOM's swell: other seeds** (your note: the 12 points "seemed to accentuate the mids"): http://192.168.1.238:8766/swell_seed/index.html. Measured: 12 and 24 points are equally even on noise and note by note; which notes stand out moves with TIME and the seed. B-D are the three most even seeds; E the old 24 points for reference.
 
 ### Listen (first time)
@@ -52,6 +51,7 @@
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 
 ## Done
+- [x] **SIZE's crossfade in four groups** (27 Oct 2026, `renders/size_moves`, level-matched, MIX 100 %: "C - four groups = winner. Hardly perceptible difference from 2 groups, whilst 8 groups introduces some slight staggering that's audible"). Lowers a SIZE move's CPU peak (est. ~106 → ~99 % with the old cassette; WEAR replaced it, so the candidate lap measures the real figure). Being built as v1.0.45.
 - [x] **The room follows the pad (B)** (27 Oct 2026, `renders/room_level`, MIX 50 %: "follows pad B is the winner from a level-perspective"). The room stays a steady distance under the pad as SIZE and DECAY change. Your question "some slight pitch bending when played over the top ... character of the room reverb, or imperfect tuning of the samples?" is being measured (Waiting on Claude).
 - [x] **TONE gets a resonant tilt (A)** (27 Oct 2026, `renders/tone_character`, MIX 50 %: "A resonant tilt is the clear winner — adds a little character without creating too much resonance or rounding that SEM and ladder filters add"). Today's EQ with a soft bell where it bends: a warm swell ~600 Hz turned left, a sheen ~5 kHz turned right; noon flat; the loop untouched. Being built as v1.0.44 (Waiting on Claude).
 - [x] **Panel labels** (27 Oct 2026, your answers): ATTACK → **ONSET** (NORMAL → **NATURAL** · BLOOM · SHIMMER); TIME → **DEPTH**; MIX → **BLEND**; the button **FREEZE / PAINT**; the gate **FREEZE**; ERA → **WEAR**. DRIFT → **MOTION** (your preference). Labels only: saved sets keep loading.
