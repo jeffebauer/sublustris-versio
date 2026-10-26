@@ -168,6 +168,14 @@ public:
     // crossing a boundary crossfades to the next over `seconds` (0 = as built: the overlaps). A small
     // sticky zone at each boundary keeps a resting knob from flipping. Only one era's stage runs outside
     // a crossfade.
+    // PROTOTYPE (renders/size_stagger): SIZE's crossfade in two groups of lines (Fdn::setStaggerPrototype),
+    // in every FDN (the tank, the twin, the still lows). 1 = as built.
+    void  setSizeStaggerPrototype(int groups)
+    {
+        fdn_.setStaggerPrototype(groups);
+        twinFdn_.setStaggerPrototype(groups);
+        lowFdn_.setStaggerPrototype(groups);
+    }
     void  setEraSwitchPrototype(float seconds)
     {
         eraSwitch_ = seconds;

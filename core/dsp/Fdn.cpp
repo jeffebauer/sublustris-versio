@@ -142,6 +142,13 @@ IV_SIZE_OPT void Fdn::reset()
     xfOld_ = 0.0f;
     xfNew_ = 1.0f;
     xfRest_ = 0.0f;
+#ifndef IV_FIXED_VOICINGS
+    for (int i = 0; i < kN; ++i) { // setStaggerPrototype's per-line state
+        apAmtNow_[i] = apAmtOld_[i] = inLoopNow_;
+        xfLine_[i] = false;
+        xfOff_[i] = 0.0f;
+    }
+#endif
     for (int i = 0; i < kN; ++i) {
         xfLastTarget_[i] = lenTarget_[i];
         xfLineCorr_[i] = 1.0f;
@@ -315,6 +322,11 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     bool pending = (inLoopTarget_ > 0.0f) != (inLoopNow_ > 0.0f);
     for (int i = 0; i < kN; ++i) pending |= std::fabs(lenTarget_[i] - lenNow_[i]) > 0.5f;
     controlInLoop(dt, n, slew, pending);
+#ifndef IV_FIXED_VOICINGS
+    if (staggered()) // a line waiting for its fade keeps its amount; every other line is on the shared one
+        for (int i = 0; i < kN; ++i)
+            if (!(pending && std::fabs(lenTarget_[i] - lenNow_[i]) > 0.5f)) apAmtNow_[i] = inLoopNow_;
+#endif
     earlyNow_ += glide80Memo_.get(dt, [](float t) { return 1.0f - std::exp(-t / 0.08f); }) * (earlyTarget_ - earlyNow_);
     if (earlyNow_ < 1e-4f && earlyTarget_ == 0.0f) earlyNow_ = 0.0f;
     float meanLen = 0.0f;
@@ -344,6 +356,25 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     levelGain_ += glideK * (outputTrimNow_ * std::sqrt(meanLen / voicing::kFdnLevelRefSeconds) - levelGain_);
     const float rate = decayRate_ + governRate + extraRate_;
     if (pending && xfLeft_ <= 0 && xfRest_ >= voicing::kSizeRestSeconds) {
+        // Staggered (a prototype): this fade takes one group's lines that need it (lines of the other
+        // group wait for the next fade, which follows at once: the knob has rested); none, all.
+#ifndef IV_FIXED_VOICINGS
+        bool sw[kN];
+        for (int i = 0; i < kN; ++i) sw[i] = true;
+        // (Not when the in-loop diffusion joins or leaves with this move, a small HALL crossing SIZE noon:
+        // the lines that waited rejoined it on stale allpass memory, a click; then all fade together.)
+        if (staggered() && (inLoopTarget_ > 0.0f) == (inLoopNow_ > 0.0f)) {
+            bool any[2] = {false, false};
+            for (int i = 0; i < kN; ++i) any[i & 1] |= std::fabs(lenTarget_[i] - lenNow_[i]) > 0.5f;
+            int g = xfGroupNext_;
+            if (!any[g]) g ^= 1;
+            if (any[g]) {
+                for (int i = 0; i < kN; ++i) sw[i] = (i & 1) == g;
+                xfGroupNext_ = g ^ 1;
+            }
+        }
+        const float elapsed = xfSince_ >= 0 ? float(xfSince_) : -1.0f;
+#endif
         xfLen_ = xfLeft_ = int(voicing::kSizeCrossfadeSeconds * sampleRate_);
         xfSince_ = 0;
         xfTrim_ = outputTrim_;
@@ -360,6 +391,18 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
         inLoopOld_ = inLoopNow_; // the in-loop diffusion's amount jumps too, the old one fading out
         inLoopNow_ = inLoopTarget_;
         for (int i = 0; i < kN; ++i) {
+#ifndef IV_FIXED_VOICINGS
+            xfLine_[i] = sw[i];
+            if (!sw[i]) { // waits for the next fade: its own trip correction carries on where it was
+                xfDelta_[i] = 0.0f;
+                if (elapsed >= 0.0f) xfOff_[i] += elapsed;
+                else xfLnGain_[i] = xfOff_[i] = 0.0f;
+                continue;
+            }
+            xfOff_[i] = 0.0f;
+            apAmtOld_[i] = apAmtNow_[i]; // this line's amount jumps with its lengths, its old one fading out
+            apAmtNow_[i] = inLoopTarget_;
+#endif
             xfDelta_[i] = lenNow_[i] - lenTarget_[i]; // old minus new
             // For one trip after the jump the new read hears sound written before it: from further back
             // (louder, the tail was younger) when longer, nearer (quieter) when shorter. Its level is
@@ -397,16 +440,27 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
         }
     // The trip's level correction, once per block (for each line's read and each early tap).
     if (xfSince_ >= 0) {
+#ifndef IV_FIXED_VOICINGS
+        const float s0 = float(xfSince_);
+        float       s  = s0;
+#else
         const float s = float(xfSince_);
+#endif
         auto corr = [&](float lnGain, float hold) {
             if (s < hold) return std::exp(lnGain);
             const float r = (s - hold) / float(xfLen_);
             return r >= 1.0f ? 1.0f : std::exp(lnGain * (1.0f - r));
         };
         for (int i = 0; i < kN; ++i) {
+#ifndef IV_FIXED_VOICINGS
+            if (staggered()) s = s0 + xfOff_[i]; // staggered: each line's own trip
+#endif
             xfLineCorr_[i] = corr(xfLnGain_[i], xfHold_[i]);
             for (int k = 0; k < earlyCount_; ++k) xfTapCorr_[i][k] = corr(earlyFrac_[i][k] * xfLnGain_[i], earlyFrac_[i][k] * xfHold_[i]);
         }
+#ifndef IV_FIXED_VOICINGS
+        s = s0;
+#endif
         if (s > maxLen_ + float(xfLen_)) { // every line's trip done
             xfSince_ = -1;
             for (int i = 0; i < kN; ++i) {
@@ -437,12 +491,21 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
         // decays at decayRate (+ the governor), the high end at that /
         // highRatio; at infinite the highs fade until the tail reaches its
         // floor, then it holds (ADR 0008).
-        const float apSeconds = inLoopNow_ > 0.0f ? (apLenGlide_[i][0] + apLenGlide_[i][1]) / sampleRate_ : 0.0f;
+#ifndef IV_FIXED_VOICINGS
+        const float amt = staggered() ? apAmtNow_[i] : inLoopNow_;
+#else
+        const float amt = inLoopNow_;
+#endif
+        const float apSeconds = amt > 0.0f ? (apLenGlide_[i][0] + apLenGlide_[i][1]) / sampleRate_ : 0.0f;
         const Absorb& a = absorbMemo_[i].get(lenNow_[i] / sampleRate_ + apSeconds, rate, highRatio_,
                                              gov.darken, shelfK_, air_);
         // While SIZE crossfades the loss filter goes from the old length's to the new one's with the fade
         // (switched at its start, the old read, all of the mix then, stepped to the new trip's loss: a click).
+#ifndef IV_FIXED_VOICINGS
+        const float o = xfLeft_ > 0 && !(staggered() && !xfLine_[i]) ? xfOld_ : 0.0f, w = 1.0f - o; // staggered: its own fade only
+#else
         const float o = xfLeft_ > 0 ? xfOld_ : 0.0f, w = 1.0f - o;
+#endif
         b1_[i] = o * xfAbsOld_[i][0] + w * a.b1;
         gain_[i] = o * xfAbsOld_[i][1] + w * a.gain;
         // The trip's level correction after a SIZE jump rides on the early taps' gains (they hold no state,
@@ -536,7 +599,16 @@ IV_NO_UNSWITCH void Fdn::runBlock(const float* inL, const float* inR, float* out
     float y[kN][kControlBlock];
     for (int i = 0; i < kN; ++i) {
         was[i] = line_[i];
-        if (q > 0 || !lineFast(i, m, apG, eraIn, eraOut, y[i])) lineSlow(i, m, q, xn, xo, apG, apGOld, eraIn, eraOut, y[i]);
+#ifndef IV_FIXED_VOICINGS
+        const int qi = staggered() && !xfLine_[i] ? 0 : q; // staggered: a line waiting for its fade reads once
+        // Staggered: each line on its own in-loop amount (one waiting for its fade keeps the old one).
+        const float apGi = staggered() ? voicing::kInLoopCoeff * apAmtNow_[i] : apG;
+        const float apGOldi = staggered() ? (qi > 0 ? voicing::kInLoopCoeff * apAmtOld_[i] : 0.0f) : apGOld;
+#else
+        const int   qi = q;
+        const float apGi = apG, apGOldi = apGOld;
+#endif
+        if (qi > 0 || !lineFast(i, m, apGi, eraIn, eraOut, y[i])) lineSlow(i, m, qi, xn, xo, apGi, apGOldi, eraIn, eraOut, y[i]);
     }
     xfNew_ = endNew;
     xfOld_ = endOld;
@@ -617,21 +689,41 @@ IV_NO_UNSWITCH void Fdn::runBlock(const float* inL, const float* inR, float* out
         } else {
             tapsMoving(i, m, tl, w, e[i]);
         }
+#ifndef IV_FIXED_VOICINGS
+        if (q > 0 && !(staggered() && !xfLine_[i])) tapsOld(i, q, tl, w, ol, orr);
+#else
         if (q > 0) tapsOld(i, q, tl, w, ol, orr);
+#endif
     }
     for (int s = 0; s < m; ++s) {
         float l = ls[s], r = rs[s];
         if (earlyG > 0.0f) {
             float tapL = 0.0f, tapR = 0.0f;
+#ifndef IV_FIXED_VOICINGS
+            float waitL = 0.0f, waitR = 0.0f; // staggered: the taps of lines not fading
+#endif
             for (int i = 0; i < kN; ++i) {
                 // Each line's taps go out with another line's signs, so they decorrelate from the ends.
                 const int j = (i + 3) & (kN - 1);
+#ifndef IV_FIXED_VOICINGS
+                if (staggered() && s < q && !xfLine_[i]) {
+                    waitL += kOutL[j] * e[i][s];
+                    waitR += kOutR[j] * e[i][s];
+                    continue;
+                }
+#endif
                 tapL += kOutL[j] * e[i][s];
                 tapR += kOutR[j] * e[i][s];
             }
             if (s < q) { // the old positions fade out with the lines
                 tapL = xn[s] * tapL + xo[s] * ol[s];
                 tapR = xn[s] * tapR + xo[s] * orr[s];
+#ifndef IV_FIXED_VOICINGS
+                if (staggered()) {
+                    tapL += waitL;
+                    tapR += waitR;
+                }
+#endif
             }
             l += earlyG * tapL;
             r += earlyG * tapR;
