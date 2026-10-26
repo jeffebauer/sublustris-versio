@@ -12,7 +12,6 @@
 - [ ] **Merge `claude/massive-air` into main?** It holds everything since v1.0.33 (SIZE/TIME crossfade, the CPU work, v1.0.34-36, the profile builds, and now the overnight review's speed-ups and report), all tests passing. Your OK first.
 
 ### Listen (after your notes)
-- [ ] **BLOOM's swell: other seeds** (your note: the 12 points "seemed to accentuate the mids"): http://192.168.1.238:8766/swell_seed/index.html. Measured: 12 and 24 points are equally even on noise and note by note; which notes stand out moves with TIME and the seed. B-D are the three most even seeds; E the old 24 points for reference.
 
 ### Listen (first time)
 - [ ] **ERA signatures** (out of date: it measures the old stacked ERA; Claude can re-measure it for the five eras; reference, nothing to pick; https://claude.ai/artifact/AiR2JXPAaLbT8GeJseK3Vj, opens on your phone anywhere): what each ERA stage does to the reverb, measured and drawn as charts (tone, how long each frequency rings, harmonics, grain, hiss, mirror tones, pitch wobble). `tools/era_reference.py` remeasures it.
@@ -28,6 +27,7 @@
 
 ## Waiting on Claude
 
+- **A moving swell comb** (your request): research, then the `swell_motion` page: A fixed (today), B the copies' positions move (the textbook way; est. +4-9 points of CPU), C their levels move (almost free), D BLOOM's smoothing filters move (cheap). Each with its measured cost. In progress.
 - **The room's pitch bend** (your question on room_level: it's the room's own echo movement, not your samples; mild at large SIZE, up to ~40 cents at small): a `room_motion` page with today's movement, movement scaled with SIZE, and movement off, on retuned material. In progress.
 - **MOTION (was DRIFT), the page rebuilt** (your notes: the options were confusing with no card descriptions; the tape side gets lost in the diffuse reverb; add crinkle and dropouts near the extreme). Research first, then a tape "transport" on the reverb's output (one wobble moving the whole tail together, as a tape machine does) with crinkle and dropouts toward full left, and the page split into a left (tape) group and a right (movement) group with descriptions on every card. In progress.
 - **TONE's resonant tilt is built** (v1.0.44 on `claude/tone-character`): exactly as on the page, 19 of 19 tests pass, release 106,420 B on its own (+1,064 B). Still to join with WEAR and the room. The room's level following the pad (B) is built too (v1.0.43 on `claude/era-wear`, release 105,516 B).
@@ -51,6 +51,7 @@
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 
 ## Done
+- [x] **BLOOM's swell seed stays as it is** (27 Oct 2026, `renders/swell_seed`: "really hard to tell if any are better than the others or just different"). No seed is better: each set of 12 copies is a fine comb whose emphasised notes move with the seed and DEPTH. Next: making the comb move instead (`swell_motion`).
 - [x] **SIZE's crossfade in four groups** (27 Oct 2026, `renders/size_moves`, level-matched, MIX 100 %: "C - four groups = winner. Hardly perceptible difference from 2 groups, whilst 8 groups introduces some slight staggering that's audible"). Lowers a SIZE move's CPU peak (est. ~106 → ~99 % with the old cassette; WEAR replaced it, so the candidate lap measures the real figure). Being built as v1.0.45.
 - [x] **The room follows the pad (B)** (27 Oct 2026, `renders/room_level`, MIX 50 %: "follows pad B is the winner from a level-perspective"). The room stays a steady distance under the pad as SIZE and DECAY change. Your question "some slight pitch bending when played over the top ... character of the room reverb, or imperfect tuning of the samples?" is being measured (Waiting on Claude).
 - [x] **TONE gets a resonant tilt (A)** (27 Oct 2026, `renders/tone_character`, MIX 50 %: "A resonant tilt is the clear winner — adds a little character without creating too much resonance or rounding that SEM and ladder filters add"). Today's EQ with a soft bell where it bends: a warm swell ~600 Hz turned left, a sheen ~5 kHz turned right; noon flat; the loop untouched. Being built as v1.0.44 (Waiting on Claude).
