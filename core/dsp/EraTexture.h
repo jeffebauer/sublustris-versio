@@ -46,7 +46,7 @@ struct TexMix {
 
 namespace tex {
 constexpr float kTapeDriveDb = 15.0f, kTapeEmphDb = 6.0f, kTapeEmphHz = 2000.0f, kTapeBias = 0.12f;
-constexpr float kClockHzHi = 30000.0f, kClockHzLo = 9000.0f;  // the BBD's clock across its intensity
+constexpr float kClockHzHi = 32000.0f, kClockHzLo = 14000.0f; // the BBD's clock across its intensity (no lower: unfiltered, it turns metallic)
 constexpr float kGrainBitsHi = 9.0f, kGrainBitsLo = 5.0f;     // the grain's bits under the level, across its intensity
 } // namespace tex
 
