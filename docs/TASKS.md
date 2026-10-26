@@ -8,7 +8,7 @@
 - [ ] **Round 16: real SIZE turns on the module** *(after the candidate lap; it adds the Neve and the just-unfrozen moves)* (USB power only, rack power unplugged). Flash `/Users/jesse/Documents/Sites/immensio-versio/dist/immensio_versio_profile-sizemoves.bin`, screen's log on (Ctrl-A, Shift-H), and let it run one full lap until the last line `SIZEHAND MASSIVE UNFROZE cassette twists groups 8` prints (~15-20 min; knobs don't matter, every move is scripted). Then tell Claude. It measures SIZE sweeps, twists and creeps in MASSIVE (Neve and cassette), playing, frozen and just unfrozen, with SIZE's crossfade in 2, 4 or 8 groups.
 
 ### Decide
-- [ ] **Merge `claude/massive-air` into main?** It holds everything since v1.0.33 (SIZE/TIME crossfade, the CPU work, v1.0.34-36, the profile builds, and now the overnight review's speed-ups and report), all tests passing. Your OK first.
+- [ ] **One merge into main, when your remaining picks are in** (MOTION, the swell comb, the room's movement). `claude/massive-air` no longer needs merging on its own: every branch since (era-wear, tone-character and the rest) contains it. The plan: one combined branch (era-wear + TONE + your picks), renamed Sublustris Versio in the same pass, checked, then merged with your OK. The release script (`claude/friend-package-073b04`) can go in any time.
 
 ### Listen (after your notes)
 
