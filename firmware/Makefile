@@ -31,7 +31,10 @@ RELEASE_SDRAM_TIGHT ?= 1
 # RELEASE_DIAG=1: the playing build on USB power, knobs held at noon, its own test input, a serial report
 # (immensio_versio-diag.bin; main.cpp "RELEASE_DIAG").
 RELEASE_DIAG ?= 0
-RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)
+# RELEASE_LATE_LIGHT=1: the rightmost LED flashes red after a late block, amber after a near one
+# (immensio_versio-latelight.bin; a diagnostic, not in the normal build: flash).
+RELEASE_LATE_LIGHT ?= 0
+RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)$(if $(filter 1,$(RELEASE_LATE_LIGHT)),-latelight)
 PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)
 
 ifeq ($(MODE),m0test)
@@ -47,7 +50,8 @@ else ifeq ($(MODE),profile)
 else ifeq ($(MODE),release)
   TARGET    = immensio_versio$(RELEASE_TAG)
   MODE_DEFS = -DIV_MODE_RELEASE -DIV_ITCM=1 -DIV_RELEASE_SDRAM_TIGHT=$(RELEASE_SDRAM_TIGHT) \
-              -DIV_RELEASE_DIAG=$(RELEASE_DIAG) $(if $(filter 1,$(RELEASE_DIAG)),-DIV_PROFILE_HOOKS)
+              -DIV_RELEASE_DIAG=$(RELEASE_DIAG) $(if $(filter 1,$(RELEASE_DIAG)),-DIV_PROFILE_HOOKS) \
+              -DIV_LATE_LIGHT=$(RELEASE_LATE_LIGHT)
   LDSCRIPT  = STM32H750IB_flash_itcm.lds
 else
   $(error Unknown MODE '$(MODE)': use m0test, profile, or release)

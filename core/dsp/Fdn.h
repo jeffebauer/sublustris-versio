@@ -112,18 +112,15 @@ public:
 
     float lineSeconds(int i) const { return lenNow_[i] / sampleRate_; }
 
-#ifndef IV_FIXED_VOICINGS
-    // PROTOTYPE (renders/size_stagger, 26 Oct 2026: on the module a SIZE crossfade in MASSIVE costs up to
-    // ~110 % of the CPU, every line read twice for 0.3 s): with 2, a SIZE move crossfades lines 0, 2, 4, 6
-    // first and 1, 3, 5, 7 straight after (two fades of kSizeCrossfadeSeconds back to back), so only half
-    // the lines read twice at once. 1 = as built.
-    void setStaggerPrototype(int groups) { xfStagger_ = groups == 2 ? 2 : 1; }
-#endif
+    // SIZE's crossfade in two groups (v1.0.39, the owner's pick B on renders/size_stagger; on the module a
+    // SIZE crossfade in MASSIVE reached ~110 % of the CPU, every line read twice for 0.3 s): lines 0, 2, 4,
+    // 6 crossfade first and 1, 3, 5, 7 straight after (two fades of kSizeCrossfadeSeconds back to back), so
+    // only half the lines read twice at once. Where a small HALL's in-loop diffusion joins or leaves with
+    // the move, all lines fade together. 1: all together, as before v1.0.39.
+    void setStagger(int groups) { xfStagger_ = groups == 1 ? 1 : 2; }
 
 private:
-#ifndef IV_FIXED_VOICINGS
     bool staggered() const { return xfStagger_ == 2; }
-#endif
     void control(int n);
     // The tank line by line (Fdn.cpp, "Line by line"): m samples on one control block's values.
     bool blockFits(int m) const;
@@ -192,12 +189,11 @@ private:
     float     xfLastInLoop_ = 0.0f, xfAbsOld_[kN][3] = {}; // the loss filter (b1, gain, pole) at the fade's start
     float     xfCos_ = -1.0f, xfSin_ = 0.0f; // the fade's angle (twice it): xfNew_ = (1 - cos) / 2
     int       xfLen_ = 1, xfLeft_ = 0, xfSince_ = -1; // samples; xfSince_: since the start, -1 when no correction runs
-#ifndef IV_FIXED_VOICINGS
-    int       xfStagger_ = 1, xfGroupNext_ = 0; // setStaggerPrototype
-    bool      xfLine_[kN] = {};  // staggered: the line fades in this crossfade
-    float     xfOff_[kN] = {};   // staggered: samples since the line's own trip began, ahead of xfSince_
-    float     apAmtNow_[kN] = {}, apAmtOld_[kN] = {}; // staggered: each line's in-loop amount (it changes with its own fade)
-#endif
+    int       xfStagger_ = 2, xfGroupNext_ = 0; // setStagger; 2 since v1.0.39
+    // Staggered (v1.0.39), all set by reset() before any use (no initialisers: flash, the constructor):
+    bool      xfLine_[kN];   // the line fades in this crossfade
+    float     xfOff_[kN];    // samples since the line's own trip began, ahead of xfSince_
+    float     apAmtNow_[kN], apAmtOld_[kN]; // each line's in-loop amount (it changes with its own fade)
     bool      ready_ = false;
 };
 

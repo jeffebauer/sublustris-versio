@@ -33,7 +33,7 @@ MATERIALS = {"pad": (18, 9), "keys": (18, 9), "drums": (18, 8)}
 # above noon: where its in-loop diffusion joins or leaves (below), the prototype fades all lines together.
 COLS = [("1_massive", ["space=MASSIVE", "decay=0.6", "era=0.1", "attack=NORMAL", "time=0"], (0.3, 0.8, 0.4, 0.7)),
         ("2_hall", ["space=HALL", "decay=0.6", "era=0.1", "attack=NORMAL", "time=0"], (0.55, 0.95, 0.6, 0.85))]
-VERSIONS = [("A_together_as_built", {}), ("B_staggered", {"IV_SIZE_STAGGER": "2"})]
+VERSIONS = [("A_together_as_built", {"IV_SIZE_STAGGER": "1"}), ("B_staggered", {"IV_SIZE_STAGGER": "2"})] # B since v1.0.39
 README = """SIZE's crossfade: all lines together, or in two groups. When you move SIZE in HALL or MASSIVE, the reverb's eight delay lines swap to their new lengths through a 0.3 s crossfade (your pick C on knob_moves: no pitch bend). For those 0.3 s every line is read twice, and on the module that is what tips MASSIVE over the CPU limit right after a SIZE move: the drop-outs you hear.
 
 A is today: all eight lines crossfade together. B staggers it: four lines crossfade, then the other four straight after, so the room changes size over about 0.6 s in two steps, and only half the lines are read twice at any moment (about half the extra work).
