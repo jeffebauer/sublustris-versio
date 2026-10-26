@@ -1,0 +1,98 @@
+CAND TWINROOM  twin g2 era today   .10 SIZE still   FROZEN  avg  92.5% max  93.6% | late blocks 0 of 5000 | twin on
+CAND TWINROOM  twin g2 era today   .10 SIZE sweep   FROZEN  avg  95.0% max 109.6% | late blocks 612 of 5000 | twin on
+CAND TWINROOM  twin g2 era today   .10 SIZE twists  FROZEN  avg 106.7% max 110.9% | late blocks 4137 of 5000 | twin on
+CAND TWINROOM  twin g2 era today   .10 SIZE twisthi FROZEN  avg 106.0% max 110.0% | late blocks 4155 of 5000 | twin on
+CAND TWINROOM  twin g2 era today   .70 SIZE still   FROZEN  avg 103.9% max 105.1% | late blocks 5000 of 5000 | twin on
+CAND TWINROOM  twin g2 era today   .70 SIZE sweep   FROZEN  avg 106.4% max 120.9% | late blocks 5000 of 5000 | twin on
+CAND TWINROOM  twin g2 era today   .70 SIZE twists  FROZEN  avg 117.6% max 121.9% | late blocks 5000 of 5000 | twin on
+CAND TWINROOM  twin g2 era today   .70 SIZE twisthi FROZEN  avg 117.4% max 121.5% | late blocks 5000 of 5000 | twin on
+CAND TWINROOM  room g2 era today   .10 SIZE still   FROZEN  avg  68.1% max  69.4% | late blocks 0 of 5000 | twin on
+CAND TWINROOM  room g2 era today   .10 SIZE sweep   FROZEN  avg  68.2% max  71.0% | late blocks 0 of 5000 | twin on
+CAND TWINROOM  room g2 era today   .10 SIZE twists  FROZEN  avg  70.1% max  72.5% | late blocks 0 of 5000 | twin on
+CAND TWINROOM  room g2 era today   .10 SIZE twisthi FROZEN  avg  68.7% max  71.8% | late blocks 0 of 5000 | twin on
+CAND TWINROOM  room g2 era today   .70 SIZE still   FROZEN  avg  78.4% max  79.9% | late blocks 0 of 5000 | twin on
+CAND TWINROOM  room g2 era today   .70 SIZE sweep   FROZEN  avg  78.5% max  81.6% | late blocks 0 of 5000 | twin on
+CAND TWINROOM  room g2 era today   .70 SIZE twists  FROZEN  avg  79.9% max  82.6% | late blocks 0 of 5000 | twin on
+CAND TWINROOM  room g2 era today   .70 SIZE twisthi FROZEN  avg  78.6% max  82.1% | late blocks 0 of 5000 | twin on
+CAND ERALAYOUT twin g2 era today sweep SIZE still   PLAYING avg  64.4% max  81.0% | late blocks 0 of 8000
+CAND ERALAYOUT twin g2 era today sweep SIZE still   FROZEN  avg  98.3% max 120.2% | late blocks 2701 of 8000 | twin on
+CAND ERALAYOUT twin g2 era today   .10 SIZE still   PLAYING avg  59.0% max  63.2% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era today   .30 SIZE still   PLAYING avg  64.0% max  68.5% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era today   .50 SIZE still   PLAYING avg  62.9% max  67.1% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era today   .70 SIZE still   PLAYING avg  68.8% max  73.4% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era today   .90 SIZE still   PLAYING avg  64.9% max  69.0% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era today   .10 SIZE still   FROZEN  avg  92.6% max  93.6% | late blocks 0 of 3000 | twin on
+CAND ERALAYOUT twin g2 era today   .30 SIZE still   FROZEN  avg  96.4% max  97.9% | late blocks 0 of 3000 | twin on
+CAND ERALAYOUT twin g2 era today   .50 SIZE still   FROZEN  avg  96.5% max  97.5% | late blocks 0 of 3000 | twin on
+CAND ERALAYOUT twin g2 era today   .70 SIZE still   FROZEN  avg 103.9% max 105.1% | late blocks 3000 of 3000 | twin on
+CAND ERALAYOUT twin g2 era today   .90 SIZE still   FROZEN  avg  98.4% max  99.6% | late blocks 0 of 3000 | twin on
+CAND ERALAYOUT twin g2 era A     sweep SIZE still   PLAYING avg  62.6% max  70.0% | late blocks 0 of 8000
+CAND ERALAYOUT twin g2 era A     sweep SIZE still   FROZEN  avg  96.1% max 103.5% | late blocks 628 of 8000 | twin on
+CAND ERALAYOUT twin g2 era A       .10 SIZE still   PLAYING avg  62.7% max  67.2% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era A       .30 SIZE still   PLAYING avg  64.6% max  69.2% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era A       .50 SIZE still   PLAYING avg  64.7% max  69.3% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era A       .70 SIZE still   PLAYING avg  62.9% max  67.1% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era A       .90 SIZE still   PLAYING avg  62.7% max  66.9% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era A       .10 SIZE still   FROZEN  avg  96.6% max  97.7% | late blocks 0 of 3000 | twin on
+CAND ERALAYOUT twin g2 era A       .30 SIZE still   FROZEN  avg  97.0% max  98.2% | late blocks 0 of 3000 | twin on
+CAND ERALAYOUT twin g2 era A       .50 SIZE still   FROZEN  avg  97.1% max  98.3% | late blocks 0 of 3000 | twin on
+CAND ERALAYOUT twin g2 era A       .70 SIZE still   FROZEN  avg  96.4% max  97.4% | late blocks 0 of 3000 | twin on
+CAND ERALAYOUT twin g2 era A       .90 SIZE still   FROZEN  avg  96.2% max  97.2% | late blocks 0 of 3000 | twin on
+CAND ERALAYOUT twin g2 era B     sweep SIZE still   PLAYING avg  63.7% max  68.2% | late blocks 0 of 8000
+CAND ERALAYOUT twin g2 era B     sweep SIZE still   FROZEN  avg  97.4% max 103.9% | late blocks 2224 of 8000 | twin on
+CAND ERALAYOUT twin g2 era B       .10 SIZE still   PLAYING avg  63.0% max  67.5% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era B       .30 SIZE still   PLAYING avg  63.0% max  67.4% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era B       .50 SIZE still   PLAYING avg  62.7% max  67.2% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era B       .70 SIZE still   PLAYING avg  65.0% max  69.7% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era B       .90 SIZE still   PLAYING avg  66.5% max  71.3% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era B       .10 SIZE still   FROZEN  avg  96.5% max  97.7% | late blocks 0 of 3000 | twin on
+CAND ERALAYOUT twin g2 era B       .30 SIZE still   FROZEN  avg  96.6% max  97.7% | late blocks 0 of 3000 | twin on
+CAND ERALAYOUT twin g2 era B       .50 SIZE still   FROZEN  avg  96.5% max  97.7% | late blocks 0 of 3000 | twin on
+CAND ERALAYOUT twin g2 era B       .70 SIZE still   FROZEN  avg  99.0% max 100.2% | late blocks 1 of 3000 | twin on
+CAND ERALAYOUT twin g2 era B       .90 SIZE still   FROZEN  avg 100.5% max 101.7% | late blocks 2843 of 3000 | twin on
+CAND ERALAYOUT twin g2 era C     sweep SIZE still   PLAYING avg  66.6% max  69.7% | late blocks 0 of 8000
+CAND ERALAYOUT twin g2 era C     sweep SIZE still   FROZEN  avg 100.8% max 104.7% | late blocks 5840 of 8000 | twin on
+CAND ERALAYOUT twin g2 era C       .10 SIZE still   PLAYING avg  66.7% max  71.0% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era C       .30 SIZE still   PLAYING avg  66.7% max  71.3% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era C       .50 SIZE still   PLAYING avg  66.7% max  71.1% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era C       .70 SIZE still   PLAYING avg  66.7% max  71.2% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era C       .90 SIZE still   PLAYING avg  66.4% max  71.1% | late blocks 0 of 3000
+CAND ERALAYOUT twin g2 era C       .10 SIZE still   FROZEN  avg 100.3% max 101.6% | late blocks 2450 of 3000 | twin on
+CAND ERALAYOUT twin g2 era C       .30 SIZE still   FROZEN  avg 100.2% max 101.3% | late blocks 2114 of 3000 | twin on
+CAND ERALAYOUT twin g2 era C       .50 SIZE still   FROZEN  avg 100.2% max 101.5% | late blocks 2283 of 3000 | twin on
+CAND ERALAYOUT twin g2 era C       .70 SIZE still   FROZEN  avg 100.2% max 101.4% | late blocks 2289 of 3000 | twin on
+CAND ERALAYOUT twin g2 era C       .90 SIZE still   FROZEN  avg 100.2% max 101.3% | late blocks 2229 of 3000 | twin on
+CAND SIZEHAND  twin g2 era today   .70 SIZE sweep   PLAYING avg  73.3% max  97.8% | late blocks 0 of 5000
+CAND SIZEHAND  twin g2 era today   .70 SIZE sweep   FROZEN  avg 106.6% max 121.0% | late blocks 5000 of 5000 | twin on
+CAND SIZEHAND  twin g2 era today   .70 SIZE twisthi PLAYING avg  92.0% max  98.8% | late blocks 0 of 5000
+CAND SIZEHAND  twin g2 era today   .70 SIZE twisthi FROZEN  avg 117.3% max 121.6% | late blocks 5000 of 5000 | twin on
+CAND SIZEHAND  twin g2 era today   .70 SIZE creep   PLAYING avg  92.6% max  99.1% | late blocks 0 of 6000
+CAND SIZEHAND  twin g2 era today   .70 SIZE creep   FROZEN  avg 117.9% max 121.6% | late blocks 6000 of 6000 | twin on
+CAND SIZEHAND  twin g4 era today   .70 SIZE sweep   PLAYING avg  73.0% max  88.1% | late blocks 0 of 5000
+CAND SIZEHAND  twin g4 era today   .70 SIZE sweep   FROZEN  avg 106.2% max 114.6% | late blocks 5000 of 5000 | twin on
+CAND SIZEHAND  twin g4 era today   .70 SIZE twisthi PLAYING avg  83.9% max  88.3% | late blocks 0 of 5000
+CAND SIZEHAND  twin g4 era today   .70 SIZE twisthi FROZEN  avg 112.0% max 115.0% | late blocks 5000 of 5000 | twin on
+CAND SIZEHAND  twin g4 era today   .70 SIZE creep   PLAYING avg  84.3% max  88.8% | late blocks 0 of 6000
+CAND SIZEHAND  twin g4 era today   .70 SIZE creep   FROZEN  avg 112.4% max 115.1% | late blocks 6000 of 6000 | twin on
+CAND SIZEHAND  twin g8 era today   .70 SIZE sweep   PLAYING avg  72.1% max  81.2% | late blocks 0 of 5000
+CAND SIZEHAND  twin g8 era today   .70 SIZE sweep   FROZEN  avg 105.6% max 111.3% | late blocks 5000 of 5000 | twin on
+CAND SIZEHAND  twin g8 era today   .70 SIZE twisthi PLAYING avg  79.5% max  83.0% | late blocks 0 of 5000
+CAND SIZEHAND  twin g8 era today   .70 SIZE twisthi FROZEN  avg 109.2% max 113.4% | late blocks 5000 of 5000 | twin on
+CAND SIZEHAND  twin g8 era today   .70 SIZE creep   PLAYING avg  79.5% max  83.0% | late blocks 0 of 6000
+CAND SIZEHAND  twin g8 era today   .70 SIZE creep   FROZEN  avg 109.5% max 113.8% | late blocks 6000 of 6000 | twin on
+CAND TARGET    room g8 era A       .70 SIZE still   FROZEN  avg  72.2% max  75.3% | late blocks 0 of 5000 | twin on
+CAND TARGET    room g8 era A       .70 SIZE twisthi FROZEN  avg  72.4% max  77.3% | late blocks 0 of 5000 | twin on
+CAND TARGET    room g8 era A     sweep SIZE still   FROZEN  avg  71.3% max  75.7% | late blocks 0 of 8000 | twin on
+CAND TARGET    room g8 era A       .70 SIZE sweep   PLAYING avg  66.1% max  75.2% | late blocks 0 of 5000
+CAND TARGET    room g8 era A     sweep SIZE still   PLAYING avg  63.3% max  72.0% | late blocks 0 of 8000
+CAND TARGET    room g8 era B       .70 SIZE still   FROZEN  avg  74.5% max  76.0% | late blocks 0 of 5000 | twin on
+CAND TARGET    room g8 era B       .70 SIZE twisthi FROZEN  avg  74.9% max  80.3% | late blocks 0 of 5000 | twin on
+CAND TARGET    room g8 era B     sweep SIZE still   FROZEN  avg  73.1% max  78.2% | late blocks 0 of 8000 | twin on
+CAND TARGET    room g8 era B       .70 SIZE sweep   PLAYING avg  68.4% max  77.6% | late blocks 0 of 5000
+CAND TARGET    room g8 era B     sweep SIZE still   PLAYING avg  64.4% max  68.5% | late blocks 0 of 8000
+CAND TARGET    room g8 era C       .70 SIZE still   FROZEN  avg  75.8% max  77.5% | late blocks 0 of 5000 | twin on
+CAND TARGET    room g8 era C       .70 SIZE twisthi FROZEN  avg  76.2% max  81.6% | late blocks 0 of 5000 | twin on
+CAND TARGET    room g8 era C     sweep SIZE still   FROZEN  avg  76.0% max  79.1% | late blocks 0 of 8000 | twin on
+CAND TARGET    room g8 era C       .70 SIZE sweep   PLAYING avg  69.9% max  79.0% | late blocks 0 of 5000
+CAND TARGET    room g8 era C     sweep SIZE still   PLAYING avg  67.4% max  72.0% | late blocks 0 of 8000
+CANDIDATE LAP 1 DONE: 97 lines, worst max 121.9%, late blocks in all 105506
