@@ -29,6 +29,7 @@
 
 ## Waiting on Claude
 
+- **The room's pitch bend** (your question on room_level: it's the room's own echo movement, not your samples; mild at large SIZE, up to ~40 cents at small): a `room_motion` page with today's movement, movement scaled with SIZE, and movement off, on retuned material. In progress.
 - **MOTION (was DRIFT), the page rebuilt** (your notes: the options were confusing with no card descriptions; the tape side gets lost in the diffuse reverb; add crinkle and dropouts near the extreme). Research first, then a tape "transport" on the reverb's output (one wobble moving the whole tail together, as a tape machine does) with crinkle and dropouts toward full left, and the page split into a left (tape) group and a right (movement) group with descriptions on every card. In progress.
 - **TONE's resonant tilt is built** (v1.0.44 on `claude/tone-character`): exactly as on the page, 19 of 19 tests pass, release 106,420 B on its own (+1,064 B). Still to join with WEAR and the room. The room's level following the pad (B) is built too (v1.0.43 on `claude/era-wear`, release 105,516 B).
 - **A rumble at endless DECAY with TONE bright** (found on the way): PLATE (and HALL, less) at DECAY 1 and TONE fully CW slowly turns into sub-20 Hz rumble over ~10 minutes while the audible tail fades ~40 dB. In today's sound too; to look at.
