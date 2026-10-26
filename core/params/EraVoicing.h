@@ -28,10 +28,11 @@ constexpr float kSatKnee    = 0.7f; // a held tail's peaks (crest ~4-5) stay und
 
 // ---- ERA (P4): five eras from sweet to gritty, each on its own (ADR 0021) --
 // Neve (the base, always on), Midiverb, bucket-brigade, cassette, AM radio, in equal stretches of the
-// knob. Each era comes in over the first third of its stretch as the one before goes, then runs from its
+// knob. Each era comes in over the first fifth of its stretch as the one before goes (v1.0.40, owner's
+// pick after renders/era_overlap: between its B, a sixth, and the third it was), then runs from its
 // sweet end to its gritty end (owner's picks on renders/era_discrete, era_v2, era_v2b, era_v2c).
 constexpr int   kEraCount = 5;
-constexpr float kEraFadeShare = 1.0f / 3.0f;
+constexpr float kEraFadeShare = 0.2f;
 // The BBD reaches the grit of round 2's B two-thirds into its stretch (owner, era_v2b), half as much
 // again by its end.
 constexpr float kBbdGritAt = 0.66f;

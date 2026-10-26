@@ -177,8 +177,8 @@ public:
         lowFdn_.setStagger(groups);
     }
     // PROTOTYPE (renders/era_overlap; the owner, on era_switch: keep the overlaps, "although I feel we could
-    // narrow the crossover areas"): each era fades in over `share` of its stretch (kEraFadeShare, a third,
-    // as built).
+    // narrow the crossover areas"): each era fades in over `share` of its stretch (kEraFadeShare, a fifth
+    // since v1.0.40; a third before).
     void  setEraFadeSharePrototype(float share) { eraFadeShare_ = share > 0.0f && share <= 1.0f ? share : voicing::kEraFadeShare; }
     void  setEraSwitchPrototype(float seconds)
     {

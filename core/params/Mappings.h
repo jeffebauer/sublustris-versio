@@ -159,7 +159,7 @@ inline dsp::EraMix eraMixFromWeights(float v, const float (&w)[voicing::kEraCoun
 }
 
 // ERA (P4; ADR 0021): five eras from sweet to gritty, each on its own over the Neve's warmth, in equal
-// stretches (EraVoicing.h). An era comes in over the first third of its stretch (the one before goes as
+// stretches (EraVoicing.h). An era comes in over the first fifth of its stretch (the one before goes as
 // it comes); the BBD's and radio's intensity runs from their sweet end to their gritty end across theirs.
 inline dsp::EraMix eraMix(float v)
 {
