@@ -4,7 +4,7 @@
 **Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Not yet in it: v1.0.35-36 (the 24 kHz tank, 12-point swell, fewer early reflections) and the review's speed-ups; say when you'd like it installed (Ableton closed).
 
 ## To do
-- [ ] **M3 round 14: the SIZE crossfade built for speed** (the knob fix worked, "muuuuuch better"; drop-outs now only right after moving SIZE, none once settled). On USB power, flash `/Users/jesse/Documents/Sites/immensio-versio/.claude/worktrees/massive-air/firmware/build/immensio_versio_profile.bin` (126,872 B), screen's log on, one lap plus the headroom test (~7 min), then tell Claude. It times MASSIVE's SIZE crossfade with its code built for speed. If you'd like to feel it too: `/Users/jesse/Documents/Sites/immensio-versio/.claude/worktrees/massive-air/firmware/build/immensio_versio.bin` (115,140 B) on rack power is the playing build with it, but it's 2.5 KB over the 110 KB flash budget, so adopting it is a decision for after the numbers.
+- [ ] **Play the knob-fix build** (it's the one to keep on the module for now): `/Users/jesse/Documents/Sites/immensio-versio/.claude/worktrees/massive-air/firmware/build/immensio_versio.bin` (112,236 B), rack power. Drop-outs remain only right after moving SIZE in MASSIVE, and with a frozen MASSIVE on the cassette.
 
 ### Decide
 - [ ] **Merge `claude/massive-air` into main?** It holds everything since v1.0.33 (SIZE/TIME crossfade, the CPU work, v1.0.34-36, the profile builds, and now the overnight review's speed-ups and report), all tests passing. Your OK first.
@@ -39,6 +39,7 @@
 - **M2: install the plugin** when you'd like to play it in Ableton (`tools/install_plugin.sh`), with Ableton closed for the AU check.
 
 ## Done
+- [x] **M3 round 14** (26 Oct 2026): building the SIZE crossfade's code for speed took only 1-2.5 points off its peak (106 → 105 %) for 2.9 KB of flash, so it's reverted: the crossfade's cost is memory (every line read twice), not code. The tape at 2× shows: MASSIVE with the cassette 77.5 → 70.6 %, frozen with the cassette 111 → 104.5 %.
 - [x] **Crackle hunt** (26 Oct 2026): your audio was getting into the knob readings and moving SIZE (and TIME), each move starting a costly crossfade in MASSIVE. Fixed in the playing build by smoothing the knobs (10 ms) and a 0.3 % deadband for SIZE and TIME. Ruled out on the way: the gate, the memory timing, input level, the LEDs. What's left: the SIZE crossfade itself right after a move.
 - [x] **Tape at 2×** (26 Oct 2026, `tape_os`: "no audible difference between 4x and 2x"): built as v1.0.38; only the cassette's renders change, by at most 0.033; 848 B of flash freed. (`still_lows_rate`, the review's other CPU option, is still there if more is needed.)
 - [x] **M3 round 13** (26 Oct 2026): MASSIVE with SIZE/DECAY 0.9 in real time: playing Neve 61 %, cassette 78 %; frozen Neve 93-95 % (no drop-outs), frozen cassette 111-113 % (every block late). The knobs' wobble adds only 1-2 points.
