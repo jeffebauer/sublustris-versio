@@ -31,16 +31,28 @@
 // PROTOTYPE (renders/era_rethink): ERA as texture (Mappings.h eraLayoutMix, dsp/EraTexture.h). Desktop:
 // setEraLayoutPrototype. Firmware: IV_ERA_LAYOUT=1|2|3 builds that layout in place of today's eras (for
 // its flash, as it would ship; firmware/Makefile ERA_LAYOUT); unset, the firmware is as built.
-#if !defined(IV_FIXED_VOICINGS) || IV_ERA_LAYOUT
+// Profile only (integration dry run): IV_ERA_LAYOUT_RUNTIME=1 builds today's eras and the three layouts,
+// chosen while it runs (setEraLayoutProfile), as the desktop does.
+#if !defined(IV_FIXED_VOICINGS) || IV_ERA_LAYOUT || IV_ERA_LAYOUT_RUNTIME
 #define IV_ERA_TEXTURE 1
 #include "dsp/EraTexture.h"
 #else
 #define IV_ERA_TEXTURE 0
 #endif
-#if defined(IV_FIXED_VOICINGS) && IV_ERA_LAYOUT
+#if defined(IV_FIXED_VOICINGS) && IV_ERA_LAYOUT && !IV_ERA_LAYOUT_RUNTIME
 #define IV_ERA_TODAY 0
 #else
 #define IV_ERA_TODAY 1
+#endif
+// PROTOTYPE, firmware only (integration dry run): IV_TWIN_ROOMV=1 builds the voiced small room (dsp/TwinAlt.h
+// TwinRoomV; renders/small_room C: the twin tank's loss, a 150 Hz low cut, at -8.1 dB in MASSIVE, -9.1 dB in
+// HALL) in place of HALL's and MASSIVE's twin tank, for its flash as it would ship (firmware/Makefile
+// TWIN_ROOM). In the profile build (IV_PROFILE_HOOKS) both stay in, chosen by setTwinRoomProfile.
+#if defined(IV_FIXED_VOICINGS) && IV_TWIN_ROOMV
+#define IV_ROOM_FW 1
+#include "dsp/TwinAlt.h"
+#else
+#define IV_ROOM_FW 0
 #endif
 #include "params/GestureReader.h"
 #include "params/ParamSpec.h"
@@ -245,6 +257,12 @@ public:
     int   swellTaps() const { return swell_.tapCount(); }
 #endif
 #if !defined(IV_FIXED_VOICINGS) || defined(IV_PROFILE_HOOKS) // the profile firmware's SIZEHAND lines too
+#if IV_ERA_TEXTURE && defined(IV_FIXED_VOICINGS) && IV_ERA_LAYOUT_RUNTIME
+    void  setEraLayoutProfile(int layout) { eraLayout_ = layout >= 1 && layout <= 3 ? layout : 0; } // 0 today's eras
+#endif
+#if IV_ROOM_FW && defined(IV_PROFILE_HOOKS)
+    void  setTwinRoomProfile(bool on) { twinAlt_ = on ? 4 : 0; } // takes effect at the twin's next start
+#endif
     // SIZE's crossfade in two groups of lines (v1.0.39, Fdn::setStagger), in every FDN (the tank, the twin,
     // the still lows); 1: all lines together, as before v1.0.39; 4 or 8: the size_moves prototypes.
     void  setSizeStagger(int groups)
@@ -423,10 +441,21 @@ private:
 #if IV_ERA_TEXTURE
     dsp::EraTexture texture_; // PROTOTYPE (renders/era_rethink)
     bool texOn_ IV_ZI;
-#if defined(IV_FIXED_VOICINGS)
+#if defined(IV_FIXED_VOICINGS) && IV_ERA_LAYOUT_RUNTIME
+    int eraLayout_ IV_ZI; // setEraLayoutProfile
+#elif defined(IV_FIXED_VOICINGS)
     static constexpr int eraLayout_ = IV_ERA_LAYOUT;
 #else
     int eraLayout_ = 0; // setEraLayoutPrototype
+#endif
+#endif
+#if IV_ROOM_FW
+    dsp::TwinRoomV roomFw_; // IV_TWIN_ROOMV: the voiced room in place of the twin tank
+    float roomLevel_ IV_ZI, roomCoef_ IV_ZI; // its 50 ms power (the twin stops on it), the one-pole's step
+#if defined(IV_PROFILE_HOOKS)
+    int twinAlt_ IV_ZI; // setTwinRoomProfile: 0 the twin tank, 4 the room
+#else
+    static constexpr int twinAlt_ = 4;
 #endif
 #endif
     float diffMotionNow_ IV_ZI, diffMotionPhase_ IV_ZI; // the PLATE's wandering input allpass, samples

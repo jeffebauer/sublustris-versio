@@ -32,6 +32,52 @@ public:
     // n <= kMaxBlock samples in; the tank's output added into outL / outR. A block can end mid-pair, so
     // what comes back is queued and the very first block can be a sample short (unless primed).
     // Out of line: one copy for the tank and the twin (inlined in both, +2.6 KB of flash).
+#if defined(IV_FIXED_VOICINGS) && IV_TWIN_ROOMV
+    // IV_TWIN_ROOMV (firmware trial): two tank types, so the filters in one shared copy and only the tank's
+    // call in the template (a second whole copy cost 1.2 KB of flash).
+    template <class Tank>
+    void process(Tank& tank, const float* inL, const float* inR, float* outL, float* outR, int n)
+    {
+        const int h = down(inL, inR, n);
+        if (h > 0) tank.process(halfIn_[0], halfIn_[1], halfOut_[0], halfOut_[1], h);
+        up(h, outL, outR, n);
+    }
+    IV_NOINLINE int down(const float* inL, const float* inR, int n)
+    {
+        int h = 0;
+        for (int i = 0; i < n; ++i) {
+            if (phase_ == 0) {
+                first_[0] = inL[i];
+                first_[1] = inR[i];
+            } else {
+                halfIn_[0][h] = down_[0].down(first_[0], inL[i]);
+                halfIn_[1][h] = down_[1].down(first_[1], inR[i]);
+                halfOut_[0][h] = halfOut_[1][h] = 0.0f;
+                ++h;
+            }
+            phase_ ^= 1;
+        }
+        return h;
+    }
+    IV_NOINLINE void up(int h, float* outL, float* outR, int n)
+    {
+        for (int j = 0; j < h; ++j)
+            for (int c = 0; c < 2; ++c) {
+                up_[c].up(halfOut_[c][j], queue_[c][queued_ + 2 * j], queue_[c][queued_ + 2 * j + 1]);
+            }
+        queued_ += 2 * h;
+        const int out = queued_ < n ? queued_ : n, lead = n - out;
+        for (int i = lead; i < n; ++i) {
+            outL[i] += queue_[0][i - lead];
+            outR[i] += queue_[1][i - lead];
+        }
+        for (int i = out; i < queued_; ++i) {
+            queue_[0][i - out] = queue_[0][i];
+            queue_[1][i - out] = queue_[1][i];
+        }
+        queued_ -= out;
+    }
+#else
     template <class Tank>
     IV_NOINLINE void process(Tank& tank, const float* inL, const float* inR, float* outL, float* outR, int n)
     {
@@ -65,6 +111,7 @@ public:
         }
         queued_ -= out;
     }
+#endif
 
 private:
     Halfband down_[2], up_[2];

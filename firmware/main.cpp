@@ -755,8 +755,23 @@ float SizeHand(int kind, uint32_t block)
         const float u = t - 0.7f * float(int(t / 0.7f));
         return u < 0.35f ? Ease(0.5f, 0.9f, u / 0.15f) : Ease(0.9f, 0.5f, (u - 0.35f) / 0.15f);
     }
+#if IV_PROFILE_CANDIDATE
+    if (kind == 3) { // the candidate lap's twists near the top: 0.85 <-> 1, 0.15 s each way, 0.2 s apart
+        const float u = t - 0.7f * float(int(t / 0.7f));
+        return u < 0.35f ? Ease(0.85f, 1.0f, u / 0.15f) : Ease(1.0f, 0.85f, (u - 0.35f) / 0.15f);
+    }
+#endif
     return 0.7f + 0.3f * (t / 6.0f > 1.0f ? 1.0f : t / 6.0f);
 }
+#if IV_PROFILE_CANDIDATE
+// The candidate lap's ERA hand (gEraHand >= 0): 0 -> 1 in 3 s, back in 3 s (8 s), read as release reads a knob.
+volatile int gEraHand = -1;
+float EraHand(uint32_t block)
+{
+    const float t = float(block) * float(kBlockSize) / 48000.0f, u = t - 8.0f * float(int(t / 8.0f));
+    return u < 4.0f ? Ease(0.0f, 1.0f, (u - 0.5f) / 3.0f) : Ease(1.0f, 0.0f, (u - 4.5f) / 3.0f);
+}
+#endif
 
 void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer out, size_t size)
 {
@@ -785,6 +800,18 @@ void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer ou
             engine.setParam(ParamId::Size, v);
         }
     }
+#if IV_PROFILE_CANDIDATE
+    if (gEraHand >= 0) { // the same knob path, for ERA
+        static float smooth = -1.0f, sent = -1.0f;
+        if (gBlocks == 0) smooth = sent = -1.0f;
+        smooth = smooth < 0.0f ? EraHand(gBlocks) : smooth + (1.0f / 11.0f) * (EraHand(gBlocks) - smooth);
+        const float v = ivpot::endStops(smooth);
+        if (std::fabs(v - sent) > 0.003f || ((v == 0.0f || v == 1.0f) && v != sent)) {
+            sent = v;
+            engine.setParam(ParamId::Era, v);
+        }
+    }
+#endif
     static float buf[kBlockSize];
     for (size_t i = 0; i < size; ++i) {
         float x = 5.0e-4f * NextNoise();
@@ -1297,6 +1324,160 @@ Result MeasureCorner(int index, float fs)
 }
 
 
+#if IV_PROFILE_CANDIDATE
+// ---- The candidate lap (integration dry run, 26 Oct 2026; make MODE=profile CANDIDATE=1 ...) -------------
+// In place of the corner lap, the micro-tests and the size_moves hunt: every line is timed in the audio
+// callback (late blocks are drop-outs), on the click + noise input, in MASSIVE with the knobs high
+// (ApplyRealtime: SIZE and DECAY 0.9, the rest at noon, BLOOM). Each run starts from Engine::reset(), plays
+// 3 s untimed, and when FROZEN taps freeze and lets the freeze's glide settle 2 s before the timed seconds
+// (the twin, or the room, plays the input over the pad all through them). The knobs are sent every block
+// ("still", as release does) unless a hand turns SIZE or ERA.
+struct Cand {
+    const char* family;
+    bool        room;     // the voiced small room in place of the twin tank (TWIN_ROOM=1 builds)
+    int         groups;   // SIZE's crossfade groups
+    int         layout;   // ERA: 0 today's eras, 1-3 layouts A, B, C (ERA_RUNTIME=1 builds)
+    float       era;      // ERA's knob (still runs)
+    bool        eraSweep; // ERA turned by hand 0 -> 1 -> 0
+    int         sizeHand; // -1 still at 0.9; 0 sweep 0.2 <-> 1; 1 twists 0.5 <-> 0.9; 2 creep 0.7 -> 1; 3 twists 0.85 <-> 1
+    bool        frozen;
+    float       seconds;
+};
+int      gCandLines = 0, gCandLaps = 0;
+unsigned gCandLate = 0;
+float    gCandWorst = 0.0f;
+
+void RunCand(const Cand& c, float fs)
+{
+    static const char* const kLayNames[4] = {"today", "A    ", "B    ", "C    "};
+    static const char* const kHands[4] = {"sweep  ", "twists ", "creep  ", "twisthi"};
+    engine.reset();
+#if IV_ROOM_FW
+    engine.setTwinRoomProfile(c.room);
+#endif
+#if IV_ERA_TEXTURE && IV_ERA_LAYOUT_RUNTIME
+    engine.setEraLayoutProfile(c.layout);
+#endif
+    engine.setSizeStagger(c.groups);
+    ApplyRealtime(c.era);
+    if (c.sizeHand >= 0) engine.setParam(ParamId::Size, ivpot::endStops(SizeHand(c.sizeHand, 0)));
+    if (c.eraSweep) engine.setParam(ParamId::Era, EraHand(0));
+    RunUntimed(int(3.0f * fs) / kBlockSize, fs);
+    if (c.frozen) {
+        engine.button(true, 0);
+        RunUntimed(10, fs);
+        engine.button(false, 0);
+        RunUntimed(int(2.0f * fs) / kBlockSize, fs);
+    }
+    gKnobSend = c.sizeHand < 0 && !c.eraSweep;
+    gJitterAmp = 0.0f;
+    gLate = gBlocks = gMaxCycles = 0;
+    gSumCycles = 0;
+    gStepBlocks = uint32_t(c.seconds * fs / float(kBlockSize));
+    gSizeHand = c.sizeHand;
+    gEraHand = c.eraSweep ? 0 : -1;
+    gRealtime = true;
+    while (gRealtime) {
+    }
+    gSizeHand = gEraHand = -1;
+    gKnobSend = false;
+    System::Delay(5);
+    const bool  twin = engine.twinActive();
+    const float period = float(gPeriodCycles);
+    const float avg = gBlocks ? float(gSumCycles) / float(gBlocks) / period : 0.0f;
+    const float mx = float(gMaxCycles) / period;
+    if (mx > gCandWorst) gCandWorst = mx;
+    gCandLate += unsigned(gLate);
+    ++gCandLines;
+    static char cb[200];
+    char*       p   = cb;
+    const char* end = cb + sizeof(cb);
+    AppendStr(p, end, "CAND ");
+    AppendPadRight(p, end, c.family, 9);
+    AppendStr(p, end, c.room ? " room" : " twin");
+    AppendStr(p, end, " g");
+    AppendInt(p, end, c.groups);
+    AppendStr(p, end, " era ");
+    AppendStr(p, end, kLayNames[c.layout]);
+    if (c.eraSweep) AppendStr(p, end, " sweep");
+    else {
+        AppendStr(p, end, "   .");
+        AppendInt(p, end, int(c.era * 10.0f + 0.5f));
+        AppendStr(p, end, "0");
+    }
+    AppendStr(p, end, " SIZE ");
+    AppendStr(p, end, c.sizeHand < 0 ? "still  " : kHands[c.sizeHand]);
+    AppendStr(p, end, c.frozen ? " FROZEN " : " PLAYING");
+    AppendStr(p, end, " avg ");
+    AppendFixed1(p, end, FracToPercentTenths(avg), 5);
+    AppendStr(p, end, "% max ");
+    AppendFixed1(p, end, FracToPercentTenths(mx), 5);
+    AppendStr(p, end, "% | late blocks ");
+    AppendUInt(p, end, unsigned(gLate));
+    AppendStr(p, end, " of ");
+    AppendUInt(p, end, unsigned(gBlocks));
+    if (c.frozen) AppendStr(p, end, twin ? " | twin on" : " | twin OFF");
+    AppendStr(p, end, "\r\n");
+    TransmitLine(cb, size_t(p - cb));
+}
+
+// One lap, ~15 min: (1) TWINROOM today's twin vs the room, frozen, Neve and cassette, SIZE still / sweep /
+// twists / twists near the top; (2) ERALAYOUT today's eras and A, B, C, ERA swept playing and frozen, then
+// ERA's five centres playing and frozen; (3) SIZEHAND the cassette with SIZE near the top, 2 / 4 / 8 groups,
+// playing and frozen; (4) TARGET the room, 8 groups and each layout.
+void RunCandidateLap(float fs)
+{
+    gPeriodCycles = uint32_t(float(SystemCoreClock) / fs * float(kBlockSize));
+    gCandLines = 0;
+    gCandLate = 0;
+    gCandWorst = 0.0f;
+    static const float kEras[5] = {0.1f, 0.3f, 0.5f, 0.7f, 0.9f};
+    static const int   kRoomHands[4] = {-1, 0, 1, 3};
+    for (int room = 0; room <= IV_ROOM_FW; ++room)
+        for (int e = 0; e < 2; ++e)
+            for (int h : kRoomHands) RunCand({"TWINROOM", room != 0, 2, 0, e ? 0.7f : 0.1f, false, h, true, 5.0f}, fs);
+#if IV_ERA_TEXTURE && IV_ERA_LAYOUT_RUNTIME
+    constexpr int kLayouts = 3;
+#else
+    constexpr int kLayouts = 0;
+#endif
+    for (int lay = 0; lay <= kLayouts; ++lay) {
+        RunCand({"ERALAYOUT", false, 2, lay, 0.5f, true, -1, false, 8.0f}, fs);
+        RunCand({"ERALAYOUT", false, 2, lay, 0.5f, true, -1, true, 8.0f}, fs);
+        for (int fz = 0; fz < 2; ++fz)
+            for (float era : kEras) RunCand({"ERALAYOUT", false, 2, lay, era, false, -1, fz != 0, 3.0f}, fs);
+    }
+    static const int kGroups[3] = {2, 4, 8}, kTopHands[3] = {0, 3, 2};
+    for (int g : kGroups)
+        for (int h : kTopHands)
+            for (int fz = 0; fz < 2; ++fz)
+                RunCand({"SIZEHAND", false, g, 0, 0.7f, false, h, fz != 0, h == 2 ? 6.0f : 5.0f}, fs);
+    for (int lay = 1; lay <= kLayouts; ++lay) {
+        const bool room = IV_ROOM_FW != 0;
+        RunCand({"TARGET", room, 8, lay, 0.7f, false, -1, true, 5.0f}, fs);
+        RunCand({"TARGET", room, 8, lay, 0.7f, false, 3, true, 5.0f}, fs);
+        RunCand({"TARGET", room, 8, lay, 0.7f, true, -1, true, 8.0f}, fs);
+        RunCand({"TARGET", room, 8, lay, 0.7f, false, 0, false, 5.0f}, fs);
+        RunCand({"TARGET", room, 8, lay, 0.7f, true, -1, false, 8.0f}, fs);
+    }
+    engine.setSizeStagger(2);
+    ++gCandLaps;
+    static char eb[160];
+    char*       p   = eb;
+    const char* end = eb + sizeof(eb);
+    AppendStr(p, end, "CANDIDATE LAP ");
+    AppendInt(p, end, gCandLaps);
+    AppendStr(p, end, " DONE: ");
+    AppendInt(p, end, gCandLines);
+    AppendStr(p, end, " lines, worst max ");
+    AppendFixed1(p, end, FracToPercentTenths(gCandWorst), 5);
+    AppendStr(p, end, "%, late blocks in all ");
+    AppendUInt(p, end, gCandLate);
+    AppendStr(p, end, "\r\n");
+    TransmitLine(eb, size_t(p - eb));
+}
+#endif
+
 } // namespace
 
 int main()
@@ -1327,12 +1508,18 @@ int main()
     SetFlushToZero(IV_PROFILE_FZ); // before any FP work (the micro-tests flip it once and put it back)
 
     StartCycleCounter();
+#if IV_PROFILE_CANDIDATE
+    SdramSetTiming(SdtrWith(FMC_Bank5_6_R->SDTR[0], kTightTrp, kTightTrcd)); // as release runs (no micro-tests here)
+#else
     RunMicroTests(); // before the Engine takes (and zeroes) its memory
+#endif
     engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats, gAxi, kAxiFloats);
     engine.prepare(hw.AudioSampleRate(), kBlockSize);
+#if !IV_PROFILE_CANDIDATE
     iv::prof::markHook = ProfMark;
     BuildCornerTable();
     ApplyCorner(0);
+#endif
 
     const float fs      = hw.AudioSampleRate();
     gClickPeriodSamples = size_t(0.5f * fs); // click every 500 ms
@@ -1348,6 +1535,20 @@ int main()
     hw.seed.usb_handle.Init(daisy::UsbHandle::FS_INTERNAL);
     hw.StartAudio(AudioCallback);
 
+#if IV_PROFILE_CANDIDATE
+    System::Delay(3000); // time to open the serial log
+    while (true) {
+        static const char kHello[] = "CANDIDATE START (TWINROOM, ERALAYOUT, SIZEHAND, TARGET; ~15 min a lap)\r\n";
+        TransmitLine(kHello, sizeof(kHello) - 1);
+        hw.SetLed(DaisyVersio::LED_0, 0.0f, 0.0f, 1.0f); // blue while a lap runs
+        hw.UpdateLeds();
+        RunCandidateLap(fs);
+        hw.SetLed(DaisyVersio::LED_0, 0.0f, gCandLate ? 0.0f : 1.0f, gCandLate ? 0.0f : 0.0f);
+        hw.SetLed(DaisyVersio::LED_3, gCandLate ? 1.0f : 0.0f, 0.0f, 0.0f); // red: some block came late
+        hw.UpdateLeds();
+        System::Delay(2000);
+    }
+#else
     bool everExceeded = false;
     while (true) {
         {
@@ -1642,6 +1843,7 @@ int main()
         hw.UpdateLeds();
         System::Delay(20);
     }
+#endif
 }
 
 // =============================================================================

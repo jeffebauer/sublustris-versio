@@ -191,7 +191,10 @@ private:
     float     xfLastInLoop_ IV_ZI, xfAbsOld_[kN][3] IV_ZI; // the loss filter (b1, gain, pole) at the fade's start
     float     xfCos_ = -1.0f, xfSin_ IV_ZI; // the fade's angle (twice it): xfNew_ = (1 - cos) / 2
     int       xfLen_ = 1, xfLeft_ IV_ZI, xfSince_ = -1; // samples; xfSince_: since the start, -1 when no correction runs
-    int       xfStagger_ = 2, xfGroupNext_ IV_ZI; // setStagger; 2 since v1.0.39
+#ifndef IV_SIZE_GROUPS
+#define IV_SIZE_GROUPS 2 // firmware trial (integration dry run): SIZE_GROUPS=8 in firmware/Makefile
+#endif
+    int       xfStagger_ = IV_SIZE_GROUPS, xfGroupNext_ IV_ZI; // setStagger; 2 since v1.0.39
     // Staggered (v1.0.39), all set by reset() before any use (no initialisers: flash, the constructor):
     bool      xfLine_[kN];   // the line fades in this crossfade
     float     xfOff_[kN];    // samples since the line's own trip began, ahead of xfSince_

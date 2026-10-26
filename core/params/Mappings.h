@@ -4,7 +4,7 @@
 // per milestone; numbers marked (start) in SPEC §3 are starting guesses.
 #include "dsp/Drift.h"
 #include "dsp/Era.h"
-#if !defined(IV_FIXED_VOICINGS) || IV_ERA_LAYOUT
+#if !defined(IV_FIXED_VOICINGS) || IV_ERA_LAYOUT || IV_ERA_LAYOUT_RUNTIME
 #include "dsp/EraTexture.h"
 #endif
 #include "params/EraVoicing.h"
@@ -224,7 +224,7 @@ inline dsp::EraMix eraMixShare(float v, float fadeShare)
     return eraMixFromWeights(v, w);
 }
 
-#if !defined(IV_FIXED_VOICINGS) || IV_ERA_LAYOUT
+#if !defined(IV_FIXED_VOICINGS) || IV_ERA_LAYOUT || IV_ERA_LAYOUT_RUNTIME
 // PROTOTYPE (renders/era_rethink; dsp/EraTexture.h): ERA as texture only, in three layouts. Every one keeps
 // the Neve in the loop as the base (its warmth and its ×0.7 highs, never darker with ERA), no cassette wow
 // or flutter (DRIFT's), and from ERA 0 sounds as today's ERA 0.

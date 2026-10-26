@@ -33,8 +33,8 @@ inline float rnd(uint32_t& s)
 // An exact-length ring: read d samples back (d >= 1, fractional by linear interpolation).
 template <int kCap>
 struct Ring {
-    float buf[kCap] = {};
-    int   pos = 0, len = kCap;
+    float buf[kCap] IV_ZI; // IV_ZI (SizeOpt.h): only ever a member, never a local
+    int   pos IV_ZI, len = kCap;
     void  clear()
     {
         for (auto& v : buf) v = 0.0f;
@@ -281,7 +281,9 @@ public:
         }
         snap_ = false;
     }
-    void process(const float* inL, const float* inR, float* outL, float* outR, int n)
+    // Built for size (IV_SIZE_OPT, firmware only; integration dry run): at -O3 it was 2,808 B of flash, at -Os
+    // the room cost 1.4 KB less. Its CPU is what the candidate profile's TWINROOM lines measure.
+    IV_SIZE_OPT void process(const float* inL, const float* inR, float* outL, float* outR, int n)
     {
         constexpr float kNorm = 0.35355339f;
         constexpr float kInS[2][kN] = {{1, -1, 1, -1, 1, -1, 1, -1}, {1, 1, -1, -1, 1, 1, -1, -1}};
@@ -358,15 +360,16 @@ private:
     static constexpr float kMaxSeconds = 0.052f, kApCoeff = 0.6f, kModSeconds = 0.00015f;
     static constexpr float kSlew = 0.0595f; // samples a sample: 2^(1/12) - 1, a semitone's bend at most
     static constexpr float kRatio[kN] = {0.31f, 0.42f, 0.51f, 0.60f, 0.70f, 0.79f, 0.90f, 1.0f};
-    float sr_ = 24000.0f, gain_ = 1.0f, bright_ = 1.0f, shelfK_ = 0.0f;
-    bool  cut_ = false, snap_ = true;
-    float target_[kN] = {};
-    float hb_ = 0.0f, ha1_ = 0.0f, ha2_ = 0.0f, hz_[2][2] = {};
+    // IV_ZI (SizeOpt.h): a member of the Engine (or made by make_unique) only, never a local; prepare() sets the rest.
+    float sr_ = 24000.0f, gain_ = 1.0f, bright_ = 1.0f, shelfK_ IV_ZI;
+    bool  cut_ IV_ZI, snap_ = true;
+    float target_[kN] IV_ZI;
+    float hb_ IV_ZI, ha1_ IV_ZI, ha2_ IV_ZI, hz_[2][2] IV_ZI;
     twinalt::Ring<1360> line_[kN];
     twinalt::Ring<200>  inAp_[2][2];
-    int   apLen_[2][2] = {};
-    float len_[kN] = {}, ay_[kN] = {}, ax_[kN] = {}, ap_[kN] = {};
-    float c0_[kN] = {}, s0_[kN] = {}, rc_[kN] = {}, rs_[kN] = {};
+    int   apLen_[2][2] IV_ZI;
+    float len_[kN] IV_ZI, ay_[kN] IV_ZI, ax_[kN] IV_ZI, ap_[kN] IV_ZI;
+    float c0_[kN] IV_ZI, s0_[kN] IV_ZI, rc_[kN] IV_ZI, rs_[kN] IV_ZI;
     Absorb ab_[kN] = {};
 };
 
