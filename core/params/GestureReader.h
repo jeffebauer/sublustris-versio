@@ -10,6 +10,8 @@
 //     still held at its end→ PAINT until the release (stays frozen).
 //
 // Host-neutral and allocation-free: plain counters in samples.
+#include "dsp/SizeOpt.h"
+
 #include <cstdint>
 
 namespace iv {
@@ -78,8 +80,8 @@ public:
     bool painting() const { return painting_; }
 
 private:
-    uint64_t tapMax_ = 14400, pressAt_ = 0;
-    bool     down_ = false, frozen_ = false, painting_ = false, armed_ = false, pressFroze_ = false;
+    uint64_t tapMax_ = 14400, pressAt_ IV_ZI;
+    bool     down_ IV_ZI, frozen_ IV_ZI, painting_ IV_ZI, armed_ IV_ZI, pressFroze_ IV_ZI;
 };
 
 } // namespace iv

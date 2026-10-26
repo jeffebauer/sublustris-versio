@@ -14,12 +14,12 @@
 namespace iv::dsp {
 
 struct FloorGovernor {
-    float weight = 0.0f;                 // 0 finite DECAY .. 1 infinite
+    float weight IV_ZI;                 // 0 finite DECAY .. 1 infinite
     float floorDb = voicing::kFloorDbfs;   // the level an infinite tail settles at (darkening stops there)
-    float holdDb = 0.0f;                   // a held tail's ceiling (a pad, or infinite after the input), on the slow level
+    float holdDb IV_ZI;                   // a held tail's ceiling (a pad, or infinite after the input), on the slow level
     float slowLevelDb = -200.0f;           // the level over ~kHoldSeconds (an echoey MASSIVE tail swings for seconds)
     float levelDb = -200.0f;
-    float extraRate = 0.0f;              // added loss, 1/T60 in 1/s
+    float extraRate IV_ZI;              // added loss, 1/T60 in 1/s
     float darken = 1.0f;                 // share of the infinite high-end fade to keep
 
     void reset()
@@ -95,8 +95,8 @@ struct FloorGovernor {
     }
 
 private:
-    float power_ = 0.0f, slow_ = 0.0f, block_ = 0.0f, fast_ = 0.0f;
-    float dt_ = -1.0f, cPower_ = 0.0f, cSlow_ = 0.0f, cFast_ = 0.0f; // the smoothing coefficients for dt_
+    float power_ IV_ZI, slow_ IV_ZI, block_ IV_ZI, fast_ IV_ZI;
+    float dt_ = -1.0f, cPower_ IV_ZI, cSlow_ IV_ZI, cFast_ IV_ZI; // the smoothing coefficients for dt_
 };
 
 // A tank segment's absorbent filter (Jot): a first-order shelf crossing at
@@ -145,7 +145,7 @@ struct AbsorbMemo {
 
 // One-argument maths (std::exp and the like) worked out again only when its argument changes.
 struct Memo1 {
-    float x = 3.0e38f, y = 0.0f;
+    float x = 3.0e38f, y IV_ZI;
     template <typename F> float get(float arg, F&& f)
     {
         if (arg != x) {

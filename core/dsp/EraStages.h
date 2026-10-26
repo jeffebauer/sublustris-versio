@@ -24,7 +24,7 @@ namespace iv::dsp {
 
 // Simper's trapezoidal state-variable filter (low, band, high from one state).
 struct EraSvf {
-    float ic1 = 0, ic2 = 0, a1 = 1, a2 = 0, a3 = 0, k = 1.4f;
+    float ic1 IV_ZI, ic2 IV_ZI, a1 = 1, a2 IV_ZI, a3 IV_ZI, k = 1.4f;
     IV_SIZE_OPT void set(float fc, float q, float sr) { setGain(gain(fc, sr), q); }
     // set() in two halves, so filters at one frequency share the sin and cos (the same bits).
     IV_SIZE_OPT static float gain(float fc, float sr)
@@ -129,11 +129,11 @@ public:
 
 private:
     EraSvf aa_[2], rc1_[2], rc2_[2];
-    float  p1_[2] = {}, p2_[2] = {}, envY_[2] = {}, envZ_[2] = {}, held_[2] = {};
-    float  wp_ = 1, a_ = 0, b_ = 0, noise_ = 0, wc_ = 0, we_ = 0, clock_ = 0, clockInc_ = 0.5f, aliasMix_ = 0;
-    bool   tick_ = false;
+    float  p1_[2] IV_ZI, p2_[2] IV_ZI, envY_[2] IV_ZI, envZ_[2] IV_ZI, held_[2] IV_ZI;
+    float  wp_ = 1, a_ IV_ZI, b_ IV_ZI, noise_ IV_ZI, wc_ IV_ZI, we_ IV_ZI, clock_ IV_ZI, clockInc_ = 0.5f, aliasMix_ IV_ZI;
+    bool   tick_ IV_ZI;
     EraRng rng_;
-    bool   setOk_ = false; // set()'s last t and rate (set while setOk_)
+    bool   setOk_ IV_ZI; // set()'s last t and rate (set while setOk_)
     float  setT_, setSr_;
 };
 
@@ -303,15 +303,15 @@ private:
     }
     EraSvf hp_[2], lp1_[2], lp2_[2], dip_[2], crashBp_;
     EraRng rng_;
-    float  sr_ = 48000, t_ = 0, agc_ = 1, slow_ = 0, hissLp_ = 0, wHiss_ = 0.1f, hiss_ = 0, maxBoost_ = 1, makeup_ = 1, inPow_ = 0, outPow_ = 0, wHold_ = 0;
-    float  clickLp_ = 0, clickEnv_ = 0, clickDecay_ = 0, wClick_ = 0.1f, crackleP_ = 0, crackleLvl_ = 0, alpha_ = 2;
-    float  strokeEnv_ = 0, strokeDecay_ = 0, flashLvl_ = 0, crashMean_ = 20;
-    int    crashWait_ = 48000, strokesLeft_ = 0;
-    float  storm_[4] = {}, fi_[4] = {}, fq_[4] = {}, dt_[4] = {}, notch_[4] = {};
-    float  driftGap_ = 8, driftLen_ = 1, driftPeak_ = 0, driftPos_ = -1;
-    float  gNow_ = 1, gStep_ = 0, mEff_ = 1, fl_ = 0, hum_ = 0, nfast_ = 0, wNfast_ = 0;
-    float  dipGain_ = 1, wa_ = 0, wd_ = 0, ws_ = 0, phHum_ = 0;
-    bool   setOk_ = false; // set()'s t-and-rate part is in place for t_ and sr_ (and these set)
+    float  sr_ = 48000, t_ IV_ZI, agc_ = 1, slow_ IV_ZI, hissLp_ IV_ZI, wHiss_ = 0.1f, hiss_ IV_ZI, maxBoost_ = 1, makeup_ = 1, inPow_ IV_ZI, outPow_ IV_ZI, wHold_ IV_ZI;
+    float  clickLp_ IV_ZI, clickEnv_ IV_ZI, clickDecay_ IV_ZI, wClick_ = 0.1f, crackleP_ IV_ZI, crackleLvl_ IV_ZI, alpha_ = 2;
+    float  strokeEnv_ IV_ZI, strokeDecay_ IV_ZI, flashLvl_ IV_ZI, crashMean_ = 20;
+    int    crashWait_ = 48000, strokesLeft_ IV_ZI;
+    float  storm_[4] IV_ZI, fi_[4] IV_ZI, fq_[4] IV_ZI, dt_[4] IV_ZI, notch_[4] IV_ZI;
+    float  driftGap_ = 8, driftLen_ = 1, driftPeak_ IV_ZI, driftPos_ = -1;
+    float  gNow_ = 1, gStep_ IV_ZI, mEff_ = 1, fl_ IV_ZI, hum_ IV_ZI, nfast_ IV_ZI, wNfast_ IV_ZI;
+    float  dipGain_ = 1, wa_ IV_ZI, wd_ IV_ZI, ws_ IV_ZI, phHum_ IV_ZI;
+    bool   setOk_ IV_ZI; // set()'s t-and-rate part is in place for t_ and sr_ (and these set)
     float  steady_, gNorm_, gFloor_, humStep_, lpTop_;
 };
 

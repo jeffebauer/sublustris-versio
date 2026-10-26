@@ -25,6 +25,7 @@
 #include "dsp/HalfRate.h"
 #include "dsp/Plate.h"
 #include "dsp/Shimmer.h"
+#include "dsp/SizeOpt.h"
 #include "dsp/Swell.h"
 #include "dsp/Tape.h"
 // PROTOTYPE (renders/era_rethink): ERA as texture (Mappings.h eraLayoutMix, dsp/EraTexture.h). Desktop:
@@ -318,19 +319,19 @@ private:
     int   maxBlockSize_ = 48;
     std::array<float, static_cast<size_t>(ParamId::Count)> values_{};
     std::array<float, static_cast<size_t>(ParamId::Count)> smooth_{};
-    bool  buttonDown_ = false, gateHigh_ = false;
-    bool  ready_ = false;
+    bool  buttonDown_ IV_ZI, gateHigh_ IV_ZI;
+    bool  ready_ IV_ZI;
 
     dsp::Arena large_, fast_;
 #if !defined(IV_NO_HEAP)
     std::vector<float> ownLarge_, ownFast_, ownAxi_;
 #endif
-    float* attachedLarge_ = nullptr;
-    float* attachedFast_ = nullptr;
-    size_t attachedLargeCount_ = 0, attachedFastCount_ = 0;
+    float* attachedLarge_ IV_ZI;
+    float* attachedFast_ IV_ZI;
+    size_t attachedLargeCount_ IV_ZI, attachedFastCount_ IV_ZI;
 
     dsp::DelayLine    predelay_[2];
-    float             predelayNow_ = 0.0f, predelayTarget_ = 0.0f; // samples
+    float             predelayNow_ IV_ZI, predelayTarget_ IV_ZI; // samples
     dsp::Diffuser<4>  diffuser_[2];
     dsp::Swell        swell_;
     dsp::Swell        twinSwell_; // MASSIVE's twin swells like its tank (owner: no repeats over a frozen MASSIVE)
@@ -346,20 +347,20 @@ private:
     dsp::Fdn          lowFdn_;
     bool              lowTank_ = true;
     static constexpr float kLowAntiAliasHz = 2000.0f;
-    float             xoL_[5] = {}, xoH_[5] = {}, aaL_[5] = {}; // biquads b0 b1 b2 a1 a2: crossover LP/HP, 2 kHz LP
-    float             xoZ_[2][6][2] = {};              // per channel: in LP, in AA, in HP, (spare), out AA
-    int               lowPhase_ = 0;
-    float             lowPrev_[2] = {}, lowCur_[2] = {};
-    float             lowInL_[kChunk / kLowDecimate + 2] = {}, lowInR_[kChunk / kLowDecimate + 2] = {};
-    float             lowOutL_[kChunk / kLowDecimate + 2] = {}, lowOutR_[kChunk / kLowDecimate + 2] = {};
+    float             xoL_[5] IV_ZI, xoH_[5] IV_ZI, aaL_[5] IV_ZI; // biquads b0 b1 b2 a1 a2: crossover LP/HP, 2 kHz LP
+    float             xoZ_[2][6][2] IV_ZI;              // per channel: in LP, in AA, in HP, (spare), out AA
+    int               lowPhase_ IV_ZI;
+    float             lowPrev_[2] IV_ZI, lowCur_[2] IV_ZI;
+    float             lowInL_[kChunk / kLowDecimate + 2] IV_ZI, lowInR_[kChunk / kLowDecimate + 2] IV_ZI;
+    float             lowOutL_[kChunk / kLowDecimate + 2] IV_ZI, lowOutR_[kChunk / kLowDecimate + 2] IV_ZI;
     dsp::HalfRate<kChunk> tankHalf_, twinHalf_; // fdn_ and twinFdn_ run at half the rate (v1.0.35, ADR 0026)
 #ifndef IV_FIXED_VOICINGS
-    int               fitEarlyTaps_ = 0; // setEarlyTapPrototype; 0 = as built
-    uint32_t          fitSwellSeed_ = 0; // setSwellSeedPrototype; 0 = as built
-    bool              halfPrime_ = false; // setHalfRatePrime; false = as built
+    int               fitEarlyTaps_ IV_ZI; // setEarlyTapPrototype; 0 = as built
+    uint32_t          fitSwellSeed_ IV_ZI; // setSwellSeedPrototype; 0 = as built
+    bool              halfPrime_ IV_ZI; // setHalfRatePrime; false = as built
     bool              twinStopFast_ = true; // setTwinStopFast; false = before v1.0.37
     int               fitTapeOs_ = 2;    // setTapeOversamplingPrototype; 4 = before v1.0.38
-    int               fitSwellTaps_ = 0; // setSwellTapsPrototype; 0 = as built
+    int               fitSwellTaps_ IV_ZI; // setSwellTapsPrototype; 0 = as built
     int               twinLight_ = 0;    // setTwinLightPrototype; 0 = as built
     int               twinAlt_ = 0;      // setTwinAltPrototype; 0 = as built
     bool              layerSolo_ = false; // setLayerSoloPrototype
@@ -374,61 +375,61 @@ private:
     int               twinDivide() const { return twinLight_ == 3 ? 4 : (twinLight_ > 0 ? 2 : 1); } // the twin swell's rate, 1/d
     dsp::HalfRate<kChunk> twinInner_;    // setTwinLightPrototype 3: 24 -> 12 kHz
     void              processLightTwin(int n);
-    bool              shimmerLazy_ = false, shimmerArmed_ = true, shimmerResting_ = false; // setShimmerLazyPrototype
-    float             eraSwitch_ = 0.0f; // setEraSwitchPrototype; 0 = as built
+    bool              shimmerLazy_ IV_ZI, shimmerArmed_ = true, shimmerResting_ IV_ZI; // setShimmerLazyPrototype
+    float             eraSwitch_ IV_ZI; // setEraSwitchPrototype; 0 = as built
     float             eraFadeShare_ = voicing::kEraFadeShare; // setEraFadeSharePrototype
     float             driftGrow_ = 0.0f, driftRateGrow_ = 0.0f, driftSineCents_ = 0.0f; // setDriftPrototype
     int               driftSine_ = 0;
     int               eraIdx_ = -1;      // the era playing (< 0: none yet)
-    float             eraW_[voicing::kEraCount] = {}; // each era's weight, crossfading
+    float             eraW_[voicing::kEraCount] IV_ZI; // each era's weight, crossfading
 #endif
     dsp::Plate        twinPlate_;
     dsp::Diffuser<4>  twinDiffuser_[2];
     float             twinMean_ = -1.0f, twinSpread_ = -1.0f;
-    float             twinIn_ = 0.0f, twinInStep_ = 0.0f;
-    bool              twinActive_ = false;
+    float             twinIn_ IV_ZI, twinInStep_ IV_ZI;
+    bool              twinActive_ IV_ZI;
     dsp::Shimmer      shimmer_; // ATTACK's third position (ADR 0024)
     float             eraMakeup_ = 1.0f;
     // Ducking (ADR 0014) and the limiter (SPEC §4.10).
     dsp::Tilt         tilt_;
     dsp::Limiter      limiter_;
-    float             duck_ = 0.0f, duckGrDb_ = 0.0f, duckGain_ = 1.0f, duckGainStep_ = 0.0f; // ducking: LEDs 0..1, reduction dB, wet gain
+    float             duck_ IV_ZI, duckGrDb_ IV_ZI, duckGain_ = 1.0f, duckGainStep_ IV_ZI; // ducking: LEDs 0..1, reduction dB, wet gain
     // ERA's sources into the tank's input (SPEC §4.7): cassette hiss, Midiverb crackle.
     uint32_t          noiseSeed_ = 0xA11CEu;
-    float             hissLp_[2] = {}, hissGain_ = 0.0f, crackleChance_ = 0.0f, crackleGain_ = 0.0f;
+    float             hissLp_[2] IV_ZI, hissGain_ IV_ZI, crackleChance_ IV_ZI, crackleGain_ IV_ZI;
     float             lastMean_ = -1.0f, lastSpread_ = -1.0f;
     float             hallSize_ = 0.5f; // HALL's SIZE for its gains, glided (applySpace)
 
     // SPACE flips (ADR 0013): the wet and the tank's input fade out, the
     // tank restarts in the new voicing, and both fade back in.
-    int   activeSpace_ = 1, flipPhase_ = 0; // 0 steady, 1 fading out, 2 fading in
-    float flipGain_ = 1.0f, flipStep_ = 0.0f;
+    int   activeSpace_ = 1, flipPhase_ IV_ZI; // 0 steady, 1 fading out, 2 fading in
+    float flipGain_ = 1.0f, flipStep_ IV_ZI;
     // ATTACK = SHIMMER: the octave's send fades in and out over kAttackFadeSeconds; it rests while
     // frozen. shimmerAmount_: TIME, how much shimmer.
-    float shimmerMix_ = 0.0f, shimmerTarget_ = 0.0f, shimmerAmount_ = 0.0f;
+    float shimmerMix_ IV_ZI, shimmerTarget_ IV_ZI, shimmerAmount_ IV_ZI;
     float modScale_ = 1.0f;  // test hook (setModulationScale)
     // TIME's pre-delay crossfade (Engine::controlTick, ADR 0025): the old delay, the rest before it
     // starts, the fade's gains (stepped by a rotation).
-    float pdOld_ = 0.0f, pdLastTarget_ = 0.0f, pdRest_ = 0.0f, pdOldG_ = 0.0f, pdNewG_ = 1.0f, pdRotC_ = 1.0f, pdRotS_ = 0.0f;
-    int   pdXfLeft_ = 0;
+    float pdOld_ IV_ZI, pdLastTarget_ IV_ZI, pdRest_ IV_ZI, pdOldG_ IV_ZI, pdNewG_ = 1.0f, pdRotC_ = 1.0f, pdRotS_ IV_ZI;
+    int   pdXfLeft_ IV_ZI;
     dsp::BbdStage   bbd_;   // ERA's bucket-brigade and radio, on the wet (ADR 0021, dsp/EraStages.h)
     dsp::RadioStage radio_;
-    float bbdW_ = 0, radioW_ = 0;
+    float bbdW_ IV_ZI, radioW_ IV_ZI;
     float decayMakeup_ = 1.0f, decayGain_ = 1.0f, decayGainNow_ = 1.0f; // DECAY's level make-up (v1.0.28)
-    float tapeDrive_ = 0.0f;
+    float tapeDrive_ IV_ZI;
     bool  tapeOn_ = true; // test hook (setTapeOut)
-    float tapeMix_ = 0.0f; // tape out's fade in/out
+    float tapeMix_ IV_ZI; // tape out's fade in/out
     dsp::TapeOut tape_[2]; // tape out (v1.0.27, dsp/Tape.h)
 #if IV_ERA_TEXTURE
     dsp::EraTexture texture_; // PROTOTYPE (renders/era_rethink)
-    bool texOn_ = false;
+    bool texOn_ IV_ZI;
 #if defined(IV_FIXED_VOICINGS)
     static constexpr int eraLayout_ = IV_ERA_LAYOUT;
 #else
     int eraLayout_ = 0; // setEraLayoutPrototype
 #endif
 #endif
-    float diffMotionNow_ = 0.0f, diffMotionPhase_ = 0.0f; // the PLATE's wandering input allpass, samples
+    float diffMotionNow_ IV_ZI, diffMotionPhase_ IV_ZI; // the PLATE's wandering input allpass, samples
     float hallInLoop_ = voicing::kHallInLoopDiffusion; // setHallInLoopDiffusion overrides it (renders/hall_diffusion)
 
     // Freeze (ADR 0009–0011). Button and gate edges this block, by offset.
@@ -436,42 +437,42 @@ private:
         int  offset;
         bool isButton, level;
     };
-    Edge          edges_[kMaxEdges] = {};
-    int           edgeCount_ = 0;
+    Edge          edges_[kMaxEdges] IV_ZI;
+    int           edgeCount_ IV_ZI;
     GestureReader gesture_;
-    uint64_t      clock_ = 0;            // samples since prepare
+    uint64_t      clock_ IV_ZI;            // samples since prepare
     float heldSize_ = 0.5f, heldDecay_ = 0.5f; // the big tank's SIZE and DECAY, frozen with it
-    float freezeMix_ = 0.0f;             // 0 normal .. 1 a still pad (in-loop colour out, gain 1)
-    float tankIn_ = 1.0f, tankInStep_ = 0.0f;
-    float paint_ = 0.0f, paintRoom_ = 1.0f; // paintRoom_: 1 → 0 as a painted pad nears its ceiling
+    float freezeMix_ IV_ZI;             // 0 normal .. 1 a still pad (in-loop colour out, gain 1)
+    float tankIn_ = 1.0f, tankInStep_ IV_ZI;
+    float paint_ IV_ZI, paintRoom_ = 1.0f; // paintRoom_: 1 → 0 as a painted pad nears its ceiling
     float padFloorDb_ = -24.0f;
-    bool  padCaptured_ = false; // the pad's own level has been taken as its ceiling
-    uint64_t frozeAt_ = 0;
+    bool  padCaptured_ IV_ZI; // the pad's own level has been taken as its ceiling
+    uint64_t frozeAt_ IV_ZI;
     // Input quiet detector for holding an infinite tail where it settled.
-    float    inputPower_ = 0.0f;
-    float    tankInPower_ = 0.0f; // the big tank's input (after the swell), for the quiet detector
-    uint64_t quietSince_ = 0;
-    bool     tailCaptured_ = false;
+    float    inputPower_ IV_ZI;
+    float    tankInPower_ IV_ZI; // the big tank's input (after the swell), for the quiet detector
+    uint64_t quietSince_ IV_ZI;
+    bool     tailCaptured_ IV_ZI;
     float    tailCeilingDb_ = -24.0f;
     float tankInTarget_ = 1.0f;
 
     // MIX, ramped per sample across each control chunk.
-    float dryNow_ = 1.0f, wetNow_ = 0.0f, dryStep_ = 0.0f, wetStep_ = 0.0f;
+    float dryNow_ = 1.0f, wetNow_ IV_ZI, dryStep_ IV_ZI, wetStep_ IV_ZI;
 
     // Scratch for one chunk.
-    float bufL_[kChunk] = {}, bufR_[kChunk] = {}, wetL_[kChunk] = {}, wetR_[kChunk] = {};
-    float twinInL_[kChunk] = {}, twinInR_[kChunk] = {}, twinL_[kChunk] = {}, twinR_[kChunk] = {};
-    float chunkGain_[kChunk] = {}; // the tank's input gain (tankIn_ x flipGain_) per sample, kept for after the swell
+    float bufL_[kChunk] IV_ZI, bufR_[kChunk] IV_ZI, wetL_[kChunk] IV_ZI, wetR_[kChunk] IV_ZI;
+    float twinInL_[kChunk] IV_ZI, twinInR_[kChunk] IV_ZI, twinL_[kChunk] IV_ZI, twinR_[kChunk] IV_ZI;
+    float chunkGain_[kChunk] IV_ZI; // the tank's input gain (tankIn_ x flipGain_) per sample, kept for after the swell
     static_assert(kChunk <= dsp::Swell::kMaxBlock, "the swell runs a chunk at a time");
     // The ERA each tank was sent last (eraChanged), as an EraMix's bytes; eraSentOk_: which are set.
     unsigned char eraSent_[EraSentCount][sizeof(dsp::EraMix)];
-    uint8_t       eraSentOk_ = 0;
+    uint8_t       eraSentOk_ IV_ZI;
 
     // The allpass lines' memory (attachMemory's axi): last, so no other member's offset moves (the
     // per-sample code's load offsets, and with them its flash, stay as they were).
     dsp::Arena axi_;
-    float*     attachedAxi_ = nullptr;
-    size_t     attachedAxiCount_ = 0;
+    float*     attachedAxi_ IV_ZI;
+    size_t     attachedAxiCount_ IV_ZI;
 };
 
 } // namespace iv
