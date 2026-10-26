@@ -10,7 +10,6 @@
 - [ ] **Merge `claude/massive-air` into main?** It holds everything since v1.0.33 (SIZE/TIME crossfade, the CPU work, v1.0.34-36, the profile builds, and now the overnight review's speed-ups and report), all tests passing. Your OK first.
 
 ### Listen (after your notes)
-- [ ] **`twin_louder`: the layer over a frozen pad** (pick one): `/Users/jesse/Documents/Sites/immensio-versio/renders/twin_louder/index.html`. In HALL and MASSIVE the twin sits 12-15 dB under the pad, not the 6 dB you picked in v1.0.14. A today; B louder (back to ~6 dB under); C much louder (about level with the pad); D no twin (bring MIX down: only the dry carries what you play; it also fixes the frozen cassette's CPU). The pad is the same in every version; Paint lifts it the same in all four. Flash: one level for both spaces 0 B, a level each +80 B, no twin -208 B.
 - [ ] *(on hold after the two above)* `frozen_twin` (a lighter twin): only matters if you keep a twin; `/Users/jesse/Documents/Sites/immensio-versio/renders/frozen_twin/index.html`.
 - [ ] **BLOOM's swell: other seeds** (your note: the 12 points "seemed to accentuate the mids"): http://192.168.1.238:8766/swell_seed/index.html. Measured: 12 and 24 points are equally even on noise and note by note; which notes stand out moves with TIME and the seed. B-D are the three most even seeds; E the old 24 points for reference.
 
@@ -28,6 +27,8 @@
 
 ## Waiting on Claude
 
+- **The twin at 8 dB under the pad** (v1.0.41, your pick): being built and checked; then a page to confirm it, or straight into the next flash.
+- **A lighter blur instead of the twin** (your question: allpass width and blur, the two videos): research first, then a page against today's twin if something fits. It would also free the frozen cassette's CPU.
 - **CPU: a frozen MASSIVE with the cassette** (round 15: 104.8 % in real time, late on nearly every block; everything else fits). The levers: a lighter twin while frozen (a page), the block size (+1 ms latency, your call), and measuring the ERA overlap positions (never timed on the module). Close to the line too: the moment of freezing (100.6 % for one block), MASSIVE SHIMMER (99 %).
 - **ERA's tape → radio hand-over**, if it still sounds abrupt at 20 %: the tape's sparkle fades with the cassette's drive, early in the overlap; the drive's own curve is the next thing to try (a page).
 - **The playing build's flash**: 112,548 B, 92 B under the 110 KB budget. Anything new needs bytes found first.
@@ -41,6 +42,7 @@
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 
 ## Done
+- [x] **The twin louder: 8 dB under the pad** (26 Oct 2026, `renders/twin_louder`, MIX 50 %: B "louder" on every card, the repeated cards agreeing; "Let's shoot for 8db under the pad"). In HALL and MASSIVE the layer over a frozen pad comes up from 12-15 dB under to about 8 dB under. Being built as v1.0.41 (Waiting on Claude).
 - [x] **The freeze moment stays as built** (26 Oct 2026, `renders/freeze_moment`, MIX 50 %: "A today sounds more seamless. B and C seem to drop in amplitude when frozen/pad alone."). Holding or gliding the ducking at the tap made the frozen pad sit under the swell you'd been hearing; today's quick let-go is kept. Nothing changes in the Core or the flash.
 - [x] **ERA's overlap** (26 Oct 2026, after `era_overlap`: "Let's go for B but split the difference by having it crossfade over 20%"): built as v1.0.40; each era fades in over the first fifth of its stretch (was a third).
 - 26 Oct 2026: **M3 CPU check, round 15: SIZE's crossfade fits** (your run). Moving SIZE in MASSIVE now peaks at 88 % (was 105 %), the big SIZE jump at 97 % (was 112 %); nothing else moved. Still over: a frozen MASSIVE with the cassette (~105 %, so it would crackle while frozen). Log: `docs/research/m3-round15.log` on the branch.
