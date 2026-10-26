@@ -34,25 +34,19 @@ RELEASE_DIAG ?= 0
 # RELEASE_LATE_LIGHT=1: the rightmost LED flashes red after a late block, amber after a near one
 # (immensio_versio-latelight.bin; a diagnostic, not in the normal build: flash).
 RELEASE_LATE_LIGHT ?= 0
-# ERA_LAYOUT=1|2|3 (PROTOTYPE, renders/era_rethink): release or profile with that ERA layout (A, B, C:
-# core/params/Mappings.h eraLayoutMix) in place of today's eras, to measure its flash as it would ship
-# (immensio_versio-era1.bin, ...). Unset: as built.
-ERA_LAYOUT ?=
 # Integration dry run (trial switches, all off by default; each gets its own .bin name):
 #   TWIN_ROOM=1   the voiced small room in place of HALL's and MASSIVE's twin tank (Engine.h IV_TWIN_ROOMV);
 #                 in the profile, both, chosen while it runs (-room)
 #   SIZE_GROUPS=8 SIZE's crossfade in 8 groups as the default (Fdn.h IV_SIZE_GROUPS; -g8)
-#   ERA_RUNTIME=1 profile only: today's eras and layouts A, B, C, chosen while it runs (-erarun)
 #   CANDIDATE=1   profile only: the candidate lap (main.cpp IV_PROFILE_CANDIDATE) in place of the corner lap,
 #                 the micro-tests and the size_moves hunt (-candidate)
 TWIN_ROOM ?=
 SIZE_GROUPS ?=
-ERA_RUNTIME ?=
 CANDIDATE ?=
 TRIAL_TAG = $(if $(TWIN_ROOM),-room)$(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))
-TRIAL_DEFS = $(if $(TWIN_ROOM), -DIV_TWIN_ROOMV=1)$(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(ERA_RUNTIME), -DIV_ERA_LAYOUT_RUNTIME=1)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)
-RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)$(if $(filter 1,$(RELEASE_LATE_LIGHT)),-latelight)$(if $(ERA_LAYOUT),-era$(ERA_LAYOUT))$(TRIAL_TAG)
-PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(if $(ERA_LAYOUT),-era$(ERA_LAYOUT))$(TRIAL_TAG)$(if $(ERA_RUNTIME),-erarun)$(if $(CANDIDATE),-candidate)
+TRIAL_DEFS = $(if $(TWIN_ROOM), -DIV_TWIN_ROOMV=1)$(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)
+RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)$(if $(filter 1,$(RELEASE_LATE_LIGHT)),-latelight)$(TRIAL_TAG)
+PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)
 
 ifeq ($(MODE),m0test)
   TARGET    = immensio_versio_m0test
@@ -95,7 +89,7 @@ else
   CPP_SOURCES = main.cpp no_uart_spi.cpp $(wildcard ../core/dsp/*.cpp)
 endif
 C_INCLUDES += -I../core
-C_DEFS     += $(MODE_DEFS) -DIV_PROFILE_BLOCK=$(PROFILE_BLOCK)$(if $(ERA_LAYOUT), -DIV_ERA_LAYOUT=$(ERA_LAYOUT))$(TRIAL_DEFS)
+C_DEFS     += $(MODE_DEFS) -DIV_PROFILE_BLOCK=$(PROFILE_BLOCK)$(TRIAL_DEFS)
 # Firmware build: core/dsp/SizeOpt.h's IV_SIZE_OPT (-Os on control-rate code)
 # and the shipped-voicings-only switch key off this.
 C_DEFS     += -DIV_FIXED_VOICINGS

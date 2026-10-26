@@ -1,9 +1,10 @@
 #pragma once
-// PROTOTYPE (renders/era_rethink; the owner, 26 Oct 2026: keep ERA's grit, not its darkening or its
-// wobble): ERA as texture only, on the wet after the loop, one stereo chain whose stages the three
-// layouts (Mappings.h eraLayoutMix: A grit path, B saturation then texture, C one wear amount) blend in.
-// No stage low-passes the signal (TONE owns the highs) and none moves its pitch (DRIFT owns movement);
-// the Neve's warmth stays in the loop as the base (dsp/Era.h). docs/research/era-rethink.md.
+// ERA's wear (P4, SPEC §4.7; v1.0.42, the owner's pick C on renders/era_rethink, "one wear amount"): on the
+// wet after the loop, one stereo chain whose stages all come in near the start of the knob and deepen
+// together (Mappings.h eraMix). It keeps the grit the owner likes, the Midiverb's and the BBD's, tape
+// saturation, the radio's band-pass and its wandering dip; no stage low-passes the signal (TONE owns the
+// highs) and none moves its pitch (DRIFT owns movement). The Neve's warmth stays in the loop as the base
+// (dsp/Era.h). docs/research/era-rethink.md.
 //
 //   tape:    record pre-emphasis around a soft clip, then the exact de-emphasis (Strymon's and
 //            Chowdhury's tape models); a little bias for even harmonics. The clip is a clamped cubic at
@@ -43,7 +44,6 @@ struct TexMix {
     float clockW = 0, clockT = 0;
     float grainW = 0, grainT = 0;
     float bandW = 0, bandT = 0;
-    float makeup = 1.0f; // the chain's level against the Neve base on music (Mappings.h)
 };
 
 namespace tex {
@@ -145,6 +145,10 @@ public:
         sr_ = sr;
     }
 
+    // The level hold is back at unity (within -80 dB): with every stage out, the chain may stop running. Turned
+    // off while the hold still made up a level, the wet stepped (a click turning ERA down to 0).
+    bool settled() const { return std::fabs(hold_ - 1.0f) < 1e-4f && std::fabs(holdAim_ - 1.0f) < 1e-4f; }
+
     void process(float& l, float& r)
     {
         float x[2] = {l, r};
@@ -175,9 +179,8 @@ public:
         const float out = 0.5f * (x[0] + x[1]) - hpOut_;
         outPow_ += wHold_ * (out * out - outPow_);
         hold_ += holdStep_;
-        const float g = hold_ * m_.makeup;
-        l = x[0] * g;
-        r = x[1] * g;
+        l = x[0] * hold_;
+        r = x[1] * hold_;
     }
 
 private:

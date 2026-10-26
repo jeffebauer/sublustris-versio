@@ -18,7 +18,7 @@
 // DTCM arrays before prepare(). Desktop Hosts may skip it: the Engine then
 // owns vectors (not in the firmware, which builds with IV_NO_HEAP).
 #include "dsp/Diffuser.h"
-#include "dsp/EraStages.h"
+#include "dsp/EraTexture.h"
 #include "dsp/Fdn.h"
 #include "dsp/Memory.h"
 #include "dsp/Output.h"
@@ -27,23 +27,6 @@
 #include "dsp/Shimmer.h"
 #include "dsp/SizeOpt.h"
 #include "dsp/Swell.h"
-#include "dsp/Tape.h"
-// PROTOTYPE (renders/era_rethink): ERA as texture (Mappings.h eraLayoutMix, dsp/EraTexture.h). Desktop:
-// setEraLayoutPrototype. Firmware: IV_ERA_LAYOUT=1|2|3 builds that layout in place of today's eras (for
-// its flash, as it would ship; firmware/Makefile ERA_LAYOUT); unset, the firmware is as built.
-// Profile only (integration dry run): IV_ERA_LAYOUT_RUNTIME=1 builds today's eras and the three layouts,
-// chosen while it runs (setEraLayoutProfile), as the desktop does.
-#if !defined(IV_FIXED_VOICINGS) || IV_ERA_LAYOUT || IV_ERA_LAYOUT_RUNTIME
-#define IV_ERA_TEXTURE 1
-#include "dsp/EraTexture.h"
-#else
-#define IV_ERA_TEXTURE 0
-#endif
-#if defined(IV_FIXED_VOICINGS) && IV_ERA_LAYOUT && !IV_ERA_LAYOUT_RUNTIME
-#define IV_ERA_TODAY 0
-#else
-#define IV_ERA_TODAY 1
-#endif
 // PROTOTYPE, firmware only (integration dry run): IV_TWIN_ROOMV=1 builds the voiced small room (dsp/TwinAlt.h
 // TwinRoomV; renders/small_room C: the twin tank's loss, a 150 Hz low cut, at -8.1 dB in MASSIVE, -9.1 dB in
 // HALL) in place of HALL's and MASSIVE's twin tank, for its flash as it would ship (firmware/Makefile
@@ -144,8 +127,6 @@ public:
     // Test hook: how much of DECAY's level make-up applies (1 = v1.0.28; 0 = none, shorter tails
     // quieter, as v1.0.27), for demos.
     void  setDecayMakeup(float k) { decayMakeup_ = k; }
-    // Test hook: false = no tape out (ERA's cassette stage without its output tape), for measuring.
-    void  setTapeOut(bool on) { tapeOn_ = on; }
     // Test hook: false = one tank, the lows moving too (before v1.0.18), for demos.
     void  setStillLows(bool on)
     {
@@ -182,10 +163,7 @@ public:
     // unfreeze whatever DECAY was.
     void  setTwinStopFast(bool on) { twinStopFast_ = on; }
     // PROTOTYPES (overnight review, 26 Oct 2026; CPU options for the owner, behind renderer hooks):
-    // the tape out's oversampling, 2 (as built since v1.0.38, the owner's pick on renders/tape_os) or 4
-    // (before). Re-prepares the Engine.
-    void  setTapeOversamplingPrototype(int factor);
-    // The still lows' tank at 1/d of the rate, kLowDecimate (4, as built) .. kLowDecimateMax (8),
+    // the still lows' tank at 1/d of the rate, kLowDecimate (4, as built) .. kLowDecimateMax (8),
     // renders/still_lows_rate. Re-prepares the Engine (before the tank is laid out).
     void  setLowDecimatePrototype(int d);
     // The swell's points per side, Swell::kTaps (12, as built) .. Swell::kDraws (24, before v1.0.35),
@@ -194,23 +172,6 @@ public:
     // The shimmer records only while ATTACK is on SHIMMER (frozen too) or its send is still fading
     // (cost-input c1): switching in, its first grains have only what was played since.
     void  setShimmerLazyPrototype(bool on) { shimmerLazy_ = on; }
-    // PROTOTYPE (owner, 26 Oct 2026: "even with the overlap ... a hard transition between tape and
-    // radio"; renders/era_switch): ERA without the overlaps. Each era plays alone across its whole fifth;
-    // crossing a boundary crossfades to the next over `seconds` (0 = as built: the overlaps). A small
-    // sticky zone at each boundary keeps a resting knob from flipping. Only one era's stage runs outside
-    // a crossfade.
-    // PROTOTYPE (renders/era_overlap; the owner, on era_switch: keep the overlaps, "although I feel we could
-    // narrow the crossover areas"): each era fades in over `share` of its stretch (kEraFadeShare, a fifth
-    // since v1.0.40; a third before).
-    void  setEraFadeSharePrototype(float share) { eraFadeShare_ = share > 0.0f && share <= 1.0f ? share : voicing::kEraFadeShare; }
-    // PROTOTYPE (renders/era_rethink): ERA's layout, 0 as built, 1 A grit path, 2 B saturation then
-    // texture, 3 C one wear amount (Mappings.h eraLayoutMix).
-    void  setEraLayoutPrototype(int layout) { eraLayout_ = layout >= 1 && layout <= 3 ? layout : 0; }
-    void  setEraSwitchPrototype(float seconds)
-    {
-        eraSwitch_ = seconds;
-        eraIdx_    = -1;
-    }
     // PROTOTYPE (renders/frozen_twin; round 15: a frozen MASSIVE with the cassette ran ~105 % of the
     // module's CPU, the twin ~28 points of it): a lighter twin. 0 as built; 1 its swell at 24 kHz inside
     // its half-rate stage; 2 that, no in-loop diffusion and two early taps a line; 3 its swell and tank
@@ -257,9 +218,6 @@ public:
     int   swellTaps() const { return swell_.tapCount(); }
 #endif
 #if !defined(IV_FIXED_VOICINGS) || defined(IV_PROFILE_HOOKS) // the profile firmware's SIZEHAND lines too
-#if IV_ERA_TEXTURE && defined(IV_FIXED_VOICINGS) && IV_ERA_LAYOUT_RUNTIME
-    void  setEraLayoutProfile(int layout) { eraLayout_ = layout >= 1 && layout <= 3 ? layout : 0; } // 0 today's eras
-#endif
 #if IV_ROOM_FW && defined(IV_PROFILE_HOOKS)
     void  setTwinRoomProfile(bool on) { twinAlt_ = on ? 4 : 0; } // takes effect at the twin's next start
 #endif
@@ -324,7 +282,6 @@ private:
     }
     float hysteresisSize(float size, float& held, bool snap) const; // SIZE's hysteresis (v1.0.37)
 #ifndef IV_FIXED_VOICINGS
-    dsp::EraMix switchedEra(float v, int n, bool snap); // setEraSwitchPrototype
 #endif
     float sizeHyst_ = voicing::kSizeHysteresis; // setSizeHysteresis
     float sizeHeld_ = -1.0f, twinSizeHeld_ = -1.0f; // the SIZE the tank and the twin have (< 0: none yet)
@@ -377,7 +334,6 @@ private:
     uint32_t          fitSwellSeed_ IV_ZI; // setSwellSeedPrototype; 0 = as built
     bool              halfPrime_ IV_ZI; // setHalfRatePrime; false = as built
     bool              twinStopFast_ = true; // setTwinStopFast; false = before v1.0.37
-    int               fitTapeOs_ = 2;    // setTapeOversamplingPrototype; 4 = before v1.0.38
     int               fitSwellTaps_ IV_ZI; // setSwellTapsPrototype; 0 = as built
     int               twinLight_ = 0;    // setTwinLightPrototype; 0 = as built
     int               twinAlt_ = 0;      // setTwinAltPrototype; 0 = as built
@@ -394,12 +350,8 @@ private:
     dsp::HalfRate<kChunk> twinInner_;    // setTwinLightPrototype 3: 24 -> 12 kHz
     void              processLightTwin(int n);
     bool              shimmerLazy_ IV_ZI, shimmerArmed_ = true, shimmerResting_ IV_ZI; // setShimmerLazyPrototype
-    float             eraSwitch_ IV_ZI; // setEraSwitchPrototype; 0 = as built
-    float             eraFadeShare_ = voicing::kEraFadeShare; // setEraFadeSharePrototype
     float             driftGrow_ = 0.0f, driftRateGrow_ = 0.0f, driftSineCents_ = 0.0f; // setDriftPrototype
     int               driftSine_ = 0;
-    int               eraIdx_ = -1;      // the era playing (< 0: none yet)
-    float             eraW_[voicing::kEraCount] IV_ZI; // each era's weight, crossfading
 #endif
     dsp::Plate        twinPlate_;
     dsp::Diffuser<4>  twinDiffuser_[2];
@@ -412,7 +364,7 @@ private:
     dsp::Tilt         tilt_;
     dsp::Limiter      limiter_;
     float             duck_ IV_ZI, duckGrDb_ IV_ZI, duckGain_ = 1.0f, duckGainStep_ IV_ZI; // ducking: LEDs 0..1, reduction dB, wet gain
-    // ERA's sources into the tank's input (SPEC §4.7): cassette hiss, Midiverb crackle.
+    // ERA's sources into the tank's input (SPEC §4.7): the tape's hiss, the Midiverb's crackle.
     uint32_t          noiseSeed_ = 0xA11CEu;
     float             hissLp_[2] IV_ZI, hissGain_ IV_ZI, crackleChance_ IV_ZI, crackleGain_ IV_ZI;
     float             lastMean_ = -1.0f, lastSpread_ = -1.0f;
@@ -430,25 +382,9 @@ private:
     // starts, the fade's gains (stepped by a rotation).
     float pdOld_ IV_ZI, pdLastTarget_ IV_ZI, pdRest_ IV_ZI, pdOldG_ IV_ZI, pdNewG_ = 1.0f, pdRotC_ = 1.0f, pdRotS_ IV_ZI;
     int   pdXfLeft_ IV_ZI;
-    dsp::BbdStage   bbd_;   // ERA's bucket-brigade and radio, on the wet (ADR 0021, dsp/EraStages.h)
-    dsp::RadioStage radio_;
-    float bbdW_ IV_ZI, radioW_ IV_ZI;
     float decayMakeup_ = 1.0f, decayGain_ = 1.0f, decayGainNow_ = 1.0f; // DECAY's level make-up (v1.0.28)
-    float tapeDrive_ IV_ZI;
-    bool  tapeOn_ = true; // test hook (setTapeOut)
-    float tapeMix_ IV_ZI; // tape out's fade in/out
-    dsp::TapeOut tape_[2]; // tape out (v1.0.27, dsp/Tape.h)
-#if IV_ERA_TEXTURE
-    dsp::EraTexture texture_; // PROTOTYPE (renders/era_rethink)
+    dsp::EraTexture texture_; // ERA's wear on the wet (v1.0.42)
     bool texOn_ IV_ZI;
-#if defined(IV_FIXED_VOICINGS) && IV_ERA_LAYOUT_RUNTIME
-    int eraLayout_ IV_ZI; // setEraLayoutProfile
-#elif defined(IV_FIXED_VOICINGS)
-    static constexpr int eraLayout_ = IV_ERA_LAYOUT;
-#else
-    int eraLayout_ = 0; // setEraLayoutPrototype
-#endif
-#endif
 #if IV_ROOM_FW
     dsp::TwinRoomV roomFw_; // IV_TWIN_ROOMV: the voiced room in place of the twin tank
     float roomLevel_ IV_ZI, roomCoef_ IV_ZI; // its 50 ms power (the twin stops on it), the one-pole's step

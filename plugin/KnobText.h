@@ -1,8 +1,8 @@
 #pragma once
 // Knob value text, one place for the plugin window and the host's own parameter view (Ableton's
 // device panel, automation lanes): percent of travel; DRIFT as its side and amount (ADR 0012: left
-// tape wow/flutter, right wander, noon still); ERA as the era whose fifth of the knob it's in and how
-// far through that fifth (ADR 0021: Neve, Midiverb, BBD, Cassette, Radio; "Cassette 40 %").
+// tape wow/flutter, right wander, noon still); ERA as its amount of wear (v1.0.42, one wear amount over
+// the Neve base: "Wear 40 %"; until then the era whose fifth it was in).
 #include "params/EraVoicing.h"
 #include "params/ParamSpec.h"
 
@@ -21,12 +21,7 @@ inline juce::String knobText(ParamId id, double value)
         if (v > voicing::kDriftDeadHi) return "Drift " + pct((v - voicing::kDriftDeadHi) / (1.0f - voicing::kDriftDeadHi));
         return "Still";
     }
-    if (id == ParamId::Era) {
-        static const char* const kNames[voicing::kEraCount] = {"Neve", "Midiverb", "BBD", "Cassette", "Radio"};
-        const float pos = std::clamp(v, 0.0f, 1.0f) * float(voicing::kEraCount);
-        const int   era = std::min(int(pos), voicing::kEraCount - 1); // fully CW is the radio's 100 %
-        return juce::String(kNames[era]) + " " + pct(pos - float(era));
-    }
+    if (id == ParamId::Era) return "Wear " + pct(std::clamp(v, 0.0f, 1.0f));
     return pct(v);
 }
 

@@ -4,9 +4,7 @@
 // per milestone; numbers marked (start) in SPEC §3 are starting guesses.
 #include "dsp/Drift.h"
 #include "dsp/Era.h"
-#if !defined(IV_FIXED_VOICINGS) || IV_ERA_LAYOUT || IV_ERA_LAYOUT_RUNTIME
 #include "dsp/EraTexture.h"
-#endif
 #include "params/EraVoicing.h"
 #include "params/SpaceVoicing.h"
 
@@ -98,8 +96,8 @@ inline float bloomSeconds(float v) { return expLerp(0.12f, 4.0f, v); }
 // SIZE (P5) in PLATE: the tank's scale, 0.5 → 1.59 of Dattorro's (SPEC §3).
 inline float plateScale(float v) { return expLerp(voicing::kPlateMinScale, voicing::kPlateMaxScale, v); }
 
-// DRIFT (P6), bipolar (ADR 0012) + ERA's cassette wow/flutter (SPEC §4.7).
-inline dsp::DriftAmounts driftAmounts(float drift, float cassette)
+// DRIFT (P6), bipolar (ADR 0012). (ERA's cassette added its own wow and flutter until v1.0.42.)
+inline dsp::DriftAmounts driftAmounts(float drift)
 {
     using namespace voicing;
     dsp::DriftAmounts a;
@@ -115,14 +113,6 @@ inline dsp::DriftAmounts driftAmounts(float drift, float cassette)
         a.wowHz = kWanderHzMin + (kWanderHzMax - kWanderHzMin) * t;
         a.rateSpread = kWanderRateSpread;
     }
-    // The cassette's own wow and flutter add on top (rates blended by depth).
-    if (cassette > 0.0f) {
-        const float w = kCassetteWowCents * cassette, f = kCassetteFlutterCents * cassette;
-        if (a.wowCents + w > 0.0f) a.wowHz = (a.wowCents * a.wowHz + w * kCassetteWowHz) / (a.wowCents + w);
-        a.wowCents += w;
-        if (a.flutterCents + f > 0.0f) a.flutterHz = (a.flutterCents * a.flutterHz + f * kCassetteFlutterHz) / (a.flutterCents + f);
-        a.flutterCents += f;
-    }
     return a;
 }
 
@@ -132,15 +122,14 @@ inline dsp::DriftAmounts driftAmounts(float drift, float cassette)
 // left"). grow: each side's depth × (1 + grow·x²) and rateGrow its wow's rate × (1 + rateGrow·x²),
 // x = 0 over the first half of the side, 1 at its end (the first half stays as today). sine 1: the
 // right side a sine at 1.5 → 5.5 Hz instead of Wander, sine 2: at 1 → 2 Hz; sineCents its depth at full.
-inline dsp::DriftAmounts driftAmountsPrototype(float drift, float cassette, float grow, float rateGrow, int sine,
-                                               float sineCents)
+inline dsp::DriftAmounts driftAmountsPrototype(float drift, float grow, float rateGrow, int sine, float sineCents)
 {
     using namespace voicing;
     const float t = drift < kDriftDeadLo ? (kDriftDeadLo - drift) / kDriftDeadLo
                   : drift > kDriftDeadHi ? (drift - kDriftDeadHi) / (1.0f - kDriftDeadHi) : 0.0f;
     const float x = t > 0.5f ? 2.0f * t - 1.0f : 0.0f;
     const float g = 1.0f + grow * x * x, r = 1.0f + rateGrow * x * x;
-    dsp::DriftAmounts a = driftAmounts(drift, 0.0f);
+    dsp::DriftAmounts a = driftAmounts(drift);
     a.wowCents *= g;
     a.flutterCents *= g;
     a.wowHz *= r; // flutter keeps its rate (9 Hz is already near roughness)
@@ -150,162 +139,42 @@ inline dsp::DriftAmounts driftAmountsPrototype(float drift, float cassette, floa
         a.sineCents = sineCents * t * g;
         a.sineHz = (sine == 1 ? 1.5f + 4.0f * t : 1.0f + 1.0f * t) * r;
     }
-    if (cassette > 0.0f) { // as driftAmounts
-        const float w = kCassetteWowCents * cassette, f = kCassetteFlutterCents * cassette;
-        if (a.wowCents + w > 0.0f) a.wowHz = (a.wowCents * a.wowHz + w * kCassetteWowHz) / (a.wowCents + w);
-        a.wowCents += w;
-        if (a.flutterCents + f > 0.0f) a.flutterHz = (a.flutterCents * a.flutterHz + f * kCassetteFlutterHz) / (a.flutterCents + f);
-        a.flutterCents += f;
-    }
     return a;
 }
 #endif
 
-// ERA (P4), stacking (ADR 0003): each layer fades in across its stretch
-// (smoothstep) and stays.
-inline float layer(float v, float from, float to)
-{
-    const float t = clamp01((v - from) / (to - from));
-    return t * t * (3.0f - 2.0f * t);
-}
-// ERA's mix from each era's weight w (eraMix's crossfades, or a prototype's): the eras' own settings
-// (the BBD's and radio's intensity across their stretch) still follow the knob v.
-inline dsp::EraMix eraMixFromWeights(float v, const float (&w)[voicing::kEraCount])
-{
-    using namespace voicing;
-    float t[kEraCount];
-    for (int i = 0; i < kEraCount; ++i) {
-        const float span = 1.0f / kEraCount, from = float(i) * span;
-        t[i] = clamp01((v - from) / span);
-    }
-    dsp::EraMix m;
-    m.neve = 1.0f; // the base, under every era (owner, era_v2: "a clear winner")
-    m.midiverb = w[1];
-    m.bbd = w[2];
-    m.cassette = w[3];
-    m.radio = w[4];
-    m.bbdT = t[2];
-    m.radioT = t[4];
-    m.highRatioScale = expLerp(kNeveHighRatio, kCassetteHighRatio, m.cassette);
-    m.even = kNeveEven;
-    m.drive = 1.0f + (kCassetteDrive - 1.0f) * m.cassette;
-    m.midiEngage = m.midiverb;
-    m.midiBits = kMidiBitsStart;
-    const float makeupDb = kMakeupNeveDb + kMakeupCassetteDb * m.cassette + kMakeupMidiverbDb * m.midiverb;
-    m.makeup = std::pow(10.0f, makeupDb / 20.0f);
-    return m;
-}
-
-// ERA (P4; ADR 0021): five eras from sweet to gritty, each on its own over the Neve's warmth, in equal
-// stretches (EraVoicing.h). An era comes in over the first fifth of its stretch (the one before goes as
-// it comes); the BBD's and radio's intensity runs from their sweet end to their gritty end across theirs.
-inline dsp::EraMix eraMix(float v)
-{
-    using namespace voicing;
-    float w[kEraCount];
-    for (int i = 0; i < kEraCount; ++i) {
-        const float span = 1.0f / kEraCount, from = float(i) * span;
-        w[i] = i == 0 ? 1.0f : layer(v, from, from + kEraFadeShare * span);
-    }
-    for (int i = 0; i < kEraCount - 1; ++i) w[i] *= 1.0f - w[i + 1];
-    return eraMixFromWeights(v, w);
-}
-
-// PROTOTYPE (renders/era_overlap): eraMix with each era fading in over fadeShare of its stretch.
-inline dsp::EraMix eraMixShare(float v, float fadeShare)
-{
-    using namespace voicing;
-    float w[kEraCount];
-    for (int i = 0; i < kEraCount; ++i) {
-        const float span = 1.0f / kEraCount, from = float(i) * span;
-        w[i] = i == 0 ? 1.0f : layer(v, from, from + fadeShare * span);
-    }
-    for (int i = 0; i < kEraCount - 1; ++i) w[i] *= 1.0f - w[i + 1];
-    return eraMixFromWeights(v, w);
-}
-
-#if !defined(IV_FIXED_VOICINGS) || IV_ERA_LAYOUT || IV_ERA_LAYOUT_RUNTIME
-// PROTOTYPE (renders/era_rethink; dsp/EraTexture.h): ERA as texture only, in three layouts. Every one keeps
-// the Neve in the loop as the base (its warmth and its ×0.7 highs, never darker with ERA), no cassette wow
-// or flutter (DRIFT's), and from ERA 0 sounds as today's ERA 0.
-//   1 A, grit path: separate characters in quarters, mild → gritty, each fading in over the first fifth
-//        of its quarter as the one before goes: tape (saturation, the in-loop compression, faint hiss) →
-//        Midiverb (13 → 11 bits truncated in the loop, no dark loop, crackle) → BBD (compander breathing,
-//        then its clock's grit) → radio (band-pass, over-modulation, the wandering dip).
-//   2 B, saturation, then texture on top: tape clean → driven over the first half, then kept; the BBD's
-//        breathing and clock 0.5 → 0.65, the grain 0.65 → 0.8 (each kept); the radio's band 0.8 → 1.
-//   3 C, one wear amount: the whole chain in from the start, every stage deepening with the knob.
-struct EraLayoutMix {
-    dsp::EraMix loop;  // the loop's ERA (the Neve, A's Midiverb box)
-    dsp::TexMix tex;   // the wet's (dsp/EraTexture.h)
+// ERA (P4; v1.0.42, the owner's pick C on renders/era_rethink, "one wear amount"; it replaces ADR 0021's
+// five eras): the Neve stays in the loop as the base at every setting (its warmth and its ×0.7 highs,
+// voicing::kNeveHighRatio, never darker with ERA; no wow or flutter, DRIFT's), and the wear on the wet
+// (dsp/EraTexture.h) comes in over the first twentieth of the knob, every stage at once, then deepens
+// with it: tape saturation, the BBD's compander breathing and its clock's grit, the grain (the Midiverb's
+// floating step), the radio's band and wandering dip, and with them the tape's in-loop compression, its
+// hiss and the crackle into the tank. ERA 0 is the Neve alone.
+struct EraWear {
+    dsp::TexMix tex;                           // the wet's chain (dsp/EraTexture.h)
     float compress = 0, hiss = 0, crackle = 0; // the tape's in-loop compression, hiss and crackle, 0..1
+    float makeup = 1.0f;                       // wet gain keeping ERA's loudness level
 };
-inline EraLayoutMix eraLayoutMix(float v, int layout)
+inline EraWear eraMix(float v)
 {
     using namespace voicing;
-    EraLayoutMix e;
-    dsp::EraMix& m = e.loop;
+    EraWear e;
     dsp::TexMix& x = e.tex;
-    m.neve = 1.0f;
-    m.highRatioScale = kNeveHighRatio;
-    m.even = kNeveEven;
-    m.midiBits = kMidiBitsStart;
-    m.midiDark = -1.0f; // the box without its dark loop or halfbands (Era.h)
-    float makeupDb = kMakeupNeveDb;
-    auto in = [](float v, float from) { return layer(v, from, from + 0.05f); }; // a twentieth of the knob
-    if (layout == 1) {
-        float w[4], t[4];
-        for (int k = 0; k < 4; ++k) {
-            w[k] = in(v, 0.25f * float(k));
-            t[k] = clamp01((v - 0.25f * float(k)) / 0.25f);
-        }
-        for (int k = 0; k < 3; ++k) w[k] *= 1.0f - w[k + 1];
-        x.tapeW = w[0];
-        x.tapeT = 0.3f + 0.7f * t[0];
-        e.compress = w[0] * t[0];
-        e.hiss = w[0];
-        m.midiverb = m.midiEngage = w[1];
-        m.midiBits = kMidiBitsStart - 2.0f * t[1];
-        e.crackle = w[1];
-        x.breathW = w[2];
-        x.breathT = t[2];
-        x.clockW = w[2] * clamp01(2.0f * t[2] - 0.6f); // the clock's grit only in its upper part
-        x.clockT = t[2];
-        x.bandW = w[3];
-        x.bandT = t[3];
-    } else if (layout == 2) {
-        const float s = in(v, 0.0f);
-        x.tapeW = s;
-        x.tapeT = clamp01(v / 0.5f);
-        e.compress = s * x.tapeT;
-        e.hiss = s * x.tapeT;
-        x.breathW = in(v, 0.5f);
-        x.breathT = clamp01((v - 0.5f) / 0.15f);
-        x.clockW = x.breathW * x.breathT;
-        x.clockT = 0.5f * x.breathT;
-        x.grainW = in(v, 0.65f);
-        x.grainT = clamp01((v - 0.65f) / 0.15f);
-        e.crackle = x.grainW;
-        x.bandW = in(v, 0.8f);
-        x.bandT = clamp01((v - 0.8f) / 0.2f);
-    } else {
-        const float s = in(v, 0.0f);
-        x.tapeW = x.breathW = x.grainW = s;
-        x.tapeT = x.breathT = x.grainT = v;
-        e.compress = e.hiss = e.crackle = s * v;
-        x.clockW = s * v;
-        x.clockT = v;
-        x.bandW = s * v * std::sqrt(v);
-        x.bandT = v;
-    }
+    const float t = clamp01(v / 0.05f);
+    const float s = t * t * (3.0f - 2.0f * t); // a smoothstep over the first twentieth
+    x.tapeW = x.breathW = x.grainW = s;
+    x.tapeT = x.breathT = x.grainT = v;
+    e.compress = e.hiss = e.crackle = s * v;
+    x.clockW = s * v;
+    x.clockT = v;
+    x.bandW = s * v * std::sqrt(v);
+    x.bandT = v;
     // The chain's level: its own slow hold (EraTexture), and what it leaves on music (LUFS against the
-    // Neve base, HALL and MASSIVE: the skank, keys, the full mix's send): the band ~0.7 dB, A's box 0.5.
-    makeupDb += 0.7f * x.bandW + 0.5f * m.midiverb;
-    m.makeup = std::pow(10.0f, makeupDb / 20.0f);
-    x.makeup = 1.0f;
+    // Neve base, HALL and MASSIVE: the skank, keys, the full mix's send): the band ~0.7 dB.
+    const float bandDb = 0.7f * x.bandW; // its own statement: no fused multiply-add (renders as picked)
+    e.makeup = std::pow(10.0f, (kMakeupNeveDb + bandDb) / 20.0f);
     return e;
 }
-#endif
 
 // The floor governor's weight across DECAY's crossover (ADR 0008): 0 while
 // the tail is finite, 1 from infinite on.

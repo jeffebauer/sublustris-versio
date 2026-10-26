@@ -19,16 +19,10 @@ namespace iv {
 
 namespace {
 
-// The same bits in every field of an ERA mix as the bytes of one kept (memberwise, so +0 and -0
-// differ, and the padding after midiRound is skipped): then LoopEra::set would store what it holds.
-static_assert(sizeof(dsp::EraMix) == 15 * sizeof(float) && offsetof(dsp::EraMix, midiDark) == 11 * sizeof(float),
-              "sameEra compares EraMix's fields as two runs of floats around midiRound: update it with EraMix");
-bool sameEra(const unsigned char* kept, const dsp::EraMix& m)
-{
-    constexpr size_t kBool = offsetof(dsp::EraMix, midiRound), kTail = offsetof(dsp::EraMix, midiDark);
-    return std::memcmp(kept, &m, kBool) == 0 && std::memcmp(kept + kBool, &m.midiRound, sizeof(bool)) == 0
-        && std::memcmp(kept + kTail, &m.midiDark, sizeof(dsp::EraMix) - kTail) == 0;
-}
+// The same bits in every field of an ERA mix as the bytes of one kept (so +0 and -0 differ): then
+// LoopEra::set would store what it holds.
+static_assert(sizeof(dsp::EraMix) == sizeof(float), "sameEra compares EraMix as floats with no padding");
+bool sameEra(const unsigned char* kept, const dsp::EraMix& m) { return std::memcmp(kept, &m, sizeof m) == 0; }
 
 // One-pole smoothing coefficient for a time constant, per control chunk.
 float chunkCoeff(float ms, float sampleRate, int n)
@@ -75,12 +69,6 @@ void Engine::setEarlyTapPrototype(int earlyTaps)
 void Engine::setSwellSeedPrototype(uint32_t seed)
 {
     fitSwellSeed_ = seed;
-    prepare(sampleRate_, maxBlockSize_);
-}
-
-void Engine::setTapeOversamplingPrototype(int factor)
-{
-    fitTapeOs_ = factor == 4 ? 4 : 2;
     prepare(sampleRate_, maxBlockSize_);
 }
 
@@ -219,7 +207,6 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     twinSwell_.setSeed(fitSwellSeed_);
     swell_.setTapCount(fitSwellTaps_); // likewise the count (0 = as built)
     twinSwell_.setTapCount(fitSwellTaps_);
-    for (auto& t : tape_) t.setFactor(fitTapeOs_);
 #endif
     ready_ &= swell_.prepare(large_, sampleRate);
 #ifndef IV_FIXED_VOICINGS
@@ -273,9 +260,6 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
 IV_SIZE_OPT void Engine::reset()
 {
     eraSentOk_ = 0; // the tanks were prepared or reset: send them their ERA afresh
-#ifndef IV_FIXED_VOICINGS
-    eraIdx_ = -1; // setEraSwitchPrototype: take the knob's era afresh
-#endif
     buttonDown_ = false;
     gateHigh_   = false;
     edgeCount_  = 0;
@@ -328,15 +312,7 @@ IV_SIZE_OPT void Engine::reset()
     tilt_.set(smoothed(ParamId::Tone));
     tilt_.snap();
     limiter_.reset();
-#if IV_ERA_TODAY
-    for (auto& t : tape_) t.reset();
-    bbd_.reset();
-    radio_.reset();
-#endif
-#if IV_ERA_TEXTURE
     texture_.reset();
-#endif
-    tapeMix_ = 0.0f;
     duck_ = duckGrDb_ = duckGainStep_ = 0.0f;
     duckGain_ = 1.0f;
     hissLp_[0] = hissLp_[1] = 0.0f;
@@ -487,27 +463,6 @@ float Engine::hysteresisSize(float size, float& held, bool snap) const
     return held;
 }
 
-#ifndef IV_FIXED_VOICINGS
-// setEraSwitchPrototype: the era is the knob's fifth, held until the knob is kSticky past the boundary;
-// the weights move linearly to the new era over eraSwitch_ seconds (they sum to 1 all the way).
-dsp::EraMix Engine::switchedEra(float v, int n, bool snap)
-{
-    constexpr int   kCount  = voicing::kEraCount;
-    constexpr float kSticky = 0.004f; // the knobs' wobble stays inside 0.0005 (rack check, 26 Oct 2026)
-    const int raw = std::min(kCount - 1, std::max(0, int(v * float(kCount))));
-    const bool fresh = eraIdx_ < 0 || snap;
-    if (fresh) eraIdx_ = raw;
-    else if (raw > eraIdx_ && v > float(eraIdx_ + 1) / float(kCount) + kSticky) eraIdx_ = raw;
-    else if (raw < eraIdx_ && v < float(eraIdx_) / float(kCount) - kSticky) eraIdx_ = raw;
-    const float step = float(n) / (eraSwitch_ * sampleRate_);
-    for (int i = 0; i < kCount; ++i) {
-        const float target = i == eraIdx_ ? 1.0f : 0.0f;
-        eraW_[i] = fresh ? target : approach(eraW_[i], target, step);
-    }
-    return map::eraMixFromWeights(v, eraW_);
-}
-#endif
-
 // DECAY's loss rate for the SPACE in use (MASSIVE's shortest tail follows SIZE, v1.0.21).
 float Engine::decayRate(float decay, float size) const
 {
@@ -537,29 +492,8 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
 
     // Freezing: loss → 0, highs kept (ratio → 1), the governor caps paint.
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
-#ifndef IV_FIXED_VOICINGS
-    dsp::EraMix era = eraFadeShare_ == voicing::kEraFadeShare ? map::eraMix(smoothed(ParamId::Era)) // once a chunk
-                                                               : map::eraMixShare(smoothed(ParamId::Era), eraFadeShare_);
-    if (eraSwitch_ > 0.0f) era = switchedEra(smoothed(ParamId::Era), n, snap);
-    map::EraLayoutMix lay;
-    if (eraLayout_ > 0) {
-        lay = map::eraLayoutMix(smoothed(ParamId::Era), eraLayout_);
-        era = lay.loop;
-    }
-#elif IV_ERA_TEXTURE && IV_ERA_TODAY // the profile's ERA_RUNTIME: today's eras or a layout, chosen while it runs
-    dsp::EraMix era = map::eraMix(smoothed(ParamId::Era));
-    map::EraLayoutMix lay;
-    if (eraLayout_ > 0) {
-        lay = map::eraLayoutMix(smoothed(ParamId::Era), eraLayout_);
-        era = lay.loop;
-    }
-#elif IV_ERA_TEXTURE
-    const map::EraLayoutMix lay = map::eraLayoutMix(smoothed(ParamId::Era), eraLayout_);
-    const dsp::EraMix era = lay.loop;
-#else
-    const dsp::EraMix era = map::eraMix(smoothed(ParamId::Era)); // once a chunk (it was worked out twice)
-#endif
-    const float toneRatio = map::toneHighT60Ratio(tone) * era.highRatioScale;
+    const map::EraWear wear = map::eraMix(smoothed(ParamId::Era)); // once a chunk
+    const float toneRatio = map::toneHighT60Ratio(tone) * voicing::kNeveHighRatio;
     const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(hallSize_) : 1.0f;
     const float rate = decayRate(decay, size) / sizeT60 * (1.0f - freezeMix_);
     const float spaceRatio = massive ? map::massiveHighRatio(toneRatio, decay) : toneRatio;
@@ -647,60 +581,38 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
 
     // ERA in the loop and DRIFT (SPEC §4.6, §4.7). Freezing glides the
     // in-loop colour out (the pad holds still, ADR 0009); DRIFT stays.
-    // The bucket-brigade and the radio on the wet (ADR 0021); each runs only while it's in.
-#if IV_ERA_TODAY
-    bbdW_ = era.bbd;
-    radioW_ = era.radio;
-    if (bbdW_ > 0.0f) bbd_.set(era.bbdT, sampleRate_);
-    if (radioW_ > 0.0f) radio_.set(era.radioT, sampleRate_, n);
-#endif
-#if IV_ERA_TEXTURE
-    // The tape's in-loop compression, its hiss and the crackle: the cassette's and the Midiverb's, or a
-    // layout's (renders/era_rethink).
-    float compressW = era.cassette, hissW = era.cassette, crackleW = era.midiverb;
-    if (eraLayout_ > 0) {
-        compressW = lay.compress;
-        hissW = lay.hiss;
-        crackleW = lay.crackle;
-        dsp::TexMix t = lay.tex;
+    // ERA's wear on the wet (dsp/EraTexture.h), run only while it's in. At infinite DECAY the band keeps
+    // a share of its blend (tex::kBandAtInfinite).
+    {
+        dsp::TexMix t = wear.tex;
         t.bandW *= 1.0f - map::governorWeight(decay) * (1.0f - dsp::tex::kBandAtInfinite);
-        texOn_ = t.tapeW > 0.0f || t.breathW > 0.0f || t.clockW > 0.0f || t.grainW > 0.0f || t.bandW > 0.0f;
+        texOn_ = t.tapeW > 0.0f || t.breathW > 0.0f || t.clockW > 0.0f || t.grainW > 0.0f || t.bandW > 0.0f
+              || !texture_.settled(); // every stage out: runs on (the hold alone) until its gain is back at 1
         texture_.set(t, sampleRate_, n);
-    } else texOn_ = false;
-#endif
-    dsp::EraMix loopEra = era;
+    }
     const float keep = 1.0f - freezeMix_;
-    loopEra.midiRound = map::governorWeight(decay) >= 1.0f; // infinite: no systematic loss
-    loopEra.midiDark = 1.0f - map::governorWeight(decay) * (1.0f - voicing::kMidiDarkAtInfinite); // v1.0.23
-#if IV_ERA_TEXTURE
-    if (eraLayout_ > 0) loopEra.midiDark = era.midiDark; // the bits alone
-#endif
     // Neve's even harmonics add energy in proportion to the level: harmless
     // while DECAY loses energy, a runaway in a lossless loop (measured: the
     // tail jumping 2-3 dB, then the governor overshooting into dips). So
     // they fade out across DECAY's infinite crossover.
+    dsp::EraMix loopEra;
+    loopEra.even = voicing::kNeveEven;
     loopEra.even *= keep * (1.0f - map::governorWeight(decay));
-    loopEra.drive = 1.0f + keep * (era.drive - 1.0f);
-    loopEra.midiEngage *= keep;
 #ifndef IV_FIXED_VOICINGS
     const dsp::DriftAmounts drift = driftGrow_ == 0.0f && driftRateGrow_ == 0.0f && driftSine_ == 0
-        ? map::driftAmounts(smoothed(ParamId::Drift), era.cassette)
-        : map::driftAmountsPrototype(smoothed(ParamId::Drift), era.cassette, driftGrow_, driftRateGrow_, driftSine_,
+        ? map::driftAmounts(smoothed(ParamId::Drift))
+        : map::driftAmountsPrototype(smoothed(ParamId::Drift), driftGrow_, driftRateGrow_, driftSine_,
                                      driftSineCents_); // setDriftPrototype
 #else
-    const dsp::DriftAmounts drift = map::driftAmounts(smoothed(ParamId::Drift), era.cassette);
+    const dsp::DriftAmounts drift = map::driftAmounts(smoothed(ParamId::Drift));
 #endif
-    // The cassette's slow 2:1 compression: more loss above −18 dBFS.
+    // The tape's slow 2:1 compression: more loss above −18 dBFS.
     // Judged like the floor (the lower of its 1.5 s and 50 ms levels): on the 1.5 s level alone it
     // kept compressing for seconds after a loud input stopped, and an infinite tail plunged 20+ dB
     // under the floor (soak audit). A steady tail measures the same.
     const float tankNowDb = activeSpace_ == 0 ? plate_.fastLevelDb() : fdn_.fastLevelDb();
     const float over = std::fmin(tankLevelDb(), tankNowDb) - voicing::kCompressThresholdDb;
-#if IV_ERA_TEXTURE
-    const float compress = over > 0.0f ? keep * compressW * voicing::kCompressRatePerDb * over : 0.0f;
-#else
-    const float compress = over > 0.0f ? keep * era.cassette * voicing::kCompressRatePerDb * over : 0.0f;
-#endif
+    const float compress = over > 0.0f ? keep * wear.compress * voicing::kCompressRatePerDb * over : 0.0f;
     if (plate) {
         if (eraChanged(EraSentPlate, loopEra)) plate_.setEra(loopEra);
         plate_.setDrift(drift);
@@ -715,25 +627,15 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         lowFdn_.setDrift(dsp::DriftAmounts{}); // still: no wow, flutter or Wander
         lowFdn_.setExtraRate(compress);
     }
-    eraMakeup_ = era.makeup;
-#if IV_ERA_TODAY
-    tapeDrive_ = era.cassette; // tape out (v1.0.22, E5)
-    if (snap) tapeMix_ = tapeDrive_ > 0.0f && tapeOn_ ? 1.0f : 0.0f;
-    for (auto& t : tape_) t.set(tapeDrive_, sampleRate_);
-#endif
+    eraMakeup_ = wear.makeup;
 
     tilt_.set(smoothed(ParamId::Tone));
     // Hiss follows the input (none in silence, so an infinite tail doesn't
     // fill with noise, ADR 0005); crackle the same.
     const float inDb = 10.0f * std::log10(inputPower_ + 1e-20f);
     const float follow = map::clamp01((inDb - (voicing::kHissFollowFromDbfs - 30.0f)) / 30.0f);
-#if IV_ERA_TEXTURE
-    hissGain_ = hissW * follow * std::pow(10.0f, voicing::kHissDbfs / 20.0f);
-    crackleChance_ = crackleW * follow * voicing::kCracklePerSecond / sampleRate_;
-#else
-    hissGain_ = era.cassette * follow * std::pow(10.0f, voicing::kHissDbfs / 20.0f);
-    crackleChance_ = era.midiverb * follow * voicing::kCracklePerSecond / sampleRate_;
-#endif
+    hissGain_ = wear.hiss * follow * std::pow(10.0f, voicing::kHissDbfs / 20.0f);
+    crackleChance_ = wear.crackle * follow * voicing::kCracklePerSecond / sampleRate_;
     crackleGain_ = std::pow(10.0f, voicing::kCrackleDbfs / 20.0f);
 
     // The input diffusers' amount glides (~50 ms): it changes with a SPACE flip and with MASSIVE's SIZE,
@@ -789,7 +691,8 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
             roomFw_.setGain(massive ? 0.39355f : 0.35116f); // matched to v1.0.41's twin (small_room: -8.10 / -9.09 dB)
         }
 #endif
-        dsp::EraMix tEra = era;
+        dsp::EraMix tEra;
+        tEra.even = voicing::kNeveEven;
         tEra.even *= 1.0f - map::governorWeight(tDecay);
         if (plate) {
             twinPlate_.setScale(map::plateScale(tSize), snap);
@@ -1069,9 +972,6 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         return;
     }
     const float attackStep = 1.0f / (voicing::kAttackFadeSeconds * sampleRate_);
-#if IV_ERA_TODAY
-    const float tapeStep = 1.0f / (0.02f * sampleRate_);
-#endif
     for (int start = 0; start < numSamples; start += kChunk) {
         const int n = (numSamples - start) < kChunk ? (numSamples - start) : kChunk;
         handleEdges(start, start + n);
@@ -1253,35 +1153,9 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             float wr = (fr + tr) * flipGain_;
             wl *= eraMakeup_;
             wr *= eraMakeup_;
-            // ERA's tape out (v1.0.27, dsp/Tape.h), faded in and out over ~20 ms as the cassette layer
-            // appears and leaves: switched in one sample, its oversampling filters' phase stepped the wet
-            // (a click turning ERA through 0.35, found 25 Oct 2026).
             prof::mark(prof::kOutput);
-#if IV_ERA_TEXTURE
-            if (texOn_) texture_.process(wl, wr); // PROTOTYPE (renders/era_rethink)
-#endif
-#if IV_ERA_TODAY
-            tapeMix_ = approach(tapeMix_, tapeDrive_ > 0.0f && tapeOn_ ? 1.0f : 0.0f, tapeStep);
-            if (tapeMix_ > 0.0f) {
-                const float tl2 = tape_[0].process(wl), tr2 = tape_[1].process(wr);
-                wl = tapeMix_ >= 1.0f ? tl2 : wl + tapeMix_ * (tl2 - wl);
-                wr = tapeMix_ >= 1.0f ? tr2 : wr + tapeMix_ * (tr2 - wr);
-            }
-            prof::mark(prof::kEraTape);
-            if (bbdW_ > 0.0f) { // ERA's bucket-brigade (ADR 0021)
-                const float bl = bbd_.process(wl, 0), br = bbd_.process(wr, 1);
-                wl += bbdW_ * (voicing::kEraBbdTrim * bl - wl);
-                wr += bbdW_ * (voicing::kEraBbdTrim * br - wr);
-            }
-            prof::mark(prof::kEraBbd);
-            if (radioW_ > 0.0f) { // ERA's AM radio (ADR 0021)
-                float rl2 = wl, rr2 = wr;
-                radio_.process(rl2, rr2);
-                wl += radioW_ * (voicing::kEraRadioTrim * rl2 - wl);
-                wr += radioW_ * (voicing::kEraRadioTrim * rr2 - wr);
-            }
-#endif
-            prof::mark(prof::kEraRadio);
+            if (texOn_) texture_.process(wl, wr); // ERA's wear (dsp/EraTexture.h)
+            prof::mark(prof::kEraWear);
             tilt_.process(wl, wr);
             duckGain_ += duckGainStep_; // ducking (ADR 0014)
             wl *= duckGain_;

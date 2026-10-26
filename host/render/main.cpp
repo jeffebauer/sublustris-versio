@@ -161,7 +161,6 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* hd = std::getenv("IV_HALL_DIFFUSION")) engine.setHallInLoopDiffusion(float(std::atof(hd)));
     if (const char* di = std::getenv("IV_DIFF_INDEPENDENT")) engine.setDiffuserIndependent(std::atoi(di) != 0);
     if (const char* sl = std::getenv("IV_STILL_LOWS")) engine.setStillLows(std::atoi(sl) != 0);
-    if (const char* to = std::getenv("IV_TAPE_OUT")) engine.setTapeOut(std::atoi(to) != 0);
     if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
     if (const char* dm = std::getenv("IV_DECAY_MAKEUP")) engine.setDecayMakeup(float(std::atof(dm)));
     if (const char* et = std::getenv("IV_FIT_EARLY_TAPS")) engine.setEarlyTapPrototype(std::atoi(et)); // fit_cpu's D (re-prepares)
@@ -171,10 +170,6 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* ts = std::getenv("IV_TWIN_STOP_FAST")) engine.setTwinStopFast(std::atoi(ts) != 0); // overnight review, lit-plate 6
     // The overnight review's CPU options (26 Oct 2026), each re-preparing the Engine so the layout is
     // made for it; stderr confirms what was built (a count set after prepare() once mislabelled a page).
-    if (const char* to = std::getenv("IV_TAPE_OS")) {
-        engine.setTapeOversamplingPrototype(std::atoi(to)); // renders/tape_os
-        std::fprintf(stderr, "iv_render: IV_TAPE_OS: tape out at %dx\n", std::atoi(to) == 4 ? 4 : 2);
-    }
     if (const char* ld = std::getenv("IV_LOW_DECIMATE")) {
         engine.setLowDecimatePrototype(std::atoi(ld)); // renders/still_lows_rate
         std::fprintf(stderr, "iv_render: IV_LOW_DECIMATE: still lows' tank at 1/%d (%.0f Hz)\n", engine.lowDecimate(),
@@ -212,15 +207,9 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         engine.setSizeStagger(std::atoi(st));
         std::fprintf(stderr, "iv_render: IV_SIZE_STAGGER: SIZE crossfades in %d group(s)\n", std::atoi(st) == 1 || std::atoi(st) == 4 || std::atoi(st) == 8 ? std::atoi(st) : 2);
     }
-    if (const char* ef = std::getenv("IV_ERA_FADE_SHARE")) { // renders/era_overlap
-        engine.setEraFadeSharePrototype(float(std::atof(ef)));
-        std::fprintf(stderr, "iv_render: IV_ERA_FADE_SHARE: each era fades in over %.3f of its stretch\n", std::atof(ef));
-    }
-    if (const char* el = std::getenv("IV_ERA_LAYOUT")) { // renders/era_rethink: A, B, C (or 1, 2, 3)
-        const int layout = el[0] >= 'A' && el[0] <= 'C' ? el[0] - 'A' + 1 : std::atoi(el);
-        engine.setEraLayoutPrototype(layout);
-        std::fprintf(stderr, "iv_render: IV_ERA_LAYOUT: ERA layout %c (texture only)\n", layout >= 1 && layout <= 3 ? char('A' + layout - 1) : '0');
-    }
+    if (std::getenv("IV_ERA_LAYOUT") || std::getenv("IV_ERA_SWITCH") || std::getenv("IV_ERA_FADE_SHARE") || std::getenv("IV_TAPE_OUT")
+        || std::getenv("IV_TAPE_OS")) // the ERA prototypes before v1.0.42: their eras are gone
+        std::fprintf(stderr, "iv_render: IV_ERA_LAYOUT / _SWITCH / _FADE_SHARE, IV_TAPE_OUT / _OS ignored: ERA is one wear amount (layout C) since v1.0.42\n");
     if (std::getenv("IV_DRIFT_GROW") || std::getenv("IV_DRIFT_RATE_GROW") || std::getenv("IV_DRIFT_SINE")) { // renders/drift_rethink
         auto num = [](const char* k, float d) { const char* v = std::getenv(k); return v ? float(std::atof(v)) : d; };
         const int sine = int(num("IV_DRIFT_SINE", 0.0f));
@@ -228,10 +217,6 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         std::fprintf(stderr, "iv_render: IV_DRIFT: extremes depth x(1+%.2f), rates x(1+%.2f), right side %s, sine %.1f c\n",
                      num("IV_DRIFT_GROW", 0.0f), num("IV_DRIFT_RATE_GROW", 0.0f),
                      sine == 1 ? "sine 1.5-5.5 Hz" : sine == 2 ? "sine 1-2 Hz" : "Wander", num("IV_DRIFT_SINE_CENTS", 22.0f));
-    }
-    if (const char* es = std::getenv("IV_ERA_SWITCH")) { // renders/era_switch
-        engine.setEraSwitchPrototype(float(std::atof(es)));
-        std::fprintf(stderr, "iv_render: IV_ERA_SWITCH: ERA without overlaps, %.0f ms switch\n", 1000.0 * std::atof(es));
     }
     if (const char* sz = std::getenv("IV_SHIMMER_LAZY")) {
         engine.setShimmerLazyPrototype(std::atoi(sz) != 0);

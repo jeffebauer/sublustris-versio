@@ -15,8 +15,8 @@ namespace iv::prof {
 // Inside the tanks (M3 round 4): kTankCtl, each tank's once-a-block maths; kTankLoop, the FDN's lines
 // (read, in-loop allpasses, loss filter, ERA's in-loop stages); kTankOut, its output and early taps;
 // kTankMix, the Hadamard mix and the writes. kTank keeps the rest (the Plate's loop, the still-lows split).
-// ERA's stages on the wet (M3 round 10): kEraTape (the cassette's tape out), kEraBbd, kEraRadio.
-enum Section { kControl, kInput, kShimmer, kSwell, kTwin, kTank, kTankCtl, kTankLoop, kTankOut, kTankMix, kEraTape, kEraBbd, kEraRadio, kOutput, kNumSections };
+// kEraWear: ERA's wear on the wet (v1.0.42, dsp/EraTexture.h; until then kEraTape, kEraBbd, kEraRadio).
+enum Section { kControl, kInput, kShimmer, kSwell, kTwin, kTank, kTankCtl, kTankLoop, kTankOut, kTankMix, kEraWear, kOutput, kNumSections };
 
 #if defined(IV_PROFILE_HOOKS)
 // Set by the host (profile firmware) before audio starts; null = no timing.

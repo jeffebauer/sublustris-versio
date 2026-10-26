@@ -27,8 +27,7 @@
 #include "daisy_versio.h"
 #if !defined(IV_MODE_M0TEST)
 #include "dsp/Engine.h"
-#include "dsp/EraStages.h"
-#include "dsp/Tape.h"
+#include "dsp/EraTexture.h"
 #include "params/Mappings.h"
 #include "params/ParamSpec.h"
 #include "PotEndStops.h"
@@ -578,10 +577,10 @@ struct Corner {
     char  name[40];
 };
 
-// M3 round 10: every era (the centre of each one's stretch: Neve, Midiverb, bucket-brigade, cassette,
-// AM radio), SIZE 0 / 1, DECAY full.
+// M3 round 10: five ERA settings (until v1.0.42 the centres of its five eras; now five amounts of wear),
+// SIZE 0 / 1, DECAY full.
 constexpr float kCornerEras[5] = {0.1f, 0.3f, 0.5f, 0.7f, 0.9f};
-const char* const kEraNames[5] = {"neve", "midiverb", "bbd", "cassette", "radio"};
+const char* const kEraNames[5] = {"wear10", "wear30", "wear50", "wear70", "wear90"};
 constexpr int kNumGridCorners = 3 * 2 * 5;
 constexpr int kHeaviestCorner = kNumGridCorners - 1; // MASSIVE S1 radio: the headroom test's corner
 constexpr int kNumCorners = kNumGridCorners + 3;
@@ -872,7 +871,7 @@ volatile float gSink = 0.0f;
 // "axi32" timed a chain of dependent vadds, 3.0 cycles = the VADD latency, not AXI SRAM).
 enum Micro {
     kSdr1, kSdr32, kSdw32, kSdline8, kAxi32, kDtcm32, kExp, kSin, kPow, kLog10, kDiv, kFdnAxi, kFdnSdram,
-    kTape, kBbd, kRadio, kBbdSet, kRadioSet, kLoopNeve, kLoopMidi,
+    kWear, kWearSet, kLoopNeve,
     // overnight review, 26 Oct 2026
     kSub, kNorm, kSubX, kVdivDep, kVdivThr, kVdivIndep, kPld32, kSwell12, kSwellNS, kSwellW, kFdnMassive,
     kFdnMassiveApAxi, kSdr1t, kSdr32t, kSdw32t, kSdline8t, kPld32t, kFdnSdramt, kFdnMassivet,
@@ -881,8 +880,7 @@ enum Micro {
 int               gMicro[kMicro]{};
 const char* const kMicroNames[] = {"sdr1", "sdr32", "sdw32", "sdline8", "axi32", "dtcm32",
                                    "exp", "sin", "pow", "log10", "div", "fdnAXI", "fdnSDRAM",
-                                   "tape/smp", "bbd/smp", "radio/smp", "bbdSet/blk", "radioSet/blk",
-                                   "loopNeve/smp", "loopMidi/smp",
+                                   "wear/smp", "wearSet/blk", "loopNeve/smp",
                                    "sub", "norm", "subX", "vdivDep", "vdivThr", "vdivIndep", "pld32",
                                    "swell12/blk", "swellNS/blk", "swellW/blk", "fdnMassive24k", "fdnMassiveApAxi",
                                    "sdr1t", "sdr32t", "sdw32t", "sdline8t", "pld32t", "fdnSDRAMt",
@@ -1017,7 +1015,9 @@ iv::dsp::Fdn* PrepareMassive(int which, float* lines, size_t lineFloats, float* 
     f->setInLoopDiffusion(1.0f);
     f->setInLoopScale(1.0f);
     f->setEarlyTaps(1.0f);
-    f->setEra(iv::map::eraMix(0.1f));
+    iv::dsp::EraMix neve;
+    neve.even = iv::voicing::kNeveEven;
+    f->setEra(neve);
     f->reset();
     return f;
 }
@@ -1133,28 +1133,21 @@ void RunMicroTests()
     gMicro[kPow] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::pow(x, 1.0f + float(i) * 1e-4f); });
     gMicro[kLog10] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += std::log10(x + float(i) * 1e-4f); });
     gMicro[kDiv] = Tenths(1000, [&] { for (int i = 0; i < 1000; ++i) acc += 1.0f / (x + float(i)); });
-    // ERA's stages alone (M3 round 10), stereo per sample (both channels) or per block's set():
+    // ERA alone (M3 round 10; v1.0.42 its wear), stereo per sample (both channels) or per block's set():
     {
-        static iv::dsp::TapeOut tape[2];
-        static iv::dsp::BbdStage bbd;
-        static iv::dsp::RadioStage radio;
+        static iv::dsp::EraTexture wear;
         static iv::dsp::LoopEra loop;
-        for (auto& t : tape) { t.reset(); t.set(1.0f, 48000.0f); }
-        bbd.reset();
-        bbd.set(0.5f, 48000.0f);
-        radio.reset();
-        radio.set(0.5f, 48000.0f, 32);
+        const iv::dsp::TexMix half = iv::map::eraMix(0.5f).tex;
+        wear.reset();
+        wear.set(half, 48000.0f, 32);
         float l = 0.1f, r = -0.1f;
-        gMicro[kTape] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) { l = tape[0].process(0.3f * NextNoise()); r = tape[1].process(0.3f * NextNoise()); acc += l + r; } });
-        gMicro[kBbd] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) { acc += bbd.process(0.3f * NextNoise(), 0) + bbd.process(0.3f * NextNoise(), 1); } });
-        gMicro[kRadio] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) { l = 0.3f * NextNoise(); r = 0.3f * NextNoise(); radio.process(l, r); acc += l + r; } });
-        gMicro[kBbdSet] = Tenths(100, [&] { for (int i = 0; i < 100; ++i) bbd.set(0.5f + 1e-4f * float(i), 48000.0f); });
-        gMicro[kRadioSet] = Tenths(100, [&] { for (int i = 0; i < 100; ++i) radio.set(0.5f, 48000.0f, 32); });
+        gMicro[kWear] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) { l = 0.3f * NextNoise(); r = 0.3f * NextNoise(); wear.process(l, r); acc += l + r; } });
+        gMicro[kWearSet] = Tenths(100, [&] { for (int i = 0; i < 100; ++i) wear.set(half, 48000.0f, 32); });
         loop.prepare(48000.0f);
-        loop.set(iv::map::eraMix(0.1f));
+        iv::dsp::EraMix neve;
+        neve.even = iv::voicing::kNeveEven;
+        loop.set(neve);
         gMicro[kLoopNeve] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) acc += loop.process(0.3f * NextNoise()); });
-        loop.set(iv::map::eraMix(0.3f));
-        gMicro[kLoopMidi] = Tenths(4800, [&] { for (int i = 0; i < 4800; ++i) acc += loop.process(0.3f * NextNoise()); });
     }
     gMicro[kFdnAxi] = TimeTestFdn(gAxi, kTestArenaFloats, false);
     gMicro[kFdnSdram] = TimeTestFdn(gLarge, kLargeFloats, true);
@@ -1336,7 +1329,7 @@ struct Cand {
     const char* family;
     bool        room;     // the voiced small room in place of the twin tank (TWIN_ROOM=1 builds)
     int         groups;   // SIZE's crossfade groups
-    int         layout;   // ERA: 0 today's eras, 1-3 layouts A, B, C (ERA_RUNTIME=1 builds)
+    int         layout;   // unused since v1.0.42 (ERA's layouts, ERA_RUNTIME=1 builds); 0
     float       era;      // ERA's knob (still runs)
     bool        eraSweep; // ERA turned by hand 0 -> 1 -> 0
     int         sizeHand; // -1 still at 0.9; 0 sweep 0.2 <-> 1; 1 twists 0.5 <-> 0.9; 2 creep 0.7 -> 1; 3 twists 0.85 <-> 1
@@ -1349,14 +1342,10 @@ float    gCandWorst = 0.0f;
 
 void RunCand(const Cand& c, float fs)
 {
-    static const char* const kLayNames[4] = {"today", "A    ", "B    ", "C    "};
     static const char* const kHands[4] = {"sweep  ", "twists ", "creep  ", "twisthi"};
     engine.reset();
 #if IV_ROOM_FW
     engine.setTwinRoomProfile(c.room);
-#endif
-#if IV_ERA_TEXTURE && IV_ERA_LAYOUT_RUNTIME
-    engine.setEraLayoutProfile(c.layout);
 #endif
     engine.setSizeStagger(c.groups);
     ApplyRealtime(c.era);
@@ -1398,7 +1387,7 @@ void RunCand(const Cand& c, float fs)
     AppendStr(p, end, " g");
     AppendInt(p, end, c.groups);
     AppendStr(p, end, " era ");
-    AppendStr(p, end, kLayNames[c.layout]);
+    AppendStr(p, end, "wear ");
     if (c.eraSweep) AppendStr(p, end, " sweep");
     else {
         AppendStr(p, end, "   .");
@@ -1422,9 +1411,9 @@ void RunCand(const Cand& c, float fs)
 }
 
 // One lap, ~15 min: (1) TWINROOM today's twin vs the room, frozen, Neve and cassette, SIZE still / sweep /
-// twists / twists near the top; (2) ERALAYOUT today's eras and A, B, C, ERA swept playing and frozen, then
+// twists / twists near the top; (2) ERALAYOUT (one ERA since v1.0.42) ERA swept playing and frozen, then
 // ERA's five centres playing and frozen; (3) SIZEHAND the cassette with SIZE near the top, 2 / 4 / 8 groups,
-// playing and frozen; (4) TARGET the room, 8 groups and each layout.
+// playing and frozen; (4) TARGET the room, 8 groups.
 void RunCandidateLap(float fs)
 {
     gPeriodCycles = uint32_t(float(SystemCoreClock) / fs * float(kBlockSize));
@@ -1436,12 +1425,7 @@ void RunCandidateLap(float fs)
     for (int room = 0; room <= IV_ROOM_FW; ++room)
         for (int e = 0; e < 2; ++e)
             for (int h : kRoomHands) RunCand({"TWINROOM", room != 0, 2, 0, e ? 0.7f : 0.1f, false, h, true, 5.0f}, fs);
-#if IV_ERA_TEXTURE && IV_ERA_LAYOUT_RUNTIME
-    constexpr int kLayouts = 3;
-#else
-    constexpr int kLayouts = 0;
-#endif
-    for (int lay = 0; lay <= kLayouts; ++lay) {
+    for (int lay = 0; lay <= 0; ++lay) { // one ERA since v1.0.42 (ERA_RUNTIME's layouts are gone)
         RunCand({"ERALAYOUT", false, 2, lay, 0.5f, true, -1, false, 8.0f}, fs);
         RunCand({"ERALAYOUT", false, 2, lay, 0.5f, true, -1, true, 8.0f}, fs);
         for (int fz = 0; fz < 2; ++fz)
@@ -1452,7 +1436,7 @@ void RunCandidateLap(float fs)
         for (int h : kTopHands)
             for (int fz = 0; fz < 2; ++fz)
                 RunCand({"SIZEHAND", false, g, 0, 0.7f, false, h, fz != 0, h == 2 ? 6.0f : 5.0f}, fs);
-    for (int lay = 1; lay <= kLayouts; ++lay) {
+    for (int lay = 0; lay <= 0; ++lay) {
         const bool room = IV_ROOM_FW != 0;
         RunCand({"TARGET", room, 8, lay, 0.7f, false, -1, true, 5.0f}, fs);
         RunCand({"TARGET", room, 8, lay, 0.7f, false, 3, true, 5.0f}, fs);
@@ -1589,7 +1573,7 @@ int main()
             // Where the time goes, each section as % of the whole budget
             // (10,000 cycles per sample): cycles / (samples x 10) = tenths of a %.
             static const char* const kSectionNames[kNumSections] = {"ctl", "in", "shim", "swell", "twin", "tank",
-                                                                    "tkctl", "tkloop", "tkout", "tkmix", "tape", "bbd", "radio", "out"};
+                                                                    "tkctl", "tkloop", "tkout", "tkmix", "wear", "out"};
             AppendStr(p, end, "  SPLIT");
             for (int k = 0; k < kNumSections; ++k) {
                 AppendStr(p, end, " ");
@@ -2398,7 +2382,7 @@ int main()
             AppendUInt(q, end, unsigned(gNearBlocks));
             AppendStr(q, end, "\r\n  PEAK");
             static const char* const kSec[iv::prof::kNumSections] = {"ctl", "in", "shim", "swell", "twin", "tank", "tkctl",
-                                                                     "tkloop", "tkout", "tkmix", "tape", "bbd", "radio", "out"};
+                                                                     "tkloop", "tkout", "tkmix", "wear", "out"};
             for (int k = 0; k < iv::prof::kNumSections; ++k) {
                 AppendStr(q, end, " ");
                 AppendStr(q, end, kSec[k]);
