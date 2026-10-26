@@ -176,6 +176,10 @@ public:
         twinFdn_.setStagger(groups);
         lowFdn_.setStagger(groups);
     }
+    // PROTOTYPE (renders/era_overlap; the owner, on era_switch: keep the overlaps, "although I feel we could
+    // narrow the crossover areas"): each era fades in over `share` of its stretch (kEraFadeShare, a third,
+    // as built).
+    void  setEraFadeSharePrototype(float share) { eraFadeShare_ = share > 0.0f && share <= 1.0f ? share : voicing::kEraFadeShare; }
     void  setEraSwitchPrototype(float seconds)
     {
         eraSwitch_ = seconds;
@@ -293,6 +297,7 @@ private:
     int               fitSwellTaps_ = 0; // setSwellTapsPrototype; 0 = as built
     bool              shimmerLazy_ = false, shimmerArmed_ = true, shimmerResting_ = false; // setShimmerLazyPrototype
     float             eraSwitch_ = 0.0f; // setEraSwitchPrototype; 0 = as built
+    float             eraFadeShare_ = voicing::kEraFadeShare; // setEraFadeSharePrototype
     int               eraIdx_ = -1;      // the era playing (< 0: none yet)
     float             eraW_[voicing::kEraCount] = {}; // each era's weight, crossfading
 #endif

@@ -417,7 +417,8 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // Freezing: loss → 0, highs kept (ratio → 1), the governor caps paint.
     // ERA's darkening scales the high end's T60 share with TONE (Era.h).
 #ifndef IV_FIXED_VOICINGS
-    dsp::EraMix era = map::eraMix(smoothed(ParamId::Era)); // once a chunk (it was worked out twice)
+    dsp::EraMix era = eraFadeShare_ == voicing::kEraFadeShare ? map::eraMix(smoothed(ParamId::Era)) // once a chunk
+                                                               : map::eraMixShare(smoothed(ParamId::Era), eraFadeShare_);
     if (eraSwitch_ > 0.0f) era = switchedEra(smoothed(ParamId::Era), n, snap);
 #else
     const dsp::EraMix era = map::eraMix(smoothed(ParamId::Era)); // once a chunk (it was worked out twice)

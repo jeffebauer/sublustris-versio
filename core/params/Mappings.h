@@ -173,6 +173,19 @@ inline dsp::EraMix eraMix(float v)
     return eraMixFromWeights(v, w);
 }
 
+// PROTOTYPE (renders/era_overlap): eraMix with each era fading in over fadeShare of its stretch.
+inline dsp::EraMix eraMixShare(float v, float fadeShare)
+{
+    using namespace voicing;
+    float w[kEraCount];
+    for (int i = 0; i < kEraCount; ++i) {
+        const float span = 1.0f / kEraCount, from = float(i) * span;
+        w[i] = i == 0 ? 1.0f : layer(v, from, from + fadeShare * span);
+    }
+    for (int i = 0; i < kEraCount - 1; ++i) w[i] *= 1.0f - w[i + 1];
+    return eraMixFromWeights(v, w);
+}
+
 // The floor governor's weight across DECAY's crossover (ADR 0008): 0 while
 // the tail is finite, 1 from infinite on.
 inline float governorWeight(float decay)

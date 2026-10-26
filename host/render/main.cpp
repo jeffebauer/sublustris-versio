@@ -185,6 +185,10 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         engine.setSizeStagger(std::atoi(st));
         std::fprintf(stderr, "iv_render: IV_SIZE_STAGGER: SIZE crossfades in %d group(s)\n", std::atoi(st) == 1 ? 1 : 2);
     }
+    if (const char* ef = std::getenv("IV_ERA_FADE_SHARE")) { // renders/era_overlap
+        engine.setEraFadeSharePrototype(float(std::atof(ef)));
+        std::fprintf(stderr, "iv_render: IV_ERA_FADE_SHARE: each era fades in over %.3f of its stretch\n", std::atof(ef));
+    }
     if (const char* es = std::getenv("IV_ERA_SWITCH")) { // renders/era_switch
         engine.setEraSwitchPrototype(float(std::atof(es)));
         std::fprintf(stderr, "iv_render: IV_ERA_SWITCH: ERA without overlaps, %.0f ms switch\n", 1000.0 * std::atof(es));
