@@ -30,6 +30,8 @@
 
 ## Waiting on Claude
 
+- **Flash freed without changing the sound** (branch `claude/flash-neutral`): release 112,548 → 110,460 B, so 2,180 B spare instead of 92; renders bit-identical (55/55). It rests on the module zeroing memory at start-up (checked in the code); the first playing build with it should be heard at the rack before it's trusted.
+- **Putting the branches together** (a scratch branch, not main) and a **candidate CPU build** for you to flash: the small room, ERA A/B/C, SIZE in 4/8 groups, measured on the module. In progress.
 - **The SIZE drop-outs in MASSIVE**: the cause is a cassette SIZE move at a large SIZE (~106 %; round 15 only timed the Neve at SIZE .3-.8); frozen, only the twin crossfades, and only the blur or small room twin brings a frozen SIZE move under the limit (est.). Waiting on round 16 and your `size_moves` pick.
 - **The twin at 8 dB under the pad** (v1.0.41, your pick): built and checked on branch `claude/frozen-twin-213dc9` (MASSIVE's twin now ~8.5 dB under on average, HALL's ~7.8; Paint still under its ceiling; release flash 112,596 B, 44 B left). Not in a flash or the plugin yet; it goes in with whatever you pick on `twin_alternatives`.
 - **A lighter blur instead of the twin** (your go-ahead: "today's twin, blur and width, small room, and the twin without its swell, all at -8 dB. Skip the spring chirp"): the `twin_alternatives` page, after v1.0.41. Research: the light options would cost ~2-5 points of CPU against the twin's ~28 (estimates), enough to fix the frozen cassette; they lose the space's colour, and SIZE/DECAY play them less.
