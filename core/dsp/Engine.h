@@ -202,7 +202,7 @@ public:
         freezeDuckSeconds_ = seconds > 0.01f ? seconds : voicing::kDuckReleaseSeconds;
     }
     // PROTOTYPE (renders/twin_louder; owner: "even with the AS BUILT option, with wet at 100% i can hardly
-    // hear the secondary reverb"): the twin's level in HALL and MASSIVE, db above kTwinLevel (its output
+    // hear the secondary reverb"): the twin's level in HALL and MASSIVE, db above today's (its output
     // only: Paint sends what it did), or no twin at all while frozen (off).
     void  setTwinGainPrototype(float db, bool off)
     {

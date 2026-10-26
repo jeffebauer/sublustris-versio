@@ -209,6 +209,12 @@ constexpr float kFrozenPlateModDepth = 0.15f;
 // predelay... disjointed"). (start)
 constexpr float kTwinLevel     = 0.5f;  // −6 dB against the pad (was 0.3, −10.5 dB): "the sweet spot is between plus3 and plus6" (owner, renders/twin_level, v1.0.14)
 constexpr float kTwinMaxT60    = 8.0f;  // it always fades, even when DECAY is infinite
+// HALL's and MASSIVE's twin, on its output trim: up to +5.4 dB (v1.0.41, owner's pick on renders/twin_louder:
+// "Let's shoot for 8db under the pad"). Its tail stops within kTwinMaxT60 while theirs runs to 14 s or infinite,
+// so at kTwinLevel alone it sat 12-15 dB (A-weighted) under a frozen pad, not 6; the lift follows how much
+// shorter it is (Engine::applySpace), so a short HALL's twin, which isn't cut, stays where it was. PLATE's is at -6.
+constexpr float kTwinFdnGain      = 1.862f;
+constexpr float kTwinFdnGainInvSq = 1.0f / (kTwinFdnGain * kTwinFdnGain);
 constexpr float kTwinFadeSeconds = 0.02f; // its input opens / closes at freeze / unfreeze
 constexpr float kPaintHeadroomDb     = 1.5f;  // a painted pad may grow this far above its frozen level (or the floor)
 constexpr float kPaintFadeDb         = 1.0f;  // painting eases off over the last this-many dB below that

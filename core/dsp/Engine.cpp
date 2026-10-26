@@ -677,7 +677,8 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         const float tDecay = smoothed(ParamId::Decay);
         twinSwell_.setAttackSeconds(massive ? map::massiveNormalAttackSeconds(tDecay, tSize) : 0.0f, snap);
         const float tT60 = activeSpace_ == 1 ? map::hallT60Scale(tSize) : 1.0f;
-        const float tRate = std::fmax(decayRate(tDecay, tSize) / tT60, 1.0f / voicing::kTwinMaxT60);
+        const float tankRate = decayRate(tDecay, tSize) / tT60;
+        const float tRate = std::fmax(tankRate, 1.0f / voicing::kTwinMaxT60);
         dsp::EraMix tEra = era;
         tEra.even *= 1.0f - map::governorWeight(tDecay);
         if (plate) {
@@ -702,8 +703,13 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
 #ifndef IV_FIXED_VOICINGS
             if (twinLight_ == 2) twinFdn_.setInLoopDiffusion(0.0f); // setTwinLightPrototype 2: none
 #endif
-            twinFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(tDecay, tSize)
-                                           : voicing::kHallOutputTrim * map::hallSizeLevelTrim(tSize, tDecay));
+            // Cut short by kTwinMaxT60, the twin holds less of what's played than the tank would: its level
+            // comes back by the square root of how much shorter it is (energy ~ T60), up to kTwinFdnGain
+            // (v1.0.41). Not cut short (a short HALL), it is exactly as before.
+            const float lift = std::sqrt(std::fmin(tRate / std::fmax(tankRate, tRate * voicing::kTwinFdnGainInvSq),
+                                                   1.0f / voicing::kTwinFdnGainInvSq));
+            twinFdn_.setOutputTrim(lift * (massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(tDecay, tSize)
+                                                   : voicing::kHallOutputTrim * map::hallSizeLevelTrim(tSize, tDecay)));
             twinFdn_.setEarlyTaps(massive ? 1.0f : 0.0f);
             if (eraChanged(EraSentTwinFdn, tEra)) twinFdn_.setEra(tEra);
             twinFdn_.setDrift(drift);
