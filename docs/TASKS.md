@@ -30,7 +30,7 @@
 
 ## Waiting on Claude
 
-- **ERA as one wear amount** (your pick C, v1.0.42) **then the small room E** (v1.0.43): built as defaults on `claude/era-wear`, off the combined branch; today's eras and HALL/MASSIVE's twin tank leave the module build. Then the spec lines and decision records.
+- **v1.0.42 (ERA as one wear amount) and v1.0.43 (the small room E) are built** on `claude/era-wear`: all 18 tests pass, both sound exactly as on their pages, release flash 105,356 B (7.3 KB spare). Two questions for you before the spec lines: ERA's starting point, and the room's level away from the page's setting.
 - **Flash freed without changing the sound** (branch `claude/flash-neutral`): release 112,548 → 110,460 B, so 2,180 B spare instead of 92; renders bit-identical (55/55). It rests on the module zeroing memory at start-up (checked in the code); the first playing build with it should be heard at the rack before it's trusted.
 - **The branches put together** on a scratch branch (`claude/integration-dryrun`, not main; all checks pass, sound unchanged by default). Combined flash: today 110,516 B (2,124 B spare); the small room alone is 220 B over, but with any new ERA layout and SIZE in 8 groups it's 109,244 B (3.4 KB spare). Your picks can land quickly from here.
 - **The SIZE drop-outs in MASSIVE**: the cause is a cassette SIZE move at a large SIZE (~106 %; round 15 only timed the Neve at SIZE .3-.8); frozen, only the twin crossfades, and only the blur or small room twin brings a frozen SIZE move under the limit (est.). Waiting on round 16 and your `size_moves` pick.
