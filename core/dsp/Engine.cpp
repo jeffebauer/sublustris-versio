@@ -91,7 +91,7 @@ void Engine::setSwellTapsPrototype(int taps)
 
 void Engine::setTwinAltPrototype(int mode, float gainDb)
 {
-    twinAlt_ = mode < 0 || mode > 3 ? 0 : mode;
+    twinAlt_ = mode < 0 || mode > 6 ? 0 : mode;
     const float g = std::pow(10.0f, gainDb / 20.0f);
     if (twinAlt_ == 1) {
         if (!twinBlur_) twinBlur_ = std::make_unique<dsp::TwinBlur>();
@@ -101,6 +101,10 @@ void Engine::setTwinAltPrototype(int mode, float gainDb)
         if (!twinRoom_) twinRoom_ = std::make_unique<dsp::TwinRoom>();
         twinRoom_->prepare(0.5f * sampleRate_, 0x5A11u);
         twinRoom_->setGain(g);
+    } else if (twinAlt_ >= 4) { // the voiced room (renders/small_room): 4 low cut 150 Hz, 5 300 Hz (the split), 6 150 Hz and darker
+        if (!twinRoomV_) twinRoomV_ = std::make_unique<dsp::TwinRoomV>();
+        twinRoomV_->prepare(0.5f * sampleRate_, 0x5A11u, twinAlt_ == 5 ? voicing::kStillLowsHz : 150.0f, twinAlt_ == 6 ? 0.6f : 1.0f);
+        twinRoomV_->setGain(g);
     } else if (twinAlt_ == 3) {
         twinGain_ = g; // the twin without its swell: its level on the output
     }
@@ -416,6 +420,7 @@ IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: 
 #ifndef IV_FIXED_VOICINGS
             if (twinBlur_) twinBlur_->reset(); // setTwinAltPrototype
             if (twinRoom_) twinRoom_->reset();
+            if (twinRoomV_) twinRoomV_->reset();
             altLevel_ = 0.0f;
 #endif
             twinMean_ = twinSpread_ = -1.0f;
@@ -703,6 +708,8 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         const float tRate = std::fmax(tankRate, 1.0f / voicing::kTwinMaxT60);
 #ifndef IV_FIXED_VOICINGS
         if (twinAlt_ == 2 && twinRoom_) twinRoom_->set(tSize, tRate); // setTwinAltPrototype: the room plays SIZE and DECAY
+        if (twinAlt_ >= 4 && twinRoomV_) // the voiced room: and TONE, as the twin's tank does
+            twinRoomV_->set(tSize, tRate, massive ? map::massiveHighRatio(toneRatio, tDecay) : toneRatio);
 #endif
         dsp::EraMix tEra = era;
         tEra.even *= 1.0f - map::governorWeight(tDecay);
@@ -1101,6 +1108,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
 #ifndef IV_FIXED_VOICINGS
             else if (twinAlt_ == 1) twinBlur_->process(twinInL_, twinInR_, twinL_, twinR_, n); // setTwinAltPrototype
             else if (twinAlt_ == 2) twinHalf_.process(*twinRoom_, twinInL_, twinInR_, twinL_, twinR_, n);
+            else if (twinAlt_ >= 4) twinHalf_.process(*twinRoomV_, twinInL_, twinInR_, twinL_, twinR_, n);
             else if (twinLight_ > 0) processLightTwin(n);
 #endif
             else twinHalf_.process(twinFdn_, twinInL_, twinInR_, twinL_, twinR_, n);
@@ -1109,7 +1117,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             float lvl = activeSpace_ == 0 ? twinPlate_.fastLevelDb() : twinFdn_.fastLevelDb();
 #ifndef IV_FIXED_VOICINGS
             if (!twinStopFast_) lvl = activeSpace_ == 0 ? twinPlate_.levelDb() : twinFdn_.levelDb(); // setTwinStopFast(false)
-            if (activeSpace_ != 0 && (twinAlt_ == 1 || twinAlt_ == 2)) { // setTwinAltPrototype: its own 50 ms level
+            if (activeSpace_ != 0 && (twinAlt_ == 1 || twinAlt_ == 2 || twinAlt_ >= 4)) { // setTwinAltPrototype: its own 50 ms level
                 float p = 0.0f;
                 for (int i = 0; i < n; ++i) p += 0.5f * (twinL_[i] * twinL_[i] + twinR_[i] * twinR_[i]);
                 altLevel_ += (1.0f - std::exp(-float(n) / (0.05f * sampleRate_))) * (p / float(n) - altLevel_);

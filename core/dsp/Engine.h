@@ -197,7 +197,8 @@ public:
     // PROTOTYPE (renders/twin_alternatives; owner: "a page with today's twin, blur and width, small room, and the
     // twin without its swell, all at -8 dB"): in HALL and MASSIVE, instead of the twin's tank, 1 a blur (dsp/
     // TwinAlt.h, no tail of its own), 2 a small room (8 short lines at 24 kHz, the twin's T60), 3 the twin without
-    // its swell; gainDb its level (each matched to v1.0.41's twin on the page). Call after prepare().
+    // its swell; 4-6 the small room voiced (renders/small_room: its loss the twin tank's, a low cut of 150 Hz,
+    // 300 Hz, or 150 Hz and darker); gainDb its level (each matched to v1.0.41's twin). Call after prepare().
     void  setTwinAltPrototype(int mode, float gainDb);
     // PROTOTYPE (renders/twin_alternatives, "the layer alone"): the tank (the frozen pad) is left out of the wet,
     // so only the twin (or its alternative) is heard; the tank still runs and freezes as in use.
@@ -337,6 +338,7 @@ private:
     float             altLevel_ = 0.0f;  // its output's 50 ms power (the twin stops on it)
     std::unique_ptr<dsp::TwinBlur> twinBlur_;
     std::unique_ptr<dsp::TwinRoom> twinRoom_;
+    std::unique_ptr<dsp::TwinRoomV> twinRoomV_; // setTwinAltPrototype 4-6
     int               freezeDuck_ = 0;   // setFreezeDuckPrototype; 0 = as built
     float             freezeDuckSeconds_ = 0.4f, duckAtFreeze_ = 0.0f;
     float             twinGain_ = 1.0f;  // setTwinGainPrototype; 1 = as built
