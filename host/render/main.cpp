@@ -140,8 +140,8 @@ Audio renderWithAutomation(iv::Engine& engine, const Audio& in, int block, const
         if (profFile) {
             std::fprintf(profFile, "%zu", pos);
             for (double v : profNs) std::fprintf(profFile, ",%.0f", v);
-            std::fprintf(profFile, ",%d,%d", iv::prof::xfStarts, iv::prof::xfLineBlocks); // SIZE crossfades
-            iv::prof::xfStarts = iv::prof::xfLineBlocks = 0;
+            std::fprintf(profFile, ",%d,%d,%d", iv::prof::xfStarts, iv::prof::xfLineBlocks, iv::prof::xfTanks); // SIZE crossfades
+            iv::prof::xfStarts = iv::prof::xfLineBlocks = iv::prof::xfTanks = 0;
             std::fprintf(profFile, "\n");
         }
 #endif

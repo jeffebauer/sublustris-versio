@@ -26,14 +26,22 @@ inline void mark(Section s)
     if (markHook) markHook(int(s));
 }
 // SIZE crossfade counters (the size_moves hunt, 26 Oct 2026), read and cleared by the host each block:
-// crossfades started, and line-blocks that read twice (a line crossfading over one control block).
-inline int xfStarts = 0, xfLineBlocks = 0;
+// crossfades started, line-blocks that read twice (a line crossfading over one control block), and how
+// many tanks (FDNs: the tank, the still lows, the twin) crossfaded in the block.
+inline int         xfStarts = 0, xfLineBlocks = 0, xfTanks = 0;
+inline const void* xfTank[4] = {};
 inline void countXfStart() { ++xfStarts; }
-inline void countXfLines(int n) { xfLineBlocks += n; }
+inline void countXfLines(const void* tank)
+{
+    ++xfLineBlocks;
+    for (int k = 0; k < xfTanks; ++k)
+        if (xfTank[k] == tank) return;
+    if (xfTanks < 4) xfTank[xfTanks++] = tank;
+}
 #else
 inline void mark(Section) {}
 inline void countXfStart() {}
-inline void countXfLines(int) {}
+inline void countXfLines(const void*) {}
 #endif
 
 } // namespace iv::prof

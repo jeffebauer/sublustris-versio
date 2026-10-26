@@ -582,7 +582,7 @@ IV_NO_UNSWITCH void Fdn::runBlock(const float* inL, const float* inR, float* out
         // Staggered: each line on its own in-loop amount (one waiting for its fade keeps the old one).
         const float apGi = staggered() ? voicing::kInLoopCoeff * apAmtNow_[i] : apG;
         const float apGOldi = staggered() ? (qi > 0 ? voicing::kInLoopCoeff * apAmtOld_[i] : 0.0f) : apGOld;
-        if (qi > 0) prof::countXfLines(1);
+        if (qi > 0) prof::countXfLines(this);
         if (qi > 0 || !lineFast(i, m, apGi, eraIn, eraOut, y[i])) lineSlow(i, m, qi, xn, xo, apGi, apGOldi, eraIn, eraOut, y[i]);
     }
     xfNew_ = endNew;

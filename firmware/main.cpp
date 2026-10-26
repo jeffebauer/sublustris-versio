@@ -1568,46 +1568,68 @@ int main()
             }
 
             // The size_moves hunt: SIZE turned by hand (SizeHand) in MASSIVE with the knobs high, Neve and
-            // cassette, with the crossfade in 2 groups (as built, v1.0.39), 4 and 8 (the prototypes).
+            // cassette, with the crossfade in 2 groups (as built, v1.0.39), 4 and 8 (the prototypes). Three
+            // states: playing; frozen (the pad holds its SIZE, the twin follows the knob and crossfades); just
+            // unfrozen (the pad jumps to the knob's SIZE and crossfades while the twin rings on and crossfades
+            // too; the owner: drop-outs mostly frozen, "very occasionally when unfrozen too"). The frozen ones
+            // the sweep and the twists, just unfrozen the twists.
             static const char* const kHandNames[3] = {"sweep", "twists", "creep"};
+            static const char* const kStateNames[3] = {"", "FROZEN ", "UNFROZE "};
             static const int kGroups[3] = {2, 4, 8};
-            for (int era = 0; era < 2; ++era)
-                for (int hand = 0; hand < 3; ++hand)
-                    for (int gi = 0; gi < 3; ++gi) {
-                        ApplyRealtime(era ? 0.7f : 0.1f);
-                        engine.setSizeStagger(kGroups[gi]);
-                        engine.setParam(ParamId::Size, ivpot::endStops(SizeHand(hand, 0)));
-                        RunUntimed(int(3.0f * fs) / kBlockSize, fs); // the move to the start, its crossfades done
-                        gLate = gBlocks = gMaxCycles = 0;
-                        gSumCycles = 0;
-                        gStepBlocks = uint32_t((hand == 2 ? 6.0f : 5.0f) * fs / float(kBlockSize));
-                        gSizeHand = hand;
-                        gRealtime = true;
-                        while (gRealtime) {
+            auto tap = [&](int hold) { // a press, released `hold` blocks later
+                engine.button(true, 0);
+                RunUntimed(hold, fs);
+                engine.button(false, 0);
+            };
+            for (int state = 0; state < 3; ++state)
+                for (int era = 0; era < 2; ++era)
+                    for (int hand = 0; hand < 3; ++hand)
+                        for (int gi = 0; gi < 3; ++gi) {
+                            if ((state > 0 && hand == 2) || (state == 2 && hand == 0)) continue;
+                            ApplyRealtime(era ? 0.7f : 0.1f);
+                            engine.setSizeStagger(kGroups[gi]);
+                            engine.setParam(ParamId::Size, ivpot::endStops(SizeHand(hand, 0)));
+                            RunUntimed(int(3.0f * fs) / kBlockSize, fs); // the move to the start, its crossfades done
+                            if (state > 0) { // freeze (the twin starts), let the freeze's glide settle
+                                tap(10);
+                                RunUntimed(int(2.0f * fs) / kBlockSize, fs);
+                            }
+                            if (state == 2) tap(1); // unfreeze: the twin rings on through the timed moves
+                            gLate = gBlocks = gMaxCycles = 0;
+                            gSumCycles = 0;
+                            gStepBlocks = uint32_t((hand == 2 ? 6.0f : 5.0f) * fs / float(kBlockSize));
+                            gSizeHand = hand;
+                            gRealtime = true;
+                            while (gRealtime) {
+                            }
+                            gSizeHand = -1;
+                            System::Delay(5);
+                            const bool twin = engine.twinActive();
+                            if (state == 1) tap(1); // unfreeze
+                            if (state > 0) RunUntimed(-1, fs); // run on until the twin stops
+                            const float period = float(gPeriodCycles);
+                            const float avg = gBlocks ? float(gSumCycles) / float(gBlocks) / period : 0.0f;
+                            static char sb[160];
+                            char*       p   = sb;
+                            const char* end = sb + sizeof(sb);
+                            AppendStr(p, end, "SIZEHAND MASSIVE ");
+                            AppendStr(p, end, kStateNames[state]);
+                            AppendStr(p, end, era ? "cassette " : "neve     ");
+                            AppendPadRight(p, end, kHandNames[hand], 7);
+                            AppendStr(p, end, " groups ");
+                            AppendInt(p, end, kGroups[gi]);
+                            AppendStr(p, end, " avg ");
+                            AppendFixed1(p, end, FracToPercentTenths(avg), 5);
+                            AppendStr(p, end, "% max ");
+                            AppendFixed1(p, end, FracToPercentTenths(float(gMaxCycles) / period), 5);
+                            AppendStr(p, end, "% | late blocks ");
+                            AppendUInt(p, end, unsigned(gLate));
+                            AppendStr(p, end, " of ");
+                            AppendUInt(p, end, unsigned(gBlocks));
+                            if (state == 2) AppendStr(p, end, twin ? " | twin still on" : " | twin stopped");
+                            AppendStr(p, end, "\r\n");
+                            TransmitLine(sb, size_t(p - sb));
                         }
-                        gSizeHand = -1;
-                        System::Delay(5);
-                        const float period = float(gPeriodCycles);
-                        const float avg = gBlocks ? float(gSumCycles) / float(gBlocks) / period : 0.0f;
-                        static char sb[160];
-                        char*       p   = sb;
-                        const char* end = sb + sizeof(sb);
-                        AppendStr(p, end, "SIZEHAND MASSIVE ");
-                        AppendStr(p, end, era ? "cassette " : "neve     ");
-                        AppendPadRight(p, end, kHandNames[hand], 7);
-                        AppendStr(p, end, " groups ");
-                        AppendInt(p, end, kGroups[gi]);
-                        AppendStr(p, end, " avg ");
-                        AppendFixed1(p, end, FracToPercentTenths(avg), 5);
-                        AppendStr(p, end, "% max ");
-                        AppendFixed1(p, end, FracToPercentTenths(float(gMaxCycles) / period), 5);
-                        AppendStr(p, end, "% | late blocks ");
-                        AppendUInt(p, end, unsigned(gLate));
-                        AppendStr(p, end, " of ");
-                        AppendUInt(p, end, unsigned(gBlocks));
-                        AppendStr(p, end, "\r\n");
-                        TransmitLine(sb, size_t(p - sb));
-                    }
             engine.setSizeStagger(2);
             ApplyCorner(gCurrentCorner);
         }
