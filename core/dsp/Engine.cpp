@@ -1136,7 +1136,12 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             // DECAY's level make-up (v1.0.28) on the forward wet and the twin, a ~40 ms glide.
             decayGainNow_ += 0.0005f * (decayGain_ - decayGainNow_);
             // The twin fades with a SPACE flip too (it stops at the flip's silent point).
+#ifndef IV_FIXED_VOICINGS
+            const float keepTank = layerSolo_ ? 0.0f : 1.0f; // setLayerSoloPrototype: the frozen pad (the tank) out of the wet
+            const float fl = keepTank * decayGainNow_ * wetL_[i], fr = keepTank * decayGainNow_ * wetR_[i];
+#else
             const float fl = decayGainNow_ * wetL_[i], fr = decayGainNow_ * wetR_[i];
+#endif
 #ifndef IV_FIXED_VOICINGS
             const float twinK = voicing::kTwinLevel * (activeSpace_ != 0 ? twinGain_ : 1.0f); // setTwinGainPrototype (1: exact)
             const float tl = decayGainNow_ * twinK * twinL_[i];

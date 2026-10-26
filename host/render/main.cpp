@@ -182,6 +182,10 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         std::fprintf(stderr, "iv_render: IV_TWIN_LIGHT: twin %d (0 as built, 1 swell at 24 kHz, 2 + no in-loop diffusion, 2 taps, 3 at 12 kHz)\n",
                      engine.twinLight());
     }
+    if (const char* ls = std::getenv("IV_LAYER_SOLO")) { // renders/twin_alternatives: the layer alone
+        engine.setLayerSoloPrototype(std::atoi(ls) != 0);
+        std::fprintf(stderr, "iv_render: IV_LAYER_SOLO: %s\n", std::atoi(ls) ? "the pad out of the wet" : "off");
+    }
     if (const char* ta = std::getenv("IV_TWIN_ALT")) { // renders/twin_alternatives: mode[:gainDb]
         const char* colon = std::strchr(ta, ':');
         engine.setTwinAltPrototype(std::atoi(ta), colon ? float(std::atof(colon + 1)) : 0.0f);

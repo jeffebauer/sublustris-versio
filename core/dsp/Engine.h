@@ -199,6 +199,9 @@ public:
     // TwinAlt.h, no tail of its own), 2 a small room (8 short lines at 24 kHz, the twin's T60), 3 the twin without
     // its swell; gainDb its level (each matched to v1.0.41's twin on the page). Call after prepare().
     void  setTwinAltPrototype(int mode, float gainDb);
+    // PROTOTYPE (renders/twin_alternatives, "the layer alone"): the tank (the frozen pad) is left out of the wet,
+    // so only the twin (or its alternative) is heard; the tank still runs and freezes as in use.
+    void  setLayerSoloPrototype(bool on) { layerSolo_ = on; }
     int   twinLight() const { return twinLight_; }
     // PROTOTYPE (renders/freeze_moment; owner: "the frozen sound seems to jump in amplitude once frozen
     // compared to the swelling reverb"): the ducking (ADR 0014) at a freeze. 0 as built: let go in 50 ms
@@ -330,6 +333,7 @@ private:
     int               fitSwellTaps_ = 0; // setSwellTapsPrototype; 0 = as built
     int               twinLight_ = 0;    // setTwinLightPrototype; 0 = as built
     int               twinAlt_ = 0;      // setTwinAltPrototype; 0 = as built
+    bool              layerSolo_ = false; // setLayerSoloPrototype
     float             altLevel_ = 0.0f;  // its output's 50 ms power (the twin stops on it)
     std::unique_ptr<dsp::TwinBlur> twinBlur_;
     std::unique_ptr<dsp::TwinRoom> twinRoom_;
