@@ -2,6 +2,7 @@
 // The wet's last stages before MIX (SPEC §4.9, §4.10): TONE's tilt and the
 // soft limiter (the ducking is a gain in Engine, ADR 0014). Both act on the wet only, so MIX fully
 // CCW stays a clean passthrough.
+#include "dsp/SizeOpt.h"
 #include "params/SpaceVoicing.h"
 
 #include <cmath>
@@ -41,7 +42,7 @@ public:
 
 private:
     static constexpr float kGlide = 0.002f; // ~10 ms at 48 kHz
-    float coeff_ = 0.1f, low_ = 1.0f, high_ = 1.0f, lowTarget_ = 1.0f, highTarget_ = 1.0f, lp_[2] = {};
+    float coeff_ = 0.1f, low_ = 1.0f, high_ = 1.0f, lowTarget_ = 1.0f, highTarget_ = 1.0f, lp_[2] IV_ZI;
 };
 
 // The soft limiter: instant attack on the peak, kLimitReleaseSeconds release,

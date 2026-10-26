@@ -90,11 +90,11 @@ private:
         return float(int32_t(rng_)) * (1.0f / 2147483648.0f);
     }
 
-    float    sampleRate_ = 48000.0f, spread_ = 0.0f, value_ = 0.0f;
+    float    sampleRate_ = 48000.0f, spread_ IV_ZI, value_ IV_ZI;
     uint32_t rng_ = 1;
-    float    wowA_ = 0, wowB_ = 0, wowTarget_ = 0, wowCountdown_ = 0, flutterPhase_ = 0;
-    float    wcArg_ = 1.0f, wc_ = 0.0f;                                  // the wow's smoothing, for wcArg_
-    float    depthIn_[4] = {-1.0f, -1.0f, -1.0f, -1.0f}, wowDepth_ = 0.0f, flutterDepth_ = 0.0f;
+    float    wowA_ IV_ZI, wowB_ IV_ZI, wowTarget_ IV_ZI, wowCountdown_ IV_ZI, flutterPhase_ IV_ZI;
+    float    wcArg_ = 1.0f, wc_ IV_ZI;                                  // the wow's smoothing, for wcArg_
+    float    depthIn_[4] = {-1.0f, -1.0f, -1.0f, -1.0f}, wowDepth_ IV_ZI, flutterDepth_ IV_ZI;
 };
 
 } // namespace iv::dsp

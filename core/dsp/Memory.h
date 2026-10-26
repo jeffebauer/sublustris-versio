@@ -159,8 +159,8 @@ private:
 // for memory-tight places (the Plate and its twin, SPEC §5.2): the
 // wrap costs a compare instead of a mask.
 struct ExactLine {
-    float*   buf  = nullptr;
-    uint32_t size = 0, pos = 0, fill = 0; // fill: as DelayLine's (clear() is lazy)
+    float*   buf IV_ZI;
+    uint32_t size IV_ZI, pos IV_ZI, fill IV_ZI; // fill: as DelayLine's (clear() is lazy)
 
     IV_SIZE_OPT bool init(Arena& arena, size_t maxDelaySamples)
     {

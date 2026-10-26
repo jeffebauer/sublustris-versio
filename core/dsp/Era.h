@@ -164,11 +164,11 @@ private:
 
     float    sampleRate_ = 48000.0f;
     EraMix   mix_;
-    float    evenCoeff_ = 0.001f, evenMean_ = 0.0f;
+    float    evenCoeff_ = 0.001f, evenMean_ IV_ZI;
     float    midiStep_ = 1.0f / 32768.0f;
     Halfband down_, up_;
-    int      phase_ = 0;
-    float    held_ = 0.0f, pairFirst_ = 0.0f, darkLp_ = 0.0f;
+    int      phase_ IV_ZI;
+    float    held_ IV_ZI, pairFirst_ IV_ZI, darkLp_ IV_ZI;
 };
 
 } // namespace iv::dsp

@@ -39,8 +39,9 @@
 // the constructor runs, so storing those zeros again only cost flash: ~67 memsets and a few hundred
 // stores in Engine() and Fdn() (overnight review 26 Oct 2026, section 5.6). Desktop hosts declare
 // `iv::Engine e;` (default-initialisation, no zeroing) and keep the initialisers. Use it only on members
-// of classes the firmware creates as part of the value-initialised Engine (or by `new (p) T()`), never
-// on a local or a struct a function builds with `T x;`.
+// of classes the firmware creates as part of the value-initialised Engine, by `new (p) T()` or with
+// static storage (zeroed too: the profile build's micro-tests), never on a class a function builds as
+// a local with `T x;` (DelayLine: Fdn::runBlock's `was`; EraMix, DriftAmounts, Absorb, Arena).
 #if defined(IV_FIXED_VOICINGS)
 #define IV_ZI
 #else

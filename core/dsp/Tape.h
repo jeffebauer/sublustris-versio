@@ -88,9 +88,9 @@ private:
         return x * (27.0f + x2) / (27.0f + 9.0f * x2);
     }
 
-    float c_ = -1.0f, sr_ = 0.0f;
-    float gEmph_ = 1.0f, drive_ = 1.0f, wPre_ = 0.0f, wDe_ = 0.0f, wRms_ = 0.0f, wDc_ = 0.0f, b_ = 0.0f, tb_ = 0.0f;
-    float preLp_ = 0.0f, deLp_ = 0.0f, dc_ = 0.0f, play_ = 0.0f, rms_ = 0.0f;
+    float c_ = -1.0f, sr_ IV_ZI;
+    float gEmph_ = 1.0f, drive_ = 1.0f, wPre_ IV_ZI, wDe_ IV_ZI, wRms_ IV_ZI, wDc_ IV_ZI, b_ IV_ZI, tb_ IV_ZI;
+    float preLp_ IV_ZI, deLp_ IV_ZI, dc_ IV_ZI, play_ IV_ZI, rms_ IV_ZI;
     Oversampler os1_;
 #ifndef IV_FIXED_VOICINGS
     Oversampler os2_; // setFactor(4) only
