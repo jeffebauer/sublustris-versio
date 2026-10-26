@@ -1888,20 +1888,31 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
     if (button != lastButton) engine.button(button, 0);
     lastButton = button;
 
-    // Knob deadband (26 Oct 2026, after the rack jitter check: every reading changes all the time, inside
-    // +-0.0005): a knob's value goes to the Engine only once it has moved more than kKnobDeadband from the
-    // last one sent, or when it reaches an end stop (exact 0 / 1). Then the Engine's memos (ERA's stages,
-    // the loss filters, the drift) see a still knob as still and skip their maths, as the profile measured.
-    // Moves come in steps of 0.05 % of the travel.
-    constexpr float kKnobDeadband = 0.0005f;
-    static float    sent[DaisyVersio::KNOB_LAST] = {-1, -1, -1, -1, -1, -1, -1};
+    // Knob readings (26 Oct 2026). The rack jitter check found every reading changing all the time, and
+    // with the reverb running the audio gets into them: playing notes moved SIZE's reading past the old
+    // 0.0005 deadband, and each move started a SIZE crossfade in MASSIVE (up to ~110 % of the CPU): the
+    // owner's drop-outs, and never in PLATE, which glides. So each reading is smoothed by a one-pole of
+    // kKnobSmoothMs (on top of libDaisy's 2 ms) and reaches the Engine only once it has moved more than
+    // its deadband from the last value sent, or at an end stop (exact 0 / 1): kKnobDeadband for most,
+    // kCrossfadeDeadband for SIZE and TIME, whose changes start a crossfade in HALL and MASSIVE (0.3 % of
+    // the travel: ~9 cents of MASSIVE's room, 2 ms of pre-delay; they jump by crossfade anyway).
+    constexpr float kKnobSmoothMs      = 10.0f;
+    constexpr float kKnobSmooth        = 1.0f / (1.0f + kKnobSmoothMs * 48.0f / float(kBlockSize)); // a block = 1 ms
+    constexpr float kKnobDeadband      = 0.001f;
+    constexpr float kCrossfadeDeadband = 0.003f;
+    static float    smooth[DaisyVersio::KNOB_LAST] = {-1, -1, -1, -1, -1, -1, -1};
+    static float    sent[DaisyVersio::KNOB_LAST]   = {-1, -1, -1, -1, -1, -1, -1};
     for (int p = 0; p < DaisyVersio::KNOB_LAST; ++p) {
 #if IV_RELEASE_DIAG
-        const float v = 0.5f; // every knob at noon
+        const float raw = 0.5f; // every knob at noon
 #else
-        const float v = ivpot::endStops(hw.GetKnobValue(kPotKnob[p])); // exact 0 / 1 at the stops
+        const float raw = hw.GetKnobValue(kPotKnob[p]);
 #endif
-        if (std::fabs(v - sent[p]) > kKnobDeadband || ((v == 0.0f || v == 1.0f) && v != sent[p])) {
+        smooth[p] = smooth[p] < 0.0f ? raw : smooth[p] + kKnobSmooth * (raw - smooth[p]);
+        const float v    = ivpot::endStops(smooth[p]); // exact 0 / 1 at the stops
+        const bool  xf   = kPotParams[p] == iv::ParamId::Size || kPotParams[p] == iv::ParamId::Time;
+        const float band = xf ? kCrossfadeDeadband : kKnobDeadband;
+        if (std::fabs(v - sent[p]) > band || ((v == 0.0f || v == 1.0f) && v != sent[p])) {
             if (kPotParams[p] == iv::ParamId::Size && sent[p] >= 0.0f) gSizeSends = gSizeSends + 1;
             if (kPotParams[p] == iv::ParamId::Time && sent[p] >= 0.0f) gTimeSends = gTimeSends + 1;
             sent[p] = v;
