@@ -633,9 +633,9 @@ void BuildCornerTable()
         int   kind;
         const char* name;
     } extra[3] = {
-        {1.0f, 3.0f, kShimmerCorner, "MASSIVE S1 neve SHIMMER"},
-        {kSizeMoveLow, 6.0f, kSizeMove, "MASSIVE neve SIZE .3<>.8"},
-        {1.0f, 6.0f, kFrozen, "MASSIVE S1 neve FROZEN+twin"},
+        {1.0f, 3.0f, kShimmerCorner, "MASSIVE S1 wear10 SHIMMER"},
+        {kSizeMoveLow, 6.0f, kSizeMove, "MASSIVE wear10 SIZE .3<>.8"},
+        {1.0f, 6.0f, kFrozen, "MASSIVE S1 wear10 FROZEN+twin"},
     };
     for (const auto& e : extra) {
         Corner& c  = gCorners[idx++];

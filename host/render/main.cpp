@@ -45,8 +45,11 @@ void usage(const char* argv0)
         "       %s --analyze <in.wav> [--sidecar-out x.json] [--channel L|R|mix]\n",
         argv0, argv0, argv0);
     std::fprintf(stderr, "keys (--set key=value, 0..1; the panel's name in brackets):");
-    for (const auto& p : iv::kParams) std::fprintf(stderr, " %s [%s]", p.key, p.name);
-    std::fprintf(stderr, "\n");
+    for (const auto& p : iv::kParams) {
+        if (p.kind == iv::ParamKind::Switch3) std::fprintf(stderr, " %s [%s: %s %s %s]", p.key, p.name, p.choices[0], p.choices[1], p.choices[2]);
+        else std::fprintf(stderr, " %s [%s]", p.key, p.name);
+    }
+    std::fprintf(stderr, "\n  (attack=NORMAL still reads as NATURAL)\n");
 }
 
 // Mono downmix used by every analysis metric (sum of channels / channel
@@ -184,6 +187,11 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     }
     if (std::getenv("IV_TWIN_ALT") || std::getenv("IV_TWIN_LIGHT")) // the twin prototypes before v1.0.43: the twin tank is gone
         std::fprintf(stderr, "iv_render: IV_TWIN_ALT / IV_TWIN_LIGHT ignored: HALL's and MASSIVE's twin is the small room (E) since v1.0.43\n");
+    if (const char* rl = std::getenv("IV_ROOM_LEVEL")) { // renders/room_level
+        engine.setRoomLevelPrototype(std::atoi(rl));
+        const int m = std::atoi(rl);
+        std::fprintf(stderr, "iv_render: IV_ROOM_LEVEL: %s\n", m == 1 ? "room level follows the pad (full)" : m == 2 ? "room level follows the pad (halfway)" : "as built");
+    }
     if (const char* fd = std::getenv("IV_FREEZE_DUCK")) { // renders/freeze_moment: mode[:seconds]
         const char* colon = std::strchr(fd, ':');
         engine.setFreezeDuckPrototype(std::atoi(fd), colon ? float(std::atof(colon + 1)) : 0.0f);

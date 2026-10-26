@@ -224,7 +224,8 @@ public:
         // freeze, a hold while frozen paints. Every press and release goes
         // to the audio thread, which hands it to the Engine at the start of
         // its next block; the Engine's gesture reader does the rest.
-        button_.setButtonText("FREEZE");
+        button_.setButtonText("FREEZE / PAINT"); // the owner's label (27 Oct 2026): tap freezes, hold paints
+        button_.setTooltip("Tap: freeze. Hold while frozen: paint.");
         button_.onStateChange = [this] {
             const bool down = button_.isDown();
             if (down == buttonDown_) return;
@@ -369,6 +370,7 @@ private:
     std::array<std::array<juce::TextButton, 3>, std::size(kToggles)> toggles_;
     std::array<std::unique_ptr<juce::ParameterAttachment>, std::size(kToggles)> toggleAttach_;
     juce::TextButton                button_;
+    juce::TooltipWindow             tooltips_{this, 600}; // shows the button's tooltip (tap / hold)
     bool                            buttonDown_ = false;
     std::array<juce::TextButton, 3> sizes_;
 

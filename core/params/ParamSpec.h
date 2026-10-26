@@ -43,7 +43,8 @@ struct ParamSpec {
     // save a device's parameters by it (VST3 ID = a hash of the key), so a
     // rename leaves a dead slot in every saved set. Change `name` instead.
     const char* key;
-    const char* name; // panel label
+    const char* name; // panel label (27 Oct 2026, the owner's names: BLEND, WEAR, MOTION, DEPTH, ONSET with NATURAL;
+                      // the keys stay: hosts and presets name parameters by them)
     ParamKind   kind;
     float       defaultValue; // Normalised
     Smoothing   smoothing;
@@ -52,15 +53,15 @@ struct ParamSpec {
 };
 
 inline constexpr std::array<ParamSpec, static_cast<size_t>(ParamId::Count)> kParams{{
-    {ParamId::Mix,    "mix",    "MIX",    ParamKind::Knob,    0.5f, Smoothing::Snappy,   5.0f, {}},
+    {ParamId::Mix,    "mix",    "BLEND",  ParamKind::Knob,    0.5f, Smoothing::Snappy,   5.0f, {}},
     {ParamId::Decay,  "decay",  "DECAY",  ParamKind::Knob,    0.5f, Smoothing::Gliding, 80.0f, {}},
     {ParamId::Tone,   "tone",   "TONE",   ParamKind::Knob,    0.5f, Smoothing::Snappy,   5.0f, {}},
     {ParamId::Era,    "era",    "WEAR",   ParamKind::Knob,    0.0f, Smoothing::Gliding, 60.0f, {}}, // clean: the Neve alone (v1.0.42, owner: "Start Clean"); shown as WEAR, its key stays "era"
     {ParamId::Size,   "size",   "SIZE",   ParamKind::Knob,    0.5f, Smoothing::Slewed,  80.0f, {}},
-    {ParamId::Drift,  "drift",  "DRIFT",  ParamKind::Knob,    0.5f, Smoothing::Gliding, 80.0f, {}},
-    {ParamId::Time,   "time",   "TIME",   ParamKind::Knob,    0.2f, Smoothing::Gliding, 80.0f, {}},
+    {ParamId::Drift,  "drift",  "MOTION", ParamKind::Knob,    0.5f, Smoothing::Gliding, 80.0f, {}},
+    {ParamId::Time,   "time",   "DEPTH",  ParamKind::Knob,    0.2f, Smoothing::Gliding, 80.0f, {}},
     {ParamId::Space,  "space",  "SPACE",  ParamKind::Switch3, 0.5f, Smoothing::Switch, 100.0f, {"PLATE", "HALL", "MASSIVE"}},
-    {ParamId::Attack, "attack", "ATTACK", ParamKind::Switch3, 0.0f, Smoothing::Switch,  50.0f, {"NORMAL", "BLOOM", "SHIMMER"}},
+    {ParamId::Attack, "attack", "ONSET",  ParamKind::Switch3, 0.0f, Smoothing::Switch,  50.0f, {"NATURAL", "BLOOM", "SHIMMER"}},
 }};
 
 constexpr const ParamSpec& spec(ParamId id) { return kParams[static_cast<size_t>(id)]; }
