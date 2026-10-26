@@ -8,7 +8,7 @@
 - [ ] **Round 16: real SIZE turns on the module** *(after the candidate lap; it adds the Neve and the just-unfrozen moves)* (USB power only, rack power unplugged). Flash `/Users/jesse/Documents/Sites/immensio-versio/dist/immensio_versio_profile-sizemoves.bin`, screen's log on (Ctrl-A, Shift-H), and let it run one full lap until the last line `SIZEHAND MASSIVE UNFROZE cassette twists groups 8` prints (~15-20 min; knobs don't matter, every move is scripted). Then tell Claude. It measures SIZE sweeps, twists and creeps in MASSIVE (Neve and cassette), playing, frozen and just unfrozen, with SIZE's crossfade in 2, 4 or 8 groups.
 
 ### Decide
-- [ ] **A new name** ("immensio" keeps turning into "immersio", and Immensio/Versio rhyme). Shortlist: **Nubila** (an overcast, cloud-heavy sky), **Caligo** (thick fog, sea fog, gloom) and **Obscurus** (dim, hazy, hard to make out). Still exploring: sea, swell and wave words. On a rename the plugin's ID (ImVs) and parameter keys stay, so Ableton sets keep loading.
+- [ ] **A new name** ("immensio" keeps turning into "immersio", and Immensio/Versio rhyme). Shortlist: **Nubila** (an overcast, cloud-heavy sky), **Caligo** (thick fog, sea fog, gloom), **Obscurus** (dim, hazy, hard to make out; "Obscura" is taken by two pedals) and **Sublustris** (dimly lit, faintly glowing: the half-light of a clouded night). Still exploring: sea, swell and wave words. On a rename the plugin's ID (ImVs) and parameter keys stay, so Ableton sets keep loading.
 - [ ] **Merge `claude/massive-air` into main?** It holds everything since v1.0.33 (SIZE/TIME crossfade, the CPU work, v1.0.34-36, the profile builds, and now the overnight review's speed-ups and report), all tests passing. Your OK first.
 
 ### Listen (after your notes)
