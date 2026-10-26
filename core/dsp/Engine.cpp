@@ -89,6 +89,23 @@ void Engine::setSwellTapsPrototype(int taps)
     prepare(sampleRate_, maxBlockSize_);
 }
 
+void Engine::setTwinAltPrototype(int mode, float gainDb)
+{
+    twinAlt_ = mode < 0 || mode > 3 ? 0 : mode;
+    const float g = std::pow(10.0f, gainDb / 20.0f);
+    if (twinAlt_ == 1) {
+        if (!twinBlur_) twinBlur_ = std::make_unique<dsp::TwinBlur>();
+        twinBlur_->prepare(sampleRate_, 0xB10Fu);
+        twinBlur_->setGain(g);
+    } else if (twinAlt_ == 2) {
+        if (!twinRoom_) twinRoom_ = std::make_unique<dsp::TwinRoom>();
+        twinRoom_->prepare(0.5f * sampleRate_, 0x5A11u);
+        twinRoom_->setGain(g);
+    } else if (twinAlt_ == 3) {
+        twinGain_ = g; // the twin without its swell: its level on the output
+    }
+}
+
 void Engine::setTwinLightPrototype(int mode)
 {
     twinLight_ = mode < 0 || mode > 3 ? 0 : mode;
@@ -396,6 +413,11 @@ IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: 
                                             ? map::massiveNormalAttackSeconds(smoothed(ParamId::Decay), smoothed(ParamId::Size)) : 0.0f,
                                         true);
             twinSwell_.reset();
+#ifndef IV_FIXED_VOICINGS
+            if (twinBlur_) twinBlur_->reset(); // setTwinAltPrototype
+            if (twinRoom_) twinRoom_->reset();
+            altLevel_ = 0.0f;
+#endif
             twinMean_ = twinSpread_ = -1.0f;
             twinActive_ = true;
         }
@@ -679,6 +701,9 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         const float tT60 = activeSpace_ == 1 ? map::hallT60Scale(tSize) : 1.0f;
         const float tankRate = decayRate(tDecay, tSize) / tT60;
         const float tRate = std::fmax(tankRate, 1.0f / voicing::kTwinMaxT60);
+#ifndef IV_FIXED_VOICINGS
+        if (twinAlt_ == 2 && twinRoom_) twinRoom_->set(tSize, tRate); // setTwinAltPrototype: the room plays SIZE and DECAY
+#endif
         dsp::EraMix tEra = era;
         tEra.even *= 1.0f - map::governorWeight(tDecay);
         if (plate) {
@@ -1038,7 +1063,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         // Its swell too: after a MASSIVE freeze its attack stayed set, and with no twin it read 24 taps
         // a sample from a ring of silence until power-off (overnight review, 26 Oct 2026).
 #ifndef IV_FIXED_VOICINGS
-        if (twinRuns && twinLight_ == 0) twinSwell_.processBlock(twinInL_, twinInR_, n); // else at the twin's rate
+        if (twinRuns && twinLight_ == 0 && twinAlt_ == 0) twinSwell_.processBlock(twinInL_, twinInR_, n); // else at the twin's rate, or none
 #else
         if (twinRuns) twinSwell_.processBlock(twinInL_, twinInR_, n);
 #endif
@@ -1074,6 +1099,8 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         if (twinActive_) {
             if (activeSpace_ == 0) twinPlate_.process(twinInL_, twinInR_, twinL_, twinR_, n);
 #ifndef IV_FIXED_VOICINGS
+            else if (twinAlt_ == 1) twinBlur_->process(twinInL_, twinInR_, twinL_, twinR_, n); // setTwinAltPrototype
+            else if (twinAlt_ == 2) twinHalf_.process(*twinRoom_, twinInL_, twinInR_, twinL_, twinR_, n);
             else if (twinLight_ > 0) processLightTwin(n);
 #endif
             else twinHalf_.process(twinFdn_, twinInL_, twinInR_, twinL_, twinR_, n);
@@ -1082,6 +1109,12 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             float lvl = activeSpace_ == 0 ? twinPlate_.fastLevelDb() : twinFdn_.fastLevelDb();
 #ifndef IV_FIXED_VOICINGS
             if (!twinStopFast_) lvl = activeSpace_ == 0 ? twinPlate_.levelDb() : twinFdn_.levelDb(); // setTwinStopFast(false)
+            if (activeSpace_ != 0 && (twinAlt_ == 1 || twinAlt_ == 2)) { // setTwinAltPrototype: its own 50 ms level
+                float p = 0.0f;
+                for (int i = 0; i < n; ++i) p += 0.5f * (twinL_[i] * twinL_[i] + twinR_[i] * twinR_[i]);
+                altLevel_ += (1.0f - std::exp(-float(n) / (0.05f * sampleRate_))) * (p / float(n) - altLevel_);
+                lvl = 10.0f * std::log10(altLevel_ + 1e-30f);
+            }
 #endif
             if (!gesture_.frozen() && twinIn_ == 0.0f && lvl < -100.0f) twinActive_ = false;
             // Painting (holding) copies a little of the twin into the pad: what you played becomes a layer of it.

@@ -182,6 +182,11 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         std::fprintf(stderr, "iv_render: IV_TWIN_LIGHT: twin %d (0 as built, 1 swell at 24 kHz, 2 + no in-loop diffusion, 2 taps, 3 at 12 kHz)\n",
                      engine.twinLight());
     }
+    if (const char* ta = std::getenv("IV_TWIN_ALT")) { // renders/twin_alternatives: mode[:gainDb]
+        const char* colon = std::strchr(ta, ':');
+        engine.setTwinAltPrototype(std::atoi(ta), colon ? float(std::atof(colon + 1)) : 0.0f);
+        std::fprintf(stderr, "iv_render: IV_TWIN_ALT: %s (0 as built, 1 blur, 2 small room, 3 no swell)\n", ta);
+    }
     if (const char* fd = std::getenv("IV_FREEZE_DUCK")) { // renders/freeze_moment: mode[:seconds]
         const char* colon = std::strchr(fd, ':');
         engine.setFreezeDuckPrototype(std::atoi(fd), colon ? float(std::atof(colon + 1)) : 0.0f);

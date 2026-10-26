@@ -38,6 +38,10 @@
 #if !defined(IV_NO_HEAP)
 #include <vector>
 #endif
+#if !defined(IV_FIXED_VOICINGS) && !defined(IV_NO_HEAP)
+#include "dsp/TwinAlt.h" // setTwinAltPrototype
+#include <memory>
+#endif
 
 namespace iv {
 
@@ -190,6 +194,11 @@ public:
     // its half-rate stage; 2 that, no in-loop diffusion and two early taps a line; 3 its swell and tank
     // at 12 kHz. Re-prepares the Engine.
     void  setTwinLightPrototype(int mode);
+    // PROTOTYPE (renders/twin_alternatives; owner: "a page with today's twin, blur and width, small room, and the
+    // twin without its swell, all at -8 dB"): in HALL and MASSIVE, instead of the twin's tank, 1 a blur (dsp/
+    // TwinAlt.h, no tail of its own), 2 a small room (8 short lines at 24 kHz, the twin's T60), 3 the twin without
+    // its swell; gainDb its level (each matched to v1.0.41's twin on the page). Call after prepare().
+    void  setTwinAltPrototype(int mode, float gainDb);
     int   twinLight() const { return twinLight_; }
     // PROTOTYPE (renders/freeze_moment; owner: "the frozen sound seems to jump in amplitude once frozen
     // compared to the swelling reverb"): the ducking (ADR 0014) at a freeze. 0 as built: let go in 50 ms
@@ -320,6 +329,10 @@ private:
     int               fitTapeOs_ = 2;    // setTapeOversamplingPrototype; 4 = before v1.0.38
     int               fitSwellTaps_ = 0; // setSwellTapsPrototype; 0 = as built
     int               twinLight_ = 0;    // setTwinLightPrototype; 0 = as built
+    int               twinAlt_ = 0;      // setTwinAltPrototype; 0 = as built
+    float             altLevel_ = 0.0f;  // its output's 50 ms power (the twin stops on it)
+    std::unique_ptr<dsp::TwinBlur> twinBlur_;
+    std::unique_ptr<dsp::TwinRoom> twinRoom_;
     int               freezeDuck_ = 0;   // setFreezeDuckPrototype; 0 = as built
     float             freezeDuckSeconds_ = 0.4f, duckAtFreeze_ = 0.0f;
     float             twinGain_ = 1.0f;  // setTwinGainPrototype; 1 = as built
