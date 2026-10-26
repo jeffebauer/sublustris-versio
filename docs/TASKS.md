@@ -4,6 +4,7 @@
 **Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Not yet in it: v1.0.35-36 (the 24 kHz tank, 12-point swell, fewer early reflections) and the review's speed-ups; say when you'd like it installed (Ableton closed).
 
 ## To do
+- [ ] **Send your friend the plugin** (v1.0.41, Mac, plugin only): `/Users/jesse/Documents/Sites/immensio-versio/dist/release/v1.0.41-e99dfba/ImmensioVersio_v1.0.41-e99dfba.zip` (7.3 MB: VST3 + Audio Unit, Apple Silicon and Intel, the read-me with install steps, the licence files). Nothing was installed or published.
 - [ ] **Round 16: real SIZE turns on the module** (USB power only, rack power unplugged). Flash `/Users/jesse/Documents/Sites/immensio-versio/dist/immensio_versio_profile-sizemoves.bin`, screen's log on (Ctrl-A, Shift-H), and let it run one full lap until the last line `SIZEHAND MASSIVE UNFROZE cassette twists groups 8` prints (~15-20 min; knobs don't matter, every move is scripted). Then tell Claude. It measures SIZE sweeps, twists and creeps in MASSIVE (Neve and cassette), playing, frozen and just unfrozen, with SIZE's crossfade in 2, 4 or 8 groups.
 
 ### Decide
@@ -28,6 +29,8 @@
 
 ## Waiting on Claude
 
+- **ERA rethink** (your pick: A grit path, B saturation then texture, C one wear amount, against today): research, then the `era_rethink` page, judged in a mix. ERA keeps only texture (grit, saturation, the radio's band-pass and dip); TONE owns the highs, DRIFT the movement.
+- **DRIFT** (stronger extremes, a sine right side): the `drift_rethink` page, in progress.
 - **The SIZE drop-outs in MASSIVE**: the cause is a cassette SIZE move at a large SIZE (~106 %; round 15 only timed the Neve at SIZE .3-.8); frozen, only the twin crossfades, and only the blur or small room twin brings a frozen SIZE move under the limit (est.). Waiting on round 16 and your `size_moves` pick.
 - **The twin at 8 dB under the pad** (v1.0.41, your pick): built and checked on branch `claude/frozen-twin-213dc9` (MASSIVE's twin now ~8.5 dB under on average, HALL's ~7.8; Paint still under its ceiling; release flash 112,596 B, 44 B left). Not in a flash or the plugin yet; it goes in with whatever you pick on `twin_alternatives`.
 - **A lighter blur instead of the twin** (your go-ahead: "today's twin, blur and width, small room, and the twin without its swell, all at -8 dB. Skip the spring chirp"): the `twin_alternatives` page, after v1.0.41. Research: the light options would cost ~2-5 points of CPU against the twin's ~28 (estimates), enough to fix the frozen cassette; they lose the space's colour, and SIZE/DECAY play them less.
