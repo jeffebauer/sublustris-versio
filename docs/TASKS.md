@@ -13,7 +13,6 @@
 ### Listen (after your notes)
 
 ### Listen (first time)
-- [ ] **ERA signatures** (out of date: it measures the old stacked ERA; Claude can re-measure it for the five eras; reference, nothing to pick; https://claude.ai/artifact/AiR2JXPAaLbT8GeJseK3Vj, opens on your phone anywhere): what each ERA stage does to the reverb, measured and drawn as charts (tone, how long each frequency rings, harmonics, grain, hiss, mirror tones, pitch wobble). `tools/era_reference.py` remeasures it.
 
 ### Try in Ableton
 - [ ] **Play the plugin** (Immensio Versio, AU or VST3; rescan plug-ins first). It's v1.0.33 from branch `claude/massive-air`: everything in `main` plus MASSIVE's highs and shortest tail, ERA's era names, and **SHIMMER** on ATTACK's third position (TIME is how much). Notes welcome on anything; it goes into `main` when you say so.
