@@ -187,11 +187,8 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     }
     if (std::getenv("IV_TWIN_ALT") || std::getenv("IV_TWIN_LIGHT")) // the twin prototypes before v1.0.43: the twin tank is gone
         std::fprintf(stderr, "iv_render: IV_TWIN_ALT / IV_TWIN_LIGHT ignored: HALL's and MASSIVE's twin is the small room (E) since v1.0.43\n");
-    if (const char* rl = std::getenv("IV_ROOM_LEVEL")) { // renders/room_level
-        engine.setRoomLevelPrototype(std::atoi(rl));
-        const int m = std::atoi(rl);
-        std::fprintf(stderr, "iv_render: IV_ROOM_LEVEL: %s\n", m == 1 ? "room level follows the pad (full)" : m == 2 ? "room level follows the pad (halfway)" : "as built");
-    }
+    if (std::getenv("IV_ROOM_LEVEL")) // renders/room_level: B is built in since v1.0.43
+        std::fprintf(stderr, "iv_render: IV_ROOM_LEVEL ignored: the room's level follows the pad (B) since v1.0.43\n");
     if (const char* fd = std::getenv("IV_FREEZE_DUCK")) { // renders/freeze_moment: mode[:seconds]
         const char* colon = std::strchr(fd, ':');
         engine.setFreezeDuckPrototype(std::atoi(fd), colon ? float(std::atof(colon + 1)) : 0.0f);

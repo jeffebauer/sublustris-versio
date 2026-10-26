@@ -9,8 +9,9 @@
 // test_era's loudness), twin minus pad, on the dub skank (test_audio/stimulus/04_skank.wav).
 //
 // Asserted: at the page's setting, HALL's and MASSIVE's room within 1.5 dB of where v1.0.41's twin sat (its figure
-// measured by this test against v1.0.41); PLATE's twin within 0.2 dB of v1.0.41's. Printed for the record: the
-// room against v1.0.41's twin elsewhere (away from the page's setting the room sits louder against the pad).
+// measured by this test against v1.0.41); PLATE's twin within 0.2 dB of v1.0.41's. Across SIZE 0 / 0.5 / 0.9 x
+// DECAY 0.5 / 0.9 the room follows the pad (v1.0.43, the owner's pick B on renders/room_level), so it keeps
+// v1.0.41's distance under the pad within 3 dB (the page's constant gain sat up to 8 dB closer).
 
 #include "Wav.h"
 #include "dsp/Engine.h"
@@ -106,14 +107,21 @@ int main()
         double v1041; // twin - pad, dB, measured by this test against v1.0.41 (the twin tank)
         double limit; // asserted within this of it (0: printed only)
     };
+    // The page's setting first (the anchor), then the grid of renders/room_level.
     const Case cases[] = {
         {"MASSIVE S0.9 D0.9 (the page's)", 2, 0.9f, 0.9f, -4.04, 1.5},
         {"HALL S0.9 D0.9 (the page's)", 1, 0.9f, 0.9f, -8.29, 1.5},
         {"PLATE S0.9 D0.9", 0, 0.9f, 0.9f, -10.00, 0.2},
-        {"MASSIVE S0.5 D0.5", 2, 0.5f, 0.5f, -1.51, 0.0},
-        {"MASSIVE S0.0 D0.9", 2, 0.0f, 0.9f, -4.84, 0.0},
-        {"HALL S0.5 D0.5", 1, 0.5f, 0.5f, -9.13, 0.0},
-        {"HALL S0.0 D0.9", 1, 0.0f, 0.9f, -5.11, 0.0},
+        {"MASSIVE S0 D0.5", 2, 0.0f, 0.5f, -4.76, 3.0},
+        {"MASSIVE S0 D0.9", 2, 0.0f, 0.9f, -4.84, 3.0},
+        {"MASSIVE S0.5 D0.5", 2, 0.5f, 0.5f, -1.51, 3.0},
+        {"MASSIVE S0.5 D0.9", 2, 0.5f, 0.9f, -4.45, 3.0},
+        {"MASSIVE S0.9 D0.5", 2, 0.9f, 0.5f, -3.18, 3.0},
+        {"HALL S0 D0.5", 1, 0.0f, 0.5f, -5.51, 3.0},
+        {"HALL S0 D0.9", 1, 0.0f, 0.9f, -5.11, 3.0},
+        {"HALL S0.5 D0.5", 1, 0.5f, 0.5f, -9.13, 3.0},
+        {"HALL S0.5 D0.9", 1, 0.5f, 0.9f, -7.68, 3.0},
+        {"HALL S0.9 D0.5", 1, 0.9f, 0.5f, -10.13, 3.0},
     };
     for (const auto& c : cases) {
         const double d = level(music, c.space, c.size, c.decay, false) - level(music, c.space, c.size, c.decay, true);

@@ -214,6 +214,10 @@ constexpr float kTwinMaxT60    = 8.0f;  // it always fades, even when DECAY is i
 // a frozen pad (owner, renders/twin_louder: "Let's shoot for 8db under the pad"). PLATE's twin is a second Plate.
 constexpr float kTwinRoomHallDb    = -8.63f;
 constexpr float kTwinRoomMassiveDb = -7.65f;
+// Elsewhere it follows the pad (v1.0.43, the owner's pick B on renders/room_level; Engine::applySpace): v1.0.41's lift
+// for a twin cut short, up to this (+5.4 dB), is where the gains above hold; a room under a shorter tank tail is that
+// much under them.
+constexpr float kTwinRoomLift = 1.862f;
 constexpr float kTwinFadeSeconds = 0.02f; // its input opens / closes at freeze / unfreeze
 constexpr float kPaintHeadroomDb     = 1.5f;  // a painted pad may grow this far above its frozen level (or the floor)
 constexpr float kPaintFadeDb         = 1.0f;  // painting eases off over the last this-many dB below that
