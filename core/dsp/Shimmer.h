@@ -130,9 +130,9 @@ private:
 
     DelayLine line_[2];
     float     window_ = 19200.0f;
-    float     b0_[4] = {}, b1_[4] = {}, a1_[4] = {}, a2_[4] = {}, z_[2][4][2] = {};
-    float     afterA_ = 1.0f, lowCutA_ = 0.0f, after_[2] = {}, lowCut_[2] = {};
-    float     phase_[2][kHeads] = {}, offset_[2][kHeads] = {};
+    float     b0_[4] IV_ZI, b1_[4] IV_ZI, a1_[4] IV_ZI, a2_[4] IV_ZI, z_[2][4][2] IV_ZI;
+    float     afterA_ = 1.0f, lowCutA_ IV_ZI, after_[2] IV_ZI, lowCut_[2] IV_ZI;
+    float     phase_[2][kHeads] IV_ZI, offset_[2][kHeads] IV_ZI;
     uint32_t  seed_ = 1;
 };
 

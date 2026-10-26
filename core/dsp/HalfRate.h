@@ -68,10 +68,10 @@ public:
 
 private:
     Halfband down_[2], up_[2];
-    float    first_[2] = {};
-    float    halfIn_[2][kMaxBlock / 2 + 1] = {}, halfOut_[2][kMaxBlock / 2 + 1] = {};
-    float    queue_[2][kMaxBlock + 4] = {};
-    int      phase_ = 0, queued_ = 0;
+    float    first_[2] IV_ZI;
+    float    halfIn_[2][kMaxBlock / 2 + 1] IV_ZI, halfOut_[2][kMaxBlock / 2 + 1] IV_ZI;
+    float    queue_[2][kMaxBlock + 4] IV_ZI;
+    int      phase_ IV_ZI, queued_ IV_ZI;
 };
 
 } // namespace iv::dsp

@@ -223,18 +223,18 @@ public:
 private:
     float     sampleRate_ = 48000.0f;
     DelayLine line_[2];
-    float     frac_[2][kTapSlots] = {}, sign_[2][kTapSlots] = {}, gain_[2][kTapSlots] = {}, tapDelay_[2][kTapSlots] = {};
+    float     frac_[2][kTapSlots] IV_ZI, sign_[2][kTapSlots] IV_ZI, gain_[2][kTapSlots] IV_ZI, tapDelay_[2][kTapSlots] IV_ZI;
 #ifndef IV_FIXED_VOICINGS
     int       taps_ = kTaps; // setTapCount (a prototype)
 #else
     static constexpr int taps_ = kTaps;
 #endif
     uint32_t  seed_ = 0x5EE11u; // the jitter and signs' generator (setSeed, a prototype)
-    float     attackNow_ = 0.0f, attackTarget_ = 0.0f, tapMix_ = 0.0f;
-    bool      sCurve_ = false;
+    float     attackNow_ IV_ZI, attackTarget_ IV_ZI, tapMix_ IV_ZI;
+    bool      sCurve_ IV_ZI;
     DelayLine smear_[2][kSmearStages];
     uint32_t  smearLen_[kSmearStages] = {1, 1, 1};
-    float     smearG_ = 0.0f, smearTarget_ = 0.0f;
+    float     smearG_ IV_ZI, smearTarget_ IV_ZI;
 
 public:
     // BLOOM smears its taps (kSmearGain); MASSIVE's mass and the twin's swell don't.

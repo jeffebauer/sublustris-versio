@@ -32,3 +32,17 @@
 #define IV_INLINE inline
 #define IV_NOINLINE
 #endif
+
+// IV_ZI: a member's zero initialiser ("float x_ IV_ZI;" is "float x_ = {};"), left out in the firmware.
+// The firmware builds its Engine by value-initialisation (`new (gEngineStorage) iv::Engine()` in
+// firmware/main.cpp; Engine has no user-provided constructor), which zeroes the whole object before
+// the constructor runs, so storing those zeros again only cost flash: ~67 memsets and a few hundred
+// stores in Engine() and Fdn() (overnight review 26 Oct 2026, section 5.6). Desktop hosts declare
+// `iv::Engine e;` (default-initialisation, no zeroing) and keep the initialisers. Use it only on members
+// of classes the firmware creates as part of the value-initialised Engine (or by `new (p) T()`), never
+// on a local or a struct a function builds with `T x;`.
+#if defined(IV_FIXED_VOICINGS)
+#define IV_ZI
+#else
+#define IV_ZI = {}
+#endif

@@ -18,6 +18,7 @@
 #include "dsp/Era.h"
 #include "dsp/Governor.h"
 #include "dsp/Memory.h"
+#include "dsp/SizeOpt.h"
 #include "params/SpaceVoicing.h"
 
 #include <cmath>
@@ -139,62 +140,62 @@ private:
 
     float     sampleRate_ = 48000.0f;
     DelayLine line_[kN];
-    float     lenTarget_[kN] = {}; // samples
-    float     lenNow_[kN]    = {}; // samples, gliding toward the target
-    float     maxLen_        = 0.0f;
+    float     lenTarget_[kN] IV_ZI; // samples
+    float     lenNow_[kN] IV_ZI; // samples, gliding toward the target
+    float     maxLen_ IV_ZI;
     // Modulation floor, per line: a random target, smoothed twice.
-    float     floorTarget_[kN] = {}, floorA_[kN] = {}, floorB_[kN] = {};
-    float     floorCountdown_[kN] = {};
+    float     floorTarget_[kN] IV_ZI, floorA_[kN] IV_ZI, floorB_[kN] IV_ZI;
+    float     floorCountdown_[kN] IV_ZI;
     uint32_t  rng_ = 1;
     // Per-sample read position for the current control block.
-    float     readNow_[kN] = {}, readStep_[kN] = {};
-    float     tapLen_[kN] = {}, tapStep_[kN] = {}; // the early taps' line length, gliding per sample
-    float     interp_[kN] = {}; // allpass-interpolation state per read
+    float     readNow_[kN] IV_ZI, readStep_[kN] IV_ZI;
+    float     tapLen_[kN] IV_ZI, tapStep_[kN] IV_ZI; // the early taps' line length, gliding per sample
+    float     interp_[kN] IV_ZI; // allpass-interpolation state per read
     // Absorbent filters: y = g (1 − b) x + b y.
-    float     gain_[kN] = {}, pole_[kN] = {}, absorbY_[kN] = {};
-    float     b1_[kN] = {}, absorbX_[kN] = {}, shelfK_ = 0.0f; // lossShelfK(sampleRate_)
-    float     modDepth_ = 1.0f, air_ = 0.0f;
+    float     gain_[kN] IV_ZI, pole_[kN] IV_ZI, absorbY_[kN] IV_ZI;
+    float     b1_[kN] IV_ZI, absorbX_[kN] IV_ZI, shelfK_ IV_ZI; // lossShelfK(sampleRate_)
+    float     modDepth_ = 1.0f, air_ IV_ZI;
     float     decayRate_ = 0.2f, highRatio_ = voicing::kDampingHighT60Ratio;
     LoopEra   era_[kN];
     Drift     driftGen_[kN];
     DriftAmounts drift_;
-    float     extraRate_ = 0.0f;
+    float     extraRate_ IV_ZI;
     DelayLine apLine_[kN][2];
-    uint32_t  apLen_[kN][2] = {};
-    uint32_t  apLenNow_[kN][2] = {}; // apLen_ × apScale_ (HALL scales its allpasses with SIZE): where each length is going
+    uint32_t  apLen_[kN][2] IV_ZI;
+    uint32_t  apLenNow_[kN][2] IV_ZI; // apLen_ × apScale_ (HALL scales its allpasses with SIZE): where each length is going
     // Each allpass's length as it glides there (SIZE's semitone slew), read between samples while it moves:
     // jumping with the knob clicked loudly in a small HALL (soak audit). Still, it is the exact integer read.
     // Bypassed allpasses (no in-loop diffusion) have length 0: they join and leave the loop from there.
-    float     apLenGlide_[kN][2] = {}, apLenStep_[kN][2] = {}; // per sample
+    float     apLenGlide_[kN][2] IV_ZI, apLenStep_[kN][2] IV_ZI; // per sample
     float     apScale_ = 1.0f;
     static constexpr int kEarlyTaps = voicing::kEarlyTaps;
-    float     earlyFrac_[kN][kEarlyTaps] = {}, earlyGain_[kN][kEarlyTaps] = {};
+    float     earlyFrac_[kN][kEarlyTaps] IV_ZI, earlyGain_[kN][kEarlyTaps] IV_ZI;
     int       earlyCount_ = kEarlyTaps; // taps per line in use (setEarlyTapCount, a prototype)
-    float     earlyTarget_ = 0.0f, earlyNow_ = 0.0f;
-    float     inLoopOld_ = 0.0f; // the in-loop amount fading out during a SIZE crossfade
-    float     inLoopTarget_ = 0.0f, inLoopNow_ = 0.0f, outputTrim_ = 1.0f, levelGain_ = 1.0f;
+    float     earlyTarget_ IV_ZI, earlyNow_ IV_ZI;
+    float     inLoopOld_ IV_ZI; // the in-loop amount fading out during a SIZE crossfade
+    float     inLoopTarget_ IV_ZI, inLoopNow_ IV_ZI, outputTrim_ = 1.0f, levelGain_ = 1.0f;
     float     outputTrimNow_ = 1.0f; // glides to outputTrim_ (~50 ms): it follows SIZE and DECAY, which can jump (soak audit)
     FloorGovernor governor_;
-    const Fdn* leader_ = nullptr;
-    float     externalPower_ = 0.0f;
+    const Fdn* leader_ IV_ZI;
+    float     externalPower_ IV_ZI;
     // SIZE by crossfade (Fdn::control, ADR 0025): the old lengths, the fade (old/new gains stepped by
     // a rotation), the rest before it starts, the trip's level corrections (per block), the held trim.
-    float     xfDelta_[kN] = {}, xfLastTarget_[kN] = {}, interpOld_[kN] = {}, apOld_[kN][2] = {};
-    float     xfLnGain_[kN] = {}, xfHold_[kN] = {}, xfLineCorr_[kN] = {};
-    float     xfTapCorr_[kN][kEarlyTaps] = {}, tapGainNow_[kN][kEarlyTaps] = {}; // tapGainNow_: earlyGain_ x the correction
-    float     xfRest_ = 0.0f, xfTrim_ = 1.0f, xfOld_ = 0.0f, xfNew_ = 1.0f, xfRotC_ = 1.0f, xfRotS_ = 0.0f;
-    float     xfOO_[kN] = {}, xfNN_[kN] = {}, xfON_[kN] = {}, xfK_[kN] = {}; // the reads' powers, their agreement, the fade's gain
+    float     xfDelta_[kN] IV_ZI, xfLastTarget_[kN] IV_ZI, interpOld_[kN] IV_ZI, apOld_[kN][2] IV_ZI;
+    float     xfLnGain_[kN] IV_ZI, xfHold_[kN] IV_ZI, xfLineCorr_[kN] IV_ZI;
+    float     xfTapCorr_[kN][kEarlyTaps] IV_ZI, tapGainNow_[kN][kEarlyTaps] IV_ZI; // tapGainNow_: earlyGain_ x the correction
+    float     xfRest_ IV_ZI, xfTrim_ = 1.0f, xfOld_ IV_ZI, xfNew_ = 1.0f, xfRotC_ = 1.0f, xfRotS_ IV_ZI;
+    float     xfOO_[kN] IV_ZI, xfNN_[kN] IV_ZI, xfON_[kN] IV_ZI, xfK_[kN] IV_ZI; // the reads' powers, their agreement, the fade's gain
     AbsorbMemo absorbMemo_[kN]; // each line's loss filter, worked out again only when its inputs change
     Memo1     floorCoeffMemo_, glide80Memo_, glideXfMemo_; // per-block smoothing coefficients, worked out once per dt
-    float     xfLastInLoop_ = 0.0f, xfAbsOld_[kN][3] = {}; // the loss filter (b1, gain, pole) at the fade's start
-    float     xfCos_ = -1.0f, xfSin_ = 0.0f; // the fade's angle (twice it): xfNew_ = (1 - cos) / 2
-    int       xfLen_ = 1, xfLeft_ = 0, xfSince_ = -1; // samples; xfSince_: since the start, -1 when no correction runs
-    int       xfStagger_ = 2, xfGroupNext_ = 0; // setStagger; 2 since v1.0.39
+    float     xfLastInLoop_ IV_ZI, xfAbsOld_[kN][3] IV_ZI; // the loss filter (b1, gain, pole) at the fade's start
+    float     xfCos_ = -1.0f, xfSin_ IV_ZI; // the fade's angle (twice it): xfNew_ = (1 - cos) / 2
+    int       xfLen_ = 1, xfLeft_ IV_ZI, xfSince_ = -1; // samples; xfSince_: since the start, -1 when no correction runs
+    int       xfStagger_ = 2, xfGroupNext_ IV_ZI; // setStagger; 2 since v1.0.39
     // Staggered (v1.0.39), all set by reset() before any use (no initialisers: flash, the constructor):
     bool      xfLine_[kN];   // the line fades in this crossfade
     float     xfOff_[kN];    // samples since the line's own trip began, ahead of xfSince_
     float     apAmtNow_[kN], apAmtOld_[kN]; // each line's in-loop amount (it changes with its own fade)
-    bool      ready_ = false;
+    bool      ready_ IV_ZI;
 };
 
 } // namespace iv::dsp
