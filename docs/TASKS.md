@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 26 Oct 2026, session 8: round 11 read (`docs/research/m3-round11.log` on `claude/massive-air`), round 12 read (`m3-round12.log`), the ITCM build read; v1.0.40 built (SIZE's crossfade staggered, ERA's overlap a fifth: your picks); round 15 and the rack test next; ERA's overlap now a fifth (v1.0.40, your pick).
+**Last updated:** 26 Oct 2026, end of session 8: v1.0.37-40 built on `claude/massive-air` (SDRAM timing, ITCM, SIZE fix, twin stop, tape at 2×, knob smoothing and deadband, SIZE's crossfade staggered, ERA's overlap a fifth); round 15 and the rack test next.
 **Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Not yet in it: v1.0.35-36 (the 24 kHz tank, 12-point swell, fewer early reflections) and the review's speed-ups; say when you'd like it installed (Ableton closed).
 
 ## To do
@@ -26,16 +26,17 @@
 
 ## Waiting on Claude
 
-- **CPU, after round 11** (the review's plan, `docs/research/review-2026-10-26.md` section 8): adopt in the instrument what the module confirms (the SDRAM timing if `SDRAMCHK` is clean, flush-to-zero if subnormals cost, the ITCM linker script if it booted and gained, the block size from the owner's latency feel); then the fixes behind hooks (SIZE hysteresis, the half-rate prime, the twin stopping on its fast level) as flash allows; then, if still short, the swell inside the 24 kHz path, control once per block, the crossfade peak mitigations, and the owner's options on the pages.
+- **CPU, after round 15** (your flash; `firmware/README.md`): read the SIZE crossfade's peak with the stagger (round 12: 106 %, round 14: 105 %). Still over in real time: **a frozen MASSIVE with the cassette** (round 13-14: 104.5 %): the levers are a lighter twin while frozen (a page), the block size (+1 ms latency, your call), and measuring the ERA overlap positions (never timed on the module).
+- **ERA's tape → radio hand-over**, if it still sounds abrupt at 20 %: the tape's sparkle fades with the cassette's drive, early in the overlap; the drive's own curve is the next thing to try (a page).
+- **The playing build's flash**: 112,548 B, 92 B under the 110 KB budget. Anything new needs bytes found first.
+- **The plugin** has v1.0.34; v1.0.35-40 aren't in it (install when you'd like, Ableton closed).
 - **The review's housekeeping list** (report section 8, item 7): the desktop Core built without fused multiply-adds like the firmware, the stimulus as a CTest fixture, the Plugin's mono-input aliasing fix, the NaN guard, the sieve as a static initialiser, ~1-2 KB of flash from `queueEdge` and the constructors, dead headers and stale comments, SPEC §5.2 / §6.2 brought in line with the code.
-- **CPU, after round 10.** Target ~90 % at peak (your headroom test). Built so far: the 24 kHz tank, 12-point swell, HALL 2 / MASSIVE 4 early reflections (v1.0.35-36), the prime table (spikes). Round 10 (yours to flash) measures every era and ERA's stages alone; then: ERA's cheaper paths (cassette's 4x tape, the radio's per-sample sin and divisions, per-block filter maths), sound-neutral first, any sound change as a page; then more tuning of the tank's loop.
 - **BLOOM's TIME and PLATE's SIZE by crossfade** (phase 2 of your pick C): they still slide; HALL and MASSIVE's SIZE and TIME's pre-delay are done (v1.0.34).
 - **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): build it for real. For 3 s after a flip both spaces hear the music while one crossfades into the other; it needs a second reverb running for those 3 s (the freeze's spare) and ~0.5-1 KB of flash, which has to be freed first (804 B left). A plan before building.
 - **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper; a later round if the shimmer is kept.
 - **The rest of the Valhalla comparison** (`docs/research/valhalla-comparison.md`): the loudness one is done (v1.0.28); MASSIVE's highs are on a page to pick from (above). Still to come: Supermassive moves more in pitch at long settings (a DRIFT comparison). Found on the way: the Immensio beside Valhalla page's MASSIVE settings now ring longer than labelled (a 21 Oct 2026 DECAY change, v1.0.21: "15 s" rings ~20 s, "2 s" ~4.7 s); DECAY 0.08 / 0.33 give 5 / 15 s at SIZE 0.7, and 2 s is below MASSIVE's shortest at that SIZE.
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
-- **M2: install the plugin** when you'd like to play it in Ableton (`tools/install_plugin.sh`), with Ableton closed for the AU check.
 
 ## Done
 - [x] **ERA's overlap** (26 Oct 2026, after `era_overlap`: "Let's go for B but split the difference by having it crossfade over 20%"): built as v1.0.40; each era fades in over the first fifth of its stretch (was a third).
