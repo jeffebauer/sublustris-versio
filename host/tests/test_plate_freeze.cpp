@@ -175,6 +175,7 @@ void plate()
         Setting s;
         s.space = 0;
         s.decay = d;
+        s.era = 0.0f; // the Neve alone: ERA's wear (v1.0.42) has the tape's in-loop compression, more loss on a hot tank
         const double got = lowBandT60(render(in, s));
         char msg[160];
         std::snprintf(msg, sizeof msg, "PLATE T60 at DECAY %.1f: %.2f s, mapping %.2f s (within 10%%)", d, got, want);

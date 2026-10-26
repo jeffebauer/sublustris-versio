@@ -1,10 +1,10 @@
-// M6: the loop's character (SPEC §4.6, §4.7, §7 M6; ADR 0004, 0005, 0008, 0012, 0021). ERA's five eras
-// (Neve base, Midiverb, bucket-brigade, cassette, AM radio): the Midiverb and cassette darken the tail
-// against the Neve base; loudness on music stays within ±1 dB across the knob; the BBD and radio are on
-// the wet only; the Midiverb box lets a finite tail reach true silence (no stuck buzz); the BBD's,
-// cassette's and radio's noise follows the input (none in silence); infinite tails hold at every era;
-// turning ERA through the eras doesn't click; DRIFT's dead zone is exact and both sides move the tail
-// without clicks; the saturation doesn't alias badly when hit hard.
+// M6: the loop's character (SPEC §4.6, §4.7, §7 M6; ADR 0005, 0008, 0012). ERA as one wear amount (v1.0.42,
+// the owner's pick C on renders/era_rethink): the Neve base in the loop, the wear on the wet. The wear doesn't
+// darken the loop (TONE's job) nor move the pitch (DRIFT's); loudness on music stays within ±1 dB across the
+// knob; it is on the wet only; a finite tail still reaches true silence and silence stays silent; its noise
+// follows the input; infinite tails hold across the knob in every SPACE; turning ERA doesn't click (1 ms
+// frames); DRIFT's dead zone is exact and both sides move the tail without clicks; the saturation doesn't
+// alias badly when hit hard.
 
 #include "Fft.h"
 #include "Metrics.h"
@@ -12,6 +12,7 @@
 #include "dsp/Engine.h"
 #include "params/Mappings.h"
 
+#include <algorithm>
 #include <cmath>
 #include <complex>
 #include <cstdio>
@@ -105,27 +106,31 @@ void bandT60s(const Stereo& out, double& low, double& high)
     high = iv::metrics::compute({hi}, kSr).t60S;
 }
 
-// The Midiverb and the cassette darken the tail against the Neve base: the highs' T60 over the lows' falls.
-void eraDarkens()
+// The wear doesn't darken the loop (v1.0.42: TONE owns the highs): the tail's highs' T60 over its lows' stays
+// the Neve base's across the knob, in every SPACE.
+void eraDoesntDarken()
 {
     std::vector<float> in(size_t(12.0f * kSr), 0.0f);
-    for (size_t i = 0; i < size_t(0.2f * kSr); ++i) in[i] = 0.3f * noise(); // a burst: one click is too quiet for the Midiverb's 13 bits
-    double base = 0.0;
-    bool falling = true;
-    std::string detail;
-    for (float era : {0.1f, 0.3f, 0.7f}) { // Neve, Midiverb, cassette
-        Setting s;
-        s.era = era;
-        double lo, hi;
-        bandT60s(render(in, s), lo, hi);
-        const double ratio = hi / lo;
-        if (era < 0.2f) base = ratio;
-        else falling &= ratio < base - 0.02;
-        char buf[64];
-        std::snprintf(buf, sizeof buf, " ERA %.1f: %.2f", era, ratio);
-        detail += buf;
+    for (size_t i = 0; i < size_t(0.2f * kSr); ++i) in[i] = 0.3f * noise();
+    for (int space : {0, 1}) { // (MASSIVE's tail outlasts the render)
+        double base = 0.0, worst = 0.0;
+        std::string detail;
+        for (float era : {0.0f, 0.3f, 0.7f, 1.0f}) {
+            Setting s;
+            s.space = space;
+            s.era = era;
+            double lo, hi;
+            bandT60s(render(in, s), lo, hi);
+            const double ratio = hi / lo;
+            if (era == 0.0f) base = ratio;
+            else worst = std::fmin(worst, ratio - base);
+            char buf[64];
+            std::snprintf(buf, sizeof buf, " %.1f: %.2f", era, ratio);
+            detail += buf;
+        }
+        check(worst > -0.05, "SPACE " + std::to_string(space) + ": the wear doesn't darken the tail against the Neve base (high/low T60, ERA" +
+                                 detail + ")");
     }
-    check(falling, "the Midiverb and cassette darken the tail against the Neve base (high/low T60:" + detail + ")");
 }
 
 // SPEC §7 M6 (v1.0.19): ERA's loudness on music stays within ±1 dB across the
@@ -167,7 +172,7 @@ void eraLoudness()
     for (const Space& sp : {Space{1, 0.6f, 0.6f, "HALL"}, Space{2, 0.65f, 0.7f, "MASSIVE"}}) {
         double lo = 1e9, hi = -1e9;
         std::string detail;
-        for (float era : {0.0f, 0.3f, 0.5f, 0.7f, 0.9f, 1.0f}) { // Neve, Midiverb, BBD, cassette, radio
+        for (float era : {0.0f, 0.1f, 0.3f, 0.5f, 0.7f, 0.9f, 1.0f}) {
             Setting s;
             s.space = sp.space;
             s.decay = sp.decay;
@@ -184,77 +189,142 @@ void eraLoudness()
     }
 }
 
-// The BBD and the radio are on the wet only: MIX 0 there is still a bit-identical passthrough.
-void erasOnWetOnly()
+// The wear is on the wet only: MIX 0 is still a bit-identical passthrough.
+void eraOnWetOnly()
 {
     std::vector<float> in(size_t(2.0f * kSr));
     for (size_t i = 0; i < in.size(); ++i) in[i] = 0.3f * std::sin(2.0f * 3.14159265f * 1000.0f * float(i) / kSr);
-    for (float era : {0.5f, 0.9f}) {
+    for (float era : {0.5f, 1.0f}) {
         Setting dry;
         dry.era = era;
         dry.mix = 0.0f;
         const Stereo out = render(in, dry);
         bool same = true;
         for (size_t i = 0; i < in.size(); ++i) same &= out.l[i] == in[i];
-        check(same, std::string("ERA ") + (era < 0.6f ? "0.5 (BBD)" : "0.9 (radio)") + " is on the wet only: MIX 0 is a bit-identical passthrough");
+        check(same, "ERA " + std::to_string(era).substr(0, 3) + " is on the wet only: MIX 0 is a bit-identical passthrough");
     }
 }
 
-// ADR 0004: the Midiverb lets a finite tail reach true silence (the box truncates toward zero: no stuck buzz).
-void midiverbReachesSilence()
+// A finite tail at full wear reaches true silence (the grain truncates toward zero, its step has a floor, the
+// breath's noise follows the level: no stuck buzz or hiss), and silence in stays silence out.
+void tailReachesSilence()
 {
     std::vector<float> in(size_t(60.0f * kSr), 0.0f);
     for (size_t i = 0; i < size_t(0.5f * kSr); ++i) in[i] = 0.3f * noise();
-    Setting s;
-    s.era = 0.3f; // the Midiverb
-    s.decay = 0.5f;
-    const Stereo out = render(in, s);
-    const double end = rmsDb(out.l, 55.0, 60.0);
-    check(finite(out) && end < -110.0, "Midiverb, DECAY 0.5: the tail reaches silence, no stuck buzz (" +
-                                           std::to_string(int(end)) + " dBFS at 55-60 s)");
+    for (int space : {0, 1}) {
+        Setting s;
+        s.space = space;
+        s.era = 1.0f;
+        s.decay = 0.5f;
+        const Stereo out = render(in, s);
+        const double end = rmsDb(out.l, 55.0, 60.0);
+        check(finite(out) && end < -110.0, "SPACE " + std::to_string(space) + ", full wear, DECAY 0.5: the tail reaches silence (" +
+                                               std::to_string(int(end)) + " dBFS at 55-60 s)");
+    }
+    const std::vector<float> zeros(size_t(10.0f * kSr), 0.0f);
+    for (int space : {0, 1, 2}) {
+        Setting s;
+        s.space = space;
+        s.era = 1.0f;
+        s.decay = 1.0f;
+        const Stereo out = render(zeros, s);
+        bool silent = true;
+        for (size_t i = 0; i < out.l.size(); ++i) silent &= out.l[i] == 0.0f && out.r[i] == 0.0f;
+        check(silent, "SPACE " + std::to_string(space) + ", full wear, DECAY infinite: silence in is silence out");
+    }
 }
 
-// ADR 0005: noise follows the input: none once the input is silent (the cassette's hiss, the BBD's
-// compander noise, the radio's hiss and static).
+// ADR 0005: noise follows the input: none once the input is silent (the tape's hiss, the breath's noise,
+// the crackle).
 void hissFollowsInput()
 {
     std::vector<float> in(size_t(120.0f * kSr), 0.0f);
     for (size_t i = 0; i < size_t(1.0f * kSr); ++i) in[i] = 0.3f * noise();
-    for (float era : {0.5f, 0.7f, 0.9f}) {
+    for (float era : {0.1f, 0.5f, 1.0f}) {
         Setting s;
         s.era = era;
         s.decay = 0.3f;
         const Stereo out = render(in, s);
         const double end = rmsDb(out.l, 115.0, 120.0);
-        check(finite(out) && end < -90.0, std::string(era < 0.6f ? "BBD" : era < 0.8f ? "cassette" : "radio") +
-                                              " noise is gone in silence (" + std::to_string(int(end)) + " dBFS after 2 min)");
+ check(finite(out) && end < -90.0, "ERA " + std::to_string(era).substr(0, 3) +
+                                              ": the wear's noise is gone in silence (" + std::to_string(int(end)) + " dBFS after 2 min)");
     }
 }
 
-// ADR 0008: an infinite tail holds at every era (10 min, within 3 dB, no growth, not silent). The radio's
-// station fades are on the wet after the loop and come and go by design (the deepest beyond what its AGC
-// gives back), so there the level is judged over 25 s stretches, which average the fades out.
-void infiniteAtEveryEra()
+// ADR 0008: an infinite tail holds across the knob in every SPACE (10 min, within 3 dB, no growth, not
+// silent). The band's wandering dip comes and goes on the wet by design, so the level is judged over 5 s.
+void infiniteAcrossTheKnob()
 {
     std::vector<float> in(size_t(620.0f * kSr), 0.0f);
     for (size_t i = 0; i < size_t(20.0f * kSr); ++i) in[i] = 0.3f * noise();
-    for (float era : {0.1f, 0.3f, 0.5f, 0.7f, 0.9f}) {
-        Setting s;
-        s.era = era;
-        s.decay = 1.0f;
-        const Stereo out = render(in, s);
-        const double win = era > 0.8f ? 25.0 : 5.0; // the radio: average its fades
-        const double first = rmsDb(out.l, 60.0, 60.0 + std::fmax(10.0, win));
-        double lo = first, hi = first;
-        for (double t = 60.0; t + win < 620.0; t += 30.0) {
-            const double db = rmsDb(out.l, t, t + win);
-            lo = std::fmin(lo, db);
-            hi = std::fmax(hi, db);
+    for (int space : {0, 1, 2})
+        for (float era : {0.0f, 0.1f, 0.5f, 1.0f}) {
+            Setting s;
+            s.space = space;
+            s.era = era;
+            s.decay = 1.0f;
+            const Stereo out = render(in, s);
+            const double win = 5.0;
+            const double first = rmsDb(out.l, 60.0, 70.0);
+            double lo = first, hi = first;
+            for (double t = 60.0; t + win < 620.0; t += 30.0) {
+                const double db = rmsDb(out.l, t, t + win);
+                lo = std::fmin(lo, db);
+                hi = std::fmax(hi, db);
+            }
+            char msg[160];
+            std::snprintf(msg, sizeof msg, "SPACE %d: infinite holds 10 min at ERA %.1f: %.1f .. %.1f dBFS", space, era, lo, hi);
+            check(finite(out) && hi - lo < 3.0 && hi <= first + 1.0 && lo > -60.0, msg);
         }
-        char msg[160];
-        std::snprintf(msg, sizeof msg, "infinite holds 10 min at ERA %.2f: %.1f .. %.1f dBFS (%.0f s windows)", era, lo, hi, win);
-        check(finite(out) && hi - lo < 3.0 && hi <= first + 1.0 && lo > -60.0, msg);
+}
+
+// The wear moves no pitch (DRIFT's job): a held tone's frequency through the tail, second by second, wanders
+// no more at full wear than with the Neve alone (DRIFT at noon: only the tanks' own modulation floor).
+double peakHz(const std::vector<float>& x, size_t from, size_t n, double lo, double hi)
+{
+    auto mag = [&](double f) {
+        double re = 0.0, im = 0.0;
+        const double w = 2.0 * 3.141592653589793 * f / kSr;
+        for (size_t i = 0; i < n; ++i) {
+            const double h = 0.5 - 0.5 * std::cos(2.0 * 3.141592653589793 * double(i) / double(n));
+            re += h * x[from + i] * std::cos(w * double(i));
+            im -= h * x[from + i] * std::sin(w * double(i));
+        }
+        return re * re + im * im;
+    };
+    double best = lo, bestM = -1.0;
+    for (double f = lo; f <= hi; f += 0.5)
+        if (const double m = mag(f); m > bestM) { bestM = m; best = f; }
+    const double a = best - 0.5, b = best + 0.5;
+    for (double f = a; f <= b; f += 0.01)
+        if (const double m = mag(f); m > bestM) { bestM = m; best = f; }
+    return best;
+}
+
+void eraMovesNoPitch()
+{
+    std::vector<float> in(size_t(9.0f * kSr));
+    for (size_t i = 0; i < in.size(); ++i) in[i] = 0.2f * std::sin(2.0f * 3.14159265f * 440.0f * float(i) / kSr);
+    double spread[2] = {}, mean[2] = {};
+    for (int k = 0; k < 2; ++k) {
+        Setting s;
+        s.era = k == 0 ? 0.0f : 1.0f;
+        const Stereo out = render(in, s);
+        double lo = 1e9, hi = -1e9, sum = 0.0;
+        for (int w = 0; w < 6; ++w) {
+            const double hz = peakHz(out.l, size_t((2.5 + w) * kSr), size_t(kSr), 430.0, 450.0);
+            lo = std::fmin(lo, hz);
+            hi = std::fmax(hi, hz);
+            sum += hz;
+        }
+        spread[k] = 1200.0 * std::log2(hi / lo);
+        mean[k] = sum / 6.0;
     }
+    const double offset = 1200.0 * std::log2(mean[1] / mean[0]);
+    char msg[200];
+    std::snprintf(msg, sizeof msg, "the wear moves no pitch: a held 440 Hz wanders %.2f cents a second at full wear, %.2f with the Neve alone; "
+                  "its mean %.2f cents off", spread[1], spread[0], offset);
+    check(spread[1] <= spread[0] + 0.5 && std::fabs(offset) < 0.5, msg);
 }
 
 // DRIFT: the dead zone is exact (noon ± 3 % renders bit-identically), and
@@ -280,44 +350,89 @@ void drift()
     }
 }
 
-// Turning ERA through the eras doesn't click: through the Midiverb's, the BBD's and the cassette's starts
-// (where tape out comes in: switched in one sample, its oversampling filters' phase stepped the wet, found
-// 25 Oct 2026). The radio's crackle is clicks by design, so its start isn't judged here.
+// Turning ERA doesn't click: up and down the whole knob, and quickly through its start (where every stage
+// comes in) and back, in HALL and PLATE, on a held chord. Judged two ways: the metrics' click count (a
+// singular glitch above the local second difference), and as renders/era_rethink judged it, the loudest
+// 1 ms frame above 5 kHz against the median of the half second around it, which must stay within 3 dB of
+// the same chord's at a still ERA (the wear's own grit reads there too).
+double clickScanDb(const Stereo& out, double from, double to)
+{
+    // Above 5 kHz: two 2nd-order Butterworth high-passes (RBJ) in a row.
+    const double w = 2.0 * 3.141592653589793 * 5000.0 / kSr, al = std::sin(w) / (2.0 * 0.7071067811865476), c = std::cos(w);
+    const double b0 = (1 + c) / 2 / (1 + al), b1 = -(1 + c) / (1 + al), a1 = -2 * c / (1 + al), a2 = (1 - al) / (1 + al);
+    std::vector<double> h(out.l.size());
+    double x1[2] = {}, x2[2] = {}, y1[2] = {}, y2[2] = {};
+    for (size_t i = 0; i < h.size(); ++i) {
+        double x = 0.5 * (double(out.l[i]) + out.r[i]);
+        for (int k = 0; k < 2; ++k) {
+            const double y = b0 * x + b1 * x1[k] + b0 * x2[k] - a1 * y1[k] - a2 * y2[k];
+            x2[k] = x1[k]; x1[k] = x; y2[k] = y1[k]; y1[k] = y;
+            x = y;
+        }
+        h[i] = x;
+    }
+    const size_t f = size_t(0.001f * kSr), frames = h.size() / f, half = 250;
+    std::vector<double> e(frames);
+    for (size_t k = 0; k < frames; ++k) {
+        double sum = 0.0;
+        for (size_t i = k * f; i < (k + 1) * f; ++i) sum += h[i] * h[i];
+        e[k] = sum / double(f) + 1e-20;
+    }
+    double best = -99.0;
+    for (size_t k = size_t(from * 1000.0); k < size_t(to * 1000.0) && k + half < frames; ++k) {
+        std::vector<double> around(e.begin() + long(k - half), e.begin() + long(k + half));
+        std::nth_element(around.begin(), around.begin() + long(half), around.end());
+        best = std::fmax(best, 10.0 * std::log10(e[k] / around[half]));
+    }
+    return best;
+}
+
 void eraSweepClickFree()
 {
-    std::vector<float> in(size_t(6.0f * kSr));
+    std::vector<float> in(size_t(7.0f * kSr));
     for (size_t i = 0; i < in.size(); ++i)
         in[i] = 0.2f * std::sin(2.0f * 3.14159265f * 220.0f * float(i) / kSr) + 0.1f * std::sin(2.0f * 3.14159265f * 331.0f * float(i) / kSr);
-    for (int mode : {0, 1, 2}) { // up, down, and down then back up (the tape comes back in after resting)
-        const bool up = mode == 0;
-        iv::Engine e;
-        e.prepare(kSr, 48);
-        e.setParam(iv::ParamId::Space, iv::switchToNormalised(1));
-        e.setParam(iv::ParamId::Mix, 1.0f);
-        e.setParam(iv::ParamId::Era, up ? 0.1f : 0.75f);
-        e.reset();
-        Stereo out{std::vector<float>(in.size()), std::vector<float>(in.size())};
-        for (size_t pos = 0; pos < in.size(); pos += 48) {
-            const float sec = float(pos) / kSr;
-            const float t = std::fmin(1.0f, std::fmax(0.0f, (sec - 1.0f) / 8.0f)); // 1 s still, 8 s across 0.10-0.75
-            float era = up ? 0.1f + 0.65f * t : 0.75f - 0.65f * t;
-            if (mode == 2) era = sec < 5.0f ? 0.75f - 0.25f * std::fmin(1.0f, std::fmax(0.0f, sec - 1.0f) / 2.0f) // to the BBD
-                                            : 0.5f + 0.25f * std::fmin(1.0f, (sec - 5.0f) / 2.0f);                 // and back
-            
-            e.setParam(iv::ParamId::Era, era);
-            const int n = int(std::min<size_t>(48, in.size() - pos));
-            e.process(in.data() + pos, in.data() + pos, out.l.data() + pos, out.r.data() + pos, n);
+    for (int space : {1, 0}) {
+        double still = -99.0;
+        for (int mode : {-1, -2, -3, 0, 1, 2}) { // still at 0, 0.5, 1; up 0 -> 1 over 5 s; down 1 -> 0; 0 -> 0.15 -> 0 in a quarter second each way
+            iv::Engine e;
+            e.prepare(kSr, 48);
+            e.setParam(iv::ParamId::Space, iv::switchToNormalised(space));
+            e.setParam(iv::ParamId::Mix, 1.0f);
+            const float rest = mode == -2 ? 0.5f : (mode == -3 || mode == 1) ? 1.0f : 0.0f;
+            e.setParam(iv::ParamId::Era, rest);
+            e.reset();
+            Stereo out{std::vector<float>(in.size()), std::vector<float>(in.size())};
+            for (size_t pos = 0; pos < in.size(); pos += 48) {
+                const float sec = float(pos) / kSr;
+                const float t = std::fmin(1.0f, std::fmax(0.0f, (sec - 1.0f) / 5.0f));
+                float era = mode == 0 ? t : mode == 1 ? 1.0f - t : rest;
+                if (mode == 2) {
+                    const float u = sec - 2.0f;
+                    era = u < 0.0f ? 0.0f : u < 0.25f ? 0.6f * u : u < 0.5f ? 0.15f - 0.6f * (u - 0.25f) : 0.0f;
+                }
+                e.setParam(iv::ParamId::Era, era);
+                const int n = int(std::min<size_t>(48, in.size() - pos));
+                e.process(in.data() + pos, in.data() + pos, out.l.data() + pos, out.r.data() + pos, n);
+            }
+            const auto m = iv::metrics::compute({out.l, out.r}, kSr);
+            const double scan = clickScanDb(out, 0.8, 6.7);
+            if (mode < 0) {
+                still = std::fmax(still, scan);
+                continue;
+            }
+            char msg[200];
+            std::snprintf(msg, sizeof msg, "SPACE %d: ERA turned %s, no clicks (%ld; loudest 1 ms frame above 5 kHz %+.1f dB, still ERA %+.1f)",
+                          space, mode == 0 ? "up" : mode == 1 ? "down" : "quickly through its start and back", m.clickCount, scan, still);
+            check(finite(out) && m.clickCount == 0 && scan < still + 3.0, msg);
         }
-        const auto m = iv::metrics::compute({out.l, out.r}, kSr);
-        check(finite(out) && m.clickCount == 0, std::string("ERA turned ") + (mode == 0 ? "up" : mode == 1 ? "down" : "down and back up") +
-                                                    " through the eras' starts, no clicks (" + std::to_string(m.clickCount) + ")");
     }
 }
 
 // SPEC §7 M6: the saturation hit hard doesn't alias badly. A loud 7 kHz
 // tone's 3rd/5th harmonics fold to 27 → 21 kHz and 35 → 13 kHz: check the
-// band below 5 kHz, where nothing harmonic belongs. Tape out's asymmetry
-// (v1.0.22, even harmonics as tape's) puts real difference tones there too, so
+// band below 5 kHz, where nothing harmonic belongs. The wear's tape (its bias:
+// even harmonics as tape's) puts real difference tones there too, so
 // the same tone is also rendered at 96 kHz, where little folds: aliasing is
 // what 48 kHz adds over that (or the band simply stays 40 dB down).
 // Averaged over five tones 6.6-7.4 kHz (v1.0.36): the tank's early taps comb a single tone and its
@@ -328,7 +443,7 @@ double lowBandDb(float sr, float hz)
     std::vector<float> in(size_t(3.0f * sr));
     for (size_t i = 0; i < in.size(); ++i) in[i] = 0.9f * std::sin(2.0f * 3.14159265f * hz * float(i) / sr);
     Setting s;
-    s.era = 0.75f; // cassette drive
+    s.era = 0.75f; // the wear's tape well driven
     s.decay = 0.0f;
     const Stereo out = render(in, s, sr);
     if (!finite(out)) return 999.0;
@@ -359,7 +474,7 @@ void notAliasing()
     // ~3 kHz: about -34 dB here (was under -40). Accepted for the CPU (classic digital reverbs fold the
     // same way); the limit for it is -32.
     check(at48 < -32.0 || at48 - at96 < 2.0,
-          "hot 7 kHz tone at the cassette stage: energy below 5 kHz " + std::to_string(int(at48)) + " dB re total at 48 kHz, " +
+          "hot 7 kHz tone at ERA 0.75: energy below 5 kHz " + std::to_string(int(at48)) + " dB re total at 48 kHz, " +
               std::to_string(int(at96)) + " at 96 kHz (< −32 with the 24 kHz tank, or aliasing adds < 2 dB)");
 }
 
@@ -367,12 +482,13 @@ void notAliasing()
 
 int main()
 {
-    eraDarkens();
+    eraDoesntDarken();
     eraLoudness();
-    erasOnWetOnly();
-    midiverbReachesSilence();
+    eraOnWetOnly();
+    tailReachesSilence();
     hissFollowsInput();
-    infiniteAtEveryEra();
+    infiniteAcrossTheKnob();
+    eraMovesNoPitch();
     drift();
     eraSweepClickFree();
     notAliasing();

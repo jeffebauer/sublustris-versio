@@ -51,6 +51,7 @@ Stereo render(const std::vector<float>& in, const Setting& s, float sampleRate =
     e.setParam(iv::ParamId::Tone, s.tone);
     e.setParam(iv::ParamId::Mix, s.mix);
     e.setParam(iv::ParamId::Time, 0.0f);
+    e.setParam(iv::ParamId::Era, 0.0f); // the Neve alone (as ERA's default was until v1.0.42): the wear's tape compression takes more loss on a hot tank
     e.reset();
     Stereo out{std::vector<float>(in.size()), std::vector<float>(in.size())};
     const std::vector<float> silent(in.size(), 0.0f);

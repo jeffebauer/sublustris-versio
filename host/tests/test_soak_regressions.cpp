@@ -25,7 +25,13 @@ struct Rig {
     int block;
     std::vector<float> inL, inR, outL, outR;
     uint32_t noise = 1;
-    Rig(float fs, int b) : block(b), inL(size_t(b)), inR(size_t(b)), outL(size_t(b)), outR(size_t(b)) { e.prepare(fs, b); }
+    // ERA 0, the Neve alone (as ERA's default was until v1.0.42): the click watch's second difference reads
+    // the wear's grit (its grain, clock and breath noise) as clicks everywhere; ERA's own clicks are test_era's.
+    Rig(float fs, int b) : block(b), inL(size_t(b)), inR(size_t(b)), outL(size_t(b)), outR(size_t(b))
+    {
+        e.prepare(fs, b);
+        e.setParam(ParamId::Era, 0.0f);
+    }
     double phase = 0.0;
     // Click watch: the worst |second difference| of the output over its own recent level (10 ms).
     float y1[2] = {}, y2[2] = {}, dp[2] = {};
@@ -240,7 +246,7 @@ void smallHallSizeJumpsDontClick()
 // stopped, had its hold level taken while the tail was rising. Now the floor judges a falling tail
 // on a 50 ms level too (first only once the input was quiet, which missed an input fading out over
 // seconds: a decaying hit still plunged 64 dB), and the hold waits for the tank's own input to go
-// quiet. ERA's cassette compression, judged on the same lagging level, did the same (fixed alike).
+// quiet. ERA's tape compression (the cassette's until v1.0.42), judged on the same lagging level, did the same (fixed alike).
 // A tail now settles at the floor within a couple of dB and holds there.
 void infiniteTailDoesntPlungeWhenTheInputStops()
 {
@@ -398,8 +404,8 @@ void padFrozenFromADyingTailHolds()
     }
 }
 
-// The same plunge from ERA's cassette compression, which also judged the tail on the 1.5 s level:
-// an infinite PLATE in the cassette range, a loud tone, then silence (soak seed 225's settings).
+// The same plunge from ERA's tape compression (the cassette's until v1.0.42), which also judged the tail on
+// the 1.5 s level: an infinite PLATE at ERA 0.82, a loud tone, then silence (soak seed 225's settings).
 void cassetteCompressionDoesntPlunge()
 {
     Rig r(44100.0f, 64);
@@ -418,7 +424,7 @@ void cassetteCompressionDoesntPlunge()
     const double lowest = *std::min_element(levels.begin(), levels.begin() + 30);
     const double end = 0.5 * (levels[58] + levels[59]);
     char what[160];
-    std::snprintf(what, sizeof what, "PLATE infinite, ERA's cassette: no plunge when a loud tone stops (lowest %.1f dB, %.1f under where it holds)",
+    std::snprintf(what, sizeof what, "PLATE infinite, ERA 0.82's tape compression: no plunge when a loud tone stops (lowest %.1f dB, %.1f under where it holds)",
                   lowest, end - lowest);
     check(end - lowest < 4.0, what);
 }

@@ -115,16 +115,15 @@ void ducksAndComesBack()
     check(hiPlaying > 0.5 * hiAfter, msg);
 }
 
-// Driven hot: a full-scale input into a long, bright PLATE. ERA 0.3 (Neve), below the cassette stage:
-// from there tape out (v1.0.27, +12 dB of drive taken off after its curve) soft-limits the wet's peaks to
-// about a quarter of full scale itself, so the limiter would have nothing to do. At infinite the floor
+// Driven hot: a full-scale input into a long, bright PLATE. ERA 0, the Neve alone: the wear's tape
+// (v1.0.42) soft-limits the wet's peaks itself, so the limiter would have less to do. At infinite the floor
 // governor would hold the tank down, so this is a finite DECAY.
 void limiter()
 {
     iv::Engine* e = makeEngine(0.6f);
     e->setParam(iv::ParamId::Space, 0.0f);
     e->setParam(iv::ParamId::Size, 1.0f);
-    e->setParam(iv::ParamId::Era, 0.3f);
+    e->setParam(iv::ParamId::Era, 0.0f);
     e->setParam(iv::ParamId::Tone, 1.0f);
     e->reset();
     const size_t n = size_t(10.0f * kSr);

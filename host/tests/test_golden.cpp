@@ -50,7 +50,8 @@ struct Corner {
     float       size, decay, tone, era, drift, time;
 };
 
-// Era −1 = its default. Each corner is one the owner has heard on a page.
+// Era −1 = its default (0.1: a light wear since v1.0.42). Each corner is one the owner has heard on a page;
+// hall_wear30/50/90 were hall_midiverb / _bbd / _radio until ERA became one wear amount (v1.0.42).
 const Corner kCorners[] = {
     {"plate_small",     0, 0, 0.0f, 0.4f, 0.5f, -1.0f, 0.5f, 0.2f},
     {"plate_large",     0, 0, 1.0f, 0.7f, 0.5f, -1.0f, 0.5f, 0.2f},
@@ -58,9 +59,9 @@ const Corner kCorners[] = {
     {"hall_small",      1, 0, 0.0f, 0.3f, 0.5f, -1.0f, 0.5f, 0.2f},
     {"hall_large",      1, 0, 1.0f, 0.7f, 0.5f, -1.0f, 0.5f, 0.2f},
     {"hall_dark",       1, 0, 0.5f, 0.5f, 0.0f, -1.0f, 0.5f, 0.2f},
-    {"hall_midiverb",   1, 0, 0.5f, 0.5f, 0.5f, 0.3f,  0.5f, 0.2f},
-    {"hall_bbd",        1, 0, 0.5f, 0.5f, 0.5f, 0.5f,  0.5f, 0.2f},
-    {"hall_radio",      1, 0, 0.5f, 0.5f, 0.5f, 0.9f,  0.5f, 0.2f},
+    {"hall_wear30",     1, 0, 0.5f, 0.5f, 0.5f, 0.3f,  0.5f, 0.2f},
+    {"hall_wear50",     1, 0, 0.5f, 0.5f, 0.5f, 0.5f,  0.5f, 0.2f},
+    {"hall_wear90",     1, 0, 0.5f, 0.5f, 0.5f, 0.9f,  0.5f, 0.2f},
     {"massive_small",   2, 0, 0.0f, 0.5f, 0.5f, -1.0f, 0.5f, 0.2f},
     {"massive_large",   2, 0, 1.0f, 0.6f, 0.5f, -1.0f, 0.5f, 0.5f},
     {"massive_shimmer", 2, 2, 0.5f, 0.5f, 0.5f, -1.0f, 0.5f, 0.5f},
