@@ -34,8 +34,8 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def render(bin_, stim, out, sets, hook):
     env = dict(os.environ)
-    if hook:  # NAME=VALUE: the prototype's renderer env hook ("" = today)
-        name, value = hook.split("=", 1)
+    for h in hook.split(",") if hook else []:  # NAME=VALUE[,NAME=VALUE]: the prototype's renderer env hooks ("" = today)
+        name, value = h.split("=", 1)
         env[name] = value
     cmd = [bin_, str(stim), str(out), "--set", "mix=1"]
     for kv in sets:
@@ -53,7 +53,7 @@ def windows_db(y, edges):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--bin", default=os.environ.get("IV_RENDER", str(ROOT / "build" / "iv_render")))
-    ap.add_argument("--hook", required=True, help="the prototype's renderer env hook, NAME=VALUE")
+    ap.add_argument("--hook", required=True, help="the prototype's renderer env hook, NAME=VALUE (several: comma-separated)")
     ap.add_argument("--set", action="append", default=[], help="k=v, one grid per value (repeatable)")
     ap.add_argument("--ref", help="k=v: A is also rendered with this, and the louder A counts")
     ap.add_argument("--no-holds", action="store_true")

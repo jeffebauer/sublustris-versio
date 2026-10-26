@@ -221,6 +221,14 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         engine.setEraLayoutPrototype(layout);
         std::fprintf(stderr, "iv_render: IV_ERA_LAYOUT: ERA layout %c (texture only)\n", layout >= 1 && layout <= 3 ? char('A' + layout - 1) : '0');
     }
+    if (std::getenv("IV_DRIFT_GROW") || std::getenv("IV_DRIFT_RATE_GROW") || std::getenv("IV_DRIFT_SINE")) { // renders/drift_rethink
+        auto num = [](const char* k, float d) { const char* v = std::getenv(k); return v ? float(std::atof(v)) : d; };
+        const int sine = int(num("IV_DRIFT_SINE", 0.0f));
+        engine.setDriftPrototype(num("IV_DRIFT_GROW", 0.0f), num("IV_DRIFT_RATE_GROW", 0.0f), sine, num("IV_DRIFT_SINE_CENTS", 22.0f));
+        std::fprintf(stderr, "iv_render: IV_DRIFT: extremes depth x(1+%.2f), rates x(1+%.2f), right side %s, sine %.1f c\n",
+                     num("IV_DRIFT_GROW", 0.0f), num("IV_DRIFT_RATE_GROW", 0.0f),
+                     sine == 1 ? "sine 1.5-5.5 Hz" : sine == 2 ? "sine 1-2 Hz" : "Wander", num("IV_DRIFT_SINE_CENTS", 22.0f));
+    }
     if (const char* es = std::getenv("IV_ERA_SWITCH")) { // renders/era_switch
         engine.setEraSwitchPrototype(float(std::atof(es)));
         std::fprintf(stderr, "iv_render: IV_ERA_SWITCH: ERA without overlaps, %.0f ms switch\n", 1000.0 * std::atof(es));

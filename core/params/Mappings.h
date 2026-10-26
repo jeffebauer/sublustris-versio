@@ -126,6 +126,41 @@ inline dsp::DriftAmounts driftAmounts(float drift, float cassette)
     return a;
 }
 
+#ifndef IV_FIXED_VOICINGS
+// PROTOTYPE (renders/drift_rethink; the owner: "the extreme ends of the modulation knob don't create
+// obvious results" in a mix, and a sine right side "to juxtapose the more random modulation on the
+// left"). grow: each side's depth × (1 + grow·x²) and rateGrow its wow's rate × (1 + rateGrow·x²),
+// x = 0 over the first half of the side, 1 at its end (the first half stays as today). sine 1: the
+// right side a sine at 1.5 → 5.5 Hz instead of Wander, sine 2: at 1 → 2 Hz; sineCents its depth at full.
+inline dsp::DriftAmounts driftAmountsPrototype(float drift, float cassette, float grow, float rateGrow, int sine,
+                                               float sineCents)
+{
+    using namespace voicing;
+    const float t = drift < kDriftDeadLo ? (kDriftDeadLo - drift) / kDriftDeadLo
+                  : drift > kDriftDeadHi ? (drift - kDriftDeadHi) / (1.0f - kDriftDeadHi) : 0.0f;
+    const float x = t > 0.5f ? 2.0f * t - 1.0f : 0.0f;
+    const float g = 1.0f + grow * x * x, r = 1.0f + rateGrow * x * x;
+    dsp::DriftAmounts a = driftAmounts(drift, 0.0f);
+    a.wowCents *= g;
+    a.flutterCents *= g;
+    a.wowHz *= r; // flutter keeps its rate (9 Hz is already near roughness)
+    if (drift > kDriftDeadHi && sine > 0) {
+        a.wowCents = 0.0f; // no Wander: the sine alone
+        a.rateSpread = dsp::DriftAmounts{}.rateSpread;
+        a.sineCents = sineCents * t * g;
+        a.sineHz = (sine == 1 ? 1.5f + 4.0f * t : 1.0f + 1.0f * t) * r;
+    }
+    if (cassette > 0.0f) { // as driftAmounts
+        const float w = kCassetteWowCents * cassette, f = kCassetteFlutterCents * cassette;
+        if (a.wowCents + w > 0.0f) a.wowHz = (a.wowCents * a.wowHz + w * kCassetteWowHz) / (a.wowCents + w);
+        a.wowCents += w;
+        if (a.flutterCents + f > 0.0f) a.flutterHz = (a.flutterCents * a.flutterHz + f * kCassetteFlutterHz) / (a.flutterCents + f);
+        a.flutterCents += f;
+    }
+    return a;
+}
+#endif
+
 // ERA (P4), stacking (ADR 0003): each layer fades in across its stretch
 // (smoothstep) and stays.
 inline float layer(float v, float from, float to)
