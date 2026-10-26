@@ -31,9 +31,12 @@ keep no cassette wow or flutter and no radio detune, and run every wet stage onl
   the grain 0.65-0.8; the band and dip 0.8-1. Each stage stays once in.
 - **C, one wear amount:** every stage in from 0.05 and deepening with the knob; the band's blend as v^1.5.
 
-Loudness: a slow level hold on the chain (~4 s, measured above 200 Hz, -6 / +12 dB) and two small trims keep every
-layout within ±1 dB of ERA 0 on music (LUFS; HALL and MASSIVE; the skank, keys and the full mix's send), as
-`test_era` asks of today's.
+Loudness: a level hold on the chain (0.1 s levels above 200 Hz compared, its gain gliding over ~0.5 s, -6 / +12 dB)
+and two small trims keep every layout within ±1.3 dB of ERA 0 on music (LUFS; HALL and MASSIVE; the skank, keys and
+the full mix's send), as `test_era` asks of today's. A first, 4 s hold kept a loud passage's make-up into the quiet
+tail after it (tails 3-5 dB over the Neve's). At infinite DECAY the band keeps half its blend (`kBandAtInfinite`, as
+the Midiverb keeps a quarter of its dark loop there): a held tail darkens to its floor under 100 Hz (ADR 0008), where
+the band is ~20 dB down, and the whole band took 4-6 dB off a 10-minute hold at ERA 1.
 
 ## CPU on the module (estimates)
 
@@ -71,7 +74,7 @@ domain (half the samples, ~3.4 points), or the band in mono (an AM radio is; −
 | Build | Bytes | Spare to 112,640 (110 KB) |
 |---|---|---|
 | today (v1.0.40, `e570741`) | 112,548 | 92 |
-| A, B or C in place of today's eras | 108,540 each | 4,100 |
+| A, B or C in place of today's eras | 108,644 each | 3,996 |
 
 Today's radio (`process` 2.6 KB, `set` 1.5 KB), tape (1.3 KB) and BBD go; the texture chain (`set` 1.4 KB,
 `process` inlined) comes in. Each build still carries all three layouts' mapping; one alone would be a little smaller.
@@ -82,14 +85,25 @@ Today's radio (`process` 2.6 KB, `set` 1.5 KB), tape (1.3 KB) and BBD go; the te
 mix (reverb on its send) and a solo chord with two snare hits; 100 % wet with a MIX fader; pick buttons; 769 MB.
 
 - **Labels** (`_verify.txt`): every render's hook line names its layout; no two versions identical on any card.
-- **Level:** every layout within ±1 dB of its ERA 0 on music across the knob (skank, keys, the mix's send; HALL and
-  MASSIVE). Against today at the same knob point, -1.1 to +1.7 LU: today itself dips ~1 dB at its cassette.
+- **Level:** every layout within ±1.3 dB of its ERA 0 on music across the knob (skank, keys, the mix's send; HALL and
+  MASSIVE). Against today at the same knob point, -0.3 to +1.4 LU: today itself dips ~1 dB at its cassette.
 - **No darkening:** energy above 5 kHz against ERA 0 never falls outside the radio's stretch (B +4 to +8 dB at
   0.6-0.8: the clock's and grain's fizz); the radio's band takes 2.4-6 dB off the top (C ~0: its band is in only
   part-way). Today: -8 to -30 dB.
 - **Clicks** (1 ms frames above 5 kHz across ERA sweeps of a held pad and the mix, HALL and MASSIVE): every layout
   at or under today's (8-14 dB against today's 9.6-15.5; A's HALL pad 14.2 against today's 13.8, both at the radio).
-- **Energy:** 10-minute infinite holds at DECAY 1 for A (0.2, 0.4, 0.5, every SPACE) within 0.7 dB. The level grid
-  against today's same knob flags A louder late in tails (+3 to +6 dB; +125 where today's Midiverb has already
-  truncated to silence): today's eras darken in the loop and lose level, these don't. Rerun against the Neve base
-  (`--ref era=0`): see below.
+- **Energy:** see the last section.
+
+## Energy (final code)
+
+- **10-minute infinite holds** (DECAY 1, SIZE 0.5, 20 s of noise then silence, PLATE / HALL / MASSIVE): A at 0.2, 0.4,
+  0.5, 0.6, 0.8, 1.0; B at 0.3, 0.5, 0.7, 0.9, 1.0; C at 0.3, 0.6, 1.0; today at 0.9: 45 of 45 pass on 10 s and
+  25 s windows; the worst swing is 1.8 dB, none grows.
+- **The level grid** (`tools/pages/energy_check.py --ref era=0`: every SPACE × SIZE 0 / 0.6 / 1 × DECAY 0.5 / 0.75 /
+  0.95 × DRIFT 0-1, against the Neve base): no infinite tail grows. A's tails are never more than +1.05 dB over the
+  Neve's (A at 0.2: the tape's squash made up on a decaying tail), B's and C's +2.2 dB at ERA 1 (the compander's
+  noise and the clock's fizz in quiet late windows); the grid's 0.5 dB rule flags those, which are on the wet.
+- **Loudness on music** against ERA 0 (skank, keys, the mix's send; HALL and MASSIVE; ERA 0-1 in tenths): A -0.3 to
+  +0.5 dB, B and C -1.3 to +0.5 (the keys at ERA 1 in HALL), today -1.6 to +0.5.
+
+Flash with the band's share at infinite: 108,644 B per layout (4,000 B under the 110 KB line).

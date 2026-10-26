@@ -23,10 +23,12 @@
 //            do TONE's job), its over-modulation (flattened troughs) and its wandering dip (selective
 //            fading: a slow random notch, like a phaser's), without the station's fades, detune or static.
 // Each stage: a weight w (its blend, 0 = bypassed and not run) and an intensity t (its own setting).
-// A slow level hold (~4 s, as the radio's) keeps the chain's loudness at its input's, within -6 / +12 dB:
-// the tape's squash and the band's loss depend on how hot the wet is (a pushed send lost 4 dB more than
-// the skank), too slowly to undo either's dynamics. It measures both sides above ~200 Hz (one pole), as
-// loudness does, so the band's lost lows don't read as level to make up.
+// A level hold keeps the chain's loudness at its input's, within -6 / +12 dB: the tape's squash and the
+// band's loss depend on how hot the wet is (a pushed send lost 4 dB more than the skank). It compares the
+// two sides' 0.1 s levels and glides its gain over ~0.5 s, too slowly to undo a transient's squash, quickly
+// enough that a fading tail (no longer squashed) is back at unity within a second: measured over 4 s, it
+// kept a loud passage's make-up and left tails 3-5 dB over the Neve's. It measures both sides above
+// ~200 Hz (one pole), as loudness does, so the band's lost lows don't read as level to make up.
 #include "dsp/EraStages.h" // EraSvf, EraRng, sameBits
 #include "dsp/SizeOpt.h"
 
@@ -47,6 +49,9 @@ struct TexMix {
 namespace tex {
 constexpr float kTapeDriveDb = 15.0f, kTapeEmphDb = 6.0f, kTapeEmphHz = 2000.0f, kTapeBias = 0.12f;
 constexpr float kClockHzHi = 32000.0f, kClockHzLo = 14000.0f; // the BBD's clock across its intensity (no lower: unfiltered, it turns metallic)
+// At infinite DECAY the band keeps this share of its blend: a held tail darkens to its warm floor (ADR 0008),
+// mostly under 100 Hz, where the band is ~20 dB down; whole, it took 4-6 dB off a 10-minute hold.
+constexpr float kBandAtInfinite = 0.5f;
 constexpr float kGrainBitsHi = 9.0f, kGrainBitsLo = 5.0f;     // the grain's bits under the level, across its intensity
 } // namespace tex
 
@@ -61,7 +66,7 @@ public:
             dip_[c].reset();
         }
         clock_ = hpIn_ = hpOut_ = inPow_ = outPow_ = holdStep_ = 0.0f;
-        hold_ = 1.0f;
+        hold_ = holdAim_ = 1.0f;
         for (float& w : wander_) w = 0.0f;
     }
 
@@ -132,10 +137,11 @@ public:
             dipGain_ = std::pow(10.0f, dipDb_ / 20.0f);
         }
         // The hold's gain for this block, from the last one's powers.
-        wHold_ = 1.0f - std::exp(-1.0f / (4.0f * sr));
+        wHold_ = 1.0f - std::exp(-1.0f / (0.1f * sr));
         wHp_ = 1.0f - std::exp(-6.2831853f * 200.0f / sr);
         const float want = std::fmin(4.0f, std::fmax(0.5f, std::sqrt((inPow_ + 1e-20f) / (outPow_ + 1e-20f))));
-        holdStep_ = (want - hold_) / float(n > 0 ? n : 1);
+        holdAim_ += (1.0f - std::exp(-float(n) / (0.5f * sr))) * (want - holdAim_);
+        holdStep_ = (holdAim_ - hold_) / float(n > 0 ? n : 1);
         sr_ = sr;
     }
 
@@ -223,7 +229,7 @@ private:
     float  invDrive_ = 1, deGain_ = 0, invMEff_ = 1;
     EraSvf bp_[2], dip_[2];
     float  mEff_ = 1, dipDb_ = 0, dipHz_ = 0.1f, dipGain_ = 1, wander_[4] = {};
-    float  wHold_ = 0, wHp_ = 0, hpIn_ = 0, hpOut_ = 0, inPow_ = 0, outPow_ = 0, hold_ = 1, holdStep_ = 0;
+    float  wHold_ = 0, wHp_ = 0, hpIn_ = 0, hpOut_ = 0, inPow_ = 0, outPow_ = 0, hold_ = 1, holdAim_ = 1, holdStep_ = 0;
     EraRng rng_;
 };
 

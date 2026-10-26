@@ -539,7 +539,8 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         compressW = lay.compress;
         hissW = lay.hiss;
         crackleW = lay.crackle;
-        const dsp::TexMix& t = lay.tex;
+        dsp::TexMix t = lay.tex;
+        t.bandW *= 1.0f - map::governorWeight(decay) * (1.0f - dsp::tex::kBandAtInfinite);
         texOn_ = t.tapeW > 0.0f || t.breathW > 0.0f || t.clockW > 0.0f || t.grainW > 0.0f || t.bandW > 0.0f;
         texture_.set(t, sampleRate_, n);
     } else texOn_ = false;
