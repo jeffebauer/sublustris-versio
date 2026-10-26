@@ -4,7 +4,6 @@
 **Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Not yet in it: v1.0.35-36 (the 24 kHz tank, 12-point swell, fewer early reflections) and the review's speed-ups; say when you'd like it installed (Ableton closed).
 
 ## To do
-- [ ] **v1.0.40 at the rack** (round 15 is done: SIZE's crossfade fits now). On rack power, flash `/Users/jesse/Documents/Sites/immensio-versio/.claude/worktrees/massive-air/firmware/build/immensio_versio-latelight.bin`: the playing build with the red/amber late-block light. Move SIZE in MASSIVE the way that dropped out (do the drop-outs and red flashes go?), and turn ERA across its eras (do the transitions feel right at 20 %?). The normal playing build without the light is `immensio_versio.bin` (112,548 B).
 
 ### Decide
 - [ ] **Merge `claude/massive-air` into main?** It holds everything since v1.0.33 (SIZE/TIME crossfade, the CPU work, v1.0.34-36, the profile builds, and now the overnight review's speed-ups and report), all tests passing. Your OK first.
@@ -27,6 +26,7 @@
 
 ## Waiting on Claude
 
+- **The SIZE drop-outs in MASSIVE** (your rack test, red light, slow and quick turns): reproducing your knob moves on the desktop, a fix, and a profile build that replays real SIZE turns for you to flash.
 - **The twin at 8 dB under the pad** (v1.0.41, your pick): built and checked on branch `claude/frozen-twin-213dc9` (MASSIVE's twin now ~8.5 dB under on average, HALL's ~7.8; Paint still under its ceiling; release flash 112,596 B, 44 B left). Not in a flash or the plugin yet; it goes in with whatever you pick on `twin_alternatives`.
 - **A lighter blur instead of the twin** (your go-ahead: "today's twin, blur and width, small room, and the twin without its swell, all at -8 dB. Skip the spring chirp"): the `twin_alternatives` page, after v1.0.41. Research: the light options would cost ~2-5 points of CPU against the twin's ~28 (estimates), enough to fix the frozen cassette; they lose the space's colour, and SIZE/DECAY play them less.
 - **CPU: a frozen MASSIVE with the cassette** (round 15: 104.8 % in real time, late on nearly every block; everything else fits). The levers: a lighter twin while frozen (a page), the block size (+1 ms latency, your call), and measuring the ERA overlap positions (never timed on the module). Close to the line too: the moment of freezing (100.6 % for one block), MASSIVE SHIMMER (99 %).
@@ -42,6 +42,7 @@
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 
 ## Done
+- [x] **v1.0.40 at the rack** (26 Oct 2026, the late-light build: "It's sounding really good, although I'm still getting some dropouts the same as before (generally when changing size in MASSIVE mode). Era knob transitions feel good."; the light flashed red; slow sweeps and quick turns both). ERA's 20 % overlap is kept. The SIZE drop-outs are CPU over-runs that round 15's single scripted move didn't catch: a debug hunt is on it (Waiting on Claude).
 - [x] **The twin louder: 8 dB under the pad** (26 Oct 2026, `renders/twin_louder`, MIX 50 %: B "louder" on every card, the repeated cards agreeing; "Let's shoot for 8db under the pad"). In HALL and MASSIVE the layer over a frozen pad comes up from 12-15 dB under to about 8 dB under. Being built as v1.0.41 (Waiting on Claude; built as v1.0.41).
 - [x] **The freeze moment stays as built** (26 Oct 2026, `renders/freeze_moment`, MIX 50 %: "A today sounds more seamless. B and C seem to drop in amplitude when frozen/pad alone."). Holding or gliding the ducking at the tap made the frozen pad sit under the swell you'd been hearing; today's quick let-go is kept. Nothing changes in the Core or the flash.
 - [x] **ERA's overlap** (26 Oct 2026, after `era_overlap`: "Let's go for B but split the difference by having it crossfade over 20%"): built as v1.0.40; each era fades in over the first fifth of its stretch (was a third).
