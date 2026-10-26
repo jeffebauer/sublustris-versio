@@ -1,0 +1,114 @@
+  PEAK ctl  4.2 in  6.4 shim  2.9 swell  8.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 12.4 tkout 10.3 tkmix  1.6 tape  0.7 bbd  4.2 radio  0.4 out  1.8
+CORNER PLATE S0 cassette            avg  53.0% max  60.7% min  48.6% | mem 24461832 B | block 48 | fs 48000 Hz | ~5299 cyc/sample | max at block 54
+  SPLIT ctl  3.4 in  5.7 shim  2.9 swell 12.2 twin  0.6 tank 14.0 tkctl  1.8 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  9.1 bbd  0.5 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  5.5 in  7.3 shim  4.2 swell 14.1 twin  1.9 tank 15.7 tkctl  3.7 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 10.6 bbd  4.3 radio  1.6 out  3.1
+CORNER PLATE S0 radio               avg  49.4% max  61.7% min  47.6% | mem 24461832 B | block 48 | fs 48000 Hz | ~4942 cyc/sample | max at block 55
+  SPLIT ctl  4.6 in  5.7 shim  2.9 swell 11.3 twin  0.6 tank 13.7 tkctl  1.7 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.0 bbd  0.4 radio  5.3 out  1.8  (% of budget)
+  PEAK  ctl  7.6 in  7.3 shim  4.2 swell 12.7 twin  1.9 tank 15.7 tkctl  3.8 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 10.4 bbd  1.6 radio  6.7 out  3.1
+CORNER PLATE S1 neve                avg  43.4% max  61.7% min  41.6% | mem 24461832 B | block 48 | fs 48000 Hz | ~4337 cyc/sample | max at block 3
+  SPLIT ctl  3.3 in  5.7 shim  2.9 swell 11.2 twin  0.6 tank 13.7 tkctl  1.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  0.8 bbd  0.4 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  6.3 in  7.3 shim  4.2 swell 12.7 twin  1.9 tank 17.4 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 10.6 bbd  5.5 radio  5.3 out  3.1
+CORNER PLATE S1 midiverb            avg  44.7% max  46.3% min  41.9% | mem 24461832 B | block 48 | fs 48000 Hz | ~4471 cyc/sample | max at block 1575
+  SPLIT ctl  3.3 in  5.8 shim  2.9 swell 11.3 twin  0.6 tank 15.4 tkctl  1.6 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  0.6 bbd  0.4 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  4.6 in  7.4 shim  4.2 swell 12.7 twin  1.9 tank 17.4 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+CORNER PLATE S1 bbd                 avg  46.9% max  50.6% min  44.0% | mem 24461832 B | block 48 | fs 48000 Hz | ~4689 cyc/sample | max at block 45
+  SPLIT ctl  3.5 in  5.7 shim  2.9 swell 11.3 twin  0.6 tank 13.6 tkctl  1.6 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  0.6 bbd  4.2 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  5.4 in  7.3 shim  4.2 swell 12.7 twin  1.9 tank 16.6 tkctl  2.9 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+CORNER PLATE S1 cassette            avg  51.8% max  58.5% min  46.5% | mem 24461832 B | block 48 | fs 48000 Hz | ~5183 cyc/sample | max at block 87
+  SPLIT ctl  3.4 in  5.8 shim  2.9 swell 11.3 twin  0.6 tank 13.8 tkctl  1.7 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  9.1 bbd  0.5 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  5.5 in  7.3 shim  4.2 swell 12.7 twin  1.9 tank 15.5 tkctl  3.7 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 10.4 bbd  5.5 radio  1.6 out  3.1
+CORNER PLATE S1 radio               avg  49.3% max  61.9% min  47.4% | mem 24461832 B | block 48 | fs 48000 Hz | ~4933 cyc/sample | max at block 74
+  SPLIT ctl  4.6 in  5.7 shim  2.9 swell 11.3 twin  0.6 tank 13.6 tkctl  1.7 tkloop  0.0 tkout  0.0 tkmix  0.0 tape  1.0 bbd  0.4 radio  5.3 out  1.8  (% of budget)
+  PEAK  ctl  7.6 in  7.2 shim  4.2 swell 12.7 twin  1.9 tank 15.6 tkctl  3.8 tkloop  0.0 tkout  0.0 tkmix  0.0 tape 10.6 bbd  1.6 radio  6.6 out  3.1
+CORNER HALL S0 neve                 avg  54.4% max  68.5% min  49.6% | mem 24461832 B | block 48 | fs 48000 Hz | ~5440 cyc/sample | max at block 50
+  SPLIT ctl  3.6 in  5.3 shim  2.9 swell  9.8 twin  0.6 tank  2.8 tkctl  6.4 tkloop 11.7 tkout  5.8 tkmix  1.3 tape  0.8 bbd  0.4 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  8.7 in  7.2 shim  4.2 swell 12.5 twin  1.8 tank 15.6 tkctl  7.6 tkloop 23.2 tkout  7.4 tkmix  2.8 tape 10.5 bbd  5.5 radio  6.5 out  3.1
+CORNER HALL S0 midiverb             avg  61.0% max  63.2% min  54.0% | mem 24461832 B | block 48 | fs 48000 Hz | ~6096 cyc/sample | max at block 82
+  SPLIT ctl  3.6 in  5.2 shim  2.9 swell 12.1 twin  0.6 tank  2.6 tkctl  6.4 tkloop 16.3 tkout  5.9 tkmix  1.3 tape  0.6 bbd  0.4 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  6.5 in  6.8 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl  7.6 tkloop 17.7 tkout  7.4 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+CORNER HALL S0 bbd                  avg  60.3% max  68.3% min  58.5% | mem 24461832 B | block 48 | fs 48000 Hz | ~6034 cyc/sample | max at block 69
+  SPLIT ctl  4.1 in  5.2 shim  2.9 swell 12.5 twin  0.6 tank  2.6 tkctl  6.4 tkloop 11.4 tkout  5.5 tkmix  1.3 tape  0.6 bbd  4.2 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  7.2 in  6.8 shim  4.2 swell 14.0 twin  1.8 tank  3.8 tkctl  7.6 tkloop 17.4 tkout  7.0 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+CORNER HALL S0 cassette             avg  65.7% max  76.5% min  61.0% | mem 24461832 B | block 48 | fs 48000 Hz | ~6567 cyc/sample | max at block 46
+  SPLIT ctl  3.7 in  5.2 shim  2.9 swell 12.0 twin  0.6 tank  2.6 tkctl  6.9 tkloop 12.3 tkout  5.6 tkmix  1.3 tape  9.0 bbd  0.5 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  7.3 in  6.8 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.6 tkout  7.0 tkmix  2.7 tape 10.4 bbd  5.5 radio  1.6 out  3.1
+CORNER HALL S0 radio                avg  61.3% max  78.0% min  58.9% | mem 24461832 B | block 48 | fs 48000 Hz | ~6127 cyc/sample | max at block 55
+  SPLIT ctl  5.1 in  5.2 shim  2.9 swell 11.0 twin  0.6 tank  2.6 tkctl  6.5 tkloop 11.3 tkout  5.5 tkmix  1.3 tape  1.0 bbd  0.4 radio  5.3 out  1.9  (% of budget)
+  PEAK  ctl  9.4 in  6.7 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.5 tkout  7.0 tkmix  2.7 tape 10.6 bbd  1.6 radio  6.7 out  3.1
+CORNER HALL S1 neve                 avg  57.0% max  92.5% min  51.6% | mem 24461832 B | block 48 | fs 48000 Hz | ~5703 cyc/sample | max at block 115
+  SPLIT ctl  3.7 in  5.1 shim  2.9 swell 11.0 twin  0.6 tank  2.6 tkctl  7.7 tkloop 11.3 tkout  6.7 tkmix  1.3 tape  0.8 bbd  0.4 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  9.4 in  6.7 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 11.1 tkloop 34.5 tkout 17.8 tkmix  2.7 tape 10.6 bbd  5.5 radio  6.5 out  3.1
+CORNER HALL S1 midiverb             avg  56.7% max  60.7% min  51.9% | mem 24461832 B | block 48 | fs 48000 Hz | ~5672 cyc/sample | max at block 43
+  SPLIT ctl  3.6 in  5.2 shim  2.9 swell 11.0 twin  0.6 tank  2.6 tkctl  6.2 tkloop 13.7 tkout  5.6 tkmix  1.3 tape  0.6 bbd  0.4 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  6.4 in  6.8 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  8.5 tkloop 15.0 tkout  7.0 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+CORNER HALL S1 bbd                  avg  56.1% max  63.8% min  54.2% | mem 24461832 B | block 48 | fs 48000 Hz | ~5605 cyc/sample | max at block 76
+  SPLIT ctl  4.1 in  5.2 shim  2.9 swell 11.0 twin  0.6 tank  2.6 tkctl  6.1 tkloop  8.9 tkout  5.6 tkmix  1.3 tape  0.6 bbd  4.2 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  7.2 in  6.8 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl  7.3 tkloop 14.9 tkout  7.1 tkmix  2.6 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+CORNER HALL S1 cassette             avg  61.9% max  72.3% min  56.7% | mem 24461832 B | block 48 | fs 48000 Hz | ~6187 cyc/sample | max at block 41
+  SPLIT ctl  3.8 in  5.2 shim  2.9 swell 11.0 twin  0.6 tank  2.6 tkctl  6.6 tkloop  9.8 tkout  5.6 tkmix  1.3 tape  9.1 bbd  0.5 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  7.3 in  6.7 shim  4.2 swell 12.6 twin  1.8 tank  3.8 tkctl 10.8 tkloop 11.2 tkout  7.1 tkmix  2.7 tape 10.6 bbd  5.5 radio  1.6 out  3.1
+CORNER HALL S1 radio                avg  58.5% max  75.4% min  56.3% | mem 24461832 B | block 48 | fs 48000 Hz | ~5849 cyc/sample | max at block 61
+  SPLIT ctl  5.1 in  5.2 shim  2.9 swell 11.0 twin  0.6 tank  2.6 tkctl  6.2 tkloop  8.8 tkout  5.6 tkmix  1.3 tape  1.0 bbd  0.4 radio  5.3 out  1.8  (% of budget)
+  PEAK  ctl  9.4 in  6.7 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 10.8 tkloop 11.1 tkout  7.0 tkmix  2.6 tape 10.6 bbd  1.6 radio  6.7 out  3.1
+CORNER MASSIVE S0 neve              avg  58.3% max  75.2% min  51.5% | mem 24461832 B | block 48 | fs 48000 Hz | ~5833 cyc/sample | max at block 4
+  SPLIT ctl  3.6 in  5.2 shim  2.9 swell  9.8 twin  0.6 tank  2.6 tkctl  6.5 tkloop 11.6 tkout 10.1 tkmix  1.3 tape  0.8 bbd  0.4 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl 12.2 in  6.8 shim  4.2 swell 12.3 twin  1.8 tank  3.8 tkctl 10.8 tkloop 20.8 tkout 11.8 tkmix  2.8 tape  9.3 bbd  5.4 radio  5.3 out  3.1
+CORNER MASSIVE S0 midiverb          avg  65.4% max  67.4% min  58.4% | mem 24461832 B | block 48 | fs 48000 Hz | ~6535 cyc/sample | max at block 72
+  SPLIT ctl  3.6 in  5.2 shim  2.9 swell 12.1 twin  0.6 tank  2.6 tkctl  6.5 tkloop 16.3 tkout 10.3 tkmix  1.3 tape  0.6 bbd  0.4 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  6.4 in  6.8 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.7 tkout 11.9 tkmix  2.8 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+CORNER MASSIVE S0 bbd               avg  64.6% max  72.3% min  62.4% | mem 24461832 B | block 48 | fs 48000 Hz | ~6458 cyc/sample | max at block 70
+  SPLIT ctl  4.0 in  5.2 shim  2.9 swell 12.5 twin  0.6 tank  2.6 tkctl  6.5 tkloop 11.4 tkout  9.8 tkmix  1.3 tape  0.6 bbd  4.2 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  7.2 in  6.7 shim  4.2 swell 13.9 twin  1.8 tank  3.8 tkctl  7.7 tkloop 17.4 tkout 11.4 tkmix  2.7 tape  1.9 bbd  5.5 radio  1.6 out  3.1
+CORNER MASSIVE S0 cassette          avg  69.9% max  81.0% min  64.9% | mem 24461832 B | block 48 | fs 48000 Hz | ~6989 cyc/sample | max at block 54
+  SPLIT ctl  3.7 in  5.2 shim  2.9 swell 12.0 twin  0.6 tank  2.6 tkctl  7.0 tkloop 12.3 tkout  9.8 tkmix  1.3 tape  9.1 bbd  0.5 radio  0.4 out  1.9  (% of budget)
+  PEAK  ctl  7.3 in  6.7 shim  4.2 swell 14.0 twin  1.8 tank  3.8 tkctl 11.3 tkloop 13.6 tkout 11.4 tkmix  2.7 tape 10.5 bbd  5.5 radio  1.6 out  3.1
+CORNER MASSIVE S0 radio             avg  65.5% max  82.3% min  62.9% | mem 24461832 B | block 48 | fs 48000 Hz | ~6549 cyc/sample | max at block 46
+  SPLIT ctl  5.1 in  5.2 shim  2.9 swell 11.0 twin  0.6 tank  2.6 tkctl  6.6 tkloop 11.2 tkout  9.8 tkmix  1.3 tape  1.0 bbd  0.4 radio  5.3 out  1.9  (% of budget)
+  PEAK  ctl  9.3 in  6.7 shim  4.2 swell 12.4 twin  1.8 tank  3.8 tkctl 11.2 tkloop 13.5 tkout 11.4 tkmix  2.6 tape 10.5 bbd  1.6 radio  6.6 out  3.1
+CORNER MASSIVE S1 neve              avg  67.5% max 111.9% min  60.9% | mem 24461832 B | block 48 | fs 48000 Hz | ~6747 cyc/sample | max at block 53
+  SPLIT ctl  3.6 in  6.4 shim  2.9 swell 11.1 twin  0.6 tank  2.6 tkctl  9.8 tkloop 12.9 tkout 12.0 tkmix  1.3 tape  0.8 bbd  0.4 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  9.3 in  8.7 shim  4.2 swell 12.5 twin  1.8 tank  3.8 tkctl 12.7 tkloop 32.7 tkout 30.7 tkmix  2.7 tape 10.5 bbd  5.4 radio  5.3 out  3.1
+CORNER MASSIVE S1 midiverb          avg  65.5% max  70.5% min  61.1% | mem 24461832 B | block 48 | fs 48000 Hz | ~6548 cyc/sample | max at block 56
+  SPLIT ctl  3.6 in  6.5 shim  2.9 swell 11.1 twin  0.6 tank  2.6 tkctl  6.7 tkloop 16.0 tkout 10.1 tkmix  1.3 tape  0.6 bbd  0.4 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  6.4 in  8.1 shim  4.2 swell 12.5 twin  1.9 tank  3.8 tkctl  9.9 tkloop 17.5 tkout 11.6 tkmix  2.7 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+CORNER MASSIVE S1 bbd               avg  64.8% max  72.6% min  62.7% | mem 24461832 B | block 48 | fs 48000 Hz | ~6476 cyc/sample | max at block 68
+  SPLIT ctl  4.0 in  6.4 shim  2.9 swell 11.1 twin  0.6 tank  2.6 tkctl  6.5 tkloop 11.4 tkout 10.1 tkmix  1.3 tape  0.6 bbd  4.2 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  7.2 in  8.1 shim  4.2 swell 12.5 twin  1.9 tank  3.8 tkctl  7.7 tkloop 17.4 tkout 11.7 tkmix  2.7 tape  1.9 bbd  5.6 radio  1.6 out  3.1
+CORNER MASSIVE S1 cassette          avg  70.6% max  80.9% min  65.3% | mem 24461832 B | block 48 | fs 48000 Hz | ~7057 cyc/sample | max at block 55
+  SPLIT ctl  3.7 in  6.4 shim  2.9 swell 11.1 twin  0.6 tank  2.6 tkctl  7.0 tkloop 12.2 tkout 10.1 tkmix  1.3 tape  9.1 bbd  0.5 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  7.3 in  8.0 shim  4.2 swell 12.6 twin  1.9 tank  3.8 tkctl 11.2 tkloop 13.6 tkout 11.7 tkmix  2.7 tape 10.5 bbd  5.5 radio  1.6 out  3.1
+CORNER MASSIVE S1 radio             avg  67.2% max  83.9% min  64.6% | mem 24461832 B | block 48 | fs 48000 Hz | ~6720 cyc/sample | max at block 85
+  SPLIT ctl  5.1 in  6.4 shim  2.9 swell 11.2 twin  0.6 tank  2.6 tkctl  6.6 tkloop 11.2 tkout 10.1 tkmix  1.3 tape  1.0 bbd  0.4 radio  5.3 out  1.8  (% of budget)
+  PEAK  ctl  9.4 in  8.0 shim  4.2 swell 12.5 twin  1.9 tank  3.8 tkctl 11.2 tkloop 13.5 tkout 11.9 tkmix  2.6 tape 10.5 bbd  1.6 radio  6.6 out  3.1
+CORNER MASSIVE S1 neve SHIMMER      avg  74.0% max  98.9% min  70.5% | mem 24461832 B | block 48 | fs 48000 Hz | ~7397 cyc/sample | max at block 3
+  SPLIT ctl  3.6 in  6.4 shim 17.6 swell  9.7 twin  0.6 tank  2.6 tkctl  6.5 tkloop 11.3 tkout 10.2 tkmix  1.3 tape  0.8 bbd  0.4 radio  0.4 out  1.8  (% of budget)
+  PEAK  ctl  8.0 in  8.1 shim 19.3 swell 12.6 twin  1.9 tank  3.8 tkctl 10.0 tkloop 17.3 tkout 11.9 tkmix  2.7 tape 10.6 bbd  4.3 radio  6.5 out  3.1
+CORNER MASSIVE neve SIZE .3<>.8     avg  71.3% max 105.0% min  60.3% | mem 24461832 B | block 48 | fs 48000 Hz | ~7133 cyc/sample | max at block 3332
+  SPLIT ctl  3.5 in  6.9 shim  3.0 swell 11.0 twin  0.6 tank  2.6 tkctl 10.1 tkloop 14.5 tkout 13.8 tkmix  1.3 tape  0.6 bbd  0.4 radio  0.4 out  1.9  (% of budget)
+  PEAK  ctl  4.8 in 10.0 shim 18.9 swell 12.6 twin  1.9 tank  3.8 tkctl 13.1 tkloop 29.0 tkout 30.6 tkmix  2.8 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+CORNER MASSIVE S1 neve FROZEN+twin  avg  96.2% max  99.5% min  91.8% | mem 24461832 B | block 48 | fs 48000 Hz | ~9623 cyc/sample | max at block 0 | twin on 6142 ms after
+  SPLIT ctl  4.2 in  6.5 shim  2.9 swell 11.4 twin 14.0 tank  3.1 tkctl 10.5 tkloop 20.4 tkout 16.7 tkmix  2.5 tape  0.6 bbd  0.4 radio  0.4 out  1.9  (% of budget)
+  PEAK  ctl  5.5 in  7.9 shim  4.2 swell 12.8 twin 15.5 tank  4.3 tkctl 15.3 tkloop 25.0 tkout 18.8 tkmix  4.0 tape  1.9 bbd  1.6 radio  1.6 out  3.1
+HEADROOM MASSIVE S1 radio +0% padding: avg  66.6% max  82.7% | late blocks 0 of 3000
+HEADROOM PLATE S0 neve +0% padding: avg  42.6% max  83.0% | late blocks 0 of 3000
+HEADROOM PLATE S0 neve +5% padding: avg  48.6% max  50.3% | late blocks 0 of 3000
+HEADROOM PLATE S0 neve +10% padding: avg  54.0% max  55.5% | late blocks 0 of 3000
+HEADROOM PLATE S0 neve +15% padding: avg  58.5% max  60.0% | late blocks 0 of 3000
+HEADROOM PLATE S0 neve +20% padding: avg  62.5% max  63.5% | late blocks 0 of 3000
+HEADROOM PLATE S0 neve +25% padding: avg  67.5% max  68.7% | late blocks 0 of 3000
+HEADROOM PLATE S0 neve +30% padding: avg  72.5% max  73.5% | late blocks 0 of 3000
+HEADROOM PLATE S0 neve +35% padding: avg  77.5% max  78.7% | late blocks 0 of 3000
+HEADROOM PLATE S0 neve +40% padding: avg  82.4% max  83.5% | late blocks 0 of 3000
+HEADROOM PLATE S0 neve +45% padding: avg  87.5% max  88.6% | late blocks 0 of 3000
+HEADROOM PLATE S0 neve +50% padding: avg  92.5% max  93.5% | late blocks 0 of 3000
+HEADROOM PLATE S0 neve +55% padding: avg  97.5% max  98.5% | late blocks 0 of 3000
+HEADROOM PLATE S0 neve +60% padding: avg 102.5% max 103.4% | late blocks 3000 of 3000
+HEADROOM PLATE S0 neve +65% padding: avg 107.5% max 108.4% | late blocks 3000 of 3000
+REALTIME MASSIVE knobs high neve            still  avg  61.3% max  62.6% | late blocks 0 of 3000
+REALTIME MASSIVE knobs high neve            jitter avg  62.6% max  63.8% | late blocks 0 of 3000
+REALTIME MASSIVE knobs high cassette        still  avg  70.7% max  72.2% | late blocks 0 of 3000
+REALTIME MASSIVE knobs high cassette        jitter avg  71.0% max  72.0% | late blocks 0 of 3000
+REALTIME MASSIVE knobs high neve FROZEN     still  avg  93.3% max  95.1% | late blocks 0 of 6000
+REALTIME MASSIVE knobs high neve FROZEN     jitter avg  95.3% max  96.9% | late blocks 0 of 6000
+REALTIME MASSIVE knobs high cassette FROZEN still  avg 104.5% max 107.1% | late blocks 5902 of 6000
+REALTIME MASSIVE knobs high cassette FROZEN jitter avg 106.5% max 108.9% | late blocks 5999 of 6000
