@@ -213,12 +213,8 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
                      num("IV_DRIFT_GROW", 0.0f), num("IV_DRIFT_RATE_GROW", 0.0f),
                      sine == 1 ? "sine 1.5-5.5 Hz" : sine == 2 ? "sine 1-2 Hz" : "Wander", num("IV_DRIFT_SINE_CENTS", 22.0f));
     }
-    if (const char* tc = std::getenv("IV_TONE_CHAR")) { // renders/tone_character: A, B or C (anything else: today)
-        const int mode = tc[0] == 'A' || tc[0] == 'a' ? 1 : tc[0] == 'B' || tc[0] == 'b' ? 2 : tc[0] == 'C' || tc[0] == 'c' ? 3 : 0;
-        engine.setToneCharacterPrototype(mode);
-        static const char* names[] = {"today's tilt", "A resonant tilt", "B SEM sweep", "C ladder + air shelf"};
-        std::fprintf(stderr, "iv_render: IV_TONE_CHAR: %s\n", names[mode]);
-    }
+    if (std::getenv("IV_TONE_CHAR")) // renders/tone_character: A is built in since v1.0.44, B and C are gone
+        std::fprintf(stderr, "iv_render: IV_TONE_CHAR ignored: TONE's resonant tilt (A) is built in since v1.0.44\n");
     if (const char* sz = std::getenv("IV_SHIMMER_LAZY")) {
         engine.setShimmerLazyPrototype(std::atoi(sz) != 0);
         std::fprintf(stderr, "iv_render: IV_SHIMMER_LAZY: shimmer records %s\n", std::atoi(sz) != 0 ? "only in SHIMMER" : "always");

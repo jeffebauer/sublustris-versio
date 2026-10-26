@@ -15,6 +15,7 @@ Subcommands:
     checks      level, metallic, holds, freeze holds and click checks -> renders/tone_character/_checks.txt
 
 Usage: <main checkout>/.venv/bin/python tools/pages/tone_character.py page [--render build-tone/iv_render]
+(The hook and B / C are gone since v1.0.44, where A is built in: render the page with an iv_render built at 5e2562f.)
 """
 import argparse
 import json

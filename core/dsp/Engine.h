@@ -191,13 +191,6 @@ public:
         driftSine_ = sine;
         driftSineCents_ = sineCents;
     }
-    // PROTOTYPE (renders/tone_character; dsp/Output.h ToneCharacter): TONE's wet tilt with a soft resonance,
-    // 1 A resonant tilt, 2 B SEM sweep, 3 C ladder + air shelf; 0 = today's tilt. The loop's TONE is untouched.
-    void  setToneCharacterPrototype(int mode)
-    {
-        toneCharMode_ = mode >= 1 && mode <= 3 ? mode : 0;
-        toneChar_.setMode(toneCharMode_);
-    }
     int   lowDecimate() const { return lowDecimate_; }
     int   swellTaps() const { return swell_.tapCount(); }
 #endif
@@ -209,6 +202,11 @@ public:
         fdn_.setStagger(groups);
         lowFdn_.setStagger(groups);
     }
+#endif
+#ifndef IV_FIXED_VOICINGS
+    // Tests only: false leaves TONE's resonant tilt out of the wet (the wet as it was before v1.0.44), to show the
+    // bell is the only difference and the loop is untouched.
+    void  setToneBellForTests(bool on) { toneBellOff_ = !on; }
 #endif
     bool  twinActive() const { return twinActive_; } // read-only view for tests
     bool  buttonDown() const { return buttonDown_; }
@@ -337,11 +335,9 @@ private:
     float             eraMakeup_ = 1.0f;
     // Ducking (ADR 0014) and the limiter (SPEC §4.10).
     dsp::Tilt         tilt_;
-#if !defined(IV_FIXED_VOICINGS) || defined(IV_TONE_CHAR_SHIP)
-    dsp::ToneCharacter toneChar_; // setToneCharacterPrototype (a trial firmware: IV_TONE_CHAR_SHIP, in place of tilt_)
-#endif
+    dsp::ToneBell     toneBell_; // TONE's resonant tilt, after tilt_ (v1.0.44)
 #ifndef IV_FIXED_VOICINGS
-    int               toneCharMode_ IV_ZI;
+    bool              toneBellOff_ IV_ZI; // setToneBellForTests
 #endif
     dsp::Limiter      limiter_;
     float             duck_ IV_ZI, duckGrDb_ IV_ZI, duckGain_ = 1.0f, duckGainStep_ IV_ZI; // ducking: LEDs 0..1, reduction dB, wet gain
