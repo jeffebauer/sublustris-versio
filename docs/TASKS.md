@@ -1,10 +1,10 @@
 # Owner tasks
 
-**Last updated:** 26 Oct 2026, end of session 8: v1.0.37-40 built on `claude/massive-air` (SDRAM timing, ITCM, SIZE fix, twin stop, tape at 2×, knob smoothing and deadband, SIZE's crossfade staggered, ERA's overlap a fifth); round 15 and the rack test next.
+**Last updated:** 26 Oct 2026, end of session 8: v1.0.37-40 built on `claude/massive-air` (SDRAM timing, ITCM, SIZE fix, twin stop, tape at 2×, knob smoothing and deadband, SIZE's crossfade staggered, ERA's overlap a fifth); round 15 and the rack test next. Session 9: round 15 read.
 **Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Not yet in it: v1.0.35-36 (the 24 kHz tank, 12-point swell, fewer early reflections) and the review's speed-ups; say when you'd like it installed (Ableton closed).
 
 ## To do
-- [ ] **v1.0.40 at the rack, and round 15** (SIZE's crossfade in two groups; ERA's overlap a fifth). Two flashes: **1.** On USB power, `/Users/jesse/Documents/Sites/immensio-versio/.claude/worktrees/massive-air/firmware/build/immensio_versio_profile.bin` (124,832 B), screen's log on, one lap plus the headroom test (~7 min), then tell Claude: it measures the SIZE crossfade's peak with the stagger. **2.** On rack power, `/Users/jesse/Documents/Sites/immensio-versio/.claude/worktrees/massive-air/firmware/build/immensio_versio-latelight.bin`: the playing build with the red/amber late-block light. Move SIZE in MASSIVE the way that dropped out (do the drop-outs and red flashes go?), and turn ERA across its eras (do the transitions feel right at 20 %?). The normal playing build without the light is `immensio_versio.bin` (112,548 B).
+- [ ] **v1.0.40 at the rack** (round 15 is done: SIZE's crossfade fits now). On rack power, flash `/Users/jesse/Documents/Sites/immensio-versio/.claude/worktrees/massive-air/firmware/build/immensio_versio-latelight.bin`: the playing build with the red/amber late-block light. Move SIZE in MASSIVE the way that dropped out (do the drop-outs and red flashes go?), and turn ERA across its eras (do the transitions feel right at 20 %?). The normal playing build without the light is `immensio_versio.bin` (112,548 B).
 
 ### Decide
 - [ ] **Merge `claude/massive-air` into main?** It holds everything since v1.0.33 (SIZE/TIME crossfade, the CPU work, v1.0.34-36, the profile builds, and now the overnight review's speed-ups and report), all tests passing. Your OK first.
@@ -26,7 +26,7 @@
 
 ## Waiting on Claude
 
-- **CPU, after round 15** (your flash; `firmware/README.md`): read the SIZE crossfade's peak with the stagger (round 12: 106 %, round 14: 105 %). Still over in real time: **a frozen MASSIVE with the cassette** (round 13-14: 104.5 %): the levers are a lighter twin while frozen (a page), the block size (+1 ms latency, your call), and measuring the ERA overlap positions (never timed on the module).
+- **CPU: a frozen MASSIVE with the cassette** (round 15: 104.8 % in real time, late on nearly every block; everything else fits). The levers: a lighter twin while frozen (a page), the block size (+1 ms latency, your call), and measuring the ERA overlap positions (never timed on the module). Close to the line too: the moment of freezing (100.6 % for one block), MASSIVE SHIMMER (99 %).
 - **ERA's tape → radio hand-over**, if it still sounds abrupt at 20 %: the tape's sparkle fades with the cassette's drive, early in the overlap; the drive's own curve is the next thing to try (a page).
 - **The playing build's flash**: 112,548 B, 92 B under the 110 KB budget. Anything new needs bytes found first.
 - **The plugin** has v1.0.34; v1.0.35-40 aren't in it (install when you'd like, Ableton closed).
@@ -40,6 +40,7 @@
 
 ## Done
 - [x] **ERA's overlap** (26 Oct 2026, after `era_overlap`: "Let's go for B but split the difference by having it crossfade over 20%"): built as v1.0.40; each era fades in over the first fifth of its stretch (was a third).
+- 26 Oct 2026: **M3 CPU check, round 15: SIZE's crossfade fits** (your run). Moving SIZE in MASSIVE now peaks at 88 % (was 105 %), the big SIZE jump at 97 % (was 112 %); nothing else moved. Still over: a frozen MASSIVE with the cassette (~105 %, so it would crackle while frozen). Log: `docs/research/m3-round15.log` on the branch.
 - [x] **ERA overlaps** (26 Oct 2026, `era_switch`: no pick per card; "Prefer the smoothly crossfaded versions, which would help smooth out when modulating with CV. Let's keep if we can, although I feel we could narrow the crossover areas, or only trigger a crossfade when the knob/CV value passes the intersection between ERAs"): the overlaps stay as built for now.
 - [x] **SIZE's crossfade staggered** (26 Oct 2026, `size_stagger`: B on five of six cards; "A sounds slightly smoother [on MASSIVE keys], but it's a subtle difference"): built as v1.0.39 in the reverb itself, so the plugin gets it too (not installed). Three clicks found and fixed in the prototype before it reached you.
 - [x] **M3 round 14** (26 Oct 2026): building the SIZE crossfade's code for speed took only 1-2.5 points off its peak (106 → 105 %) for 2.9 KB of flash, so it's reverted: the crossfade's cost is memory (every line read twice), not code. The tape at 2× shows: MASSIVE with the cassette 77.5 → 70.6 %, frozen with the cassette 111 → 104.5 %.
