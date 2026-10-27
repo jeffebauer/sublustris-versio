@@ -24,9 +24,14 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0018](0018-brand-ombra-audio.md) | Brand: Ombra Audio (maker code Ombr) for both plugins | owner, 23 Oct 2026 |
 | [0019](0019-vintage-reads-and-tape-out.md) | ERA gains vintage reads and tape out | owner, 24 Oct 2026 |
 | [0020](0020-decay-keeps-the-loudness.md) | DECAY keeps the loudness | owner, 24 Oct 2026 |
-| [0021](0021-era-sweet-to-gritty.md) | ERA runs from sweet to gritty: five eras, each on its own, over the Neve | owner, 25 Oct 2026 |
+| [0021](0021-era-sweet-to-gritty.md) | ERA runs from sweet to gritty: five eras, each on its own, over the Neve (superseded by 0027) | owner, 25 Oct 2026 |
 | [0022](0022-massive-highs-ring-with-the-body.md) | MASSIVE's highs ring as long as its body | owner, 25 Oct 2026 |
 | [0023](0023-massive-shortest-tail-six-trips.md) | MASSIVE's shortest tail lasts six trips round its lines | owner, 25 Oct 2026 |
 | [0024](0024-shimmer-replaces-reverse.md) | SHIMMER replaces REVERSE on ATTACK's third position | owner, 25 Oct 2026 |
-| [0025](0025-size-and-time-crossfade.md) | HALL's and MASSIVE's SIZE, and TIME's predelay, move by crossfade | owner, 25 Oct 2026 |
-| [0026](0026-fitting-the-cpu.md) | Fitting the CPU: the HALL / MASSIVE tank at 24 kHz, a 12-point swell | owner, 25 Oct 2026 |
+| [0025](0025-size-and-time-crossfade.md) | HALL's and MASSIVE's SIZE, and TIME's predelay, move by crossfade (amended: four groups) | owner, 25 Oct 2026 |
+| [0026](0026-fitting-the-cpu.md) | Fitting the CPU: the HALL / MASSIVE tank at 24 kHz, a 12-point swell (amended: the candidate lap) | owner, 25 Oct 2026 |
+| [0027](0027-wear-replaces-era.md) | WEAR replaces ERA: one wear amount over the Neve | owner, 26-27 Oct 2026 |
+| [0028](0028-small-room-replaces-the-twin.md) | HALL's and MASSIVE's freeze twin is a small room | owner, 26-27 Oct 2026 |
+| [0029](0029-panel-names.md) | The panel names: BLEND, WEAR, MOTION, DEPTH, ONSET, FREEZE / PAINT | owner, 27 Oct 2026 |
+| [0030](0030-motion-tape-transport-and-stronger-wander.md) | MOTION: a tape transport on the left, a stronger Wander on the right | owner, 27 Oct 2026 |
+| [0031](0031-tone-resonant-tilt.md) | TONE gets a resonant tilt on the wet | owner, 27 Oct 2026 |

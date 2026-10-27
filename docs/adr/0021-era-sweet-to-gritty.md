@@ -1,6 +1,6 @@
 # 0021 — ERA runs from sweet to gritty: five eras, each on its own, over the Neve
 
-**Status:** Accepted, 25 Oct 2026 (owner's picks on `renders/era_discrete`, `era_v2`, `era_v2b`, `era_v2c`). SPEC v1.0.30. Supersedes ADR 0003 (stacking, travel weighting) and the μ-law parts of ADR 0004 and ADR 0019.
+**Status:** Superseded by ADR 0027 (26-27 Oct 2026: one wear amount, shown as WEAR). Accepted, 25 Oct 2026 (owner's picks on `renders/era_discrete`, `era_v2`, `era_v2b`, `era_v2c`). SPEC v1.0.30. Supersedes ADR 0003 (stacking, travel weighting) and the μ-law parts of ADR 0004 and ADR 0019.
 
 **Context:**
 - **Stacking hid the eras.** ERA stacked Clean → Neve → Cassette → μ-law → Midiverb (ADR 0003): each era kept the ones before it. Heard on their own (`renders/era_discrete`), the owner chose them that way "hands down" ("MidiVerb sounds beautiful").

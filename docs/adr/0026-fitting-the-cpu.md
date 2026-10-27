@@ -52,3 +52,13 @@ Amends ADR 0007 (the swell) and ADR 0012 (the still-lows tanks).
 ## Amendment, 26 Oct 2026 (v1.0.37): measured on the module
 
 M3 rounds 11-12 (`docs/research/m3-round11.log`, `m3-round12.log`, `m3-round12-itcm.log`) measured the overnight review's sound-neutral speed-ups: everyday MASSIVE 61-80 % average (round 9b: 115-129 %), HALL 57-75 %, PLATE 44-60 %; the module plays without a late block up to ~99 % load. Adopted in release, all sound-neutral: the SDRAM at TRP / TRCD 3 / 3 (`SDRAMCHK` 0 / 0 / 0; reads 34 → 17 cycles), the Core's hot code in ITCM (2.5-3.5 points off every corner), and the twin stopping on its 50 ms level (a second tank no longer runs ~20 s after every unfreeze; the twin's output under −100 dB is dropped). Not adopted: flush-to-zero (subnormals cost nothing on this FPU), prefetching (slower). Flash for them came from `Engine::queueEdge`, `Engine::onGesture` and `Drift::control` built for size (−744 B); `-fno-math-errno` and `-fmove-loop-invariants` made the release larger at -O3 (+240 / +440 B) and are not used. Still over 100 % for single blocks: MASSIVE's SIZE crossfade (106-114 % with ITCM) and a frozen MASSIVE (96 % average, 100 % peak).
+
+## Amendment, 27 Oct 2026 (v1.0.42-v1.0.45): the candidate lap
+
+The owner ran the candidate profile (`CANDIDATE=1`, `docs/research/m3-candidate-lap1.log`): the old eras and the old twin against the candidates, each line timed in the audio callback with its late blocks counted. MASSIVE, SIZE and DECAY high:
+- **The small room fits** (ADR 0028). A frozen MASSIVE with the room peaks at 69-83 % with not one late block. With the old twin, every frozen setting overran: 92-122 %, late on most blocks at the old cassette (105 % held still, 122 % on a SIZE move).
+- **WEAR** (ADR 0027), with the old twin: C costs ~3-4 points more than A or B, and frozen it was still over (100-105 %).
+- **The target build** (the room, WEAR C, eight SIZE groups) reached **81.6 % at worst** (frozen, SIZE twisted at WEAR 0.7), with no late block anywhere: peaks of 72-79 % playing and 75-82 % frozen.
+- **SIZE groups:** four groups peak at 88.8 % on a playing SIZE move (ADR 0025).
+
+Not in the lap: the shipping mix of four groups, TONE's bell (ADR 0031) and MOTION's transport (ADR 0030). The estimate for it is ~86-88 % at worst [I], under the 95 % target, to be confirmed on the module. Every frozen line now has headroom, so SPEC §5.1's "frozen pad + twin" worst case no longer is one.
