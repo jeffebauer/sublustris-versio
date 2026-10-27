@@ -9,6 +9,7 @@
 - [ ] **One merge into main, when your remaining picks are in** (MOTION, the swell comb, the room's movement). `claude/massive-air` no longer needs merging on its own: every branch since (era-wear, tone-character and the rest) contains it. The plan: one combined branch (era-wear + TONE + your picks), renamed Sublustris Versio in the same pass, checked, then merged with your OK. The release script (`claude/friend-package-073b04`) can go in any time.
 
 ### Listen (after your notes)
+- [ ] **`motion_entry`: how the tape side comes in** (pick one): `/Users/jesse/Documents/Sites/immensio-versio/renders/motion_entry/index.html`. A as built: the tape transport only runs on MOTION's left side and "comes up to speed" over ~5 s as you turn into it (the tail up to ~11 cents flat meanwhile), and back out the same way; B always on: no glide and no dip crossing noon, but the whole reverb ~21 ms later everywhere (like a little extra pre-delay). Slow and quick turns, and a card at noon where only the 21 ms differs; held chord and dub mix, HALL and MASSIVE.
 
 ### Listen (first time)
 
