@@ -10,6 +10,7 @@
 - [ ] **One merge into main, when your remaining picks are in** (MOTION, the swell comb, the room's movement). `claude/massive-air` no longer needs merging on its own: every branch since (era-wear, tone-character and the rest) contains it. The plan: one combined branch (era-wear + TONE + your picks), renamed Sublustris Versio in the same pass, checked, then merged with your OK. The release script (`claude/friend-package-073b04`) can go in any time.
 
 ### Listen (after your notes)
+- [ ] **`wear_saturation`: backing off WEAR's saturation** (pick one): `/Users/jesse/Documents/Sites/immensio-versio/renders/wear_saturation/index.html`. The vibes' "resonances" are new tones WEAR's saturation adds at 1.5-6 kHz (harmonics of the vibes' few pure partials, where a dark reverb is otherwise empty), not their own partials growing. A F as picked; B the tape drive and the radio's over-modulation ×0.75; C both ×0.5; D C plus the compander's harmonics halved. Chord and pad keep most of their wear. All fit in flash. A frozen MASSIVE pad at full WEAR sits 2-4 dB louder than before (closer to WEAR 0's level).
 
 ### Listen (first time)
 
