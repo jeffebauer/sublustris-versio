@@ -311,7 +311,7 @@ Plate mode ~1,500 × 2 ≈ 30 %. Mitigations, if short: stagger coefficient rede
 | Swell stage (4 × 2 ch × 1 s) | ~1.5 MB | SDRAM | |
 | Predelay (stereo, 0.75 s: Size + DEPTH) | ~0.3 MB | SDRAM | |
 | SHIMMER's line (2 × 0.8 s, stereo, power of two) | ~0.5 MB | SDRAM | |
-| Plate engine (scale up to 1.59, stereo taps) | ~150 KB | SDRAM [VERIFY: the table said AXI SRAM; `Engine::largeFloats` counts two Plates in the large pool] | random-ish taps |
+| Plate engine (scale up to 1.59, stereo taps) | ~150 KB | SDRAM (the large pool: `plate_.prepare(large_, …)`; this table said AXI SRAM before v1.0.47) | random-ish taps |
 | PLATE's twin (a second Plate) | as the Plate | SDRAM | runs only while frozen (v1.0.7). HALL's and MASSIVE's second FDN (~3.5 MB) is gone since v1.0.43 |
 | The small room (HALL / MASSIVE twin, 8 lines and 4 allpasses at 24 kHz) | ~42 KB | AXI SRAM | one slice after the tanks' allpass lines (v1.0.43) |
 | The tanks' in-loop allpass lines (the tank's, the low tank's) | 256 + 128 KB | AXI SRAM | on chip and cached: ~11 cycles a line fill against SDRAM's ~200 (overnight review) |

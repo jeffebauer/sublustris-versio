@@ -34,7 +34,7 @@ SPEC v1.0.43 and v1.0.47. Amends ADR 0009 (what plays over a frozen pad) and the
 **Rejected:**
 - **Blur and width** (`twin_alternatives` B): the cheapest, but it has no tail of its own and loses the space's colour.
 - **The twin without its swell** (D, MASSIVE only): it saves little CPU and still runs a second big tank.
-- **Lighter twins** (`renders/frozen_twin`: B the swell at 24 kHz, C a plainer twin, D the twin at 12 kHz): set aside when the small room was picked. [VERIFY: no owner pick for `frozen_twin` is recorded in `docs/TASKS.md`.]
+- **Lighter twins** (`renders/frozen_twin`: B the swell at 24 kHz, C a plainer twin, D the twin at 12 kHz): set aside without a pick: listening to it the owner noted "even with the AS BUILT option, with wet at 100% i can hardly hear the secondary reverb", which led to the twin's level (v1.0.41) and then to the small room.
 - **The room unvoiced** (`small_room` A) and the other voicings on that page: E was picked on every card.
 - **Louder twins** (`renders/twin_louder` C, 1.5 dB under the pad): B, about 8 dB under, was picked (v1.0.41) and the room keeps that level.
 - **The room's level fixed at the page's gains** (`room_level` A): it moved against the pad across SIZE and DECAY.
