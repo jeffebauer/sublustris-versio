@@ -35,3 +35,4 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0029](0029-panel-names.md) | The panel names: BLEND, WEAR, MOTION, DEPTH, ONSET, FREEZE / PAINT | owner, 27 Oct 2026 |
 | [0030](0030-motion-tape-transport-and-stronger-wander.md) | MOTION: a tape transport on the left, a stronger Wander on the right | owner, 27 Oct 2026 |
 | [0031](0031-tone-resonant-tilt.md) | TONE gets a resonant tilt on the wet | owner, 27 Oct 2026 |
+| [0032](0032-the-name-sublustris-versio.md) | The name: Sublustris Versio (was Immensio Versio) | owner, 27 Oct 2026 |

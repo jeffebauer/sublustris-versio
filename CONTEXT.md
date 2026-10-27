@@ -1,4 +1,4 @@
-# IMMENSIO VERSIO — Context / Glossary
+# SUBLUSTRIS VERSIO — Context / Glossary
 
 Shared vocabulary for this project. Use these terms exactly in code, comments and conversation. Spec: `SPEC.md`. Decisions: `docs/adr/` (index: `docs/adr/README.md`).
 

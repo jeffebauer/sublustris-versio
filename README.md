@@ -1,4 +1,6 @@
-# Immensio Versio
+# Sublustris Versio
+
+*Formerly Immensio Versio (renamed 27 Oct 2026, [ADR 0032](docs/adr/0032-the-name-sublustris-versio.md)).*
 
 A huge, warm, lush reverb for the [Noise Engineering Versio](https://noiseengineering.us/collections/versio) platform, for dub techno, ambient and dark ambient. Supermassive-scale tails with tape-era character, a freeze you can play over, and a swell or reverse on the switch. Sibling to [Resilio Versio](https://github.com/jeffebauer/resilio-versio).
 
