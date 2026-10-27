@@ -798,6 +798,13 @@ uint32_t     gSpkMaxSec[kNumSections];
 int          gSpkMaxStart = 0, gSpkMaxLines = 0, gSpkMaxTanks = 0;
 uint32_t     gSpkNear = 0, gSpkFadeBlocks = 0, gSpkFadeMax = 0, gMaxBlock = 0;
 uint64_t     gSpkFadeSum = 0;
+#if IV_PROFILE_SIZESPIKE >= 3
+// The flip lines (RunFlip): SPACE to gFlipTo at block gFlipAt (-1: none); every block's cycles in gBlockCyc.
+volatile int      gFlipTo = -1;
+volatile uint32_t gFlipAt = 0;
+constexpr uint32_t kFlipRec = 4400;
+IV_DTCM uint32_t  gBlockCyc[kFlipRec]; // DTCM: AXI SRAM is full in this build (written before read)
+#endif
 void SpikeMark(int section)
 {
     const uint32_t now = DWT->CYCCNT;
@@ -873,6 +880,9 @@ void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer ou
         if (++gClickPhase >= gClickPeriodSamples) gClickPhase = 0;
         buf[i] = x;
     }
+#if IV_PROFILE_SIZESPIKE >= 3
+    if (gFlipTo >= 0 && gBlocks == gFlipAt) engine.setParam(ParamId::Space, iv::switchToNormalised(gFlipTo));
+#endif
 #if IV_PROFILE_SIZESPIKE
     for (int k = 0; k < kNumSections; ++k) gSpkSec[k] = 0;
     iv::prof::xfStarts = iv::prof::xfLineBlocks = iv::prof::xfTanks = 0;
@@ -901,6 +911,9 @@ void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer ou
     if (d > gMaxCycles) gMaxCycles = d;
     if (d > gPeriodCycles) ++gLate;
     gSumCycles = gSumCycles + d;
+#if IV_PROFILE_SIZESPIKE >= 3
+    if (gBlocks < kFlipRec) gBlockCyc[gBlocks] = d;
+#endif
     // The callback ends the step itself: over 100 % it runs back to back and the main loop never gets
     // the CPU to stop it (round 9's first run stalled there).
     if (++gBlocks >= gStepBlocks) gRealtime = false;
@@ -1552,6 +1565,8 @@ struct Spike {
     int         input;  // 0 silence, 1 music
     bool        frozen;
     float       wear, motion, tone;
+    int         attack = 1;     // ONSET: 1 BLOOM (every lap before SIZESPIKE=3), 2 SHIMMER
+    float       decay  = 0.9f;
 };
 int         gSpkLines = 0, gSpkLaps = 0;
 unsigned    gSpkLate = 0, gSpkNearAll = 0;
@@ -1569,14 +1584,14 @@ void RunSpikeUntimed(int n, int input)
 
 void RunSpike(const Spike& c, float fs)
 {
-#if IV_PROFILE_SIZESPIKE >= 2
+#if IV_PROFILE_SIZESPIKE == 2
     iv::prof::xfFast = c.group[0] == 'F';
 #endif
     static const char* const kHands[6] = {"sweep  ", "twists ", "creep  ", "twisthi", "nudge  ", "still  "};
     static const char* const kSp[3] = {"PLATE  ", "HALL   ", "MASSIVE"};
     engine.setParam(ParamId::Space, iv::switchToNormalised(c.space));
-    engine.setParam(ParamId::Attack, iv::switchToNormalised(1)); // BLOOM
-    engine.setParam(ParamId::Decay, 0.9f);
+    engine.setParam(ParamId::Attack, iv::switchToNormalised(c.attack)); // BLOOM, or SHIMMER (SIZESPIKE=3)
+    engine.setParam(ParamId::Decay, c.decay);
     engine.setParam(ParamId::Mix, 0.5f);
     engine.setParam(ParamId::Time, 0.5f);
     engine.setParam(ParamId::Era, c.wear);
@@ -1628,6 +1643,10 @@ void RunSpike(const Spike& c, float fs)
     AppendFixed1(p, end, int(c.motion * 10.0f + 0.5f), 1);
     AppendStr(p, end, " T");
     AppendFixed1(p, end, int(c.tone * 10.0f + 0.5f), 1);
+#if IV_PROFILE_SIZESPIKE >= 3
+    AppendStr(p, end, " D");
+    AppendInt(p, end, int(c.decay * 100.0f + 0.5f));
+#endif
     if (mx > gSpkWorst) {
         gSpkWorst = mx;
         const size_t len = std::min(size_t(p - name), sizeof(gSpkWorstName) - 1);
@@ -1670,6 +1689,104 @@ void RunSpike(const Spike& c, float fs)
     TransmitLine(cb, size_t(p - cb));
 }
 
+#if IV_PROFILE_SIZESPIKE >= 3
+// The SPACE-flip lines (28 Oct 2026; the owner on v1.0.52's late light: "When switching between Plate -> Hall, and
+// between Hall/Massive the right-most LED flashes red"). The knobs as RunSpike's (SIZE still at 0.7), the line's
+// input, Engine::reset() in `from`, 6 s untimed; then timed: 0.2 s, SPACE to `to` (as the switch sends it), 4 s on.
+// Each block's time is kept (gBlockCyc), so the line gives the worst block before the flip and the worst in each
+// window after it: the fade out (0-50 ms), the tanks' restart at its silent point and the fade in (to ~150 ms),
+// then the new space's lines filling for the first time (lineSlow, the Plate's filling reads) up to 4 s.
+void RunFlip(int from, int to, int attack, int input, float fs)
+{
+    static const char* const kSp[3] = {"PLATE", "HALL", "MASSIVE"};
+    engine.setParam(ParamId::Space, iv::switchToNormalised(from));
+    engine.setParam(ParamId::Attack, iv::switchToNormalised(attack));
+    engine.setParam(ParamId::Decay, 0.9f);
+    engine.setParam(ParamId::Mix, 0.5f);
+    engine.setParam(ParamId::Time, 0.5f);
+    engine.setParam(ParamId::Era, 0.0f);
+    engine.setParam(ParamId::Drift, 0.5f);
+    engine.setParam(ParamId::Tone, 0.5f);
+    engine.setParam(ParamId::Size, 0.7f);
+    engine.reset();
+    const int blocks1s = int(fs) / kBlockSize;
+    RunSpikeUntimed(6 * blocks1s, input);
+    gKnobSend = false;
+    gLate = gBlocks = gMaxCycles = gMaxBlock = 0;
+    gSumCycles = 0;
+    gSpkNear = gSpkFadeBlocks = gSpkFadeMax = 0;
+    gSpkFadeSum = 0;
+    gSpikeInput = input;
+    gFlipAt = uint32_t(blocks1s / 5);
+    uint32_t stop = gFlipAt + uint32_t(4 * blocks1s);
+    if (stop > kFlipRec) stop = kFlipRec;
+    gStepBlocks = stop;
+    gFlipTo = to;
+    gRealtime = true;
+    while (gRealtime) {
+    }
+    gFlipTo = -1;
+    gSpikeInput = -1;
+    System::Delay(5);
+    const float period = float(gPeriodCycles);
+    const float msPerBlock = 1000.0f * float(kBlockSize) / fs;
+    ++gSpkLines;
+    gSpkLate += unsigned(gLate);
+    gSpkNearAll += gSpkNear;
+    static char cb[520];
+    char*       p   = cb;
+    const char* end = cb + sizeof(cb);
+    char* const name = p;
+    AppendStr(p, end, "FLIP ");
+    AppendStr(p, end, attack == 2 ? "SHIMMER " : "BLOOM   ");
+    AppendStr(p, end, kSp[from]);
+    AppendStr(p, end, "->");
+    AppendStr(p, end, kSp[to]);
+    AppendStr(p, end, input ? " music" : " silence");
+    const float mx = float(gMaxCycles) / period;
+    if (mx > gSpkWorst) {
+        gSpkWorst = mx;
+        const size_t len = std::min(size_t(p - name), sizeof(gSpkWorstName) - 1);
+        std::memcpy(gSpkWorstName, name, len);
+        gSpkWorstName[len] = '\0';
+    }
+    uint32_t pre = 0;
+    for (uint32_t b = 0; b < gFlipAt && b < stop; ++b) pre = gBlockCyc[b] > pre ? gBlockCyc[b] : pre;
+    AppendStr(p, end, " | before ");
+    AppendFixed1(p, end, FracToPercentTenths(float(pre) / period), 5);
+    AppendStr(p, end, "% | worst ");
+    AppendFixed1(p, end, FracToPercentTenths(mx), 5);
+    AppendStr(p, end, "% at ");
+    AppendInt(p, end, int((float(gMaxBlock) - float(gFlipAt)) * msPerBlock));
+    AppendStr(p, end, " ms | late ");
+    AppendUInt(p, end, unsigned(gLate));
+    AppendStr(p, end, " near ");
+    AppendUInt(p, end, gSpkNear);
+    AppendStr(p, end, "\r\n  AFTER (ms: worst %)");
+    static const int   kEdgeMs[9] = {0, 50, 100, 150, 250, 500, 1000, 2000, 4000};
+    static const char* const kWin[8] = {" 0-50", " 50-100", " 100-150", " 150-250", " 250-500", " 500-1k", " 1k-2k", " 2k-4k"};
+    for (int w = 0; w < 8; ++w) {
+        const uint32_t b0 = gFlipAt + uint32_t(float(kEdgeMs[w]) / msPerBlock);
+        const uint32_t b1 = gFlipAt + uint32_t(float(kEdgeMs[w + 1]) / msPerBlock);
+        uint32_t       m  = 0;
+        for (uint32_t b = b0; b < b1 && b < stop; ++b) m = gBlockCyc[b] > m ? gBlockCyc[b] : m;
+        AppendStr(p, end, kWin[w]);
+        AppendStr(p, end, " ");
+        AppendFixed1(p, end, FracToPercentTenths(float(m) / period), 1);
+    }
+    AppendStr(p, end, "\r\n  SPLIT");
+    static const char* const kSec[kNumSections] = {"ctl", "in", "shim", "swell", "twin", "tank",
+                                                   "tkctl", "tkloop", "tkout", "tkmix", "wear", "out"};
+    for (int k = 0; k < kNumSections; ++k) {
+        AppendStr(p, end, " ");
+        AppendStr(p, end, kSec[k]);
+        AppendFixed1(p, end, FracToPercentTenths(float(gSpkMaxSec[k]) / period), 5);
+    }
+    AppendStr(p, end, "\r\n");
+    TransmitLine(cb, size_t(p - cb));
+}
+#endif
+
 // One lap, ~11 min: SPACES (MASSIVE and HALL: silence and music, playing and frozen, sweep / twists / creep / nudges;
 // PLATE: sweep and twists), KNOBS (MASSIVE, music, creep: WEAR 0 / 0.5 / 1 x MOTION noon / full left, playing and
 // frozen; TONE at its ends; the twists near the top), STILL (each SPACE with SIZE still: the reference).
@@ -1680,7 +1797,27 @@ void RunSpikeLap(float fs)
     gSpkLate = gSpkNearAll = 0;
     gSpkWorst = 0.0f;
     gSpkWorstName[0] = '\0';
-#if IV_PROFILE_SIZESPIKE >= 2
+#if IV_PROFILE_SIZESPIKE >= 3
+    // The CPU-hunt lap (~7 min; 28 Oct 2026, v1.0.52 at the rack: overloads moving SIZE in HALL / MASSIVE at high
+    // DECAY with SHIMMER, and the late light on SPACE flips). Every earlier lap ran ONSET at BLOOM. The shipping
+    // crossfade paths (prof::xfFast stays on).
+    static const int kHandsAll[4] = {0, 1, 2, 4};
+    for (int space = 2; space >= 1; --space) // SHIMMER against BLOOM: music, DECAY 0.9, each hand
+        for (int h : kHandsAll)
+            for (int att = 1; att <= 2; ++att)
+                RunSpike({att == 2 ? "SHIMMER" : "BLOOM", space, h, 1, false, 0.0f, 0.5f, 0.5f, att, 0.9f}, fs);
+    for (int space = 2; space >= 1; --space) {
+        for (int h = 0; h < 2; ++h) // the tail alone (no input): sweep and twists
+            RunSpike({"SHIMMER", space, h, 0, false, 0.0f, 0.5f, 0.5f, 2, 0.9f}, fs);
+        RunSpike({"SHIMMER", space, 0, 1, false, 0.5f, 0.0f, 0.5f, 2, 0.9f}, fs); // WEAR half, MOTION left (the A/B lap's worst)
+        RunSpike({"SHIMMER", space, 2, 1, false, 0.5f, 0.0f, 0.5f, 2, 0.9f}, fs);
+        RunSpike({"SHIMMER", space, 0, 1, false, 0.0f, 0.5f, 0.5f, 2, 0.75f}, fs); // DECAY long but finite
+        RunSpike({"SHIMMER", space, 5, 1, false, 0.0f, 0.5f, 0.5f, 2, 0.9f}, fs);  // still: the reference
+    }
+    static const int kFlips[6][2] = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {0, 2}, {2, 0}};
+    for (int att = 1; att <= 2; ++att)
+        for (const auto& f : kFlips) RunFlip(f[0], f[1], att, 1, fs);
+#elif IV_PROFILE_SIZESPIKE >= 2
     // The A / B lap (~8 min): each SIZE move that crossfades (MASSIVE and HALL, playing, silence and music, the four
     // hands; MASSIVE's twists near the top, and WEAR / MOTION up) as v1.0.48 ran it, then straight after on the faster
     // paths. PLATE (it glides) and the frozen lines (the pad holds its SIZE: no crossfade) are left out.
@@ -1809,7 +1946,9 @@ int main()
 #if IV_PROFILE_SIZESPIKE
     System::Delay(3000); // time to open the serial log
     while (true) {
-#if IV_PROFILE_SIZESPIKE >= 2
+#if IV_PROFILE_SIZESPIKE >= 3
+        static const char kHello[] = "CPUHUNT START (SIZE moves SHIMMER vs BLOOM, SPACE flips; 40 lines, ~7 min a lap)\r\n";
+#elif IV_PROFILE_SIZESPIKE >= 2
         static const char kHello[] = "SIZESPIKE A/B START (AS-SHIP then FASTER, each SIZE move; 38 lines, ~8 min a lap)\r\n";
 #else
         static const char kHello[] = "SIZESPIKE START (SPACES, KNOBS, STILL; 59 lines, ~11 min a lap)\r\n";
