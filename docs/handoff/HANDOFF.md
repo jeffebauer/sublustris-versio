@@ -1,6 +1,6 @@
 # Handoff
 
-**Written:** 26 Oct 2026, end of session 8 (M3 hardware rounds 11-14, the crackle hunt, v1.0.37-40). Start the next session with `/immensio-start`, which now has a **"Working as the orchestrator"** section: this session ran out of context doing everything in one thread; hand prototypes, pages, debug and flash hunts and hardware-log reads to nested sessions or subagents.
+**Written:** 26 Oct 2026, end of session 8 (M3 hardware rounds 11-14, the crackle hunt, v1.0.37-40). Start the next session with `/sublustris-start`, which now has a **"Working as the orchestrator"** section: this session ran out of context doing everything in one thread; hand prototypes, pages, debug and flash hunts and hardware-log reads to nested sessions or subagents.
 
 **Nothing running:** no agents, no nested sessions. `main` holds docs and skills only; **all the code is on branch `claude/massive-air`** (worktree `.claude/worktrees/massive-air`, HEAD `48d46a6`), not merged into main (the owner's Decide item).
 
@@ -74,7 +74,7 @@
 
 ## Where to look
 
-- `.claude/skills/immensio-start/SKILL.md` ("Working as the orchestrator") and `docs/TASKS.md`
+- `.claude/skills/sublustris-start/SKILL.md` ("Working as the orchestrator") and `docs/TASKS.md`
 - `firmware/README.md` (rounds 11-14, the crackle hunt, v1.0.37-40, the build switches)
 - `docs/research/m3-round14.log`, `m3-round13.log` (the baselines for round 15)
 - `core/dsp/Fdn.cpp` (`control`'s crossfade start, `runBlock`, `lineSlow`), `firmware/main.cpp` (release `AudioCallback`'s knob reading)

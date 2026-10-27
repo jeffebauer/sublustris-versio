@@ -1,9 +1,9 @@
 ---
-name: immensio-wrap
-description: Close a Immensio Versio working session so the next one starts cold without losing anything: account for uncommitted and in-flight work (agents, worktrees, branches), run the gates, sync the owner's task list and docs, and write the handoff. Use when the owner says they're wrapping up, clearing context, running low on context, or asks for a handoff.
+name: sublustris-wrap
+description: Close a Sublustris Versio working session so the next one starts cold without losing anything: account for uncommitted and in-flight work (agents, worktrees, branches), run the gates, sync the owner's task list and docs, and write the handoff. Use when the owner says they're wrapping up, clearing context, running low on context, or asks for a handoff.
 ---
 
-# /immensio-wrap: end a session on purpose
+# /sublustris-wrap: end a session on purpose
 
 The next session knows nothing this one knew. Write down **what is true now, what is half-done, and what will bite**, for someone who wasn't here. Not a summary of the conversation.
 

@@ -1,9 +1,9 @@
 ---
-name: immensio-start
-description: Start a Immensio Versio working session from a cold context: read the handoff and rules, check git, worktrees, build and installed-plugin state, and propose the next step. Use at the beginning of a session, after clearing context, or when the owner says "start", "pick up where we left off" or "what's next".
+name: sublustris-start
+description: Start a Sublustris Versio working session from a cold context: read the handoff and rules, check git, worktrees, build and installed-plugin state, and propose the next step. Use at the beginning of a session, after clearing context, or when the owner says "start", "pick up where we left off" or "what's next".
 ---
 
-# /immensio-start: pick up cold
+# /sublustris-start: pick up cold
 
 The previous session left a handoff. Read it before touching anything; don't re-derive decisions it records.
 
