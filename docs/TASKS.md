@@ -10,6 +10,7 @@
 - [ ] **One merge into main, when your remaining picks are in** (MOTION, the swell comb, the room's movement). `claude/massive-air` no longer needs merging on its own: every branch since (era-wear, tone-character and the rest) contains it. The plan: one combined branch (era-wear + TONE + your picks), renamed Sublustris Versio in the same pass, checked, then merged with your OK. The release script (`claude/friend-package-073b04`) can go in any time.
 
 ### Listen (after your notes)
+- [ ] **`wear_fizz`: softening WEAR's fizz** (pick one): `/Users/jesse/Documents/Sites/immensio-versio/renders/wear_fizz/index.html`. All start the grit at 0.65 and fix WEAR's level drop at full (now within ±1 dB). A your pick; B fizz 4 dB down (fits in flash); C a gentle filter before the hold (measured: sounds almost the same as A, because the fizz is mostly mirror images of the reverb's body, not its top folding); D C plus a wobbling clock (the fizz a little more noise-like). C and D don't fit in flash on top of the SIZE fix without ~40-60 B found. Not on the page: a filter *after* the hold (a real BBD's output filter) smooths it about twice as much as B, for about C's flash; say if you'd like to hear it.
 
 ### Listen (first time)
 
