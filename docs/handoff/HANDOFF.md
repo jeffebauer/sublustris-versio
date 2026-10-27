@@ -1,81 +1,100 @@
 # Handoff
 
-**Written:** 26 Oct 2026, end of session 8 (M3 hardware rounds 11-14, the crackle hunt, v1.0.37-40). Start the next session with `/sublustris-start`, which now has a **"Working as the orchestrator"** section: this session ran out of context doing everything in one thread; hand prototypes, pages, debug and flash hunts and hardware-log reads to nested sessions or subagents.
+**Written:** 28 Oct 2026, end of session 9. That session did the following:
+- built v1.0.41-49, the owner's long run of picks: twin, WEAR, small room, TONE, SIZE crossfade groups, MOTION, room wander, the rename to **Sublustris Versio**, and WEAR's tuning plus the faster SIZE crossfade;
+- fixed the ONSET/SPACE burst (v1.0.50);
+- measured the level at endless DECAY;
+- got the owner's level pick (D).
 
-**Nothing running:** no agents, no nested sessions. `main` holds docs and skills only; **all the code is on branch `claude/massive-air`** (worktree `.claude/worktrees/massive-air`, HEAD `48d46a6`), not merged into main (the owner's Decide item).
+Start with `/sublustris-start`.
+
+**Nothing running:** no agents and no nested sessions. A LAN page server (port 8765) was running as a background task of session 9; assume it is gone. To serve pages, use `preview_start` `review-pages-lan` (port 8766, `.claude/launch.json`) and give the owner `http://<ipconfig getifaddr en0>:8766/<page>/`. Memory "owner reviews on phone" has the details.
 
 ## State
 
 | Milestone | State |
 |---|---|
-| Spec | v1.0 frozen plus build amendments to **v1.0.40** (v1.0.34-40 on the branch only; main's SPEC stops at v1.0.33) |
+| Spec | v1.0 frozen plus amendments to **v1.0.50**, on `claude/combined` only. Main's SPEC stops at v1.0.33 |
 | M0 | Passed (25 Oct) |
-| M1/M4/M5/M6/M7/M8 | Built and listened |
-| M2 | Plugin installed `b39d451` (v1.0.34). v1.0.35-40 not installed |
-| M3 | **Nearly there.** Everyday sounds fit (playing MASSIVE 61-71 %, HALL 57-73 %, PLATE 44-60 %; no drop-outs up to ~99 % load). Open: **the SIZE crossfade's peak** (106 % before the stagger; round 15 measures v1.0.39's stagger) and **a frozen MASSIVE with the cassette** (104.5 % in real time) |
+| M1/M4-M8 | Built and listened |
+| M2 | Plugin installed `b39d451` (v1.0.34, still named Immensio Versio). v1.0.35-50 not installed |
+| M3 | **Done on paper, confirmed at the rack for v1.0.49** (owner, 27 Oct: "really sounding excellent"). The SIZE A/B lap put every SIZE move at ≤ 89.6 %, with no near-late blocks. v1.0.50 has not been on the module yet |
 | M9 | Not started |
 
-**This session (all on `claude/massive-air`):**
-- **Hardware rounds:** 11 (`docs/research/m3-round11.log`), 12 (+ITCM, `m3-round12.log`, `m3-round12-itcm.log`), 13 (real-time knob sends, `m3-round13.log`), the playing build's own report (`m3-release-diag.log`), 14 (`m3-round14.log`). `firmware/README.md` has each round's reading.
-- **v1.0.37:** release at SDRAM TRP/TRCD 3/3 (`SDRAMCHK` 0/0/0), the Core's hot code in ITCM (−2.5-3.5 points), SIZE's 0.1 % hysteresis and the twin stopping on its 50 ms level as Core defaults, flash freed by `IV_SIZE_OPT` on `queueEdge` / `onGesture` / `Drift::control`.
-- **v1.0.38:** ERA's tape at 2× (owner's pick, `tape_os`).
-- **The crackle hunt:** the owner's MASSIVE drop-outs were **audio leaking into the knob readings** (the ADC), moving SIZE by itself and starting SIZE crossfades (~110 % CPU). Fixed in the release's knob reading: a 10 ms one-pole + a deadband of 0.001 (0.003 for SIZE and TIME). Ruled out on the way: the gate, the SDRAM timing (libDaisy timing still crackled), input level, the LEDs, fast notes (desktop and the module's `RELEASE_DIAG` build both flat).
-- **v1.0.39:** SIZE's crossfade in two staggered groups of lines (owner's pick B on `size_stagger`; ADR 0025 amendment). Three clicks in the prototype found and fixed before the page (waiting lines need their own in-loop amount, loss-filter blend, trip correction; HALL fades together where its diffusion joins or leaves).
-- **v1.0.40:** ERA's overlap a fifth of each stretch (owner: "B but split the difference ... 20%"; ADR 0021 amendment), after `era_switch` (owner kept the overlaps for CV) and `era_overlap`.
-- **Firmware tooling:** `RELEASE_DIAG=1` (the playing build on USB power, knobs held at noon, own input, a serial load report), `RELEASE_LATE_LIGHT=1` (rightmost LED red/amber after a late/near block), `RELEASE_SDRAM_TIGHT=0` (libDaisy timing), `PROFILE_ITCM=0`; m0test has a knob-jitter readout on serial and an LED jitter mode for rack power (SPACE left, ATTACK right). Profile: frozen corner last, `max at block N`, `REALTIME` lines.
-- **Desktop tooling:** `IV_BLOCK_PROFILE=<csv>` per-block section timing in a `-DIV_PROFILE_HOOKS` renderer (relative only: see Will bite); prototype hooks `IV_ERA_SWITCH`, `IV_ERA_FADE_SHARE`, `IV_SIZE_STAGGER=1` (the old fade); page scripts `tools/pages/era_switch.py`, `era_overlap.py`, `size_stagger.py`.
+**All the code is on `claude/combined`** (worktree `.claude/worktrees/combined`, HEAD `8f5124e`). `main` holds docs and skills only. The merge into main waits for the owner's OK (TASKS "Decide"), after the next rack build.
 
-**Gates** (branch HEAD `48d46a6`, `build-scratch` in the worktree): ctest **"100% tests passed out of 17"**. `tools/same_render.py` against v1.0.39: only the three ERA sweeps differ (the deliberate v1.0.40 change). Firmware (budget 112,640 B):
+**Gates on `claude/combined`.** Its tree equals `dcc7112`, re-run by me in `space-burst`'s build:
+- ctest: **"100% tests passed out of 21"**.
+- `same_render` against v1.0.49: only `flips` differs.
 
-| Variant | Bytes | % of 128 KB |
+Firmware:
+
+| Variant | Bytes | |
 |---|---|---|
-| release | 112,548 | 85 % (**92 B under budget**) |
-| release `-latelight` | 112,812 | test build, over budget on purpose |
-| profile | 124,832 | 95 % (profile-only; the warning is expected) |
+| release | **112,628** | **12 B under the 112,640 budget** |
 | m0test | 83,556 | 63 % |
-| release `-diag` | ~129,700 | USB-power diagnostic only |
+| profile | 125,024 | 95 %; the warning is expected |
 
-`main` HEAD: this handoff's commit. Plugin installed: `b39d451`.
+The v1.0.49 builds in `dist/` (`sublustris_versio-v1.0.49-0b58b25{,-latelight}.bin`) were heard at the rack. The v1.0.48 builds in `dist/` can go to the Trash.
 
 ## In flight
 
-- **Nothing running.** Branch `claude/massive-air` kept until the owner OKs the merge into main (TASKS "Decide"); its `docs/TASKS.md` / `HANDOFF.md` are stale copies: at the merge take main's.
-- **The owner's next flashes** (TASKS): round 15 profile on USB power, then `immensio_versio-latelight.bin` at the rack (SIZE moves in MASSIVE; ERA at 20 %). The `.bin`s sit in the worktree's `firmware/build/`.
-- `screenlog.0` (untracked, main checkout root): the owner's screen log; rounds read so far are filed in `docs/research/`. It keeps growing while logging is on.
-- Trash holds `immensio-cleanup-2026-10-26` (old temp, 15 GB) and `immensio-judged-pages-2026-10-26` (`era_switch`, `size_stagger`, `era_overlap`): the owner empties it.
+- **`claude/level-duck`** (worktree `.claude/worktrees/level-duck`, HEAD `5c4d683`, off `e3c4cb4`, **not rebased onto the burst fix**). It holds renderer-only prototype hooks; firmware is byte-identical and the hooks are bit-identical when off:
+  - `IV_DUCK_RATIO`, `IV_FLOOR_DB` (Engine `setDuckRatioPrototype` / `setFloorPrototype`, with `floorDbfs()` / `duckSlope()` accessors that are constexpr in the firmware);
+  - `IV_DUCK_RELEASE`, `IV_DUCK_ADAPTIVE`, `IV_DUCK_SUSTAIN_CUT`;
+  - page scripts `tools/pages/level_duck.py` and `level_glue.py`, which include `--safety` checks.
+- **The owner's pick on `level_duck`: D**, duck 2:1 and governor floor −21 dBFS. Their words: "Duck 2:1 floor21 sounds the best, but ... still an audible dip once the dry signal stops". Not built yet.
+- **`renders/level_glue`** (593 MB) is waiting for the owner's picks. Every option is D plus one of:
+  - **B:** duck release 0.15 s instead of 0.4. Fits in flash at 0 B.
+  - **C:** fast release only after held sounds. Roughly 80-120 B.
+  - **D′:** held sounds ducked less. Roughly 90-130 B.
+  - **E:** C + D′. Roughly 100-140 B.
+
+  Dip numbers are in its `_verify.txt`. Research sources: `docs/research/level-at-infinite.md` covers the cause; the agent's sources (Eventide, Valhalla, TC 2290, Giannoulis/Massberg/Reiss JAES 2012/2013) are not written up yet. Put them in that file when building the pick.
+- Remaining worktrees: `combined` and `level-duck` only. Old branches still exist (`git branch --no-merged main`); all are folded into `claude/combined` or shelved (`claude/swell-motion` holds swell motion D).
 
 ## Next steps
 
-1. **Read round 15** when the owner sends it (delegate the read to a subagent: compare with `m3-round14.log`): `MASSIVE neve SIZE .3<>.8`'s `max` and `MASSIVE S1 neve`'s max (the SIZE 0 → 1 jump) with the stagger; the frozen corner; `REALTIME` lines. Target: under ~95 %.
-2. **The rack test of v1.0.40** (owner): drop-outs after SIZE moves, ERA's feel at 20 %. If drop-outs remain, the SIZE crossfade needs more (old early taps faded faster, or a page for three groups).
-3. **A frozen MASSIVE with the cassette (104.5 %):** options, each a page or an owner call: a lighter twin while frozen (review item N, −10 to −35 % while frozen), the block size (`PROFILE_BLOCK=96`, −7.5 points model, +1 ms latency), the still lows at 6 kHz (`still_lows_rate` page still exists, −7-10 % in MASSIVE). Also time the ERA overlap positions on the module (cassette + radio at ERA ~0.82), never measured. A good nested-session task: prototype + page + gates.
-4. **ERA's tape → radio hand-over** if the owner still hears it as abrupt: the tape drive's curve within the overlap (its sparkle needs near-full drive).
-5. **Merge `claude/massive-air` into main** on the owner's OK; install the plugin (v1.0.40) when they want it (`tools/install_plugin.sh <commit>`, Ableton closed).
-6. Housekeeping from the review (report section 8, item 7), each small.
+1. **The owner's `level_glue` picks.** Then build into `claude/combined`, in one change:
+   - D: `kDuckRatio` 2 and `kFloorDbfs` −21 in `core/params/SpaceVoicing.h`;
+   - the glue pick.
+
+   If the pick isn't B, find the bytes first (a flash hunt subagent: `nm -S` diff; candidates in `firmware/README.md`). Then:
+   - SPEC v1.0.51 line plus an ADR 0014 amendment for the duck, and the governor floor's ADR;
+   - golden update with its reason;
+   - the safety checks via `tools/pages/level_glue.py --safety`.
+2. **A rack build** of v1.0.51 (release and `-latelight`, unique `dist/` names). The owner checks:
+   - ONSET switches in and out of BLOOM;
+   - MASSIVE ↔ HALL switches;
+   - the level at 50:50 with endless DECAY;
+   - the dip when they stop.
+3. **Merge `claude/combined` into main** with the owner's OK. Take main's TASKS / HANDOFF / CLAUDE.md / skills. Then install the plugin with `tools/install_plugin.sh <commit>`, with Ableton closed; validate only with `auval -v aumf ImVs Ombr`. Tell the owner to remove the old "Immensio Versio" bundles, and update the TASKS "Plugin installed" line.
+4. Later:
+   - TIME moves while in BLOOM still glide the swell's taps (gentler than the ONSET burst; unmeasured);
+   - the sub-20 Hz rumble at endless DECAY with TONE CW;
+   - the low tank's crossover reset on a SPACE flip (−9 dB more early highs MASSIVE→HALL, costs bytes);
+   - the PLATE flip not covered by the burst test.
 
 ## Waiting on the owner (`docs/TASKS.md`)
 
-- Flash round 15 (USB) and play v1.0.40 with the late light (rack).
-- Decide: merge the branch into main.
-- Listen: `swell_seed` (session 6), `still_lows_rate` (only if more CPU is needed).
-- Empty the Trash; reference recordings as before.
+- Listen: `level_glue`.
+- Decide: the merge into main, after the rack build.
+- Empty the Trash: `immensio-*-2026-10-27*` and `sublustris-judged-pages-2026-10-28`.
+- Optional Ribbons/Magneto recordings and reference recordings, as before.
 
 ## Will bite
 
-- **Flash: 92 B left.** Anything new in the release needs bytes found first. Cheap known sources: none left that are sound-neutral and measured; the constructors (`Engine()` / `Fdn()` member initialisers over already-zeroed storage, ~1-2 KB, unmeasured, risky), newlib `sinf`/`cosf` (~2.2 KB, not bit-identical). `-fno-math-errno` / `-fmove-loop-invariants` made the release *bigger* at -O3.
-- **Desktop timing is not the module** (memory): the desktop is compute-bound, the M7 memory-bound. Desktop per-block timing finds which block spikes, never how much a memory saving is worth.
-- **Knob readings on the module are noisy and the audio gets into them.** Any new knob-driven behaviour that restarts on change (crossfades, rest timers, memos) needs the deadband in mind. On USB power the knobs aren't powered at all (memory).
-- **The release's knob path differs from the Plugin's** (smoothing + deadband, firmware only): SIZE/TIME move in 0.3 % steps on the module.
-- **The stagger's per-line state** (`xfLine_`, `xfOff_`, `apAmtNow_/Old_` in `Fdn`) has no initialisers; `Fdn::reset()` sets them. Anything that reads them before `prepare()`/`reset()` reads garbage.
-- **Two tank paths** (`lineFast` / `lineSlow`) plus now per-line fade state: any change to the crossfade goes into both paths and the waiting-line logic; `tools/same_render.py` and a 1 ms-frame click check at every move are the gates.
-- **The profile build is at 95 %**; the all-variants warning is expected. The `-diag` build is near 128 KB.
-- **Firmware objects in the worktree once pointed at a deleted worktree** (stale `.d` files): if a build complains about a missing `review-overnight/...` path, remove `firmware/build/obj-*` (literal paths) and rebuild.
-- **`screenlog.0` holds several rounds**: when filing a round, cut it from its own BENCH/first CORNER to its last line (or let a subagent do it).
+- **Flash: 12 B left.** Any new Core code needs bytes found first, including C/D′/E on `level_glue` and the D pick itself if it isn't free. D should be free, since it only changes constants. Known techniques: `IV_ZI`, `IV_SIZE_OPT`, `IV_NOINLINE`, no new libm calls (memory "flash: libm costs").
+- **`claude/level-duck` is based on `e3c4cb4`, before the burst fix.** Both touch `Engine.cpp`: the duck target ~663 and `applySpace`. Rebase or port by hand, then re-run SAME and the click check.
+- **The shell's cwd drifts into worktrees.** A TASKS commit landed on `claude/combined` once this session. Commit main's docs from the main checkout path in the same command (memory "keep checkout on main").
+- **The click check misses broadband bursts.** The ONSET burst was about 50 dB under the music with no sample steps. Use energy above 3 kHz against an unswitched render, as `onsetAndSpaceChangesDontBurst` does.
+- **The level governor holds an absolute level.** The endless wet doesn't follow the input, so level numbers depend on input level. The module's jack-to-dBFS calibration is unknown; the "hot" tier (peaks at −1 dBFS) is the upper bound.
+- From before: knob readings are noisy on the module (deadband); the two tank paths plus `lineXf` need any crossfade change in all three; USB power leaves the knobs unpowered.
 
 ## Where to look
 
-- `.claude/skills/sublustris-start/SKILL.md` ("Working as the orchestrator") and `docs/TASKS.md`
-- `firmware/README.md` (rounds 11-14, the crackle hunt, v1.0.37-40, the build switches)
-- `docs/research/m3-round14.log`, `m3-round13.log` (the baselines for round 15)
-- `core/dsp/Fdn.cpp` (`control`'s crossfade start, `runBlock`, `lineSlow`), `firmware/main.cpp` (release `AudioCallback`'s knob reading)
-- `docs/adr/0025-size-and-time-crossfade.md`, `0026-fitting-the-cpu.md`, `0021-era-sweet-to-gritty.md` (amendments)
+- `docs/TASKS.md`, `docs/research/level-at-infinite.md`
+- `.claude/worktrees/level-duck`: `tools/pages/level_glue.py` and its `Engine.cpp` hooks (duck target ~663)
+- `core/params/SpaceVoicing.h` (duck and limiter constants ~257-272, `kFloorDbfs` ~153), `core/dsp/Governor.h`
+- SPEC.md on `claude/combined` (changelog v1.0.42-50), `docs/adr/0014-*` (ducking), `0013-*` (SPACE flip)
+- `firmware/README.md` (flash techniques)
