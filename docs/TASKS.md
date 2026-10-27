@@ -10,7 +10,6 @@
 - [ ] **One merge into main, when your remaining picks are in** (MOTION, the swell comb, the room's movement). `claude/massive-air` no longer needs merging on its own: every branch since (era-wear, tone-character and the rest) contains it. The plan: one combined branch (era-wear + TONE + your picks), renamed Sublustris Versio in the same pass, checked, then merged with your OK. The release script (`claude/friend-package-073b04`) can go in any time.
 
 ### Listen (after your notes)
-- [ ] **`wear_grit`: where WEAR's grit starts** (pick one): `/Users/jesse/Documents/Sites/immensio-versio/renders/wear_grit/index.html`. What reads as bitcrushing is mostly the BBD clock's fizz (its top folded back down), most obvious on held, dark sounds and quiet tails. A today (grit from the very start); B grit from about a third of the knob; C from half; D from two thirds. Everything else as today; full WEAR identical in all four. Note: with the fizz held back, WEAR's faint crackle ticks are easier to hear early on the knob. Flash +112 B.
 
 ### Listen (first time)
 
@@ -49,6 +48,7 @@
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 
 ## Done
+- [x] **WEAR's grit starts at about two thirds (D)** (27 Oct 2026, `renders/wear_grit`, level-matched, MIX 100 %: "Grit from 0.65 wins."). Tape, breathing, band and the rest keep today's curve; full WEAR unchanged. Your follow-up: the grit (mostly the BBD clock's fizz, the reverb's top folded down because the clock runs without filters) could be a little less present.
 - [x] **v1.0.48 at the rack** (27 Oct 2026, the late-light build: "It's sounding excellent, although the size knob is still triggering some amber and red dropouts. Oddly enough, even when there's nothing in the reverb tank and I move the size knob, the red LED triggers." And: "it feels like the bit reduction is coming in too early on the knob" (WEAR)). Both being looked at (Waiting on Claude).
 - 27 Oct 2026: **Judged pages and old material moved to the Trash** (your OK): small_room, swell_seed, tone_character, era_rethink, room_motion, drift_rethink, swell_motion, motion_entry, size_moves, still_lows_rate (no longer needed: the CPU fits), and the shared `_material` folders, 7.9 GB in `~/.Trash/immensio-judged-pages-2026-10-27`. Empty the Trash to get the space back (it also holds the old firmware, 944 MB, and session 8's clean-ups).
 - [x] **The tape side comes in as built (A)** (27 Oct 2026, `renders/motion_entry`, MIX 50 %, A on every card). The transport runs only on MOTION's left side and comes up to speed over ~5 s; noon and the right side stay exactly as before. The last sound question of this round: next the docs, the rename, a playing build for the rack, then the merge.
