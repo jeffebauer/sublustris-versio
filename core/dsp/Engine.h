@@ -28,6 +28,7 @@
 #include "dsp/Shimmer.h"
 #include "dsp/SizeOpt.h"
 #include "dsp/Swell.h"
+#include "dsp/Transport.h"
 #include "dsp/TwinRoom.h"
 #include "params/GestureReader.h"
 #include "params/ParamSpec.h"
@@ -185,15 +186,6 @@ public:
         twinGain_ = std::pow(10.0f, db / 20.0f);
         twinOff_ = off;
     }
-    // PROTOTYPE (renders/drift_rethink): DRIFT's extremes stronger and/or a sine right side
-    // (map::driftAmountsPrototype); all 0 = as built.
-    void  setDriftPrototype(float grow, float rateGrow, int sine, float sineCents)
-    {
-        driftGrow_ = grow;
-        driftRateGrow_ = rateGrow;
-        driftSine_ = sine;
-        driftSineCents_ = sineCents;
-    }
     int   lowDecimate() const { return lowDecimate_; }
     int   swellTaps() const { return swell_.tapCount(); }
 #endif
@@ -212,6 +204,7 @@ public:
     void  setToneBellForTests(bool on) { toneBellOff_ = !on; }
 #endif
     bool  twinActive() const { return twinActive_; } // read-only view for tests
+    const dsp::Transport& transport() const { return transport_; } // read-only view for tests
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.
@@ -320,8 +313,6 @@ private:
     float             twinGain_ = 1.0f;  // setTwinGainPrototype; 1 = as built
     bool              twinOff_ = false;
     bool              shimmerLazy_ IV_ZI, shimmerArmed_ = true, shimmerResting_ IV_ZI; // setShimmerLazyPrototype
-    float             driftGrow_ = 0.0f, driftRateGrow_ = 0.0f, driftSineCents_ = 0.0f; // setDriftPrototype
-    int               driftSine_ = 0;
 #endif
     dsp::Plate        twinPlate_; // PLATE's twin
     // HALL's and MASSIVE's twin (v1.0.43, the owner's pick E on renders/small_room): the small room, its rings in
@@ -339,6 +330,10 @@ private:
     // Ducking (ADR 0014) and the limiter (SPEC §4.10).
     dsp::Tilt         tilt_;
     dsp::ToneBell     toneBell_; // TONE's resonant tilt, after tilt_ (v1.0.44)
+    // MOTION's left side: the tape transport on the wet (v1.0.46, dsp/Transport.h), and what it was last told.
+    dsp::Transport         transport_;
+    dsp::TransportAmounts  transportAmt_;
+    bool                   transportOn_ IV_ZI;
 #ifndef IV_FIXED_VOICINGS
     bool              toneBellOff_ IV_ZI; // setToneBellForTests
 #endif

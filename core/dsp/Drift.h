@@ -21,11 +21,6 @@ struct DriftAmounts {
     float wowCents = 0, wowHz = 0.5f;
     float flutterCents = 0, flutterHz = 7.0f;
     float rateSpread = 0.3f; // how far the lines' rates fan out: 0.85-1.15 (tape), 0.5-1.5 (Wander)
-#ifndef IV_FIXED_VOICINGS
-    // PROTOTYPE (renders/drift_rethink): a regular sine on top, its phase spread across the lines
-    // (sinePhaseSpan of a cycle from the first line to the last) and its rate fanned by sineRateSpread.
-    float sineCents = 0, sineHz = 3.0f, sineRateSpread = 0.12f, sinePhaseSpan = 0.75f;
-#endif
 };
 
 class Drift {
@@ -43,9 +38,6 @@ public:
         wowCountdown_ = 0.0f;
         flutterPhase_ = 0.37f * spread_;
         value_ = 0.0f;
-#ifndef IV_FIXED_VOICINGS
-        sinePhase_ = 0.0f;
-#endif
     }
 
     // Advances dt seconds; returns the read offset in samples. maxSamples
@@ -79,14 +71,6 @@ public:
             flutterDepth_ = samplesFor(a.flutterCents, a.flutterHz);
         }
         float v = wowDepth_ * wowB_ + (flutterDepth_ != 0.0f ? flutterDepth_ * std::sin(6.2831853f * flutterPhase_) : 0.0f);
-#ifndef IV_FIXED_VOICINGS
-        if (a.sineCents > 0.0f) { // PROTOTYPE (renders/drift_rethink)
-            const float hz = a.sineHz * (1.0f + a.sineRateSpread * (spread_ - 0.5f));
-            sinePhase_ += hz * dt;
-            sinePhase_ -= float(int(sinePhase_));
-            v += samplesFor(a.sineCents, hz) * std::sin(6.2831853f * (sinePhase_ + a.sinePhaseSpan * spread_));
-        }
-#endif
         if (v > maxSamples) v = maxSamples;
         if (v < -maxSamples) v = -maxSamples;
         value_ = v;
@@ -111,9 +95,6 @@ private:
     float    wowA_ IV_ZI, wowB_ IV_ZI, wowTarget_ IV_ZI, wowCountdown_ IV_ZI, flutterPhase_ IV_ZI;
     float    wcArg_ = 1.0f, wc_ IV_ZI;                                  // the wow's smoothing, for wcArg_
     float    depthIn_[4] = {-1.0f, -1.0f, -1.0f, -1.0f}, wowDepth_ IV_ZI, flutterDepth_ IV_ZI;
-#ifndef IV_FIXED_VOICINGS
-    float    sinePhase_ IV_ZI; // DriftAmounts::sineCents (PROTOTYPE)
-#endif
 };
 
 } // namespace iv::dsp

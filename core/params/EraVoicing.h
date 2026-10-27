@@ -14,6 +14,18 @@ constexpr float kFlutterCents = 3.0f, kFlutterHzMin = 5.0f, kFlutterHzMax = 9.0f
 // lines' rates fanned out ±50 % so they never sway together; 1 → 2.25 Hz, cents at full.
 // (Until v1.0.20: a slow sine per line, 0.05 → 0.3 Hz, ±35 cents: "too seasick".)
 constexpr float kWanderCents = 20.0f, kWanderHzMin = 1.0f, kWanderHzMax = 2.25f, kWanderRateSpread = 1.0f;
+// v1.0.46 (owner's pick B "stronger", renders/drift_rethink): over the right side's last half Wander deepens to
+// ×1.4 and quickens to ×1.2 at the end (x² from the side's middle; the first half as before).
+constexpr float kWanderGrow = 0.4f, kWanderRateGrow = 0.2f;
+// v1.0.46: the left side's tape transport on the wet (dsp/Transport.h; owner's picks round 3's E with the confirm
+// page's B, renders/drift_rethink), at full left before its variance: one shared wow and flutter, crinkle bursts
+// a second over the side's last 40 %, and the share of them bringing a dip (about a third of round 2's crinkle dips).
+constexpr float kTransportWowCents = 12.0f, kTransportWowHzMin = 0.5f, kTransportWowHzMax = 1.2f;
+constexpr float kTransportFlutterCents = 3.0f, kTransportFlutterHzMin = 6.0f, kTransportFlutterHzMax = 10.0f;
+constexpr float kTransportCrinklePerSecond = 0.6f, kTransportDipShare = 0.43f;
+// The tank's own per-line wow and flutter keep this share on the left side: at full, its incoherent ~20 cents
+// buried the transport's coherent movement (docs/research/drift-rethink.md).
+constexpr float kTransportLineShare = 0.33f;
 // A line's drift excursion never exceeds this share of its own length (a
 // 24 ms HALL line can't swing by 65 ms), nor kDriftMaxSeconds.
 constexpr float kDriftMaxShareOfLine = 0.35f;

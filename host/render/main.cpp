@@ -215,14 +215,10 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (std::getenv("IV_ERA_LAYOUT") || std::getenv("IV_ERA_SWITCH") || std::getenv("IV_ERA_FADE_SHARE") || std::getenv("IV_TAPE_OUT")
         || std::getenv("IV_TAPE_OS")) // the ERA prototypes before v1.0.42: their eras are gone
         std::fprintf(stderr, "iv_render: IV_ERA_LAYOUT / _SWITCH / _FADE_SHARE, IV_TAPE_OUT / _OS ignored: WEAR (key \"era\") is one wear amount (layout C) since v1.0.42\n");
-    if (std::getenv("IV_DRIFT_GROW") || std::getenv("IV_DRIFT_RATE_GROW") || std::getenv("IV_DRIFT_SINE")) { // renders/drift_rethink
-        auto num = [](const char* k, float d) { const char* v = std::getenv(k); return v ? float(std::atof(v)) : d; };
-        const int sine = int(num("IV_DRIFT_SINE", 0.0f));
-        engine.setDriftPrototype(num("IV_DRIFT_GROW", 0.0f), num("IV_DRIFT_RATE_GROW", 0.0f), sine, num("IV_DRIFT_SINE_CENTS", 22.0f));
-        std::fprintf(stderr, "iv_render: IV_DRIFT: extremes depth x(1+%.2f), rates x(1+%.2f), right side %s, sine %.1f c\n",
-                     num("IV_DRIFT_GROW", 0.0f), num("IV_DRIFT_RATE_GROW", 0.0f),
-                     sine == 1 ? "sine 1.5-5.5 Hz" : sine == 2 ? "sine 1-2 Hz" : "Wander", num("IV_DRIFT_SINE_CENTS", 22.0f));
-    }
+    if (std::getenv("IV_DRIFT_GROW") || std::getenv("IV_DRIFT_RATE_GROW") || std::getenv("IV_DRIFT_SINE")
+        || std::getenv("IV_TAPE_TRANSPORT")) // renders/drift_rethink: the picks are built in since v1.0.46, the rest gone
+        std::fprintf(stderr, "iv_render: IV_DRIFT_* / IV_TAPE_TRANSPORT ignored: MOTION's picks (the tape transport with "
+                             "Magneto crinkle and a third of the dips; Wander stronger) are built in since v1.0.46\n");
     if (std::getenv("IV_TONE_CHAR")) // renders/tone_character: A is built in since v1.0.44, B and C are gone
         std::fprintf(stderr, "iv_render: IV_TONE_CHAR ignored: TONE's resonant tilt (A) is built in since v1.0.44\n");
     if (const char* sz = std::getenv("IV_SHIMMER_LAZY")) {

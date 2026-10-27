@@ -173,6 +173,7 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     gesture_.prepare(sampleRate);
     tilt_.prepare(sampleRate);
     toneBell_.prepare(sampleRate);
+    transport_.prepare(sampleRate, 0x7a9e5u);
     limiter_.prepare(sampleRate);
     reset();
 }
@@ -229,6 +230,7 @@ IV_SIZE_OPT void Engine::reset()
     toneBell_.reset();
     toneBell_.set(smoothed(ParamId::Tone), kChunk);
     toneBell_.snap();
+    transport_.reset(transportOn_); // (applySpace(true) above set it)
     limiter_.reset();
     texture_.reset();
     duck_ = duckGrDb_ = duckGainStep_ = 0.0f;
@@ -498,14 +500,10 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     dsp::EraMix loopEra;
     loopEra.even = voicing::kNeveEven;
     loopEra.even *= keep * (1.0f - map::governorWeight(decay));
-#ifndef IV_FIXED_VOICINGS
-    const dsp::DriftAmounts drift = driftGrow_ == 0.0f && driftRateGrow_ == 0.0f && driftSine_ == 0
-        ? map::driftAmounts(smoothed(ParamId::Drift))
-        : map::driftAmountsPrototype(smoothed(ParamId::Drift), driftGrow_, driftRateGrow_, driftSine_,
-                                     driftSineCents_); // setDriftPrototype
-#else
     const dsp::DriftAmounts drift = map::driftAmounts(smoothed(ParamId::Drift));
-#endif
+    // MOTION's left side: the tape transport on the wet (v1.0.46); off it, the transport glides out and rests.
+    transportOn_ = smoothed(ParamId::Drift) < voicing::kDriftDeadLo;
+    if (transportOn_ || !transport_.idle()) transportAmt_ = map::transportAmounts(smoothed(ParamId::Drift));
     // The tape's slow 2:1 compression: more loss above −18 dBFS.
     // Judged like the floor (the lower of its 1.5 s and 50 ms levels): on the 1.5 s level alone it
     // kept compressing for seconds after a loud input stopped, and an infinite tail plunged 20+ dB
@@ -985,6 +983,8 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
         else processTwoTanks(n);
         prof::mark(prof::kTank);
 
+        transport_.control(n, transportAmt_, transportOn_); // MOTION's tape transport (returns at once when out)
+        const bool transportLive = !transport_.idle();
         for (int i = 0; i < n; ++i) {
             // DECAY's level make-up (v1.0.28) on the forward wet and the twin, a ~40 ms glide.
             decayGainNow_ += 0.0005f * (decayGain_ - decayGainNow_);
@@ -1007,6 +1007,8 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             float wr = (fr + tr) * flipGain_;
             wl *= eraMakeup_;
             wr *= eraMakeup_;
+            if (transportLive) transport_.process(wl, wr); // MOTION's tape transport (dsp/Transport.h)
+            else transport_.write(wl, wr);
             prof::mark(prof::kOutput);
             if (texOn_) texture_.process(wl, wr); // ERA's wear (dsp/EraTexture.h)
             prof::mark(prof::kEraWear);

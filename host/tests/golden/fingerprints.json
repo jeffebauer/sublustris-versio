@@ -1,6 +1,6 @@
 {
-  "spec": "v1.0.44",
-  "why": "v1.0.44: TONE's resonant tilt (owner's pick A, renders/tone_character)",
+  "spec": "v1.0.46",
+  "why": "v1.0.46: MOTION's tape transport with Magneto crinkle, stronger Wander (owner's picks, renders/drift_rethink)",
   "corners": {
     "plate_small": {
       "chord_loudness_db": -39.768000000000001,

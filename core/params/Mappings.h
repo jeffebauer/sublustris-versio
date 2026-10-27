@@ -5,6 +5,7 @@
 #include "dsp/Drift.h"
 #include "dsp/Era.h"
 #include "dsp/EraTexture.h"
+#include "dsp/Transport.h"
 #include "params/EraVoicing.h"
 #include "params/SpaceVoicing.h"
 
@@ -96,7 +97,9 @@ inline float bloomSeconds(float v) { return expLerp(0.12f, 4.0f, v); }
 // SIZE (P5) in PLATE: the tank's scale, 0.5 → 1.59 of Dattorro's (SPEC §3).
 inline float plateScale(float v) { return expLerp(voicing::kPlateMinScale, voicing::kPlateMaxScale, v); }
 
-// DRIFT (P6), bipolar (ADR 0012). (ERA's cassette added its own wow and flutter until v1.0.42.)
+// DRIFT (P6, MOTION on the panel), bipolar (ADR 0012). (ERA's cassette added its own wow and flutter until v1.0.42.)
+// v1.0.46: on the left side the tape transport on the wet carries most of the wow (transportAmounts), so the
+// tank's lines keep kTransportLineShare of theirs; on the right Wander grows over the side's last half.
 inline dsp::DriftAmounts driftAmounts(float drift)
 {
     using namespace voicing;
@@ -107,41 +110,47 @@ inline dsp::DriftAmounts driftAmounts(float drift)
         a.wowHz = kWowHzMin + (kWowHzMax - kWowHzMin) * t;
         a.flutterCents = kFlutterCents * t;
         a.flutterHz = kFlutterHzMin + (kFlutterHzMax - kFlutterHzMin) * t;
+        a.wowCents *= kTransportLineShare;
+        a.flutterCents *= kTransportLineShare;
     } else if (drift > kDriftDeadHi) {
         const float t = (drift - kDriftDeadHi) / (1.0f - kDriftDeadHi);
         a.wowCents = kWanderCents * t; // Wander: the same random generator, quicker, lines fanned out
         a.wowHz = kWanderHzMin + (kWanderHzMax - kWanderHzMin) * t;
         a.rateSpread = kWanderRateSpread;
+        const float x = t > 0.5f ? 2.0f * t - 1.0f : 0.0f; // 0 over the side's first half, 1 at its end
+        const float g = 1.0f + kWanderGrow * x * x, r = 1.0f + kWanderRateGrow * x * x;
+        a.wowCents *= g;
+        a.wowHz *= r;
     }
     return a;
 }
 
-#ifndef IV_FIXED_VOICINGS
-// PROTOTYPE (renders/drift_rethink; the owner: "the extreme ends of the modulation knob don't create
-// obvious results" in a mix, and a sine right side "to juxtapose the more random modulation on the
-// left"). grow: each side's depth × (1 + grow·x²) and rateGrow its wow's rate × (1 + rateGrow·x²),
-// x = 0 over the first half of the side, 1 at its end (the first half stays as today). sine 1: the
-// right side a sine at 1.5 → 5.5 Hz instead of Wander, sine 2: at 1 → 2 Hz; sineCents its depth at full.
-inline dsp::DriftAmounts driftAmountsPrototype(float drift, float grow, float rateGrow, int sine, float sineCents)
+// 0 below from, a smoothstep to 1 at to.
+inline float layer(float v, float from, float to)
+{
+    const float t = clamp01((v - from) / (to - from));
+    return t * t * (3.0f - 2.0f * t);
+}
+
+// MOTION's left side (v1.0.46, dsp/Transport.h), t 0 at the dead zone, 1 fully left: the transport's wow and
+// flutter, more variance over the side's last half (eased in), crinkle over its last 40 % (rising straight), and
+// a counted share of the crinkle bursts with a dip.
+IV_SIZE_OPT inline dsp::TransportAmounts transportAmounts(float drift)
 {
     using namespace voicing;
-    const float t = drift < kDriftDeadLo ? (kDriftDeadLo - drift) / kDriftDeadLo
-                  : drift > kDriftDeadHi ? (drift - kDriftDeadHi) / (1.0f - kDriftDeadHi) : 0.0f;
-    const float x = t > 0.5f ? 2.0f * t - 1.0f : 0.0f;
-    const float g = 1.0f + grow * x * x, r = 1.0f + rateGrow * x * x;
-    dsp::DriftAmounts a = driftAmounts(drift);
-    a.wowCents *= g;
-    a.flutterCents *= g;
-    a.wowHz *= r; // flutter keeps its rate (9 Hz is already near roughness)
-    if (drift > kDriftDeadHi && sine > 0) {
-        a.wowCents = 0.0f; // no Wander: the sine alone
-        a.rateSpread = dsp::DriftAmounts{}.rateSpread;
-        a.sineCents = sineCents * t * g;
-        a.sineHz = (sine == 1 ? 1.5f + 4.0f * t : 1.0f + 1.0f * t) * r;
-    }
+    dsp::TransportAmounts a;
+    const float t = drift < kDriftDeadLo ? (kDriftDeadLo - drift) / kDriftDeadLo : 0.0f;
+    a.wowCents = kTransportWowCents * t;
+    a.wowHz = kTransportWowHzMin + (kTransportWowHzMax - kTransportWowHzMin) * t;
+    a.flutterCents = kTransportFlutterCents * t;
+    a.flutterHz = kTransportFlutterHzMin + (kTransportFlutterHzMax - kTransportFlutterHzMin) * t;
+    a.crinkleRate = kTransportCrinklePerSecond * clamp01((t - 0.6f) / 0.4f);
+    a.variance = layer(t, 0.5f, 1.0f);
+    a.wowCents *= 1.0f + 0.7f * a.variance;    // 12 -> ~20 c at full
+    a.flutterCents *= 1.0f + 0.5f * a.variance; // 3 -> 4.5 c
+    a.crinkleDip = kTransportDipShare;
     return a;
 }
-#endif
 
 // ERA (P4; v1.0.42, the owner's pick C on renders/era_rethink, "one wear amount"; it replaces ADR 0021's
 // five eras): the Neve stays in the loop as the base at every setting (its warmth and its ×0.7 highs,
