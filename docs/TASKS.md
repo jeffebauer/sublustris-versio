@@ -4,6 +4,7 @@
 **Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Not yet in it: v1.0.35-36 (the 24 kHz tank, 12-point swell, fewer early reflections) and the review's speed-ups; say when you'd like it installed (Ableton closed).
 
 ## To do
+- [ ] **v1.0.49 at the rack**: everything, with the faster SIZE crossfade and WEAR's new tuning. On **rack power**, flash `/Users/jesse/Documents/Sites/immensio-versio/dist/sublustris_versio-v1.0.49-0b58b25-latelight.bin`. Move SIZE the ways that went amber/red (MASSIVE and HALL, empty and playing; HALL through noon), turn WEAR up through 0.65 (where the grit now starts) to full, and play vibes at full WEAR. Do the red and amber flashes stay away? Without the light: `/Users/jesse/Documents/Sites/immensio-versio/dist/sublustris_versio-v1.0.49-0b58b25.bin` (112,500 B). The old v1.0.48 builds can go once this one's confirmed.
 
 ### Decide
 - [ ] **One merge into main, when your remaining picks are in** (MOTION, the swell comb, the room's movement). `claude/massive-air` no longer needs merging on its own: every branch since (era-wear, tone-character and the rest) contains it. The plan: one combined branch (era-wear + TONE + your picks), renamed Sublustris Versio in the same pass, checked, then merged with your OK. The release script (`claude/friend-package-073b04`) can go in any time.
