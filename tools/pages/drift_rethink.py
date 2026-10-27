@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Renders at its original commit: build iv_render at bbd2635 (IV_DRIFT_* are ignored since v1.0.46).
 """PROTOTYPE pick page (26 Oct 2026; the owner: "In a realistic setting amongst a broader mix, the extreme
 ends of the modulation knob don't create obvious results ... we should make them stronger to at least be
 more noticeable in a mix", and of the right side's per-line movement: "I wonder if we should consider a more

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Renders at its original commit: build iv_render at d827daa (IV_ERA_SWITCH is ignored since v1.0.42).
 """PROTOTYPE pick page (26 Oct 2026; the owner: "even with the overlap, on the desktop plugin I noticed a
 hard transition between tape and radio ... it didn't sound like a smooth crossfade"): ERA as built (each
 era fades in over the first third of its fifth while the one before fades out) against ERA without the

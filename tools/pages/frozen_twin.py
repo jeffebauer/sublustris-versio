@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Renders at its original commit: build iv_render at a766750 (IV_TWIN_LIGHT is ignored since v1.0.43).
 """PROTOTYPE pick page (26 Oct 2026; round 15: a frozen MASSIVE with the cassette runs ~105 % of the module's
 CPU in real time, and the twin is ~28 points of a frozen MASSIVE): a lighter twin, the second tank that plays
 over a frozen pad. Renderer hook IV_TWIN_LIGHT (Engine::setTwinLightPrototype):

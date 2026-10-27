@@ -503,9 +503,6 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     const dsp::DriftAmounts drift = map::driftAmounts(smoothed(ParamId::Drift));
     // MOTION's left side: the tape transport on the wet (v1.0.46); off it, the transport glides out and rests.
     transportOn_ = smoothed(ParamId::Drift) < voicing::kDriftDeadLo;
-#ifndef IV_FIXED_VOICINGS
-    if (transportAlways_) transportOn_ = true; // setTransportAlwaysPrototype (renders/motion_entry)
-#endif
     if (transportOn_ || !transport_.idle()) transportAmt_ = map::transportAmounts(smoothed(ParamId::Drift));
     // The tape's slow 2:1 compression: more loss above −18 dBFS.
     // Judged like the floor (the lower of its 1.5 s and 50 ms levels): on the 1.5 s level alone it

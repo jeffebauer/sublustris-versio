@@ -187,11 +187,8 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     }
     if (std::getenv("IV_TWIN_ALT") || std::getenv("IV_TWIN_LIGHT")) // the twin prototypes before v1.0.43: the twin tank is gone
         std::fprintf(stderr, "iv_render: IV_TWIN_ALT / IV_TWIN_LIGHT ignored: HALL's and MASSIVE's twin is the small room (E) since v1.0.43\n");
-    if (const char* ta = std::getenv("IV_TRANSPORT_ALWAYS")) { // renders/motion_entry
-        engine.setTransportAlwaysPrototype(std::atoi(ta) != 0);
-        std::fprintf(stderr, "iv_render: IV_TRANSPORT_ALWAYS: %s\n", std::atoi(ta) != 0 ? "transport always on at its centre"
-                                                                                      : "as built (the transport in on the left side only)");
-    }
+    if (std::getenv("IV_TRANSPORT_ALWAYS")) // renders/motion_entry: A (as built) was the pick
+        std::fprintf(stderr, "iv_render: IV_TRANSPORT_ALWAYS ignored: the tape transport comes in on MOTION's left side only (A, as built) since v1.0.46\n");
     if (std::getenv("IV_ROOM_WANDER")) // renders/room_motion: B is built in since v1.0.47
         std::fprintf(stderr, "iv_render: IV_ROOM_WANDER ignored: the small room's wander scales with each line's length (B) since v1.0.47\n");
     if (std::getenv("IV_ROOM_LEVEL")) // renders/room_level: B is built in since v1.0.43

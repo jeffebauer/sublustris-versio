@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Renders at its original commit: build iv_render at 3fd6aa5 (IV_ROOM_LEVEL is ignored since v1.0.43).
 """PROTOTYPE decision page (27 Oct 2026): the small room's level under a frozen pad across SIZE and DECAY.
 
 v1.0.43 made the small room (the owner's pick E on renders/small_room) HALL's and MASSIVE's freeze twin, at the gains

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Renders at its original commit: build iv_render at 0014bf8 (IV_ROOM_WANDER is ignored since v1.0.47).
 """PROTOTYPE decision page (27 Oct 2026; the owner on renders/room_level: "Twin reverb sounds like there's some slight
 pitch bending when played over the top"). Measured: the small room's read wander (0.15 ms on every line, 0.21-0.58 Hz)
 bends what it holds by 4-9 cents at SIZE 0.9 and up to ~40 cents at SIZE 0 (its short lines go round 20-125 times a

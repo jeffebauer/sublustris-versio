@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Renders at its original commit: build iv_render at d74c785 (tape_os: IV_TAPE_OS is ignored since v1.0.42; still_lows_rate still renders today).
 """PROTOTYPE pick pages from the overnight review (26 Oct 2026): two CPU savings that change the sound a
 little, for the owner to hear before deciding.
 

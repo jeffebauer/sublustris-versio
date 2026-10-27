@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Renders at its original commit: build iv_render at 41eb788 (IV_ERA_LAYOUT is ignored since v1.0.42).
 """PROTOTYPE pick page (26 Oct 2026; the owner on ERA: keep the grit they like, "the reason I like the tape
 saturation", the radio's "phasing and the band-pass like tone", without ERA darkening the tail (TONE's job)
 or moving its pitch (DRIFT's), within the module's CPU and flash). Three layouts of ERA against today's

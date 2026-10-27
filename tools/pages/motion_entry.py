@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Renders at its original commit: build iv_render at da65b0c (IV_TRANSPORT_ALWAYS is ignored since its pick (A, as built)).
 """PROTOTYPE decision page (27 Oct 2026): how MOTION's tape transport (v1.0.46, dsp/Transport.h) comes in. Renderer hook
 IV_TRANSPORT_ALWAYS (Engine::setTransportAlwaysPrototype; desktop only):
 

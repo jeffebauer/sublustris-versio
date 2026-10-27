@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Renders at its original commit: build iv_render at 054ad26 (IV_ERA_FADE_SHARE / IV_ERA_SWITCH are ignored since v1.0.42).
 """PROTOTYPE pick page (26 Oct 2026; the owner on era_switch: keep the overlaps, "although I feel we could
 narrow the crossover areas, or only trigger a crossfade when the knob/CV value passes the intersection
 between ERAs"): ERA's overlaps as built (each era fades in over the first third of its fifth), narrower

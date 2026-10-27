@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Renders at its original commit: build iv_render at 52060b2 (IV_TWIN_ALT is ignored since v1.0.43).
 """PROTOTYPE pick page (26 Oct 2026; owner: "Yes: a page with today's twin, blur and width, small room, and the twin
 without its swell, all at -8 dB"; then, on its first version: "because there's a frozen pad underneath, it's hard to
 hear the differences. Can you render various sounds with just the twin so I can hear it in isolation? ... the frozen

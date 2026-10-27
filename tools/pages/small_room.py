@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Renders at its original commit: build iv_render at 23733bb (IV_TWIN_ALT is ignored since v1.0.43).
 """PROTOTYPE confirm page (26 Oct 2026; owner on twin_alternatives: "I quite like small room, but it sounds a little
 boomy and low-end heavy. If we can skew the frequencies to remove some lows and increase the highs a bit, I think this
 can replace today's twin"). Measured first: the room's lows sat where the twin's do (63-250 Hz within ~2 dB, each
