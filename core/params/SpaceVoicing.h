@@ -149,8 +149,9 @@ constexpr float kInLoopCoeff = 0.62f;
 
 // Floor governor (ADR 0008): an infinite tail's wet settles at this RMS
 // level; each dB above it adds kGovernorRatePerDb of loss (1/T60, 1/s),
-// measured over kGovernorSeconds.
-constexpr float kFloorDbfs          = -24.0f;
+// measured over kGovernorSeconds. -21 since v1.0.51 (ADR 0033, the owner's pick D on renders/level_duck:
+// "on hall and massive with Long decays, I feel the limiter is keeping the level a bit too low"; was -24).
+constexpr float kFloorDbfs          = -21.0f;
 constexpr float kGovernorRatePerDb  = 0.08f;
 constexpr float kGovernorSeconds    = 1.5f;
 constexpr float kHoldSeconds        = 8.0f; // the slow level a held tail's ceiling is judged on
@@ -254,18 +255,31 @@ constexpr float kToneDarkHighDb   = -9.0f;
 constexpr float kToneBrightLowDb  = -4.0f; // TONE fully CW
 constexpr float kToneBrightHighDb = 6.0f;
 
-// ---- Ducking: 4:1 compression of the wet (ADR 0014 amended, SPEC v1.0.17) --
-// The wet is compressed 4:1 above kDuckThresholdDbfs of input (its ~10 ms
+// ---- Ducking: 2:1 compression of the wet (ADR 0014 amended, SPEC v1.0.17, v1.0.51) --
+// The wet is compressed above kDuckThresholdDbfs of input (its ~10 ms
 // power), with this attack and release, scaled by how far into infinite
 // DECAY is (0 below 0.85, full at 1) and off while frozen. No darkening: the
 // owner picked it over DARKEN on renders/ducking ("closer to 4:1 compression
-// than extreme ducking, so it feels cohesive"; D on all 18 cards). About 3 dB
-// of reduction while playing at the materials' level.
+// than extreme ducking, so it feels cohesive"; D on all 18 cards). 2:1 since
+// v1.0.51 (renders/level_duck D: "ducking on large washy sounds still feels a
+// bit heavy handed"; was 4:1).
 constexpr float kDuckThresholdDbfs  = -24.0f;
-constexpr float kDuckRatio          = 4.0f;
+constexpr float kDuckRatio          = 2.0f;
 constexpr float kDuckAttackSeconds  = 0.03f;
 constexpr float kDuckReleaseSeconds = 0.4f;
 constexpr float kDuckFullDb         = 6.0f; // reduction the LEDs show as full ducking
+// The duck follows the playing (v1.0.51, the owner's pick E on renders/level_glue: "glue the dry and wet
+// at points of transition so they sound more integrated rather than two separate layers"). Held playing
+// (a chord, a pad: the input's ~10 ms power within kDuckSustainCrest, 3 dB, of its kDuckSlowSeconds power,
+// judged while over the threshold and smoothed over kDuckSustainSeconds) is ducked less (x (1 -
+// kDuckSustainCut)) and let go faster (kDuckSustainReleaseSeconds) when it stops; short sounds (stabs)
+// keep the full reduction and kDuckReleaseSeconds, so they don't pump. A program-dependent release
+// (Giannoulis, Massberg and Reiss, JAES 2012).
+constexpr float kDuckSlowSeconds           = 0.5f;
+constexpr float kDuckSustainSeconds        = 0.3f;
+constexpr float kDuckSustainCrest          = 1.99526231f; // 3 dB, as a power ratio
+constexpr float kDuckSustainCut            = 0.6f;  // held playing gets 40 % of the reduction
+constexpr float kDuckSustainReleaseSeconds = 0.08f;
 
 // ---- Output soft limiter (SPEC §4.10): the wet only, before MIX ------------
 constexpr float kLimitCeiling        = 0.891f; // −1 dBFS

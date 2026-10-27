@@ -44,7 +44,7 @@ Shared vocabulary for this project. Use these terms exactly in code, comments an
 | **Air** | HALL's and PLATE's highs lose a steady extra few dB per second at every finite DECAY, as air does in a room, instead of a fixed share of the decay, so short tails stay bright and long PLATEs lose some top end (v1.0.25). MASSIVE keeps the share. |
 | **Still lows** | Below ~300 Hz the HALL / MASSIVE tail rings in its own unmodulated tank, so the bass never wavers; MOTION and the modulation floor move only what's above (v1.0.18). |
 | **Loop chain** | Everything inside each line per pass: modulated read → TONE's loss + damping → soft saturation → the Neve → WEAR's tape compression. |
-| **Duck** | Tail ducking from the input level, only at infinite Decay: 4:1 compression of the wet (attack 30 ms, release 0.4 s), about 3 dB while you play, no darkening (v1.0.17; it was DARKEN). |
+| **Duck** | Tail ducking from the input level, only at infinite Decay: 2:1 compression of the wet (attack 30 ms, release 0.4 s), no darkening (v1.0.17; it was DARKEN; 4:1 until v1.0.51). Held playing is ducked less (40 %) and let go faster (0.08 s) when it stops (v1.0.51). |
 | **P1-P7** | Pots by panel position, reading order (Resilio ADR 0028), not libDaisy index. |
 | **Normalised** | 0-1 parameter value every host passes; mapping curves live only in `core/params/`. |
 | **Starting guess *(start)*** | A number to be confirmed by measurement or ear at its milestone. |

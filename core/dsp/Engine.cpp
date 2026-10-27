@@ -25,6 +25,13 @@ float chunkCoeff(float ms, float sampleRate, int n)
     return 1.0f - std::exp(-float(n) / (0.001f * ms * sampleRate));
 }
 
+// One-pole coefficient for a time constant in seconds, per block of n: out of line, so its six callers
+// share one copy (flash, v1.0.51).
+IV_NOINLINE IV_SIZE_OPT float blockCoeff(float seconds, float sampleRate, int n)
+{
+    return 1.0f - std::exp(-float(n) / (seconds * sampleRate));
+}
+
 float clamp01(float v) { return v < 0.0f ? 0.0f : (v > 1.0f ? 1.0f : v); }
 
 // Moves `now` toward `target` by at most `step` (linear glides).
@@ -201,7 +208,7 @@ IV_SIZE_OPT void Engine::reset()
     twinPlate_.reset();
     twinSwell_.reset();
     for (auto& d : twinDiffuser_) d.clear();
-    inputPower_ = 0.0f;
+    inputPower_ = inputSlow_ = duckSustained_ = 0.0f;
     tankInPower_ = 0.0f;
     quietSince_ = 0;
     tailCaptured_ = false;
@@ -334,7 +341,7 @@ IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: 
         break;
     case GestureReader::Event::PaintStart:
         // Room to grow while painting: the pad's level or the floor, + kPaintHeadroomDb.
-        padFloorDb_ = (tankSlowLevelDb() > voicing::kFloorDbfs ? tankSlowLevelDb() : voicing::kFloorDbfs) + voicing::kPaintHeadroomDb;
+        padFloorDb_ = (tankSlowLevelDb() > floorDbfs() ? tankSlowLevelDb() : floorDbfs()) + voicing::kPaintHeadroomDb;
         break;
     case GestureReader::Event::PaintStop:
         // The painted pad settles like a fresh one: no ceiling until its slow level has caught up,
@@ -367,7 +374,7 @@ float Engine::hysteresisSize(float size, float& held, bool snap) const
 }
 
 // DECAY's loss rate for the SPACE in use (MASSIVE's shortest tail follows SIZE, v1.0.21).
-float Engine::decayRate(float decay, float size) const
+IV_SIZE_OPT float Engine::decayRate(float decay, float size) const
 {
     return activeSpace_ == 2 ? map::massiveDecayRate(decay, size) : map::decayRate(decay, activeSpace_);
 }
@@ -385,7 +392,7 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // unfreeze after SIZE moved) doesn't step the loop's gains (soak audit).
     if (snap) hallSize_ = size;
     else {
-        hallSize_ += (1.0f - std::exp(-float(n) / (0.08f * sampleRate_))) * (size - hallSize_);
+        hallSize_ += blockCoeff(0.08f, sampleRate_, n) * (size - hallSize_);
         if (std::fabs(size - hallSize_) < 1e-6f) hallSize_ = size;
     }
     const float decay = frozen ? heldDecay_ : smoothed(ParamId::Decay);
@@ -419,7 +426,7 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // A pad isn't pulled to the floor: the floor glides away with freezeMix_ (and back on unfreeze).
     // Switched in one sample, a fed infinite tail's governor loss vanished at once and the wet
     // stepped (up to 20x a sample's normal change, PLATE; heard once the dark tilt took the highs out).
-    const float floorDb = voicing::kFloorDbfs * (1.0f - freezeMix_);
+    const float floorDb = floorDbfs() * (1.0f - freezeMix_);
     float holdDb = 0.0f;
     if (frozen) holdDb = padFloorDb_;
     else if (tailCaptured_) holdDb = tailCeilingDb_;
@@ -541,7 +548,7 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // The input diffusers' amount glides (~50 ms): it changes with a SPACE flip and with MASSIVE's SIZE,
     // and a jump stepped the input into the tank (soak audit).
     const float diffusion = massive ? map::massiveDiffusion(size) : 1.0f;
-    const float glide = snap && snapInput ? 1.0f : 1.0f - std::exp(-float(n) / (0.05f * sampleRate_));
+    const float glide = snap && snapInput ? 1.0f : blockCoeff(0.05f, sampleRate_, n);
     for (int c = 0; c < 2; ++c)
         for (int k = 0; k < 4; ++k) {
             float& g = diffuser_[c].stage[k].coeff;
@@ -668,15 +675,28 @@ IV_NOINLINE IV_SIZE_OPT void Engine::predelayCrossfade(float l, float r, float& 
 
 IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (flash)
 {
-    // Ducking (ADR 0014, amended v1.0.17): 4:1 compression of the wet, keyed by the input's
+    // Ducking (ADR 0014, amended v1.0.17 and v1.0.51): 2:1 compression of the wet, keyed by the input's
     // ~10 ms power, × how far into infinite DECAY is; not while frozen (playing over a pad
     // mustn't duck it; fades with the freeze glide). The reduction moves with its own attack
     // and release once per control block; the wet gain ramps across the block.
     {
         const float levelDb = 10.0f * std::log10(inputPower_ + 1e-12f);
         const float over = levelDb - voicing::kDuckThresholdDbfs;
-        const float target = (over > 0.0f ? (1.0f - 1.0f / voicing::kDuckRatio) * over : 0.0f)
-                           * map::governorWeight(smoothed(ParamId::Decay)) * (1.0f - freezeMix_);
+        float target = (over > 0.0f ? duckSlope() * over : 0.0f)
+                     * map::governorWeight(smoothed(ParamId::Decay)) * (1.0f - freezeMix_);
+        // v1.0.51 (renders/level_glue E): held playing is ducked less and let go faster when it stops, so the
+        // tail arrives under the dry without a dip; short sounds keep the full reduction and the slow release.
+        // "Held": the 10 ms power within 3 dB of its 0.5 s power, judged only while over the threshold.
+        float release = duckRelease();
+        if (duckFastRelease() > 0.0f || duckSustainCut() > 0.0f) {
+            inputSlow_ += blockCoeff(voicing::kDuckSlowSeconds, sampleRate_, n) * (inputPower_ - inputSlow_);
+            if (over > 0.0f) {
+                const float held = inputPower_ < voicing::kDuckSustainCrest * inputSlow_ ? 1.0f : 0.0f;
+                duckSustained_ += blockCoeff(voicing::kDuckSustainSeconds, sampleRate_, n) * (held - duckSustained_);
+            }
+            if (duckFastRelease() > 0.0f) release += duckSustained_ * (duckFastRelease() - release);
+            target *= 1.0f - duckSustainCut() * duckSustained_;
+        }
 #ifndef IV_FIXED_VOICINGS
         if (freezeDuck_ == 1 && gesture_.frozen()) {
             // setFreezeDuckPrototype 1: the pad keeps the reduction it had at the tap
@@ -684,14 +704,14 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
             duckGrDb_ = std::fmax(0.0f, duckGrDb_ - duckAtFreeze_ * float(n) / (freezeDuckSeconds_ * sampleRate_));
         } else {
             const float secs = target > duckGrDb_ ? voicing::kDuckAttackSeconds
-                             : (freezeMix_ > 0.0f ? (freezeDuck_ == 1 ? freezeDuckSeconds_ : 0.05f) : voicing::kDuckReleaseSeconds);
-            duckGrDb_ += (1.0f - std::exp(-float(n) / (secs * sampleRate_))) * (target - duckGrDb_);
+                             : (freezeMix_ > 0.0f ? (freezeDuck_ == 1 ? freezeDuckSeconds_ : 0.05f) : release);
+            duckGrDb_ += blockCoeff(secs, sampleRate_, n) * (target - duckGrDb_);
         }
 #else
         // A freeze lets go quickly (50 ms), so a fresh pad doesn't swell up over the release.
         const float secs = target > duckGrDb_ ? voicing::kDuckAttackSeconds
-                         : (freezeMix_ > 0.0f ? 0.05f : voicing::kDuckReleaseSeconds);
-        duckGrDb_ += (1.0f - std::exp(-float(n) / (secs * sampleRate_))) * (target - duckGrDb_);
+                         : (freezeMix_ > 0.0f ? 0.05f : release);
+        duckGrDb_ += blockCoeff(secs, sampleRate_, n) * (target - duckGrDb_);
 #endif
         if (target == 0.0f && duckGrDb_ < 0.05f) duckGrDb_ = 0.0f; // fully let go (and exact unity)
         duckGainStep_ = (std::pow(10.0f, -duckGrDb_ / 20.0f) - duckGain_) / float(n);
@@ -701,7 +721,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
     // on renders/diffuser_motion, v1.0.16), so repeated hits don't enter the tank identically.
     // Its depth glides in and out with SPACE, so a flip never jumps the read.
     const float motionTarget = activeSpace_ == 0 ? voicing::kDiffuserMotionSeconds * sampleRate_ : 0.0f;
-    diffMotionNow_ += (1.0f - std::exp(-float(n) / (0.1f * sampleRate_))) * (motionTarget - diffMotionNow_);
+    diffMotionNow_ += blockCoeff(0.1f, sampleRate_, n) * (motionTarget - diffMotionNow_);
     if (diffMotionNow_ > 1e-3f || motionTarget > 0.0f) {
         diffMotionPhase_ += voicing::kDiffuserMotionHz * float(n) / sampleRate_;
         if (diffMotionPhase_ >= 1.0f) diffMotionPhase_ -= 1.0f;
@@ -989,7 +1009,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             if (activeSpace_ != 0) { // the room's own 50 ms power, under -100 dB: no log a block, the step once per block size
                 if (n != roomStepN_) {
                     roomStepN_ = n;
-                    roomStep_ = 1.0f - std::exp(-float(n) / (0.05f * sampleRate_));
+                    roomStep_ = blockCoeff(0.05f, sampleRate_, n);
                 }
                 float p = 0.0f;
                 for (int i = 0; i < n; ++i) p += 0.5f * (twinL_[i] * twinL_[i] + twinR_[i] * twinR_[i]);

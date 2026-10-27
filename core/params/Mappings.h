@@ -22,7 +22,7 @@ inline float clamp01(float v) { return v < 0.0f ? 0.0f : (v > 1.0f ? 1.0f : v); 
 struct MixGains {
     float dry, wet;
 };
-inline MixGains mixGains(float v) { return {std::cos(v * 0.5f * kPi), std::sin(v * 0.5f * kPi)}; }
+IV_SIZE_OPT inline MixGains mixGains(float v) { return {std::cos(v * 0.5f * kPi), std::sin(v * 0.5f * kPi)}; }
 
 // DECAY (P2), SPEC §3: 0–0.80 T60 exponential per SPACE; 0.80–0.85 a
 // crossover to infinite (1/T60 falls linearly to 0); 0.85–1 infinite.
@@ -39,7 +39,7 @@ inline const T60Range& t60Range(int space) { return space == 0 ? kT60Plate : (sp
 
 // 1 / T60 in 1/s: 0 means infinite. Kept as a rate so the crossover is a
 // straight line and a loop gain follows as 10^(−3 · length · rate).
-inline float decayRate(float v, int space)
+IV_SIZE_OPT inline float decayRate(float v, int space)
 {
     const T60Range& r = t60Range(space);
     if (v <= kDecayFiniteTop) return 1.0f / expLerp(r.minS, r.maxS, v / kDecayFiniteTop);
@@ -64,7 +64,7 @@ inline float toneHighT60Ratio(float v)
 inline float hallT60Scale(float size) { return expLerp(voicing::kHallSmallT60Scale, 1.0f, size); }
 
 // SIZE (P5) in HALL: mean line delay, seconds (SPEC §3).
-inline float hallMeanSeconds(float v)
+IV_SIZE_OPT inline float hallMeanSeconds(float v)
 {
     return 0.001f * expLerp(voicing::kHallMeanMinMs, voicing::kHallMeanMaxMs, v);
 }
@@ -164,7 +164,7 @@ struct EraWear {
     float compress = 0, hiss = 0, crackle = 0; // the tape's in-loop compression, hiss and crackle, 0..1
     float makeup = 1.0f;                       // wet gain keeping ERA's loudness level
 };
-inline EraWear eraMix(float v)
+IV_SIZE_OPT inline EraWear eraMix(float v)
 {
     using namespace voicing;
     EraWear e;
@@ -196,7 +196,7 @@ inline EraWear eraMix(float v)
 
 // The floor governor's weight across DECAY's crossover (ADR 0008): 0 while
 // the tail is finite, 1 from infinite on.
-inline float governorWeight(float decay)
+IV_SIZE_OPT inline float governorWeight(float decay)
 {
     return clamp01((decay - kDecayFiniteTop) / (kDecayInfiniteAt - kDecayFiniteTop));
 }
@@ -204,7 +204,7 @@ inline float governorWeight(float decay)
 // MASSIVE's high-end T60 share (v1.0.31, ADR 0022): TONE and ERA's share scaled to MASSIVE's own
 // (kMassiveHighT60Ratio), gliding back to the shared one across DECAY's crossover, so an infinite
 // MASSIVE still darkens towards its floor (ADR 0008).
-inline float massiveHighRatio(float toneRatio, float decay)
+IV_SIZE_OPT inline float massiveHighRatio(float toneRatio, float decay)
 {
     const float own = toneRatio * (voicing::kMassiveHighT60Ratio / voicing::kDampingHighT60Ratio);
     return own + governorWeight(decay) * (toneRatio - own);
@@ -213,7 +213,7 @@ inline float massiveHighRatio(float toneRatio, float decay)
 // MASSIVE's DECAY: as decayRate(v, 2), but its shortest T60 is at least kMassiveMinPasses mean
 // lines (v1.0.21, knob_feel; 6 since v1.0.32, ADR 0023): ~2.1 s at SIZE 0, ~5 s at noon, ~7 s at
 // SIZE 0.7, 12 s at full SIZE.
-inline float massiveDecayRate(float v, float size)
+IV_SIZE_OPT inline float massiveDecayRate(float v, float size)
 {
     const float lo = std::fmax(kT60Massive.minS, voicing::kMassiveMinPasses * massiveMeanSeconds(size));
     if (v <= kDecayFiniteTop) return 1.0f / expLerp(lo, kT60Massive.maxS, v / kDecayFiniteTop);
@@ -224,7 +224,7 @@ inline float massiveDecayRate(float v, float size)
 // MASSIVE: the level a finite tail gains by ringing longer than decayRate(v, 2) would make it
 // (massiveDecayRate's longer shortest tails at big SIZEs), taken off again so each setting keeps
 // its loudness (energy goes with T60, as hallSizeLevelTrim); 1 where the two curves agree.
-inline float massiveDecayLevelTrim(float v, float size)
+IV_SIZE_OPT inline float massiveDecayLevelTrim(float v, float size)
 {
     const float now = massiveDecayRate(v, size), was = decayRate(v, 2);
     return now > 0.0f && was > 0.0f ? std::sqrt(now / was) : 1.0f;
@@ -234,7 +234,7 @@ inline float massiveDecayLevelTrim(float v, float size)
 // shorter (SpaceVoicing.h, kDecayLevelPower). The plain decayRate curve: HALL's SIZE has
 // hallSizeLevelTrim, MASSIVE's longer shortest tails massiveDecayLevelTrim. 1 at the finite top, and
 // through the crossover and infinite (T60 only grows there), so a held tail is as before.
-inline float decayLevelMakeup(float v, int space)
+IV_SIZE_OPT inline float decayLevelMakeup(float v, int space)
 {
     const float r = decayRate(v, space);
     if (r <= 0.0f) return 1.0f;
@@ -246,7 +246,7 @@ inline float decayLevelMakeup(float v, int space)
 
 // HALL: The level a finite tail loses by being shorter (its energy goes with its
 // T60), made up on the output; none at infinite, where nothing is shorter.
-inline float hallSizeLevelTrim(float size, float decay)
+IV_SIZE_OPT inline float hallSizeLevelTrim(float size, float decay)
 {
     const float full = 1.0f / std::sqrt(hallT60Scale(size));
     return full + (1.0f - full) * governorWeight(decay);

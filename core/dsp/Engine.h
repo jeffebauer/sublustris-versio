@@ -183,6 +183,16 @@ public:
         twinGain_ = std::pow(10.0f, db / 20.0f);
         twinOff_ = off;
     }
+    // PROTOTYPES (renders/level_duck, renders/level_glue; built since v1.0.51 as voicing::kFloorDbfs -21,
+    // kDuckRatio 2, kDuckSustainReleaseSeconds 0.08, kDuckSustainCut 0.6): the floor governor's floor (dBFS),
+    // the duck's ratio (<= 1: no ducking), its release (s), its release after held playing (s; 0: always the
+    // release), and the share of the reduction taken off held playing (0: none). Defaults are as built.
+    void  setFloorPrototype(float dbfs) { floorDbfs_ = dbfs; }
+    void  setDuckRatioPrototype(float ratio) { duckSlope_ = ratio > 1.0f ? 1.0f - 1.0f / ratio : 0.0f; }
+    void  setDuckReleasePrototype(float seconds) { duckRelease_ = seconds > 0.005f ? seconds : voicing::kDuckReleaseSeconds; }
+    void  setDuckAdaptivePrototype(float fastReleaseSeconds) { duckFastRelease_ = fastReleaseSeconds; }
+    void  setDuckSustainCutPrototype(float cut) { duckSustainCut_ = cut < 0.0f ? 0.0f : (cut > 1.0f ? 1.0f : cut); }
+    float duckSustained() const { return duckSustained_; }
     int   lowDecimate() const { return lowDecimate_; }
     int   swellTaps() const { return swell_.tapCount(); }
 #endif
@@ -310,6 +320,22 @@ private:
     float             twinGain_ = 1.0f;  // setTwinGainPrototype; 1 = as built
     bool              twinOff_ = false;
     bool              shimmerLazy_ IV_ZI, shimmerArmed_ = true, shimmerResting_ IV_ZI; // setShimmerLazyPrototype
+    float             floorDbfs_ = voicing::kFloorDbfs;                     // setFloorPrototype
+    float             duckSlope_ = 1.0f - 1.0f / voicing::kDuckRatio;       // setDuckRatioPrototype
+    float             duckRelease_ = voicing::kDuckReleaseSeconds;         // setDuckReleasePrototype
+    float             duckFastRelease_ = voicing::kDuckSustainReleaseSeconds; // setDuckAdaptivePrototype
+    float             duckSustainCut_ = voicing::kDuckSustainCut;          // setDuckSustainCutPrototype
+    float floorDbfs() const { return floorDbfs_; }
+    float duckSlope() const { return duckSlope_; }
+    float duckRelease() const { return duckRelease_; }
+    float duckFastRelease() const { return duckFastRelease_; }
+    float duckSustainCut() const { return duckSustainCut_; }
+#else
+    static constexpr float floorDbfs() { return voicing::kFloorDbfs; }
+    static constexpr float duckSlope() { return 1.0f - 1.0f / voicing::kDuckRatio; }
+    static constexpr float duckRelease() { return voicing::kDuckReleaseSeconds; }
+    static constexpr float duckFastRelease() { return voicing::kDuckSustainReleaseSeconds; }
+    static constexpr float duckSustainCut() { return voicing::kDuckSustainCut; }
 #endif
     dsp::Plate        twinPlate_; // PLATE's twin
     // HALL's and MASSIVE's twin (v1.0.43, the owner's pick E on renders/small_room): the small room, its rings in
@@ -383,6 +409,7 @@ private:
     uint64_t frozeAt_ IV_ZI;
     // Input quiet detector for holding an infinite tail where it settled.
     float    inputPower_ IV_ZI;
+    float    inputSlow_ IV_ZI, duckSustained_ IV_ZI; // the duck's: the input's 0.5 s power; how held the playing is (0..1, v1.0.51)
     float    tankInPower_ IV_ZI; // the big tank's input (after the swell), for the quiet detector
     uint64_t quietSince_ IV_ZI;
     bool     tailCaptured_ IV_ZI;

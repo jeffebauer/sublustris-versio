@@ -71,13 +71,16 @@ void duckDepth()
     char msg[200];
     std::snprintf(msg, sizeof msg, "ducking depth: %.2f at DECAY 0.80, %.2f at 0.90, %.2f at 1.0 (0 below 0.85, rising)",
                   d80, d90, d100);
-    check(d80 == 0.0f && d90 > 0.0f && d100 >= d90 && d100 > 0.5f, msg);
+    // Steady noise is held playing: since v1.0.51 it gets 40 % of the 2:1 reduction (~0.3 of the LEDs' full);
+    // the maximum is the onset, before the playing counts as held.
+    check(d80 == 0.0f && d90 > 0.0f && d100 >= d90 - 0.01f && d100 > 0.5f, msg);
     std::snprintf(msg, sizeof msg, "no duck while frozen (playing over a pad mustn't duck it): %.2f", duckWhilePlaying(1.0f, true));
     check(duckWhilePlaying(1.0f, true) == 0.0f, msg);
 }
 
-// While playing at infinite the wet steps back (4:1), with no darkening, and
-// it lets go within about a second of stopping (release 0.4 s).
+// While playing at infinite the wet steps back (2:1 since v1.0.51, 4:1 before), with no darkening, and it
+// lets go when the playing stops. Held playing (steady noise here) gets 40 % of the reduction and is let go in
+// 0.08 s; short sounds (bursts) get all of it and the 0.4 s release (v1.0.51, ADR 0014; renders/level_glue E).
 double highShare(const std::vector<float>& x, size_t a, size_t b)
 {
     const float c = std::exp(-2.0f * 3.14159265f * 4000.0f / kSr);
@@ -90,6 +93,32 @@ double highShare(const std::vector<float>& x, size_t a, size_t b)
         all += double(x[i]) * x[i];
     }
     return hi / (all + 1e-30);
+}
+
+// Short sounds (60 ms noise bursts, two a second) aren't held playing: the full 2:1 reduction, and the slow
+// 0.4 s release, so they don't pump; a held sound is let go fast (0.08 s) when it stops (v1.0.51).
+void shortSoundsDuckInFull()
+{
+    iv::Engine* e = makeEngine(1.0f);
+    const size_t n = size_t(10.0f * kSr);
+    std::vector<float> in(n, 0.0f), l(n), r(n);
+    for (size_t i = 0; i < size_t(6.0f * kSr); ++i) in[i] = (i % size_t(0.5f * kSr)) < size_t(0.06f * kSr) ? 0.3f * noise() : 0.0f;
+    for (size_t i = size_t(6.0f * kSr); i < size_t(8.0f * kSr); ++i) in[i] = 0.3f * noise();
+    float bursts = 0.0f, between = 1.0f, heldGone = 1.0f;
+    for (size_t pos = 0; pos < n; pos += 48) {
+        e->process(in.data() + pos, in.data() + pos, l.data() + pos, r.data() + pos, 48);
+        const size_t ph = pos % size_t(0.5f * kSr);
+        if (pos > size_t(2.0f * kSr) && pos < size_t(6.0f * kSr)) {
+            bursts = std::fmax(bursts, e->duckAmount());
+            if (ph > size_t(0.3f * kSr) && ph < size_t(0.35f * kSr)) between = std::fmin(between, e->duckAmount());
+        }
+        if (pos > size_t(8.3f * kSr) && pos < size_t(8.4f * kSr)) heldGone = std::fmin(heldGone, e->duckAmount());
+    }
+    delete e;
+    char msg[240];
+    std::snprintf(msg, sizeof msg, "ducking short sounds: %.2f on the bursts (full 2:1: > 0.45), %.2f 0.25 s after one (the slow "
+                                   "release: > 0.1); held noise let go 0.3 s after it stops: %.2f (< 0.05)", bursts, between, heldGone);
+    check(bursts > 0.45f && between > 0.1f && heldGone < 0.05f, msg);
 }
 
 void ducksAndComesBack()
@@ -108,8 +137,9 @@ void ducksAndComesBack()
     const double hiPlaying = highShare(l, size_t(6.0f * kSr), size_t(8.0f * kSr));
     const double hiAfter = highShare(l, size_t(9.5f * kSr), size_t(11.5f * kSr));
     char msg[220];
-    std::snprintf(msg, sizeof msg, "ducking: %.2f while playing, %.2f 1.5 s after stopping (lets go)", during, after);
-    check(during > 0.5f && after < 0.05f, msg);
+    std::snprintf(msg, sizeof msg, "ducking: %.2f while playing held noise (40 %% of 2:1: 0.2-0.45), %.2f 1.5 s after stopping (lets go)",
+                  during, after);
+    check(during > 0.2f && during < 0.45f && after < 0.05f, msg);
     std::snprintf(msg, sizeof msg, "ducking doesn't darken: the wet's highs (> 4 kHz) %.1f%% while playing, %.1f%% after",
                   100.0 * hiPlaying, 100.0 * hiAfter);
     check(hiPlaying > 0.5 * hiAfter, msg);
@@ -200,6 +230,7 @@ int main()
 {
     duckDepth();
     ducksAndComesBack();
+    shortSoundsDuckInFull();
     limiter();
     integrationSweep();
     std::printf("%d failure(s)\n", failures);

@@ -330,13 +330,13 @@ void twin()
 // most kPaintHeadroomDb (1.5 dB) over its frozen level, and stays after. The pad is judged alone, before and after:
 // noise builds it (0-3 s, frozen at 2.5 s), silence lets the input's tail go (to 20 s), then noise plays over it
 // (20-45 s, painted 30-45 s) and stops, and the twin (from v1.0.43 HALL's and MASSIVE's small room) has gone by
-// 55 s. HALL and MASSIVE fed loud enough (0.9) that their pads freeze above the floor, where painting may grow
-// a pad to the floor + 1.5 dB by design.
+// 55 s. Every SPACE fed loud enough (HALL, MASSIVE 0.9; PLATE 0.5, 0.35 until the floor rose to -21 dBFS in
+// v1.0.51) that its pad freezes above the floor: below it painting may grow a pad to the floor + 1.5 dB by design.
 void paint()
 {
     std::vector<float> in(size_t(60.0f * kSr), 0.0f);
     for (int space : {1, 2, 0}) {
-        const float amp = space == 0 ? 0.35f : 0.9f;
+        const float amp = space == 0 ? 0.5f : 0.9f;
         for (size_t i = 0; i < in.size(); ++i) {
             const double t = double(i) / kSr;
             in[i] = (t < 3.0 || (t >= 20.0 && t < 45.0)) ? amp * noise() : 0.0f;

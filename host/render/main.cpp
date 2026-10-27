@@ -203,6 +203,30 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         engine.setTwinGainPrototype(off ? 0.0f : float(std::atof(tg)), off);
         std::fprintf(stderr, "iv_render: IV_TWIN_GAIN_DB: %s\n", off ? "no twin" : tg);
     }
+#ifndef IV_FIXED_VOICINGS
+    // renders/level_duck and renders/level_glue's hooks; as built since v1.0.51 (ratio 2, floor -21, release 0.4,
+    // 0.08 after held playing, held playing keeps 40 % of the reduction).
+    if (const char* dr = std::getenv("IV_DUCK_RATIO")) {
+        engine.setDuckRatioPrototype(float(std::atof(dr)));
+        std::fprintf(stderr, "iv_render: IV_DUCK_RATIO: %s:1\n", dr);
+    }
+    if (const char* fl = std::getenv("IV_FLOOR_DB")) {
+        engine.setFloorPrototype(float(std::atof(fl)));
+        std::fprintf(stderr, "iv_render: IV_FLOOR_DB: %s dBFS\n", fl);
+    }
+    if (const char* rl = std::getenv("IV_DUCK_RELEASE")) {
+        engine.setDuckReleasePrototype(float(std::atof(rl)));
+        std::fprintf(stderr, "iv_render: IV_DUCK_RELEASE: %s s\n", rl);
+    }
+    if (const char* ad = std::getenv("IV_DUCK_ADAPTIVE")) { // 0: no faster release after held playing
+        engine.setDuckAdaptivePrototype(float(std::atof(ad)));
+        std::fprintf(stderr, "iv_render: IV_DUCK_ADAPTIVE: %s s after held playing\n", ad);
+    }
+    if (const char* sc = std::getenv("IV_DUCK_SUSTAIN_CUT")) { // 0: held playing ducked in full
+        engine.setDuckSustainCutPrototype(float(std::atof(sc)));
+        std::fprintf(stderr, "iv_render: IV_DUCK_SUSTAIN_CUT: %s\n", sc);
+    }
+#endif
     if (const char* st = std::getenv("IV_SWELL_TAPS")) {
         engine.setSwellTapsPrototype(std::atoi(st));
         std::fprintf(stderr, "iv_render: IV_SWELL_TAPS: %d swell points a side\n", engine.swellTaps());
