@@ -426,7 +426,12 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // A pad isn't pulled to the floor: the floor glides away with freezeMix_ (and back on unfreeze).
     // Switched in one sample, a fed infinite tail's governor loss vanished at once and the wet
     // stepped (up to 20x a sample's normal change, PLATE; heard once the dark tilt took the highs out).
+#ifndef IV_FIXED_VOICINGS
+    // setHallTailPrototype (renders/hall_level): HALL's endless tail settles hallTailDb_ higher (0: as built).
+    const float floorDb = (activeSpace_ == 1 && hallTailDb_ != 0.0f ? floorDbfs() + hallTailDb_ : floorDbfs()) * (1.0f - freezeMix_);
+#else
     const float floorDb = floorDbfs() * (1.0f - freezeMix_);
+#endif
     float holdDb = 0.0f;
     if (frozen) holdDb = padFloorDb_;
     else if (tailCaptured_) holdDb = tailCeilingDb_;
@@ -536,6 +541,14 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     eraMakeup_ = wear.makeup;
 
     tilt_.set(smoothed(ParamId::Tone));
+#ifndef IV_FIXED_VOICINGS
+    // setHallTailPrototype (renders/hall_level): HALL at infinite DECAY tilted brighter (lows / highs dB), as far as
+    // DECAY's governor weight reaches (0 below 0.85, full at 1) and not while frozen.
+    if (activeSpace_ == 1 && (hallTiltLowDb_ != 0.0f || hallTiltHighDb_ != 0.0f)) {
+        const float w = map::governorWeight(smoothed(ParamId::Decay)) * (1.0f - freezeMix_);
+        tilt_.trimPrototype(w * hallTiltLowDb_, w * hallTiltHighDb_);
+    }
+#endif
     toneBell_.set(smoothed(ParamId::Tone), n);
     // Hiss follows the input (none in silence, so an infinite tail doesn't
     // fill with noise, ADR 0005); crackle the same.

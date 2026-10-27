@@ -31,6 +31,14 @@ public:
         highTarget_ = std::pow(10.0f, (d * voicing::kToneDarkHighDb + b * voicing::kToneBrightHighDb) / 20.0f);
     }
     void snap() { low_ = lowTarget_; high_ = highTarget_; }
+#ifndef IV_FIXED_VOICINGS
+    // PROTOTYPE (Engine::setHallTailPrototype): after set(), the targets moved by these dB.
+    void trimPrototype(float lowDb, float highDb)
+    {
+        lowTarget_ *= std::pow(10.0f, lowDb / 20.0f);
+        highTarget_ *= std::pow(10.0f, highDb / 20.0f);
+    }
+#endif
     void process(float& l, float& r)
     {
         low_ += kGlide * (lowTarget_ - low_); // per sample, so a fast TONE move can't step

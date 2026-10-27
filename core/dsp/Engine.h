@@ -193,6 +193,16 @@ public:
     void  setDuckAdaptivePrototype(float fastReleaseSeconds) { duckFastRelease_ = fastReleaseSeconds; }
     void  setDuckSustainCutPrototype(float cut) { duckSustainCut_ = cut < 0.0f ? 0.0f : (cut > 1.0f ? 1.0f : cut); }
     float duckSustained() const { return duckSustained_; }
+    // PROTOTYPE (renders/hall_level; owner: "Hall infinite examples feel slightly less level matched than massive ...
+    // reverb feels a bit too quiet so when the set stops, there's a less seamless transition"): HALL's endless tail
+    // settles `tailDb` higher (its floor governor's floor, HALL only), and/or HALL at infinite DECAY is tilted
+    // brighter on the wet (TONE's tilt, lows / highs in dB). All 0: as built.
+    void  setHallTailPrototype(float tailDb, float tiltLowDb, float tiltHighDb)
+    {
+        hallTailDb_ = tailDb;
+        hallTiltLowDb_ = tiltLowDb;
+        hallTiltHighDb_ = tiltHighDb;
+    }
     int   lowDecimate() const { return lowDecimate_; }
     int   swellTaps() const { return swell_.tapCount(); }
 #endif
@@ -325,6 +335,7 @@ private:
     float             duckRelease_ = voicing::kDuckReleaseSeconds;         // setDuckReleasePrototype
     float             duckFastRelease_ = voicing::kDuckSustainReleaseSeconds; // setDuckAdaptivePrototype
     float             duckSustainCut_ = voicing::kDuckSustainCut;          // setDuckSustainCutPrototype
+    float             hallTailDb_ IV_ZI, hallTiltLowDb_ IV_ZI, hallTiltHighDb_ IV_ZI; // setHallTailPrototype
     float floorDbfs() const { return floorDbfs_; }
     float duckSlope() const { return duckSlope_; }
     float duckRelease() const { return duckRelease_; }
