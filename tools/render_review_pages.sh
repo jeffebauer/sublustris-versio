@@ -115,7 +115,7 @@ if on m1_hall; then
     for tc in 0:A_dark 0.5:B_noon 1:C_bright; do
         r m1_hall tone ${tc##*:} "" --set space=HALL --set era=0 --set time=0 --set size=0.6 --set decay=0.6 --set tone=${tc%%:*}
     done
-    finish m1_hall "Immensio M1: the Hall" "The HALL tank on its own (ERA clean), after your M1 notes: SIZE now goes from a small room (shorter lines, and its tails are shorter too, as a small room's are) to a huge hall, which also stops the buzzy build-up on long small rooms; TONE's ends go further (dark: more lows, fewer highs; bright: the opposite; noon unchanged). SIZE columns with DECAY as versions; TONE dark / noon / bright.
+    finish m1_hall "Sublustris M1: the Hall" "The HALL tank on its own (ERA clean), after your M1 notes: SIZE now goes from a small room (shorter lines, and its tails are shorter too, as a small room's are) to a huge hall, which also stops the buzzy build-up on long small rooms; TONE's ends go further (dark: more lows, fewer highs; bright: the opposite; noon unchanged). SIZE columns with DECAY as versions; TONE dark / noon / bright.
 
 size_small   SIZE fully CCW: a small room
 size_medium  SIZE noon
@@ -145,7 +145,7 @@ if on m4_massive; then
     done
     r m4_massive infinite A_hall "" --set space=HALL --set era=0 --set decay=1 --set size=0.7
     r m4_massive infinite B_massive "" --set space=MASSIVE --set era=0 --set decay=1 --set size=0.7
-    finish m4_massive "Immensio M4: MASSIVE and ATTACK" "After your M4 notes: MASSIVE starts with what you play and swells from there (it was silent for over a second), SIZE fully CCW is a wash, not rhythmic echoes, and DARKEN lets go sooner between phrases. The four ATTACK settings in HALL and MASSIVE, and infinite DECAY (ERA clean). SHIMMER (ATTACK's third position since v1.0.33) adds your input an octave up.
+    finish m4_massive "Sublustris M4: MASSIVE and ATTACK" "After your M4 notes: MASSIVE starts with what you play and swells from there (it was silent for over a second), SIZE fully CCW is a wash, not rhythmic echoes, and DARKEN lets go sooner between phrases. The four ATTACK settings in HALL and MASSIVE, and infinite DECAY (ERA clean). SHIMMER (ATTACK's third position since v1.0.33) adds your input an octave up.
 
 massive_size    MASSIVE's SIZE, DECAY 0.7
 attack_hall     the ATTACK switch in HALL
@@ -175,7 +175,7 @@ if on m5_plate_freeze; then
     r m5_plate_freeze paint A_hall_paint freeze --set space=HALL --set size=0.7 --set decay=0.6
     r m5_plate_freeze paint B_massive_paint freeze --set space=MASSIVE --set size=0.7 --set decay=0.6
     r m5_plate_freeze paint C_plate_paint freeze --set space=PLATE --set size=0.7 --set decay=0.6
-    finish m5_plate_freeze "Immensio M5: PLATE, freeze and paint" "The PLATE; freeze, now the twin you picked: a tap freezes the tank into a still pad, and what you play goes into a twin of it, a quieter layer over the pad that fades back out when you stop, leaving the pad as it was; a second tap unfreezes. Paint (a long hold while frozen) blends a little of that layer into the pad, never more than ~1.5 dB, so the pad stays itself. ERA at its default (a touch of Neve).
+    finish m5_plate_freeze "Sublustris M5: PLATE, freeze and paint" "The PLATE; freeze, now the twin you picked: a tap freezes the tank into a still pad, and what you play goes into a twin of it, a quieter layer over the pad that fades back out when you stop, leaving the pad as it was; a second tap unfreezes. Paint (a long hold while frozen) blends a little of that layer into the pad, never more than ~1.5 dB, so the pad stays itself. ERA at its default (a touch of Neve).
 
 plate    the PLATE from small and short to large and infinite
 freeze   a tap freezes; your playing is a layer over the pad, then fades back out; a tap unfreezes
@@ -207,7 +207,7 @@ if on m6_character; then
     for tc in 0:A_dark 0.5:B_noon 1:C_bright; do
         r m6_character tone ${tc##*:} "" --set space=HALL --set decay=0.6 --set size=0.6 --set tone=${tc%%:*}
     done
-    finish m6_character "Immensio M6: ERA, DRIFT and TONE" "ERA's five eras (ADR 0021), DRIFT both ways and TONE's full range, from today's reverb. ERA now runs from sweet to gritty, each era on its own, with the Neve's warmth under all of them: the Neve, the Midiverb, a bucket-brigade delay line, the cassette and AM radio (each card is the middle of its stretch). Notes only.
+    finish m6_character "Sublustris M6: ERA, DRIFT and TONE" "ERA's five eras (ADR 0021), DRIFT both ways and TONE's full range, from today's reverb. ERA now runs from sweet to gritty, each era on its own, with the Neve's warmth under all of them: the Neve, the Midiverb, a bucket-brigade delay line, the cassette and AM radio (each card is the middle of its stretch). Notes only.
 
 era_hall     ERA's five eras in HALL (DECAY 0.6, SIZE 0.6)
 era_massive  three eras in MASSIVE (DECAY 0.65, SIZE 0.7)
@@ -233,7 +233,7 @@ if on m7_duck; then
         r m7_duck duck_hall ${dc##*:} "" --set space=HALL --set size=0.7 --set decay=${dc%%:*}
         r m7_duck duck_massive ${dc##*:} "" --set space=MASSIVE --set size=0.7 --set decay=${dc%%:*}
     done
-    finish m7_duck "Immensio M7: ducking" "Ducking at infinite DECAY (ADR 0014, amended v1.0.17): while you play, the tail is compressed 4:1 (attack 30 ms, release 0.4 s, about 3 dB) so the dry stays clear, without darkening; when you stop, it comes back over about a second.
+    finish m7_duck "Sublustris M7: ducking" "Ducking at infinite DECAY (ADR 0014, amended v1.0.17): while you play, the tail is compressed 4:1 (attack 30 ms, release 0.4 s, about 3 dB) so the dry stays clear, without darkening; when you stop, it comes back over about a second.
 
 duck_hall      ducking in HALL (SIZE 0.7)
 duck_massive   ducking in MASSIVE (SIZE 0.7)
@@ -246,7 +246,7 @@ fi
 # ---- Decision pages (built WITHOUT --showcase: they ask the owner to pick) -------------------
 
 if on valhalla_compare; then
-    # Immensio beside the owner's Valhalla recordings (docs/reference-recording-guide.md; read from their
+    # Sublustris beside the owner's Valhalla recordings (docs/reference-recording-guide.md; read from their
     # Ableton set and split by tools/ingest_reference.py into test_audio/reference/, never committed).
     # Our DECAY set so the tail rings 2 / 5 / 15 s (T60 at 500 Hz-1 kHz, measured 23 Oct 2026, v1.0.19).
     REF=test_audio/reference
@@ -272,7 +272,7 @@ if on valhalla_compare; then
     done
     MATERIALS=("${saved[@]}")
     refs=(); for d in $REF/*(/N); do [ -f $d/${d:t}_skank.wav ] && refs+=(--reference $d); done
-    print -r -- "Immensio beside your Valhalla recordings, at matched decays: each column rings for about 2, 5 or 15 seconds (our DECAY set to match; ERA clean, DRIFT noon). In each card, A is Immensio and B and C are the Valhalla takes from your Ableton set: HALL against Room (Large Room, Dark Chamber), PLATE against Plate (Chrome, Lithium), MASSIVE against Supermassive (Sagittarius, Andromeda). The Andromeda in the 2 s column is its 0 % feedback take, which rings only about half a second. The Compare with menu adds any of your takes to every card as R. Notes only: what do they do that we don't, and the other way round?
+    print -r -- "Sublustris beside your Valhalla recordings, at matched decays: each column rings for about 2, 5 or 15 seconds (our DECAY set to match; ERA clean, DRIFT noon). In each card, A is Sublustris and B and C are the Valhalla takes from your Ableton set: HALL against Room (Large Room, Dark Chamber), PLATE against Plate (Chrome, Lithium), MASSIVE against Supermassive (Sagittarius, Andromeda). The Andromeda in the 2 s column is its 0 % feedback take, which rings only about half a second. The Compare with menu adds any of your takes to every card as R. Notes only: what do they do that we don't, and the other way round?
 
 hall_02s      HALL, about 2 s (DECAY 0.30, SIZE 0.6)
 hall_05s      HALL, about 5 s (DECAY 0.51)
@@ -284,14 +284,14 @@ massive_02s   MASSIVE, about 2 s (DECAY 0.07, SIZE 0.7: its shortest is 2.2 s)
 massive_05s   MASSIVE, about 5 s (DECAY 0.20)
 massive_15s   MASSIVE, about 15 s (DECAY 0.41)
 
-A_immensio                    Immensio
+A_immensio                    Sublustris
 B_valhalla_room_large_room    Valhalla Room, Large Room
 C_valhalla_room_dark_chamber  Valhalla Room, Dark Chamber
 B_valhalla_plate_chrome       Valhalla Plate, Chrome
 C_valhalla_plate_lithium      Valhalla Plate, Lithium
 B_supermassive_sagittarius    Valhalla Supermassive, Sagittarius
 C_supermassive_andromeda      Valhalla Supermassive, Andromeda" > renders/valhalla_compare/README.txt
-    python3 tools/review/make_review.py renders/valhalla_compare --title "Immensio beside Valhalla" --level-match --showcase --dry $SRC --wet-only "${refs[@]}" > /dev/null
+    python3 tools/review/make_review.py renders/valhalla_compare --title "Sublustris beside Valhalla" --level-match --showcase --dry $SRC --wet-only "${refs[@]}" > /dev/null
     echo "renders/valhalla_compare/index.html"
 fi
 
@@ -384,7 +384,7 @@ hall      HALL (DECAY 0.6, SIZE 0.6)
 massive   MASSIVE (DECAY 0.65, SIZE 0.7)
 
 A_era_sweep  ERA, fully left to fully right" > renders/era_sweep/README.txt
-    python3 tools/review/make_review.py renders/era_sweep --title "Immensio: ERA, knob sweep" --showcase --no-level-match --dry $SW --wet-only \
+    python3 tools/review/make_review.py renders/era_sweep --title "Sublustris: ERA, knob sweep" --showcase --no-level-match --dry $SW --wet-only \
         --chapters "Neve:0,Midiverb:8,BBD:16,Cassette:24,Radio:32,Tail:40" > /dev/null
     echo "renders/era_sweep/index.html"
 fi
@@ -419,7 +419,7 @@ B_hall_large       SIZE fully CW
 A_massive_medium   SIZE noon
 B_massive_small    SIZE fully CCW
 C_massive_large    SIZE fully CW" > renders/grainy_start/README.txt
-    python3 tools/review/make_review.py renders/grainy_start --title "Immensio: do big spaces start grainy?" --level-match --showcase --dry $SRC --wet-only > /dev/null
+    python3 tools/review/make_review.py renders/grainy_start --title "Sublustris: do big spaces start grainy?" --level-match --showcase --dry $SRC --wet-only > /dev/null
     echo "renders/grainy_start/index.html"
 fi
 

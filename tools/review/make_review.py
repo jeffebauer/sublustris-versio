@@ -404,7 +404,7 @@ def main():
                              "version to every card")
     parser.add_argument("--wet-only", action="store_true",
                         help="The renders are 100%% wet (MIX fully up); with --dry the page gets a live MIX fader "
-                             "that blends the dry back in (Immensio's equal-power law)")
+                             "that blends the dry back in (Sublustris's equal-power law)")
     parser.add_argument("--no-audio-files", action="store_true",
                         help="Don't write _audio/*.js (the page then only plays over http, e.g. a local server)")
     parser.add_argument("--showcase", action="store_true",

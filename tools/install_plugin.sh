@@ -2,7 +2,7 @@
 # Build the AU + VST3 from a git commit (default: HEAD) in a throwaway
 # worktree and install them into ~/Library/Audio/Plug-Ins, so the plugin in
 # Ableton only changes when we choose. Usage: tools/install_plugin.sh [ref] [label]
-# With a label (e.g. F) the build installs as "Immensio Versio <label>", with its
+# With a label (e.g. F) the build installs as "Sublustris Versio <label>", with its
 # own plugin code and bundle ID (as make_release.sh --candidate), NEXT TO the main
 # plugin, for A/B in Ableton; the main plugin is left alone.
 set -euo pipefail
@@ -10,11 +10,11 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 REF="${1:-HEAD}"
 LABEL="${2:-}"
 if [ -n "$LABEL" ]; then
-    NAME="Immensio Versio $LABEL" BUNDLE="com.OmbraAudio.ImmensioVersio$LABEL"
+    NAME="Sublustris Versio $LABEL" BUNDLE="com.OmbraAudio.ImmensioVersio$LABEL"
     CODE="ImV$(printf '%s' "$LABEL" | tr '[:lower:]' '[:upper:]' | cut -c1)"
     RECORD="dist/installed_plugin_$LABEL.txt"
 else
-    NAME="Immensio Versio" CODE="ImVs" BUNDLE="com.OmbraAudio.ImmensioVersio" RECORD="dist/installed_plugin.txt"
+    NAME="Sublustris Versio" CODE="ImVs" BUNDLE="com.OmbraAudio.ImmensioVersio" RECORD="dist/installed_plugin.txt"
 fi
 SHA="$(git -C "$REPO" rev-parse --short "$REF")"
 # A version that always goes up, so hosts re-read the parameters (plugin/CMakeLists.txt).
@@ -51,6 +51,12 @@ done
 # Don't kill AudioComponentRegistrar / coreaudiod: doing so on 28 Sep 2026 left
 # CoreAudio unresponsive and Ableton hung at launch. Ableton picks up the new
 # bundles on a rescan (Option-click Rescan if it cached an old failure).
+
+# The plugin was "Immensio Versio" until 27 Oct 2026 (ADR 0032): same codes and
+# bundle ID, so an old-named copy left installed is a second copy of this plugin.
+for old in "$DEST/Components/Immensio Versio"*.component "$DEST/VST3/Immensio Versio"*.vst3; do
+    [ -e "$old" ] && echo "WARNING: $old is this plugin under its old name: move it to the Trash, or the DAW sees two copies."
+done
 
 echo "Installed $NAME plugin from $SHA: $(git -C "$REPO" log -1 --format=%s "$SHA")"
 echo "Now rescan plug-ins in Ableton. Validate the AU with Ableton closed: auval -v aumf $CODE Ombr"

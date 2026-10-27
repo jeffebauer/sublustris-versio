@@ -296,7 +296,7 @@ public:
             g.drawFittedText(s, centred(at, wMm, hMm), j, 1, 0.8f);
         };
 
-        text("IMMENSIO VERSIO", {kPanelW * 0.5f, 9.0f}, 3.0f, 12.0f, kTextColour, juce::Justification::centred, 30.0f);
+        text("SUBLUSTRIS VERSIO", {kPanelW * 0.5f, 9.0f}, 3.0f, 12.0f, kTextColour, juce::Justification::centred, 30.0f);
 
         // Meter labels: left pair is the input, right pair the output.
         text("IN", {(kLeds[0].x + kLeds[1].x) * 0.5f, 15.6f}, kLabelHMm, 9.0f, kDimTextColour);

@@ -1906,7 +1906,7 @@ constexpr size_t kMeterLed[kNumMeters] = {
 volatile float gPeak[kNumMeters] = {};
 volatile float gLimiterGain      = 1.0f; // lowest Engine::limiterGain() since last read
 // Late blocks (diagnostic, 26 Oct 2026: the owner heard crackle in MASSIVE at noon that round 13's
-// real-time test didn't show; RELEASE_LATE_LIGHT=1 builds it, immensio_versio-latelight.bin): the
+// real-time test didn't show; RELEASE_LATE_LIGHT=1 builds it, sublustris_versio-latelight.bin): the
 // callback times itself; a block over its period (48 samples at
 // 48 kHz) counts in gLateBlocks, one over 90 % in gNearBlocks. The main loop flashes the rightmost
 // LED red for a late block, amber for a near one, so a crackle with a flash is the CPU, one without

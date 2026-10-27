@@ -7,7 +7,10 @@
 set(IV_PLUGIN_VERSION "${PROJECT_VERSION}" CACHE STRING "Plugin version shown to hosts")
 # A candidate build for friends (make_release.sh --candidate) gets its own name
 # and plugin code, so it installs next to the released plugin for A/B.
-set(IV_PLUGIN_NAME "Immensio Versio" CACHE STRING "Plugin name (and bundle name)")
+# The name was "Immensio Versio" until 27 Oct 2026 (ADR 0032). Never change
+# IV_PLUGIN_CODE, the manufacturer code or the bundle ID with it: hosts find the
+# plugin, and its saved sets, by them.
+set(IV_PLUGIN_NAME "Sublustris Versio" CACHE STRING "Plugin name (and bundle name)")
 set(IV_PLUGIN_CODE "ImVs" CACHE STRING "4-character plugin code") # Resilio Versio is RsVs
 set(IV_PLUGIN_BUNDLE_ID "com.OmbraAudio.ImmensioVersio" CACHE STRING "macOS bundle identifier")
 juce_add_plugin(ImmensioVersio

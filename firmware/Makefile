@@ -1,10 +1,10 @@
-# Immensio Versio firmware (standard libDaisy app, internal flash, SPEC §5.3;
+# Sublustris Versio firmware (standard libDaisy app, internal flash, SPEC §5.3;
 # seeded from Resilio Versio's firmware, its ADR 0011).
 #
 # Three variants, one main.cpp, selected by MODE (SPEC §7 M0/M3):
-#   make -C firmware MODE=m0test   -> build/immensio_versio_m0test.bin  (SPEC §7 M0)
-#   make -C firmware MODE=profile  -> build/immensio_versio_profile.bin (SPEC §7 M3)
-#   make -C firmware [MODE=release]-> build/immensio_versio.bin         (default; the real instrument)
+#   make -C firmware MODE=m0test   -> build/sublustris_versio_m0test.bin  (SPEC §7 M0)
+#   make -C firmware MODE=profile  -> build/sublustris_versio_profile.bin (SPEC §7 M3)
+#   make -C firmware [MODE=release]-> build/sublustris_versio.bin         (default; the real instrument)
 #
 # `make -C firmware all-variants` builds all three and reports each size
 # against the 128 KB internal-flash limit (SPEC §5.3), failing if any is over.
@@ -19,20 +19,20 @@ PROFILE_BLOCK ?= 48
 #   PROFILE_FZ=0          the profile build without flush-to-zero (FPSCR/FPDSCR.FZ)
 #   PROFILE_SDRAM_TIGHT=0 the corner lap at libDaisy's SDRAM timing (the micro-tests still try 3 / 3)
 #   PROFILE_ITCM=0        the profile with the Core's hot code in flash, as before ITCM (round 12)
-# A non-default value gets its own object directory and .bin name (immensio_versio_profile-nofz.bin, ...).
+# A non-default value gets its own object directory and .bin name (sublustris_versio_profile-nofz.bin, ...).
 # Release and profile run Engine.o, Fdn.o and Plate.o from ITCM (STM32H750IB_flash_itcm.lds; M3 round 12,
 # 26 Oct 2026: it boots, 2.5-3.5 points off every corner); m0test doesn't link the Core.
 PROFILE_FZ ?= 1
 PROFILE_SDRAM_TIGHT ?= 1
 PROFILE_ITCM ?= 1
 # Release-only switch (diagnostic, 26 Oct 2026): RELEASE_SDRAM_TIGHT=0 keeps libDaisy's SDRAM timing
-# (immensio_versio-sdlibdaisy.bin), to tell a timing fault on rack power from a CPU overrun.
+# (sublustris_versio-sdlibdaisy.bin), to tell a timing fault on rack power from a CPU overrun.
 RELEASE_SDRAM_TIGHT ?= 1
 # RELEASE_DIAG=1: the playing build on USB power, knobs held at noon, its own test input, a serial report
-# (immensio_versio-diag.bin; main.cpp "RELEASE_DIAG").
+# (sublustris_versio-diag.bin; main.cpp "RELEASE_DIAG").
 RELEASE_DIAG ?= 0
 # RELEASE_LATE_LIGHT=1: the rightmost LED flashes red after a late block, amber after a near one
-# (immensio_versio-latelight.bin; a diagnostic, not in the normal build: flash).
+# (sublustris_versio-latelight.bin; a diagnostic, not in the normal build: flash).
 RELEASE_LATE_LIGHT ?= 0
 # Integration dry run (trial switches, all off by default; each gets its own .bin name):
 #   SIZE_GROUPS=n SIZE's crossfade in n groups (1, 2 or 8) as the default instead of 4 (Fdn.h IV_SIZE_GROUPS; -gn)
@@ -46,17 +46,17 @@ RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 
 PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)
 
 ifeq ($(MODE),m0test)
-  TARGET    = immensio_versio_m0test
+  TARGET    = sublustris_versio_m0test
   MODE_DEFS = -DIV_MODE_M0TEST
 else ifeq ($(MODE),profile)
-  TARGET    = immensio_versio_profile$(PROFILE_TAG)
+  TARGET    = sublustris_versio_profile$(PROFILE_TAG)
   MODE_DEFS = -DIV_MODE_PROFILE -DIV_PROFILE_HOOKS -DIV_PROFILE_FZ=$(PROFILE_FZ) \
               -DIV_PROFILE_SDRAM_TIGHT=$(PROFILE_SDRAM_TIGHT) -DIV_ITCM=$(PROFILE_ITCM)
   ifeq ($(PROFILE_ITCM),1)
     LDSCRIPT = STM32H750IB_flash_itcm.lds
   endif
 else ifeq ($(MODE),release)
-  TARGET    = immensio_versio$(RELEASE_TAG)
+  TARGET    = sublustris_versio$(RELEASE_TAG)
   MODE_DEFS = -DIV_MODE_RELEASE -DIV_ITCM=1 -DIV_RELEASE_SDRAM_TIGHT=$(RELEASE_SDRAM_TIGHT) \
               -DIV_RELEASE_DIAG=$(RELEASE_DIAG) $(if $(filter 1,$(RELEASE_DIAG)),-DIV_PROFILE_HOOKS) \
               -DIV_LATE_LIGHT=$(RELEASE_LATE_LIGHT)
@@ -159,7 +159,7 @@ all-variants:
 	@echo ""; \
 	echo "=== Variant sizes vs $(FLASH_LIMIT)-byte internal-flash limit (SPEC §5.3) ==="; \
 	fail=0; warn=0; \
-	for f in immensio_versio immensio_versio_m0test immensio_versio_profile; do \
+	for f in sublustris_versio sublustris_versio_m0test sublustris_versio_profile; do \
 		bytes=$$(wc -c < build/$$f.bin | tr -d ' '); \
 		pct=$$((bytes * 100 / $(FLASH_LIMIT))); \
 		if [ $$bytes -gt $(FLASH_LIMIT) ]; then status="EXCEEDS LIMIT"; fail=1; \

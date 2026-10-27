@@ -1,9 +1,9 @@
-IMMENSIO VERSIO {{VERSION}} — a huge, warm, lush reverb
+SUBLUSTRIS VERSIO {{VERSION}} — a huge, warm, lush reverb
 By Jesse Bauer (Ombra Audio) — https://jessebauer.xyz
 
-Immensio Versio is firmware for the Noise Engineering Versio. Not affiliated with or endorsed by Noise Engineering.
+Sublustris Versio is firmware for the Noise Engineering Versio. Not affiliated with or endorsed by Noise Engineering.
 
-Immensio is a big reverb that runs as firmware on the Versio Eurorack module. The plugin is its desktop twin: the exact same sound engine as the module, laid out like its panel. It's a work in progress, so honest ears are very welcome.
+Sublustris is a big reverb that runs as firmware on the Versio Eurorack module. The plugin is its desktop twin: the exact same sound engine as the module, laid out like its panel. It's a work in progress, so honest ears are very welcome.
 
 Made for dub techno, ambient and dark ambient: long tails that drift and swell, sustain almost forever without running away, and go from sweet to gritty. Warm, never metallic.
 {{NOTES}}
@@ -15,6 +15,7 @@ INSTALL (Mac, macOS 12 or newer, Apple Silicon or Intel)
 2. In Finder, Go > Go to Folder... and paste:
      ~/Library/Audio/Plug-Ins/
    Drag "{{NAME}}.vst3" into the VST3 folder and "{{NAME}}.component" into the Components folder (create the folder if it's missing).
+   If you had Immensio Versio installed, delete "Immensio Versio.vst3" and "Immensio Versio.component" from those folders first: it's the same plugin under its old name, and two copies confuse your DAW.
 3. It isn't signed by Apple, so macOS will block it at first. Open Terminal and paste these two lines (each one is a single line):
      xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/"{{NAME}}.vst3"
      xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/Components/"{{NAME}}.component"
@@ -64,7 +65,7 @@ Send it straight to Jesse. Especially welcome:
 LICENCE
 
 Version {{VERSION}}, built from commit {{COMMIT}}. The source isn't public yet; ask Jesse for the source of this build.
-Immensio's own code is MIT (LICENSE). The plugin is built with JUCE, used under the GNU AGPLv3, so the plugin binaries in this download are distributed under AGPLv3 (LICENSES/AGPL-3.0.txt). Notices: NOTICE.
+Sublustris's own code is MIT (LICENSE). The plugin is built with JUCE, used under the GNU AGPLv3, so the plugin binaries in this download are distributed under AGPLv3 (LICENSES/AGPL-3.0.txt). Notices: NOTICE.
 
 Versio is a trademark of Noise Engineering. VST is a registered trademark of Steinberg Media Technologies GmbH. Audio Units is a trademark of Apple Inc.
 

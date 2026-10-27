@@ -8,7 +8,7 @@
 #   tools/make_release.sh [<ref>]   the plugin at <ref> (default HEAD, which
 #                                   must have no uncommitted code changes)
 #   tools/make_release.sh --candidate <ref> <label>
-#       a sound candidate for friends to A/B: built as "Immensio Versio
+#       a sound candidate for friends to A/B: built as "Sublustris Versio
 #       <label>", with its own plugin code and bundle ID, so it installs next
 #       to the main plugin (as tools/install_plugin.sh <ref> <label>).
 #   --notes <file>                  "what's new" notes into the read-me
@@ -44,12 +44,12 @@ N="$(git rev-list --count "$SHA")"; PLUGIN_VERSION="1.$((N / 100)).$((N % 100))"
 SOUND="$(git show "$SHA:SPEC.md" | awk 'match($0, /^- v[0-9]+\.[0-9]+\.[0-9]+/) && !v { v = substr($0, 3, RLENGTH - 2) } END { print v }')"
 [ -n "$SOUND" ] || { echo "No SPEC changelog version at $SHA." >&2; exit 1; }
 if [ -n "$LABEL" ]; then
-    NAME="Immensio Versio $LABEL"
+    NAME="Sublustris Versio $LABEL"
     BUNDLE="com.OmbraAudio.ImmensioVersio$LABEL"
     CODE="ImV$(printf '%s' "$LABEL" | tr '[:lower:]' '[:upper:]' | cut -c1)"   # 4 characters, as install_plugin.sh
     TAG="$SOUND-$SHA-candidate-$LABEL"
 else
-    NAME="Immensio Versio" CODE="ImVs" BUNDLE="com.OmbraAudio.ImmensioVersio" TAG="$SOUND-$SHA"
+    NAME="Sublustris Versio" CODE="ImVs" BUNDLE="com.OmbraAudio.ImmensioVersio" TAG="$SOUND-$SHA"
 fi
 OUT="$MAIN/dist/release/$TAG"
 SOURCE_URL="https://github.com/jeffebauer/immensio-versio/tree/$(git rev-parse "$SHA")"
@@ -89,7 +89,7 @@ rm -rf "$OUT/LICENSES"; mkdir -p "$OUT/LICENSES"
 cp "$LIC/LICENSE" "$OUT/LICENSE"
 sed "s#https://github.com/jeffebauer/immensio-versio/tree/<tag>#$SOURCE_URL#" "$LIC/NOTICE" > "$OUT/NOTICE"
 cp "$LIC/LICENSES/AGPL-3.0.txt" "$OUT/LICENSES/AGPL-3.0.txt"
-ZIP="ImmensioVersio_$TAG.zip"
+ZIP="SublustrisVersio_$TAG.zip"
 (cd "$OUT" && rm -f "$ZIP" && zip -q -r -y "$ZIP" "$NAME.vst3" "$NAME.component" "$(basename "$README")" LICENSE NOTICE LICENSES)
 (cd "$OUT" && shasum -a 256 "$ZIP" > SHA256SUMS.txt)
 echo "Built $OUT/$ZIP"
