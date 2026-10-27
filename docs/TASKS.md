@@ -9,6 +9,7 @@
 - [ ] **One merge into main, when your remaining picks are in** (MOTION, the swell comb, the room's movement). `claude/massive-air` no longer needs merging on its own: every branch since (era-wear, tone-character and the rest) contains it. The plan: one combined branch (era-wear + TONE + your picks), renamed Sublustris Versio in the same pass, checked, then merged with your OK. The release script (`claude/friend-package-073b04`) can go in any time.
 
 ### Listen (after your notes)
+- [ ] **`wear_grit`: where WEAR's grit starts** (pick one): `/Users/jesse/Documents/Sites/immensio-versio/renders/wear_grit/index.html`. What reads as bitcrushing is mostly the BBD clock's fizz (its top folded back down), most obvious on held, dark sounds and quiet tails. A today (grit from the very start); B grit from about a third of the knob; C from half; D from two thirds. Everything else as today; full WEAR identical in all four. Note: with the fizz held back, WEAR's faint crackle ticks are easier to hear early on the knob. Flash +112 B.
 
 ### Listen (first time)
 
@@ -24,7 +25,6 @@
 ## Waiting on Claude
 
 - **SIZE still runs late at the rack, even on an empty reverb**: a cost that doesn't depend on the sound, likely one heavy block when a SIZE change starts its crossfade. A debug hunt on the desktop and a profile build replaying your SIZE turns on v1.0.48, then a fix.
-- **WEAR's bit grit starts too early**: measured first, then a `wear_grit` page with the grit starting later on the knob (about a third, a half, two thirds of the way), everything else as it is.
 - **Before the merge:** (1) ✓ the spec lines, decision records and glossary for v1.0.42-47 (on `claude/combined`, reviewed); (2) the rename (in progress) to Sublustris Versio; (3) a playing build for the rack; (4) the merge into main with your OK, and the plugin installed in Ableton.
 - **Optional: record your Ribbons and Magneto** so the tape side can be matched to measured numbers (for analysis only, never committed or shared). Play `test_audio/stimulus/08_held_tones.wav` (its first 8 s, a held 1 kHz tone) and `renders/_material_drift_rethink/held_organ.wav`, 20 s each, fully wet, into `test_audio/reference/incoming/` named `<unit>_<control>_<setting>.wav`. **Ribbons** (saturation and noise off): wow depth ¼, ½, full; wow frequency min and full; flutter depth ½ and full; flutter frequency full; crinkle ¼, ½, full; dropouts ½; your usual tape setting. **Magneto** (wet only): wow & flutter ¼, ½, full; crinkle ¼, ½, full; slow and fast tape speed with crinkle ½.
 - **TONE's resonant tilt is built** (v1.0.44 on `claude/tone-character`): exactly as on the page, 19 of 19 tests pass, release 106,420 B on its own (+1,064 B). Still to join with WEAR and the room. The room's level following the pad (B) is built too (v1.0.43 on `claude/era-wear`, release 105,516 B).
