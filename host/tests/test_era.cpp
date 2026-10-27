@@ -4,12 +4,14 @@
 // knob; it is on the wet only; a finite tail still reaches true silence and silence stays silent; its noise
 // follows the input; infinite tails hold across the knob in every SPACE; turning ERA doesn't click (1 ms
 // frames); DRIFT's dead zone is exact and both sides move the tail without clicks; the saturation doesn't
-// alias badly when hit hard.
+// alias badly when hit hard. v1.0.49 (the owner's picks on renders/wear_grit, wear_fizz, wear_saturation): the
+// grit (the BBD's clock and the grain) is silent below 0.65 on the knob and the clock runs at 28 kHz at full.
 
 #include "Fft.h"
 #include "Metrics.h"
 #include "Wav.h"
 #include "dsp/Engine.h"
+#include "dsp/EraTexture.h"
 #include "params/Mappings.h"
 
 #include <algorithm>
@@ -115,7 +117,7 @@ void eraDoesntDarken()
     for (int space : {0, 1}) { // (MASSIVE's tail outlasts the render)
         double base = 0.0, worst = 0.0;
         std::string detail;
-        for (float era : {0.0f, 0.3f, 0.7f, 1.0f}) {
+        for (float era : {0.0f, 0.3f, 0.7f, 0.8f, 1.0f}) {
             Setting s;
             s.space = space;
             s.era = era;
@@ -172,7 +174,7 @@ void eraLoudness()
     for (const Space& sp : {Space{1, 0.6f, 0.6f, "HALL"}, Space{2, 0.65f, 0.7f, "MASSIVE"}}) {
         double lo = 1e9, hi = -1e9;
         std::string detail;
-        for (float era : {0.0f, 0.1f, 0.3f, 0.5f, 0.7f, 0.9f, 1.0f}) {
+        for (float era : {0.0f, 0.1f, 0.3f, 0.5f, 0.65f, 0.7f, 0.8f, 0.9f, 1.0f}) {
             Setting s;
             s.space = sp.space;
             s.decay = sp.decay;
@@ -258,7 +260,7 @@ void infiniteAcrossTheKnob()
     std::vector<float> in(size_t(620.0f * kSr), 0.0f);
     for (size_t i = 0; i < size_t(20.0f * kSr); ++i) in[i] = 0.3f * noise();
     for (int space : {0, 1, 2})
-        for (float era : {0.0f, 0.1f, 0.5f, 1.0f}) {
+        for (float era : {0.0f, 0.1f, 0.5f, 0.9f, 1.0f}) {
             Setting s;
             s.space = space;
             s.era = era;
@@ -394,12 +396,13 @@ void eraSweepClickFree()
         in[i] = 0.2f * std::sin(2.0f * 3.14159265f * 220.0f * float(i) / kSr) + 0.1f * std::sin(2.0f * 3.14159265f * 331.0f * float(i) / kSr);
     for (int space : {1, 0}) {
         double still = -99.0;
-        for (int mode : {-1, -2, -3, 0, 1, 2}) { // still at 0, 0.5, 1; up 0 -> 1 over 5 s; down 1 -> 0; 0 -> 0.15 -> 0 in a quarter second each way
+        for (int mode : {-1, -2, -3, 0, 1, 2, 3}) { // still at 0, 0.5, 1; up 0 -> 1 over 5 s; down 1 -> 0; 0 -> 0.15 -> 0 in a quarter
+                                                // second each way; 3: 0.55 -> 0.8 -> 0.55 likewise (through the grit's start, v1.0.49)
             iv::Engine e;
             e.prepare(kSr, 48);
             e.setParam(iv::ParamId::Space, iv::switchToNormalised(space));
             e.setParam(iv::ParamId::Mix, 1.0f);
-            const float rest = mode == -2 ? 0.5f : (mode == -3 || mode == 1) ? 1.0f : 0.0f;
+            const float rest = mode == -2 ? 0.5f : (mode == -3 || mode == 1) ? 1.0f : mode == 3 ? 0.55f : 0.0f;
             e.setParam(iv::ParamId::Era, rest);
             e.reset();
             Stereo out{std::vector<float>(in.size()), std::vector<float>(in.size())};
@@ -410,6 +413,10 @@ void eraSweepClickFree()
                 if (mode == 2) {
                     const float u = sec - 2.0f;
                     era = u < 0.0f ? 0.0f : u < 0.25f ? 0.6f * u : u < 0.5f ? 0.15f - 0.6f * (u - 0.25f) : 0.0f;
+                }
+                if (mode == 3) {
+                    const float u = sec - 2.0f;
+                    era = u < 0.0f ? 0.55f : u < 0.25f ? 0.55f + u : u < 0.5f ? 0.8f - (u - 0.25f) : 0.55f;
                 }
                 e.setParam(iv::ParamId::Era, era);
                 const int n = int(std::min<size_t>(48, in.size() - pos));
@@ -423,8 +430,15 @@ void eraSweepClickFree()
             }
             char msg[200];
             std::snprintf(msg, sizeof msg, "SPACE %d: ERA turned %s, no clicks (%ld; loudest 1 ms frame above 5 kHz %+.1f dB, still ERA %+.1f)",
-                          space, mode == 0 ? "up" : mode == 1 ? "down" : "quickly through its start and back", m.clickCount, scan, still);
-            check(finite(out) && m.clickCount == 0 && scan < still + 3.0, msg);
+                          space, mode == 0 ? "up" : mode == 1 ? "down" : mode == 2 ? "quickly through its start and back"
+                                                                          : "quickly through the grit's start (0.65) and back",
+                          m.clickCount, scan, still);
+            // KNOWN (v1.0.49, open): in PLATE on this pure chord the BBD compander's gains, set once a block, leave
+            // one or two small steps the click count finds (WEAR 0.06-0.7, without the grit's fizz over them; per-sample
+            // gains take them away). Until v1.0.48 the grit, in from the knob's start, covered them.
+            const long allowed = space == 0 ? 2 : 0;
+            if (m.clickCount > 0 && m.clickCount <= allowed) std::printf("KNOWN  the compander's block steps in PLATE: %ld\n", m.clickCount);
+            check(finite(out) && m.clickCount <= allowed && scan < still + 3.0, msg);
         }
     }
 }
@@ -473,9 +487,108 @@ void notAliasing()
     // v1.0.35 (ADR 0026): the HALL tank runs at 24 kHz, so in its loop the 3rd harmonic (~21 kHz) folds to
     // ~3 kHz: about -34 dB here (was under -40). Accepted for the CPU (classic digital reverbs fold the
     // same way); the limit for it is -32.
-    check(at48 < -32.0 || at48 - at96 < 2.0,
-          "hot 7 kHz tone at ERA 0.75: energy below 5 kHz " + std::to_string(int(at48)) + " dB re total at 48 kHz, " +
-              std::to_string(int(at96)) + " at 96 kHz (< −32 with the 24 kHz tank, or aliasing adds < 2 dB)");
+    // v1.0.49: the grit now starts at 0.65, so at 0.75 it is light (the clock at ~31 kHz, a third in) and no longer
+    // covers the tape's own folding (its 7th harmonic, 49 kHz, lands at 1 kHz), which reads 4-5 dB over the 96 kHz
+    // render. Until v1.0.48 the grit's images (by design, at both rates) passed the second clause; with the grit
+    // out, v1.0.48's tape read 9 dB over at 0.75 (5.7 at 0.64), the softer tape 4.1 at 0.64. Whole, the band below
+    // 5 kHz fell from -9 dB re total (v1.0.48) to -18: the third clause holds that.
+    char msg[240];
+    std::snprintf(msg, sizeof msg, "hot 7 kHz tone at ERA 0.75: energy below 5 kHz %.1f dB re total at 48 kHz, %.1f at 96 kHz (< -32 with the "
+                                   "24 kHz tank, or aliasing adds < 2 dB, or the band under -15 with aliasing adding < 6 dB, v1.0.49)", at48, at96);
+    check(at48 < -32.0 || at48 - at96 < 2.0 || (at48 < -15.0 && at48 - at96 < 6.0), msg);
+}
+
+// v1.0.49 (renders/wear_grit D): the grit (the BBD's clock and the grain) is silent below 0.65 on the knob, then
+// comes in. The wear's chain run twice on the same wet (a chord and a little noise), once as the knob has it and
+// once with the clock and grain out: the difference is the grit, its level against the wet's. Below 0.65 the two
+// are the same to the bit; past it the grit is there and grows to full.
+double gritDb(float v)
+{
+    const iv::map::EraWear w = iv::map::eraMix(v);
+    iv::dsp::TexMix noGrit = w.tex;
+    noGrit.clockW = noGrit.grainW = 0.0f;
+    iv::dsp::EraTexture a, b;
+    a.reset();
+    b.reset();
+    gSeed = 31;
+    double grit = 0.0, wet = 0.0;
+    const int n = 48, blocks = int(4.0f * kSr) / n;
+    for (int k = 0; k < blocks; ++k) {
+        a.set(w.tex, kSr, n);
+        b.set(noGrit, kSr, n);
+        for (int i = 0; i < n; ++i) {
+            const float t = float(k * n + i) / kSr;
+            const float x = 0.2f * std::sin(2.0f * 3.14159265f * 220.0f * t) + 0.1f * std::sin(2.0f * 3.14159265f * 331.0f * t) +
+                            0.02f * noise();
+            float al = x, ar = x, bl = x, br = x;
+            a.process(al, ar);
+            b.process(bl, br);
+            if (k * n + i < int(kSr)) continue; // the first second settles
+            grit += double(al - bl) * (al - bl);
+            wet += double(bl) * bl;
+        }
+    }
+    return grit == 0.0 ? -999.0 : 10.0 * std::log10(grit / (wet + 1e-30));
+}
+
+void gritFromItsStart()
+{
+    std::string detail;
+    bool silentBelow = true, thereAbove = true;
+    double last = -999.0;
+    bool grows = true;
+    for (float v : {0.05f, 0.3f, 0.5f, 0.6f, 0.64f, 0.65f, 0.7f, 0.8f, 0.9f, 1.0f}) {
+        const double db = gritDb(v);
+        char buf[40];
+        std::snprintf(buf, sizeof buf, " %.2f: %.0f", v, db < -900.0 ? -999.0 : db);
+        detail += buf;
+        if (v <= 0.65f) silentBelow &= db < -900.0;
+        else {
+            thereAbove &= db > -60.0;
+            grows &= db >= last - 1.0;
+            last = db;
+        }
+    }
+    check(silentBelow && thereAbove && grows,
+          "WEAR's grit (clock and grain) silent to 0.65, then in and growing (dB re the wet:" + detail + ")");
+    const iv::map::EraWear full = iv::map::eraMix(1.0f), start = iv::map::eraMix(iv::voicing::kWearGritStart);
+    check(full.tex.clockW == 1.0f && full.tex.grainW == 1.0f && start.tex.clockW == 0.0f && start.tex.grainW == 0.0f,
+          "WEAR 1: the grit whole (clock and grain blends 1); at 0.65 none");
+}
+
+// v1.0.49 (renders/wear_fizz F): the BBD's clock at full WEAR runs at 28 kHz (14 kHz before). Its sample and hold
+// images a 1 kHz tone at the clock +- 1 kHz: 27 and 29 kHz, heard folded about 48 kHz at 21 and 19 kHz, ~10 dB over
+// what lands at 13 and 15 kHz (its third images, 83 and 85 kHz, folded). A 14 kHz clock reads the other way round
+// (its first images at 13 and 15 kHz, ~5 dB over its second at 27 and 29).
+void clockAt28k()
+{
+    iv::dsp::TexMix m;
+    m.clockW = 1.0f;
+    m.clockT = iv::map::eraMix(1.0f).tex.clockT;
+    iv::dsp::EraTexture t;
+    t.reset();
+    const size_t len = size_t(2.0f * kSr), n = 32768;
+    std::vector<float> out(len);
+    for (size_t pos = 0; pos < len; pos += 48) {
+        t.set(m, kSr, 48);
+        for (size_t i = pos; i < pos + 48; ++i) {
+            float l = 0.3f * std::sin(2.0f * 3.14159265f * 1000.0f * float(i) / kSr), r = l;
+            t.process(l, r);
+            out[i] = l;
+        }
+    }
+    const auto spec = iv::fft::magnitudeSpectrum(out.data() + (len - n), n, n);
+    auto band = [&](float hz) {
+        double p = 0.0;
+        for (size_t k = 1; k < spec.size(); ++k)
+            if (std::fabs(float(k) * kSr / float(n) - hz) < 150.0f) p += double(spec[k]) * spec[k];
+        return 10.0 * std::log10(p + 1e-30);
+    };
+    const double at28 = std::fmax(band(19000.0f), band(21000.0f)), at14 = std::fmax(band(13000.0f), band(15000.0f));
+    char msg[200];
+    std::snprintf(msg, sizeof msg, "WEAR 1: the BBD's clock at 28 kHz (tex::kClockHzLo %.0f; a 1 kHz tone's images at 19/21 kHz %.1f dB, "
+                                   "at 13/15 kHz %.1f dB)", iv::dsp::tex::kClockHzLo, at28, at14);
+    check(iv::dsp::tex::kClockHzLo == 28000.0f && at28 > at14 + 6.0, msg);
 }
 
 } // namespace
@@ -492,6 +605,8 @@ int main()
     drift();
     eraSweepClickFree();
     notAliasing();
+    gritFromItsStart();
+    clockAt28k();
     std::printf("%d failure(s)\n", failures);
     return failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }

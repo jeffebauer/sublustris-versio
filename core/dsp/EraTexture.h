@@ -47,8 +47,14 @@ struct TexMix {
 };
 
 namespace tex {
-constexpr float kTapeDriveDb = 15.0f, kTapeEmphDb = 6.0f, kTapeEmphHz = 2000.0f, kTapeBias = 0.12f;
-constexpr float kClockHzHi = 32000.0f, kClockHzLo = 14000.0f; // the BBD's clock across its intensity (no lower: unfiltered, it turns metallic)
+// The tape's drive at full, 11.25 dB (v1.0.49: 15 x 0.75, the owner's pick E on renders/wear_saturation).
+constexpr float kTapeDriveDb = 11.25f, kTapeEmphDb = 6.0f, kTapeEmphHz = 2000.0f, kTapeBias = 0.12f;
+// The BBD's clock across its intensity: 28 kHz at full (v1.0.49, the owner's pick F on renders/wear_fizz; 14 kHz
+// before: unfiltered, lower turns metallic, and 14 kHz fizzed).
+constexpr float kClockHzHi = 32000.0f, kClockHzLo = 28000.0f;
+// The level hold's ceiling, +15 dB (10^(15/20); v1.0.49, renders/wear_fizz): at +12 the band took a low chord's or
+// pad's fundamentals down and WEAR 1 lost 1.1-1.8 dB on held chords and pads; now within +-1 dB of WEAR 0.
+constexpr float kHoldMax = 5.62341309f;
 // At infinite DECAY the band keeps this share of its blend: a held tail darkens to its warm floor (ADR 0008),
 // mostly under 100 Hz, where the band is ~20 dB down; whole, it took 4-6 dB off a 10-minute hold.
 constexpr float kBandAtInfinite = 0.5f;
@@ -88,8 +94,8 @@ public:
         }
         if (m.breathW > 0.0f && (!sameBits(m.breathT, breathT_) || !sameBits(sr, sr_))) {
             const float t = breathT_ = m.breathT;
-            a2_ = 0.04f + 0.10f * t;
-            a3_ = 0.02f + 0.05f * t;
+            a2_ = 0.02f + 0.05f * t;  // the compander's 2nd and 3rd harmonics, halved in v1.0.49 (renders/wear_saturation E)
+            a3_ = 0.01f + 0.025f * t;
             noise_ = 0.126f * std::pow(10.0f, (-60.0f + 18.0f * t) / 20.0f);
             wc_ = 1.0f - std::exp(-1.0f / (0.010f * sr));
             we_ = 1.0f - std::exp(-1.0f / ((0.012f + 0.02f * t) * sr));
@@ -117,7 +123,7 @@ public:
                 // The old radio's 200-400 Hz to 4.5-2.4 kHz: centred ~1.1 kHz, narrowing with t.
                 bp_[0].set(1000.0f + 200.0f * t, 0.45f + 0.35f * t, sr);
                 bp_[1].copyCoefficients(bp_[0]);
-                mEff_ = (0.9f + 0.5f * t) * 4.0f; // over a -12 dBFS carrier
+                mEff_ = (0.9f + 0.5f * t) * 3.0f; // over a -12 dBFS carrier (x4 before v1.0.49: x0.75, renders/wear_saturation E)
                 invMEff_ = 1.0f / mEff_;
                 dipDb_ = -4.0f - 14.0f * t;
                 dipHz_ = 0.1f + 0.4f * t;
@@ -139,7 +145,7 @@ public:
         // The hold's gain for this block, from the last one's powers.
         wHold_ = 1.0f - std::exp(-1.0f / (0.1f * sr));
         wHp_ = 1.0f - std::exp(-6.2831853f * 200.0f / sr);
-        const float want = std::fmin(4.0f, std::fmax(0.5f, std::sqrt((inPow_ + 1e-20f) / (outPow_ + 1e-20f))));
+        const float want = std::fmin(tex::kHoldMax, std::fmax(0.5f, std::sqrt((inPow_ + 1e-20f) / (outPow_ + 1e-20f))));
         holdAim_ += (1.0f - std::exp(-float(n) / (0.5f * sr))) * (want - holdAim_);
         holdStep_ = (holdAim_ - hold_) / float(n > 0 ? n : 1);
         sr_ = sr;

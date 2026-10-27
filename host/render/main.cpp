@@ -220,6 +220,15 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
                              "Magneto crinkle and a third of the dips; Wander stronger) are built in since v1.0.46\n");
     if (std::getenv("IV_TONE_CHAR")) // renders/tone_character: A is built in since v1.0.44, B and C are gone
         std::fprintf(stderr, "iv_render: IV_TONE_CHAR ignored: TONE's resonant tilt (A) is built in since v1.0.44\n");
+    {   // renders/wear_grit, wear_fizz, wear_saturation: the picks are built in since v1.0.49, the rest gone
+        static const char* const wearHooks[] = {"IV_WEAR_GRIT_START", "IV_WEAR_GRIT_PARTS", "IV_WEAR_CLOCK_LO", "IV_WEAR_HOLD_MAX_DB",
+                                                "IV_WEAR_TAPE_DRIVE", "IV_WEAR_OVERMOD", "IV_WEAR_BREATH_HARM", "IV_WEAR_FIZZ_DB",
+                                                "IV_WEAR_PREFILTER", "IV_WEAR_CLOCK_JITTER"};
+        for (const char* h : wearHooks)
+            if (std::getenv(h))
+                std::fprintf(stderr, "iv_render: %s ignored: WEAR's picks (grit from 0.65, a 28 kHz clock, the hold to +15 dB, "
+                                     "softer saturation: E) are built in since v1.0.49\n", h);
+    }
     if (const char* sz = std::getenv("IV_SHIMMER_LAZY")) {
         engine.setShimmerLazyPrototype(std::atoi(sz) != 0);
         std::fprintf(stderr, "iv_render: IV_SHIMMER_LAZY: shimmer records %s\n", std::atoi(sz) != 0 ? "only in SHIMMER" : "always");

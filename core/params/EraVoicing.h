@@ -60,4 +60,7 @@ constexpr float kCracklePerSecond = 4.0f;
 // materials, HALL and MASSIVE; v1.0.19). The wear's own is in Mappings.h eraMix.
 constexpr float kMakeupNeveDb = 0.2f;
 
+// Where WEAR's grit (the BBD's clock and the grain) starts on the knob (v1.0.49, renders/wear_grit D).
+constexpr float kWearGritStart = 0.65f;
+
 } // namespace iv::voicing

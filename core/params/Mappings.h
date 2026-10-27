@@ -155,9 +155,9 @@ IV_SIZE_OPT inline dsp::TransportAmounts transportAmounts(float drift)
 // ERA (P4; v1.0.42, the owner's pick C on renders/era_rethink, "one wear amount"; it replaces ADR 0021's
 // five eras): the Neve stays in the loop as the base at every setting (its warmth and its ×0.7 highs,
 // voicing::kNeveHighRatio, never darker with ERA; no wow or flutter, DRIFT's), and the wear on the wet
-// (dsp/EraTexture.h) comes in over the first twentieth of the knob, every stage at once, then deepens
-// with it: tape saturation, the BBD's compander breathing and its clock's grit, the grain (the Midiverb's
-// floating step), the radio's band and wandering dip, and with them the tape's in-loop compression, its
+// (dsp/EraTexture.h) comes in over the first twentieth of the knob, then deepens with it: tape saturation,
+// the BBD's compander breathing, the radio's band and wandering dip; the grit (the BBD's clock and the grain,
+// the Midiverb's floating step) from 0.65 on (v1.0.49); and with them the tape's in-loop compression, its
 // hiss and the crackle into the tank. ERA 0 is the Neve alone.
 struct EraWear {
     dsp::TexMix tex;                           // the wet's chain (dsp/EraTexture.h)
@@ -171,11 +171,20 @@ inline EraWear eraMix(float v)
     dsp::TexMix& x = e.tex;
     const float t = clamp01(v / 0.05f);
     const float s = t * t * (3.0f - 2.0f * t); // a smoothstep over the first twentieth
-    x.tapeW = x.breathW = x.grainW = s;
-    x.tapeT = x.breathT = x.grainT = v;
+    x.tapeW = x.breathW = s;
+    x.tapeT = x.breathT = v;
     e.compress = e.hiss = e.crackle = s * v;
-    x.clockW = s * v;
-    x.clockT = v;
+    // The grit (the BBD's clock and the grain) from 0.65 on the knob (v1.0.49, the owner's pick D on
+    // renders/wear_grit: "it feels like the bit reduction is coming in too early"). Past 0.65 the rest of the
+    // knob is u (0..1): the grit's blend comes in over its first fifth (a smoothstep) and its intensity goes
+    // from its finest (the clock at 32 kHz, the grain at 9 bits) to its full at WEAR 1.
+    const float u = clamp01((v - kWearGritStart) / (1.0f - kWearGritStart));
+    const float a = clamp01(u / 0.2f);
+    const float g = a * a * (3.0f - 2.0f * a);
+    x.clockW = g * u;
+    x.clockT = u;
+    x.grainW = g;
+    x.grainT = u;
     x.bandW = s * v * std::sqrt(v);
     x.bandT = v;
     // The chain's level: its own slow hold (EraTexture), and what it leaves on music (LUFS against the
