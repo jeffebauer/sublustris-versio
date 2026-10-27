@@ -203,6 +203,16 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         engine.setTwinGainPrototype(off ? 0.0f : float(std::atof(tg)), off);
         std::fprintf(stderr, "iv_render: IV_TWIN_GAIN_DB: %s\n", off ? "no twin" : tg);
     }
+#ifndef IV_FIXED_VOICINGS
+    if (const char* dr = std::getenv("IV_DUCK_RATIO")) { // renders/level_duck: the duck's ratio (as built 4)
+        engine.setDuckRatioPrototype(float(std::atof(dr)));
+        std::fprintf(stderr, "iv_render: IV_DUCK_RATIO: %s:1\n", dr);
+    }
+    if (const char* fl = std::getenv("IV_FLOOR_DB")) { // renders/level_duck: the governor's floor, dBFS (as built -24)
+        engine.setFloorPrototype(float(std::atof(fl)));
+        std::fprintf(stderr, "iv_render: IV_FLOOR_DB: %s dBFS\n", fl);
+    }
+#endif
     if (const char* st = std::getenv("IV_SWELL_TAPS")) {
         engine.setSwellTapsPrototype(std::atoi(st));
         std::fprintf(stderr, "iv_render: IV_SWELL_TAPS: %d swell points a side\n", engine.swellTaps());

@@ -183,6 +183,12 @@ public:
         twinGain_ = std::pow(10.0f, db / 20.0f);
         twinOff_ = off;
     }
+    // PROTOTYPES (renders/level_duck; owner: "on hall and massive with Long decays, I feel the limiter is
+    // keeping the level a bit too low" and "ducking on large washy sounds still feels a bit heavy handed,
+    // I think we can reduce it from 4:1 to 2:1 or even 1.5:1"): the floor governor's floor (dBFS, as built
+    // voicing::kFloorDbfs) and the duck's ratio (as built voicing::kDuckRatio; <= 1 = no ducking).
+    void  setFloorPrototype(float dbfs) { floorDbfs_ = dbfs; }
+    void  setDuckRatioPrototype(float ratio) { duckSlope_ = ratio > 1.0f ? 1.0f - 1.0f / ratio : 0.0f; }
     int   lowDecimate() const { return lowDecimate_; }
     int   swellTaps() const { return swell_.tapCount(); }
 #endif
@@ -310,6 +316,13 @@ private:
     float             twinGain_ = 1.0f;  // setTwinGainPrototype; 1 = as built
     bool              twinOff_ = false;
     bool              shimmerLazy_ IV_ZI, shimmerArmed_ = true, shimmerResting_ IV_ZI; // setShimmerLazyPrototype
+    float             floorDbfs_ = voicing::kFloorDbfs;                 // setFloorPrototype
+    float             duckSlope_ = 1.0f - 1.0f / voicing::kDuckRatio;   // setDuckRatioPrototype
+    float floorDbfs() const { return floorDbfs_; }
+    float duckSlope() const { return duckSlope_; }
+#else
+    static constexpr float floorDbfs() { return voicing::kFloorDbfs; }
+    static constexpr float duckSlope() { return 1.0f - 1.0f / voicing::kDuckRatio; }
 #endif
     dsp::Plate        twinPlate_; // PLATE's twin
     // HALL's and MASSIVE's twin (v1.0.43, the owner's pick E on renders/small_room): the small room, its rings in

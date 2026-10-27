@@ -333,7 +333,7 @@ IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: 
         break;
     case GestureReader::Event::PaintStart:
         // Room to grow while painting: the pad's level or the floor, + kPaintHeadroomDb.
-        padFloorDb_ = (tankSlowLevelDb() > voicing::kFloorDbfs ? tankSlowLevelDb() : voicing::kFloorDbfs) + voicing::kPaintHeadroomDb;
+        padFloorDb_ = (tankSlowLevelDb() > floorDbfs() ? tankSlowLevelDb() : floorDbfs()) + voicing::kPaintHeadroomDb;
         break;
     case GestureReader::Event::PaintStop:
         // The painted pad settles like a fresh one: no ceiling until its slow level has caught up,
@@ -418,7 +418,7 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // A pad isn't pulled to the floor: the floor glides away with freezeMix_ (and back on unfreeze).
     // Switched in one sample, a fed infinite tail's governor loss vanished at once and the wet
     // stepped (up to 20x a sample's normal change, PLATE; heard once the dark tilt took the highs out).
-    const float floorDb = voicing::kFloorDbfs * (1.0f - freezeMix_);
+    const float floorDb = floorDbfs() * (1.0f - freezeMix_);
     float holdDb = 0.0f;
     if (frozen) holdDb = padFloorDb_;
     else if (tailCaptured_) holdDb = tailCeilingDb_;
@@ -660,7 +660,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
     {
         const float levelDb = 10.0f * std::log10(inputPower_ + 1e-12f);
         const float over = levelDb - voicing::kDuckThresholdDbfs;
-        const float target = (over > 0.0f ? (1.0f - 1.0f / voicing::kDuckRatio) * over : 0.0f)
+        const float target = (over > 0.0f ? duckSlope() * over : 0.0f)
                            * map::governorWeight(smoothed(ParamId::Decay)) * (1.0f - freezeMix_);
 #ifndef IV_FIXED_VOICINGS
         if (freezeDuck_ == 1 && gesture_.frozen()) {
