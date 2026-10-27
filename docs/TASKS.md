@@ -23,6 +23,7 @@
 
 ## Waiting on Claude
 
+- **Before the merge:** (1) the spec lines, decision records and glossary for v1.0.42-47 (drafting, then Claude reviews); (2) the rename to Sublustris Versio; (3) a playing build for the rack; (4) the merge into main with your OK, and the plugin installed in Ableton.
 - **Optional: record your Ribbons and Magneto** so the tape side can be matched to measured numbers (for analysis only, never committed or shared). Play `test_audio/stimulus/08_held_tones.wav` (its first 8 s, a held 1 kHz tone) and `renders/_material_drift_rethink/held_organ.wav`, 20 s each, fully wet, into `test_audio/reference/incoming/` named `<unit>_<control>_<setting>.wav`. **Ribbons** (saturation and noise off): wow depth ¼, ½, full; wow frequency min and full; flutter depth ½ and full; flutter frequency full; crinkle ¼, ½, full; dropouts ½; your usual tape setting. **Magneto** (wet only): wow & flutter ¼, ½, full; crinkle ¼, ½, full; slow and fast tape speed with crinkle ½.
 - **TONE's resonant tilt is built** (v1.0.44 on `claude/tone-character`): exactly as on the page, 19 of 19 tests pass, release 106,420 B on its own (+1,064 B). Still to join with WEAR and the room. The room's level following the pad (B) is built too (v1.0.43 on `claude/era-wear`, release 105,516 B).
 - **A rumble at endless DECAY with TONE bright** (found on the way): PLATE (and HALL, less) at DECAY 1 and TONE fully CW slowly turns into sub-20 Hz rumble over ~10 minutes while the audible tail fades ~40 dB. In today's sound too; to look at.
