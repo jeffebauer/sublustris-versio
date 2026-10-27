@@ -212,6 +212,18 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         engine.setFloorPrototype(float(std::atof(fl)));
         std::fprintf(stderr, "iv_render: IV_FLOOR_DB: %s dBFS\n", fl);
     }
+    if (const char* rl = std::getenv("IV_DUCK_RELEASE")) { // renders/level_glue: the duck's release, s (as built 0.4)
+        engine.setDuckReleasePrototype(float(std::atof(rl)));
+        std::fprintf(stderr, "iv_render: IV_DUCK_RELEASE: %s s\n", rl);
+    }
+    if (const char* ad = std::getenv("IV_DUCK_ADAPTIVE")) { // renders/level_glue: release after sustained playing, s
+        engine.setDuckAdaptivePrototype(float(std::atof(ad)));
+        std::fprintf(stderr, "iv_render: IV_DUCK_ADAPTIVE: %s s after sustained playing\n", ad);
+    }
+    if (const char* sc = std::getenv("IV_DUCK_SUSTAIN_CUT")) { // renders/level_glue: share of the duck taken off when sustained
+        engine.setDuckSustainCutPrototype(float(std::atof(sc)));
+        std::fprintf(stderr, "iv_render: IV_DUCK_SUSTAIN_CUT: %s\n", sc);
+    }
 #endif
     if (const char* st = std::getenv("IV_SWELL_TAPS")) {
         engine.setSwellTapsPrototype(std::atoi(st));

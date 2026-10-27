@@ -245,7 +245,9 @@ def loop_to(y, seconds):
     return np.tile(y, (reps, 1))[:n]
 
 
-def safety(binary, root, part="all"):
+def safety(binary, root, part="all", safe=None, clickv=None):
+    safe = SAFE if safe is None else safe
+    clickv = VERSIONS if clickv is None else clickv
     material = root / "renders" / "_material"
     fails = []
     lines = []
@@ -304,11 +306,11 @@ def safety(binary, root, part="all"):
             return sp, tag, era, worst_click(y, 1.0)
 
         long_ = part == "all"
-        fed_f = [pool.submit(fed_job, sp, tag, env) for sp in ("HALL", "MASSIVE") for tag, env in SAFE] if long_ else []
+        fed_f = [pool.submit(fed_job, sp, tag, env) for sp in ("HALL", "MASSIVE") for tag, env in safe] if long_ else []
         fz_f = [pool.submit(fz_job, sp, dc, tag, env) for sp in ("HALL", "MASSIVE") for dc in ("0.9", "1")
-                for tag, env in SAFE] if long_ else []
-        sh_f = [pool.submit(sh_job, sp, tag, env) for sp in ("HALL", "MASSIVE") for tag, env in SAFE] if long_ else []
-        ck_f = [pool.submit(ck_job, sp, tag, env, era) for sp in ("HALL", "MASSIVE", "PLATE") for tag, env in VERSIONS
+                for tag, env in safe] if long_ else []
+        sh_f = [pool.submit(sh_job, sp, tag, env) for sp in ("HALL", "MASSIVE") for tag, env in safe] if long_ else []
+        ck_f = [pool.submit(ck_job, sp, tag, env, era) for sp in ("HALL", "MASSIVE", "PLATE") for tag, env in clickv
                 for era in ("0.1", "0")]
         fz_a = {}
 
@@ -354,7 +356,7 @@ def safety(binary, root, part="all"):
                      "(the page's) and WEAR 0 (fail: > 3 dB over A)")
         ck = {(sp, tag, era): s for sp, tag, era, s in (f.result() for f in ck_f)}
         for (sp, tag, era), s in ck.items():
-            good = s <= ck[(sp, "A_today", era)] + 3.0
+            good = s <= ck[(sp, clickv[0][0], era)] + 3.0
             if not good:
                 fails.append("click {} {} WEAR {}".format(sp, tag, era))
             lines.append("   {:8s} {:22s} WEAR {:3s} {:5.1f} dB  {}".format(sp, tag, era, s, "pass" if good else "FAIL"))

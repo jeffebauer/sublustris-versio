@@ -189,6 +189,16 @@ public:
     // voicing::kFloorDbfs) and the duck's ratio (as built voicing::kDuckRatio; <= 1 = no ducking).
     void  setFloorPrototype(float dbfs) { floorDbfs_ = dbfs; }
     void  setDuckRatioPrototype(float ratio) { duckSlope_ = ratio > 1.0f ? 1.0f - 1.0f / ratio : 0.0f; }
+    // PROTOTYPES (renders/level_glue; owner: "there are some cases where there's still an audible dip once the
+    // dry signal stops ... glue the dry and wet at points of transition"): the duck's release (s; as built
+    // voicing::kDuckReleaseSeconds); a program-dependent release, from `releaseSeconds` after sustained playing
+    // (a held chord) to the as-built release after transients (stabs: no pumping); and less ducking on sustained
+    // playing (the reduction x (1 - sustainCut x how sustained the playing is)). "Sustained": the input's 10 ms
+    // level within kSustainCrestDb of its 0.5 s level, judged while over the threshold, smoothed over 0.3 s.
+    void  setDuckReleasePrototype(float seconds) { duckRelease_ = seconds > 0.005f ? seconds : voicing::kDuckReleaseSeconds; }
+    void  setDuckAdaptivePrototype(float fastReleaseSeconds) { duckFastRelease_ = fastReleaseSeconds; }
+    void  setDuckSustainCutPrototype(float cut) { duckSustainCut_ = cut < 0.0f ? 0.0f : (cut > 1.0f ? 1.0f : cut); }
+    float duckSustained() const { return duckSustained_; }
     int   lowDecimate() const { return lowDecimate_; }
     int   swellTaps() const { return swell_.tapCount(); }
 #endif
@@ -318,6 +328,10 @@ private:
     bool              shimmerLazy_ IV_ZI, shimmerArmed_ = true, shimmerResting_ IV_ZI; // setShimmerLazyPrototype
     float             floorDbfs_ = voicing::kFloorDbfs;                 // setFloorPrototype
     float             duckSlope_ = 1.0f - 1.0f / voicing::kDuckRatio;   // setDuckRatioPrototype
+    float             duckRelease_ = voicing::kDuckReleaseSeconds;     // setDuckReleasePrototype
+    float             duckFastRelease_ = 0.0f;  // setDuckAdaptivePrototype; 0 = as built
+    float             duckSustainCut_ = 0.0f;   // setDuckSustainCutPrototype; 0 = as built
+    float             inputSlow_ = 0.0f, duckSustained_ = 0.0f; // the input's 0.5 s power; how sustained (0..1)
     float floorDbfs() const { return floorDbfs_; }
     float duckSlope() const { return duckSlope_; }
 #else

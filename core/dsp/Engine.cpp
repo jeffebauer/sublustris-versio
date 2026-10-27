@@ -202,6 +202,9 @@ IV_SIZE_OPT void Engine::reset()
     twinSwell_.reset();
     for (auto& d : twinDiffuser_) d.clear();
     inputPower_ = 0.0f;
+#ifndef IV_FIXED_VOICINGS
+    inputSlow_ = duckSustained_ = 0.0f;
+#endif
     tankInPower_ = 0.0f;
     quietSince_ = 0;
     tailCaptured_ = false;
@@ -663,14 +666,27 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
         const float target = (over > 0.0f ? duckSlope() * over : 0.0f)
                            * map::governorWeight(smoothed(ParamId::Decay)) * (1.0f - freezeMix_);
 #ifndef IV_FIXED_VOICINGS
+        // renders/level_glue's prototypes: how sustained the playing is (judged only while over the threshold),
+        // a release from duckFastRelease_ (sustained) to duckRelease_ (transients), and less ducking when sustained.
+        float release = duckRelease_, tgt = target;
+        if (duckFastRelease_ > 0.0f || duckSustainCut_ > 0.0f) {
+            inputSlow_ += (1.0f - std::exp(-float(n) / (0.5f * sampleRate_))) * (inputPower_ - inputSlow_);
+            if (over > 0.0f) {
+                const float crest = levelDb - 10.0f * std::log10(inputSlow_ + 1e-12f);
+                const float isSustained = crest < 3.0f ? 1.0f : 0.0f;
+                duckSustained_ += (1.0f - std::exp(-float(n) / (0.3f * sampleRate_))) * (isSustained - duckSustained_);
+            }
+            if (duckFastRelease_ > 0.0f) release = duckRelease_ + duckSustained_ * (duckFastRelease_ - duckRelease_);
+            tgt = target * (1.0f - duckSustainCut_ * duckSustained_);
+        }
         if (freezeDuck_ == 1 && gesture_.frozen()) {
             // setFreezeDuckPrototype 1: the pad keeps the reduction it had at the tap
         } else if (freezeDuck_ == 2 && gesture_.frozen()) { // 2: let go in a straight line (dB) over the glide
             duckGrDb_ = std::fmax(0.0f, duckGrDb_ - duckAtFreeze_ * float(n) / (freezeDuckSeconds_ * sampleRate_));
         } else {
-            const float secs = target > duckGrDb_ ? voicing::kDuckAttackSeconds
-                             : (freezeMix_ > 0.0f ? (freezeDuck_ == 1 ? freezeDuckSeconds_ : 0.05f) : voicing::kDuckReleaseSeconds);
-            duckGrDb_ += (1.0f - std::exp(-float(n) / (secs * sampleRate_))) * (target - duckGrDb_);
+            const float secs = tgt > duckGrDb_ ? voicing::kDuckAttackSeconds
+                             : (freezeMix_ > 0.0f ? (freezeDuck_ == 1 ? freezeDuckSeconds_ : 0.05f) : release);
+            duckGrDb_ += (1.0f - std::exp(-float(n) / (secs * sampleRate_))) * (tgt - duckGrDb_);
         }
 #else
         // A freeze lets go quickly (50 ms), so a fresh pad doesn't swell up over the release.
