@@ -194,6 +194,22 @@ The owner played v1.0.37: crackle in MASSIVE with SIZE and DECAY high (now and t
 REALTIME <setting>                          still|jitter avg  <%> max  <%> | late blocks <n> of <blocks>
 ```
 
+### The SIZE-spike lap (27 Oct 2026)
+
+The owner on v1.0.48's late light: "the size knob is still triggering some amber and red dropouts ... even when there's nothing in the reverb tank". `make -C firmware MODE=profile SIZESPIKE=1` builds `sublustris_versio_profile-sizespike.bin`: in place of the corner lap, 59 lines (~11 min a lap), each timed in the audio callback on the shipping Core, SIZE turned through release's knob path (10 ms one-pole, 0.003 deadband, end stops), ONSET BLOOM, DECAY 0.9, BLEND and DEPTH at noon, no flush-to-zero (as release). Each line resets the Engine and plays 6 s untimed first (the lines' first trip after a reset reads them as filling, 5.5 s). Groups: `SPACES` (MASSIVE and HALL: silence (exact zeros) and music in, playing and frozen, SIZE swept 0.2 <-> 1, twisted 0.5 <-> 0.9, crept 0.7 -> 1, nudged two deadband steps every 1.5 s; PLATE swept and twisted), `KNOBS` (MASSIVE, music, crept: WEAR 0 / 0.5 / 1 x MOTION noon / full left, playing and frozen; TONE's ends; twists near the top), `STILL` (SIZE still: the reference).
+
+```
+SPIKE SPACES  MASSIVE playing silence sweep   W0.0 M0.5 T0.5 avg  63.0% max  80.1% | late 0 near 0 of 6000 | max at block 2345 start 0 lines 4 tanks 2 | fading 3600 avg  72.0% max  80.1%
+  SPLIT ctl  0.4 in  9.0 shim  2.1 swell  8.0 twin  0.0 tank  3.0 tkctl  2.0 tkloop 20.0 tkout 18.0 tkmix  4.0 wear  6.0 out  3.0
+SIZESPIKE LAP 1 DONE: 59 lines, worst max  80.1% (SPIKE SPACES  MASSIVE ...), late blocks in all 0, near 0
+```
+
+`late` = blocks over the 1 ms period (release's red), `near` = 90-100 % (its amber). `max at block` = the worst block, counted from the line's start; `start` / `lines` / `tanks` = SIZE crossfades started in it / line-blocks reading twice / tanks crossfading (0 0 0: no crossfade was running). `fading` = the blocks a SIZE crossfade ran in, their average and worst. `SPLIT` = the worst block's sections, % of one block (the knob path and the input aren't in a section; they are in its total).
+
+`SIZESPIKE=2` builds `sublustris_versio_profile-sizespikeab.bin`, the A / B lap (38 lines, ~8 min): every SIZE move that crossfades (MASSIVE and HALL, playing, silence and music, the four hands; twists near the top; WEAR / MOTION up) as v1.0.48 ran its crossfade (`AS-SHIP`: `Fdn::lineSlow`, `Fdn::tapsOld`) and straight after on the faster paths (`FASTER`: `Fdn::lineXf` and the carried old taps, the same output to the bit), switched by `prof::xfFast`.
+
+Flashing and reading it: **rack power unplugged, USB only**; flash the `.bin` (Firmware Swap: Select Custom File, CONNECT, CHANGE FIRMWARE); `screen /dev/tty.usbmodem* 115200`, then `Ctrl-A`, `Shift-H` to log to `screenlog.0`; the first line (`SIZESPIKE START` / `SIZESPIKE A/B START`) comes ~3 s after boot; wait for `SIZESPIKE LAP 1 DONE` (LED 1 blue while a lap runs, then green, or LED 4 red if any block came late), then `Ctrl-A`, `Shift-H` again and `Ctrl-A`, `K`, `Y`.
+
 ## Memory
 
 Nothing yet (M0 passthrough). The plan (SPEC §5.2): the FDN lines, swell stage, predelay and REVERSE segments in the 64 MB SDRAM; the input diffusers and the companion plate in DTCM (`IV_DTCM` in `main.cpp`: zero-wait, NOLOAD, so cleared by whoever uses it); the Plate engine in AXI SRAM. libDaisy's linker script already puts the stack in AXI SRAM, leaving DTCM free (Resilio measured this).

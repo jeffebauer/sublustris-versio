@@ -1546,7 +1546,7 @@ void RunCandidateLap(float fs)
 // the worst and whether a SIZE crossfade started (start) or ran (lines, tanks) in it, the blocks a crossfade ran in
 // (their average and worst), and the worst block's sections (SPLIT, % of one block).
 struct Spike {
-    const char* group;
+    const char* group;  // SIZESPIKE=2: "AS-SHIP" (v1.0.48's crossfade paths) or "FASTER" (prof::xfFast)
     int         space;  // 0 PLATE, 1 HALL, 2 MASSIVE
     int         hand;   // SizeHand: 0 sweep 0.2 <-> 1, 1 twists 0.5 <-> 0.9, 2 creep 0.7 -> 1, 3 twists 0.85 <-> 1, 4 nudges, 5 still
     int         input;  // 0 silence, 1 music
@@ -1569,6 +1569,9 @@ void RunSpikeUntimed(int n, int input)
 
 void RunSpike(const Spike& c, float fs)
 {
+#if IV_PROFILE_SIZESPIKE >= 2
+    iv::prof::xfFast = c.group[0] == 'F';
+#endif
     static const char* const kHands[6] = {"sweep  ", "twists ", "creep  ", "twisthi", "nudge  ", "still  "};
     static const char* const kSp[3] = {"PLATE  ", "HALL   ", "MASSIVE"};
     engine.setParam(ParamId::Space, iv::switchToNormalised(c.space));
@@ -1614,7 +1617,7 @@ void RunSpike(const Spike& c, float fs)
     const char* end = cb + sizeof(cb);
     char* const name = p;
     AppendStr(p, end, "SPIKE ");
-    AppendPadRight(p, end, c.group, 7);
+    AppendPadRight(p, end, c.group, 8);
     AppendStr(p, end, kSp[c.space]);
     AppendStr(p, end, c.frozen ? " FROZEN " : " playing");
     AppendStr(p, end, c.input ? " music   " : " silence ");
@@ -1677,6 +1680,27 @@ void RunSpikeLap(float fs)
     gSpkLate = gSpkNearAll = 0;
     gSpkWorst = 0.0f;
     gSpkWorstName[0] = '\0';
+#if IV_PROFILE_SIZESPIKE >= 2
+    // The A / B lap (~8 min): each SIZE move that crossfades (MASSIVE and HALL, playing, silence and music, the four
+    // hands; MASSIVE's twists near the top, and WEAR / MOTION up) as v1.0.48 ran it, then straight after on the faster
+    // paths. PLATE (it glides) and the frozen lines (the pad holds its SIZE: no crossfade) are left out.
+    static const int kHandsAb[4] = {0, 1, 2, 4};
+    for (int space = 2; space >= 1; --space)
+        for (int input = 0; input < 2; ++input)
+            for (int h : kHandsAb)
+                for (int fast = 0; fast < 2; ++fast)
+                    RunSpike({fast ? "FASTER" : "AS-SHIP", space, h, input, false, 0.0f, 0.5f, 0.5f}, fs);
+    static const Spike kMore[3] = {{"", 2, 3, 1, false, 0.0f, 0.5f, 0.5f},
+                                   {"", 2, 2, 1, false, 0.5f, 0.0f, 0.5f},
+                                   {"", 2, 2, 1, false, 1.0f, 0.0f, 0.5f}};
+    for (const Spike& m : kMore)
+        for (int fast = 0; fast < 2; ++fast) {
+            Spike c = m;
+            c.group = fast ? "FASTER" : "AS-SHIP";
+            RunSpike(c, fs);
+        }
+    iv::prof::xfFast = true;
+#else
     static const int kHandsBig[4] = {0, 1, 2, 4};
     for (int space = 2; space >= 0; --space)
         for (int input = 0; input < 2; ++input)
@@ -1697,6 +1721,7 @@ void RunSpikeLap(float fs)
     RunSpike({"KNOBS", 2, 3, 1, false, 0.0f, 0.5f, 0.5f}, fs);
     for (int space = 2; space >= 0; --space)
         for (int input = 0; input < 2; ++input) RunSpike({"STILL", space, 5, input, false, 0.0f, 0.5f, 0.5f}, fs);
+#endif
     ++gSpkLaps;
     static char eb[200];
     char*       p   = eb;
@@ -1784,7 +1809,11 @@ int main()
 #if IV_PROFILE_SIZESPIKE
     System::Delay(3000); // time to open the serial log
     while (true) {
+#if IV_PROFILE_SIZESPIKE >= 2
+        static const char kHello[] = "SIZESPIKE A/B START (AS-SHIP then FASTER, each SIZE move; 38 lines, ~8 min a lap)\r\n";
+#else
         static const char kHello[] = "SIZESPIKE START (SPACES, KNOBS, STILL; 59 lines, ~11 min a lap)\r\n";
+#endif
         TransmitLine(kHello, sizeof(kHello) - 1);
         hw.SetLed(DaisyVersio::LED_0, 0.0f, 0.0f, 1.0f); // blue while a lap runs
         hw.UpdateLeds();

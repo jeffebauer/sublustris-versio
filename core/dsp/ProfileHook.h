@@ -38,6 +38,10 @@ inline void countXfLines(const void* tank)
         if (xfTank[k] == tank) return;
     if (xfTanks < 4) xfTank[xfTanks++] = tank;
 }
+// The SIZE-spike lap's A / B (27 Oct 2026): false runs SIZE's crossfade on v1.0.48's paths (Fdn::lineSlow and
+// Fdn::tapsOld for every crossfading line), true on the faster ones (Fdn::lineXf, the carried old taps), which give
+// the same output to the bit. Builds without the hooks always take the faster ones.
+inline bool xfFast = true;
 #else
 inline void mark(Section) {}
 inline void countXfStart() {}

@@ -14,6 +14,14 @@
 #define IV_FLATTEN
 #endif
 
+// The crossfade's faster paths (lineXf, the carried old taps; the SIZE-spike hunt, 27 Oct 2026); the profile
+// firmware can switch them off to time v1.0.48's (prof::xfFast).
+#if defined(IV_PROFILE_HOOKS)
+#define IV_XF_FAST (prof::xfFast)
+#else
+#define IV_XF_FAST true
+#endif
+
 namespace iv::dsp {
 
 namespace {
@@ -71,6 +79,8 @@ uint32_t primeAtOrAbove(uint32_t n, const float* taken, int count)
         if (!clash) return n;
     }
 }
+
+constexpr float kXfAgreeA = 0.004f; // SIZE's crossfade: the reads' agreement follower (Fdn::xfMix), ~5 ms
 
 float uniform(uint32_t& s) // −1..1
 {
@@ -261,7 +271,7 @@ IV_SIZE_OPT void Fdn::controlInLoop(float dt, int n, float slew, bool pending)
 // through the in-loop allpasses it had when they're leaving (gOld > 0).
 IV_NOINLINE IV_SIZE_OPT float Fdn::xfMix(int i, float nw, float od, float gOld)
 {
-    constexpr float kA = 0.004f; // the agreement's follower: ~5 ms
+    constexpr float kA = kXfAgreeA;
     if (gOld > 0.0f) od = xfAllpass(i, od, gOld, true);
     xfOO_[i] += kA * (od * od - xfOO_[i]);
     xfNN_[i] += kA * (nw * nw - xfNN_[i]);
@@ -583,7 +593,9 @@ IV_NO_UNSWITCH void Fdn::runBlock(const float* inL, const float* inR, float* out
         const float apGi = staggered() ? voicing::kInLoopCoeff * apAmtNow_[i] : apG;
         const float apGOldi = staggered() ? (qi > 0 ? voicing::kInLoopCoeff * apAmtOld_[i] : 0.0f) : apGOld;
         if (qi > 0) prof::countXfLines(this);
-        if (qi > 0 || !lineFast(i, m, apGi, eraIn, eraOut, y[i])) lineSlow(i, m, qi, xn, xo, apGi, apGOldi, eraIn, eraOut, y[i]);
+        if (qi > 0 ? !(IV_XF_FAST && lineXf(i, m, qi, xn, xo, apGi, apGOldi, eraIn, eraOut, y[i]))
+                   : !lineFast(i, m, apGi, eraIn, eraOut, y[i]))
+            lineSlow(i, m, qi, xn, xo, apGi, apGOldi, eraIn, eraOut, y[i]);
     }
     xfNew_ = endNew;
     xfOld_ = endOld;
@@ -669,6 +681,33 @@ IV_NO_UNSWITCH void Fdn::runBlock(const float* inL, const float* inR, float* out
             for (int s = 0; s < q; ++s) {
                 ol[s] += kOutL[j] * e[i][s];
                 orr[s] += kOutR[j] * e[i][s];
+            }
+        } else if (q > 0 && step == 0.0f && w.full() && IV_XF_FAST) {
+            // The old taps while SIZE crossfades, the everyday case (the taps jumped with the lines, so each old
+            // tap sits still all block), as the still taps above: each tap one stream, its b1 the sample before's
+            // b0 (tapsOld reads both, every sample, through a copy of the line). The same values read and the same
+            // sums in the same order (each sample's taps in k order, then the line's signs), so the same output to
+            // the bit, with half the old taps' SDRAM reads (the SIZE-spike hunt, 27 Oct 2026).
+            float       eo[kControlBlock];
+            const float tlo = tl[0] + xfDelta_[i];
+            for (int s = 0; s < q; ++s) eo[s] = 0.0f;
+            for (int k = 0; k < earlyCount_; ++k) {
+                const float    g  = earlyGain_[i][k];
+                const float    od = 1.0f + earlyFrac_[i][k] * tlo;
+                const auto     oi = uint32_t(od);
+                const float    ot = od - float(oi);
+                const uint32_t p  = w.pos - oi;
+                float b1 = w.buf[(p - 1u) & w.mask];
+                for (int s = 0; s < q; ++s) {
+                    const float b0 = w.buf[(p + uint32_t(s)) & w.mask];
+                    eo[s] += g * (b0 + ot * (b1 - b0));
+                    b1 = b0;
+                }
+            }
+            const int j = (i + 3) & (kN - 1);
+            for (int s = 0; s < q; ++s) {
+                ol[s] += kOutL[j] * eo[s];
+                orr[s] += kOutR[j] * eo[s];
             }
         } else if (q > 0) {
             tapsOld(i, q, tl, w, ol, orr);
@@ -768,6 +807,88 @@ IV_NO_UNSWITCH bool Fdn::lineFast(int i, int m, float apG, float eraIn, float er
     interp_[i] = state;
     absorbY_[i] = ay;
     absorbX_[i] = ax;
+    return true;
+}
+
+// One line over the block while it crossfades (its first q samples), the everyday case: full, and its in-loop
+// allpasses (MASSIVE, a small HALL) in the loop at their exact lengths before and after (or in neither: a large
+// HALL). lineSlow's steps for that case with its state in locals, as lineFast's (lineSlow went through a copy of
+// the line, the members and an out-of-line xfMix every sample): the same float operations in the same order, so
+// the same output to the bit (the SIZE-spike hunt, 27 Oct 2026). Built for size, as lineSlow (flash: 880 B here,
+// ~1.9 KB at -O3). False: lineSlow's case (an allpass joining, leaving or gliding, a line filling).
+IV_SIZE_OPT bool Fdn::lineXf(int i, int m, int q, const float* xn, const float* xo, float apG, float apGOld,
+                                float eraIn, float eraOut, float* y)
+{
+    const DelayLine& line = line_[i];
+    if (!line.full() || (apG > 0.0f) != (apGOld > 0.0f)) return false;
+    float*   apBuf[2] = {};
+    uint32_t apPos[2] = {}, apMask[2] = {}, apL[2] = {};
+    if (apG > 0.0f)
+        for (int k = 0; k < 2; ++k) {
+            const DelayLine& a = apLine_[i][k];
+            const float      glide = apLenGlide_[i][k];
+            if (!(apLenStep_[i][k] == 0.0f && glide == float(apLenNow_[i][k]) && glide >= 1.0f && apOld_[i][k] == glide
+                  && a.full()))
+                return false;
+            apBuf[k] = a.buf;
+            apPos[k] = a.pos;
+            apMask[k] = a.mask;
+            apL[k] = apLenNow_[i][k];
+        }
+    const float*   buf = line.buf;
+    const uint32_t mask = line.mask, pos0 = line.pos;
+    const float    step = readStep_[i], corr = xfLineCorr_[i], gain = gain_[i], b1 = b1_[i], pole = pole_[i];
+    const float    delta = xfDelta_[i], K = xfK_[i];
+    float read = readNow_[i], state = interp_[i], stateOld = interpOld_[i], ay = absorbY_[i], ax = absorbX_[i];
+    float oo = xfOO_[i], nn = xfNN_[i], on = xfON_[i];
+    for (int s = 0; s < m; ++s) {
+        const uint32_t pos = pos0 + uint32_t(s);
+        read += step;
+        // DelayLine::readAllpass, the new length, then (crossfading) the old one on its own state.
+        const auto  di = uint32_t(int32_t(read - 0.5f));
+        const float f = read - float(di);
+        const float eta = (1.0f - f) / (1.0f + f);
+        const float a = buf[(pos - di) & mask], b = buf[(pos - di - 1) & mask];
+        state = b + eta * (a - state);
+        float x = state * corr;
+        float g = apG;
+        if (s < q) {
+            const float dO = read + delta;
+            const auto  dOi = uint32_t(int32_t(dO - 0.5f));
+            const float fO = dO - float(dOi);
+            const float etaO = (1.0f - fO) / (1.0f + fO);
+            const float aO = buf[(pos - dOi) & mask], bO = buf[(pos - dOi - 1) & mask];
+            stateOld = bO + etaO * (aO - stateOld);
+            const float od = stateOld;
+            oo += kXfAgreeA * (od * od - oo); // xfMix
+            nn += kXfAgreeA * (x * x - nn);
+            on += kXfAgreeA * (od * x - on);
+            x = K * (xn[s] * x + xo[s] * od);
+            g = xn[s] * apG + xo[s] * apGOld;
+        }
+        if (apG > 0.0f)
+            for (int k = 0; k < 2; ++k) { // in-loop diffusion: read(L) and write()
+                const float d = apBuf[k][(apPos[k] - apL[k]) & apMask[k]];
+                const float v = x + g * d;
+                apBuf[k][apPos[k]] = v;
+                apPos[k] = (apPos[k] + 1) & apMask[k];
+                x = d - g * v;
+            }
+        ay = gain * x + b1 * ax + pole * ay;
+        ax = x;
+        y[s] = ay;
+    }
+    era_[i].run(y, m, eraIn, eraOut);
+    if (apG > 0.0f)
+        for (int k = 0; k < 2; ++k) apLine_[i][k].pos = apPos[k];
+    readNow_[i] = read;
+    interp_[i] = state;
+    interpOld_[i] = stateOld;
+    absorbY_[i] = ay;
+    absorbX_[i] = ax;
+    xfOO_[i] = oo;
+    xfNN_[i] = nn;
+    xfON_[i] = on;
     return true;
 }
 
