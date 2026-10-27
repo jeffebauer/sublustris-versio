@@ -475,6 +475,56 @@ void thirdAttackFlipWhileTimeGlidesDoesntClick()
 
 } // namespace
 
+// The owner's "slight burst of noise" (v1.0.49, rack): switching ONSET (SHIMMER to BLOOM) with DECAY,
+// SIZE and TIME past noon. BLOOM's attack is TIME, the others' MASSIVE's own or none, so the swell's
+// attack glided across the change and its taps swept over seconds of their line in ~0.3 s, re-set once
+// a chunk: scrambled, sped-up sound into the tank, hiss in the tail's highs for its whole length (into
+// or out of BLOOM, x18-53 the steady sound's sharpest step here). Now the swell dips out, restarts in
+// its new voicing and dips back in. And a SPACE flip (HALL to and from MASSIVE) faded the tank's input
+// after the input diffusers and the swell, so the predelay's jump at the silent point (and the swell's
+// cleared line under an unfaded input) rang into the new space as clicks (HALL to MASSIVE x2.2 here);
+// now the input side fades too. Both while a chord plays, after the change's own dip.
+void onsetAndSpaceChangesDontBurst()
+{
+    // The sharpest step over the 3 s after a change at 4 s (after its own 0.15 s dip or fade), against the
+    // sharpest of the two settings' own over the same 3 s unchanged (SHIMMER's octave is sharper).
+    auto worst = [](int space, int onset, int toSpace, int toOnset) {
+        Rig r(48000.0f, 48);
+        r.e.setParam(ParamId::Space, iv::switchToNormalised(space));
+        r.e.setParam(ParamId::Decay, 0.75f);
+        r.e.setParam(ParamId::Size, 0.75f);
+        r.e.setParam(ParamId::Time, 0.75f);
+        r.e.setParam(ParamId::Attack, iv::switchToNormalised(onset));
+        r.e.setParam(ParamId::Mix, 1.0f);
+        r.e.reset();
+        r.run(4.0, 0.3f, -220.0f);
+        r.e.setParam(ParamId::Space, iv::switchToNormalised(toSpace));
+        r.e.setParam(ParamId::Attack, iv::switchToNormalised(toOnset));
+        r.run(0.15, 0.3f, -220.0f);
+        r.clearWatch();
+        r.run(3.0, 0.3f, -220.0f);
+        return r.maxD2;
+    };
+    char what[160];
+    for (int sp = 1; sp < 3; ++sp)
+        for (int from = 0; from < 3; ++from)
+            for (int to = 0; to < 3; ++to) {
+                if (to == from) continue;
+                const float steady = std::max(worst(sp, from, sp, from), worst(sp, to, sp, to));
+                const float x = worst(sp, from, sp, to) / steady;
+                std::snprintf(what, sizeof what, "%s: ONSET %d->%d while playing doesn't burst (sharpest step x%.2f the steady sound's)",
+                              sp == 1 ? "HALL" : "MASSIVE", from, to, x);
+                check(x < 1.5f, what);
+            }
+    for (int from = 1; from < 3; ++from) {
+        const float steady = std::max(worst(from, 0, from, 0), worst(3 - from, 0, 3 - from, 0));
+        const float x = worst(from, 0, 3 - from, 0) / steady;
+        std::snprintf(what, sizeof what, "a flip %s while playing doesn't burst (sharpest step x%.2f the steady sound's)",
+                      from == 1 ? "HALL->MASSIVE" : "MASSIVE->HALL", x);
+        check(x < 1.5f, what);
+    }
+}
+
 int main()
 {
     tapMidChunkUnfreezes();
@@ -488,6 +538,7 @@ int main()
     padFrozenFromADyingTailHolds();
     cassetteCompressionDoesntPlunge();
     thirdAttackFlipWhileTimeGlidesDoesntClick();
+    onsetAndSpaceChangesDontBurst();
     std::printf("%s\n", failures ? "SOME TESTS FAILED" : "ALL TESTS PASSED");
     return failures ? 1 : 0;
 }
