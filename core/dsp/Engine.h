@@ -347,6 +347,10 @@ private:
     // tank restarts in the new voicing, and both fade back in.
     int   activeSpace_ = 1, flipPhase_ IV_ZI; // 0 steady, 1 fading out, 2 fading in
     float flipGain_ = 1.0f, flipStep_ IV_ZI;
+    // An ONSET change dips the swell out and back in (applySpace): the ONSET it is voiced for, the dip
+    // (0 none .. 1 out) and its step per sample.
+    int   swellOnset_ IV_ZI;
+    float onsetDip_ IV_ZI, onsetStep_ IV_ZI;
     // ATTACK = SHIMMER: the octave's send fades in and out over kAttackFadeSeconds; it rests while
     // frozen. shimmerAmount_: TIME, how much shimmer.
     float shimmerMix_ IV_ZI, shimmerTarget_ IV_ZI, shimmerAmount_ IV_ZI;

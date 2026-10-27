@@ -239,6 +239,9 @@ private:
 public:
     // BLOOM smears its taps (kSmearGain); MASSIVE's mass and the twin's swell don't.
     void setSmear(bool on) { smearTarget_ = on ? kSmearGain : 0.0f; }
+    // The smear straight at its target (a restart: gliding out from a cleared smear, it jumped from the
+    // delayed read to the direct one when it let go, a click ~1.5 s after BLOOM was left).
+    void snapSmear() { smearG_ = smearTarget_; }
 };
 
 } // namespace iv::dsp

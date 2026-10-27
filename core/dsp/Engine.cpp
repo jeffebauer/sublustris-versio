@@ -213,6 +213,7 @@ IV_SIZE_OPT void Engine::reset()
     flipPhase_ = 0;
     flipGain_ = 1.0f;
     flipStep_ = 0.0f;
+    onsetDip_ = 0.0f;
     applySpace(true);
     swell_.reset();
     fdn_.reset();
@@ -558,6 +559,20 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         attackSeconds = map::bloomSeconds(time) * (massive ? map::massiveMass(size) : 1.0f);
     swell_.setAttackSeconds(attackSeconds, snap);
     swell_.setSmear(attack == 1); // BLOOM only (owner, renders/swell_smear)
+    // An ONSET change (what the swell is: BLOOM's attack is TIME, the others' MASSIVE's own or none): the
+    // swell's input and output dip out over kSpaceFlipSeconds, its taps and smear held; it restarts from
+    // silence in its new voicing there and dips back in, the tank's tail ringing on. Glided, its taps swept
+    // across seconds of their line in ~0.3 s, re-set once a chunk: scrambled, sped-up sound into the tank,
+    // 50-80 dB over the tail's highs for its whole length (owner: "a slight burst of noise", SHIMMER to
+    // BLOOM; every switch into or out of BLOOM measured it, and NATURAL to SHIMMER in MASSIVE).
+    if (snap) swellOnset_ = attack;
+    if (attack != swellOnset_ && onsetDip_ >= 1.0f) {
+        swellOnset_ = attack;
+        swell_.reset(); // its attack jumps to the one just set, and its smear
+        swell_.snapSmear();
+    }
+    // Out while the swell isn't the ONSET's, back in (and resting at 0, exactly) once it is.
+    onsetStep_ = (attack != swellOnset_ ? 1.0f : -1.0f) / (voicing::kSpaceFlipSeconds * sampleRate_);
     // SHIMMER (ADR 0024): TIME is how much; it rests while frozen (as REVERSE did, ADR 0015).
     shimmerAmount_ = time;
     shimmerTarget_ = attack == 2 && !frozen ? 1.0f : 0.0f;
@@ -796,6 +811,11 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
             twinPlate_.reset();
             twinSwell_.reset();
             for (auto& d : twinDiffuser_) d.clear();
+            // The input side fades with the flip (process(): before the diffusers), so the predelay's jump
+            // here is silent and the diffusers and swell start from silence. Faded only at the tank (after
+            // them), that jump and the swell's cleared line under the unfaded input rang into the new space
+            // as clicks, hiss over its tail's highs for seconds (owner: a burst switching MASSIVE and HALL).
+            for (auto& d : diffuser_) d.clear();
             flipPhase_ = 2;
         }
     }
@@ -809,7 +829,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
     if (flipPhase_ == 0) flipStep_ = 0.0f;
 
     applySpace(false, n);
-    swell_.control(n);
+    if (onsetStep_ < 0.0f) swell_.control(n); // dipping out for an ONSET change (applySpace), its taps and smear stay put
     twinSwell_.control(n);
     // TIME's pre-delay by crossfade (v1.0.34, ADR 0025; owner's pick C on renders/knob_moves): it jumps
     // and the old delay fades out over kSizeCrossfadeSeconds, equal power, instead of sliding, which swept
@@ -877,6 +897,8 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                 pr += t * (predelay_[1].readCubic(2.0f) - pr);
             }
             if (pdXfLeft_ > 0) predelayCrossfade(l, r, pl, pr);
+            pl *= flipGain_; // a SPACE flip fades the input side too (the predelay jumps at its silent point)
+            pr *= flipGain_;
             pl = diffuser_[0].process(pl);
             pr = diffuser_[1].process(pr);
             prof::mark(prof::kInput);
@@ -887,7 +909,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             // sound's sharpest step, MASSIVE to PLATE; REVERSE's line had the same, soak finding 6).
             shimmerMix_ = approach(shimmerMix_, shimmerTarget_, attackStep);
             {
-                float sl = flipGain_ * pl, sr = flipGain_ * pr;
+                float sl = pl, sr = pr; // faded with a SPACE flip (above)
 #ifndef IV_FIXED_VOICINGS
                 if (shimmerLazy_ && !shimmerArmed_ && shimmerMix_ <= 0.0f) { // the prototype: resting
                     sl = sr = 0.0f;
@@ -915,9 +937,11 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             // arrives as a wash, not two distinct repeats first (owner, 22 Oct 2026).
             twinL_[i] = twinR_[i] = 0.0f;
             prof::mark(prof::kTwin);
-            bufL_[i] = pl; // the swell's input; it runs over the whole chunk below
-            bufR_[i] = pr;
-            chunkGain_[i] = tankIn_ * flipGain_;
+            onsetDip_ = clamp01(onsetDip_ + onsetStep_);
+            const float og = 1.0f - onsetDip_;
+            bufL_[i] = og * pl; // the swell's input; it runs over the whole chunk below
+            bufR_[i] = og * pr;
+            chunkGain_[i] = tankIn_ * flipGain_ * og;
             wetL_[i] = wetR_[i] = 0.0f;
             prof::mark(prof::kInput);
         }
