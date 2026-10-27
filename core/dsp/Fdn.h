@@ -130,6 +130,8 @@ private:
     bool blockFits(int m) const;
     void runBlock(const float* inL, const float* inR, float* outL, float* outR, int m);
     bool lineFast(int i, int m, float apG, float eraIn, float eraOut, float* y);
+    bool lineXf(int i, int m, int q, const float* xn, const float* xo, float apG, float apGOld, float eraIn,
+                float eraOut, float* y);
     void lineSlow(int i, int m, int q, const float* xn, const float* xo, float apG, float apGOld, float eraIn,
                   float eraOut, float* y);
     void tapsMoving(int i, int m, const float* tl, const DelayLine& was, float* e) const;
