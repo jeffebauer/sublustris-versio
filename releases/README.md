@@ -21,7 +21,7 @@ INSTALL (Mac, macOS 12 or newer, Apple Silicon or Intel)
      xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/Components/"{{NAME}}.component"
 4. Restart your DAW and rescan plug-ins. In Ableton: Settings > Plug-Ins, turn on the VST3 / Audio Units system folders, then hold Option and click Rescan. In Logic it appears under Audio Units > Ombra Audio. It shows up as "{{NAME}}".
 
-Use it on a return track (MIX fully up) or as an insert (MIX to taste).
+Use it on a return track (BLEND fully up) or as an insert (BLEND to taste).
 
 
 THE CONTROLS (same places as on the module)
@@ -43,10 +43,10 @@ The four lights at the top are level meters: input left / right, output left / r
 
 THINGS TO TRY
 
-- Chord stabs on a send: HALL, NORMAL, DECAY noon, TONE a little left, DRIFT a little left, ERA into the cassette.
-- A pad or a drone: MASSIVE, BLOOM, TIME noon, DECAY past 3 o'clock. Turn SIZE slowly.
+- Chord stabs on a send: HALL, NATURAL, DECAY noon, TONE a little left, MOTION a little left, WEAR around 10 o'clock for a little tape.
+- A pad or a drone: MASSIVE, BLOOM, DEPTH noon, DECAY past 3 o'clock. Turn SIZE slowly.
 - Play a chord, tap FREEZE, then play over the pad. Hold FREEZE now and then to paint new notes into it.
-- SHIMMER on sparse piano or guitar, TIME around 10 o'clock, ERA up into the radio for a broken, distant feel.
+- SHIMMER on sparse piano or guitar, DEPTH around 10 o'clock, WEAR near full for a broken, distant radio feel.
 
 
 KNOWN ISSUES
