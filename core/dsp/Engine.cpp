@@ -172,6 +172,7 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
         }
     gesture_.prepare(sampleRate);
     tilt_.prepare(sampleRate);
+    toneBell_.prepare(sampleRate);
     limiter_.prepare(sampleRate);
     reset();
 }
@@ -225,6 +226,9 @@ IV_SIZE_OPT void Engine::reset()
     tilt_.reset();
     tilt_.set(smoothed(ParamId::Tone));
     tilt_.snap();
+    toneBell_.reset();
+    toneBell_.set(smoothed(ParamId::Tone), kChunk);
+    toneBell_.snap();
     limiter_.reset();
     texture_.reset();
     duck_ = duckGrDb_ = duckGainStep_ = 0.0f;
@@ -526,6 +530,7 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     eraMakeup_ = wear.makeup;
 
     tilt_.set(smoothed(ParamId::Tone));
+    toneBell_.set(smoothed(ParamId::Tone), n);
     // Hiss follows the input (none in silence, so an infinite tail doesn't
     // fill with noise, ADR 0005); crackle the same.
     const float inDb = 10.0f * std::log10(inputPower_ + 1e-20f);
@@ -1006,6 +1011,10 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             if (texOn_) texture_.process(wl, wr); // ERA's wear (dsp/EraTexture.h)
             prof::mark(prof::kEraWear);
             tilt_.process(wl, wr);
+#ifndef IV_FIXED_VOICINGS
+            if (!toneBellOff_)
+#endif
+                toneBell_.process(wl, wr); // TONE's resonant tilt (v1.0.44)
             duckGain_ += duckGainStep_; // ducking (ADR 0014)
             wl *= duckGain_;
             wr *= duckGain_;

@@ -206,6 +206,11 @@ public:
         lowFdn_.setStagger(groups);
     }
 #endif
+#ifndef IV_FIXED_VOICINGS
+    // Tests only: false leaves TONE's resonant tilt out of the wet (the wet as it was before v1.0.44), to show the
+    // bell is the only difference and the loop is untouched.
+    void  setToneBellForTests(bool on) { toneBellOff_ = !on; }
+#endif
     bool  twinActive() const { return twinActive_; } // read-only view for tests
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
@@ -333,6 +338,10 @@ private:
     float             eraMakeup_ = 1.0f;
     // Ducking (ADR 0014) and the limiter (SPEC §4.10).
     dsp::Tilt         tilt_;
+    dsp::ToneBell     toneBell_; // TONE's resonant tilt, after tilt_ (v1.0.44)
+#ifndef IV_FIXED_VOICINGS
+    bool              toneBellOff_ IV_ZI; // setToneBellForTests
+#endif
     dsp::Limiter      limiter_;
     float             duck_ IV_ZI, duckGrDb_ IV_ZI, duckGain_ = 1.0f, duckGainStep_ IV_ZI; // ducking: LEDs 0..1, reduction dB, wet gain
     // ERA's sources into the tank's input (SPEC §4.7): the tape's hiss, the Midiverb's crackle.
