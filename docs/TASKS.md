@@ -9,7 +9,6 @@
 - [ ] **One merge into main, when your remaining picks are in** (MOTION, the swell comb, the room's movement). `claude/massive-air` no longer needs merging on its own: every branch since (era-wear, tone-character and the rest) contains it. The plan: one combined branch (era-wear + TONE + your picks), renamed Sublustris Versio in the same pass, checked, then merged with your OK. The release script (`claude/friend-package-073b04`) can go in any time.
 
 ### Listen (after your notes)
-- [ ] **`motion_entry`: how the tape side comes in** (pick one): `/Users/jesse/Documents/Sites/immensio-versio/renders/motion_entry/index.html`. A as built: the tape transport only runs on MOTION's left side and "comes up to speed" over ~5 s as you turn into it (the tail up to ~11 cents flat meanwhile), and back out the same way; B always on: no glide and no dip crossing noon, but the whole reverb ~21 ms later everywhere (like a little extra pre-delay). Slow and quick turns, and a card at noon where only the 21 ms differs; held chord and dub mix, HALL and MASSIVE.
 
 ### Listen (first time)
 
@@ -46,6 +45,7 @@
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 
 ## Done
+- [x] **The tape side comes in as built (A)** (27 Oct 2026, `renders/motion_entry`, MIX 50 %, A on every card). The transport runs only on MOTION's left side and comes up to speed over ~5 s; noon and the right side stay exactly as before. The last sound question of this round: next the docs, the rename, a playing build for the rack, then the merge.
 - [x] **The room's movement scales with SIZE (B)** (27 Oct 2026, `renders/room_motion`, MIX 76 %, B on every card). The room bends about 3-9 cents at every SIZE (was up to 40 at small SIZE), like the main reverb. Being built as v1.0.47 on the combined branch. That was the last open sound question before the merge.
 - [x] **BLOOM's swell stays as it is** (27 Oct 2026, `renders/swell_motion`: "I like D smear moves overall, but the difference is very subtle, especially when not fully wet"; then "Keep it as is"). D (BLOOM's smoothing moving) is on the shelf (branch `claude/swell-motion`) in case flash allows later; it can't change the comb anyway. The room's pitch bend is a separate question (`room_motion`).
 - [x] **MOTION's crinkle dips: a third of C's (B)** (27 Oct 2026, `renders/drift_rethink/left_tape_final`, every card, repeated cards agreeing). MOTION is settled: left side the tape transport with more variance and Magneto-style crinkle, a few dips (15 a minute at full left); right side stronger Wander. Being built as the default on the combined branch.
