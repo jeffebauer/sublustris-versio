@@ -2,7 +2,7 @@
 
 A huge, warm, lush reverb firmware for the Noise Engineering Versio (Daisy Seed, STM32H750), sibling to Resilio Versio. One DSP Core, three Hosts: Renderer (offline CLI), JUCE Plugin (AU/VST3 test bench), Versio Firmware.
 
-**Start a session with `/immensio-start`, end one with `/immensio-wrap`.** The handoff lives in `docs/handoff/HANDOFF.md`.
+**Start a session with `/immensio-start`, end one with `/immensio-wrap`.** The handoff lives in `docs/handoff/HANDOFF.md`. The main session orchestrates (the owner, decisions, reviews, commits); prototypes, pages, debug and flash hunts and hardware-log reads go to nested sessions or subagents (`/immensio-start`, "Working as the orchestrator").
 
 ## Read first
 - `SPEC.md`: the spec (frozen v1.0; changes via ADR + changelog line). `CONTEXT.md`: the glossary (use its terms in code, comments and chat). `docs/adr/`: every decision (index `docs/adr/README.md`). `docs/TASKS.md`: the owner's to-do list.

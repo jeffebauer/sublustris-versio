@@ -1,112 +1,81 @@
 # Handoff
 
-**Written:** 25 Oct 2026, end of session 5. Start the next session with `/immensio-start`.
+**Written:** 26 Oct 2026, end of session 8 (M3 hardware rounds 11-14, the crackle hunt, v1.0.37-40). Start the next session with `/immensio-start`, which now has a **"Working as the orchestrator"** section: this session ran out of context doing everything in one thread; hand prototypes, pages, debug and flash hunts and hardware-log reads to nested sessions or subagents.
 
-**Nothing running:** no agents, a clean tree, `main` pushed to `origin` with this handoff.
+**Nothing running:** no agents, no nested sessions. `main` holds docs and skills only; **all the code is on branch `claude/massive-air`** (worktree `.claude/worktrees/massive-air`, HEAD `48d46a6`), not merged into main (the owner's Decide item).
 
 ## State
 
 | Milestone | State |
 |---|---|
-| Spec | v1.0 frozen, plus build amendments **v1.0.1–v1.0.30** (SPEC changelog). This session: v1.0.28–v1.0.30, below |
-| M0 desktop / firmware | Built |
-| M0 hardware | **Owner check pending** (`docs/m0-hardware-check.md`) |
-| M1 Hall, M4 MASSIVE, M5 PLATE | Built and listened |
-| M2 | Criteria pass. **Not installed** in Ableton |
-| M3 | Needs the owner at the rack (CPU). New wet stages since the last estimate: the BBD and the radio |
-| M6 character | **Redesigned and listened:** ERA's five eras ("M6 also sounding excellent"; the ERA sweep "sounds excellent") |
-| M7 duck | Done |
-| M8 | Knob feel done; DECAY keeps the loudness (v1.0.28) |
+| Spec | v1.0 frozen plus build amendments to **v1.0.40** (v1.0.34-40 on the branch only; main's SPEC stops at v1.0.33) |
+| M0 | Passed (25 Oct) |
+| M1/M4/M5/M6/M7/M8 | Built and listened |
+| M2 | Plugin installed `b39d451` (v1.0.34). v1.0.35-40 not installed |
+| M3 | **Nearly there.** Everyday sounds fit (playing MASSIVE 61-71 %, HALL 57-73 %, PLATE 44-60 %; no drop-outs up to ~99 % load). Open: **the SIZE crossfade's peak** (106 % before the stagger; round 15 measures v1.0.39's stagger) and **a frozen MASSIVE with the cassette** (104.5 % in real time) |
 | M9 | Not started |
 
-**This session's spec changes:**
-- **v1.0.28 DECAY keeps the loudness** (ADR 0020). A shorter tail is made up to its SPACE's longest finite tail (`map::decayLevelMakeup`), MASSIVE included, and a short REVERSE too (`map::reverseLevelMakeup`). PLATE is +0.4 dB. Every finite setting sits within ~2 dB on music (it spread 13 dB).
-- **v1.0.29 bug fix:** turning ERA into or out of the cassette clicked (a spike ~250× the surrounding level, since v1.0.22). Tape out now fades in and out over 20 ms (`Engine` `tapeMix_`). `test_era` sweeps the knob.
-- **v1.0.30 ERA runs from sweet to gritty** (new ADR 0021; ADR 0003 superseded, 0004 and 0019 amended):
-  - **Five eras in equal stretches,** each on its own (only neighbours crossfade): Neve, Midiverb, bucket-brigade, cassette, AM radio.
-  - **The Neve is the base under all of them,** and alone at ERA fully CCW. ERA's default is now 0.1.
-  - **Bucket-brigade** (`dsp/EraStages.h` `BbdStage`, on the wet after the loop): its grit reaches round 2's "more" at two-thirds of its stretch (`kBbdGritAt`).
-  - **Radio** (`RadioStage`, on the wet after the loop):
-    - a Rician station fade, given back by an AGC that follows the carrier, so the static swells as the station dips;
-    - round 1's wandering dip;
-    - soft hiss, three-layer static, a slow detune;
-    - at the gritty end, drift-offs and a faint hum;
-    - a slow level hold (~8 s, ±12 dB). Without it, a held tail drained 6 dB in six minutes through the band as it darkened.
-    - No whistles or polar flutter (owner).
-  - **Removed:** μ-law, vintage reads, stacking.
+**This session (all on `claude/massive-air`):**
+- **Hardware rounds:** 11 (`docs/research/m3-round11.log`), 12 (+ITCM, `m3-round12.log`, `m3-round12-itcm.log`), 13 (real-time knob sends, `m3-round13.log`), the playing build's own report (`m3-release-diag.log`), 14 (`m3-round14.log`). `firmware/README.md` has each round's reading.
+- **v1.0.37:** release at SDRAM TRP/TRCD 3/3 (`SDRAMCHK` 0/0/0), the Core's hot code in ITCM (−2.5-3.5 points), SIZE's 0.1 % hysteresis and the twin stopping on its 50 ms level as Core defaults, flash freed by `IV_SIZE_OPT` on `queueEdge` / `onGesture` / `Drift::control`.
+- **v1.0.38:** ERA's tape at 2× (owner's pick, `tape_os`).
+- **The crackle hunt:** the owner's MASSIVE drop-outs were **audio leaking into the knob readings** (the ADC), moving SIZE by itself and starting SIZE crossfades (~110 % CPU). Fixed in the release's knob reading: a 10 ms one-pole + a deadband of 0.001 (0.003 for SIZE and TIME). Ruled out on the way: the gate, the SDRAM timing (libDaisy timing still crackled), input level, the LEDs, fast notes (desktop and the module's `RELEASE_DIAG` build both flat).
+- **v1.0.39:** SIZE's crossfade in two staggered groups of lines (owner's pick B on `size_stagger`; ADR 0025 amendment). Three clicks in the prototype found and fixed before the page (waiting lines need their own in-loop amount, loss-filter blend, trip correction; HALL fades together where its diffusion joins or leaves).
+- **v1.0.40:** ERA's overlap a fifth of each stretch (owner: "B but split the difference ... 20%"; ADR 0021 amendment), after `era_switch` (owner kept the overlaps for CV) and `era_overlap`.
+- **Firmware tooling:** `RELEASE_DIAG=1` (the playing build on USB power, knobs held at noon, own input, a serial load report), `RELEASE_LATE_LIGHT=1` (rightmost LED red/amber after a late/near block), `RELEASE_SDRAM_TIGHT=0` (libDaisy timing), `PROFILE_ITCM=0`; m0test has a knob-jitter readout on serial and an LED jitter mode for rack power (SPACE left, ATTACK right). Profile: frozen corner last, `max at block N`, `REALTIME` lines.
+- **Desktop tooling:** `IV_BLOCK_PROFILE=<csv>` per-block section timing in a `-DIV_PROFILE_HOOKS` renderer (relative only: see Will bite); prototype hooks `IV_ERA_SWITCH`, `IV_ERA_FADE_SHARE`, `IV_SIZE_STAGGER=1` (the old fade); page scripts `tools/pages/era_switch.py`, `era_overlap.py`, `size_stagger.py`.
 
-**Turned down after listening** (in the ADRs and `docs/TASKS.md` Done):
-- ERA on the dry too: "too intense" (ADR 0004 amendment);
-- stacked ERA made stronger (superseded by the redesign);
-- the early-sampler era;
-- the round-1 and round-2 radios, whistles and polar flutter.
+**Gates** (branch HEAD `48d46a6`, `build-scratch` in the worktree): ctest **"100% tests passed out of 17"**. `tools/same_render.py` against v1.0.39: only the three ERA sweeps differ (the deliberate v1.0.40 change). Firmware (budget 112,640 B):
 
-- **`main` HEAD:** this handoff's commit.
-- **Plugin in Ableton:** none installed.
-- **Gates:** ctest **"100% tests passed out of 15"** on the merge commit `2d6364c`. Only `docs/TASKS.md` changed after it.
-- **Firmware** (110 KB budget = 112,640 B; **1,068 B left**):
+| Variant | Bytes | % of 128 KB |
+|---|---|---|
+| release | 112,548 | 85 % (**92 B under budget**) |
+| release `-latelight` | 112,812 | test build, over budget on purpose |
+| profile | 124,832 | 95 % (profile-only; the warning is expected) |
+| m0test | 83,556 | 63 % |
+| release `-diag` | ~129,700 | USB-power diagnostic only |
 
-  | Variant | Bytes | % of 128 KB |
-  |---|---|---|
-  | release | 111,572 | 85 % |
-  | profile | 112,560 | 85 % |
-  | m0test | 82,356 | 62 % |
-
-- **Listening pages:** none waiting (`renders/` holds only `_material` and `_material_sweep`, 626 MB). The ERA signatures reference page (https://claude.ai/artifact/AiR2JXPAaLbT8GeJseK3Vj) measures the **old** stacked ERA. The owner declined a re-measure for now.
-- **Phone listening:** `.claude/launch.json` "review-pages-lan" serves `renders/` on the Wi-Fi at port 8766 (http://192.168.1.100:8766/…; the IP comes from `ipconfig getifaddr en0`). See memory [[owner-reviews-on-phone]].
+`main` HEAD: this handoff's commit. Plugin installed: `b39d451`.
 
 ## In flight
 
-- **The overnight review (26 Oct 2026) is on branch `review/overnight`** (worktree `.claude/worktrees/review-overnight`, off `claude/massive-air` `0bf5505`), not merged: `docs/research/review-2026-10-26.md` is the report (Summary and section 8 first). It merged a set of bit-identical speed-ups (the tank line by line, the twin's input side off when idle, the Plate's reads, ERA memos, the Engine in DTCM, the allpass lines in AXI SRAM: `tools/same_render.py` `SAME 55/55`, `100% tests passed out of 17`, release 112,484 B), left four sound options and three bug fixes behind renderer hooks (off), built two pick pages in its `renders/` (`tape_os`, `still_lows_rate`), and rebuilt the profile firmware as **round 11** for the owner to flash (`docs/TASKS.md`). The four prototype branches `review/p2-fdn`, `review/p2-neutral`, `review/p2-firmware`, `review/p2-sound` are merged into it and can be deleted. Found on the way: on the module SIZE may never take effect in MASSIVE (knob noise restarts the crossfade's rest timer; the fix is behind `IV_SIZE_HYST`), and the twin's swell ran 24 taps a sample forever after any MASSIVE freeze (fixed).
-- **Nothing running.**
-- **No branches kept:** the prototype branches `claude/era-dry` (7ec5af8), `claude/era-strength` (3608c89) and `claude/listen` (fbb283c) were deleted at the owner's request after the wrap; the decisions are in ADR 0004 and 0021.
-- `.claude/worktrees/serene-snyder-30d3a2` and `swell-curve`: old sessions' worktrees, already merged. The app cleans them.
+- **Nothing running.** Branch `claude/massive-air` kept until the owner OKs the merge into main (TASKS "Decide"); its `docs/TASKS.md` / `HANDOFF.md` are stale copies: at the merge take main's.
+- **The owner's next flashes** (TASKS): round 15 profile on USB power, then `immensio_versio-latelight.bin` at the rack (SIZE moves in MASSIVE; ERA at 20 %). The `.bin`s sit in the worktree's `firmware/build/`.
+- `screenlog.0` (untracked, main checkout root): the owner's screen log; rounds read so far are filed in `docs/research/`. It keeps growing while logging is on.
+- Trash holds `immensio-cleanup-2026-10-26` (old temp, 15 GB) and `immensio-judged-pages-2026-10-26` (`era_switch`, `size_stagger`, `era_overlap`): the owner empties it.
 
 ## Next steps
 
-1. **Owner at the rack: M0, then M3.** Profile the heaviest cases, which now include the new wet stages:
-   - a frozen MASSIVE, DRIFT CW, BLOOM, ERA at the radio (0.9–1.0), and at the BBD (0.5);
-   - the cassette with tape out at 4×;
-   - a long silent tail, for subnormals (the firmware doesn't flush to zero).
+1. **Read round 15** when the owner sends it (delegate the read to a subagent: compare with `m3-round14.log`): `MASSIVE neve SIZE .3<>.8`'s `max` and `MASSIVE S1 neve`'s max (the SIZE 0 → 1 jump) with the stagger; the frozen corner; `REALTIME` lines. Target: under ~95 %.
+2. **The rack test of v1.0.40** (owner): drop-outs after SIZE moves, ERA's feel at 20 %. If drop-outs remain, the SIZE crossfade needs more (old early taps faded faster, or a page for three groups).
+3. **A frozen MASSIVE with the cassette (104.5 %):** options, each a page or an owner call: a lighter twin while frozen (review item N, −10 to −35 % while frozen), the block size (`PROFILE_BLOCK=96`, −7.5 points model, +1 ms latency), the still lows at 6 kHz (`still_lows_rate` page still exists, −7-10 % in MASSIVE). Also time the ERA overlap positions on the module (cassette + radio at ERA ~0.82), never measured. A good nested-session task: prototype + page + gates.
+4. **ERA's tape → radio hand-over** if the owner still hears it as abrupt: the tape drive's curve within the overlap (its sparkle needs near-full drive).
+5. **Merge `claude/massive-air` into main** on the owner's OK; install the plugin (v1.0.40) when they want it (`tools/install_plugin.sh <commit>`, Ableton closed).
+6. Housekeeping from the review (report section 8, item 7), each small.
 
-   The radio runs ~8 RNG calls, 2 SVF sets and 5 filters per sample. If CPU is short, its per-block `std::pow` calls and the BBD's three SVFs are the first places to look.
-2. **The rest of the Valhalla comparison** (TASKS "Waiting on Claude"). MASSIVE's highs die sooner than Supermassive's, and the Neve base now shortens every space's highs a little more (×0.7 high T60 share at every ERA). Re-measure with `tools/compare_reference.py` first. Supermassive's pitch movement at long settings is the other item.
-3. **Flash before any Core addition:** 1 KB left. See memory [[flash-libm-costs]] for where the bytes go (`arm-none-eabi-nm --size-sort -S -C -t d firmware/build/immensio_versio.elf`). Candidates: the radio's per-sample `process` (2.6 KB, -O3) and REVERSE / old prototype code paths.
-4. **ERA signatures page**, only if the owner asks: `tools/era_reference.py` still lists the old stage positions (`STAGES`). Update it to the five eras and republish the artifact (Dashboard type, `ArtifactData` writes; one long-form JSON asset).
-5. Resilio → Ombra Audio (its own repo; check the owner's Ableton sets first).
+## Waiting on the owner (`docs/TASKS.md`)
 
-## Waiting on the owner (all in `docs/TASKS.md`)
-
-- No picks or pages waiting.
-- **At the rack:** M0, then M3.
-- **Recordings:**
-  - re-export three clipped Valhalla takes 6 dB lower;
-  - re-record Supermassive's short settings;
-  - check Supermassive's DELAY;
-  - H9 Reverse, Mercury7, VintageVerb.
-- **M2:** install the plugin when they want it in Ableton.
+- Flash round 15 (USB) and play v1.0.40 with the late light (rack).
+- Decide: merge the branch into main.
+- Listen: `swell_seed` (session 6), `still_lows_rate` (only if more CPU is needed).
+- Empty the Trash; reference recordings as before.
 
 ## Will bite
 
-- **Flash:** 1,068 B left. A new libm function (`tan` was 2.7 KB) or an inlined helper can blow it. Mark control-rate code `IV_SIZE_OPT`.
-- **Goldens update once per SPEC version.** `IV_GOLDEN_UPDATE` refuses unless SPEC's newest changelog version is newer than the goldens' (now v1.0.30). A second sound change needs its own changelog line first.
-- **ERA fully CCW is no longer clean** (the Neve base, darkening ×0.7). Tests that used ERA 0 as "clean" now hear the Neve. Mostly fine, but keep it in mind when reading old measurements and research notes.
-- **The radio is random by design** (storm, fades, crashes, drift-offs), with a fixed seed per Engine. Two renders of the same settings match, but different material lengths shift the events. Its hold is judged over 25 s windows in `test_era` (its fades are meant to be heard).
-- **The click detector flags the music's own attacks** (bass plucks, keys) on looped material. Check click times against era boundaries before blaming the engine. The radio's crackle is clicks by design; `test_era`'s sweep stops before the radio.
-- **Page chapters are per row** (the material). `make_review.py --chapters` sets one chapter bar for every row, for knob sweeps on their own page.
-- **Earlier traps still apply:**
-  - the tape soft-limits the wet's peaks from the cassette up;
-  - level-matched pages hide loudness;
-  - don't rebuild `build/` while a page renders from it;
-  - iv_render sidecars don't record `IV_*` hooks (none are left in the renderer now except `IV_STILL_LOWS`, `IV_TAPE_OUT`, `IV_DIFF_INDEPENDENT`, `IV_HALL_DIFFUSION`, `IV_MOD_SCALE`, `IV_DECAY_MAKEUP`);
-  - picks relayed by other sessions need the owner's confirmation.
-- **Removals built from shell variables are refused** by the harness (memory [[rm-literal-paths]]).
+- **Flash: 92 B left.** Anything new in the release needs bytes found first. Cheap known sources: none left that are sound-neutral and measured; the constructors (`Engine()` / `Fdn()` member initialisers over already-zeroed storage, ~1-2 KB, unmeasured, risky), newlib `sinf`/`cosf` (~2.2 KB, not bit-identical). `-fno-math-errno` / `-fmove-loop-invariants` made the release *bigger* at -O3.
+- **Desktop timing is not the module** (memory): the desktop is compute-bound, the M7 memory-bound. Desktop per-block timing finds which block spikes, never how much a memory saving is worth.
+- **Knob readings on the module are noisy and the audio gets into them.** Any new knob-driven behaviour that restarts on change (crossfades, rest timers, memos) needs the deadband in mind. On USB power the knobs aren't powered at all (memory).
+- **The release's knob path differs from the Plugin's** (smoothing + deadband, firmware only): SIZE/TIME move in 0.3 % steps on the module.
+- **The stagger's per-line state** (`xfLine_`, `xfOff_`, `apAmtNow_/Old_` in `Fdn`) has no initialisers; `Fdn::reset()` sets them. Anything that reads them before `prepare()`/`reset()` reads garbage.
+- **Two tank paths** (`lineFast` / `lineSlow`) plus now per-line fade state: any change to the crossfade goes into both paths and the waiting-line logic; `tools/same_render.py` and a 1 ms-frame click check at every move are the gates.
+- **The profile build is at 95 %**; the all-variants warning is expected. The `-diag` build is near 128 KB.
+- **Firmware objects in the worktree once pointed at a deleted worktree** (stale `.d` files): if a build complains about a missing `review-overnight/...` path, remove `firmware/build/obj-*` (literal paths) and rebuild.
+- **`screenlog.0` holds several rounds**: when filing a round, cut it from its own BENCH/first CORNER to its last line (or let a subagent do it).
 
 ## Where to look
 
-- `docs/TASKS.md`
-- `docs/adr/0021-era-sweet-to-gritty.md` and `docs/adr/0020-decay-keeps-the-loudness.md`
-- `core/dsp/EraStages.h` (BBD, radio), `core/params/Mappings.h` (`eraMix`, `decayLevelMakeup`), `core/dsp/Engine.cpp` (wet path)
-- `docs/research/new-eras.md`, `docs/research/radio-artifacts.md`
-- `host/tests/test_era.cpp` (what ERA promises)
-- `SPEC.md` changelog v1.0.28–v1.0.30 and §4.7
+- `.claude/skills/immensio-start/SKILL.md` ("Working as the orchestrator") and `docs/TASKS.md`
+- `firmware/README.md` (rounds 11-14, the crackle hunt, v1.0.37-40, the build switches)
+- `docs/research/m3-round14.log`, `m3-round13.log` (the baselines for round 15)
+- `core/dsp/Fdn.cpp` (`control`'s crossfade start, `runBlock`, `lineSlow`), `firmware/main.cpp` (release `AudioCallback`'s knob reading)
+- `docs/adr/0025-size-and-time-crossfade.md`, `0026-fitting-the-cpu.md`, `0021-era-sweet-to-gritty.md` (amendments)
