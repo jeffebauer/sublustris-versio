@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 28 Oct 2026, session 10: D + E built (v1.0.51 on `claude/combined`); `hall_level` waiting on your ears.
+**Last updated:** 28 Oct 2026, session 10: D + E built (v1.0.51); `hall_level` picked C (HALL's endless tail +3 dB); being built, then the rack build.
 **Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Not yet in it: v1.0.35-36 (the 24 kHz tank, 12-point swell, fewer early reflections) and the review's speed-ups; say when you'd like it installed (Ableton closed).
 
 ## To do
@@ -11,7 +11,6 @@
 ### Listen (after your notes)
 
 ### Listen (first time)
-- [ ] **`hall_level`**: http://192.168.1.30:8766/hall_level/ (or `/Users/jesse/Documents/Sites/immensio-versio/renders/hall_level/index.html`). Your HALL note on `level_glue`, on v1.0.51 (D + E built), MIX starting at 50 %, not level-matched: HALL's endless tail A as built, B 1.5 dB louder, C 3 dB louder, D brighter at A's level (its highs about where MASSIVE's are). M in each card is MASSIVE as built, for comparison only. All fit in flash (B/C ~20 B, D ~40-70 B).
 
 ### Try in Ableton
 - [ ] **Play the plugin** (Immensio Versio, AU or VST3; rescan plug-ins first). It's v1.0.33 from branch `claude/massive-air`: everything in `main` plus MASSIVE's highs and shortest tail, ERA's era names, and **SHIMMER** on ATTACK's third position (TIME is how much). Notes welcome on anything; it goes into `main` when you say so.
@@ -25,8 +24,8 @@
 ## Waiting on Claude
 
 - **Your three notes from the v1.0.49 rack test** (27 Oct 2026). (1)-(2) Measured (`docs/research/level-at-infinite.md`): not the limiter (it barely acts). At endless DECAY the reverb sits 7-12 dB under the dry while you play: the level the endless tail settles at, plus the 4:1 duck. At DECAY 0.8 and below wet and dry are already within ±1.5 dB. Your pick: D (2:1, endless tail 3 dB higher). The dip when the playing stops: mostly the ducking's slow let-go (~0.5 dB and twice as long); the `level_glue` page is ready (Listen). (3) ✓ The noise burst: fixed on `claude/combined` (both switches had one). Every switch into or out of BLOOM fed the reverb scrambled, sped-up sound for 4-5 s (now the swell dips out for ~0.1 s, restarts and dips back in); a MASSIVE ↔ HALL switch had a smaller one. 21 of 21 tests pass; flash 112,628 B (12 B left). Not yet on the module: it goes in the next rack build with the level pick.
-- **D + E built (v1.0.51)** on `claude/combined`: ducking 2:1, the endless tail 3 dB higher, held sounds ducked less and let go fast when they stop; the same to the bit as the E you picked on `level_glue`. 816 B of flash freed first (control-rate maths built for size), so release is 111,996 B (644 B left). 21 of 21 tests pass. Side effect to know: with the higher endless level, painting a frozen pad can now grow a quiet pad by up to 2.5 dB (was 1.5). Next: your `hall_level` pick, then the rack build.
-- **Your HALL note on `level_glue`** ("Hall infinite ... reverb feels a bit too quiet so when the set stops, there's a less seamless transition"). Measured on the held chord: HALL's reverb isn't quieter overall than MASSIVE's (both tails ~4.5 dB under the dry), but HALL's tail is darker: above 2 kHz it's 3-4 dB further under the dry than MASSIVE's, so when the dry's brightness goes, HALL's tail reads as quieter. On the `hall_level` page (Listen).
+- **D + E built (v1.0.51)** on `claude/combined`: ducking 2:1, the endless tail 3 dB higher, held sounds ducked less and let go fast when they stop; the same to the bit as the E you picked on `level_glue`. 816 B of flash freed first (control-rate maths built for size), so release is 111,996 B (644 B left). 21 of 21 tests pass. Side effect to know: with the higher endless level, painting a frozen pad can now grow a quiet pad by up to 2.5 dB (was 1.5). Next: your `hall_level` pick C (HALL +3 dB) built in, then the rack build.
+- **Your HALL note on `level_glue`** ("Hall infinite ... reverb feels a bit too quiet so when the set stops, there's a less seamless transition"). Measured on the held chord: HALL's reverb isn't quieter overall than MASSIVE's (both tails ~4.5 dB under the dry), but HALL's tail is darker: above 2 kHz it's 3-4 dB further under the dry than MASSIVE's, so when the dry's brightness goes, HALL's tail reads as quieter. Your pick on `hall_level`: C, HALL's endless tail 3 dB louder (Done).
 - **Before the merge:** (1) ✓ the spec lines and decision records for v1.0.42-49 (on `claude/combined`); (2) ✓ the rename to Sublustris Versio; (3) ✓ v1.0.49 heard at the rack; (4) the fixes from your three notes; (5) the merge into main with your OK, and the plugin installed in Ableton.
 - **Flash: 644 B left** (release 111,996 B, v1.0.51).
 - **The plugin** has v1.0.34 (as Immensio Versio); it gets v1.0.50+ at the merge (Ableton closed; remove the old Immensio bundles).
@@ -41,6 +40,7 @@
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 
 ## Done
+- [x] **HALL's endless tail 3 dB louder (C)** (28 Oct 2026, `renders/hall_level`, MIX 50 %, C on every card, repeated card agreeing). Being built into v1.0.52 with D + E, then the rack build.
 - [x] **Gluing the reverb to the dry: E** (28 Oct 2026, `renders/level_glue`, MIX 50 %, E on every card, repeated cards agreeing). Held sounds ducked less (40 %) and the ducking lets go fast after held sounds, as today after short ones; with D (2:1, endless tail 3 dB higher). Note: "Hall infinite examples feel slightly less level matched than massive, particularly the first example - reverb feels a bit too quiet so when the set stops, there's a less seamless transition between the two where they feel more balanced in other examples" (Waiting on Claude).
 - [x] **Level and ducking: D (2:1, the endless tail 3 dB higher)** (27 Oct 2026, `renders/level_duck`: "Duck 2:1 floor21 sounds the best, but there are some cases where there's still an audible dip once the dry signal stops, particularly in the first example. What can we do to glue the dry and wet..."). The dip is being measured and the fixes put on a `level_glue` page (Waiting on Claude).
 - [x] **v1.0.49 at the rack** (27 Oct 2026, ~10 minutes, the late-light build: "really sounding excellent!"). Three notes, being looked at (Waiting on Claude): "on hall and massive with Long decays, I feel the limiter is keeping the level a bit too low. When sweeping the mix from 50:50 dry wet to 100% wet, the reverb gets noticeably louder"; "ducking on large washy sounds still feels a bit heavy handed, I think we can reduce it from 4:1 to 2:1 or even 1.5:1"; and a slight burst of noise carried into the tail when switching between MASSIVE and HALL with DECAY, SIZE and TIME above half way.
