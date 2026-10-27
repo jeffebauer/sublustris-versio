@@ -600,6 +600,11 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
                              : massive ? map::massiveDecayLevelTrim(tDecay, tSize) : map::hallSizeLevelTrim(tSize, tDecay);
             const float dens = std::sqrt((0.008f + 0.042f * tSize) / (0.008f + 0.042f * 0.9f));
             room_.setGain(roomGain_[massive ? 1 : 0] * (trim * dens * (over > 1.0f ? 1.0f / std::sqrt(over) : 1.0f)));
+            // The level the owner heard B at on renders/room_motion (v1.0.47), on its output (Paint sends as before).
+            const float* k = voicing::kTwinRoomTrimDb;
+            const float trimDb = tSize >= 0.9f ? k[2] : tSize >= 0.5f ? k[1] + (k[2] - k[1]) * ((tSize - 0.5f) / 0.4f)
+                                                                       : k[0] + (k[1] - k[0]) * (tSize / 0.5f);
+            roomTrim_ = std::pow(10.0f, trimDb / 20.0f);
             twinSized_ = true; // (PLATE's twin takes SIZE as it comes, as before)
         }
     }
@@ -996,13 +1001,12 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             const float fl = decayGainNow_ * wetL_[i], fr = decayGainNow_ * wetR_[i];
 #endif
 #ifndef IV_FIXED_VOICINGS
-            const float twinK = voicing::kTwinLevel * (activeSpace_ != 0 ? twinGain_ : 1.0f); // setTwinGainPrototype (1: exact)
+            const float twinK = voicing::kTwinLevel * (activeSpace_ != 0 ? twinGain_ * roomTrim_ : 1.0f); // setTwinGainPrototype (1: exact)
+#else
+            const float twinK = voicing::kTwinLevel * (activeSpace_ != 0 ? roomTrim_ : 1.0f); // the room's trim (v1.0.47)
+#endif
             const float tl = decayGainNow_ * twinK * twinL_[i];
             const float tr = decayGainNow_ * twinK * twinR_[i];
-#else
-            const float tl = decayGainNow_ * voicing::kTwinLevel * twinL_[i];
-            const float tr = decayGainNow_ * voicing::kTwinLevel * twinR_[i];
-#endif
             float wl = (fl + tl) * flipGain_;
             float wr = (fr + tr) * flipGain_;
             wl *= eraMakeup_;

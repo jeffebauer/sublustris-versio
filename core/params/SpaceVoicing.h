@@ -218,6 +218,10 @@ constexpr float kTwinRoomMassiveDb = -7.65f;
 // for a twin cut short, up to this (+5.4 dB), is where the gains above hold; a room under a shorter tank tail is that
 // much under them.
 constexpr float kTwinRoomLift = 1.862f;
+// v1.0.47: the room's wander scaled with its lines (owner's pick B, renders/room_motion) made it louder on short lines;
+// the page level-matched B to the room as before, and the owner chose it at that level: these trims on the room's
+// output at SIZE 0 / 0.5 / 0.9 (dB, straight between them, held above 0.9).
+constexpr float kTwinRoomTrimDb[3] = {-0.93f, -0.88f, -0.53f};
 constexpr float kTwinFadeSeconds = 0.02f; // its input opens / closes at freeze / unfreeze
 constexpr float kPaintHeadroomDb     = 1.5f;  // a painted pad may grow this far above its frozen level (or the floor)
 constexpr float kPaintFadeDb         = 1.0f;  // painting eases off over the last this-many dB below that

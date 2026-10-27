@@ -112,11 +112,20 @@ void movementAndRinging()
         tones[i] = t < 4.0 ? 0.3f * noise()
                  : t >= 4.5 ? float(0.15 * (std::sin(2.0 * M_PI * 700.0 * t) + std::sin(2.0 * M_PI * 1300.0 * t))) : 0.0f;
     }
+    std::vector<float> played(size_t(14.0f * kSr), 0.0f);
+    for (size_t i = 0; i < played.size(); ++i) {
+        const double t = double(i) / kSr;
+        played[i] = t < 4.0 || t >= 4.5 ? 0.2f * noise() : 0.0f;
+    }
     for (size_t i = 0; i < burst.size(); ++i) {
         const double t = double(i) / kSr;
         burst[i] = t < 4.0 || (t >= 4.5 && t < 4.7) ? 0.3f * noise() : 0.0f;
     }
     // v1.0.47's own ringing (the page's B, bit for bit), dB: HALL then MASSIVE, SIZE 0 / 0.5 / 0.9.
+    // The room alone's level on noise, dBFS (HALL, MASSIVE x SIZE 0 / 0.5 / 0.9), with the page's trims (voicing::kTwinRoomTrimDb:
+    // B level-matched to A on the page's chord and vibes, A-weighted). On this white noise the wander as before read
+    // -34.7 / -34.7 / -34.8 (HALL) and -33.8 / -33.7 / -33.8 (MASSIVE): music, not noise, set the page's match.
+    const double levelB[2][3] = {{-35.52, -35.49, -35.28}, {-34.54, -34.51, -34.30}};
     const double ringB[2][3] = {{13.7, 7.2, 7.1}, {13.7, 7.2, 7.1}};
     for (int space : {1, 2})
         for (int k = 0; k < 3; ++k) {
@@ -130,6 +139,11 @@ void movementAndRinging()
             std::snprintf(msg, sizeof msg, "%s SIZE %.1f, the room alone, frozen: a held 1.3 kHz moves %.1f c (p95; at most 10)",
                           name(space), kSizes[k], c);
             check(finite(out) && c <= 10.0, msg);
+            const double lvl = rmsDb(render(played, s, {{4.0, true}, {4.1, false}}), 6.0, 13.0);
+            std::snprintf(msg, sizeof msg, "%s SIZE %.1f, the room alone: %.2f dBFS on noise played over the freeze (pinned "
+                          "%.2f ±0.2: the page's level for B, matched to the room as before)", name(space), kSizes[k], lvl,
+                          levelB[space - 1][k]);
+            check(std::fabs(lvl - levelB[space - 1][k]) <= 0.2, msg);
 
             const Stereo b = render(burst, s, {{4.0, true}, {4.1, false}});
             std::vector<float> l(b.l.begin() + long(4.7 * kSr), b.l.end()), r(b.r.begin() + long(4.7 * kSr), b.r.end());

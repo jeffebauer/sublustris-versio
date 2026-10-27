@@ -317,6 +317,7 @@ private:
     // it) and that one-pole's step for a block of roomStepN_; twinSized_: SIZE has reached it since it started.
     dsp::TwinRoom     room_;
     float             roomGain_[2] = {1.0f, 1.0f}, roomLevel_ IV_ZI, roomStep_ IV_ZI;
+    float             roomTrim_ = 1.0f; // the room's output trim over SIZE (v1.0.47, voicing::kTwinRoomTrimDb)
     int               roomStepN_ = -1;
     bool              twinSized_ IV_ZI;
     dsp::Diffuser<4>  twinDiffuser_[2];
