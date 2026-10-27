@@ -1,0 +1,78 @@
+SIZESPIKE A/B START (AS-SHIP then FASTER, each SIZE move; 38 lines, ~8 min a lap)
+SPIKE AS-SHIP MASSIVE playing silence sweep   W0.0 M0.5 T0.5 avg  65.5% max  79.2% | late 0 near 0 of 6000 | max at block 2585 start 0 lines 8 tanks 2 | fading 1502 avg  76.2% max  79.2%
+  SPLIT ctl  3.7 in  8.5 shim  2.9 swell 12.9 twin  0.7 tank  2.5 tkctl 11.6 tkloop 15.4 tkout 16.2 tkmix  1.4 wear  0.3 out  2.8
+SPIKE FASTER  MASSIVE playing silence sweep   W0.0 M0.5 T0.5 avg  64.0% max  73.8% | late 0 near 0 of 6000 | max at block 2589 start 0 lines 8 tanks 2 | fading 1502 avg  70.9% max  73.8%
+  SPLIT ctl  3.7 in  8.6 shim  2.9 swell 13.0 twin  0.7 tank  2.6 tkctl 11.5 tkloop 12.5 tkout 13.7 tkmix  1.3 wear  0.3 out  2.8
+SPIKE AS-SHIP MASSIVE playing silence twists  W0.0 M0.5 T0.5 avg  75.2% max  79.8% | late 0 near 0 of 6000 | max at block 500 start 0 lines 8 tanks 2 | fading 4990 avg  77.6% max  79.8%
+  SPLIT ctl  4.4 in  8.6 shim  2.9 swell 13.2 twin  0.7 tank  2.5 tkctl 11.5 tkloop 15.3 tkout 15.8 tkmix  1.4 wear  0.3 out  2.8
+SPIKE FASTER  MASSIVE playing silence twists  W0.0 M0.5 T0.5 avg  70.9% max  74.5% | late 0 near 0 of 6000 | max at block 476 start 0 lines 8 tanks 2 | fading 4990 avg  72.4% max  74.5%
+  SPLIT ctl  4.4 in  8.5 shim  2.9 swell 13.0 twin  0.7 tank  2.6 tkctl 11.3 tkloop 12.5 tkout 13.9 tkmix  1.4 wear  0.3 out  2.8
+SPIKE AS-SHIP MASSIVE playing silence creep   W0.0 M0.5 T0.5 avg  75.7% max  79.2% | late 0 near 0 of 6000 | max at block 470 start 0 lines 8 tanks 2 | fading 5223 avg  77.5% max  79.2%
+  SPLIT ctl  4.6 in  8.5 shim  2.9 swell 12.8 twin  0.7 tank  2.5 tkctl 11.4 tkloop 15.3 tkout 15.9 tkmix  1.4 wear  0.3 out  2.8
+SPIKE FASTER  MASSIVE playing silence creep   W0.0 M0.5 T0.5 avg  71.1% max  74.3% | late 0 near 0 of 6000 | max at block 4609 start 0 lines 8 tanks 2 | fading 5223 avg  72.3% max  74.3%
+  SPLIT ctl  4.5 in  8.5 shim  2.9 swell 12.9 twin  0.7 tank  2.5 tkctl 11.4 tkloop 12.4 tkout 13.9 tkmix  1.3 wear  0.3 out  2.8
+SPIKE AS-SHIP MASSIVE playing silence nudge   W0.0 M0.5 T0.5 avg  74.0% max  78.5% | late 0 near 0 of 6000 | max at block 458 start 0 lines 8 tanks 2 | fading 5118 avg  76.0% max  78.5%
+  SPLIT ctl  3.7 in  8.5 shim  2.9 swell 12.8 twin  0.7 tank  2.6 tkctl 11.2 tkloop 15.4 tkout 16.1 tkmix  1.5 wear  0.3 out  2.8
+SPIKE FASTER  MASSIVE playing silence nudge   W0.0 M0.5 T0.5 avg  69.6% max  73.5% | late 0 near 0 of 6000 | max at block 3478 start 0 lines 8 tanks 2 | fading 5118 avg  70.8% max  73.5%
+  SPLIT ctl  3.7 in  8.5 shim  2.9 swell 13.0 twin  0.7 tank  2.5 tkctl 11.2 tkloop 12.3 tkout 13.8 tkmix  1.6 wear  0.3 out  2.8
+SPIKE AS-SHIP MASSIVE playing music   sweep   W0.0 M0.5 T0.5 avg  69.3% max  82.7% | late 0 near 0 of 6000 | max at block 2453 start 0 lines 8 tanks 2 | fading 1502 avg  80.1% max  82.7%
+  SPLIT ctl  3.7 in  8.5 shim  2.9 swell 12.8 twin  0.7 tank  2.6 tkctl 15.1 tkloop 15.6 tkout 15.6 tkmix  1.4 wear  0.3 out  2.8
+SPIKE FASTER  MASSIVE playing music   sweep   W0.0 M0.5 T0.5 avg  68.1% max  78.0% | late 0 near 0 of 6000 | max at block 2593 start 0 lines 8 tanks 2 | fading 1502 avg  75.2% max  78.0%
+  SPLIT ctl  3.7 in  8.4 shim  2.9 swell 12.9 twin  0.7 tank  2.6 tkctl 15.8 tkloop 12.3 tkout 13.5 tkmix  1.3 wear  0.3 out  2.8
+SPIKE AS-SHIP MASSIVE playing music   twists  W0.0 M0.5 T0.5 avg  79.3% max  84.1% | late 0 near 0 of 6000 | max at block 504 start 0 lines 8 tanks 2 | fading 4990 avg  81.8% max  84.1%
+  SPLIT ctl  4.4 in  8.5 shim  2.9 swell 12.8 twin  0.7 tank  2.6 tkctl 15.8 tkloop 15.4 tkout 15.5 tkmix  1.5 wear  0.3 out  2.8
+SPIKE FASTER  MASSIVE playing music   twists  W0.0 M0.5 T0.5 avg  75.1% max  78.9% | late 0 near 0 of 6000 | max at block 434 start 0 lines 8 tanks 2 | fading 4990 avg  76.7% max  78.9%
+  SPLIT ctl  4.5 in  8.4 shim  2.9 swell 12.9 twin  0.7 tank  2.6 tkctl 15.6 tkloop 12.4 tkout 13.5 tkmix  1.5 wear  0.3 out  2.8
+SPIKE AS-SHIP MASSIVE playing music   creep   W0.0 M0.5 T0.5 avg  79.9% max  83.5% | late 0 near 0 of 6000 | max at block 4322 start 0 lines 8 tanks 2 | fading 5223 avg  81.7% max  83.5%
+  SPLIT ctl  4.5 in  8.3 shim  2.9 swell 12.7 twin  0.7 tank  2.6 tkctl 15.6 tkloop 15.5 tkout 15.5 tkmix  1.4 wear  0.3 out  2.8
+SPIKE FASTER  MASSIVE playing music   creep   W0.0 M0.5 T0.5 avg  75.4% max  78.4% | late 0 near 0 of 6000 | max at block 3573 start 0 lines 8 tanks 2 | fading 5223 avg  76.5% max  78.4%
+  SPLIT ctl  4.5 in  8.4 shim  2.9 swell 12.5 twin  0.7 tank  2.6 tkctl 15.7 tkloop 12.4 tkout 13.5 tkmix  1.3 wear  0.3 out  2.8
+SPIKE AS-SHIP MASSIVE playing music   nudge   W0.0 M0.5 T0.5 avg  78.2% max  82.7% | late 0 near 0 of 6000 | max at block 3326 start 0 lines 8 tanks 2 | fading 5118 avg  80.2% max  82.7%
+  SPLIT ctl  3.7 in  8.3 shim  2.9 swell 12.3 twin  0.7 tank  2.6 tkctl 15.5 tkloop 15.4 tkout 15.9 tkmix  1.4 wear  0.3 out  2.8
+SPIKE FASTER  MASSIVE playing music   nudge   W0.0 M0.5 T0.5 avg  73.8% max  77.7% | late 0 near 0 of 6000 | max at block 4806 start 0 lines 8 tanks 2 | fading 5118 avg  75.1% max  77.7%
+  SPLIT ctl  4.3 in  8.3 shim  2.9 swell 12.6 twin  0.7 tank  2.6 tkctl 15.3 tkloop 12.2 tkout 13.5 tkmix  1.4 wear  0.3 out  2.8
+SPIKE AS-SHIP HALL    playing silence sweep   W0.0 M0.5 T0.5 avg  60.8% max  89.7% | late 0 near 0 of 6000 | max at block 5320 start 0 lines 32 tanks 2 | fading 602 avg  88.8% max  89.7%
+  SPLIT ctl  3.8 in  5.1 shim  2.9 swell 11.3 twin  0.7 tank  2.5 tkctl 10.7 tkloop 31.3 tkout 16.7 tkmix  1.4 wear  0.3 out  2.8
+SPIKE FASTER  HALL    playing silence sweep   W0.0 M0.5 T0.5 avg  60.4% max  85.4% | late 0 near 0 of 6000 | max at block 5248 start 0 lines 32 tanks 2 | fading 602 avg  84.4% max  85.4%
+  SPLIT ctl  3.8 in  5.1 shim  2.9 swell 11.2 twin  0.7 tank  2.5 tkctl 10.7 tkloop 31.7 tkout 12.0 tkmix  1.5 wear  0.3 out  2.8
+SPIKE AS-SHIP HALL    playing silence twists  W0.0 M0.5 T0.5 avg  59.6% max  63.3% | late 0 near 0 of 6000 | max at block 464 start 0 lines 8 tanks 2 | fading 4990 avg  60.9% max  63.3%
+  SPLIT ctl  4.5 in  5.1 shim  2.9 swell 12.7 twin  0.7 tank  2.5 tkctl  9.7 tkloop 11.1 tkout  9.5 tkmix  1.4 wear  0.3 out  2.8
+SPIKE FASTER  HALL    playing silence twists  W0.0 M0.5 T0.5 avg  57.4% max  60.6% | late 0 near 0 of 6000 | max at block 448 start 0 lines 8 tanks 2 | fading 4990 avg  58.2% max  60.6%
+  SPLIT ctl  4.4 in  5.1 shim  2.9 swell 12.7 twin  0.7 tank  2.5 tkctl  9.6 tkloop  9.5 tkout  8.4 tkmix  1.5 wear  0.3 out  2.8
+SPIKE AS-SHIP HALL    playing silence creep   W0.0 M0.5 T0.5 avg  59.8% max  62.8% | late 0 near 0 of 6000 | max at block 470 start 0 lines 8 tanks 2 | fading 5223 avg  60.7% max  62.8%
+  SPLIT ctl  4.4 in  5.1 shim  2.9 swell 13.0 twin  0.7 tank  2.5 tkctl  9.2 tkloop 10.9 tkout  9.4 tkmix  1.3 wear  0.3 out  2.8
+SPIKE FASTER  HALL    playing silence creep   W0.0 M0.5 T0.5 avg  57.4% max  59.8% | late 0 near 0 of 6000 | max at block 470 start 0 lines 8 tanks 2 | fading 5223 avg  58.0% max  59.8%
+  SPLIT ctl  4.4 in  5.1 shim  2.9 swell 12.7 twin  0.7 tank  2.5 tkctl  9.4 tkloop  9.3 tkout  8.1 tkmix  1.4 wear  0.3 out  2.8
+SPIKE AS-SHIP HALL    playing silence nudge   W0.0 M0.5 T0.5 avg  59.4% max  62.7% | late 0 near 0 of 6000 | max at block 619 start 2 lines 8 tanks 2 | fading 5118 avg  60.5% max  62.7%
+  SPLIT ctl  3.8 in  5.1 shim  2.9 swell 12.7 twin  0.7 tank  2.5 tkctl 10.3 tkloop 11.1 tkout  9.0 tkmix  1.3 wear  0.3 out  2.8
+SPIKE FASTER  HALL    playing silence nudge   W0.0 M0.5 T0.5 avg  57.0% max  60.1% | late 0 near 0 of 6000 | max at block 619 start 2 lines 8 tanks 2 | fading 5118 avg  57.7% max  60.1%
+  SPLIT ctl  3.8 in  5.1 shim  2.9 swell 12.8 twin  0.7 tank  2.5 tkctl 10.4 tkloop  9.4 tkout  8.0 tkmix  1.3 wear  0.3 out  2.8
+SPIKE AS-SHIP HALL    playing music   sweep   W0.0 M0.5 T0.5 avg  64.9% max  93.9% | late 0 near 598 of 6000 | max at block 5366 start 0 lines 32 tanks 2 | fading 602 avg  92.9% max  93.9%
+  SPLIT ctl  3.8 in  5.0 shim  2.9 swell 11.0 twin  0.7 tank  2.6 tkctl 15.1 tkloop 31.1 tkout 16.4 tkmix  1.5 wear  0.3 out  2.8
+SPIKE FASTER  HALL    playing music   sweep   W0.0 M0.5 T0.5 avg  64.5% max  89.6% | late 0 near 0 of 6000 | max at block 5198 start 0 lines 32 tanks 2 | fading 602 avg  88.6% max  89.6%
+  SPLIT ctl  3.8 in  5.0 shim  2.9 swell 10.9 twin  0.7 tank  2.6 tkctl 15.0 tkloop 31.5 tkout 11.8 tkmix  1.5 wear  0.3 out  2.8
+SPIKE AS-SHIP HALL    playing music   twists  W0.0 M0.5 T0.5 avg  64.1% max  67.9% | late 0 near 0 of 6000 | max at block 460 start 0 lines 8 tanks 2 | fading 4990 avg  65.4% max  67.9%
+  SPLIT ctl  4.4 in  5.0 shim  2.9 swell 12.5 twin  0.7 tank  2.6 tkctl 14.1 tkloop 11.0 tkout  9.5 tkmix  1.4 wear  0.3 out  2.8
+SPIKE FASTER  HALL    playing music   twists  W0.0 M0.5 T0.5 avg  61.9% max  65.2% | late 0 near 0 of 6000 | max at block 462 start 0 lines 8 tanks 2 | fading 4990 avg  62.8% max  65.2%
+  SPLIT ctl  4.4 in  5.0 shim  2.9 swell 12.5 twin  0.7 tank  2.6 tkctl 14.0 tkloop  9.6 tkout  8.2 tkmix  1.4 wear  0.3 out  2.8
+SPIKE AS-SHIP HALL    playing music   creep   W0.0 M0.5 T0.5 avg  64.2% max  67.2% | late 0 near 0 of 6000 | max at block 412 start 0 lines 8 tanks 2 | fading 5223 avg  65.2% max  67.2%
+  SPLIT ctl  4.6 in  5.0 shim  2.9 swell 12.4 twin  0.7 tank  2.6 tkctl 14.1 tkloop 10.9 tkout  8.8 tkmix  1.3 wear  0.3 out  2.8
+SPIKE FASTER  HALL    playing music   creep   W0.0 M0.5 T0.5 avg  61.9% max  64.4% | late 0 near 0 of 6000 | max at block 412 start 0 lines 8 tanks 2 | fading 5223 avg  62.5% max  64.4%
+  SPLIT ctl  4.5 in  5.0 shim  2.9 swell 12.4 twin  0.7 tank  2.6 tkctl 14.0 tkloop  9.4 tkout  7.6 tkmix  1.3 wear  0.3 out  2.8
+SPIKE AS-SHIP HALL    playing music   nudge   W0.0 M0.5 T0.5 avg  63.8% max  66.9% | late 0 near 0 of 6000 | max at block 618 start 0 lines 8 tanks 2 | fading 5118 avg  64.9% max  66.9%
+  SPLIT ctl  3.8 in  5.0 shim  2.9 swell 12.5 twin  0.7 tank  2.6 tkctl 14.1 tkloop 10.9 tkout  9.0 tkmix  1.5 wear  0.3 out  2.8
+SPIKE FASTER  HALL    playing music   nudge   W0.0 M0.5 T0.5 avg  61.5% max  64.3% | late 0 near 0 of 6000 | max at block 560 start 0 lines 8 tanks 2 | fading 5118 avg  62.3% max  64.3%
+  SPLIT ctl  3.8 in  5.0 shim  2.9 swell 12.5 twin  0.7 tank  2.6 tkctl 14.1 tkloop  9.4 tkout  7.9 tkmix  1.4 wear  0.3 out  2.8
+SPIKE AS-SHIP MASSIVE playing music   twisthi W0.0 M0.5 T0.5 avg  79.5% max  84.3% | late 0 near 0 of 6000 | max at block 424 start 0 lines 8 tanks 2 | fading 5044 avg  81.8% max  84.3%
+  SPLIT ctl  4.5 in  8.4 shim  2.9 swell 12.7 twin  0.7 tank  2.6 tkctl 16.3 tkloop 15.4 tkout 15.4 tkmix  1.5 wear  0.3 out  2.8
+SPIKE FASTER  MASSIVE playing music   twisthi W0.0 M0.5 T0.5 avg  75.2% max  78.4% | late 0 near 0 of 6000 | max at block 1863 start 0 lines 8 tanks 2 | fading 5044 avg  76.7% max  78.4%
+  SPLIT ctl  4.5 in  8.4 shim  2.9 swell 12.9 twin  0.7 tank  2.6 tkctl 15.5 tkloop 12.3 tkout 13.2 tkmix  1.4 wear  0.3 out  2.8
+SPIKE AS-SHIP MASSIVE playing music   creep   W0.5 M0.0 T0.5 avg  90.4% max  94.2% | late 0 near 5084 of 6000 | max at block 3286 start 0 lines 8 tanks 2 | fading 5223 avg  92.3% max  94.2%
+  SPLIT ctl  5.2 in  9.0 shim  2.9 swell 12.6 twin  0.7 tank  2.6 tkctl 16.1 tkloop 15.3 tkout 15.5 tkmix  1.5 wear  6.7 out  5.3
+SPIKE FASTER  MASSIVE playing music   creep   W0.5 M0.0 T0.5 avg  86.0% max  89.1% | late 0 near 0 of 6000 | max at block 470 start 0 lines 8 tanks 2 | fading 5223 avg  87.2% max  89.1%
+  SPLIT ctl  5.2 in  8.8 shim  2.9 swell 12.7 twin  0.7 tank  2.6 tkctl 16.1 tkloop 12.4 tkout 13.3 tkmix  1.6 wear  6.7 out  5.4
+SPIKE AS-SHIP MASSIVE playing music   creep   W1.0 M0.0 T0.5 avg  90.4% max  94.2% | late 0 near 5084 of 6000 | max at block 3573 start 0 lines 8 tanks 2 | fading 5223 avg  92.2% max  94.2%
+  SPLIT ctl  5.2 in  8.8 shim  2.9 swell 12.6 twin  0.7 tank  2.6 tkctl 16.1 tkloop 15.3 tkout 15.6 tkmix  1.3 wear  6.6 out  5.6
+SPIKE FASTER  MASSIVE playing music   creep   W1.0 M0.0 T0.5 avg  86.0% max  89.0% | late 0 near 0 of 6000 | max at block 4840 start 0 lines 8 tanks 2 | fading 5223 avg  87.1% max  89.0%
+  SPLIT ctl  5.3 in  8.8 shim  2.9 swell 12.5 twin  0.7 tank  2.6 tkctl 15.9 tkloop 12.3 tkout 13.6 tkmix  1.5 wear  6.6 out  5.5
+SIZESPIKE LAP 2 DONE: 38 lines, worst max  94.2% (SPIKE AS-SHIP MASSIVE playing music   creep   W0.5 M0.0 T0.5), late blocks in all 0, near 10766
