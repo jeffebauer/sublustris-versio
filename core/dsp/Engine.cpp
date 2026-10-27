@@ -426,12 +426,8 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // A pad isn't pulled to the floor: the floor glides away with freezeMix_ (and back on unfreeze).
     // Switched in one sample, a fed infinite tail's governor loss vanished at once and the wet
     // stepped (up to 20x a sample's normal change, PLATE; heard once the dark tilt took the highs out).
-#ifndef IV_FIXED_VOICINGS
-    // setHallTailPrototype (renders/hall_level): HALL's endless tail settles hallTailDb_ higher (0: as built).
-    const float floorDb = (activeSpace_ == 1 && hallTailDb_ != 0.0f ? floorDbfs() + hallTailDb_ : floorDbfs()) * (1.0f - freezeMix_);
-#else
-    const float floorDb = floorDbfs() * (1.0f - freezeMix_);
-#endif
+    // HALL's endless tail settles voicing::kHallTailDb higher (v1.0.52, ADR 0033: the owner's pick C on renders/hall_level).
+    const float floorDb = (activeSpace_ == 1 ? floorDbfs() + hallTailDb() : floorDbfs()) * (1.0f - freezeMix_);
     float holdDb = 0.0f;
     if (frozen) holdDb = padFloorDb_;
     else if (tailCaptured_) holdDb = tailCeilingDb_;

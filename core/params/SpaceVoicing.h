@@ -152,6 +152,10 @@ constexpr float kInLoopCoeff = 0.62f;
 // measured over kGovernorSeconds. -21 since v1.0.51 (ADR 0033, the owner's pick D on renders/level_duck:
 // "on hall and massive with Long decays, I feel the limiter is keeping the level a bit too low"; was -24).
 constexpr float kFloorDbfs          = -21.0f;
+// HALL's endless tail settles this much above kFloorDbfs, so at -18 dBFS (v1.0.52, ADR 0033 amended: the owner's
+// pick C on renders/hall_level, "Hall infinite examples feel slightly less level matched than massive ... reverb
+// feels a bit too quiet so when the set stops, there's a less seamless transition").
+constexpr float kHallTailDb         = 3.0f;
 constexpr float kGovernorRatePerDb  = 0.08f;
 constexpr float kGovernorSeconds    = 1.5f;
 constexpr float kHoldSeconds        = 8.0f; // the slow level a held tail's ceiling is judged on

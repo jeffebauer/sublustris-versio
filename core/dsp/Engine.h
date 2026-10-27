@@ -195,8 +195,8 @@ public:
     float duckSustained() const { return duckSustained_; }
     // PROTOTYPE (renders/hall_level; owner: "Hall infinite examples feel slightly less level matched than massive ...
     // reverb feels a bit too quiet so when the set stops, there's a less seamless transition"): HALL's endless tail
-    // settles `tailDb` higher (its floor governor's floor, HALL only), and/or HALL at infinite DECAY is tilted
-    // brighter on the wet (TONE's tilt, lows / highs in dB). All 0: as built.
+    // settles `tailDb` above the floor (HALL only; as built voicing::kHallTailDb, 3 since v1.0.52, the owner's pick C),
+    // and/or HALL at infinite DECAY is tilted brighter on the wet (TONE's tilt, lows / highs in dB; D, not built: 0).
     void  setHallTailPrototype(float tailDb, float tiltLowDb, float tiltHighDb)
     {
         hallTailDb_ = tailDb;
@@ -335,18 +335,21 @@ private:
     float             duckRelease_ = voicing::kDuckReleaseSeconds;         // setDuckReleasePrototype
     float             duckFastRelease_ = voicing::kDuckSustainReleaseSeconds; // setDuckAdaptivePrototype
     float             duckSustainCut_ = voicing::kDuckSustainCut;          // setDuckSustainCutPrototype
-    float             hallTailDb_ IV_ZI, hallTiltLowDb_ IV_ZI, hallTiltHighDb_ IV_ZI; // setHallTailPrototype
+    float             hallTailDb_ = voicing::kHallTailDb;                  // setHallTailPrototype
+    float             hallTiltLowDb_ IV_ZI, hallTiltHighDb_ IV_ZI;          // setHallTailPrototype (not built)
     float floorDbfs() const { return floorDbfs_; }
     float duckSlope() const { return duckSlope_; }
     float duckRelease() const { return duckRelease_; }
     float duckFastRelease() const { return duckFastRelease_; }
     float duckSustainCut() const { return duckSustainCut_; }
+    float hallTailDb() const { return hallTailDb_; }
 #else
     static constexpr float floorDbfs() { return voicing::kFloorDbfs; }
     static constexpr float duckSlope() { return 1.0f - 1.0f / voicing::kDuckRatio; }
     static constexpr float duckRelease() { return voicing::kDuckReleaseSeconds; }
     static constexpr float duckFastRelease() { return voicing::kDuckSustainReleaseSeconds; }
     static constexpr float duckSustainCut() { return voicing::kDuckSustainCut; }
+    static constexpr float hallTailDb() { return voicing::kHallTailDb; }
 #endif
     dsp::Plate        twinPlate_; // PLATE's twin
     // HALL's and MASSIVE's twin (v1.0.43, the owner's pick E on renders/small_room): the small room, its rings in

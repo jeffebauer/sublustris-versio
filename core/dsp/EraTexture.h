@@ -219,7 +219,14 @@ private:
         const float y = x * gComp_[c];                                 // 2:1, its rectifier on its own output
         gComp_[c] += gCompStep_[c];
         envY_[c] += wc_ * (std::fabs(y) - envY_[c]);
-        const float u = std::fmin(2.0f, std::fmax(-2.0f, y * (0.5f / ref))); // overshoots on onsets
+        // Onsets overshoot past ±2: there a soft knee to ±2.5, slope 1 at ±2 (v1.0.52). The hard clamp it replaces
+        // put a corner in the wave, heard as a tick on a loud tail's biggest peaks (renders/hall_level C, 17 dB over
+        // its highs); every sample within ±2 is as before, to the bit.
+        float u = y * (0.5f / ref);
+        if (std::fabs(u) > 2.0f) {
+            const float d = std::fabs(u) - 2.0f;
+            u = std::copysign(2.0f + d / (1.0f + 2.0f * d), u);
+        }
         float z = (u - a2_ * u * u - a3_ * u * u * u) * (2.0f * ref); // the chip's soft 2nd harmonic
         z += noise_ * rng_.next();
         envZ_[c] += we_ * (std::fabs(z) - envZ_[c]);

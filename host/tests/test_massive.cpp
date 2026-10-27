@@ -208,9 +208,11 @@ void infiniteHoldsTheFloor()
         }
         const std::string name = space == 2 ? "MASSIVE" : "HALL";
         char msg[200];
+        // HALL's floor sits voicing::kHallTailDb over the shared one (v1.0.52, ADR 0033 amended).
+        const double floorDb = iv::voicing::kFloorDbfs + (space == 2 ? 0.0 : double(iv::voicing::kHallTailDb));
         std::snprintf(msg, sizeof msg, "%s infinite, fed hard: the tank at %.1f dBFS (floor %.0f, within 3 dB)", name.c_str(),
-                      fedTank, double(iv::voicing::kFloorDbfs));
-        check(finite(out) && std::fabs(fedTank - iv::voicing::kFloorDbfs) < 3.0, msg);
+                      fedTank, floorDb);
+        check(finite(out) && std::fabs(fedTank - floorDb) < 3.0, msg);
         std::snprintf(msg, sizeof msg, "%s infinite holds 10 min: %.1f .. %.1f dBFS (within 3 dB, no growth, not silent)",
                       name.c_str(), lo, hi);
         check(hi - lo < 3.0 && hi <= first + 1.0 && lo > -60.0, msg);

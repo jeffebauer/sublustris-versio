@@ -1,6 +1,6 @@
 {
-  "spec": "v1.0.51",
-  "why": "v1.0.51 level D + glue E",
+  "spec": "v1.0.52",
+  "why": "v1.0.52 HALL endless tail +3 dB (owner pick C, renders/hall_level)",
   "corners": {
     "plate_small": {
       "chord_loudness_db": -39.768000000000001,

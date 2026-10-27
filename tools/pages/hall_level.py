@@ -40,7 +40,7 @@ import frozen_twin as ft  # noqa: E402
 SR = 48000
 TILT = "-2,3.5"  # D: lows / highs round TONE's 600 Hz bend, dB at infinite (calibrated on the chord: its tail at A's level, its > 2 kHz ~3 dB up, near MASSIVE's)
 HALL = ["space=HALL", "size=0.8", "decay=1"]
-VERSIONS = [("A_as_built", HALL, {}),
+VERSIONS = [("A_as_built", HALL, {"IV_HALL_TAIL_DB": "0"}),  # 0: as built before v1.0.52 (C is built since)
             ("B_tail_plus_1_5dB", HALL, {"IV_HALL_TAIL_DB": "1.5"}),
             ("C_tail_plus_3dB", HALL, {"IV_HALL_TAIL_DB": "3"}),
             ("D_brighter_tail", HALL, {"IV_HALL_TAIL_TILT": TILT}),

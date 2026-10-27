@@ -222,15 +222,15 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         engine.setDuckAdaptivePrototype(float(std::atof(ad)));
         std::fprintf(stderr, "iv_render: IV_DUCK_ADAPTIVE: %s s after held playing\n", ad);
     }
-    { // renders/hall_level: HALL's endless tail +dB (IV_HALL_TAIL_DB) and/or brighter (IV_HALL_TAIL_TILT "low,high" dB)
+    { // renders/hall_level: HALL's endless tail over the floor, dB (IV_HALL_TAIL_DB; as built 3, v1.0.52) and/or brighter (IV_HALL_TAIL_TILT "low,high" dB)
         const char* td = std::getenv("IV_HALL_TAIL_DB");
         const char* tt = std::getenv("IV_HALL_TAIL_TILT");
         if (td || tt) {
             float lo = 0.0f, hi = 0.0f;
             if (tt && std::sscanf(tt, "%f,%f", &lo, &hi) != 2) lo = hi = 0.0f;
-            engine.setHallTailPrototype(td ? float(std::atof(td)) : 0.0f, lo, hi);
-            std::fprintf(stderr, "iv_render: IV_HALL_TAIL: HALL's endless tail %+.2f dB, tilt lows %+.2f / highs %+.2f dB\n",
-                         td ? std::atof(td) : 0.0, double(lo), double(hi));
+            engine.setHallTailPrototype(td ? float(std::atof(td)) : iv::voicing::kHallTailDb, lo, hi);
+            std::fprintf(stderr, "iv_render: IV_HALL_TAIL: HALL's endless tail %+.2f dB over the floor, tilt lows %+.2f / highs %+.2f dB\n",
+                         td ? std::atof(td) : double(iv::voicing::kHallTailDb), double(lo), double(hi));
         }
     }
     if (const char* sc = std::getenv("IV_DUCK_SUSTAIN_CUT")) { // 0: held playing ducked in full
