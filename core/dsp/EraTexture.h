@@ -68,6 +68,9 @@ public:
         for (int c = 0; c < 2; ++c) {
             pre_[c] = de_[c] = dc_[c] = 0.0f;
             envY_[c] = envZ_[c] = held_[c] = gEnv_[c] = gSum_[c] = 0.0f;
+            gCompStep_[c] = gExpStep_[c] = 0.0f;
+            gComp_[c] = 0.126f / 1e-4f; // the gains of empty envelopes: the first block starts where it did
+            gExp_[c] = 1e-4f * (1.0f / 0.126f);
             bp_[c].reset();
             dip_[c].reset();
         }
@@ -100,11 +103,15 @@ public:
             wc_ = 1.0f - std::exp(-1.0f / (0.010f * sr));
             we_ = 1.0f - std::exp(-1.0f / ((0.012f + 0.02f * t) * sr));
         }
-        if (m.breathW > 0.0f)
-            for (int c = 0; c < 2; ++c) { // the compander's gains from its envelopes, once a block
-                gComp_[c] = 0.126f / std::fmax(envY_[c], 1e-4f);
-                gExp_[c] = std::fmax(envZ_[c], 1e-4f) * (1.0f / 0.126f);
+        if (m.breathW > 0.0f) {
+            // The compander's gains from its envelopes, worked out once a block and ramped to across it (v1.0.49:
+            // stepped, they left small clicks on a pure chord in PLATE once the grit no longer covered them).
+            const float inv = 1.0f / float(n > 0 ? n : 1);
+            for (int c = 0; c < 2; ++c) {
+                gCompStep_[c] = (0.126f / std::fmax(envY_[c], 1e-4f) - gComp_[c]) * inv;
+                gExpStep_[c] = (std::fmax(envZ_[c], 1e-4f) * (1.0f / 0.126f) - gExp_[c]) * inv;
             }
+        }
         if (m.clockW > 0.0f) clockInc_ = tex::kClockHzHi * std::pow(tex::kClockHzLo / tex::kClockHzHi, m.clockT) / sr;
         if (m.grainW > 0.0f) { // the step follows the level a block late (~5 ms), worked out once a block
             const float step = std::exp2(-(tex::kGrainBitsHi + (tex::kGrainBitsLo - tex::kGrainBitsHi) * m.grainT));
@@ -210,12 +217,15 @@ private:
     {
         constexpr float ref = 0.126f;                                  // -18 dBFS: the compander's unity point
         const float y = x * gComp_[c];                                 // 2:1, its rectifier on its own output
+        gComp_[c] += gCompStep_[c];
         envY_[c] += wc_ * (std::fabs(y) - envY_[c]);
         const float u = std::fmin(2.0f, std::fmax(-2.0f, y * (0.5f / ref))); // overshoots on onsets
         float z = (u - a2_ * u * u - a3_ * u * u * u) * (2.0f * ref); // the chip's soft 2nd harmonic
         z += noise_ * rng_.next();
         envZ_[c] += we_ * (std::fabs(z) - envZ_[c]);
-        return z * gExp_[c];                                           // 1:2: the noise breathes with the level
+        const float out = z * gExp_[c];                                // 1:2: the noise breathes with the level
+        gExp_[c] += gExpStep_[c];
+        return out;
     }
     float band(float v, int c)
     {
@@ -228,17 +238,18 @@ private:
     }
 
     TexMix m_;
-    float  sr_ = 0.0f, tapeT_ = -1.0f, breathT_ = -1.0f, bandT_ = -1.0f;
-    float  gEmph_ = 1, drive_ = 1, wPre_ = 0, wDe_ = 0, wDc_ = 0, bias_ = 0, fBias_ = 0;
-    float  pre_[2] = {}, de_[2] = {}, dc_[2] = {};
-    float  a2_ = 0, a3_ = 0, noise_ = 0, wc_ = 0, we_ = 0, envY_[2] = {}, envZ_[2] = {}, gComp_[2] = {1, 1}, gExp_[2] = {1, 1};
-    float  clock_ = 0, clockInc_ = 1, held_[2] = {};
-    bool   tick_ = false;
-    float  gSum_[2] = {}, gEnv_[2] = {}, q_[2] = {1.0f, 1.0f}, invQ_[2] = {1.0f, 1.0f};
-    float  invDrive_ = 1, deGain_ = 0, invMEff_ = 1;
+    float  sr_ IV_ZI, tapeT_ = -1.0f, breathT_ = -1.0f, bandT_ = -1.0f;
+    float  gEmph_ = 1, drive_ = 1, wPre_ IV_ZI, wDe_ IV_ZI, wDc_ IV_ZI, bias_ IV_ZI, fBias_ IV_ZI;
+    float  pre_[2] IV_ZI, de_[2] IV_ZI, dc_[2] IV_ZI;
+    float  a2_ IV_ZI, a3_ IV_ZI, noise_ IV_ZI, wc_ IV_ZI, we_ IV_ZI, envY_[2] IV_ZI, envZ_[2] IV_ZI, gComp_[2] = {1, 1}, gExp_[2] = {1, 1};
+    float  gCompStep_[2] IV_ZI, gExpStep_[2] IV_ZI;
+    float  clock_ IV_ZI, clockInc_ = 1, held_[2] IV_ZI;
+    bool   tick_ IV_ZI;
+    float  gSum_[2] IV_ZI, gEnv_[2] IV_ZI, q_[2] = {1.0f, 1.0f}, invQ_[2] = {1.0f, 1.0f};
+    float  invDrive_ = 1, deGain_ IV_ZI, invMEff_ = 1;
     EraSvf bp_[2], dip_[2];
-    float  mEff_ = 1, dipDb_ = 0, dipHz_ = 0.1f, dipGain_ = 1, wander_[4] = {};
-    float  wHold_ = 0, wHp_ = 0, hpIn_ = 0, hpOut_ = 0, inPow_ = 0, outPow_ = 0, hold_ = 1, holdAim_ = 1, holdStep_ = 0;
+    float  mEff_ = 1, dipDb_ IV_ZI, dipHz_ = 0.1f, dipGain_ = 1, wander_[4] IV_ZI;
+    float  wHold_ IV_ZI, wHp_ IV_ZI, hpIn_ IV_ZI, hpOut_ IV_ZI, inPow_ IV_ZI, outPow_ IV_ZI, hold_ = 1, holdAim_ = 1, holdStep_ IV_ZI;
     EraRng rng_;
 };
 

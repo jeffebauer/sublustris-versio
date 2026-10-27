@@ -357,7 +357,7 @@ void drift()
 // singular glitch above the local second difference), and as renders/era_rethink judged it, the loudest
 // 1 ms frame above 5 kHz against the median of the half second around it, which must stay within 3 dB of
 // the same chord's at a still ERA (the wear's own grit reads there too).
-double clickScanDb(const Stereo& out, double from, double to)
+double clickScanDb(const Stereo& out, double from, double to, double* levelDb = nullptr)
 {
     // Above 5 kHz: two 2nd-order Butterworth high-passes (RBJ) in a row.
     const double w = 2.0 * 3.141592653589793 * 5000.0 / kSr, al = std::sin(w) / (2.0 * 0.7071067811865476), c = std::cos(w);
@@ -380,6 +380,11 @@ double clickScanDb(const Stereo& out, double from, double to)
         for (size_t i = k * f; i < (k + 1) * f; ++i) sum += h[i] * h[i];
         e[k] = sum / double(f) + 1e-20;
     }
+    if (levelDb) { // the median 1 ms frame's level over [from, to): the steady fizz above 5 kHz
+        std::vector<double> span(e.begin() + long(from * 1000.0), e.begin() + long(std::min(double(frames), to * 1000.0)));
+        std::nth_element(span.begin(), span.begin() + long(span.size() / 2), span.end());
+        *levelDb = 10.0 * std::log10(span[span.size() / 2]);
+    }
     double best = -99.0;
     for (size_t k = size_t(from * 1000.0); k < size_t(to * 1000.0) && k + half < frames; ++k) {
         std::vector<double> around(e.begin() + long(k - half), e.begin() + long(k + half));
@@ -395,14 +400,14 @@ void eraSweepClickFree()
     for (size_t i = 0; i < in.size(); ++i)
         in[i] = 0.2f * std::sin(2.0f * 3.14159265f * 220.0f * float(i) / kSr) + 0.1f * std::sin(2.0f * 3.14159265f * 331.0f * float(i) / kSr);
     for (int space : {1, 0}) {
-        double still = -99.0;
-        for (int mode : {-1, -2, -3, 0, 1, 2, 3}) { // still at 0, 0.5, 1; up 0 -> 1 over 5 s; down 1 -> 0; 0 -> 0.15 -> 0 in a quarter
+        double still = -99.0, hf80 = 0.0;
+        for (int mode : {-1, -2, -3, -4, 0, 1, 2, 3}) { // still at 0, 0.5, 1, 0.8; up 0 -> 1 over 5 s; down 1 -> 0; 0 -> 0.15 -> 0 in a quarter
                                                 // second each way; 3: 0.55 -> 0.8 -> 0.55 likewise (through the grit's start, v1.0.49)
             iv::Engine e;
             e.prepare(kSr, 48);
             e.setParam(iv::ParamId::Space, iv::switchToNormalised(space));
             e.setParam(iv::ParamId::Mix, 1.0f);
-            const float rest = mode == -2 ? 0.5f : (mode == -3 || mode == 1) ? 1.0f : mode == 3 ? 0.55f : 0.0f;
+            const float rest = mode == -2 ? 0.5f : (mode == -3 || mode == 1) ? 1.0f : mode == -4 ? 0.8f : mode == 3 ? 0.55f : 0.0f;
             e.setParam(iv::ParamId::Era, rest);
             e.reset();
             Stereo out{std::vector<float>(in.size()), std::vector<float>(in.size())};
@@ -423,22 +428,27 @@ void eraSweepClickFree()
                 e.process(in.data() + pos, in.data() + pos, out.l.data() + pos, out.r.data() + pos, n);
             }
             const auto m = iv::metrics::compute({out.l, out.r}, kSr);
-            const double scan = clickScanDb(out, 0.8, 6.7);
+            double hf = 0.0;
+            const double scan = clickScanDb(out, 0.8, 6.7, &hf);
+            if (mode == -4) hf80 = hf;
             if (mode < 0) {
                 still = std::fmax(still, scan);
                 continue;
+            }
+            // Quickly through the grit's start (mode 3): the grit comes in and goes within the half second the scan
+            // judges against, so its frames stand over their median by the grit's own rise over the wear without it
+            // (the steady fizz above 5 kHz at a still 0.8 over the sweep's still 0.55), not by a click.
+            if (mode == 3) {
+                const double rise = hf80 - hf; // hf: this sweep's own median, at rest at 0.55 for all but half a second
+                std::printf("       the grit's rise above 5 kHz, 0.55 -> 0.8 still: %+.1f dB\n", rise);
+                still = std::fmax(still, rise);
             }
             char msg[200];
             std::snprintf(msg, sizeof msg, "SPACE %d: ERA turned %s, no clicks (%ld; loudest 1 ms frame above 5 kHz %+.1f dB, still ERA %+.1f)",
                           space, mode == 0 ? "up" : mode == 1 ? "down" : mode == 2 ? "quickly through its start and back"
                                                                           : "quickly through the grit's start (0.65) and back",
                           m.clickCount, scan, still);
-            // KNOWN (v1.0.49, open): in PLATE on this pure chord the BBD compander's gains, set once a block, leave
-            // one or two small steps the click count finds (WEAR 0.06-0.7, without the grit's fizz over them; per-sample
-            // gains take them away). Until v1.0.48 the grit, in from the knob's start, covered them.
-            const long allowed = space == 0 ? 2 : 0;
-            if (m.clickCount > 0 && m.clickCount <= allowed) std::printf("KNOWN  the compander's block steps in PLATE: %ld\n", m.clickCount);
-            check(finite(out) && m.clickCount <= allowed && scan < still + 3.0, msg);
+            check(finite(out) && m.clickCount == 0 && scan < still + 3.0, msg);
         }
     }
 }
