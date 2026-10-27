@@ -26,17 +26,17 @@ Use it on a return track (MIX fully up) or as an insert (MIX to taste).
 
 THE CONTROLS (same places as on the module)
 
-MIX — dry / wet. Fully up = reverb only (best on a send).
+BLEND — dry / wet. Fully up = reverb only (best on a send).
 DECAY — how long the tail rings. Past about 3 o'clock it never ends: it settles into a warm bed that steps back while you play and comes forward when you stop.
-TONE — noon is neutral. Left darkens the tail a little more on every pass, right brightens it.
-ERA — the reverb's age, from sweet to gritty, in five stretches: a Neve desk's warmth, an old Midiverb (grainy, lo-fi digital), a bucket-brigade delay chip, a cassette (hiss, wow, softer highs), then an AM radio, fading and crackling. Turning it blends from one to the next.
-SIZE — how big the space is. In HALL and MASSIVE a move crossfades to the new size; in PLATE it bends the pitch like tape. While frozen, it plays the layer you hear over the pad (see FREEZE).
-DRIFT — noon is still. Left = tape wow and flutter that never repeats. Right = a quicker, restless wander. It moves the pitch inside the tail, not the dry sound.
-TIME — depends on ATTACK: in NORMAL it's predelay (up to a quarter second), in BLOOM how long the swell takes, in SHIMMER how much shimmer.
+TONE — noon is neutral. Left darkens the tail a little more on every pass, with a warm swell in the low mids; right brightens it, with a soft sheen on top.
+WEAR — how worn the sound is. At zero it's clean; turning up adds tape saturation, a gentle breathing, grain and grit, and at the top a distant, band-limited radio with a slowly wandering dip. It never darkens the tail (that's TONE) or moves its pitch (that's MOTION).
+SIZE — how big the space is. In HALL and MASSIVE a move crossfades to the new size; in PLATE it bends the pitch like tape. While frozen, it sets the small room you hear over the pad (see FREEZE / PAINT).
+MOTION — noon is still. Left = a tape machine: the whole tail wobbles together, more and less regularly towards full left, with a scratchy crinkle and a few small dips near the end. Right = a quicker, restless wander inside the tail. Only the reverb moves, never the dry sound.
+DEPTH — depends on ONSET: in NATURAL it's how far away the reverb starts (pre-delay, up to a quarter second), in BLOOM how long the swell takes, in SHIMMER how much shimmer.
 
 SPACE (PLATE / HALL / MASSIVE) — a dense, quick plate; a big hall; or MASSIVE: enormous, slow-swelling, almost endless.
-ATTACK (NORMAL / BLOOM / SHIMMER) — how the sound enters: at once; swelling in over TIME; or with an octave up blended into the reverb.
-FREEZE — tap it to freeze: the tail becomes a still pad, and what you play now goes into a quieter, fresh reverb on top of it. Tap again to let the pad fade. While frozen, hold it to paint: a little of what you're playing soaks into the pad over a few seconds. Held MIDI notes into the plugin act like the button (a short note taps, a long one paints), so a clip can play it.
+ONSET (NATURAL / BLOOM / SHIMMER) — how the sound enters the reverb: at once; swelling in over DEPTH; or with an octave up blended in.
+FREEZE / PAINT — tap it to freeze: the tail becomes a still pad, and what you play now goes into a small, close room on top of it, a steady distance under the pad. Tap again to let the pad fade. While frozen, hold it to paint: a little of what you're playing soaks into the pad over a few seconds. Held MIDI notes into the plugin act like the button (a short note taps, a long one paints), so a clip can play it.
 
 The four lights at the top are level meters: input left / right, output left / right. Green to amber as it gets hot; red means the input is close to clipping, or the output is being limited. The output pair turns blue while frozen, and pulses while you paint. ZOOM (1x / 1.5x / 2x) sets the window size.
 
