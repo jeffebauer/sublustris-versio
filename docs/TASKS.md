@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 28 Oct 2026, session 10: v1.0.52 built (D + E + HALL +3 dB); the rack build waiting for you.
+**Last updated:** 28 Oct 2026, session 10: v1.0.52 at the rack, three notes being looked at.
 **Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Not yet in it: v1.0.35-36 (the 24 kHz tank, 12-point swell, fewer early reflections) and the review's speed-ups; say when you'd like it installed (Ableton closed).
 
 ## To do
@@ -16,7 +16,6 @@
 - [ ] **Play the plugin** (Immensio Versio, AU or VST3; rescan plug-ins first). It's v1.0.33 from branch `claude/massive-air`: everything in `main` plus MASSIVE's highs and shortest tail, ERA's era names, and **SHIMMER** on ATTACK's third position (TIME is how much). Notes welcome on anything; it goes into `main` when you say so.
 
 ### At the rack
-- [ ] **v1.0.52 at the rack** (D + E + HALL's endless tail 3 dB louder, plus the ONSET/SPACE burst fix): `dist/sublustris_versio-v1.0.52-59ce205.bin`, or `dist/sublustris_versio-v1.0.52-59ce205-latelight.bin` to watch the dropout LEDs. Check: ONSET switching in and out of BLOOM (no noise burst); MASSIVE ↔ HALL switches; the level at MIX 50:50 with endless DECAY; the moment you stop playing (no dip, the two glued); and if you can, the dropout LEDs while you play (the knob maths was made smaller to fit, not yet heard on the module).
 
 ### When convenient
 - [ ] **Re-record Supermassive's short settings at a feedback that sounds like a reverb** (your note: at 0 % and 12 % it's separate delays): about 5 % for Andromeda's 2 s, or skip 2 s and record the longer settings you like (15 s, 30 s, infinite). Also **re-export three clipped Valhalla takes about 6 dB lower**: Plate Chrome 15 s, Plate Lithium 15 s and Supermassive Andromeda 100 % (measure and music). Also check Supermassive's DELAY: its first sound came at different times between takes (Sagittarius 421 / 38 / 3 ms, Andromeda 1.1 / 0.7 / 0.65 s).
@@ -24,6 +23,7 @@
 
 ## Waiting on Claude
 
+- **Your three notes from the v1.0.52 rack test** (28 Oct 2026). (1) SIZE moves with SHIMMER at high DECAY overloading, and (2) the red LED on SPACE switches: a CPU hunt is under way. One lead is the 816 B saved for E, which built the knob maths smaller and may have made it slower on the module; it will likely end in profile builds for you to run a lap. (3) The noise when TIME moves in HALL: being reproduced on the desktop and compared with v1.0.49.
 - **Your three notes from the v1.0.49 rack test** (27 Oct 2026). (1)-(2) Measured (`docs/research/level-at-infinite.md`): not the limiter (it barely acts). At endless DECAY the reverb sits 7-12 dB under the dry while you play: the level the endless tail settles at, plus the 4:1 duck. At DECAY 0.8 and below wet and dry are already within ±1.5 dB. Your pick: D (2:1, endless tail 3 dB higher). The dip when the playing stops: mostly the ducking's slow let-go (~0.5 dB and twice as long); the `level_glue` page is ready (Listen). (3) ✓ The noise burst: fixed on `claude/combined` (both switches had one). Every switch into or out of BLOOM fed the reverb scrambled, sped-up sound for 4-5 s (now the swell dips out for ~0.1 s, restarts and dips back in); a MASSIVE ↔ HALL switch had a smaller one. 21 of 21 tests pass; flash 112,628 B (12 B left). Not yet on the module: it goes in the next rack build with the level pick.
 - **v1.0.52 built** on `claude/combined` (At the rack): v1.0.51's D + E (ducking 2:1, the endless tail 3 dB higher, held sounds ducked less and let go fast when they stop; the same to the bit as the E you picked on `level_glue`) plus v1.0.52's HALL endless tail 3 dB louder (your C). Found on the way: C's faint tick was WEAR's compander hitting a hard limit on the louder tail's biggest peaks; that limit now eases in instead (only samples that used to hit it change). 816 B of flash freed (control-rate maths built for size). 21 of 21 tests pass. Side effect to know: painting a frozen pad can now grow a quiet pad by up to 2.5 dB (was 1.5).
 - **Before the merge:** (1) ✓ the spec lines and decision records for v1.0.42-49 (on `claude/combined`); (2) ✓ the rename to Sublustris Versio; (3) ✓ v1.0.49 heard at the rack; (4) the fixes from your three notes; (5) the merge into main with your OK, and the plugin installed in Ableton.
@@ -40,6 +40,7 @@
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 
 ## Done
+- [x] **v1.0.52 at the rack** (28 Oct 2026). Three notes, being looked at (Waiting on Claude): "Hall or Massive, high decay, shimmer: when shifting size still getting some occasional red LEDs and CPU overloads causing audible glitches after moving the size knob"; "When switching between Plate -> Hall, and between Hall/Massive the right-most LED flashes red (no audible dropout...)"; "Hall, high decay, when moving the time knob, noise is introduced into the reverb which carries into the tail".
 - [x] **HALL's endless tail 3 dB louder (C)** (28 Oct 2026, `renders/hall_level`, MIX 50 %, C on every card, repeated card agreeing). Being built into v1.0.52 with D + E, then the rack build.
 - [x] **Gluing the reverb to the dry: E** (28 Oct 2026, `renders/level_glue`, MIX 50 %, E on every card, repeated cards agreeing). Held sounds ducked less (40 %) and the ducking lets go fast after held sounds, as today after short ones; with D (2:1, endless tail 3 dB higher). Note: "Hall infinite examples feel slightly less level matched than massive, particularly the first example - reverb feels a bit too quiet so when the set stops, there's a less seamless transition between the two where they feel more balanced in other examples" (Waiting on Claude).
 - [x] **Level and ducking: D (2:1, the endless tail 3 dB higher)** (27 Oct 2026, `renders/level_duck`: "Duck 2:1 floor21 sounds the best, but there are some cases where there's still an audible dip once the dry signal stops, particularly in the first example. What can we do to glue the dry and wet..."). The dip is being measured and the fixes put on a `level_glue` page (Waiting on Claude).
