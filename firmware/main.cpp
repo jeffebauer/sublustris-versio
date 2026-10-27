@@ -761,11 +761,19 @@ float SizeHand(int kind, uint32_t block)
         const float u = t - 0.7f * float(int(t / 0.7f));
         return u < 0.35f ? Ease(0.5f, 0.9f, u / 0.15f) : Ease(0.9f, 0.5f, (u - 0.35f) / 0.15f);
     }
-#if IV_PROFILE_CANDIDATE
+#if IV_PROFILE_CANDIDATE || IV_PROFILE_SIZESPIKE
     if (kind == 3) { // the candidate lap's twists near the top: 0.85 <-> 1, 0.15 s each way, 0.2 s apart
         const float u = t - 0.7f * float(int(t / 0.7f));
         return u < 0.35f ? Ease(0.85f, 1.0f, u / 0.15f) : Ease(1.0f, 0.85f, (u - 0.35f) / 0.15f);
     }
+#endif
+#if IV_PROFILE_SIZESPIKE
+    if (kind == 4) { // single nudges: 0.7 <-> 0.706 (two deadband steps) in 50 ms, every 1.5 s, then the knob rests
+        const int   k = int(t / 1.5f);
+        const float u = t - 1.5f * float(k);
+        return k % 2 ? Ease(0.706f, 0.7f, (u - 0.2f) / 0.05f) : Ease(0.7f, 0.706f, (u - 0.2f) / 0.05f);
+    }
+    if (kind == 5) return 0.7f; // still (the lap's reference lines)
 #endif
     return 0.7f + 0.3f * (t / 6.0f > 1.0f ? 1.0f : t / 6.0f);
 }
@@ -776,6 +784,41 @@ float EraHand(uint32_t block)
 {
     const float t = float(block) * float(kBlockSize) / 48000.0f, u = t - 8.0f * float(int(t / 8.0f));
     return u < 4.0f ? Ease(0.0f, 1.0f, (u - 0.5f) / 3.0f) : Ease(1.0f, 0.0f, (u - 4.5f) / 3.0f);
+}
+#endif
+#if IV_PROFILE_SIZESPIKE
+// The SIZE-spike lap (27 Oct 2026; the owner on v1.0.48's late light: "the size knob is still triggering some
+// amber and red dropouts ... even when there's nothing in the reverb tank"). gSpikeInput: what the callback
+// feeds the Engine (-1 the lap's click + noise; 0 silence, exact zeros; 1 music: fast decaying saw notes, 8 a
+// second, as RELEASE_DIAG's). Each block's sections (prof::Section) are timed in gSpkSec; the worst block's are
+// kept with its crossfade counters (prof::xf*), and the blocks a SIZE crossfade ran in are summed apart.
+volatile int gSpikeInput = -1;
+uint32_t     gSpkSec[kNumSections], gSpkLast = 0;
+uint32_t     gSpkMaxSec[kNumSections];
+int          gSpkMaxStart = 0, gSpkMaxLines = 0, gSpkMaxTanks = 0;
+uint32_t     gSpkNear = 0, gSpkFadeBlocks = 0, gSpkFadeMax = 0, gMaxBlock = 0;
+uint64_t     gSpkFadeSum = 0;
+void SpikeMark(int section)
+{
+    const uint32_t now = DWT->CYCCNT;
+    gSpkSec[section] += now - gSpkLast;
+    gSpkLast = now;
+}
+float SpikeInput(int kind)
+{
+    static uint32_t sinceNote = 0, note = 0;
+    static float    phase = 0.0f, env = 0.0f;
+    if (kind == 0) return 0.0f;
+    constexpr float kHz[8] = {110.0f, 220.0f, 165.0f, 330.0f, 247.0f, 440.0f, 196.0f, 587.0f};
+    if (++sinceNote >= 6000u) {
+        sinceNote = 0;
+        note      = (note + 3u) % 8u;
+        env       = 0.5f;
+    }
+    phase += kHz[note] / 48000.0f;
+    if (phase >= 1.0f) phase -= 1.0f;
+    env *= 0.99965f; // ~60 ms
+    return env * (2.0f * phase - 1.0f);
 }
 #endif
 
@@ -819,17 +862,42 @@ void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer ou
     }
 #endif
     static float buf[kBlockSize];
+#if IV_PROFILE_SIZESPIKE
+    if (gSpikeInput >= 0)
+        for (size_t i = 0; i < size; ++i) buf[i] = SpikeInput(gSpikeInput);
+    else
+#endif
     for (size_t i = 0; i < size; ++i) {
         float x = 5.0e-4f * NextNoise();
         if (gClickPhase == 0) x += 0.8f;
         if (++gClickPhase >= gClickPeriodSamples) gClickPhase = 0;
         buf[i] = x;
     }
+#if IV_PROFILE_SIZESPIKE
+    for (int k = 0; k < kNumSections; ++k) gSpkSec[k] = 0;
+    iv::prof::xfStarts = iv::prof::xfLineBlocks = iv::prof::xfTanks = 0;
+    gSpkLast = DWT->CYCCNT; // the knob path and the input so far go to no section (only into the block's total)
+#endif
     engine.process(buf, buf, out[0], out[1], int(size));
     const uint32_t pad0 = DWT->CYCCNT;
     while (DWT->CYCCNT - pad0 < gPadCycles) {
     }
     const uint32_t d = DWT->CYCCNT - t0;
+#if IV_PROFILE_SIZESPIKE
+    if (d > gMaxCycles) {
+        for (int k = 0; k < kNumSections; ++k) gSpkMaxSec[k] = gSpkSec[k];
+        gSpkMaxStart = iv::prof::xfStarts;
+        gSpkMaxLines = iv::prof::xfLineBlocks;
+        gSpkMaxTanks = iv::prof::xfTanks;
+        gMaxBlock    = gBlocks;
+    }
+    if (d > gPeriodCycles / 10u * 9u && d <= gPeriodCycles) ++gSpkNear; // the release's amber
+    if (iv::prof::xfLineBlocks > 0) { // a SIZE crossfade ran in this block
+        ++gSpkFadeBlocks;
+        gSpkFadeSum += d;
+        if (d > gSpkFadeMax) gSpkFadeMax = d;
+    }
+#endif
     if (d > gMaxCycles) gMaxCycles = d;
     if (d > gPeriodCycles) ++gLate;
     gSumCycles = gSumCycles + d;
@@ -1468,6 +1536,188 @@ void RunCandidateLap(float fs)
 }
 #endif
 
+#if IV_PROFILE_SIZESPIKE
+// ---- The SIZE-spike lap (27 Oct 2026; make MODE=profile SIZESPIKE=1) ------------------------------------------
+// The shipping code (v1.0.48: four SIZE groups, the small room, WEAR, TONE's bell, MOTION's transport) timed in the
+// audio callback, SIZE turned through release's knob path (its 10 ms one-pole, the 0.003 deadband, the end stops).
+// Each line: the knobs set (DECAY 0.9, BLEND / DEPTH 0.5, ONSET BLOOM, as the candidate lap), Engine::reset(), 6 s
+// untimed on the line's input, FROZEN: a tap and 2 s for the freeze's glide; then the timed seconds. Per line: the
+// average and worst block, late (over 100 %, release's red) and near (90-100 %, its amber) blocks, which block was
+// the worst and whether a SIZE crossfade started (start) or ran (lines, tanks) in it, the blocks a crossfade ran in
+// (their average and worst), and the worst block's sections (SPLIT, % of one block).
+struct Spike {
+    const char* group;
+    int         space;  // 0 PLATE, 1 HALL, 2 MASSIVE
+    int         hand;   // SizeHand: 0 sweep 0.2 <-> 1, 1 twists 0.5 <-> 0.9, 2 creep 0.7 -> 1, 3 twists 0.85 <-> 1, 4 nudges, 5 still
+    int         input;  // 0 silence, 1 music
+    bool        frozen;
+    float       wear, motion, tone;
+};
+int         gSpkLines = 0, gSpkLaps = 0;
+unsigned    gSpkLate = 0, gSpkNearAll = 0;
+float       gSpkWorst = 0.0f;
+char        gSpkWorstName[64];
+
+void RunSpikeUntimed(int n, int input)
+{
+    static float l[kBlockSize], ol[kBlockSize], orr[kBlockSize];
+    for (int b = 0; b < n; ++b) {
+        for (int i = 0; i < kBlockSize; ++i) l[i] = SpikeInput(input);
+        engine.process(l, l, ol, orr, kBlockSize);
+    }
+}
+
+void RunSpike(const Spike& c, float fs)
+{
+    static const char* const kHands[6] = {"sweep  ", "twists ", "creep  ", "twisthi", "nudge  ", "still  "};
+    static const char* const kSp[3] = {"PLATE  ", "HALL   ", "MASSIVE"};
+    engine.setParam(ParamId::Space, iv::switchToNormalised(c.space));
+    engine.setParam(ParamId::Attack, iv::switchToNormalised(1)); // BLOOM
+    engine.setParam(ParamId::Decay, 0.9f);
+    engine.setParam(ParamId::Mix, 0.5f);
+    engine.setParam(ParamId::Time, 0.5f);
+    engine.setParam(ParamId::Era, c.wear);
+    engine.setParam(ParamId::Drift, c.motion);
+    engine.setParam(ParamId::Tone, c.tone);
+    engine.setParam(ParamId::Size, ivpot::endStops(SizeHand(c.hand, 0)));
+    engine.reset(); // at the settings (unfrozen, the tanks empty, no glide in from the last line)
+    const int blocks1s = int(fs) / kBlockSize;
+    RunSpikeUntimed(6 * blocks1s, c.input); // past the lines' first trip after the reset (5.5 s: until then they read as filling)
+    if (c.frozen) {
+        engine.button(true, 0);
+        RunSpikeUntimed(10, c.input);
+        engine.button(false, 0);
+        RunSpikeUntimed(2 * blocks1s, c.input);
+    }
+    gKnobSend = false;
+    gLate = gBlocks = gMaxCycles = gMaxBlock = 0;
+    gSumCycles = 0;
+    gSpkNear = gSpkFadeBlocks = gSpkFadeMax = 0;
+    gSpkFadeSum = 0;
+    gSpikeInput = c.input;
+    gStepBlocks = uint32_t((c.hand == 5 ? 4.0f : 6.0f) * fs / float(kBlockSize));
+    gSizeHand = c.hand;
+    gRealtime = true;
+    while (gRealtime) {
+    }
+    gSizeHand = -1;
+    gSpikeInput = -1;
+    System::Delay(5);
+    const float period = float(gPeriodCycles);
+    const float avg = gBlocks ? float(gSumCycles) / float(gBlocks) / period : 0.0f;
+    const float mx = float(gMaxCycles) / period;
+    ++gSpkLines;
+    gSpkLate += unsigned(gLate);
+    gSpkNearAll += gSpkNear;
+    static char cb[400];
+    char*       p   = cb;
+    const char* end = cb + sizeof(cb);
+    char* const name = p;
+    AppendStr(p, end, "SPIKE ");
+    AppendPadRight(p, end, c.group, 7);
+    AppendStr(p, end, kSp[c.space]);
+    AppendStr(p, end, c.frozen ? " FROZEN " : " playing");
+    AppendStr(p, end, c.input ? " music   " : " silence ");
+    AppendStr(p, end, kHands[c.hand]);
+    AppendStr(p, end, " W");
+    AppendFixed1(p, end, int(c.wear * 10.0f + 0.5f), 1);
+    AppendStr(p, end, " M");
+    AppendFixed1(p, end, int(c.motion * 10.0f + 0.5f), 1);
+    AppendStr(p, end, " T");
+    AppendFixed1(p, end, int(c.tone * 10.0f + 0.5f), 1);
+    if (mx > gSpkWorst) {
+        gSpkWorst = mx;
+        const size_t len = std::min(size_t(p - name), sizeof(gSpkWorstName) - 1);
+        std::memcpy(gSpkWorstName, name, len);
+        gSpkWorstName[len] = '\0';
+    }
+    AppendStr(p, end, " avg ");
+    AppendFixed1(p, end, FracToPercentTenths(avg), 5);
+    AppendStr(p, end, "% max ");
+    AppendFixed1(p, end, FracToPercentTenths(mx), 5);
+    AppendStr(p, end, "% | late ");
+    AppendUInt(p, end, unsigned(gLate));
+    AppendStr(p, end, " near ");
+    AppendUInt(p, end, gSpkNear);
+    AppendStr(p, end, " of ");
+    AppendUInt(p, end, unsigned(gBlocks));
+    AppendStr(p, end, " | max at block ");
+    AppendUInt(p, end, gMaxBlock);
+    AppendStr(p, end, " start ");
+    AppendInt(p, end, gSpkMaxStart);
+    AppendStr(p, end, " lines ");
+    AppendInt(p, end, gSpkMaxLines);
+    AppendStr(p, end, " tanks ");
+    AppendInt(p, end, gSpkMaxTanks);
+    AppendStr(p, end, " | fading ");
+    AppendUInt(p, end, gSpkFadeBlocks);
+    AppendStr(p, end, " avg ");
+    AppendFixed1(p, end, FracToPercentTenths(gSpkFadeBlocks ? float(gSpkFadeSum) / float(gSpkFadeBlocks) / period : 0.0f), 5);
+    AppendStr(p, end, "% max ");
+    AppendFixed1(p, end, FracToPercentTenths(float(gSpkFadeMax) / period), 5);
+    AppendStr(p, end, "%\r\n  SPLIT");
+    static const char* const kSec[kNumSections] = {"ctl", "in", "shim", "swell", "twin", "tank",
+                                                   "tkctl", "tkloop", "tkout", "tkmix", "wear", "out"};
+    for (int k = 0; k < kNumSections; ++k) {
+        AppendStr(p, end, " ");
+        AppendStr(p, end, kSec[k]);
+        AppendFixed1(p, end, FracToPercentTenths(float(gSpkMaxSec[k]) / period), 5);
+    }
+    AppendStr(p, end, "\r\n");
+    TransmitLine(cb, size_t(p - cb));
+}
+
+// One lap, ~11 min: SPACES (MASSIVE and HALL: silence and music, playing and frozen, sweep / twists / creep / nudges;
+// PLATE: sweep and twists), KNOBS (MASSIVE, music, creep: WEAR 0 / 0.5 / 1 x MOTION noon / full left, playing and
+// frozen; TONE at its ends; the twists near the top), STILL (each SPACE with SIZE still: the reference).
+void RunSpikeLap(float fs)
+{
+    gPeriodCycles = uint32_t(float(SystemCoreClock) / fs * float(kBlockSize));
+    gSpkLines = 0;
+    gSpkLate = gSpkNearAll = 0;
+    gSpkWorst = 0.0f;
+    gSpkWorstName[0] = '\0';
+    static const int kHandsBig[4] = {0, 1, 2, 4};
+    for (int space = 2; space >= 0; --space)
+        for (int input = 0; input < 2; ++input)
+            for (int fz = 0; fz < 2; ++fz)
+                for (int h : kHandsBig) {
+                    if (space == 0 && h > 1) continue; // PLATE glides (no crossfade): sweep and twists
+                    RunSpike({"SPACES", space, h, input, fz != 0, 0.0f, 0.5f, 0.5f}, fs);
+                }
+    static const float kWear[3] = {0.0f, 0.5f, 1.0f}, kMotion[2] = {0.5f, 0.0f};
+    for (float w : kWear)
+        for (float m : kMotion)
+            for (int fz = 0; fz < 2; ++fz) {
+                if (w == 0.0f && m == 0.5f) continue; // in SPACES
+                RunSpike({"KNOBS", 2, 2, 1, fz != 0, w, m, 0.5f}, fs);
+            }
+    RunSpike({"KNOBS", 2, 2, 1, false, 0.0f, 0.5f, 0.0f}, fs);
+    RunSpike({"KNOBS", 2, 2, 1, false, 0.0f, 0.5f, 1.0f}, fs);
+    RunSpike({"KNOBS", 2, 3, 1, false, 0.0f, 0.5f, 0.5f}, fs);
+    for (int space = 2; space >= 0; --space)
+        for (int input = 0; input < 2; ++input) RunSpike({"STILL", space, 5, input, false, 0.0f, 0.5f, 0.5f}, fs);
+    ++gSpkLaps;
+    static char eb[200];
+    char*       p   = eb;
+    const char* end = eb + sizeof(eb);
+    AppendStr(p, end, "SIZESPIKE LAP ");
+    AppendInt(p, end, gSpkLaps);
+    AppendStr(p, end, " DONE: ");
+    AppendInt(p, end, gSpkLines);
+    AppendStr(p, end, " lines, worst max ");
+    AppendFixed1(p, end, FracToPercentTenths(gSpkWorst), 5);
+    AppendStr(p, end, "% (");
+    AppendStr(p, end, gSpkWorstName);
+    AppendStr(p, end, "), late blocks in all ");
+    AppendUInt(p, end, gSpkLate);
+    AppendStr(p, end, ", near ");
+    AppendUInt(p, end, gSpkNearAll);
+    AppendStr(p, end, "\r\n");
+    TransmitLine(eb, size_t(p - eb));
+}
+#endif
+
 } // namespace
 
 int main()
@@ -1495,17 +1745,23 @@ int main()
             hw.leds[i].Init(kLedPins[i][0], kLedPins[i][1], kLedPins[i][2], true);
     }
     hw.seed.SetAudioBlockSize(kBlockSize);
+#if IV_PROFILE_SIZESPIKE
+    SetFlushToZero(false); // as release runs (no FZ)
+#else
     SetFlushToZero(IV_PROFILE_FZ); // before any FP work (the micro-tests flip it once and put it back)
+#endif
 
     StartCycleCounter();
-#if IV_PROFILE_CANDIDATE
+#if IV_PROFILE_CANDIDATE || IV_PROFILE_SIZESPIKE
     SdramSetTiming(SdtrWith(FMC_Bank5_6_R->SDTR[0], kTightTrp, kTightTrcd)); // as release runs (no micro-tests here)
 #else
     RunMicroTests(); // before the Engine takes (and zeroes) its memory
 #endif
     engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats, gAxi, kAxiFloats);
     engine.prepare(hw.AudioSampleRate(), kBlockSize);
-#if !IV_PROFILE_CANDIDATE
+#if IV_PROFILE_SIZESPIKE
+    iv::prof::markHook = SpikeMark;
+#elif !IV_PROFILE_CANDIDATE
     iv::prof::markHook = ProfMark;
     BuildCornerTable();
     ApplyCorner(0);
@@ -1525,7 +1781,20 @@ int main()
     hw.seed.usb_handle.Init(daisy::UsbHandle::FS_INTERNAL);
     hw.StartAudio(AudioCallback);
 
-#if IV_PROFILE_CANDIDATE
+#if IV_PROFILE_SIZESPIKE
+    System::Delay(3000); // time to open the serial log
+    while (true) {
+        static const char kHello[] = "SIZESPIKE START (SPACES, KNOBS, STILL; 59 lines, ~11 min a lap)\r\n";
+        TransmitLine(kHello, sizeof(kHello) - 1);
+        hw.SetLed(DaisyVersio::LED_0, 0.0f, 0.0f, 1.0f); // blue while a lap runs
+        hw.UpdateLeds();
+        RunSpikeLap(fs);
+        hw.SetLed(DaisyVersio::LED_0, 0.0f, gSpkLate ? 0.0f : 1.0f, 0.0f); // green: no block came late
+        hw.SetLed(DaisyVersio::LED_3, gSpkLate ? 1.0f : 0.0f, 0.0f, 0.0f); // red: some block came late
+        hw.UpdateLeds();
+        System::Delay(2000);
+    }
+#elif IV_PROFILE_CANDIDATE
     System::Delay(3000); // time to open the serial log
     while (true) {
         static const char kHello[] = "CANDIDATE START (TWINROOM, WEAR, SIZEHAND, TARGET; ~15 min a lap)\r\n";

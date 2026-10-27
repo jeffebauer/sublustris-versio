@@ -38,12 +38,15 @@ RELEASE_LATE_LIGHT ?= 0
 #   SIZE_GROUPS=n SIZE's crossfade in n groups (1, 2 or 8) as the default instead of 4 (Fdn.h IV_SIZE_GROUPS; -gn)
 #   CANDIDATE=1   profile only: the candidate lap (main.cpp IV_PROFILE_CANDIDATE) in place of the corner lap,
 #                 the micro-tests and the size_moves hunt (-candidate)
+#   SIZESPIKE=1   profile only: the SIZE-spike lap (main.cpp IV_PROFILE_SIZESPIKE; 27 Oct 2026, the owner's red light on
+#                 SIZE moves with an empty tank) in place of the corner lap (-sizespike)
 SIZE_GROUPS ?=
 CANDIDATE ?=
+SIZESPIKE ?=
 TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))
-TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)
+TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=1)
 RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)$(if $(filter 1,$(RELEASE_LATE_LIGHT)),-latelight)$(TRIAL_TAG)
-PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)
+PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)$(if $(SIZESPIKE),-sizespike)
 
 ifeq ($(MODE),m0test)
   TARGET    = sublustris_versio_m0test
