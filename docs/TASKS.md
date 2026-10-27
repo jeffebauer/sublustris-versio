@@ -9,7 +9,6 @@
 - [ ] **One merge into main, when your remaining picks are in** (MOTION, the swell comb, the room's movement). `claude/massive-air` no longer needs merging on its own: every branch since (era-wear, tone-character and the rest) contains it. The plan: one combined branch (era-wear + TONE + your picks), renamed Sublustris Versio in the same pass, checked, then merged with your OK. The release script (`claude/friend-package-073b04`) can go in any time.
 
 ### Listen (after your notes)
-- [ ] **`room_motion`: the room's pitch bend** (pick one): `/Users/jesse/Documents/Sites/immensio-versio/renders/room_motion/index.html`. A today (bends 8-40 cents, most at small SIZE); B movement scaled with SIZE (about 3-9 cents, like the main reverb; at the smallest SIZE it rings a little more); C movement off (no bend, but it rings metallically, most at small SIZE). The room alone and over a pad, retuned to A4 = 440, small/medium/large SIZE, MASSIVE and HALL. Same CPU for all three.
 
 ### Listen (first time)
 
@@ -46,6 +45,7 @@
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 
 ## Done
+- [x] **The room's movement scales with SIZE (B)** (27 Oct 2026, `renders/room_motion`, MIX 76 %, B on every card). The room bends about 3-9 cents at every SIZE (was up to 40 at small SIZE), like the main reverb. Being built as v1.0.47 on the combined branch. That was the last open sound question before the merge.
 - [x] **BLOOM's swell stays as it is** (27 Oct 2026, `renders/swell_motion`: "I like D smear moves overall, but the difference is very subtle, especially when not fully wet"; then "Keep it as is"). D (BLOOM's smoothing moving) is on the shelf (branch `claude/swell-motion`) in case flash allows later; it can't change the comb anyway. The room's pitch bend is a separate question (`room_motion`).
 - [x] **MOTION's crinkle dips: a third of C's (B)** (27 Oct 2026, `renders/drift_rethink/left_tape_final`, every card, repeated cards agreeing). MOTION is settled: left side the tape transport with more variance and Magneto-style crinkle, a few dips (15 a minute at full left); right side stronger Wander. Being built as the default on the combined branch.
 - [x] **MOTION's tape side: Magneto-style crinkle (E)** (27 Oct 2026, `renders/drift_rethink` left page round 3, every card, repeated cards agreeing: "I like the magneto crinkle, but compared to C there are less dropouts. I think C's dropouts are a little extreme, so let's find a middle ground"). C has no real dropouts, so what reads as dropouts there is being measured first (likely its big tape-speed swings); then a short confirm page with E and two middle amounts.
