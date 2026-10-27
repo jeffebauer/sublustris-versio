@@ -1,6 +1,6 @@
 {
-  "spec": "v1.0.46",
-  "why": "v1.0.46: MOTION's tape transport with Magneto crinkle, stronger Wander (owner's picks, renders/drift_rethink)",
+  "spec": "v1.0.47",
+  "why": "v1.0.47: the small room's movement scales with SIZE (owner's pick B, renders/room_motion)",
   "corners": {
     "plate_small": {
       "chord_loudness_db": -39.768000000000001,

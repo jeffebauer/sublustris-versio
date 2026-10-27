@@ -8,6 +8,7 @@
 // their neighbours); no energy growth, and 10-minute infinite holds at DECAY 1 at both ends in every SPACE (the
 // per-line change is in the loop); music's loudness within ±1 dB of noon across the knob.
 
+#include "PitchTrack.h"
 #include "Wav.h"
 #include "dsp/Engine.h"
 #include "dsp/Transport.h"
@@ -15,7 +16,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <complex>
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -82,105 +82,7 @@ Setting pageSetting(int space, float drift) // the page's SPACEs: SIZE 0.6 (MASS
     return s;
 }
 
-// ---- The page's pitch measure (tools/pages/drift_rethink.py cents_tracks / pitch_stats) ----------------------
-
-using cplx = std::complex<double>;
-void fft(std::vector<cplx>& a, bool inverse)
-{
-    const size_t n = a.size();
-    for (size_t i = 1, j = 0; i < n; ++i) {
-        size_t bit = n >> 1;
-        for (; j & bit; bit >>= 1) j ^= bit;
-        j ^= bit;
-        if (i < j) std::swap(a[i], a[j]);
-    }
-    for (size_t len = 2; len <= n; len <<= 1) {
-        const double ang = 2.0 * M_PI / double(len) * (inverse ? 1.0 : -1.0);
-        const cplx wl(std::cos(ang), std::sin(ang));
-        for (size_t i = 0; i < n; i += len) {
-            cplx w(1.0);
-            for (size_t k = 0; k < len / 2; ++k) {
-                const cplx u = a[i + k], v = a[i + k + len / 2] * w;
-                a[i + k] = u + v;
-                a[i + k + len / 2] = u - v;
-                w *= wl;
-            }
-        }
-    }
-    if (inverse)
-        for (auto& x : a) x /= double(n);
-}
-
-// One channel's pitch (cents from its median) in 1 ms frames over 3..9 s: the band ±150 Hz around f0 as an
-// analytic signal, its phase slope, smoothed to 40 Hz, 100 ms trimmed each end.
-std::vector<double> centsTrack(const std::vector<float>& x, double f0)
-{
-    const size_t n0 = size_t(3.0 * kSr), n1 = size_t(9.0 * kSr), len = n1 - n0;
-    size_t nf = 1;
-    while (nf < len) nf <<= 1;
-    std::vector<cplx> X(nf);
-    for (size_t i = 0; i < len; ++i) X[i] = x[n0 + i];
-    fft(X, false);
-    for (size_t k = 0; k < nf; ++k) {
-        const double f = double(k) * kSr / double(nf);
-        X[k] = (k > nf / 2 || std::fabs(f - f0) > 150.0) ? cplx(0.0) : 2.0 * X[k];
-    }
-    fft(X, true);
-    std::vector<double> inst;
-    double prev = std::arg(X[0]), acc = 0.0;
-    int cnt = 0;
-    for (size_t i = 1; i < len; ++i) {
-        double ph = std::arg(X[i]), d = ph - prev;
-        prev = ph;
-        while (d > M_PI) d -= 2.0 * M_PI;
-        while (d < -M_PI) d += 2.0 * M_PI;
-        acc += d * kSr / (2.0 * M_PI);
-        if (++cnt == 48) {
-            inst.push_back(acc / 48.0);
-            acc = 0.0;
-            cnt = 0;
-        }
-    }
-    size_t m = 1;
-    while (m < inst.size()) m <<= 1;
-    std::vector<cplx> Y(m, cplx(0.0));
-    double mean = 0.0;
-    for (double v : inst) mean += v;
-    mean /= double(inst.size());
-    for (size_t i = 0; i < inst.size(); ++i) Y[i] = inst[i] - mean;
-    fft(Y, false);
-    for (size_t k = 0; k < m; ++k) {
-        const size_t kk = k <= m / 2 ? k : m - k;
-        if (double(kk) * 1000.0 / double(m) > 40.0) Y[k] = 0.0;
-    }
-    fft(Y, true);
-    std::vector<double> c;
-    for (size_t i = 100; i + 100 < inst.size(); ++i) c.push_back(Y[i].real() + mean);
-    std::vector<double> s(c);
-    std::nth_element(s.begin(), s.begin() + long(s.size() / 2), s.end());
-    const double med = s[s.size() / 2];
-    for (auto& v : c) v = 1200.0 * std::log2(v / med);
-    return c;
-}
-
-double percentile(std::vector<double> v, double p)
-{
-    std::sort(v.begin(), v.end());
-    return v[size_t(p / 100.0 * double(v.size() - 1))];
-}
-
-// p95 |cents| of the 1.3 kHz (the channels' mean, about its median) with 700 Hz beside it: the page's "p95".
-double p95Cents(const Stereo& s)
-{
-    const auto a = centsTrack(s.l, 1300.0), b = centsTrack(s.r, 1300.0);
-    std::vector<double> m(a.size());
-    for (size_t i = 0; i < a.size(); ++i) m[i] = 0.5 * (a[i] + b[i]);
-    std::vector<double> sorted(m);
-    std::nth_element(sorted.begin(), sorted.begin() + long(sorted.size() / 2), sorted.end());
-    const double med = sorted[sorted.size() / 2];
-    for (auto& v : m) v = std::fabs(v - med);
-    return percentile(m, 95.0);
-}
+double p95Of(const Stereo& s) { return iv::test::p95Cents(s.l, s.r, 1300.0, kSr); } // 1.3 kHz, 3-9 s
 
 std::vector<float> heldTones() // the page's tones.wav: 9 s of 700 Hz + 1.3 kHz, 24-bit
 {
@@ -266,7 +168,7 @@ void leftSide()
                        {0.0f, "full left", {19.9, 18.5, 15.1}, 34, 15}};
     for (const Pos& p : pos) {
         for (int space : {0, 1, 2}) {
-            const double c = p95Cents(render(tones, pageSetting(space, p.drift)));
+            const double c = p95Of(render(tones, pageSetting(space, p.drift)));
             char msg[200];
             std::snprintf(msg, sizeof msg, "MOTION %s, %s: p95 %.1f c on a held 1.3 kHz (the page's B: %.1f, within 10 %%)",
                           p.name, kSpaceName[space], c, p.p95[space]);
@@ -295,7 +197,7 @@ void rightSide()
     const float drifts[2] = {0.75f, 1.0f}; // the right page's positions
     for (int k = 0; k < 2; ++k)
         for (int space : {0, 1, 2}) {
-            const double c = p95Cents(render(tones, pageSetting(space, drifts[k])));
+            const double c = p95Of(render(tones, pageSetting(space, drifts[k])));
             char msg[220];
             if (k == 0)
                 std::snprintf(msg, sizeof msg, "MOTION 3/4 right (0.75), %s: p95 %.1f c (as before v1.0.46: %.1f, within 10 %%)",

@@ -8,7 +8,8 @@
 // found the unvoiced room "a little boomy and low-end heavy"), two allpasses a side, then eight short lines (SIZE:
 // 8-50 ms at the longest) mixed by a Hadamard matrix. Each line's loss is the twin tank's own (absorbent(): DECAY's
 // T60, at most kTwinMaxT60, the highs' T60 TONE's share of the lows', × kTwinRoomBrightness: the top a little
-// softer than the tank's), and its read wanders slowly on a rotating phasor (no sin a sample). Run at 24 kHz,
+// softer than the tank's), and its read wanders slowly on a rotating phasor (no sin a sample), by 0.5 % of
+// the line's length (v1.0.47). Run at 24 kHz,
 // inside the twin's HalfRate stage. SIZE moves glide the lines, at most a semitone's bend (as the tank's SIZE
 // slew), with no crossfade. Its rings (~42 KB at 24 kHz) come from the caller: AXI SRAM on the module.
 //
@@ -80,12 +81,6 @@ public:
             for (auto& z : c) z = 0.0f;
     }
     void setGain(float g) { gain_ = g; }
-#ifndef IV_FIXED_VOICINGS
-    // PROTOTYPE (renders/room_motion): the reads' wander. 0 as built (0.15 ms on every line); 1 scaled with each line's
-    // length (kWanderShare of it), so the bend, which builds up pass after pass on short lines, stays a few cents at
-    // every SIZE; 2 off.
-    void setWanderPrototype(int mode) { wander_ = mode == 1 || mode == 2 ? mode : 0; }
-#endif
     // size 0..1 (SIZE), rate 1/T60 in 1/s (the twin's), highRatio the twin's TONE share (its highs' T60 over its lows').
     IV_SIZE_OPT void set(float size, float rate, float highRatio)
     {
@@ -106,16 +101,14 @@ public:
         constexpr float kNorm = 0.35355339f;
         constexpr float kInS[2][kN] = {{1, -1, 1, -1, 1, -1, 1, -1}, {1, 1, -1, -1, 1, 1, -1, -1}};
         constexpr float kOutS[2][kN] = {{1, 1, -1, -1, 1, 1, -1, -1}, {1, -1, -1, 1, 1, -1, -1, 1}};
-        const float depth = kModSeconds * sr_;
         int   di[kN];
         float eta[kN], dep[kN];
         bool  moving[kN];
         for (int i = 0; i < kN; ++i) { // keep the phasors on the unit circle (a first-order step, once a call)
-            dep[i] = depth;
-#ifndef IV_FIXED_VOICINGS
-            if (wander_ == 1) dep[i] = kWanderShare * len_[i];
-            else if (wander_ == 2) dep[i] = 0.0f;
-#endif
+            // The wander's depth, a share of the line's own length (v1.0.47, owner's pick B on renders/room_motion: 0.15 ms
+            // on every line bent the short ones most, the bend building up pass after pass; scaled, it stays a few cents
+            // at every SIZE). Fixed for the call, as the read.
+            dep[i] = kWanderShare * len_[i];
             const float r = 1.5f - 0.5f * (c0_[i] * c0_[i] + s0_[i] * s0_[i]);
             c0_[i] *= r;
             s0_[i] *= r;
@@ -215,17 +208,14 @@ private:
     }
     static constexpr size_t lineFloats(float sampleRate) { return size_t(int(kMaxSeconds * sampleRate) + 16); }
 
-    static constexpr float kMaxSeconds = 0.052f, kApCoeff = 0.6f, kModSeconds = 0.00015f;
+    static constexpr float kMaxSeconds = 0.052f, kApCoeff = 0.6f;
     static constexpr float kApSeconds[2][2] = {{0.0033f, 0.0059f}, {0.0039f, 0.0067f}};
-    static constexpr float kWanderShare = 0.005f; // setWanderPrototype 1: the wander's depth x the line's length (today's 0.15 ms on a SIZE 0.9 line)
+    static constexpr float kWanderShare = 0.005f; // the wander's depth x the line's length (v1.0.46's 0.15 ms on a SIZE 0.9 line)
     static constexpr float kSlew = 0.0595f; // samples a sample: 2^(1/12) - 1, a semitone's bend at most
     static constexpr float kRatio[kN] = {0.31f, 0.42f, 0.51f, 0.60f, 0.70f, 0.79f, 0.90f, 1.0f};
     // IV_ZI (SizeOpt.h): a member of the Engine only, never a local; prepare() sets the rest.
     float sr_ = 24000.0f, gain_ = 1.0f, shelfK_ IV_ZI;
     bool  ok_ IV_ZI, snap_ = true;
-#ifndef IV_FIXED_VOICINGS
-    int   wander_ = 0; // setWanderPrototype
-#endif
     float target_[kN] IV_ZI;
     float hb_ IV_ZI, ha1_ IV_ZI, ha2_ IV_ZI, hz_[2][2] IV_ZI;
     Ring  line_[kN];
