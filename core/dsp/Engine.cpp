@@ -442,7 +442,21 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     const float governor = frozen ? std::fmax(map::governorWeight(decay), freezeMix_) : map::governorWeight(decay);
     // DECAY keeps the loudness (v1.0.28): a shorter tail is made up to the finite top's level, on the
     // wet and the twin alike. A frozen pad keeps heldDecay_, so freezing doesn't move it.
-    decayGain_ = std::pow(map::decayLevelMakeup(decay, activeSpace_), decayMakeup_);
+    const float gainWas = decayGain_;
+#ifndef IV_FIXED_VOICINGS
+    decayGain_ = std::pow(map::decayLevelMakeup(decay, activeSpace_), decayMakeup_); // setDecayMakeup: 1 = as built
+#else
+    decayGain_ = map::decayLevelMakeup(decay, activeSpace_); // the module never sets setDecayMakeup (1): no pow
+#endif
+    // The make-up rises no faster than voicing::kDecayRiseShare of the tank's own decay (v1.0.55, ADR 0020
+    // amendment, renders/decay_swell): it's a gain after the loop, so jumping up with a DECAY turned down it
+    // boosted the long tail still ringing in the tank (+9 dB MASSIVE, +4.5 HALL, the owner's "swell"). Now
+    // the old tail fades while the shorter one grows in under it. As a gain over this block: 60 dB x ln 10 / 20
+    // = 6.9078 per unit of rate x seconds (a block's step is small, so linear). Finite DECAYs only: across the
+    // crossover the make-up rises as DECAY goes up (PLATE's and HALL's long-tail trim letting go) while the
+    // tank barely loses, and a cap there held HALL's endless level down. Falls as before; a held DECAY is unchanged.
+    if (!snap && decay < map::kDecayFiniteTop)
+        decayGain_ = std::fmin(decayGain_, gainWas * (1.0f + (voicing::kDecayRiseShare * 6.9078f) * rate * float(n) / sampleRate_));
     if (snap) {
         decayGainNow_ = decayGain_;
     }
@@ -792,7 +806,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
     // A still pad's ceiling: its own level once settled (kPadSettleSeconds
     // after the freeze), so it can't creep up afterwards.
     if (gesture_.frozen() && !gesture_.painting() && !padCaptured_ && freezeMix_ >= 1.0f && tankIn_ <= 0.0f
-        && clock_ - frozeAt_ > uint64_t(voicing::kPadSettleSeconds * sampleRate_)) {
+        && clock_ - frozeAt_ > uint64_t(uint32_t(voicing::kPadSettleSeconds * sampleRate_))) {
         // Judged on the 8 s level, which averages a MASSIVE pad's early swings; unless that's still
         // well above the pad's level now (50 ms), as when a fast-dying tail (a short DECAY) was frozen:
         // the slower levels still remember the tail before the freeze (it can fall 130 dB in a second),
@@ -817,11 +831,12 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
         quietSince_ = clock_;
         tailCaptured_ = false;
     } else if (map::governorWeight(smoothed(ParamId::Decay)) >= 1.0f
-               && clock_ - quietSince_ > uint64_t(voicing::kQuietSeconds * sampleRate_)) {
+               && clock_ - quietSince_ > uint64_t(uint32_t(voicing::kQuietSeconds * sampleRate_))) {
         // Ratchets down with the tail while it settles, then stays put (the
         // hold makeup brings a sagging tail back up to it).
         const float c = tankSlowLevelDb() + voicing::kPadCeilingDb;
-        const bool settling = clock_ - quietSince_ < uint64_t((voicing::kQuietSeconds + voicing::kTailSettleSeconds) * sampleRate_);
+        // (Each time through 32 bits: a float to uint64_t pulled in libgcc's __aeabi_f2ulz, 72 B of flash.)
+        const bool settling = clock_ - quietSince_ < uint64_t(uint32_t((voicing::kQuietSeconds + voicing::kTailSettleSeconds) * sampleRate_));
         if (!tailCaptured_ || (settling && c < tailCeilingDb_)) tailCeilingDb_ = c;
         tailCaptured_ = true;
     }

@@ -22,7 +22,7 @@ public:
 
     enum class Event : uint8_t { None, Freeze, Unfreeze, PaintStart, PaintStop };
 
-    void prepare(float sampleRate) { tapMax_ = uint64_t(kTapMaxSeconds * sampleRate); reset(); }
+    void prepare(float sampleRate) { tapMax_ = uint64_t(uint32_t(kTapMaxSeconds * sampleRate)); reset(); } // via 32 bits: no libgcc __aeabi_f2ulz (flash)
     void reset()
     {
         down_ = frozen_ = painting_ = armed_ = pressFroze_ = false;
