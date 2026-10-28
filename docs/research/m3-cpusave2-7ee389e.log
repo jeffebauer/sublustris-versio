@@ -1,0 +1,353 @@
+FLIP SHIMMER HALL->MASSIVE music W0.5 M0.0 | before  61.2% | worst  80.1% at 3480 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 61.0 50-100 78.0 100-150 77.3 150-250 79.5 250-500 72.5 500-1k 74.5 1k-2k 76.2 2k-4k 80.1
+  SPLIT ctl  4.0 in  6.9 shim 14.6 swell 10.2 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.6 tkout 10.3 tkmix  1.5 wear  4.4 out  4.8 flip  0.0 tkabs  3.5
+FLIP SHIMMER MASSIVE->HALL music W0.5 M0.0 | before  79.1% | worst  79.5% at 21 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 79.5 50-100 58.8 100-150 56.8 150-250 57.8 250-500 58.0 500-1k 57.9 1k-2k 60.4 2k-4k 61.6
+  SPLIT ctl  4.0 in  7.0 shim 14.6 swell 10.2 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.2 tkout 10.1 tkmix  1.3 wear  4.4 out  4.8 flip  0.0 tkabs  3.5
+FLIP SHIMMER PLATE->MASSIVE music W0.5 M0.0 | before  51.2% | worst  80.0% at 3626 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 51.0 50-100 79.6 100-150 78.0 150-250 80.0 250-500 73.0 500-1k 75.0 1k-2k 76.2 2k-4k 80.0
+  SPLIT ctl  3.8 in  6.9 shim 14.6 swell 10.3 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.5 tkout 10.4 tkmix  1.5 wear  4.4 out  4.7 flip  0.0 tkabs  3.5
+FLIP SHIMMER MASSIVE->PLATE music W0.5 M0.0 | before  79.2% | worst  79.5% at 11 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 79.5 50-100 58.2 100-150 59.6 150-250 59.5 250-500 57.7 500-1k 50.9 1k-2k 50.8 2k-4k 51.3
+  SPLIT ctl  3.8 in  7.0 shim 14.6 swell 10.3 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.3 tkout 10.0 tkmix  1.3 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+FLIP BLOOM   PLATE->HALL music W0.5 M0.0 | before  51.1% | worst  61.6% at 3726 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 51.1 50-100 54.4 100-150 54.2 150-250 55.4 250-500 56.4 500-1k 58.4 1k-2k 57.9 2k-4k 61.6
+  SPLIT ctl  4.3 in  5.6 shim  1.8 swell 12.9 twin  0.6 tank  2.6 tkctl  4.8 tkloop  8.1 tkout  6.1 tkmix  1.6 wear  4.4 out  4.5 flip  0.0 tkabs  3.4
+FLIP BLOOM   HALL->PLATE music W0.5 M0.0 | before  61.1% | worst  61.1% at -8 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 60.8 50-100 53.2 100-150 55.9 150-250 56.2 250-500 54.9 500-1k 49.5 1k-2k 51.0 2k-4k 51.4
+  SPLIT ctl  4.0 in  5.6 shim  1.8 swell 12.6 twin  0.6 tank  2.6 tkctl  4.9 tkloop  8.0 tkout  5.8 tkmix  1.5 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+FLIP BLOOM   HALL->MASSIVE music W0.5 M0.0 | before  60.8% | worst  69.0% at 3382 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 60.9 50-100 66.3 100-150 65.5 150-250 66.3 250-500 59.7 500-1k 63.5 1k-2k 66.1 2k-4k 69.0
+  SPLIT ctl  4.0 in  6.9 shim  1.8 swell 13.0 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.5 tkout 10.3 tkmix  1.6 wear  4.4 out  4.8 flip  0.0 tkabs  2.3
+FLIP BLOOM   MASSIVE->HALL music W0.5 M0.0 | before  68.9% | worst  69.0% at 47 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 69.0 50-100 53.4 100-150 53.5 150-250 54.8 250-500 56.0 500-1k 57.9 1k-2k 58.0 2k-4k 61.7
+  SPLIT ctl  3.9 in  6.9 shim  1.8 swell 12.9 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.4 tkout  9.8 tkmix  1.3 wear  4.4 out  4.9 flip  0.0 tkabs  3.4
+FLIP BLOOM   PLATE->MASSIVE music W0.5 M0.0 | before  50.6% | worst  68.8% at 3483 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 50.8 50-100 68.0 100-150 66.1 150-250 67.0 250-500 60.3 500-1k 64.0 1k-2k 66.0 2k-4k 68.8
+  SPLIT ctl  3.9 in  6.9 shim  1.8 swell 13.1 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.6 tkout 10.4 tkmix  1.3 wear  4.4 out  4.9 flip  0.0 tkabs  2.3
+FLIP BLOOM   MASSIVE->PLATE music W0.5 M0.0 | before  68.9% | worst  69.4% at 42 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 69.4 50-100 53.0 100-150 56.3 150-250 56.2 250-500 55.2 500-1k 49.5 1k-2k 50.7 2k-4k 51.4
+  SPLIT ctl  4.0 in  6.9 shim  1.8 swell 12.8 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.3 tkout 10.0 tkmix  1.5 wear  4.4 out  4.9 flip  0.0 tkabs  3.4
+SPIKE ABSEXP  MASSIVE playing music   twists  W0.5 M0.0 T0.5 D90 avg  88.2% max  92.4% | late 0 near 3531 of 6000 | max at block 3642 start 0 lines 8 tanks 2 | fading 4990 avg  90.0% max  92.4%
+  SPLIT ctl  4.6 in  9.1 shim 14.7 swell 11.9 twin  0.6 tank  2.6 tkctl  9.0 tkloop 12.6 tkout 13.4 tkmix  1.5 wear  4.4 out  4.8 flip  0.0 tkabs  2.1
+SPIKE ABSEXP  MASSIVE playing music   creep   W0.5 M0.0 T0.5 D90 avg  88.2% max  92.0% | late 0 near 3488 of 6000 | max at block 2482 start 0 lines 8 tanks 2 | fading 5223 avg  89.5% max  92.0%
+  SPLIT ctl  4.3 in  9.3 shim 14.8 swell 11.9 twin  0.6 tank  2.6 tkctl  8.8 tkloop 12.9 tkout 13.2 tkmix  1.4 wear  4.4 out  4.7 flip  0.0 tkabs  2.1
+SPIKE ABSEXP  MASSIVE playing music   sweep   W0.5 M0.0 T0.5 D90 avg  80.5% max  90.8% | late 0 near 146 of 6000 | max at block 2533 start 0 lines 8 tanks 2 | fading 1502 avg  87.2% max  90.8%
+  SPLIT ctl  3.9 in  9.4 shim 14.8 swell 12.0 twin  0.6 tank  2.6 tkctl  7.8 tkloop 12.7 tkout 13.6 tkmix  1.2 wear  4.4 out  4.7 flip  0.0 tkabs  2.1
+SIZESPIKE LAP 1 DONE: 36 lines, worst max  94.9% (SPIKE SHIMMER MASSIVE playing music   sweep   W0.5 M0.0 T0.5 D9), late blocks in all 0, near 17340
+CPUSAVE START (SHIMMER + WEAR 0.5 + MOTION left: SIZE moves, apart, still, SPACE flips, the ABSEXP trial; 36 lines, ~7.5 min a lap)
+SPIKE SHIMMER HALL    playing music   sweep   W0.5 M0.0 T0.5 D90 avg  67.9% max  85.2% | late 0 near 0 of 6000 | max at block 5300 start 0 lines 32 tanks 2 | fading 602 avg  83.0% max  85.2%
+  SPLIT ctl  4.2 in  5.7 shim 14.8 swell  0.2 twin  0.6 tank  2.6 tkctl 10.1 tkloop 20.8 tkout 11.5 tkmix  1.4 wear  4.4 out  4.6 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   twists  W0.5 M0.0 T0.5 D90 avg  66.4% max  69.9% | late 0 near 0 of 6000 | max at block 430 start 0 lines 8 tanks 2 | fading 4990 avg  67.3% max  69.9%
+  SPLIT ctl  4.7 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  9.0 tkloop  9.7 tkout  7.9 tkmix  1.4 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   creep   W0.5 M0.0 T0.5 D90 avg  66.3% max  69.0% | late 0 near 0 of 6000 | max at block 412 start 0 lines 8 tanks 2 | fading 5223 avg  67.0% max  69.0%
+  SPLIT ctl  4.7 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  8.9 tkloop  9.3 tkout  7.4 tkmix  1.3 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   nudge   W0.5 M0.0 T0.5 D90 avg  66.0% max  68.6% | late 0 near 0 of 6000 | max at block 573 start 0 lines 8 tanks 2 | fading 5118 avg  66.8% max  68.6%
+  SPLIT ctl  4.2 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  8.8 tkloop  9.6 tkout  7.6 tkmix  1.2 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   sweep   W0.5 M0.0 T0.5 D90 avg  81.9% max  94.8% | late 0 near 300 of 6000 | max at block 2556 start 0 lines 8 tanks 2 | fading 1502 avg  88.9% max  94.8%
+  SPLIT ctl  4.0 in  9.3 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl 10.8 tkloop 12.7 tkout 13.2 tkmix  1.4 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   twists  W0.5 M0.0 T0.5 D90 avg  89.5% max  93.7% | late 0 near 4035 of 6000 | max at block 448 start 0 lines 8 tanks 2 | fading 4990 avg  91.4% max  93.7%
+  SPLIT ctl  4.9 in  9.2 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl  8.6 tkloop 12.7 tkout 13.4 tkmix  1.5 wear  4.4 out  4.9 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   creep   W0.5 M0.0 T0.5 D90 avg  89.5% max  93.4% | late 0 near 4179 of 6000 | max at block 1045 start 0 lines 8 tanks 2 | fading 5223 avg  90.9% max  93.4%
+  SPLIT ctl  4.9 in  9.3 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl  8.8 tkloop 12.7 tkout 13.3 tkmix  1.2 wear  4.4 out  4.5 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   nudge   W0.5 M0.0 T0.5 D90 avg  87.1% max  92.7% | late 0 near 1335 of 6000 | max at block 3608 start 0 lines 8 tanks 2 | fading 5118 avg  88.2% max  92.7%
+  SPLIT ctl  3.6 in  9.1 shim 14.7 swell 11.8 twin  0.6 tank  2.6 tkctl  9.1 tkloop 12.7 tkout 13.4 tkmix  1.4 wear  4.4 out  4.9 flip  0.0 tkabs  3.5
+SPIKE SHIMMER PLATE   playing music   sweep   W0.5 M0.0 T0.5 D90 avg  50.3% max  51.9% | late 0 near 0 of 6000 | max at block 924 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  3.6 in  6.2 shim 14.6 swell  0.2 twin  0.6 tank 14.3 tkctl  2.5 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.4 out  4.5 flip  0.0 tkabs  0.0
+SPIKE SHIMMER PLATE   playing music   twists  W0.5 M0.0 T0.5 D90 avg  50.3% max  52.3% | late 0 near 0 of 6000 | max at block 1420 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  3.7 in  6.2 shim 14.7 swell  0.2 twin  0.6 tank 14.7 tkctl  2.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.4 out  4.4 flip  0.0 tkabs  0.0
+SPIKE SHIMMER HALL    playing music   sweep   W0.5 M0.5 T0.5 D90 avg  65.4% max  82.6% | late 0 near 0 of 6000 | max at block 5178 start 0 lines 32 tanks 2 | fading 602 avg  80.3% max  82.6%
+  SPLIT ctl  4.2 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  9.7 tkloop 20.6 tkout 11.6 tkmix  1.4 wear  4.4 out  2.6 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   creep   W0.5 M0.5 T0.5 D90 avg  87.1% max  92.3% | late 0 near 343 of 6000 | max at block 182 start 0 lines 8 tanks 2 | fading 5223 avg  88.5% max  92.3%
+  SPLIT ctl  4.5 in  9.2 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl 10.1 tkloop 12.7 tkout 13.3 tkmix  1.3 wear  4.4 out  2.6 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   sweep   W0.0 M0.0 T0.5 D90 avg  62.8% max  80.1% | late 0 near 0 of 6000 | max at block 5194 start 0 lines 32 tanks 2 | fading 602 avg  77.9% max  80.1%
+  SPLIT ctl  3.9 in  5.3 shim 14.7 swell  0.2 twin  0.6 tank  2.6 tkctl 10.1 tkloop 20.6 tkout 11.6 tkmix  1.4 wear  0.0 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   creep   W0.0 M0.0 T0.5 D90 avg  84.6% max  90.0% | late 0 near 0 of 6000 | max at block 412 start 0 lines 8 tanks 2 | fading 5223 avg  86.0% max  90.0%
+  SPLIT ctl  4.1 in  8.8 shim 14.8 swell 11.7 twin  0.6 tank  2.6 tkctl 11.0 tkloop 12.6 tkout 13.1 tkmix  1.4 wear  0.0 out  4.9 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   sweep   W0.0 M0.5 T0.5 D90 avg  60.3% max  77.6% | late 0 near 0 of 6000 | max at block 5194 start 0 lines 32 tanks 2 | fading 602 avg  75.1% max  77.6%
+  SPLIT ctl  3.9 in  5.3 shim 14.7 swell  0.2 twin  0.6 tank  2.6 tkctl  9.7 tkloop 20.7 tkout 11.6 tkmix  1.4 wear  0.0 out  2.6 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   creep   W0.0 M0.5 T0.5 D90 avg  82.1% max  87.3% | late 0 near 0 of 6000 | max at block 412 start 0 lines 8 tanks 2 | fading 5223 avg  83.4% max  87.3%
+  SPLIT ctl  4.1 in  8.8 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl 10.3 tkloop 12.6 tkout 13.3 tkmix  1.4 wear  0.0 out  2.6 flip  0.0 tkabs  3.4
+SPIKE BLOOM   HALL    playing music   sweep   W0.5 M0.0 T0.5 D90 avg  67.1% max  83.3% | late 0 near 0 of 6000 | max at block 2642 start 0 lines 32 tanks 2 | fading 602 avg  80.9% max  83.3%
+  SPLIT ctl  4.3 in  5.6 shim  1.8 swell 12.8 twin  0.6 tank  2.6 tkctl  8.6 tkloop 20.5 tkout 11.6 tkmix  1.4 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE BLOOM   MASSIVE playing music   creep   W0.5 M0.0 T0.5 D90 avg  80.4% max  85.7% | late 0 near 0 of 6000 | max at block 412 start 0 lines 8 tanks 2 | fading 5223 avg  81.9% max  85.7%
+  SPLIT ctl  4.8 in  8.9 shim  1.8 swell 15.6 twin  0.6 tank  2.6 tkctl 11.0 tkloop 12.6 tkout 12.7 tkmix  1.5 wear  4.4 out  4.9 flip  0.0 tkabs  3.5
+SPIKE SHIMMER PLATE   playing music   still   W0.5 M0.0 T0.5 D90 avg  50.3% max  51.4% | late 0 near 0 of 4000 | max at block 1562 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  3.5 in  6.2 shim 14.5 swell  0.2 twin  0.6 tank 14.0 tkctl  2.5 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.4 out  4.5 flip  0.0 tkabs  0.0
+SPIKE SHIMMER HALL    playing music   still   W0.5 M0.0 T0.5 D90 avg  60.3% max  61.1% | late 0 near 0 of 4000 | max at block 196 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  4.2 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  4.9 tkloop  8.0 tkout  5.6 tkmix  1.3 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   still   W0.5 M0.0 T0.5 D90 avg  78.7% max  79.8% | late 0 near 0 of 4000 | max at block 431 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  4.0 in  6.9 shim 14.7 swell 10.2 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.3 tkout 10.3 tkmix  1.2 wear  4.4 out  4.8 flip  0.0 tkabs  3.5
+FLIP SHIMMER PLATE->HALL music W0.5 M0.0 | before  50.9% | worst  61.8% at 3470 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 50.9 50-100 59.5 100-150 57.0 150-250 58.7 250-500 58.7 500-1k 58.5 1k-2k 60.4 2k-4k 61.8
+  SPLIT ctl  4.1 in  5.6 shim 14.5 swell  0.2 twin  0.6 tank  2.6 tkctl  4.9 tkloop  8.2 tkout  6.0 tkmix  1.5 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+FLIP SHIMMER HALL->PLATE music W0.5 M0.0 | before  61.0% | worst  61.1% at 6 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 61.1 50-100 57.5 100-150 59.7 150-250 59.7 250-500 57.9 500-1k 50.7 1k-2k 51.1 2k-4k 51.4
+  SPLIT ctl  4.2 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  4.9 tkloop  7.9 tkout  5.6 tkmix  1.4 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+FLIP SHIMMER HALL->MASSIVE music W0.5 M0.0 | before  60.7% | worst  80.2% at 3450 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 61.0 50-100 78.1 100-150 77.5 150-250 79.4 250-500 72.3 500-1k 74.4 1k-2k 76.2 2k-4k 80.2
+  SPLIT ctl  4.0 in  7.0 shim 14.6 swell 10.3 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.5 tkout 10.3 tkmix  1.5 wear  4.4 out  4.9 flip  0.0 tkabs  3.5
+FLIP SHIMMER MASSIVE->HALL music W0.5 M0.0 | before  79.4% | worst  79.5% at 14 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 79.5 50-100 58.8 100-150 57.0 150-250 58.0 250-500 58.1 500-1k 58.0 1k-2k 60.3 2k-4k 61.8
+  SPLIT ctl  4.0 in  6.9 shim 14.6 swell 10.2 twin  0.6 tank  2.6 tkctl  5.4 tkloop 10.3 tkout  9.9 tkmix  1.5 wear  4.4 out  4.8 flip  0.0 tkabs  3.5
+FLIP SHIMMER PLATE->MASSIVE music W0.5 M0.0 | before  50.7% | worst  80.2% at 3391 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 50.9 50-100 79.7 100-150 78.2 150-250 79.6 250-500 72.9 500-1k 75.1 1k-2k 76.3 2k-4k 80.2
+  SPLIT ctl  4.0 in  7.0 shim 14.7 swell 10.4 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.5 tkout 10.3 tkmix  1.4 wear  4.4 out  4.8 flip  0.0 tkabs  3.5
+FLIP SHIMMER MASSIVE->PLATE music W0.5 M0.0 | before  79.5% | worst  79.5% at -1 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 79.5 50-100 58.0 100-150 59.5 150-250 59.9 250-500 57.8 500-1k 50.6 1k-2k 50.9 2k-4k 51.1
+  SPLIT ctl  3.9 in  6.9 shim 14.7 swell 10.3 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.3 tkout 10.0 tkmix  1.3 wear  4.4 out  4.8 flip  0.0 tkabs  3.5
+FLIP BLOOM   PLATE->HALL music W0.5 M0.0 | before  51.2% | worst  61.6% at 3896 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 51.3 50-100 54.8 100-150 54.1 150-250 55.6 250-500 56.5 500-1k 58.5 1k-2k 58.0 2k-4k 61.6
+  SPLIT ctl  4.2 in  5.6 shim  1.8 swell 12.9 twin  0.6 tank  2.6 tkctl  4.9 tkloop  8.2 tkout  6.2 tkmix  1.5 wear  4.4 out  4.5 flip  0.0 tkabs  3.4
+FLIP BLOOM   HALL->PLATE music W0.5 M0.0 | before  60.7% | worst  61.2% at 44 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 61.2 50-100 53.4 100-150 56.4 150-250 56.6 250-500 54.7 500-1k 50.1 1k-2k 50.9 2k-4k 51.6
+  SPLIT ctl  4.1 in  5.6 shim  1.8 swell 12.8 twin  0.6 tank  2.6 tkctl  4.9 tkloop  7.9 tkout  6.0 tkmix  1.5 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+FLIP BLOOM   HALL->MASSIVE music W0.5 M0.0 | before  61.2% | worst  68.9% at 3369 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 61.1 50-100 66.1 100-150 65.6 150-250 66.2 250-500 59.7 500-1k 63.8 1k-2k 66.1 2k-4k 68.9
+  SPLIT ctl  4.1 in  6.9 shim  1.8 swell 13.0 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.5 tkout 10.6 tkmix  1.2 wear  4.4 out  4.8 flip  0.0 tkabs  2.3
+FLIP BLOOM   MASSIVE->HALL music W0.5 M0.0 | before  69.0% | worst  69.1% at 33 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 69.1 50-100 53.5 100-150 53.5 150-250 55.0 250-500 55.9 500-1k 58.0 1k-2k 58.1 2k-4k 61.6
+  SPLIT ctl  4.0 in  6.9 shim  1.8 swell 12.8 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.3 tkout 10.0 tkmix  1.3 wear  4.4 out  4.9 flip  0.0 tkabs  3.5
+FLIP BLOOM   PLATE->MASSIVE music W0.5 M0.0 | before  51.1% | worst  69.1% at 3497 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 50.9 50-100 67.8 100-150 65.8 150-250 67.0 250-500 60.4 500-1k 64.1 1k-2k 66.1 2k-4k 69.1
+  SPLIT ctl  4.1 in  6.9 shim  1.8 swell 12.9 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.5 tkout 10.5 tkmix  1.5 wear  4.4 out  4.9 flip  0.0 tkabs  2.3
+FLIP BLOOM   MASSIVE->PLATE music W0.5 M0.0 | before  69.1% | worst  69.4% at 6 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 69.4 50-100 53.0 100-150 56.4 150-250 56.5 250-500 54.9 500-1k 49.8 1k-2k 50.6 2k-4k 51.2
+  SPLIT ctl  4.0 in  6.9 shim  1.8 swell 12.9 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.4 tkout  9.9 tkmix  1.4 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+SPIKE ABSEXP  MASSIVE playing music   twists  W0.5 M0.0 T0.5 D90 avg  88.2% max  92.4% | late 0 near 3709 of 6000 | max at block 3650 start 0 lines 8 tanks 2 | fading 4990 avg  90.1% max  92.4%
+  SPLIT ctl  4.7 in  9.3 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl  8.9 tkloop 12.7 tkout 13.2 tkmix  1.5 wear  4.4 out  4.9 flip  0.0 tkabs  2.1
+SPIKE ABSEXP  MASSIVE playing music   creep   W0.5 M0.0 T0.5 D90 avg  88.2% max  92.0% | late 0 near 3454 of 6000 | max at block 2482 start 0 lines 8 tanks 2 | fading 5223 avg  89.5% max  92.0%
+  SPLIT ctl  4.3 in  9.3 shim 14.9 swell 11.8 twin  0.6 tank  2.6 tkctl  8.9 tkloop 12.7 tkout 13.4 tkmix  1.4 wear  4.4 out  4.7 flip  0.0 tkabs  2.1
+SPIKE ABSEXP  MASSIVE playing music   sweep   W0.5 M0.0 T0.5 D90 avg  80.5% max  90.7% | late 0 near 173 of 6000 | max at block 2641 start 0 lines 8 tanks 2 | fading 1502 avg  87.3% max  90.7%
+  SPLIT ctl  3.8 in  9.3 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl  8.1 tkloop 12.7 tkout 13.5 tkmix  1.3 wear  4.4 out  4.7 flip  0.0 tkabs  2.1
+SIZESPIKE LAP 2 DONE: 36 lines, worst max  94.8% (SPIKE SHIMMER MASSIVE playing music   sweep   W0.5 M0.0 T0.5 D9), late blocks in all 0, near 17528
+CPUSAVE START (SHIMMER + WEAR 0.5 + MOTION left: SIZE moves, apart, still, SPACE flips, the ABSEXP trial; 36 lines, ~7.5 min a lap)
+SPIKE SHIMMER HALL    playing music   sweep   W0.5 M0.0 T0.5 D90 avg  67.9% max  85.1% | late 0 near 0 of 6000 | max at block 5286 start 0 lines 32 tanks 2 | fading 602 avg  82.8% max  85.1%
+  SPLIT ctl  4.0 in  5.6 shim 14.7 swell  0.2 twin  0.6 tank  2.6 tkctl 10.2 tkloop 20.6 tkout 11.7 tkmix  1.4 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   twists  W0.5 M0.0 T0.5 D90 avg  66.4% max  70.3% | late 0 near 0 of 6000 | max at block 504 start 0 lines 8 tanks 2 | fading 4990 avg  67.3% max  70.3%
+  SPLIT ctl  4.9 in  5.6 shim 14.7 swell  0.2 twin  0.6 tank  2.6 tkctl  9.1 tkloop  9.7 tkout  8.1 tkmix  1.4 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   creep   W0.5 M0.0 T0.5 D90 avg  66.4% max  69.8% | late 0 near 0 of 6000 | max at block 412 start 0 lines 8 tanks 2 | fading 5223 avg  67.0% max  69.8%
+  SPLIT ctl  5.1 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  9.1 tkloop  9.5 tkout  7.5 tkmix  1.3 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   nudge   W0.5 M0.0 T0.5 D90 avg  66.0% max  68.5% | late 0 near 0 of 6000 | max at block 619 start 2 lines 8 tanks 2 | fading 5118 avg  66.8% max  68.5%
+  SPLIT ctl  4.2 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  9.2 tkloop  9.4 tkout  7.6 tkmix  1.2 wear  4.4 out  4.5 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   sweep   W0.5 M0.0 T0.5 D90 avg  81.9% max  94.8% | late 0 near 300 of 6000 | max at block 2623 start 0 lines 8 tanks 2 | fading 1502 avg  88.9% max  94.8%
+  SPLIT ctl  4.0 in  9.3 shim 14.8 swell 11.9 twin  0.6 tank  2.6 tkctl 10.8 tkloop 12.6 tkout 13.4 tkmix  1.3 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   twists  W0.5 M0.0 T0.5 D90 avg  89.6% max  93.8% | late 0 near 4034 of 6000 | max at block 4282 start 0 lines 8 tanks 2 | fading 4990 avg  91.5% max  93.8%
+  SPLIT ctl  4.8 in  9.2 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl  9.0 tkloop 12.8 tkout 13.5 tkmix  1.4 wear  4.4 out  4.5 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   creep   W0.5 M0.0 T0.5 D90 avg  89.5% max  93.3% | late 0 near 4183 of 6000 | max at block 1620 start 0 lines 8 tanks 2 | fading 5223 avg  90.9% max  93.3%
+  SPLIT ctl  4.8 in  9.3 shim 14.8 swell 11.7 twin  0.6 tank  2.6 tkctl  8.6 tkloop 12.8 tkout 13.3 tkmix  1.4 wear  4.4 out  4.5 flip  0.0 tkabs  3.5
+SPIKE SHIMMER MASSIVE playing music   nudge   W0.5 M0.0 T0.5 D90 avg  87.1% max  92.7% | late 0 near 1334 of 6000 | max at block 2306 start 0 lines 8 tanks 2 | fading 5118 avg  88.3% max  92.7%
+  SPLIT ctl  4.0 in  9.1 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl  9.0 tkloop 12.6 tkout 13.3 tkmix  1.4 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER PLATE   playing music   sweep   W0.5 M0.0 T0.5 D90 avg  50.3% max  51.8% | late 0 near 0 of 6000 | max at block 4864 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  3.3 in  6.2 shim 14.6 swell  0.2 twin  0.6 tank 14.5 tkctl  2.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.4 out  4.6 flip  0.0 tkabs  0.0
+SPIKE SHIMMER PLATE   playing music   twists  W0.5 M0.0 T0.5 D90 avg  50.3% max  51.8% | late 0 near 0 of 6000 | max at block 973 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  3.2 in  6.2 shim 14.6 swell  0.3 twin  0.6 tank 14.6 tkctl  2.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.4 out  4.5 flip  0.0 tkabs  0.0
+SPIKE SHIMMER HALL    playing music   sweep   W0.5 M0.5 T0.5 D90 avg  65.4% max  82.7% | late 0 near 0 of 6000 | max at block 5162 start 0 lines 32 tanks 2 | fading 602 avg  80.3% max  82.7%
+  SPLIT ctl  4.2 in  5.6 shim 14.7 swell  0.2 twin  0.6 tank  2.6 tkctl  9.7 tkloop 20.8 tkout 11.6 tkmix  1.3 wear  4.4 out  2.6 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   creep   W0.5 M0.5 T0.5 D90 avg  87.1% max  92.6% | late 0 near 333 of 6000 | max at block 297 start 0 lines 8 tanks 2 | fading 5223 avg  88.5% max  92.6%
+  SPLIT ctl  4.3 in  9.2 shim 14.9 swell 11.8 twin  0.6 tank  2.6 tkctl 10.4 tkloop 12.8 tkout 13.4 tkmix  1.3 wear  4.4 out  2.6 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   sweep   W0.0 M0.0 T0.5 D90 avg  62.9% max  80.0% | late 0 near 0 of 6000 | max at block 5264 start 0 lines 32 tanks 2 | fading 602 avg  77.8% max  80.0%
+  SPLIT ctl  3.9 in  5.3 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl 10.2 tkloop 20.5 tkout 11.6 tkmix  1.4 wear  0.0 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   creep   W0.0 M0.0 T0.5 D90 avg  84.6% max  90.2% | late 0 near 1 of 6000 | max at block 297 start 0 lines 8 tanks 2 | fading 5223 avg  86.0% max  90.2%
+  SPLIT ctl  4.2 in  8.7 shim 14.9 swell 11.7 twin  0.6 tank  2.6 tkctl 10.8 tkloop 12.7 tkout 13.6 tkmix  1.3 wear  0.0 out  4.8 flip  0.0 tkabs  3.5
+SPIKE SHIMMER HALL    playing music   sweep   W0.0 M0.5 T0.5 D90 avg  60.4% max  77.7% | late 0 near 0 of 6000 | max at block 5284 start 0 lines 32 tanks 2 | fading 602 avg  75.3% max  77.7%
+  SPLIT ctl  4.0 in  5.3 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  9.7 tkloop 20.7 tkout 11.6 tkmix  1.4 wear  0.0 out  2.6 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   creep   W0.0 M0.5 T0.5 D90 avg  82.1% max  87.2% | late 0 near 0 of 6000 | max at block 412 start 0 lines 8 tanks 2 | fading 5223 avg  83.4% max  87.2%
+  SPLIT ctl  4.2 in  8.8 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl 10.6 tkloop 12.2 tkout 13.3 tkmix  1.4 wear  0.0 out  2.6 flip  0.0 tkabs  3.4
+SPIKE BLOOM   HALL    playing music   sweep   W0.5 M0.0 T0.5 D90 avg  67.0% max  83.6% | late 0 near 0 of 6000 | max at block 2645 start 0 lines 32 tanks 2 | fading 602 avg  80.6% max  83.6%
+  SPLIT ctl  4.2 in  5.6 shim  1.8 swell 12.7 twin  0.6 tank  2.6 tkctl  8.9 tkloop 20.6 tkout 11.7 tkmix  1.3 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE BLOOM   MASSIVE playing music   creep   W0.5 M0.0 T0.5 D90 avg  80.4% max  85.5% | late 0 near 0 of 6000 | max at block 412 start 0 lines 8 tanks 2 | fading 5223 avg  81.9% max  85.5%
+  SPLIT ctl  4.7 in  8.8 shim  1.8 swell 15.5 twin  0.6 tank  2.6 tkctl 10.7 tkloop 12.5 tkout 13.3 tkmix  1.3 wear  4.4 out  4.8 flip  0.0 tkabs  3.5
+SPIKE SHIMMER PLATE   playing music   still   W0.5 M0.0 T0.5 D90 avg  50.3% max  51.7% | late 0 near 0 of 4000 | max at block 504 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  3.5 in  6.2 shim 14.7 swell  0.2 twin  0.6 tank 14.0 tkctl  2.5 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.4 out  4.6 flip  0.0 tkabs  0.0
+SPIKE SHIMMER HALL    playing music   still   W0.5 M0.0 T0.5 D90 avg  60.3% max  61.2% | late 0 near 0 of 4000 | max at block 3618 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  4.1 in  5.6 shim 14.5 swell  0.2 twin  0.6 tank  2.6 tkctl  4.9 tkloop  7.9 tkout  5.6 tkmix  1.4 wear  4.4 out  4.9 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   still   W0.5 M0.0 T0.5 D90 avg  78.6% max  79.8% | late 0 near 0 of 4000 | max at block 374 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  4.0 in  6.9 shim 14.7 swell 10.1 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.3 tkout 10.3 tkmix  1.4 wear  4.4 out  4.9 flip  0.0 tkabs  3.5
+FLIP SHIMMER PLATE->HALL music W0.5 M0.0 | before  50.7% | worst  61.6% at 3434 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 50.9 50-100 59.9 100-150 56.9 150-250 58.4 250-500 58.7 500-1k 58.5 1k-2k 60.3 2k-4k 61.6
+  SPLIT ctl  4.1 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  4.9 tkloop  8.2 tkout  5.9 tkmix  1.4 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+FLIP SHIMMER HALL->PLATE music W0.5 M0.0 | before  61.1% | worst  61.1% at 8 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 61.1 50-100 58.2 100-150 60.2 150-250 59.7 250-500 58.1 500-1k 50.5 1k-2k 51.4 2k-4k 51.5
+  SPLIT ctl  4.3 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  4.9 tkloop  7.9 tkout  5.6 tkmix  1.4 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+FLIP SHIMMER HALL->MASSIVE music W0.5 M0.0 | before  60.8% | worst  80.2% at 3419 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 61.2 50-100 78.3 100-150 77.7 150-250 79.1 250-500 72.2 500-1k 74.4 1k-2k 76.2 2k-4k 80.2
+  SPLIT ctl  4.0 in  7.0 shim 14.6 swell 10.3 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.4 tkout 10.5 tkmix  1.3 wear  4.4 out  4.9 flip  0.0 tkabs  3.4
+FLIP SHIMMER MASSIVE->HALL music W0.5 M0.0 | before  79.3% | worst  79.3% at 26 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 79.3 50-100 58.7 100-150 56.3 150-250 58.0 250-500 58.1 500-1k 58.0 1k-2k 60.4 2k-4k 61.6
+  SPLIT ctl  4.0 in  6.9 shim 14.6 swell 10.2 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.2 tkout  9.8 tkmix  1.4 wear  4.4 out  4.8 flip  0.0 tkabs  3.5
+FLIP SHIMMER PLATE->MASSIVE music W0.5 M0.0 | before  50.9% | worst  80.2% at 3395 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 51.2 50-100 79.6 100-150 78.3 150-250 79.8 250-500 72.9 500-1k 74.9 1k-2k 76.2 2k-4k 80.2
+  SPLIT ctl  3.9 in  7.0 shim 14.6 swell 10.4 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.5 tkout 10.4 tkmix  1.3 wear  4.4 out  4.8 flip  0.0 tkabs  3.5
+FLIP SHIMMER MASSIVE->PLATE music W0.5 M0.0 | before  79.2% | worst  79.3% at 5 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 79.3 50-100 57.6 100-150 60.0 150-250 59.7 250-500 58.1 500-1k 50.5 1k-2k 51.3 2k-4k 51.4
+  SPLIT ctl  3.9 in  6.9 shim 14.6 swell 10.1 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.3 tkout 10.1 tkmix  1.3 wear  4.4 out  4.8 flip  0.0 tkabs  3.5
+FLIP BLOOM   PLATE->HALL music W0.5 M0.0 | before  50.9% | worst  61.3% at 3840 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 50.8 50-100 54.5 100-150 54.4 150-250 55.7 250-500 56.8 500-1k 58.4 1k-2k 58.0 2k-4k 61.3
+  SPLIT ctl  4.3 in  5.6 shim  1.8 swell 12.8 twin  0.6 tank  2.6 tkctl  4.8 tkloop  8.2 tkout  5.9 tkmix  1.5 wear  4.4 out  4.5 flip  0.0 tkabs  3.4
+FLIP BLOOM   HALL->PLATE music W0.5 M0.0 | before  60.8% | worst  61.0% at 46 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 61.0 50-100 52.7 100-150 56.4 150-250 56.2 250-500 55.1 500-1k 50.1 1k-2k 50.5 2k-4k 51.1
+  SPLIT ctl  4.3 in  5.6 shim  1.8 swell 12.8 twin  0.6 tank  2.6 tkctl  4.9 tkloop  7.9 tkout  5.6 tkmix  1.3 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+FLIP BLOOM   HALL->MASSIVE music W0.5 M0.0 | before  60.8% | worst  68.9% at 3471 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 60.9 50-100 66.0 100-150 65.1 150-250 66.4 250-500 59.7 500-1k 63.8 1k-2k 66.1 2k-4k 68.9
+  SPLIT ctl  4.1 in  6.9 shim  1.8 swell 12.9 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.5 tkout 10.6 tkmix  1.3 wear  4.4 out  4.8 flip  0.0 tkabs  2.3
+FLIP BLOOM   MASSIVE->HALL music W0.5 M0.0 | before  69.3% | worst  69.4% at 18 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 69.4 50-100 53.7 100-150 53.7 150-250 55.2 250-500 55.8 500-1k 57.9 1k-2k 58.0 2k-4k 61.5
+  SPLIT ctl  4.0 in  7.0 shim  1.8 swell 13.0 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.1 tkout 10.0 tkmix  1.4 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+FLIP BLOOM   PLATE->MASSIVE music W0.5 M0.0 | before  50.9% | worst  68.9% at 3425 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 51.1 50-100 68.0 100-150 66.0 150-250 67.2 250-500 60.3 500-1k 64.2 1k-2k 66.2 2k-4k 68.9
+  SPLIT ctl  4.0 in  7.0 shim  1.8 swell 13.0 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.5 tkout 10.3 tkmix  1.5 wear  4.4 out  4.9 flip  0.0 tkabs  2.3
+FLIP BLOOM   MASSIVE->PLATE music W0.5 M0.0 | before  69.2% | worst  69.2% at -150 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 69.2 50-100 53.7 100-150 56.6 150-250 56.3 250-500 55.1 500-1k 50.1 1k-2k 50.3 2k-4k 51.3
+  SPLIT ctl  4.0 in  7.0 shim  1.8 swell 13.0 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.5 tkout  9.8 tkmix  1.4 wear  4.4 out  4.5 flip  0.0 tkabs  3.4
+SPIKE ABSEXP  MASSIVE playing music   twists  W0.5 M0.0 T0.5 D90 avg  88.2% max  92.6% | late 0 near 3580 of 6000 | max at block 3603 start 0 lines 8 tanks 2 | fading 4990 avg  90.1% max  92.6%
+  SPLIT ctl  4.9 in  9.3 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl  8.9 tkloop 12.8 tkout 13.4 tkmix  1.3 wear  4.4 out  4.8 flip  0.0 tkabs  2.1
+SPIKE ABSEXP  MASSIVE playing music   creep   W0.5 M0.0 T0.5 D90 avg  88.2% max  92.1% | late 0 near 3584 of 6000 | max at block 1677 start 0 lines 8 tanks 2 | fading 5223 avg  89.6% max  92.1%
+  SPLIT ctl  4.9 in  9.1 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl  8.8 tkloop 12.7 tkout 13.4 tkmix  1.3 wear  4.4 out  4.5 flip  0.0 tkabs  2.1
+SPIKE ABSEXP  MASSIVE playing music   sweep   W0.5 M0.0 T0.5 D90 avg  80.6% max  90.7% | late 0 near 105 of 6000 | max at block 2646 start 0 lines 8 tanks 2 | fading 1502 avg  87.3% max  90.7%
+  SPLIT ctl  4.0 in  9.2 shim 14.8 swell 11.9 twin  0.6 tank  2.6 tkctl  8.1 tkloop 12.6 tkout 13.4 tkmix  1.5 wear  4.4 out  4.7 flip  0.0 tkabs  2.1
+SIZESPIKE LAP 3 DONE: 36 lines, worst max  94.8% (SPIKE SHIMMER MASSIVE playing music   sweep   W0.5 M0.0 T0.5 D9), late blocks in all 0, near 17454
+CPUSAVE START (SHIMMER + WEAR 0.5 + MOTION left: SIZE moves, apart, still, SPACE flips, the ABSEXP trial; 36 lines, ~7.5 min a lap)
+SPIKE SHIMMER HALL    playing music   sweep   W0.5 M0.0 T0.5 D90 avg  67.8% max  85.2% | late 0 near 0 of 6000 | max at block 5270 start 0 lines 32 tanks 2 | fading 602 avg  83.1% max  85.2%
+  SPLIT ctl  4.3 in  5.6 shim 14.7 swell  0.2 twin  0.6 tank  2.6 tkctl 10.1 tkloop 20.5 tkout 11.6 tkmix  1.4 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   twists  W0.5 M0.0 T0.5 D90 avg  66.4% max  70.2% | late 0 near 0 of 6000 | max at block 494 start 0 lines 8 tanks 2 | fading 4990 avg  67.3% max  70.2%
+  SPLIT ctl  4.6 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  9.2 tkloop  9.7 tkout  8.1 tkmix  1.4 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   creep   W0.5 M0.0 T0.5 D90 avg  66.4% max  69.3% | late 0 near 0 of 6000 | max at block 412 start 0 lines 8 tanks 2 | fading 5223 avg  67.1% max  69.3%
+  SPLIT ctl  4.6 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  9.1 tkloop  9.4 tkout  7.7 tkmix  1.3 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   nudge   W0.5 M0.0 T0.5 D90 avg  66.0% max  68.4% | late 0 near 0 of 6000 | max at block 503 start 0 lines 8 tanks 2 | fading 5118 avg  66.8% max  68.4%
+  SPLIT ctl  4.2 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  8.4 tkloop  9.7 tkout  7.6 tkmix  1.4 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   sweep   W0.5 M0.0 T0.5 D90 avg  81.9% max  95.1% | late 0 near 300 of 6000 | max at block 2619 start 0 lines 8 tanks 2 | fading 1502 avg  88.9% max  95.1%
+  SPLIT ctl  4.0 in  9.2 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl 10.8 tkloop 12.8 tkout 13.6 tkmix  1.3 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   twists  W0.5 M0.0 T0.5 D90 avg  89.6% max  94.0% | late 0 near 4054 of 6000 | max at block 500 start 0 lines 8 tanks 2 | fading 4990 avg  91.5% max  94.0%
+  SPLIT ctl  4.8 in  9.3 shim 14.9 swell 11.8 twin  0.6 tank  2.6 tkctl  8.8 tkloop 12.6 tkout 13.6 tkmix  1.4 wear  4.4 out  4.7 flip  0.0 tkabs  3.5
+SPIKE SHIMMER MASSIVE playing music   creep   W0.5 M0.0 T0.5 D90 avg  89.5% max  93.3% | late 0 near 4177 of 6000 | max at block 757 start 0 lines 8 tanks 2 | fading 5223 avg  90.9% max  93.3%
+  SPLIT ctl  4.8 in  9.3 shim 14.8 swell 11.7 twin  0.6 tank  2.6 tkctl  8.8 tkloop 12.5 tkout 13.6 tkmix  1.3 wear  4.4 out  4.5 flip  0.0 tkabs  3.5
+SPIKE SHIMMER MASSIVE playing music   nudge   W0.5 M0.0 T0.5 D90 avg  87.1% max  92.7% | late 0 near 1333 of 6000 | max at block 3472 start 0 lines 8 tanks 2 | fading 5118 avg  88.3% max  92.7%
+  SPLIT ctl  4.0 in  9.1 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl  8.8 tkloop 12.7 tkout 13.7 tkmix  1.4 wear  4.4 out  4.5 flip  0.0 tkabs  3.5
+SPIKE SHIMMER PLATE   playing music   sweep   W0.5 M0.0 T0.5 D90 avg  50.3% max  51.9% | late 0 near 0 of 6000 | max at block 5230 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  3.3 in  6.2 shim 14.6 swell  0.3 twin  0.6 tank 14.4 tkctl  2.5 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.4 out  4.7 flip  0.0 tkabs  0.0
+SPIKE SHIMMER PLATE   playing music   twists  W0.5 M0.0 T0.5 D90 avg  50.3% max  52.0% | late 0 near 0 of 6000 | max at block 1624 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  3.4 in  6.2 shim 14.6 swell  0.2 twin  0.6 tank 14.7 tkctl  2.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.4 out  4.4 flip  0.0 tkabs  0.0
+SPIKE SHIMMER HALL    playing music   sweep   W0.5 M0.5 T0.5 D90 avg  65.3% max  82.6% | late 0 near 0 of 6000 | max at block 5356 start 0 lines 32 tanks 2 | fading 602 avg  80.4% max  82.6%
+  SPLIT ctl  4.1 in  5.6 shim 14.7 swell  0.2 twin  0.6 tank  2.6 tkctl  9.7 tkloop 20.8 tkout 11.5 tkmix  1.4 wear  4.4 out  2.6 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   creep   W0.5 M0.5 T0.5 D90 avg  87.1% max  92.1% | late 0 near 311 of 6000 | max at block 354 start 0 lines 8 tanks 2 | fading 5223 avg  88.5% max  92.1%
+  SPLIT ctl  4.4 in  9.0 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl 10.6 tkloop 12.5 tkout 13.0 tkmix  1.4 wear  4.4 out  2.6 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   sweep   W0.0 M0.0 T0.5 D90 avg  62.8% max  80.2% | late 0 near 0 of 6000 | max at block 5234 start 0 lines 32 tanks 2 | fading 602 avg  78.0% max  80.2%
+  SPLIT ctl  3.9 in  5.3 shim 14.7 swell  0.2 twin  0.6 tank  2.6 tkctl 10.1 tkloop 20.7 tkout 11.6 tkmix  1.4 wear  0.0 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   creep   W0.0 M0.0 T0.5 D90 avg  84.6% max  89.9% | late 0 near 0 of 6000 | max at block 239 start 0 lines 8 tanks 2 | fading 5223 avg  86.0% max  89.9%
+  SPLIT ctl  4.2 in  8.8 shim 14.8 swell 11.7 twin  0.6 tank  2.6 tkctl 10.8 tkloop 12.6 tkout 13.4 tkmix  1.3 wear  0.0 out  4.9 flip  0.0 tkabs  3.5
+SPIKE SHIMMER HALL    playing music   sweep   W0.0 M0.5 T0.5 D90 avg  60.3% max  77.5% | late 0 near 0 of 6000 | max at block 5365 start 0 lines 32 tanks 2 | fading 602 avg  75.3% max  77.5%
+  SPLIT ctl  3.9 in  5.3 shim 14.7 swell  0.2 twin  0.6 tank  2.6 tkctl  9.7 tkloop 20.7 tkout 11.6 tkmix  1.3 wear  0.0 out  2.6 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   creep   W0.0 M0.5 T0.5 D90 avg  82.0% max  87.0% | late 0 near 0 of 6000 | max at block 354 start 0 lines 8 tanks 2 | fading 5223 avg  83.4% max  87.0%
+  SPLIT ctl  4.0 in  8.7 shim 14.8 swell 11.7 twin  0.6 tank  2.6 tkctl 10.6 tkloop 12.5 tkout 13.1 tkmix  1.4 wear  0.0 out  2.6 flip  0.0 tkabs  3.4
+SPIKE BLOOM   HALL    playing music   sweep   W0.5 M0.0 T0.5 D90 avg  67.1% max  83.5% | late 0 near 0 of 6000 | max at block 2645 start 0 lines 32 tanks 2 | fading 602 avg  81.0% max  83.5%
+  SPLIT ctl  4.1 in  5.6 shim  1.8 swell 12.9 twin  0.6 tank  2.6 tkctl  9.0 tkloop 20.5 tkout 11.6 tkmix  1.3 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE BLOOM   MASSIVE playing music   creep   W0.5 M0.0 T0.5 D90 avg  80.4% max  85.6% | late 0 near 0 of 6000 | max at block 354 start 0 lines 8 tanks 2 | fading 5223 avg  82.0% max  85.6%
+  SPLIT ctl  4.5 in  8.9 shim  1.8 swell 15.3 twin  0.6 tank  2.6 tkctl 10.8 tkloop 12.7 tkout 13.4 tkmix  1.4 wear  4.4 out  4.8 flip  0.0 tkabs  3.5
+SPIKE SHIMMER PLATE   playing music   still   W0.5 M0.0 T0.5 D90 avg  50.3% max  51.8% | late 0 near 0 of 4000 | max at block 1051 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  3.7 in  6.2 shim 14.6 swell  0.2 twin  0.6 tank 14.3 tkctl  2.5 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.4 out  4.5 flip  0.0 tkabs  0.0
+SPIKE SHIMMER HALL    playing music   still   W0.5 M0.0 T0.5 D90 avg  60.3% max  61.3% | late 0 near 0 of 4000 | max at block 3642 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  4.2 in  5.6 shim 14.5 swell  0.2 twin  0.6 tank  2.6 tkctl  4.9 tkloop  8.0 tkout  5.6 tkmix  1.5 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   still   W0.5 M0.0 T0.5 D90 avg  78.7% max  79.6% | late 0 near 0 of 4000 | max at block 3625 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  4.0 in  6.8 shim 14.6 swell 10.2 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.2 tkout 10.2 tkmix  1.3 wear  4.4 out  4.9 flip  0.0 tkabs  3.4
+FLIP SHIMMER PLATE->HALL music W0.5 M0.0 | before  50.7% | worst  61.6% at 3401 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 50.8 50-100 59.7 100-150 57.6 150-250 58.3 250-500 58.6 500-1k 58.5 1k-2k 60.3 2k-4k 61.6
+  SPLIT ctl  4.2 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  4.9 tkloop  8.1 tkout  5.9 tkmix  1.4 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+FLIP SHIMMER HALL->PLATE music W0.5 M0.0 | before  61.0% | worst  61.0% at -4 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 60.9 50-100 57.9 100-150 59.3 150-250 59.6 250-500 57.7 500-1k 50.3 1k-2k 51.1 2k-4k 51.8
+  SPLIT ctl  3.9 in  5.6 shim 14.5 swell  0.2 twin  0.6 tank  2.6 tkctl  4.9 tkloop  7.9 tkout  5.7 tkmix  1.5 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+FLIP SHIMMER HALL->MASSIVE music W0.5 M0.0 | before  60.9% | worst  80.2% at 3497 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 61.1 50-100 78.1 100-150 77.7 150-250 79.2 250-500 72.1 500-1k 74.4 1k-2k 76.2 2k-4k 80.2
+  SPLIT ctl  3.9 in  6.9 shim 14.6 swell 10.4 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.5 tkout 10.4 tkmix  1.3 wear  4.4 out  4.9 flip  0.0 tkabs  3.4
+FLIP SHIMMER MASSIVE->HALL music W0.5 M0.0 | before  79.1% | worst  79.3% at 5 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 79.3 50-100 58.8 100-150 56.6 150-250 57.7 250-500 58.0 500-1k 58.0 1k-2k 60.4 2k-4k 61.8
+  SPLIT ctl  3.9 in  7.0 shim 14.6 swell 10.3 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.2 tkout  9.9 tkmix  1.3 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+FLIP SHIMMER PLATE->MASSIVE music W0.5 M0.0 | before  51.0% | worst  80.1% at 3488 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 51.1 50-100 79.4 100-150 78.4 150-250 79.9 250-500 73.0 500-1k 74.7 1k-2k 76.3 2k-4k 80.1
+  SPLIT ctl  3.9 in  6.9 shim 14.6 swell 10.3 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.5 tkout 10.4 tkmix  1.4 wear  4.4 out  4.9 flip  0.0 tkabs  3.5
+FLIP SHIMMER MASSIVE->PLATE music W0.5 M0.0 | before  79.2% | worst  79.3% at 22 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 79.3 50-100 57.7 100-150 59.5 150-250 59.8 250-500 57.6 500-1k 50.8 1k-2k 51.1 2k-4k 51.6
+  SPLIT ctl  4.0 in  7.0 shim 14.6 swell 10.3 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.2 tkout  9.8 tkmix  1.3 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+FLIP BLOOM   PLATE->HALL music W0.5 M0.0 | before  51.1% | worst  61.3% at 3972 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 50.8 50-100 54.3 100-150 53.9 150-250 55.7 250-500 56.5 500-1k 58.6 1k-2k 58.0 2k-4k 61.3
+  SPLIT ctl  4.0 in  5.6 shim  1.8 swell 12.9 twin  0.6 tank  2.6 tkctl  4.9 tkloop  8.1 tkout  6.1 tkmix  1.4 wear  4.4 out  4.5 flip  0.0 tkabs  3.4
+FLIP BLOOM   HALL->PLATE music W0.5 M0.0 | before  60.9% | worst  61.1% at 46 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 61.1 50-100 53.1 100-150 56.6 150-250 56.4 250-500 55.5 500-1k 49.7 1k-2k 50.9 2k-4k 51.2
+  SPLIT ctl  4.1 in  5.6 shim  1.8 swell 12.9 twin  0.6 tank  2.6 tkctl  4.9 tkloop  8.0 tkout  5.6 tkmix  1.5 wear  4.4 out  4.9 flip  0.0 tkabs  3.4
+FLIP BLOOM   HALL->MASSIVE music W0.5 M0.0 | before  60.7% | worst  68.8% at 3429 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 60.8 50-100 66.4 100-150 65.3 150-250 66.5 250-500 59.6 500-1k 63.6 1k-2k 66.1 2k-4k 68.8
+  SPLIT ctl  4.0 in  6.9 shim  1.8 swell 13.0 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.5 tkout 10.3 tkmix  1.4 wear  4.4 out  4.8 flip  0.0 tkabs  2.3
+FLIP BLOOM   MASSIVE->HALL music W0.5 M0.0 | before  69.1% | worst  69.2% at 9 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 69.2 50-100 53.2 100-150 53.6 150-250 55.1 250-500 55.9 500-1k 57.8 1k-2k 58.2 2k-4k 61.5
+  SPLIT ctl  3.9 in  6.9 shim  1.8 swell 12.9 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.4 tkout  9.9 tkmix  1.3 wear  4.4 out  4.8 flip  0.0 tkabs  3.5
+FLIP BLOOM   PLATE->MASSIVE music W0.5 M0.0 | before  50.8% | worst  68.6% at 3441 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 51.1 50-100 68.1 100-150 66.2 150-250 67.1 250-500 60.2 500-1k 64.2 1k-2k 66.0 2k-4k 68.6
+  SPLIT ctl  3.8 in  6.9 shim  1.8 swell 12.9 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.6 tkout 10.3 tkmix  1.3 wear  4.4 out  4.9 flip  0.0 tkabs  2.3
+FLIP BLOOM   MASSIVE->PLATE music W0.5 M0.0 | before  68.9% | worst  69.2% at 0 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 69.2 50-100 53.7 100-150 56.3 150-250 56.7 250-500 54.7 500-1k 49.8 1k-2k 51.0 2k-4k 51.4
+  SPLIT ctl  4.1 in  6.9 shim  1.8 swell 13.0 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.3 tkout  9.8 tkmix  1.4 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+SPIKE ABSEXP  MASSIVE playing music   twists  W0.5 M0.0 T0.5 D90 avg  88.2% max  92.7% | late 0 near 3620 of 6000 | max at block 2210 start 0 lines 8 tanks 2 | fading 4990 avg  90.1% max  92.7%
+  SPLIT ctl  5.0 in  9.4 shim 14.7 swell 11.8 twin  0.6 tank  2.6 tkctl  8.9 tkloop 12.6 tkout 13.4 tkmix  1.4 wear  4.4 out  4.7 flip  0.0 tkabs  2.1
+SPIKE ABSEXP  MASSIVE playing music   creep   W0.5 M0.0 T0.5 D90 avg  88.2% max  92.1% | late 0 near 3552 of 6000 | max at block 1045 start 0 lines 8 tanks 2 | fading 5223 avg  89.6% max  92.1%
+  SPLIT ctl  4.5 in  9.4 shim 14.8 swell 11.9 twin  0.6 tank  2.6 tkctl  8.7 tkloop 12.7 tkout 13.6 tkmix  1.3 wear  4.4 out  4.5 flip  0.0 tkabs  2.1
+SPIKE ABSEXP  MASSIVE playing music   sweep   W0.5 M0.0 T0.5 D90 avg  80.5% max  90.7% | late 0 near 104 of 6000 | max at block 2579 start 0 lines 8 tanks 2 | fading 1502 avg  87.2% max  90.7%
+  SPLIT ctl  4.1 in  9.2 shim 14.8 swell 11.9 twin  0.6 tank  2.6 tkctl  7.9 tkloop 12.7 tkout 13.4 tkmix  1.3 wear  4.4 out  4.7 flip  0.0 tkabs  2.1
+SIZESPIKE LAP 4 DONE: 36 lines, worst max  95.1% (SPIKE SHIMMER MASSIVE playing music   sweep   W0.5 M0.0 T0.5 D9), late blocks in all 0, near 17451
+CPUSAVE START (SHIMMER + WEAR 0.5 + MOTION left: SIZE moves, apart, still, SPACE flips, the ABSEXP trial; 36 lines, ~7.5 min a lap)
+SPIKE SHIMMER HALL    playing music   sweep   W0.5 M0.0 T0.5 D90 avg  67.9% max  85.2% | late 0 near 0 of 6000 | max at block 5238 start 0 lines 32 tanks 2 | fading 602 avg  83.1% max  85.2%
+  SPLIT ctl  4.1 in  5.6 shim 14.7 swell  0.2 twin  0.6 tank  2.6 tkctl 10.1 tkloop 20.8 tkout 11.4 tkmix  1.4 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   twists  W0.5 M0.0 T0.5 D90 avg  66.4% max  70.2% | late 0 near 0 of 6000 | max at block 472 start 0 lines 8 tanks 2 | fading 4990 avg  67.3% max  70.2%
+  SPLIT ctl  4.9 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  9.2 tkloop  9.7 tkout  7.8 tkmix  1.4 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   creep   W0.5 M0.0 T0.5 D90 avg  66.4% max  69.4% | late 0 near 0 of 6000 | max at block 412 start 0 lines 8 tanks 2 | fading 5223 avg  67.0% max  69.4%
+  SPLIT ctl  4.7 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  9.0 tkloop  9.5 tkout  7.6 tkmix  1.4 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   nudge   W0.5 M0.0 T0.5 D90 avg  66.0% max  68.9% | late 0 near 0 of 6000 | max at block 580 start 0 lines 8 tanks 2 | fading 5118 avg  66.8% max  68.9%
+  SPLIT ctl  4.2 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  8.9 tkloop  9.6 tkout  7.8 tkmix  1.3 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   sweep   W0.5 M0.0 T0.5 D90 avg  81.9% max  95.3% | late 0 near 300 of 6000 | max at block 2604 start 0 lines 8 tanks 2 | fading 1502 avg  89.0% max  95.3%
+  SPLIT ctl  4.0 in  9.3 shim 14.8 swell 11.9 twin  0.6 tank  2.6 tkctl 10.8 tkloop 12.7 tkout 13.5 tkmix  1.5 wear  4.4 out  4.6 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   twists  W0.5 M0.0 T0.5 D90 avg  89.6% max  93.9% | late 0 near 4029 of 6000 | max at block 490 start 0 lines 8 tanks 2 | fading 4990 avg  91.4% max  93.9%
+  SPLIT ctl  4.7 in  9.2 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl  8.8 tkloop 12.8 tkout 13.6 tkmix  1.5 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   creep   W0.5 M0.0 T0.5 D90 avg  89.5% max  93.4% | late 0 near 4181 of 6000 | max at block 1103 start 0 lines 8 tanks 2 | fading 5223 avg  90.9% max  93.4%
+  SPLIT ctl  4.8 in  9.3 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl  8.9 tkloop 12.6 tkout 13.4 tkmix  1.2 wear  4.4 out  4.5 flip  0.0 tkabs  3.5
+SPIKE SHIMMER MASSIVE playing music   nudge   W0.5 M0.0 T0.5 D90 avg  87.1% max  93.0% | late 0 near 1334 of 6000 | max at block 3604 start 0 lines 8 tanks 2 | fading 5118 avg  88.3% max  93.0%
+  SPLIT ctl  3.9 in  9.2 shim 14.8 swell 11.9 twin  0.6 tank  2.6 tkctl  8.9 tkloop 12.6 tkout 13.5 tkmix  1.4 wear  4.4 out  4.8 flip  0.0 tkabs  3.5
+SPIKE SHIMMER PLATE   playing music   sweep   W0.5 M0.0 T0.5 D90 avg  50.3% max  52.0% | late 0 near 0 of 6000 | max at block 2342 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  3.5 in  6.2 shim 14.6 swell  0.3 twin  0.6 tank 14.4 tkctl  2.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.4 out  4.7 flip  0.0 tkabs  0.0
+SPIKE SHIMMER PLATE   playing music   twists  W0.5 M0.0 T0.5 D90 avg  50.3% max  51.7% | late 0 near 0 of 6000 | max at block 1082 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  3.7 in  6.2 shim 14.6 swell  0.2 twin  0.6 tank 14.1 tkctl  2.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.4 out  4.4 flip  0.0 tkabs  0.0
+SPIKE SHIMMER HALL    playing music   sweep   W0.5 M0.5 T0.5 D90 avg  65.4% max  82.6% | late 0 near 0 of 6000 | max at block 5350 start 0 lines 32 tanks 2 | fading 602 avg  80.5% max  82.6%
+  SPLIT ctl  4.3 in  5.6 shim 14.7 swell  0.2 twin  0.6 tank  2.6 tkctl  9.7 tkloop 20.7 tkout 11.4 tkmix  1.4 wear  4.4 out  2.6 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   creep   W0.5 M0.5 T0.5 D90 avg  87.1% max  91.9% | late 0 near 336 of 6000 | max at block 239 start 0 lines 8 tanks 2 | fading 5223 avg  88.5% max  91.9%
+  SPLIT ctl  4.4 in  9.1 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl 10.3 tkloop 12.5 tkout 13.3 tkmix  1.3 wear  4.4 out  2.6 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   sweep   W0.0 M0.0 T0.5 D90 avg  62.9% max  80.1% | late 0 near 0 of 6000 | max at block 5229 start 0 lines 32 tanks 2 | fading 602 avg  78.1% max  80.1%
+  SPLIT ctl  4.0 in  5.3 shim 14.7 swell  0.2 twin  0.6 tank  2.6 tkctl 10.2 tkloop 20.5 tkout 11.6 tkmix  1.4 wear  0.0 out  4.7 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   creep   W0.0 M0.0 T0.5 D90 avg  84.6% max  90.2% | late 0 near 2 of 6000 | max at block 402 start 0 lines 8 tanks 2 | fading 5223 avg  86.0% max  90.2%
+  SPLIT ctl  3.7 in  8.9 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl 11.0 tkloop 12.6 tkout 13.5 tkmix  1.5 wear  0.0 out  4.8 flip  0.0 tkabs  3.4
+SPIKE SHIMMER HALL    playing music   sweep   W0.0 M0.5 T0.5 D90 avg  60.4% max  77.5% | late 0 near 0 of 6000 | max at block 5365 start 0 lines 32 tanks 2 | fading 602 avg  75.3% max  77.5%
+  SPLIT ctl  3.9 in  5.3 shim 14.7 swell  0.2 twin  0.6 tank  2.6 tkctl  9.7 tkloop 20.6 tkout 11.7 tkmix  1.2 wear  0.0 out  2.6 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   creep   W0.0 M0.5 T0.5 D90 avg  82.0% max  87.0% | late 0 near 0 of 6000 | max at block 402 start 0 lines 8 tanks 2 | fading 5223 avg  83.4% max  87.0%
+  SPLIT ctl  3.7 in  8.9 shim 14.8 swell 11.8 twin  0.6 tank  2.6 tkctl 10.4 tkloop 12.7 tkout 13.3 tkmix  1.3 wear  0.0 out  2.6 flip  0.0 tkabs  3.5
+SPIKE BLOOM   HALL    playing music   sweep   W0.5 M0.0 T0.5 D90 avg  67.1% max  83.6% | late 0 near 0 of 6000 | max at block 2624 start 0 lines 32 tanks 2 | fading 602 avg  80.9% max  83.6%
+  SPLIT ctl  4.3 in  5.6 shim  1.8 swell 12.6 twin  0.6 tank  2.6 tkctl  8.8 tkloop 20.4 tkout 11.9 tkmix  1.4 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE BLOOM   MASSIVE playing music   creep   W0.5 M0.0 T0.5 D90 avg  80.4% max  85.8% | late 0 near 0 of 6000 | max at block 354 start 0 lines 8 tanks 2 | fading 5223 avg  81.9% max  85.8%
+  SPLIT ctl  4.8 in  8.9 shim  1.8 swell 15.4 twin  0.6 tank  2.6 tkctl 10.9 tkloop 12.5 tkout 13.2 tkmix  1.5 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+SPIKE SHIMMER PLATE   playing music   still   W0.5 M0.0 T0.5 D90 avg  50.3% max  51.4% | late 0 near 0 of 4000 | max at block 2980 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  3.4 in  6.2 shim 14.6 swell  0.2 twin  0.6 tank 14.2 tkctl  2.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.4 out  4.5 flip  0.0 tkabs  0.0
+SPIKE SHIMMER HALL    playing music   still   W0.5 M0.0 T0.5 D90 avg  60.3% max  61.2% | late 0 near 0 of 4000 | max at block 330 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  4.2 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  4.9 tkloop  8.0 tkout  5.6 tkmix  1.3 wear  4.4 out  4.9 flip  0.0 tkabs  3.4
+SPIKE SHIMMER MASSIVE playing music   still   W0.5 M0.0 T0.5 D90 avg  78.7% max  79.8% | late 0 near 0 of 4000 | max at block 242 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  4.0 in  6.9 shim 14.7 swell 10.2 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.4 tkout 10.0 tkmix  1.5 wear  4.4 out  4.9 flip  0.0 tkabs  3.5
+FLIP SHIMMER PLATE->HALL music W0.5 M0.0 | before  50.6% | worst  61.8% at 3630 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 50.9 50-100 59.9 100-150 57.3 150-250 58.4 250-500 58.6 500-1k 58.4 1k-2k 60.3 2k-4k 61.8
+  SPLIT ctl  4.2 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  4.9 tkloop  8.1 tkout  6.1 tkmix  1.5 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+FLIP SHIMMER HALL->PLATE music W0.5 M0.0 | before  60.8% | worst  61.0% at 6 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 61.0 50-100 57.7 100-150 59.3 150-250 60.1 250-500 57.9 500-1k 50.5 1k-2k 51.1 2k-4k 51.3
+  SPLIT ctl  4.2 in  5.6 shim 14.6 swell  0.2 twin  0.6 tank  2.6 tkctl  4.9 tkloop  8.0 tkout  5.6 tkmix  1.3 wear  4.4 out  4.8 flip  0.0 tkabs  3.4
+FLIP SHIMMER HALL->MASSIVE music W0.5 M0.0 | before  61.0% | worst  80.1% at 3498 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 60.9 50-100 78.0 100-150 77.6 150-250 79.3 250-500 72.3 500-1k 74.7 1k-2k 76.2 2k-4k 80.1
+  SPLIT ctl  3.7 in  7.0 shim 14.6 swell 10.3 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.6 tkout 10.3 tkmix  1.5 wear  4.4 out  4.9 flip  0.0 tkabs  3.4
+FLIP SHIMMER MASSIVE->HALL music W0.5 M0.0 | before  79.2% | worst  79.3% at 47 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 79.3 50-100 58.9 100-150 56.7 150-250 57.8 250-500 58.0 500-1k 57.9 1k-2k 60.2 2k-4k 61.8
+  SPLIT ctl  3.8 in  7.0 shim 14.6 swell 10.3 twin  0.6 tank  2.6 tkctl  5.3 tkloop 10.2 tkout 10.0 tkmix  1.3 wear  4.4 out  4.9 flip  0.0 tkabs  3.4
+FLIP SHIMMER PLATE->MASSIVE music W0.5 M0.0 | before  51.0% | worst  80.4% at 218 ms | late 0 near 0
+  AFTER (ms: worst %) 0-50 50.8 50-100 79.2 100-150 78.1 150-250 80.4 250-500 73.1 500-1k 74.9 1k-2k 76.2 2k-4k 80.2
+  SPLIT ctl  4.0 in  7.5 shim 14.7 swell  9.9 twin  0.6 tank  2.6 tkctl  5.1 tkloop 18.0 tkout  6.4 tkmix  1.5 wear  4.4 out  4.9 flip  0.0 tkabs  0.0
