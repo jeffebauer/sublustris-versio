@@ -350,8 +350,10 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     const float floorDepth = voicing::kFloorDepthSeconds * sampleRate_ * modDepth_;
     const float floorCoeff = floorCoeffMemo_.get(dt, [](float t) { return 1.0f - std::exp(-2.0f * 3.14159265f * 0.3f * t); });
 
-    // The floor governor's extra loss (ADR 0008).
-    governor_.control(n, sampleRate_);
+    // The floor governor's extra loss (ADR 0008). A low tank follows its leader's and nothing reads its own levels, so
+    // they aren't worked out (three log10f a chunk; review2/cpu, 28 Oct 2026): the same output to the bit.
+    if (leader_) governor_.skip();
+    else governor_.control(n, sampleRate_);
     const FloorGovernor& gov = leader_ ? leader_->governor_ : governor_; // a low tank follows its leader
     const float governRate = gov.extraRate;
 
@@ -486,8 +488,15 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
                 val = std::exp(lnGain);
                 return;
             }
-            const float r = (s - hold) / float(xfLen_);
-            val = r >= 1.0f ? 1.0f : std::exp(lnGain * (1.0f - r));
+            // Its trip done: 1 without the divide (review2/cpu, 28 Oct 2026). The quotient below was 1 or more
+            // whenever s - hold reached xfLen_ (a correctly rounded divide is monotonic and xfLen_ / xfLen_ is 1), and
+            // short of it, it is at most 1, where exp(lnGain * 0) is exactly the 1 it gave: the same values.
+            const float since = s - hold;
+            if (since >= float(xfLen_)) {
+                val = 1.0f;
+                return;
+            }
+            val = std::exp(lnGain * (1.0f - since / float(xfLen_)));
         };
         for (int i = 0; i < kN; ++i) {
             if (staggered()) s = s0 + xfOff_[i]; // staggered: each line's own trip

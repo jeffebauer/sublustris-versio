@@ -47,6 +47,8 @@ struct FloorGovernor {
     }
     // One output sample's power (mean of the channels' squares).
     void add(float power) { block_ += power; }
+    // A chunk not judged (a low tank's: it follows its leader's, Fdn::control): its power dropped.
+    void skip() { block_ = 0.0f; }
 
     // Once per control chunk of n samples (built for size: its three log10f are its cost).
     IV_SIZE_OPT void control(int n, float sampleRate)
