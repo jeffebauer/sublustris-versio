@@ -19,3 +19,5 @@
 - **Peaks:** the shortest tails are up to ~11 dB hotter; the loudest render (drums, MASSIVE, shortest DECAY) peaks at −5.2 dBFS, so the limiter doesn't act at ERA 0. With ERA's tape out, a short tail now meets the tape's soft limiting sooner.
 - **Energy:** the make-up is a gain after the loop, so the loop and its holds are untouched.
 - **Cost:** two `std::pow` per control block; flash in the handoff.
+
+**Amendment (28 Oct 2026, ADR 0034, SPEC v1.0.53-decay):** PLATE's and HALL's finite tops are 30 / 60 s. The make-up is still measured to the old tops (`voicing::kDecayLevelTopSeconds` 12 / 25 / 120 s), and the longer tails are trimmed (`kDecayLongTrimDb`) so each DECAY keeps the level it had while playing (within 0.44 dB on the decay_range chord). MASSIVE and endless are unchanged.

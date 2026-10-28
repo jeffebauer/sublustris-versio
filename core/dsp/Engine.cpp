@@ -376,9 +376,6 @@ float Engine::hysteresisSize(float size, float& held, bool snap) const
 // DECAY's loss rate for the SPACE in use (MASSIVE's shortest tail follows SIZE, v1.0.21).
 IV_SIZE_OPT float Engine::decayRate(float decay, float size) const
 {
-#ifndef IV_FIXED_VOICINGS
-    if (decayCurveOn_ && activeSpace_ != 2) return map::decayRatePrototype(decay, activeSpace_, decayCurve_); // renders/decay_range
-#endif
     return activeSpace_ == 2 ? map::massiveDecayRate(decay, size) : map::decayRate(decay, activeSpace_);
 }
 
@@ -419,11 +416,6 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     const float governor = frozen ? std::fmax(map::governorWeight(decay), freezeMix_) : map::governorWeight(decay);
     // DECAY keeps the loudness (v1.0.28): a shorter tail is made up to the finite top's level, on the
     // wet and the twin alike. A frozen pad keeps heldDecay_, so freezing doesn't move it.
-#ifndef IV_FIXED_VOICINGS
-    // setDecayCurvePrototype (renders/decay_range): the make-up a tail this long has as built (none past its finite top).
-    if (decayCurveOn_ && !massive) decayGain_ = std::pow(map::decayLevelMakeupForRate(decayRate(decay, size), activeSpace_), decayMakeup_);
-    else
-#endif
     decayGain_ = std::pow(map::decayLevelMakeup(decay, activeSpace_), decayMakeup_);
     if (snap) {
         decayGainNow_ = decayGain_;

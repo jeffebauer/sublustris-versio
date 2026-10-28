@@ -16,6 +16,10 @@ Knob positions are the module's (a 300 degree pot, 7 to 5 o'clock, with the firm
     9 0.184 / 10 0.289 / 11 0.395 / noon 0.5 / 1 0.605 / 2 0.711 / 2:30 0.763 / 3 0.816.
 
     decay_range.py [--render build-decay/iv_render] [--verify-only] [--skip-safety]
+    decay_range.py --built <59ce205's iv_render> [--render build-decay/iv_render]   the build against the page
+
+Built as SPEC v1.0.53-decay (ADR 0034, the owner's pick B). The IV_DECAY_* hook the page was rendered with (ed11f65)
+is gone, so only --built (and --table) work on the build.
 """
 import argparse
 import json
@@ -298,7 +302,10 @@ def flicks(binary, ph, tmp, job, k=0):
     return click, when, sclick, burst
 
 
-def safety(binary, root):
+def safety(binary, root, versions=None):
+    """versions: [(tag, env, binary)]; default the page's, all through `binary`."""
+    vers = versions or [(tag, env, binary) for tag, env, _ in VERSIONS]
+    bins = {tag: b for tag, _, b in vers}
     material = root / "renders" / "_material"
     lines = ["", "SAFETY", "Energy: fed 3-min holds (pad, stabs, chord looped at three input levels), then 30 s of tail, "
              "at DECAY 0.80 (each version's longest setting before the held tail's governor starts) and 0.835 (inside "
@@ -321,19 +328,19 @@ def safety(binary, root):
         def hold(job):
             sp, tag, env, dv, L = job
             o = tmp / "h_{}_{}_{}_{:+.0f}.wav".format(sp, tag, dv, L)
-            y = ld.read_gone(ld.render(binary, feds[L], o, SPACES[sp][0] + ld.KNOBS + ["decay={}".format(dv)], env))
+            y = ld.read_gone(ld.render(bins[tag], feds[L], o, SPACES[sp][0] + ld.KNOBS + ["decay={}".format(dv)], env))
             w = [ld.lv(y, s, s + 30) for s in range(0, 180, 30)]
             tail = [ld.lv(y, s, s + 10) for s in range(180, 210, 10)]
             pk = 20 * np.log10(np.max(np.abs(y)) + 1e-12)
             grow, tgrow = max(w[2:]) - w[1], max(tail[1:]) - tail[0]
             good = bool(np.isfinite(y).all()) and grow < 3.0 and tgrow < 0.5 and pk < 20 * np.log10(ld.CEILING) - 0.05
             return (sp, tag, dv, L), (min(w[1:]), max(w[1:]), grow, tgrow, pk, good)
-        jobs = [(sp, tag, env, dv, L) for sp in ("PLATE", "HALL") for tag, env, _ in VERSIONS for dv in HOLD_DECAYS
+        jobs = [(sp, tag, env, dv, L) for sp in ("PLATE", "HALL") for tag, env, _ in vers for dv in HOLD_DECAYS
                 for L in LEVELS]
         res = dict(pool.map(hold, jobs))
         fails = 0
         for sp in ("PLATE", "HALL"):
-            for tag, env, _ in VERSIONS:
+            for tag, env, _ in vers:
                 for dv in HOLD_DECAYS:
                     cells = []
                     for L in LEVELS:
@@ -358,9 +365,9 @@ def safety(binary, root):
                   "beyond the broadband rise against the same version with DECAY held at noon, above its median "
                   "(10 ms frames of a tail spread 1-3 dB on their own; three takes of the phrase, the chord's random phases differing, show that spread)."]
 
-        fjobs = [(sp, tag, env) for sp in ("PLATE", "HALL") for tag, env, _ in VERSIONS]
+        fjobs = [(sp, tag, env) for sp in ("PLATE", "HALL") for tag, env, _ in vers]
         runs = [(j, k) for j in fjobs for k in range(len(SEEDS))]
-        fres = list(pool.map(lambda r: flicks(binary, phs[r[1]], tmp, r[0], r[1]), runs))
+        fres = list(pool.map(lambda r: flicks(bins[r[0][1]], phs[r[1]], tmp, r[0], r[1]), runs))
         for i, (sp, tag, _) in enumerate(fjobs):
             rs = fres[i * len(SEEDS):(i + 1) * len(SEEDS)]
             lines.append("  {:5s} {:16s} flicks, takes {}: click {} dB (held at noon {})  burst {} dB".format(
@@ -369,15 +376,55 @@ def safety(binary, root):
     return lines
 
 
+def built(ref, new, root):
+    """The build (v1.0.53-decay, B) against the page: each card rendered by the new renderer (no hooks) against the
+    page's B (as heard: scaled by its _gains.json) and A; endless (DECAY >= 0.85) against the reference renderer
+    (59ce205) bit for bit; then the safety checks with A = the reference renderer, B = the build."""
+    out = root / "renders" / "decay_range"
+    dry = root / "renders" / "_material_decay_range"
+    gains = json.loads((out / "_gains.json").read_text())
+    v = ["decay_range, the build (B: PLATE 30 s, HALL 60 s, the long tails' trim) vs the page. Null = the build against "
+         "the page's B as the owner heard it (scaled to A's playing level); playing = the build's wet over 2-11 s "
+         "against A's (target within +-0.5 dB); T60 as on the page.", ""]
+    with tempfile.TemporaryDirectory() as t:
+        tmp = Path(t)
+        for col, sp in COLS:
+            for m, dv in CARDS:
+                y = ld.read_gone(ld.render(new, dry / (m + ".wav"), tmp / "b.wav",
+                                           SPACES[sp][0] + ld.KNOBS + ["decay={}".format(dv)], {}))
+                a, _ = sf.read(out / col / "{}_A_today.wav".format(m), always_2d=True)
+                b, _ = sf.read(out / col / "{}_B_longer_tops.wav".format(m), always_2d=True)
+                null = db(np.mean((y - b) ** 2) / np.mean(b ** 2))
+                g = gains["/".join((col, m, "B_longer_tops"))]
+                v.append("{:6s} {:17s} null vs the page's B (as heard, {:+.2f} dB) {:+6.1f} dB  playing vs A {:+5.2f} dB  "
+                         "T60 {:5.1f} s (page's B {:5.1f})".format(sp, m, -g, null, ld.lv(y, 2, 11) - ld.lv(a, 2, 11),
+                                                                   measured_t60(y), measured_t60(b)))
+        v += ["", "Endless and the crossover's end, bit for bit against 59ce205 (the chord, 42 s):"]
+        for sp in ("PLATE", "HALL"):
+            for dv in (0.85, 0.9, 1.0):
+                sets = SPACES[sp][0] + ld.KNOBS + ["decay={}".format(dv)]
+                x = ld.read_gone(ld.render(ref, dry / "p1_noon.wav", tmp / "r.wav", sets, {}))
+                y = ld.read_gone(ld.render(new, dry / "p1_noon.wav", tmp / "n.wav", sets, {}))
+                v.append("  {:5s} DECAY {:.2f}: {}".format(sp, dv, "identical" if np.array_equal(x, y) else
+                                                         "DIFFER (max {:.3g})".format(float(np.max(np.abs(x - y))))))
+    v += safety(new, root, [("A_59ce205", {}, ref), ("B_built", {}, new)])
+    (out / "_verify_built.txt").write_text("\n".join(v) + "\n")
+    return out / "_verify_built.txt"
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--render", type=Path, default=ROOT / "build-decay" / "iv_render")
     ap.add_argument("--verify-only", action="store_true", help="re-measure the rendered page (and redo the safety renders)")
     ap.add_argument("--skip-safety", action="store_true")
     ap.add_argument("--table", action="store_true", help="print the tail-length table and stop")
+    ap.add_argument("--built", type=Path, help="the reference renderer (59ce205): check the build (--render) against the page")
     a = ap.parse_args()
     if a.table:
         print(table())
+        return
+    if a.built:
+        print(built(a.built.resolve(), a.render.resolve(), main_checkout()))
         return
     print(page(a.render.resolve(), main_checkout(), a.verify_only, a.skip_safety))
 

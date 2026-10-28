@@ -26,13 +26,14 @@ IV_SIZE_OPT inline MixGains mixGains(float v) { return {std::cos(v * 0.5f * kPi)
 
 // DECAY (P2), SPEC §3: 0–0.80 T60 exponential per SPACE; 0.80–0.85 a
 // crossover to infinite (1/T60 falls linearly to 0); 0.85–1 infinite.
+// PLATE's and HALL's tops 30 / 60 s since v1.0.53-decay (ADR 0034; were 12 / 25).
 constexpr float kDecayFiniteTop   = 0.80f;
 constexpr float kDecayInfiniteAt  = 0.85f;
 struct T60Range {
     float minS, maxS;
 };
-constexpr T60Range kT60Plate{0.4f, 12.0f};
-constexpr T60Range kT60Hall{0.8f, 25.0f};
+constexpr T60Range kT60Plate{0.4f, 30.0f};
+constexpr T60Range kT60Hall{0.8f, 60.0f};
 constexpr T60Range kT60Massive{2.0f, 120.0f};
 
 inline const T60Range& t60Range(int space) { return space == 0 ? kT60Plate : (space == 1 ? kT60Hall : kT60Massive); }
@@ -230,53 +231,26 @@ IV_SIZE_OPT inline float massiveDecayLevelTrim(float v, float size)
     return now > 0.0f && was > 0.0f ? std::sqrt(now / was) : 1.0f;
 }
 
-// DECAY's level make-up on the wet (v1.0.28): what a tail shorter than the finite top loses by being
-// shorter (SpaceVoicing.h, kDecayLevelPower). The plain decayRate curve: HALL's SIZE has
-// hallSizeLevelTrim, MASSIVE's longer shortest tails massiveDecayLevelTrim. 1 at the finite top, and
-// through the crossover and infinite (T60 only grows there), so a held tail is as before.
+// DECAY's level make-up on the wet (v1.0.28): what a tail shorter than the v1.0.28 finite top
+// (kDecayLevelTopSeconds) loses by being shorter (SpaceVoicing.h, kDecayLevelPower). The plain decayRate
+// curve: HALL's SIZE has hallSizeLevelTrim, MASSIVE's longer shortest tails massiveDecayLevelTrim. 1 at
+// that top and past it, and at infinite. PLATE and HALL (v1.0.53-decay, ADR 0034): their longer tails are
+// trimmed back to the level the same DECAY had before (kDecayLongTrimDb), 0 dB again at infinite.
 IV_SIZE_OPT inline float decayLevelMakeup(float v, int space)
 {
     const float r = decayRate(v, space);
     if (r <= 0.0f) return 1.0f;
-    const float t = 1.0f / r, top = t60Range(space).maxS, ref = std::fmin(voicing::kDecayLevelRefSeconds, top);
+    const float t = 1.0f / r, top = voicing::kDecayLevelTopSeconds[space], ref = std::fmin(voicing::kDecayLevelRefSeconds, top);
     const float shortGain = std::pow(ref / std::fmin(t, ref), voicing::kDecayLevelPower[space]);
     const float longGain = top > ref ? std::pow(top / std::fmin(std::fmax(t, ref), top), voicing::kDecayLevelPowerLong[space]) : 1.0f;
-    return shortGain * longGain;
-}
-
-#ifndef IV_FIXED_VOICINGS
-// PROTOTYPE (renders/decay_range; owner: "i often find myself wanting longer lush decays, but the knob biases
-// towards smaller decays until you hit the 3 oclock mark and it turns into perpetual tails"): DECAY's curve for
-// PLATE and HALL with its finite top `maxS`, reached at `top` (the crossover then runs top → kDecayInfiniteAt,
-// 1/T60 falling linearly, so a wider one lengthens gradually), and `gamma` bending the exponential (x^gamma; 1 as
-// built). Endless still starts at kDecayInfiniteAt; governorWeight and the ducking keep 0.80-0.85. With
-// {12 | 25, 0.80, 1} it is decayRate(v, space). MASSIVE never uses it.
-struct DecayCurvePrototype {
-    float maxS[2] = {kT60Plate.maxS, kT60Hall.maxS};
-    float top = kDecayFiniteTop, gamma = 1.0f;
-};
-inline float decayRatePrototype(float v, int space, const DecayCurvePrototype& p)
-{
-    const float lo = t60Range(space).minS, hi = p.maxS[space];
-    if (v <= p.top) {
-        const float x = v / p.top;
-        return 1.0f / expLerp(lo, hi, p.gamma == 1.0f ? x : std::pow(x, p.gamma));
+    float g = shortGain * longGain;
+    if (space != 2) {
+        const float w = 1.0f - governorWeight(v);
+        const float db = voicing::kDecayLongTrimDb[space] * layer(v, voicing::kDecayLongTrimFrom[space], voicing::kDecayLongTrimTo[space]) * (w * w * w);
+        g *= std::pow(10.0f, -db / 20.0f);
     }
-    if (v >= kDecayInfiniteAt) return 0.0f;
-    return (kDecayInfiniteAt - v) / (kDecayInfiniteAt - p.top) / hi;
+    return g;
 }
-// decayLevelMakeup as a function of the tail's length (1/T60 = r) rather than the knob: a tail keeps the gain a
-// tail that long has as built (made up to the as-built finite top's level); one longer than that top gets none,
-// as the as-built crossover's do.
-inline float decayLevelMakeupForRate(float r, int space)
-{
-    if (r <= 0.0f) return 1.0f;
-    const float t = 1.0f / r, top = t60Range(space).maxS, ref = std::fmin(voicing::kDecayLevelRefSeconds, top);
-    const float shortGain = std::pow(ref / std::fmin(t, ref), voicing::kDecayLevelPower[space]);
-    const float longGain = top > ref ? std::pow(top / std::fmin(std::fmax(t, ref), top), voicing::kDecayLevelPowerLong[space]) : 1.0f;
-    return shortGain * longGain;
-}
-#endif
 
 // HALL: The level a finite tail loses by being shorter (its energy goes with its
 // T60), made up on the output; none at infinite, where nothing is shorter.

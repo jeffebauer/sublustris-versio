@@ -33,9 +33,6 @@
 #include "params/GestureReader.h"
 #include "params/ParamSpec.h"
 #include "params/SpaceVoicing.h"
-#ifndef IV_FIXED_VOICINGS
-#include "params/Mappings.h" // map::DecayCurvePrototype (renders/decay_range)
-#endif
 
 #include <array>
 #include <cmath>
@@ -206,14 +203,6 @@ public:
         hallTiltLowDb_ = tiltLowDb;
         hallTiltHighDb_ = tiltHighDb;
     }
-    // PROTOTYPE (renders/decay_range; owner: "I'd like more usable range so i can access longer decays without hitting
-    // the perpetual holds"): PLATE's and HALL's DECAY curve (map::DecayCurvePrototype: finite top, where it's reached,
-    // the curve's bend). Endless still starts at 0.85. Off: as built.
-    void  setDecayCurvePrototype(const map::DecayCurvePrototype& c)
-    {
-        decayCurve_ = c;
-        decayCurveOn_ = true;
-    }
     int   lowDecimate() const { return lowDecimate_; }
     int   swellTaps() const { return swell_.tapCount(); }
 #endif
@@ -348,8 +337,6 @@ private:
     float             duckSustainCut_ = voicing::kDuckSustainCut;          // setDuckSustainCutPrototype
     float             hallTailDb_ = voicing::kHallTailDb;                  // setHallTailPrototype
     float             hallTiltLowDb_ IV_ZI, hallTiltHighDb_ IV_ZI;          // setHallTailPrototype (not built)
-    map::DecayCurvePrototype decayCurve_;                                    // setDecayCurvePrototype
-    bool              decayCurveOn_ = false;
     float floorDbfs() const { return floorDbfs_; }
     float duckSlope() const { return duckSlope_; }
     float duckRelease() const { return duckRelease_; }

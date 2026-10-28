@@ -15,6 +15,7 @@
 // within 4 dB since v1.0.47 (the owner chose the scaled wander at the room_motion page's level, 0.93 dB under the
 // unscaled room there). Every room figure is pinned within 0.3 dB of v1.0.47's.
 
+#include "DecayV1052.h"
 #include "Wav.h"
 #include "dsp/Engine.h"
 
@@ -63,7 +64,7 @@ double level(const std::vector<float>& music, int space, float size, float decay
     e->prepare(kSr, kBlock);
     e->setParam(iv::ParamId::Space, iv::switchToNormalised(space));
     e->setParam(iv::ParamId::Size, size);
-    e->setParam(iv::ParamId::Decay, decay);
+    e->setParam(iv::ParamId::Decay, decaySameTailAsV1052(decay, space)); // the page's tail length (v1.0.53-decay)
     e->setParam(iv::ParamId::Era, 0.0f); // the Neve alone (as the pages)
     e->setParam(iv::ParamId::Mix, 1.0f);
     e->reset();

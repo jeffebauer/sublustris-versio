@@ -233,26 +233,6 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
                          td ? std::atof(td) : double(iv::voicing::kHallTailDb), double(lo), double(hi));
         }
     }
-    { // renders/decay_range: PLATE's / HALL's DECAY curve (IV_DECAY_PLATE_MAX, IV_DECAY_HALL_MAX s at IV_DECAY_TOP, bent by IV_DECAY_GAMMA)
-        const char* pm = std::getenv("IV_DECAY_PLATE_MAX");
-        const char* hm = std::getenv("IV_DECAY_HALL_MAX");
-        const char* tp = std::getenv("IV_DECAY_TOP");
-        const char* gm = std::getenv("IV_DECAY_GAMMA");
-        if (pm || hm || tp || gm) {
-            iv::map::DecayCurvePrototype c;
-            if (pm) c.maxS[0] = float(std::atof(pm));
-            if (hm) c.maxS[1] = float(std::atof(hm));
-            if (tp) c.top = float(std::atof(tp));
-            if (gm) c.gamma = float(std::atof(gm));
-            if (!(c.maxS[0] > 0.4f && c.maxS[1] > 0.8f && c.top > 0.05f && c.top < iv::map::kDecayInfiniteAt && c.gamma > 0.0f)) {
-                error = "IV_DECAY_*: out of range";
-                return false;
-            }
-            engine.setDecayCurvePrototype(c);
-            std::fprintf(stderr, "iv_render: IV_DECAY_CURVE: PLATE top %.2f s, HALL top %.2f s at DECAY %.3f, gamma %.3f; endless from %.2f\n",
-                         double(c.maxS[0]), double(c.maxS[1]), double(c.top), double(c.gamma), double(iv::map::kDecayInfiniteAt));
-        }
-    }
     if (const char* sc = std::getenv("IV_DUCK_SUSTAIN_CUT")) { // 0: held playing ducked in full
         engine.setDuckSustainCutPrototype(float(std::atof(sc)));
         std::fprintf(stderr, "iv_render: IV_DUCK_SUSTAIN_CUT: %s\n", sc);
