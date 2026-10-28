@@ -442,7 +442,25 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     const float governor = frozen ? std::fmax(map::governorWeight(decay), freezeMix_) : map::governorWeight(decay);
     // DECAY keeps the loudness (v1.0.28): a shorter tail is made up to the finite top's level, on the
     // wet and the twin alike. A frozen pad keeps heldDecay_, so freezing doesn't move it.
+#if !defined(IV_FIXED_VOICINGS) || defined(IV_DECAY_RISE_CAP)
+    const float gainWas = decayGain_;
+#endif
+#if defined(IV_DECAY_RISE_CAP) && defined(IV_DECAY_NO_POW) // trial (DECAY_NO_POW=1): the module never sets decayMakeup_ (1), -16 B
+    decayGain_ = map::decayLevelMakeup(decay, activeSpace_);
+#else
     decayGain_ = std::pow(map::decayLevelMakeup(decay, activeSpace_), decayMakeup_);
+#endif
+    // setDecayRiseCapPrototype (renders/decay_swell): a rise of at most k x the tank's own decay this block, as
+    // a gain (60 dB x ln 10 / 20 = 6.9078 per unit of rate x seconds; a block's step is small, so linear).
+    // Finite DECAYs only: across the crossover the make-up rises as DECAY goes up (PLATE's and HALL's long-tail
+    // trim letting go, v1.0.53) while the tank barely loses, and a cap on its rate would hold the gain down.
+#ifndef IV_FIXED_VOICINGS
+    if (decayRiseK_ > 0.0f && !snap && decay < map::kDecayFiniteTop)
+        decayGain_ = std::fmin(decayGain_, gainWas * (1.0f + decayRiseK_ * 6.9078f * rate * float(n) / sampleRate_));
+#elif defined(IV_DECAY_RISE_CAP) // the firmware trial (make DECAY_RISE=0.3f): its flash cost
+    if (!snap && decay < map::kDecayFiniteTop)
+        decayGain_ = std::fmin(decayGain_, gainWas * (1.0f + (IV_DECAY_RISE_CAP * 6.9078f) * rate * float(n) / sampleRate_));
+#endif
     if (snap) {
         decayGainNow_ = decayGain_;
     }

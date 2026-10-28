@@ -174,6 +174,13 @@ public:
     // PROTOTYPE (renders/twin_alternatives, "the layer alone"): the tank (the frozen pad) is left out of the wet,
     // so only the twin is heard; the tank still runs and freezes as in use.
     void  setLayerSoloPrototype(bool on) { layerSolo_ = on; }
+    // PROTOTYPE (renders/decay_swell; owner, v1.0.54: "with massive/hall with long decay, moving the decay
+    // from large to small can create a swell in amplitude"): DECAY's level make-up (v1.0.28, a gain after
+    // the loop) rises no faster than k x the tank's own new decay (60 / T60 dB/s), so a long tail's energy
+    // still in the tank isn't turned up with it: on a tail the level keeps falling, at (1 - k) of the new
+    // rate, while the make-up catches up; while playing the new, shorter tail builds in under it. Finite
+    // DECAYs only. 0 = as built (the make-up within ~40 ms); falls as built; a held DECAY is bit-identical.
+    void  setDecayRiseCapPrototype(float k) { decayRiseK_ = k; }
     // PROTOTYPE (renders/freeze_moment; owner: "the frozen sound seems to jump in amplitude once frozen
     // compared to the swelling reverb"): the ducking (ADR 0014) at a freeze. 0 as built: let go in 50 ms
     // (at DECAY 0.9 a pad jumps up by the 2-4 dB the playing was ducking it); 1 the pad keeps the tap's
@@ -334,6 +341,7 @@ private:
     bool              twinStopFast_ = true; // setTwinStopFast; false = before v1.0.37
     int               fitSwellTaps_ IV_ZI; // setSwellTapsPrototype; 0 = as built
     bool              layerSolo_ = false; // setLayerSoloPrototype
+    float             decayRiseK_ = 0.0f; // setDecayRiseCapPrototype; 0 = as built
     int               freezeDuck_ = 0;   // setFreezeDuckPrototype; 0 = as built
     float             freezeDuckSeconds_ = 0.4f, duckAtFreeze_ = 0.0f;
     float             twinGain_ = 1.0f;  // setTwinGainPrototype; 1 = as built

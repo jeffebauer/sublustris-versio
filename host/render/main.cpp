@@ -169,6 +169,10 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* sl = std::getenv("IV_STILL_LOWS")) engine.setStillLows(std::atoi(sl) != 0);
     if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
     if (const char* dm = std::getenv("IV_DECAY_MAKEUP")) engine.setDecayMakeup(float(std::atof(dm)));
+    if (const char* dr = std::getenv("IV_DECAY_RISE")) { // renders/decay_swell: k (0 = as built)
+        engine.setDecayRiseCapPrototype(float(std::atof(dr)));
+        std::fprintf(stderr, "iv_render: IV_DECAY_RISE: DECAY's make-up rises at most %s x the tank's decay\n", dr);
+    }
     if (const char* et = std::getenv("IV_FIT_EARLY_TAPS")) engine.setEarlyTapPrototype(std::atoi(et)); // fit_cpu's D (re-prepares)
     if (const char* ss = std::getenv("IV_SWELL_SEED")) engine.setSwellSeedPrototype(uint32_t(std::strtoul(ss, nullptr, 0))); // swell_seed
     if (const char* sh = std::getenv("IV_SIZE_HYST")) engine.setSizeHysteresis(float(std::atof(sh))); // overnight review, arch F1
