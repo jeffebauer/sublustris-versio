@@ -1,0 +1,28 @@
+# Review 2 audit lap with LEAN=1, dist/sublustris_versio-review2-212b68b-profile-audit-lean.bin, USB power, 29 Oct 2026 (its START line was not logged).
+SPIKE UNFRZ   MASSIVE FROZEN  music   still   W0.5 M0.0 T0.5 D90 avg  91.5% max 100.6% | late 46 near 2002 of 4000 | max at block 1744 start 0 lines 8 tanks 2 | fading 1200 avg  99.0% max 100.6%
+  SPLIT ctl  6.3 in  6.9 shim 14.6 swell 10.2 twin 10.3 tank  2.6 tkctl  8.6 tkloop 12.6 tkout 13.6 tkmix  1.5 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE UNFRZ   MASSIVE FROZEN  music   creep   W0.5 M0.0 T0.5 D90 avg  97.3% max 107.1% | late 1487 near 4135 of 6000 | max at block 1506 start 0 lines 8 tanks 2 | fading 4204 avg 100.1% max 107.1%
+  SPLIT ctl  7.2 in  9.4 shim 14.7 swell 11.9 twin 13.0 tank  2.6 tkctl  7.5 tkloop 12.6 tkout 13.5 tkmix  1.5 wear  4.4 out  4.5 flip  0.0 tkabs  3.4
+SPIKE UNFRZ   MASSIVE FROZEN  music   twists  W0.5 M0.0 T0.5 D90 avg  99.9% max 107.5% | late 4054 near 1661 of 6000 | max at block 2232 start 0 lines 8 tanks 2 | fading 4689 avg 102.6% max 107.5%
+  SPLIT ctl  7.1 in  9.3 shim 14.7 swell 11.9 twin 13.0 tank  2.6 tkctl  8.1 tkloop 12.6 tkout 13.6 tkmix  1.4 wear  4.4 out  4.5 flip  0.0 tkabs  3.5
+SPIKE UNFRZ   HALL    FROZEN  music   sweep   W0.5 M0.0 T0.5 D90 avg  80.3% max  97.9% | late 0 near 899 of 6000 | max at block 670 start 0 lines 8 tanks 2 | fading 903 avg  94.1% max  97.9%
+  SPLIT ctl  6.7 in  5.7 shim 14.8 swell  0.2 twin 12.9 tank  2.6 tkctl  7.1 tkloop 25.2 tkout  8.0 tkmix  1.4 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE UNFRZ   MASSIVE FROZEN  music   creep   W1.0 M0.0 T0.5 D90 avg  89.6% max 101.4% | late 5 near 3644 of 6000 | max at block 1563 start 0 lines 8 tanks 2 | fading 4204 avg  91.9% max 101.4%
+  SPLIT ctl  7.1 in  9.3 shim  1.9 swell 16.1 twin 12.8 tank  2.6 tkctl 10.3 tkloop 12.7 tkout 13.3 tkmix  1.3 wear  5.0 out  4.8 flip  0.0 tkabs  3.4
+SPIKE PAINT   MASSIVE FROZEN  music   still   W0.5 M0.0 T0.5 D90 avg  73.9% max  76.5% | late 0 near 0 of 4000 | max at block 1608 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  5.7 in  6.8 shim  1.8 swell 10.3 twin 10.2 tank  2.6 tkctl  5.0 tkloop 10.4 tkout 10.0 tkmix  1.4 wear  4.4 out  4.9 flip  0.0 tkabs  2.3
+SPIKE CVALL   MASSIVE playing music   creep   W0.5 M0.0 T0.5 D90 avg  92.6% max  96.7% | late 0 near 4900 of 6000 | max at block 1103 start 0 lines 8 tanks 2 | fading 5223 avg  93.7% max  96.7%
+  SPLIT ctl  5.9 in  9.4 shim 14.7 swell 11.9 twin  0.6 tank  2.6 tkctl 10.2 tkloop 12.7 tkout 13.2 tkmix  1.2 wear  4.4 out  5.2 flip  0.0 tkabs  3.4
+SPIKE CVALL   HALL    playing music   sweep   W0.5 M0.0 T0.5 D90 avg  71.3% max  89.1% | late 0 near 0 of 6000 | max at block 5304 start 0 lines 32 tanks 2 | fading 602 avg  86.5% max  89.1%
+  SPLIT ctl  5.6 in  5.6 shim 14.7 swell  0.2 twin  0.6 tank  2.6 tkctl 12.1 tkloop 20.8 tkout 11.5 tkmix  1.4 wear  4.4 out  5.2 flip  0.0 tkabs  3.4
+SPIKE GRIT    MASSIVE playing music   creep   W1.0 M0.0 T0.5 D90 avg  89.1% max  94.9% | late 0 near 4152 of 6000 | max at block 412 start 0 lines 8 tanks 2 | fading 5223 avg  90.4% max  94.9%
+  SPLIT ctl  4.4 in  9.1 shim 14.7 swell 11.7 twin  0.6 tank  2.6 tkctl 10.3 tkloop 12.6 tkout 13.5 tkmix  1.4 wear  5.0 out  4.9 flip  0.0 tkabs  3.4
+SPIKE GRIT    MASSIVE playing music   still   W1.0 M0.0 T0.5 D90 avg  78.7% max  79.8% | late 0 near 0 of 4000 | max at block 419 start 0 lines 0 tanks 0 | fading 0 avg   0.0% max   0.0%
+  SPLIT ctl  4.0 in  6.8 shim 14.6 swell 10.2 twin  0.6 tank  2.6 tkctl  5.0 tkloop 10.3 tkout 10.2 tkmix  1.2 wear  5.0 out  4.9 flip  0.0 tkabs  3.5
+SPIKE SHIMMER MASSIVE playing music   sweep   W0.5 M0.0 T0.5 D90 avg  80.8% max  90.9% | late 0 near 189 of 6000 | max at block 2589 start 0 lines 8 tanks 2 | fading 1502 avg  87.0% max  90.9%
+  SPLIT ctl  3.6 in  9.4 shim 14.7 swell 11.9 twin  0.6 tank  2.6 tkctl  7.2 tkloop 12.7 tkout 13.5 tkmix  1.3 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SPIKE ABSEXP  MASSIVE playing music   sweep   W0.5 M0.0 T0.5 D90 avg  79.5% max  90.3% | late 0 near 3 of 6000 | max at block 2645 start 0 lines 8 tanks 2 | fading 1502 avg  86.1% max  90.3%
+  SPLIT ctl  3.5 in  9.3 shim 14.7 swell 11.9 twin  0.6 tank  2.6 tkctl  8.2 tkloop 12.6 tkout 13.5 tkmix  1.3 wear  4.4 out  4.7 flip  0.0 tkabs  2.1
+SPIKE REFRESH MASSIVE playing music   sweep   W0.5 M0.0 T0.5 D90 avg  80.9% max  90.9% | late 0 near 249 of 6000 | max at block 2557 start 0 lines 8 tanks 2 | fading 1502 avg  87.1% max  90.9%
+  SPLIT ctl  3.6 in  9.2 shim 14.7 swell 11.9 twin  0.6 tank  2.6 tkctl  7.1 tkloop 12.8 tkout 13.6 tkmix  1.3 wear  4.4 out  4.7 flip  0.0 tkabs  3.4
+SIZESPIKE LAP 1 DONE: 16 lines, worst max 107.1% (SPIKE UNFRZ   MASSIVE FROZEN  music   twists  W0.5 M0.0 T0.5 D9), late blocks in all 5224, near 26759 | STACK 6548 B of 60176 | HASH 0x3b18a2ac

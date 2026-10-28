@@ -1,0 +1,61 @@
+same   plate_size0.0
+same   plate_size0.5
+same   plate_size1.0
+same   plate_era0.3
+same   plate_era0.5
+same   plate_era0.7
+same   plate_era0.9
+same   plate_bloom
+same   plate_shimmer
+same   plate_infinite
+same   plate_drift0
+same   plate_drift1
+same   plate_block37
+same   plate_sizemove
+same   plate_timemove
+same   plate_freeze
+same   plate_paint
+same   plate_erasweep
+differ hall_size0.0  first at frame 1497 (0.031 s), 1149005 samples differ, max |diff| 0.112
+differ hall_size0.5  first at frame 3224 (0.067 s), 1145552 samples differ, max |diff| 0.197
+differ hall_size1.0  first at frame 7998 (0.167 s), 1136004 samples differ, max |diff| 0.185
+differ hall_era0.3  first at frame 3418 (0.071 s), 1145164 samples differ, max |diff| 0.186
+differ hall_era0.5  first at frame 3418 (0.071 s), 1145164 samples differ, max |diff| 0.203
+differ hall_era0.7  first at frame 3418 (0.071 s), 1145162 samples differ, max |diff| 0.23
+differ hall_era0.9  first at frame 3440 (0.072 s), 1145117 samples differ, max |diff| 0.3
+differ hall_bloom  first at frame 5005 (0.104 s), 1141990 samples differ, max |diff| 0.171
+differ hall_shimmer  first at frame 2744 (0.057 s), 1146512 samples differ, max |diff| 0.261
+differ hall_infinite  first at frame 3224 (0.067 s), 1145552 samples differ, max |diff| 0.601
+differ hall_drift0  first at frame 4223 (0.088 s), 1143552 samples differ, max |diff| 0.195
+differ hall_drift1  first at frame 3224 (0.067 s), 1145552 samples differ, max |diff| 0.233
+differ hall_block37  first at frame 4585 (0.096 s), 1142830 samples differ, max |diff| 0.221
+differ hall_sizemove  first at frame 3224 (0.067 s), 1145552 samples differ, max |diff| 0.172
+differ hall_timemove  first at frame 3224 (0.067 s), 1145552 samples differ, max |diff| 0.185
+differ hall_freeze  first at frame 3224 (0.067 s), 1145552 samples differ, max |diff| 0.153
+differ hall_paint  first at frame 3224 (0.067 s), 1145552 samples differ, max |diff| 0.16
+differ hall_erasweep  first at frame 3224 (0.067 s), 1145552 samples differ, max |diff| 0.219
+same   massive_size0.0
+same   massive_size0.5
+same   massive_size1.0
+same   massive_era0.3
+same   massive_era0.5
+same   massive_era0.7
+same   massive_era0.9
+same   massive_bloom
+same   massive_shimmer
+same   massive_infinite
+same   massive_drift0
+same   massive_drift1
+same   massive_block37
+same   massive_sizemove
+same   massive_timemove
+same   massive_freeze
+same   massive_paint
+same   massive_erasweep
+same   plate_hunt_sweep
+differ hall_hunt_sweep  first at frame 3745 (0.078 s), 1144510 samples differ, max |diff| 0.515
+same   massive_hunt_sweep
+same   massive_hunt_creep
+differ hall_hunt_still  first at frame 2841 (0.059 s), 1146317 samples differ, max |diff| 0.538
+differ flips  first at frame 125384 (2.612 s), 234569 samples differ, max |diff| 0.198
+DIFFER 21 of 60
