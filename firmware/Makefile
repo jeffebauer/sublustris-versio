@@ -48,12 +48,17 @@ RELEASE_LATE_LIGHT ?= 0
 #                 since CPU save 2, three ABSEXP lines last (prof::absExp: the loss filters on std::exp, a trial)
 #   SIZESPIKE=3   the CPU-hunt lap (28 Oct 2026, v1.0.52's notes): SIZE moves with ONSET at SHIMMER against BLOOM,
 #                 and SPACE flips timed block by block around the flip (-cpuhunt)
+#   ABSORB_EXP=1  the tanks' loss filters on std::exp instead of std::pow (core/dsp/Governor.h absorbLine,
+#                 IV_ABSORB_EXP; not the same bits: ~1e-6, review2/cpu 28 Oct 2026), release or profile (-absexp).
+#                 Its own object directory and .bin name: overriding TRIAL_DEFS on the command line reused
+#                 obj-release-48's objects (make doesn't track flags), a byte-identical .bin, and dropped SIZESPIKE.
 SIZE_GROUPS ?=
 CTL_O3 ?=
+ABSORB_EXP ?=
 CANDIDATE ?=
 SIZESPIKE ?=
-TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)
-TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))
+TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)$(if $(filter 1,$(ABSORB_EXP)),-absexp)
+TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))$(if $(filter 1,$(ABSORB_EXP)), -DIV_ABSORB_EXP)
 RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)$(if $(filter 1,$(RELEASE_LATE_LIGHT)),-latelight)$(TRIAL_TAG)
 PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)$(if $(SIZESPIKE),$(if $(filter 4,$(SIZESPIKE)),-cpusave,$(if $(filter 3,$(SIZESPIKE)),-cpuhunt,-sizespike$(if $(filter 2,$(SIZESPIKE)),ab))))
 
@@ -172,7 +177,7 @@ all-variants:
 	@echo ""; \
 	echo "=== Variant sizes vs $(FLASH_LIMIT)-byte internal-flash limit (SPEC §5.3) ==="; \
 	fail=0; warn=0; \
-	for f in sublustris_versio sublustris_versio_m0test sublustris_versio_profile; do \
+	for f in sublustris_versio$(RELEASE_TAG) sublustris_versio_m0test sublustris_versio_profile$(PROFILE_TAG); do \
 		bytes=$$(wc -c < build/$$f.bin | tr -d ' '); \
 		pct=$$((bytes * 100 / $(FLASH_LIMIT))); \
 		if [ $$bytes -gt $(FLASH_LIMIT) ]; then status="EXCEEDS LIMIT"; fail=1; \

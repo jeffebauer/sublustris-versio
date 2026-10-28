@@ -163,6 +163,14 @@ Audio renderWithAutomation(iv::Engine& engine, const Audio& in, int block, const
 bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::string& presetPath,
                const std::vector<std::string>& sets, std::string& error)
 {
+#ifndef IV_FIXED_VOICINGS
+    // review2/cpu (28 Oct 2026): the tanks' loss filters on std::exp instead of std::pow (the firmware's ABSORB_EXP=1;
+    // not the same bits, ~1e-6), set before prepare() so no coefficient is worked out the other way first.
+    if (const char* ae = std::getenv("IV_ABSORB_EXP")) {
+        iv::prof::absExp = std::atoi(ae) != 0;
+        std::fprintf(stderr, "iv_render: IV_ABSORB_EXP: the tanks' loss filters on %s\n", iv::prof::absExp ? "std::exp (a trial)" : "std::pow (as built)");
+    }
+#endif
     engine.prepare(sampleRate, block);
     if (const char* hd = std::getenv("IV_HALL_DIFFUSION")) engine.setHallInLoopDiffusion(float(std::atof(hd)));
     if (const char* di = std::getenv("IV_DIFF_INDEPENDENT")) engine.setDiffuserIndependent(std::atoi(di) != 0);

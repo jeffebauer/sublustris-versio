@@ -52,6 +52,11 @@ inline bool absExp = false;
 inline void mark(Section) {}
 inline void countXfStart() {}
 inline void countXfLines(const void*) {}
+#ifndef IV_FIXED_VOICINGS
+// The desktop's A / B of the same trial (the Renderer's IV_ABSORB_EXP=1, review2/cpu, 28 Oct 2026): false (as
+// built) runs the same operations as before, so the same output to the bit. The module's builds never have it.
+inline bool absExp = false;
+#endif
 #endif
 
 } // namespace iv::prof
