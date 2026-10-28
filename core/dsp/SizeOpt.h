@@ -9,6 +9,18 @@
 #define IV_SIZE_OPT
 #endif
 
+// IV_CTL_OPT / IV_CTL_NOINLINE: v1.0.51's flash trims on the per-block control maths (the DECAY / WEAR /
+// SIZE mappings in params/Mappings.h, Engine::decayRate, and the one shared out-of-line blockCoeff;
+// 816 B). As IV_SIZE_OPT / IV_NOINLINE, unless IV_CTL_O3 (firmware/Makefile CTL_O3=1): then -O3 and
+// inlined as before v1.0.51, for the CPU hunt's A / B on the module (28 Oct 2026). Desktop: no effect.
+#if defined(IV_CTL_O3)
+#define IV_CTL_OPT
+#define IV_CTL_NOINLINE
+#else
+#define IV_CTL_OPT IV_SIZE_OPT
+#define IV_CTL_NOINLINE IV_NOINLINE
+#endif
+
 // IV_NO_UNSWITCH: -O3 as everywhere else, without loop unswitching, for the
 // Resilio Tank's per-sample block (its Tank::process). Unswitching copied its whole input
 // loop (TONE's tilt, the low cut, the coil, the Clang) once more for the one

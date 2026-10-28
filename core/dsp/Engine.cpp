@@ -27,7 +27,7 @@ float chunkCoeff(float ms, float sampleRate, int n)
 
 // One-pole coefficient for a time constant in seconds, per block of n: out of line, so its six callers
 // share one copy (flash, v1.0.51).
-IV_NOINLINE IV_SIZE_OPT float blockCoeff(float seconds, float sampleRate, int n)
+IV_CTL_NOINLINE IV_CTL_OPT float blockCoeff(float seconds, float sampleRate, int n)
 {
     return 1.0f - std::exp(-float(n) / (seconds * sampleRate));
 }
@@ -374,7 +374,7 @@ float Engine::hysteresisSize(float size, float& held, bool snap) const
 }
 
 // DECAY's loss rate for the SPACE in use (MASSIVE's shortest tail follows SIZE, v1.0.21).
-IV_SIZE_OPT float Engine::decayRate(float decay, float size) const
+IV_CTL_OPT float Engine::decayRate(float decay, float size) const
 {
     return activeSpace_ == 2 ? map::massiveDecayRate(decay, size) : map::decayRate(decay, activeSpace_);
 }
