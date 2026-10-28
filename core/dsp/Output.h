@@ -73,6 +73,7 @@ public:
     void prepare(float sampleRate)
     {
         sr_ = sampleRate;
+        memoTone_ = -1.0f; // set()'s kept coefficients were this rate's
         reset();
     }
     void reset()
