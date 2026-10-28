@@ -1833,6 +1833,13 @@ void RunSpikeLap(float fs)
     static const int kFlips[6][2] = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {0, 2}, {2, 0}};
     for (int att = 2; att >= 1; --att)
         for (const auto& f : kFlips) RunFlip(f[0], f[1], att, 1, fs, 0.5f, 0.0f);
+    // CPU save 2 (28 Oct 2026): the tanks' loss filters on std::exp instead of std::pow (prof::absExp, not the same
+    // bits: a trial), on the lines to beat; compare each with its SHIMMER line above.
+    iv::prof::absExp = true;
+    RunSpike({"ABSEXP", 2, 1, 1, false, 0.5f, 0.0f, 0.5f, 2, 0.9f}, fs);
+    RunSpike({"ABSEXP", 2, 2, 1, false, 0.5f, 0.0f, 0.5f, 2, 0.9f}, fs);
+    RunSpike({"ABSEXP", 2, 0, 1, false, 0.5f, 0.0f, 0.5f, 2, 0.9f}, fs);
+    iv::prof::absExp = false;
 #elif IV_PROFILE_SIZESPIKE >= 3
     // The CPU-hunt lap (~7 min; 28 Oct 2026, v1.0.52 at the rack: overloads moving SIZE in HALL / MASSIVE at high
     // DECAY with SHIMMER, and the late light on SPACE flips). Every earlier lap ran ONSET at BLOOM. The shipping
@@ -1984,7 +1991,7 @@ int main()
     System::Delay(3000); // time to open the serial log
     while (true) {
 #if IV_PROFILE_SIZESPIKE >= 4
-        static const char kHello[] = "CPUSAVE START (SHIMMER + WEAR 0.5 + MOTION left: SIZE moves, apart, still, SPACE flips; 33 lines, ~7 min a lap)\r\n";
+        static const char kHello[] = "CPUSAVE START (SHIMMER + WEAR 0.5 + MOTION left: SIZE moves, apart, still, SPACE flips, the ABSEXP trial; 36 lines, ~7.5 min a lap)\r\n";
 #elif IV_PROFILE_SIZESPIKE >= 3
         static const char kHello[] = "CPUHUNT START (SIZE moves SHIMMER vs BLOOM, SPACE flips; 40 lines, ~7 min a lap)\r\n";
 #elif IV_PROFILE_SIZESPIKE >= 2

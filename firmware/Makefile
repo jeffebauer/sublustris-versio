@@ -44,7 +44,8 @@ RELEASE_LATE_LIGHT ?= 0
 #                 crossfade paths (prof::xfFast; the same output to the bit) (-sizespikeab)
 #   CTL_O3=1      v1.0.51's control-rate flash trims undone (core/dsp/SizeOpt.h IV_CTL_OPT; -ctlo3)
 #   SIZESPIKE=4   the CPU-save lap (28 Oct 2026): the CPU hunt's overloads (SHIMMER, WEAR 0.5, MOTION left), WEAR and
-#                 MOTION apart, SIZE still, SPACE flips at WEAR 0.5 / MOTION left; SPLIT adds flip and tkabs (-cpusave)
+#                 MOTION apart, SIZE still, SPACE flips at WEAR 0.5 / MOTION left; SPLIT adds flip and tkabs (-cpusave);
+#                 since CPU save 2, three ABSEXP lines last (prof::absExp: the loss filters on std::exp, a trial)
 #   SIZESPIKE=3   the CPU-hunt lap (28 Oct 2026, v1.0.52's notes): SIZE moves with ONSET at SHIMMER against BLOOM,
 #                 and SPACE flips timed block by block around the flip (-cpuhunt)
 SIZE_GROUPS ?=

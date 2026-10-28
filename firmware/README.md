@@ -210,6 +210,23 @@ SIZESPIKE LAP 1 DONE: 59 lines, worst max  80.1% (SPIKE SPACES  MASSIVE ...), la
 
 Flashing and reading it: **rack power unplugged, USB only**; flash the `.bin` (Firmware Swap: Select Custom File, CONNECT, CHANGE FIRMWARE); `screen /dev/tty.usbmodem* 115200`, then `Ctrl-A`, `Shift-H` to log to `screenlog.0`; the first line (`SIZESPIKE START` / `SIZESPIKE A/B START`) comes ~3 s after boot; wait for `SIZESPIKE LAP 1 DONE` (LED 1 blue while a lap runs, then green, or LED 4 red if any block came late), then `Ctrl-A`, `Shift-H` again and `Ctrl-A`, `K`, `Y`.
 
+### CPU save 2 (28 Oct 2026, claude/cpu-save2)
+
+The second round against the CPU-save lap (`SIZESPIKE=4`, `docs/research/m3-cpusave-67ea6b8-lap2.log`), every change the
+same output to the bit on the desktop (`tools/same_render.py` SAME 60/60 against 68a4ad7):
+- **SPACE flips:** the twin room's 42 KB of D2 SRAM is no longer zeroed in the restart block (it was most of SPLIT's
+  `flip` ~23 %, and its evictions slowed the tank's reads after it); it is zeroed a slice a chunk while the room rests,
+  the rest at its first block (a freeze). HALL's and MASSIVE's early-tap layouts are worked out once.
+- **Per sample:** ERA's wear runs over the chunk with both sides side by side; MOTION's transport over the chunk with
+  its state in registers; the swell reads two taps a pass, one load a read; the shimmer heads issue their divide
+  before the reads; TONE's bell divides only while it moves.
+- **Per block:** control maths kept while their arguments hold (`Engine::blockK`, the knobs' smoothing, TONE's,
+  ERA's texture constants, MOTION's depths, the swell's glide); the loss filters' shared half once a block.
+- **Flash:** `LedPwm` writes its DMA streams' registers itself (HAL_DMA_Start and HAL_DMA_Abort no longer link, −1.8 KB).
+- The lap ends with three `ABSEXP` lines: the worst MASSIVE lines again with the loss filters on `std::exp` instead of
+  `std::pow` (`prof::absExp`; the build option `IV_ABSORB_EXP`): not the same bits (desktop: ~1e-6 apart, up to ~1e-3
+  where WEAR's grain rounds the other way), a trial. Compare each with its `SHIMMER` line.
+
 ## Memory
 
 Nothing yet (M0 passthrough). The plan (SPEC §5.2): the FDN lines, swell stage, predelay and REVERSE segments in the 64 MB SDRAM; the input diffusers and the companion plate in DTCM (`IV_DTCM` in `main.cpp`: zero-wait, NOLOAD, so cleared by whoever uses it); the Plate engine in AXI SRAM. libDaisy's linker script already puts the stack in AXI SRAM, leaving DTCM free (Resilio measured this).

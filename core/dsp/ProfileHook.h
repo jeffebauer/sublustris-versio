@@ -45,6 +45,9 @@ inline void countXfLines(const void* tank)
 // Fdn::tapsOld for every crossfading line), true on the faster ones (Fdn::lineXf, the carried old taps), which give
 // the same output to the bit. Builds without the hooks always take the faster ones.
 inline bool xfFast = true;
+// The CPU-save-2 lap's A / B (28 Oct 2026): true works the tanks' loss filters out on std::exp instead of std::pow
+// (Governor.h absorbLine; the build option IV_ABSORB_EXP in any build): not the same bits, a trial.
+inline bool absExp = false;
 #else
 inline void mark(Section) {}
 inline void countXfStart() {}

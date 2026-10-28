@@ -6,6 +6,7 @@
 // stays <= 1, SPEC §2.3 rule 2). darken() tells the tank how much of its
 // infinite high-end fade to keep: all of it above the floor, none of it once
 // the tail is down at the floor, so the tail stops darkening and holds.
+#include "dsp/ProfileHook.h"
 #include "dsp/SizeOpt.h"
 #include "params/SpaceVoicing.h"
 
@@ -182,7 +183,13 @@ IV_INLINE AbsorbShared absorbShared(float lowRate, float highRatio, float darken
 }
 IV_INLINE Absorb absorbLine(float seconds, const AbsorbShared& a)
 {
-#if defined(IV_ABSORB_EXP)
+#if defined(IV_ABSORB_EXP) || defined(IV_PROFILE_HOOKS)
+#if !defined(IV_ABSORB_EXP)
+    if (!prof::absExp) { // the profile's A / B: as shipped
+        const float gLow = std::pow(10.0f, -3.0f * seconds * a.lowRate), gHigh = std::pow(10.0f, -3.0f * seconds * a.highRate);
+        return {(gHigh + gLow * a.k) / a.onePlusK, a.pole, (gLow * a.k - gHigh) / a.onePlusK};
+    }
+#endif
     const float gLow  = std::exp(2.30258509f * (-3.0f * seconds * a.lowRate));
     const float gHigh = std::exp(2.30258509f * (-3.0f * seconds * a.highRate));
 #else
