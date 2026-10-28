@@ -2795,22 +2795,29 @@ private:
     {
         *reinterpret_cast<volatile uint32_t*>(d.StreamBaseAddress + 8u) = 0x3Fu << (d.StreamIndex & 0x1Fu);
     }
+    // LEAN=1 (review 2 audit): gLedPwm has static storage, zeroed by startup, and start() sets every port's id before
+    // reading it, so these initialisers only cost flash (the static constructor's stores and memsets, 48 B).
+#if IV_LEAN_LOOPS
+#define IV_LED_INIT(...)
+#else
+#define IV_LED_INIT(...) = __VA_ARGS__
+#endif
     struct Port {
-        GPIOPort      id      = PORTX;
-        int           numPins = 0;
-        bool          dirty   = false;
+        GPIOPort      id      IV_LED_INIT(PORTX);
+        int           numPins IV_LED_INIT(0);
+        bool          dirty   IV_LED_INIT(false);
         ivled::PwmPin pins[kNumLeds * kPinsPerLed];
-        int           counts[kNumLeds * kPinsPerLed] = {};
+        int           counts[kNumLeds * kPinsPerLed] IV_LED_INIT({});
     };
     struct Slot {
-        int port = 0, pin = 0;
+        int port IV_LED_INIT(0), pin IV_LED_INIT(0);
     };
     Port              ports_[kMaxPorts];
-    int               numPorts_   = 0;
-    int               numStarted_ = 0;
+    int               numPorts_   IV_LED_INIT(0);
+    int               numStarted_ IV_LED_INIT(0);
     Slot              slot_[kNumLeds][kPinsPerLed];
     TimerHandle       timer_;
-    DMA_HandleTypeDef dma_[kMaxPorts] = {};
+    DMA_HandleTypeDef dma_[kMaxPorts] IV_LED_INIT({});
 };
 
 LedPwm gLedPwm;
