@@ -15,6 +15,7 @@
 // over to the direct path (crossfaded up to kTapsFromSeconds).
 #include "dsp/Memory.h"
 #include "dsp/SizeOpt.h"
+#include "params/SpaceVoicing.h"
 
 #include <cmath>
 #include <cstdint>
@@ -102,30 +103,53 @@ public:
         line_[1].clear();
         for (auto& side : smear_)
             for (auto& ap : side) ap.clear();
-        attackNow_ = attackTarget_;
+        attackNow_ = attackTarget_; // (a TIME crossfade running carries on to the taps' new places)
     }
 
     // PROTOTYPE (renders/swell_seed): the jitter and signs' seed, before prepare() lays the taps out.
     void setSeed(uint32_t s) { seed_ = s ? s : 0x5EE11u; }
 
-    // The attack time in seconds; glides (so TIME moves don't jump the taps).
+    // The attack time in seconds. It moves by crossfade (ADR 0025's phase 2): once it has rested
+    // kSizeRestSeconds the taps jump to their new places one after another, each fading from its old
+    // read to its new over a twelfth of kSizeCrossfadeSeconds (equal power), and the smear's allpasses
+    // read from their old lengths' to their new ones' over the whole of it. Glided, the taps swept
+    // across seconds of their line at up to ~9x speed (a TIME move in BLOOM: scrambled, sped-up sound
+    // into the tank, +11-14 dB over 3 kHz while it moved, +14 dB under 100 Hz left in an endless tail;
+    // owner, v1.0.52: "noise ... which carries into the tail"), and the smear's lengths stepped once a
+    // chunk. One tap at a time: one extra read a side while it runs (all twelve at once would double
+    // the swell's reads, ~12 % of the module's CPU).
     void setAttackSeconds(float a, bool snap = false)
     {
         const float maxA = (kMaxSeconds - 0.1f) / kSpanPerAttack;
         attackTarget_ = a < 0.0f ? 0.0f : (a > maxA ? maxA : a);
-        if (snap) attackNow_ = attackTarget_;
+        if (snap) attackNow_ = attackTarget_; // (a crossfade running carries on to the taps' new places)
     }
 
-    // Once per control chunk of n samples (built for size: flash).
-    IV_SIZE_OPT void control(int n)
+    // Once per control chunk of n samples, before processBlock() of the same n (built for size, out of
+    // line: the tank's swell and the twin's share one copy; flash).
+    IV_NOINLINE IV_SIZE_OPT void control(int n)
     {
         const float c = 1.0f - std::exp(-float(n) / (0.15f * sampleRate_)); // 150 ms glide
-        attackNow_ += c * (attackTarget_ - attackNow_);
         smearG_ += c * (smearTarget_ - smearG_); // glides too, so switching it never clicks
         if (smearTarget_ == 0.0f && smearG_ < 1e-4f) smearG_ = 0.0f;
+        // The TIME crossfade (setAttackSeconds): the next tap once the last one's fade is done (none after
+        // the last); a start once the attack has rested (no move over half a sample at the longest tap
+        // for kSizeRestSeconds), none is running, and the taps would move.
+        const int seg = int(voicing::kSizeCrossfadeSeconds * sampleRate_) / taps_; // each tap's fade
+        int  xk = xfTap_ - 1; // the fading tap (-1: none)
+        bool next = xk >= 0 && xfPos_ >= (xk + 1) * seg;
+        if (next && ++xk >= taps_) xk = -1, next = false;
+        const float halfSample = 0.5f / (kSpanPerAttack * sampleRate_); // of attack, at the longest tap
+        restSamples_ = std::fabs(attackTarget_ - attackLast_) > halfSample ? 0 : restSamples_ + n;
+        attackLast_ = attackTarget_;
+        if (xk < 0 && restSamples_ >= int(voicing::kSizeRestSeconds * sampleRate_) && std::fabs(attackTarget_ - attackNow_) > halfSample) {
+            attackNow_ = attackTarget_;
+            xfPos_ = xk = 0;
+            next = true;
+        }
+        xfTap_ = xk + 1;
+        const bool fading = xk >= 0;
         const float a = attackNow_;
-        tapMix_ = a <= kDirectBelowSeconds ? 0.0f
-                : (a >= kTapsFromSeconds ? 1.0f : (a - kDirectBelowSeconds) / (kTapsFromSeconds - kDirectBelowSeconds));
         // The smear's allpasses add about a tenth of the span of their own delay, so the taps
         // close up by that much and the swell lands when it did unsmeared (owner: "the attack is a
         // little slower").
@@ -134,12 +158,28 @@ public:
         for (int j = 0; j < kSmearStages; ++j) {
             const float len = span / float(taps_) * kSmearRatio[j];
             smearLen_[j] = len < 1.0f ? 1u : uint32_t(len > maxLen ? maxLen : len);
+            if (!fading) smearOld_[j] = smearLen_[j]; // crossfading: from the lengths it started at
         }
         for (int c2 = 0; c2 < 2; ++c2)
             for (int k = 0; k < taps_; ++k) {
                 const float d = 1.0f + frac_[c2][k] * span;
-                tapDelay_[c2][k] = d;
+                if (!fading) tapDelay_[c2][k] = d; // crossfading: each tap takes its new place in turn
+                else if (next && k == xk) {    // the fading tap: its old place into the extra slot
+                    tapDelay_[c2][kTapSlots] = tapDelay_[c2][k];
+                    tapDelay_[c2][k] = d;
+                }
             }
+        const float mix = a <= kDirectBelowSeconds ? 0.0f
+                        : (a >= kTapsFromSeconds ? 1.0f : (a - kDirectBelowSeconds) / (kTapsFromSeconds - kDirectBelowSeconds));
+        if (!fading) tapMix_ = mix;
+        else { // this block: the fading tap's progress and the whole fade's (a line across it), the direct path
+            const float step = 1.0f / float(seg), d = step / float(taps_) * float(n);
+            // Between the direct path and the taps (MASSIVE's shortest swells), across the whole fade.
+            tapMix_ = tapMix_ < mix ? std::fmin(mix, tapMix_ + d) : std::fmax(mix, tapMix_ - d);
+            xfTapStep_ = step;
+            xfTapAt_ = float(xfPos_ - xk * seg) * step;
+            xfPos_ += n;
+        }
     }
 
     static constexpr int kMaxBlock = 64;
@@ -158,10 +198,17 @@ public:
         if (tapMix_ <= 0.0f) return;
         float sum[2][kMaxBlock];
         float* io[2] = {l, r};
+        // A TIME crossfade (control()): the fading tap fades in at its new place while its old place, in
+        // the extra slot, fades out (addRamped); the other taps as they are.
+        const int xk = xfTap_ - 1, last = xk >= 0 ? taps_ + 1 : taps_;
         for (int c = 0; c < 2; ++c) {
             for (int s = 0; s < n; ++s) sum[c][s] = 0.0f;
             const DelayLine& line = line_[c];
-            for (int k = 0; k < taps_; ++k) {
+            for (int k = 0; k < last; ++k) {
+                if (k == taps_ || k == xk) { // the fading tap: its old place (the extra slot), its new
+                    addRamped(sum[c], line, tapDelay_[c][k == taps_ ? kTapSlots : k], gain_[c][xk], k == taps_, n);
+                    continue;
+                }
                 const float    d  = tapDelay_[c][k];
                 const auto     di = uint32_t(d);
                 const float    t  = d - float(di), g = gain_[c][k];
@@ -180,12 +227,18 @@ public:
                     }
             }
         }
+        // The smear's blend across the whole crossfade: the taps done and the fading one's progress.
+        const float xfSmear = (float(xk) + xfTapAt_) / float(taps_), xfSmearStep = xfTapStep_ / float(taps_);
         for (int s = 0; s < n; ++s) {
             float v2[2] = {sum[0][s], sum[1][s]};
             if (smearG_ > 0.0f)
                 for (int c = 0; c < 2; ++c)
                     for (int j = 0; j < kSmearStages; ++j) {
-                        const float d = smear_[c][j].read(smearLen_[j]);
+                        float d = smear_[c][j].read(smearLen_[j]);
+                        if (smearOld_[j] != smearLen_[j]) { // a TIME crossfade: from the old length's read
+                            const float o = smear_[c][j].read(smearOld_[j]);
+                            d = o + (xfSmear + xfSmearStep * float(s)) * (d - o);
+                        }
                         const float v = v2[c] + smearG_ * d;
                         smear_[c][j].write(v);
                         v2[c] = d - smearG_ * v;
@@ -194,6 +247,22 @@ public:
         }
     }
 
+    // A TIME crossfade's fading tap, at its old place (out) or its new: its read, faded in or out across
+    // the block, equal power (the two places hold unrelated sound): sin / cos of a quarter turn as the
+    // cubic x (3 - x²) / 2 (within 3 %, no libm). Out of line, built for size (flash; 0.3 s after a move).
+    IV_NOINLINE IV_SIZE_OPT void addRamped(float* sum, const DelayLine& line, float d, float gain, bool out, int n) const
+    {
+        const auto  di = uint32_t(d);
+        const float t  = d - float(di), x0 = out ? 1.0f - xfTapAt_ : xfTapAt_, dx = out ? -xfTapStep_ : xfTapStep_;
+        for (int s = 0; s < n; ++s) {
+            const uint32_t back = uint32_t(n - 1 - s);
+            const float a0 = line.ago((di < 1 ? 1u : di) + back), a1 = line.ago(di + 1 + back);
+            const float x = x0 + dx * float(s); // (past 1 by under a block at a tap's end: x (3 - x²) / 2 ~ 1)
+            sum[s] += gain * (0.5f * x * (3.0f - x * x)) * (a0 + t * (a1 - a0));
+        }
+    }
+
+    // (One sample, outside a TIME crossfade: processBlock() is the one the Engine runs.)
     void process(float& l, float& r)
     {
         line_[0].write(l);
@@ -223,7 +292,15 @@ public:
 private:
     float     sampleRate_ = 48000.0f;
     DelayLine line_[2];
-    float     frac_[2][kTapSlots] IV_ZI, sign_[2][kTapSlots] IV_ZI, gain_[2][kTapSlots] IV_ZI, tapDelay_[2][kTapSlots] IV_ZI;
+    float     frac_[2][kTapSlots] IV_ZI, sign_[2][kTapSlots] IV_ZI, gain_[2][kTapSlots] IV_ZI, tapDelay_[2][kTapSlots + 1] IV_ZI;
+    // The TIME crossfade (setAttackSeconds, control()): the fading tap and the samples since
+    // the fade started (tapDelay_'s extra slot: the fading tap's old place), this block's ramp (the
+    // fading tap's progress: start and step), the rest timer, the smear's old lengths.
+    int       xfTap_ IV_ZI, xfPos_ IV_ZI; // xfTap_: the fading tap + 1 (0: none)
+    float     xfTapAt_ IV_ZI, xfTapStep_ IV_ZI;
+    float     attackLast_ IV_ZI;
+    int       restSamples_ IV_ZI;
+    uint32_t  smearOld_[kSmearStages] IV_ZI; // (control() sets it before the first block)
 #ifndef IV_FIXED_VOICINGS
     int       taps_ = kTaps; // setTapCount (a prototype)
 #else

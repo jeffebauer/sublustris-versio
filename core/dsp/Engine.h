@@ -299,8 +299,6 @@ private:
     dsp::DelayLine    predelay_[2];
     float             predelayNow_ IV_ZI, predelayTarget_ IV_ZI; // samples
     dsp::Diffuser<4>  diffuser_[2];
-    dsp::Swell        swell_;
-    dsp::Swell        twinSwell_; // PLATE's twin's (with no attack); HALL's and MASSIVE's room has none (v1.0.43)
     dsp::Fdn          fdn_;
     dsp::Plate        plate_;
     // Still lows (v1.0.18, ADR 0012 amendment; docs/research/still-lows.md): the HALL / MASSIVE tank's
@@ -441,6 +439,12 @@ private:
     // The ERA each tank was sent last (eraChanged), as an EraMix's bytes; eraSentOk_: which are set.
     unsigned char eraSent_[EraSentCount][sizeof(dsp::EraMix)];
     uint8_t       eraSentOk_ IV_ZI;
+
+    // The swells, near the end (they followed the input diffusers): the members after them load at
+    // shorter offsets, and the swell's TIME crossfade state moves only what follows (flash: in their old
+    // place that state cost ~470 B more, in the Engine's load offsets).
+    dsp::Swell        swell_;
+    dsp::Swell        twinSwell_; // PLATE's twin's (with no attack); HALL's and MASSIVE's room has none (v1.0.43)
 
     // The allpass lines' memory (attachMemory's axi): last, so no other member's offset moves (the
     // per-sample code's load offsets, and with them its flash, stay as they were).
