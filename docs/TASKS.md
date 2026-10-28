@@ -23,7 +23,7 @@ Pick pages from overnight review 2 (ask me to start the page server). Each one a
 
 ### At the rack
 - [ ] **v1.0.55 at the rack** (rack power, USB unplugged): `dist/sublustris_versio-v1.0.55-3eb5e1c-latelight.bin` (or the plain `...-3eb5e1c.bin`). v1.0.54 plus your DECAY-swell pick B. Check: the LEDs look as always, steady, no flicker; SHIMMER sounds normal; SIZE moves in HALL and MASSIVE with SHIMMER, WEAR and MOTION's tape side (no glitches; MASSIVE may flash amber); SPACE switches (no red); TIME moves in HALL BLOOM (no noise); DECAY's new range; turning DECAY down from long (no swell).
-- [ ] **The review's profile lap** (**USB power only, never with rack power**): flash `dist/sublustris_versio-review2-212b68b-profile-audit.bin`, then in Terminal from the main checkout `screen /dev/tty.usbmodem* 115200`, Ctrl-A then Shift-H to log, and wait for "SIZESPIKE LAP 1 DONE" (about 4-6 minutes). Then flash `dist/sublustris_versio-review2-212b68b-profile-audit-lean.bin` and log until its first DONE line (or the HASH line at boot). Send me `screenlog.0`. It tells us: whether MASSIVE fits with the two maths shortcuts, the one untimed case that may glitch (unfreezing after SIZE moved while frozen), and, if the two HASH lines match, that 2 KB of flash savings are the same sound on the module.
+- [ ] **The LEAN file's HASH** (USB power only): flash `dist/sublustris_versio-review2-212b68b-profile-audit-lean.bin`, keep logging, and tell me when a DONE line appears (~5 minutes). Its HASH must read `0x3b18a2ac`, like the first file's. If it does, 2 KB of flash savings are proven the same sound on the module.
 - [ ] **Optional rack boot test** (rack power, USB unplugged): `dist/sublustris_versio-review2-212b68b-lean-audiodirect.bin`. Same sound, 5 KB smaller. Check both outputs at the usual level, left and right not swapped, no hiss, buzz or crackle, knobs working. If it's clean, the flash squeeze is over and the fixes on the pages above can all fit.
 
 ### When convenient
@@ -39,7 +39,12 @@ Pick pages from overnight review 2 (ask me to start the page server). Each one a
   - The rumble: the endless hold's level nudges also tilt the tone, and incoming DC is kept forever: page `review2_endless`.
   - MASSIVE's CPU: ~4.5 more points available, the profile lap confirms.
 
-  The rest of the next steps are in the report's "What I'd do next". Waiting on your listening and the lap.
+  The rest of the next steps are in the report's "What I'd do next". Waiting on your listening and the LEAN file's HASH.
+- **Your audit lap** (29 Oct 2026, `docs/research/m3-review2-audit-212b68b.log` on `review/overnight-2`):
+  - **Unfreezing after SIZE moved while frozen overloads MASSIVE** (up to 107.5 %, two-thirds of the blocks late while it settles: a crackle). The whole SIZE move lands as one crossfade at the moment the twin room is still running. Next: a prototype that glides SIZE or waits for the twin after an unfreeze, then a page.
+  - **Playing MASSIVE with SHIMMER + WEAR + MOTION while SIZE moves now fits:** 90.8 %, and 88.4 % with both maths shortcuts.
+  - The datasheet's SDRAM refresh costs nothing measurable.
+  - The stack is 6.6 KB of 60 KB.
 - **Your first note on v1.0.54** (the swell turning DECAY down): built as v1.0.55 (your pick B), merged and in Ableton; at the rack next.
 - **Your three notes from the v1.0.52 rack test** (28 Oct 2026), all addressed in v1.0.54 (At the rack). (1)-(2) The overloads with SHIMMER + WEAR + MOTION's tape side, and the red on SPACE switches: not new (v1.0.49 measured the same); two rounds of CPU savings, same sound to the bit. Your laps (`docs/research/m3-cpuhunt-*`, `m3-cpusave*`): late blocks in a lap 11,897 → 0; HALL's SIZE sweep 104 → 85 %; switches into MASSIVE 102-106 → 80 %; MASSIVE's SIZE moves 97-99 → 93-95 % (may still flash amber). If MASSIVE still glitches, an optional maths shortcut takes 1.5-4 more points (not the same bits, far below hearing). (3) The noise when TIME moves in HALL BLOOM: the swell's copies glided across the recording; now each crossfades to its new place once TIME rests. Not new either.
 - **Merged into main** (28 Oct 2026, your OK): through v1.0.55. 22 of 22 tests pass on main; release firmware 112,564 B.
