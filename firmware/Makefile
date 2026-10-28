@@ -55,16 +55,18 @@ RELEASE_LATE_LIGHT ?= 0
 #                 IV_ABSORB_EXP; not the same bits: ~1e-6, review2/cpu 28 Oct 2026), release or profile (-absexp).
 #                 Its own object directory and .bin name: overriding TRIAL_DEFS on the command line reused
 #                 obj-release-48's objects (make doesn't track flags), a byte-identical .bin, and dropped SIZESPIKE.
-#   LEAN=1        Engine::process without loop unswitching and Fdn::runBlock without loop splitting (core/dsp/SizeOpt.h
-#                 IV_LEAN_LOOPS), HAL_I2C_Slave_Transmit wrapped to a stub, sqrtf as one vsqrt, LedPwm's
-#                 initialisers dropped (review 2 audit: -2,144 B, the same output; -lean)
+#   LEAN=1        (the default since 29 Oct 2026) Engine::process without loop unswitching and Fdn::runBlock without
+#                 loop splitting (core/dsp/SizeOpt.h IV_LEAN_LOOPS), HAL_I2C_Slave_Transmit wrapped to a stub, sqrtf as
+#                 one vsqrt, LedPwm's initialisers dropped (review 2 audit: -2,144 B, the same output: the audit lap's
+#                 HASH matched on the module, 0x3b18a2ac both ways, and its timing within 0.4 points).
+#                 LEAN=0 builds without them (-nolean).
 #   AUDIO_DIRECT=1 release only: the SAI's DMA straight to main.cpp's callback, not through libDaisy's
 #                 AudioHandle (main.cpp IV_AUDIO_DIRECT; review 2 audit: -3,240 B, the same samples; -direct)
 #   SDRAM_REFRESH=1 the SDRAM refreshed at the datasheet's rate (8192 rows in 64 ms: FMC_SDRTR COUNT 761), not
 #                 libDaisy's (COUNT 2054, 168 ms a pass); main.cpp IV_SDRAM_REFRESH (review2/neutral, 29 Oct 2026;
 #                 the same samples; -refresh). The SIZESPIKE=5 lap's REFRESH line times it.
 SIZE_GROUPS ?=
-LEAN ?=
+LEAN ?= 1
 AUDIO_DIRECT ?=
 SDRAM_REFRESH ?=
 CTL_O3 ?=
@@ -74,7 +76,7 @@ ABSORB_EXP ?=
 SHIMMER_POLY ?=
 CANDIDATE ?=
 SIZESPIKE ?=
-TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)$(if $(filter 1,$(LEAN)),-lean)$(if $(filter 1,$(AUDIO_DIRECT)),-direct)$(if $(filter 1,$(ABSORB_EXP)),-absexp)$(if $(filter 1,$(SHIMMER_POLY)),-shpoly)$(if $(filter 1,$(SDRAM_REFRESH)),-refresh)
+TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)$(if $(filter 1,$(LEAN)),,-nolean)$(if $(filter 1,$(AUDIO_DIRECT)),-direct)$(if $(filter 1,$(ABSORB_EXP)),-absexp)$(if $(filter 1,$(SHIMMER_POLY)),-shpoly)$(if $(filter 1,$(SDRAM_REFRESH)),-refresh)
 TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(filter 1,$(LEAN)), -DIV_LEAN_LOOPS)$(if $(filter 1,$(AUDIO_DIRECT)), -DIV_AUDIO_DIRECT=1)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))$(if $(filter 1,$(ABSORB_EXP)), -DIV_ABSORB_EXP)$(if $(filter 1,$(SHIMMER_POLY)), -DIV_SHIMMER_POLY)$(if $(filter 1,$(SDRAM_REFRESH)), -DIV_SDRAM_REFRESH=1)$(if $(filter 5,$(SIZESPIKE)),$(if $(filter 1,$(SHIMMER_POLY)),, -DIV_PROFILE_SHPOLY_AB))
 RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)$(if $(filter 1,$(RELEASE_LATE_LIGHT)),-latelight)$(TRIAL_TAG)
 PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)$(if $(SIZESPIKE),$(if $(filter 5,$(SIZESPIKE)),-audit,$(if $(filter 4,$(SIZESPIKE)),-cpusave,$(if $(filter 3,$(SIZESPIKE)),-cpuhunt,-sizespike$(if $(filter 2,$(SIZESPIKE)),ab)))))

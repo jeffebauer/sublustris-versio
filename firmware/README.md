@@ -229,7 +229,7 @@ same output to the bit on the desktop (`tools/same_render.py` SAME 60/60 against
 
 ### The audit lap (SIZESPIKE=5; review 2, 28-29 Oct 2026)
 
-`make -C firmware MODE=profile SIZESPIKE=5` → `sublustris_versio_profile-audit.bin` (`LEAN=1` → `-lean-audit`).
+`make -C firmware MODE=profile SIZESPIKE=5` → `sublustris_versio_profile-audit.bin` (LEAN is the default since 29 Oct 2026; `LEAN=0` → `-nolean-audit`).
 At boot, before `AUDIT START`: `HASH xxxxxxxx (3000 blocks, ...) | refresh COUNT n`: a CRC-32 of a fixed 3,000-block
 render (MASSIVE, SHIMMER, WEAR 0.5, MOTION left, DECAY 0.9, a SIZE jump), so two builds that print the same HASH give
 the same output to the bit on the module; `refresh COUNT` is the SDRAM refresh libDaisy left (2054). Then 16
