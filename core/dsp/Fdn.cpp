@@ -482,11 +482,12 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
         // Until its hold ends a correction is exp(lnGain), the same as in the trip's first block (s 0: a fade's start),
         // so it is worked out there only (CPU hunt, 28 Oct 2026: every block, every line and tap of both tanks, up to
         // ~160 std::exp a block). A line waiting through a fade keeps its own trip (s > 0) or starts none (lnGain 0).
+        // True: its trip has been done a whole control block (the line's taps: see below).
         auto corr = [&](float lnGain, float hold, float& val) {
-            if (s < hold && s > 0.0f) return;
+            if (s < hold && s > 0.0f) return false;
             if (s < hold) {
                 val = std::exp(lnGain);
-                return;
+                return false;
             }
             // Its trip done: 1 without the divide (review2/cpu, 28 Oct 2026). The quotient below was 1 or more
             // whenever s - hold reached xfLen_ (a correctly rounded divide is monotonic and xfLen_ / xfLen_ is 1), and
@@ -494,13 +495,17 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
             const float since = s - hold;
             if (since >= float(xfLen_)) {
                 val = 1.0f;
-                return;
+                return since >= float(xfLen_ + kControlBlock);
             }
             val = std::exp(lnGain * (1.0f - since / float(xfLen_)));
+            return false;
         };
         for (int i = 0; i < kN; ++i) {
             if (staggered()) s = s0 + xfOff_[i]; // staggered: each line's own trip
-            corr(xfLnGain_[i], xfHold_[i], xfLineCorr_[i]);
+            // A line's taps end their trips no later than the line (each holds a share of its hold). Once the line's
+            // trip has been done a whole control block (s moves at most kControlBlock between these), its taps were
+            // done at the last one too and set to 1 there: they are left as they are (review2/cpu, the same values).
+            if (corr(xfLnGain_[i], xfHold_[i], xfLineCorr_[i])) continue;
             for (int k = 0; k < earlyCount_; ++k) corr(earlyFrac_[i][k] * xfLnGain_[i], earlyFrac_[i][k] * xfHold_[i], xfTapCorr_[i][k]);
         }
         s = s0;
