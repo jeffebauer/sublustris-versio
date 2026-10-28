@@ -8,6 +8,7 @@
 // their neighbours); no energy growth, and 10-minute infinite holds at DECAY 1 at both ends in every SPACE (the
 // per-line change is in the loop); music's loudness within ±1 dB of noon across the knob.
 
+#include "DecayV1052.h"
 #include "PitchTrack.h"
 #include "Wav.h"
 #include "dsp/Engine.h"
@@ -79,6 +80,7 @@ Setting pageSetting(int space, float drift) // the page's SPACEs: SIZE 0.6 (MASS
     s.space = space;
     s.size = space == 2 ? 0.7f : 0.6f;
     s.drift = drift;
+    s.decay = decaySameTailAsV1052(0.7f, space); // the page's tail length (v1.0.53-decay: PLATE / HALL tops 30 / 60 s)
     return s;
 }
 
