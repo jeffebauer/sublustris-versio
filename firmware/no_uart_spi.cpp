@@ -110,6 +110,12 @@ extern "C" void exit(int)
 // result is, so every non-negative argument gives the same bits; nothing here reads errno (a negative argument gives
 // the same NaN, without errno). The Core's 12 calls land here instead.
 #if defined(IV_LEAN_LOOPS) && !defined(IV_MODE_M0TEST)
+// I2C slave transmit (LEAN=1, firmware/Makefile --wrap): never used (the only I2C here is the Seed 1.1 codec's
+// set-up, as a master), so the HAL's 638 B copy isn't linked. Refuses, as the HAL does for a bad state.
+extern "C" HAL_StatusTypeDef __wrap_HAL_I2C_Slave_Transmit(I2C_HandleTypeDef*, uint8_t*, uint16_t, uint32_t)
+{
+    return HAL_ERROR;
+}
 extern "C" float sqrtf(float x)
 {
     float r;

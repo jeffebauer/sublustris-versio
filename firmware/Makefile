@@ -147,6 +147,15 @@ include $(SYSTEM_FILES_DIR)/Makefile
 # valid for release). Saves flash without touching per-sample DSP speed.
 $(BUILD_DIR)/main.o: OPT = -Os
 
+# LEAN=1 (review 2 audit): libDaisy's I2CHandle::TransmitBlocking links HAL_I2C_Slave_Transmit (638 B) for an I2C
+# slave mode nothing here uses (the Seed 1.1 codec's set-up is a master); its one call goes to a stub
+# (no_uart_spi.cpp __wrap_HAL_I2C_Slave_Transmit) and the HAL's copy is collected.
+ifneq ($(LEAN),)
+ifneq ($(MODE),m0test)
+LDFLAGS += -Wl,--wrap=HAL_I2C_Slave_Transmit
+endif
+endif
+
 # Internal flash limit for NE Firmware Swap installs (SPEC §5.3).
 FLASH_LIMIT = 131072
 
