@@ -48,10 +48,23 @@ inline bool xfFast = true;
 // The CPU-save-2 lap's A / B (28 Oct 2026): true works the tanks' loss filters out on std::exp instead of std::pow
 // (Governor.h absorbLine; the build option IV_ABSORB_EXP in any build): not the same bits, a trial.
 inline bool absExp = false;
+#if defined(IV_PROFILE_SHPOLY_AB)
+// The audit lap's A / B (SIZESPIKE=5, review2/neutral, 29 Oct 2026): true runs the shimmer heads' window as the
+// polynomial (Shimmer.h headsAB; the firmware's SHIMMER_POLY=1 at compile time): not the same bits, a trial.
+inline bool shimmerPoly = false;
+#endif
 #else
 inline void mark(Section) {}
 inline void countXfStart() {}
 inline void countXfLines(const void*) {}
+#ifndef IV_FIXED_VOICINGS
+// The desktop's A / B of the same trial (the Renderer's IV_ABSORB_EXP=1, review2/cpu, 28 Oct 2026): false (as
+// built) runs the same operations as before, so the same output to the bit. The module's builds never have it.
+inline bool absExp = false;
+// The shimmer heads' window as a polynomial, no divide (Shimmer.h shimmerWindowPoly; the Renderer's IV_SHIMMER_POLY=1):
+// a trial, not the same bits. False runs the same operations as before.
+inline bool shimmerPoly = false;
+#endif
 #endif
 
 } // namespace iv::prof

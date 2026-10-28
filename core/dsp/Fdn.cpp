@@ -350,8 +350,10 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     const float floorDepth = voicing::kFloorDepthSeconds * sampleRate_ * modDepth_;
     const float floorCoeff = floorCoeffMemo_.get(dt, [](float t) { return 1.0f - std::exp(-2.0f * 3.14159265f * 0.3f * t); });
 
-    // The floor governor's extra loss (ADR 0008).
-    governor_.control(n, sampleRate_);
+    // The floor governor's extra loss (ADR 0008). A low tank follows its leader's and nothing reads its own levels, so
+    // they aren't worked out (three log10f a chunk; review2/cpu, 28 Oct 2026): the same output to the bit.
+    if (leader_) governor_.skip();
+    else governor_.control(n, sampleRate_);
     const FloorGovernor& gov = leader_ ? leader_->governor_ : governor_; // a low tank follows its leader
     const float governRate = gov.extraRate;
 
@@ -467,8 +469,11 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     // level of the powers' own fade over that of the mix. Old and new reads that agree sum to one (equal
     // power there grew the lows every trip, a swell to DC); reads that differ keep their power (summing
     // to one, they dipped 3 dB mid-fade, and in the loop every trip: a small HALL 25 dB down).
+    // Staggered, a line waiting for its fade reads once and never uses its gain (lineFast; a fade's start sets it to
+    // 1): its divide and square root are skipped (review2/cpu, 28 Oct 2026; the same output to the bit).
     if (xfLeft_ > 0)
         for (int i = 0; i < kN; ++i) {
+            if (staggered() && !xfLine_[i]) continue;
             const float a = xfOld_, b = xfNew_, on = std::fmax(0.0f, xfON_[i]);
             const float want = a * xfOO_[i] + b * xfNN_[i], mix = a * a * xfOO_[i] + b * b * xfNN_[i] + 2.0f * a * b * on;
             xfK_[i] = mix > 1e-24f ? std::fmin(1.42f, std::sqrt(want / mix)) : 1.0f;
@@ -480,18 +485,30 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
         // Until its hold ends a correction is exp(lnGain), the same as in the trip's first block (s 0: a fade's start),
         // so it is worked out there only (CPU hunt, 28 Oct 2026: every block, every line and tap of both tanks, up to
         // ~160 std::exp a block). A line waiting through a fade keeps its own trip (s > 0) or starts none (lnGain 0).
+        // True: its trip has been done a whole control block (the line's taps: see below).
         auto corr = [&](float lnGain, float hold, float& val) {
-            if (s < hold && s > 0.0f) return;
+            if (s < hold && s > 0.0f) return false;
             if (s < hold) {
                 val = std::exp(lnGain);
-                return;
+                return false;
             }
-            const float r = (s - hold) / float(xfLen_);
-            val = r >= 1.0f ? 1.0f : std::exp(lnGain * (1.0f - r));
+            // Its trip done: 1 without the divide (review2/cpu, 28 Oct 2026). The quotient below was 1 or more
+            // whenever s - hold reached xfLen_ (a correctly rounded divide is monotonic and xfLen_ / xfLen_ is 1), and
+            // short of it, it is at most 1, where exp(lnGain * 0) is exactly the 1 it gave: the same values.
+            const float since = s - hold;
+            if (since >= float(xfLen_)) {
+                val = 1.0f;
+                return since >= float(xfLen_ + kControlBlock);
+            }
+            val = std::exp(lnGain * (1.0f - since / float(xfLen_)));
+            return false;
         };
         for (int i = 0; i < kN; ++i) {
             if (staggered()) s = s0 + xfOff_[i]; // staggered: each line's own trip
-            corr(xfLnGain_[i], xfHold_[i], xfLineCorr_[i]);
+            // A line's taps end their trips no later than the line (each holds a share of its hold). Once the line's
+            // trip has been done a whole control block (s moves at most kControlBlock between these), its taps were
+            // done at the last one too and set to 1 there: they are left as they are (review2/cpu, the same values).
+            if (corr(xfLnGain_[i], xfHold_[i], xfLineCorr_[i])) continue;
             for (int k = 0; k < earlyCount_; ++k) corr(earlyFrac_[i][k] * xfLnGain_[i], earlyFrac_[i][k] * xfHold_[i], xfTapCorr_[i][k]);
         }
         s = s0;
@@ -609,7 +626,7 @@ IV_SIZE_OPT bool Fdn::blockFits(int m) const
 }
 
 // m samples on this control block's values (m = the block, or 1 when it doesn't fit).
-IV_NO_UNSWITCH void Fdn::runBlock(const float* inL, const float* inR, float* outL, float* outR, int m)
+IV_LEAN_RUNBLOCK void Fdn::runBlock(const float* inL, const float* inR, float* outL, float* outR, int m)
 {
     constexpr float kNorm = 0.35355339f; // 1 / sqrt(8): keeps the Hadamard mix energy-preserving
     // The level that follows SIZE (a longer loop holds the same energy over more samples) and the

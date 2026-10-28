@@ -47,6 +47,8 @@ struct FloorGovernor {
     }
     // One output sample's power (mean of the channels' squares).
     void add(float power) { block_ += power; }
+    // A chunk not judged (a low tank's: it follows its leader's, Fdn::control): its power dropped.
+    void skip() { block_ = 0.0f; }
 
     // Once per control chunk of n samples (built for size: its three log10f are its cost).
     IV_SIZE_OPT void control(int n, float sampleRate)
@@ -183,9 +185,9 @@ IV_INLINE AbsorbShared absorbShared(float lowRate, float highRatio, float darken
 }
 IV_INLINE Absorb absorbLine(float seconds, const AbsorbShared& a)
 {
-#if defined(IV_ABSORB_EXP) || defined(IV_PROFILE_HOOKS)
+#if defined(IV_ABSORB_EXP) || defined(IV_PROFILE_HOOKS) || !defined(IV_FIXED_VOICINGS)
 #if !defined(IV_ABSORB_EXP)
-    if (!prof::absExp) { // the profile's A / B: as shipped
+    if (!prof::absExp) { // the profile's A / B (and the Renderer's IV_ABSORB_EXP): as shipped
         const float gLow = std::pow(10.0f, -3.0f * seconds * a.lowRate), gHigh = std::pow(10.0f, -3.0f * seconds * a.highRate);
         return {(gHigh + gLow * a.k) / a.onePlusK, a.pole, (gLow * a.k - gHigh) / a.onePlusK};
     }

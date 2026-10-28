@@ -46,16 +46,40 @@ RELEASE_LATE_LIGHT ?= 0
 #   SIZESPIKE=4   the CPU-save lap (28 Oct 2026): the CPU hunt's overloads (SHIMMER, WEAR 0.5, MOTION left), WEAR and
 #                 MOTION apart, SIZE still, SPACE flips at WEAR 0.5 / MOTION left; SPLIT adds flip and tkabs (-cpusave);
 #                 since CPU save 2, three ABSEXP lines last (prof::absExp: the loss filters on std::exp, a trial)
+#   SIZESPIKE=5   the audit lap (review 2 audit, 28 Oct 2026): unfreeze after SIZE moved while frozen, paint, every knob
+#                 moving, WEAR's grit; a HASH line at boot (CRC-32 of a fixed render: equal across two builds = the same
+#                 output on the module) and the stack's high-water mark on each DONE line (-audit)
 #   SIZESPIKE=3   the CPU-hunt lap (28 Oct 2026, v1.0.52's notes): SIZE moves with ONSET at SHIMMER against BLOOM,
 #                 and SPACE flips timed block by block around the flip (-cpuhunt)
+#   ABSORB_EXP=1  the tanks' loss filters on std::exp instead of std::pow (core/dsp/Governor.h absorbLine,
+#                 IV_ABSORB_EXP; not the same bits: ~1e-6, review2/cpu 28 Oct 2026), release or profile (-absexp).
+#                 Its own object directory and .bin name: overriding TRIAL_DEFS on the command line reused
+#                 obj-release-48's objects (make doesn't track flags), a byte-identical .bin, and dropped SIZESPIKE.
+#   LEAN=1        (the default since 29 Oct 2026) Engine::process without loop unswitching and Fdn::runBlock without
+#                 loop splitting (core/dsp/SizeOpt.h IV_LEAN_LOOPS), HAL_I2C_Slave_Transmit wrapped to a stub, sqrtf as
+#                 one vsqrt, LedPwm's initialisers dropped (review 2 audit: -2,144 B, the same output: the audit lap's
+#                 HASH matched on the module, 0x3b18a2ac both ways, and its timing within 0.4 points).
+#                 LEAN=0 builds without them (-nolean).
+#   AUDIO_DIRECT=1 release only: the SAI's DMA straight to main.cpp's callback, not through libDaisy's
+#                 AudioHandle (main.cpp IV_AUDIO_DIRECT; review 2 audit: -3,240 B, the same samples; -direct)
+#   SDRAM_REFRESH=1 the SDRAM refreshed at the datasheet's rate (8192 rows in 64 ms: FMC_SDRTR COUNT 761), not
+#                 libDaisy's (COUNT 2054, 168 ms a pass); main.cpp IV_SDRAM_REFRESH (review2/neutral, 29 Oct 2026;
+#                 the same samples; -refresh). The SIZESPIKE=5 lap's REFRESH line times it.
 SIZE_GROUPS ?=
+LEAN ?= 1
+AUDIO_DIRECT ?=
+SDRAM_REFRESH ?=
 CTL_O3 ?=
+#   SHIMMER_POLY=1 the shimmer heads' window as a polynomial, no divide (core/dsp/Shimmer.h shimmerWindowPoly,
+#                 IV_SHIMMER_POLY; not the same bits: review2/cpu 28 Oct 2026), release or profile (-shpoly)
+ABSORB_EXP ?=
+SHIMMER_POLY ?=
 CANDIDATE ?=
 SIZESPIKE ?=
-TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)
-TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))
+TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)$(if $(filter 1,$(LEAN)),,-nolean)$(if $(filter 1,$(AUDIO_DIRECT)),-direct)$(if $(filter 1,$(ABSORB_EXP)),-absexp)$(if $(filter 1,$(SHIMMER_POLY)),-shpoly)$(if $(filter 1,$(SDRAM_REFRESH)),-refresh)
+TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(filter 1,$(LEAN)), -DIV_LEAN_LOOPS)$(if $(filter 1,$(AUDIO_DIRECT)), -DIV_AUDIO_DIRECT=1)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))$(if $(filter 1,$(ABSORB_EXP)), -DIV_ABSORB_EXP)$(if $(filter 1,$(SHIMMER_POLY)), -DIV_SHIMMER_POLY)$(if $(filter 1,$(SDRAM_REFRESH)), -DIV_SDRAM_REFRESH=1)$(if $(filter 5,$(SIZESPIKE)),$(if $(filter 1,$(SHIMMER_POLY)),, -DIV_PROFILE_SHPOLY_AB))
 RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)$(if $(filter 1,$(RELEASE_LATE_LIGHT)),-latelight)$(TRIAL_TAG)
-PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)$(if $(SIZESPIKE),$(if $(filter 4,$(SIZESPIKE)),-cpusave,$(if $(filter 3,$(SIZESPIKE)),-cpuhunt,-sizespike$(if $(filter 2,$(SIZESPIKE)),ab))))
+PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)$(if $(SIZESPIKE),$(if $(filter 5,$(SIZESPIKE)),-audit,$(if $(filter 4,$(SIZESPIKE)),-cpusave,$(if $(filter 3,$(SIZESPIKE)),-cpuhunt,-sizespike$(if $(filter 2,$(SIZESPIKE)),ab)))))
 
 ifeq ($(MODE),m0test)
   TARGET    = sublustris_versio_m0test
@@ -138,6 +162,15 @@ include $(SYSTEM_FILES_DIR)/Makefile
 # valid for release). Saves flash without touching per-sample DSP speed.
 $(BUILD_DIR)/main.o: OPT = -Os
 
+# LEAN=1 (review 2 audit): libDaisy's I2CHandle::TransmitBlocking links HAL_I2C_Slave_Transmit (638 B) for an I2C
+# slave mode nothing here uses (the Seed 1.1 codec's set-up is a master); its one call goes to a stub
+# (no_uart_spi.cpp __wrap_HAL_I2C_Slave_Transmit) and the HAL's copy is collected.
+ifeq ($(LEAN),1)
+ifneq ($(MODE),m0test)
+LDFLAGS += -Wl,--wrap=HAL_I2C_Slave_Transmit
+endif
+endif
+
 # Internal flash limit for NE Firmware Swap installs (SPEC §5.3).
 FLASH_LIMIT = 131072
 
@@ -172,7 +205,7 @@ all-variants:
 	@echo ""; \
 	echo "=== Variant sizes vs $(FLASH_LIMIT)-byte internal-flash limit (SPEC §5.3) ==="; \
 	fail=0; warn=0; \
-	for f in sublustris_versio sublustris_versio_m0test sublustris_versio_profile; do \
+	for f in sublustris_versio$(RELEASE_TAG) sublustris_versio_m0test sublustris_versio_profile$(PROFILE_TAG); do \
 		bytes=$$(wc -c < build/$$f.bin | tr -d ' '); \
 		pct=$$((bytes * 100 / $(FLASH_LIMIT))); \
 		if [ $$bytes -gt $(FLASH_LIMIT) ]; then status="EXCEEDS LIMIT"; fail=1; \

@@ -32,6 +32,19 @@
 #define IV_NO_UNSWITCH
 #endif
 
+// IV_LEAN_LOOPS (firmware trial, review 2 audit, 28 Oct 2026; firmware/Makefile LEAN=1): Engine::process without loop
+// unswitching (it copied the tank-input loop for ERA's hiss / crackle test, -540 B) and Fdn::runBlock without loop
+// splitting (it split the early taps' last loop at s < q and the filling taps' at s >= lag, -474 B). Control flow
+// only: the same floating-point operations in the same order (no fusing, no reassociation), so the same output; the
+// cost is a predictable branch a sample in those loops. Off by default until a CPU lap has timed it.
+#if defined(IV_LEAN_LOOPS) && defined(IV_FIXED_VOICINGS) && defined(__GNUC__) && !defined(__clang__)
+#define IV_LEAN_PROCESS __attribute__((optimize("no-unswitch-loops")))
+#define IV_LEAN_RUNBLOCK __attribute__((optimize("no-unswitch-loops", "no-split-loops")))
+#else
+#define IV_LEAN_PROCESS
+#define IV_LEAN_RUNBLOCK IV_NO_UNSWITCH
+#endif
+
 // IV_INLINE: always inline a small per-sample helper, even where the
 // caller has grown past the compiler's inlining budget (the mu-law box's
 // half-band steps inside Tank::process: called out of line, the two
