@@ -469,8 +469,11 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     // level of the powers' own fade over that of the mix. Old and new reads that agree sum to one (equal
     // power there grew the lows every trip, a swell to DC); reads that differ keep their power (summing
     // to one, they dipped 3 dB mid-fade, and in the loop every trip: a small HALL 25 dB down).
+    // Staggered, a line waiting for its fade reads once and never uses its gain (lineFast; a fade's start sets it to
+    // 1): its divide and square root are skipped (review2/cpu, 28 Oct 2026; the same output to the bit).
     if (xfLeft_ > 0)
         for (int i = 0; i < kN; ++i) {
+            if (staggered() && !xfLine_[i]) continue;
             const float a = xfOld_, b = xfNew_, on = std::fmax(0.0f, xfON_[i]);
             const float want = a * xfOO_[i] + b * xfNN_[i], mix = a * a * xfOO_[i] + b * b * xfNN_[i] + 2.0f * a * b * on;
             xfK_[i] = mix > 1e-24f ? std::fmin(1.42f, std::sqrt(want / mix)) : 1.0f;
