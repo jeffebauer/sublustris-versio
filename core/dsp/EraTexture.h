@@ -189,7 +189,7 @@ public:
     bool settled() const { return std::fabs(hold_ - 1.0f) < 1e-4f && std::fabs(holdAim_ - 1.0f) < 1e-4f; }
 
     // process() over a block in place (out of line: the Engine's one call, its two sides side by side).
-    IV_NOINLINE IV_NO_UNSWITCH void processBlock(float* l, float* r, int n)
+    IV_NOINLINE IV_NO_UNSWITCH void processBlock(float* __restrict l, float* __restrict r, int n)
     {
         for (int i = 0; i < n; ++i) process(l[i], r[i]);
     }

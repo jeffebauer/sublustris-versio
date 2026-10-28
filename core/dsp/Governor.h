@@ -166,16 +166,35 @@ struct Memo1 {
     }
 };
 
-inline Absorb absorbent(float seconds, float lowRate, float highRatio, float darken, float shelfK, float air)
+// absorbent() in two halves (CPU save 2, 28 Oct 2026): what every line of a tank shares (the rates, the shelf's
+// constants: four divides), then each line's own (its length's two std::pow). The same operations: the same bits.
+struct AbsorbShared {
+    float lowRate, highRate, k, onePlusK, pole;
+};
+IV_INLINE AbsorbShared absorbShared(float lowRate, float highRatio, float darken, float shelfK, float air)
 {
     float highRate = air > 0.0f && lowRate > 0.0f ? lowRate + air * (voicing::kDampingHighT60Ratio / highRatio)
                                                   : lowRate / highRatio;
     const float infiniteHigh = darken * (1.0f / highRatio - 1.0f) / voicing::kInfiniteHighT60Seconds;
     if (highRate < infiniteHigh) highRate = infiniteHigh;
-    const float gLow  = std::pow(10.0f, -3.0f * seconds * lowRate);
-    const float gHigh = std::pow(10.0f, -3.0f * seconds * highRate);
     const float K = shelfK;
-    return {(gHigh + gLow * K) / (1.0f + K), (1.0f - K) / (1.0f + K), (gLow * K - gHigh) / (1.0f + K)};
+    return {lowRate, highRate, K, 1.0f + K, (1.0f - K) / (1.0f + K)};
+}
+IV_INLINE Absorb absorbLine(float seconds, const AbsorbShared& a)
+{
+#if defined(IV_ABSORB_EXP)
+    const float gLow  = std::exp(2.30258509f * (-3.0f * seconds * a.lowRate));
+    const float gHigh = std::exp(2.30258509f * (-3.0f * seconds * a.highRate));
+#else
+    const float gLow  = std::pow(10.0f, -3.0f * seconds * a.lowRate);
+    const float gHigh = std::pow(10.0f, -3.0f * seconds * a.highRate);
+#endif
+    const float K = a.k;
+    return {(gHigh + gLow * K) / a.onePlusK, a.pole, (gLow * K - gHigh) / a.onePlusK};
+}
+inline Absorb absorbent(float seconds, float lowRate, float highRatio, float darken, float shelfK, float air)
+{
+    return absorbLine(seconds, absorbShared(lowRate, highRatio, darken, shelfK, air));
 }
 
 } // namespace iv::dsp

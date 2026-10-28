@@ -513,6 +513,8 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
                 absChanged = true;
             }
     }
+    AbsorbShared absShared;
+    bool         absReady = false;
     for (int i = 0; i < kN; ++i) {
         // Modulation floor: a new random target every ~1.7–3.1 s per line.
         floorCountdown_[i] -= dt;
@@ -543,7 +545,11 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
         if (absChanged || !(seconds == absSec_[i])) {
             absSec_[i] = seconds;
             prof::mark(prof::kTankCtl);
-            absOut_[i] = absorbent(seconds, rate, highRatio_, gov.darken, shelfK_, air_);
+            if (!absReady) { // the shared half, once for every line that needs it
+                absShared = absorbShared(rate, highRatio_, gov.darken, shelfK_, air_);
+                absReady = true;
+            }
+            absOut_[i] = absorbLine(seconds, absShared);
             prof::mark(prof::kTankAbs);
         }
         const Absorb& a = absOut_[i];
