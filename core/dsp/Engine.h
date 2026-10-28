@@ -465,6 +465,21 @@ private:
     dsp::Arena d2_; // attachMemory's d2 (likewise last)
     float*     attachedD2_ IV_ZI;
     size_t     attachedD2Count_ IV_ZI;
+
+    // Control maths kept between blocks (CPU save 2, 28 Oct 2026; last, so no other member's offset moves): blockK()'s
+    // recent coefficients; the knobs' smoothing coefficients for two chunk lengths (controlTick).
+    float blockK(float seconds, int n);
+    struct BlockMemo {
+        float seconds;
+        int   n; // 0: empty
+        float k;
+    };
+    static constexpr int kBlockMemo = 16;
+    BlockMemo blockMemo_[kBlockMemo] IV_ZI;
+    int       blockNext_ IV_ZI;
+    float     smoothK_[2][static_cast<size_t>(ParamId::Count)] IV_ZI;
+    int       smoothN_[2] IV_ZI, smoothNext_ IV_ZI;
+    dsp::EarlyLayouts earlyLayouts_; // the tanks' early-tap layouts (Fdn::layoutEarly)
 };
 
 } // namespace iv

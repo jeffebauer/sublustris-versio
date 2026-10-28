@@ -83,10 +83,6 @@ IV_SIZE_OPT uint32_t primeAtOrAbove(uint32_t n, const float* taken, int count)
     }
 }
 
-// layoutEarly()'s kept layouts, HALL's count and MASSIVE's (the same for every tank: they depend on the count alone).
-float gLayFrac[2][voicing::kFdnLines][voicing::kEarlyTaps], gLayGain[2][voicing::kFdnLines][voicing::kEarlyTaps];
-int   gLayCount[2] = {0, 0}; // (0: none yet)
-
 // The 80 ms glides' one-pole coefficient for a step of t seconds (Memo1, one copy for its two users).
 float glide80(float t) { return 1.0f - std::exp(-t / 0.08f); }
 
@@ -196,12 +192,13 @@ IV_SIZE_OPT void Fdn::layoutEarly()
 {
     // HALL's and MASSIVE's layouts are worked out once (prepare()) and copied at a SPACE flip, whose restart
     // block paid ~200 divides a tank for them (CPU save 2, 28 Oct 2026). The same values.
-    for (int c = 0; c < 2; ++c)
-        if (gLayCount[c] == earlyCount_) {
-            std::memcpy(earlyFrac_, gLayFrac[c], sizeof earlyFrac_);
-            std::memcpy(earlyGain_, gLayGain[c], sizeof earlyGain_);
-            return;
-        }
+    if (lay_)
+        for (int c = 0; c < 2; ++c)
+            if (lay_->count[c] == earlyCount_) {
+                std::memcpy(earlyFrac_, lay_->frac[c], sizeof earlyFrac_);
+                std::memcpy(earlyGain_, lay_->gain[c], sizeof earlyGain_);
+                return;
+            }
     uint32_t es = 0xEA51u;
     for (int i = 0; i < kN; ++i)
         for (int k = 0; k < kEarlyTaps; ++k) {
@@ -224,10 +221,10 @@ IV_SIZE_OPT void Fdn::layoutEarly()
         for (auto& row : earlyGain_) for (auto& g : row) g *= norm;
     }
     const int c = earlyCount_ == voicing::kMassiveEarlyTaps ? 1 : (earlyCount_ == voicing::kHallEarlyTaps ? 0 : -1);
-    if (c >= 0) { // (another count, a prototype's, isn't kept)
-        gLayCount[c] = earlyCount_;
-        std::memcpy(gLayFrac[c], earlyFrac_, sizeof earlyFrac_);
-        std::memcpy(gLayGain[c], earlyGain_, sizeof earlyGain_);
+    if (lay_ && c >= 0) { // (another count, a prototype's, isn't kept)
+        lay_->count[c] = earlyCount_;
+        std::memcpy(lay_->frac[c], earlyFrac_, sizeof earlyFrac_);
+        std::memcpy(lay_->gain[c], earlyGain_, sizeof earlyGain_);
     }
 }
 

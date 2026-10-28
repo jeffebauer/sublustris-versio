@@ -112,10 +112,30 @@ public:
                 gExpStep_[c] = (std::fmax(envZ_[c], 1e-4f) * (1.0f / 0.126f) - gExp_[c]) * inv;
             }
         }
-        if (m.clockW > 0.0f) clockInc_ = tex::kClockHzHi * std::pow(tex::kClockHzLo / tex::kClockHzHi, m.clockT) / sr;
+        // (CPU save 2, 28 Oct 2026: what follows a setting or the chunk's length alone is worked out again only when
+        // that moves; the same expressions, so the same bits.)
+        const bool srMoved = !sameBits(sr, sr_);
+        int slot = n == memoN_[0] ? 0 : (n == memoN_[1] ? 1 : -1);
+        if (slot < 0 || srMoved) {
+            slot = slot < 0 ? memoNext_ : slot;
+            memoNext_ = slot ^ 1;
+            memoN_[slot] = n;
+            memoHold_[slot] = 1.0f - std::exp(-float(n) / (0.5f * sr));
+            memoGrain_[slot] = 1.0f - std::exp(-float(n) / (0.005f * sr));
+            memoBandHz_[slot] = -1.0f;
+            if (srMoved) memoN_[slot ^ 1] = 0;
+        }
+        if (m.clockW > 0.0f && (!sameBits(m.clockT, clockT_) || srMoved)) {
+            clockT_ = m.clockT;
+            clockInc_ = tex::kClockHzHi * std::pow(tex::kClockHzLo / tex::kClockHzHi, m.clockT) / sr;
+        }
         if (m.grainW > 0.0f) { // the step follows the level a block late (~5 ms), worked out once a block
-            const float step = std::exp2(-(tex::kGrainBitsHi + (tex::kGrainBitsLo - tex::kGrainBitsHi) * m.grainT));
-            const float w = 1.0f - std::exp(-float(n) / (0.005f * sr)), inv = 1.0f / float(n > 0 ? n : 1);
+            if (!sameBits(m.grainT, grainT_)) {
+                grainT_ = m.grainT;
+                grainStep_ = std::exp2(-(tex::kGrainBitsHi + (tex::kGrainBitsLo - tex::kGrainBitsHi) * m.grainT));
+            }
+            const float step = grainStep_;
+            const float w = memoGrain_[slot], inv = 1.0f / float(n > 0 ? n : 1);
             for (int c = 0; c < 2; ++c) {
                 gEnv_[c] += w * (gSum_[c] * inv - gEnv_[c]);
                 gSum_[c] = 0.0f;
@@ -134,6 +154,7 @@ public:
                 invMEff_ = 1.0f / mEff_;
                 dipDb_ = -4.0f - 14.0f * t;
                 dipHz_ = 0.1f + 0.4f * t;
+                dipGain_ = std::pow(10.0f, dipDb_ / 20.0f);
             }
             // The wandering dip (as the radio's): a new random target every ~1/hz s, smoothed twice.
             const float dt = float(n) / sr;
@@ -142,18 +163,23 @@ public:
                 wander_[2] = rng_.next();
                 wander_[3] = (0.7f + 0.6f * (0.5f + 0.5f * rng_.next())) / dipHz_;
             }
-            const float w = 1.0f - std::exp(-6.2831853f * dipHz_ * dt);
+            if (!(memoBandHz_[slot] == dipHz_)) {
+                memoBandHz_[slot] = dipHz_;
+                memoBand_[slot] = 1.0f - std::exp(-6.2831853f * dipHz_ * dt);
+            }
+            const float w = memoBand_[slot];
             wander_[0] += w * (wander_[2] - wander_[0]);
             wander_[1] += w * (wander_[0] - wander_[1]);
             dip_[0].set(300.0f * std::pow(10.0f, 0.5f + 0.5f * wander_[1]), 1.5f + 1.5f * t, sr);
             dip_[1].copyCoefficients(dip_[0]);
-            dipGain_ = std::pow(10.0f, dipDb_ / 20.0f);
         }
         // The hold's gain for this block, from the last one's powers.
-        wHold_ = 1.0f - std::exp(-1.0f / (0.1f * sr));
-        wHp_ = 1.0f - std::exp(-6.2831853f * 200.0f / sr);
+        if (srMoved) {
+            wHold_ = 1.0f - std::exp(-1.0f / (0.1f * sr));
+            wHp_ = 1.0f - std::exp(-6.2831853f * 200.0f / sr);
+        }
         const float want = std::fmin(tex::kHoldMax, std::fmax(0.5f, std::sqrt((inPow_ + 1e-20f) / (outPow_ + 1e-20f))));
-        holdAim_ += (1.0f - std::exp(-float(n) / (0.5f * sr))) * (want - holdAim_);
+        holdAim_ += memoHold_[slot] * (want - holdAim_);
         holdStep_ = (holdAim_ - hold_) / float(n > 0 ? n : 1);
         sr_ = sr;
     }
@@ -280,6 +306,11 @@ private:
     float  mEff_ = 1, dipDb_ IV_ZI, dipHz_ = 0.1f, dipGain_ = 1, wander_[4] IV_ZI;
     float  wHold_ IV_ZI, wHp_ IV_ZI, hpIn_ IV_ZI, hpOut_ IV_ZI, inPow_ IV_ZI, outPow_ IV_ZI, hold_ = 1, holdAim_ = 1, holdStep_ IV_ZI;
     EraRng rng_;
+    // set()'s kept maths (CPU save 2): per chunk length (memoN_, 0 none): the hold's and the grain's one-pole
+    // coefficients, the band's wander's for memoBandHz_; and the clock's and the grain's step for their settings.
+    int    memoN_[2] IV_ZI, memoNext_ IV_ZI;
+    float  memoHold_[2] IV_ZI, memoGrain_[2] IV_ZI, memoBand_[2] IV_ZI, memoBandHz_[2] IV_ZI;
+    float  clockT_ = -1.0f, grainT_ = -1.0f, grainStep_ IV_ZI;
 };
 
 } // namespace iv::dsp

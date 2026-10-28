@@ -263,10 +263,24 @@ public:
     float centre() const { return base_; }     // the read point's centre, samples (tests)
 
 private:
-    float samples(float cents, float hz) const
+    IV_NOINLINE IV_SIZE_OPT float samples(float cents, float hz) const // (one copy: flash)
     {
-        return cents > 0.0f ? (std::pow(2.0f, cents / 1200.0f) - 1.0f) * sampleRate_ / (6.2831853f * hz) : 0.0f;
+        if (!(cents > 0.0f)) return 0.0f;
+        // 2^(cents / 1200) - 1 for the last few depths (the wow's, the flutter's, the drift's, the crinkle's): its std::pow
+        // only when MOTION moves (CPU save 2, 28 Oct 2026). The same bits.
+        int k = 0;
+        while (k < kCentsMemo && !(centsIn_[k] == cents)) ++k;
+        if (k == kCentsMemo) {
+            k = centsNext_;
+            centsNext_ = (centsNext_ + 1) % kCentsMemo;
+            centsIn_[k] = cents;
+            centsOut_[k] = std::pow(2.0f, cents / 1200.0f) - 1.0f;
+        }
+        return centsOut_[k] * sampleRate_ / (6.2831853f * hz);
     }
+    static constexpr int kCentsMemo = 4;
+    mutable float centsIn_[kCentsMemo] IV_ZI, centsOut_[kCentsMemo] IV_ZI; // (0 never asked for: cents > 0)
+    mutable int   centsNext_ IV_ZI;
     // 0 -> 1 -> 0 as x goes 0 -> 0.5 -> 1 (a raised cosine).
     static float raised(float x) { return 0.5f - 0.5f * std::cos(6.2831853f * (x < 0.0f ? 0.0f : x > 1.0f ? 1.0f : x)); }
     float uniform()

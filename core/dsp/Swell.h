@@ -18,6 +18,7 @@
 #include "params/SpaceVoicing.h"
 
 #include <cmath>
+#include <utility>
 #include <cstdint>
 
 namespace iv::dsp {
@@ -60,6 +61,7 @@ public:
     IV_SIZE_OPT bool prepare(Arena& arena, float sampleRate) // set-up: built for size (flash)
     {
         sampleRate_ = sampleRate;
+        glideN_[0] = glideN_[1] = 0;
         bool ok = line_[0].init(arena, size_t(kMaxSeconds * sampleRate)) && line_[1].init(arena, size_t(kMaxSeconds * sampleRate));
         for (auto& side : smear_)
             for (auto& ap : side) ok = ok && ap.init(arena, size_t(kSmearMaxSeconds * sampleRate));
@@ -129,7 +131,15 @@ public:
     // line: the tank's swell and the twin's share one copy; flash).
     IV_NOINLINE IV_SIZE_OPT void control(int n)
     {
-        const float c = 1.0f - std::exp(-float(n) / (0.15f * sampleRate_)); // 150 ms glide
+        if (n != glideN_[0]) { // 150 ms glide; its std::exp kept for the last two chunk lengths (CPU save 2)
+            std::swap(glideN_[0], glideN_[1]);
+            std::swap(glideK_[0], glideK_[1]);
+            if (n != glideN_[0]) {
+                glideN_[0] = n;
+                glideK_[0] = 1.0f - std::exp(-float(n) / (0.15f * sampleRate_));
+            }
+        }
+        const float c = glideK_[0];
         smearG_ += c * (smearTarget_ - smearG_); // glides too, so switching it never clicks
         if (smearTarget_ == 0.0f && smearG_ < 1e-4f) smearG_ = 0.0f;
         // The TIME crossfade (setAttackSeconds): the next tap once the last one's fade is done (none after
@@ -209,6 +219,37 @@ public:
                     addRamped(sum[c], line, tapDelay_[c][k == taps_ ? kTapSlots : k], gain_[c][xk], k == taps_, n);
                     continue;
                 }
+                // The everyday case, two taps at a time (CPU save 2, 28 Oct 2026): a full line, a tap at least a
+                // sample back whose block of reads doesn't wrap the ring. Its two reads a sample are neighbours, so
+                // each sample's later one is the next sample's earlier one: one load a sample, kept in a register,
+                // and the pair's two terms go onto the sum in tap order before it's stored. The same sums.
+                const float* p0 = line.full() ? plainRun(line, tapDelay_[c][k], n) : nullptr;
+                if (p0) {
+                    const float* p1 = k + 1 < taps_ && k + 1 != xk ? plainRun(line, tapDelay_[c][k + 1], n) : nullptr;
+                    const float  d0 = tapDelay_[c][k], t0 = d0 - float(uint32_t(d0)), g0 = gain_[c][k];
+                    float        b0 = p0[0];
+                    if (p1) {
+                        const float d1 = tapDelay_[c][k + 1], t1 = d1 - float(uint32_t(d1)), g1 = gain_[c][k + 1];
+                        float       b1 = p1[0];
+                        for (int s = 0; s < n; ++s) {
+                            const float a0 = p0[s + 1], a1 = p1[s + 1];
+                            float       v  = sum[c][s];
+                            v += g0 * (a0 + t0 * (b0 - a0));
+                            v += g1 * (a1 + t1 * (b1 - a1));
+                            sum[c][s] = v;
+                            b0 = a0;
+                            b1 = a1;
+                        }
+                        ++k;
+                    } else {
+                        for (int s = 0; s < n; ++s) {
+                            const float a0 = p0[s + 1];
+                            sum[c][s] += g0 * (a0 + t0 * (b0 - a0));
+                            b0 = a0;
+                        }
+                    }
+                    continue;
+                }
                 const float    d  = tapDelay_[c][k];
                 const auto     di = uint32_t(d);
                 const float    t  = d - float(di), g = gain_[c][k];
@@ -245,6 +286,17 @@ public:
                     }
             for (int c = 0; c < 2; ++c) io[c][s] += tapMix_ * (v2[c] - io[c][s]);
         }
+    }
+
+    // processBlock()'s plain reads of a tap at delay d over n samples, oldest first: n + 1 floats in a row (the
+    // block's earlier read for its first sample, then each sample's later one), or nullptr where they'd wrap the
+    // ring or the tap sits under a sample back.
+    static const float* plainRun(const DelayLine& line, float d, int n)
+    {
+        const auto di = uint32_t(d);
+        if (di < 1) return nullptr;
+        const uint32_t start = (line.pos - (di + 1) - uint32_t(n - 1)) & line.mask;
+        return start + uint32_t(n) <= line.mask ? line.buf + start : nullptr;
     }
 
     // A TIME crossfade's fading tap, at its old place (out) or its new: its read, faded in or out across
@@ -312,6 +364,8 @@ private:
     DelayLine smear_[2][kSmearStages];
     uint32_t  smearLen_[kSmearStages] = {1, 1, 1};
     float     smearG_ IV_ZI, smearTarget_ IV_ZI;
+    int       glideN_[2] IV_ZI; // control()'s glide coefficient glideK_[k] for chunks of glideN_[k] (0: none; prepare() clears)
+    float     glideK_[2] IV_ZI;
 
 public:
     // BLOOM smears its taps (kSmearGain); MASSIVE's mass and the twin's swell don't.

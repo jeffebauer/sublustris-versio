@@ -25,9 +25,8 @@ float chunkCoeff(float ms, float sampleRate, int n)
     return 1.0f - std::exp(-float(n) / (0.001f * ms * sampleRate));
 }
 
-// One-pole coefficient for a time constant in seconds, per block of n: out of line, so its six callers
-// share one copy (flash, v1.0.51).
-IV_CTL_NOINLINE IV_CTL_OPT float blockCoeff(float seconds, float sampleRate, int n)
+// One-pole coefficient for a time constant in seconds, per block of n.
+float blockCoeff(float seconds, float sampleRate, int n)
 {
     return 1.0f - std::exp(-float(n) / (seconds * sampleRate));
 }
@@ -83,6 +82,19 @@ void Engine::setSwellTapsPrototype(int taps)
 
 #endif
 
+// blockCoeff() for this block, kept (CPU save 2, 28 Oct 2026): its callers ask for the same few time constants
+// every block, at the two chunk lengths the module alternates, and each std::exp is ~110 cycles on the M7. The same
+// function of the same arguments: the same bits. Out of line, so its callers share one copy (flash, v1.0.51).
+IV_NOINLINE IV_SIZE_OPT float Engine::blockK(float seconds, int n)
+{
+    for (const auto& m : blockMemo_)
+        if (m.n == n && m.seconds == seconds) return m.k;
+    BlockMemo& m = blockMemo_[blockNext_];
+    blockNext_ = (blockNext_ + 1) % kBlockMemo;
+    m = {seconds, n, blockCoeff(seconds, sampleRate_, n)};
+    return m.k;
+}
+
 IV_SIZE_OPT void Engine::attachMemory(float* large, size_t largeCount, float* fast, size_t fastCount, float* axi,
                                       size_t axiCount, float* d2, size_t d2Count)
 {
@@ -100,6 +112,8 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
 {
     sampleRate_   = sampleRate;
     maxBlockSize_ = maxBlockSize;
+    for (auto& m : blockMemo_) m.n = 0; // (the memos hold this rate's: none yet)
+    smoothN_[0] = smoothN_[1] = 0;
     for (const auto& p : kParams) {
         values_[static_cast<size_t>(p.id)] = p.defaultValue;
         smooth_[static_cast<size_t>(p.id)] = p.defaultValue;
@@ -154,6 +168,9 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     ready_ &= twinSwell_.prepare(large_, sampleRate); // PLATE's twin's (HALL's and MASSIVE's room has none)
     twinSwell_.setSCurve(true); // eases in, then settles (owner, renders/swell_curve)
     // The tank and its twin at half the rate (v1.0.35, ADR 0026; dsp/HalfRate.h).
+    earlyLayouts_.count[0] = earlyLayouts_.count[1] = 0;
+    fdn_.setEarlyLayouts(&earlyLayouts_);
+    lowFdn_.setEarlyLayouts(&earlyLayouts_);
     ready_ &= fdn_.prepare(large_, 0.5f * sampleRate, 0x1D5A7u, voicing::kFdnMaxLineSeconds, &axi_);
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
     ready_ &= lowFdn_.prepare(large_, sampleRate / float(lowDecimate_), 0x10F7u, voicing::kFdnMaxLineSeconds, &axi_);
@@ -401,7 +418,7 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // unfreeze after SIZE moved) doesn't step the loop's gains (soak audit).
     if (snap) hallSize_ = size;
     else {
-        hallSize_ += blockCoeff(0.08f, sampleRate_, n) * (size - hallSize_);
+        hallSize_ += blockK(0.08f, n) * (size - hallSize_);
         if (std::fabs(size - hallSize_) < 1e-6f) hallSize_ = size;
     }
     const float decay = frozen ? heldDecay_ : smoothed(ParamId::Decay);
@@ -566,7 +583,7 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // The input diffusers' amount glides (~50 ms): it changes with a SPACE flip and with MASSIVE's SIZE,
     // and a jump stepped the input into the tank (soak audit).
     const float diffusion = massive ? map::massiveDiffusion(size) : 1.0f;
-    const float glide = snap && snapInput ? 1.0f : blockCoeff(0.05f, sampleRate_, n);
+    const float glide = snap && snapInput ? 1.0f : blockK(0.05f, n);
     for (int c = 0; c < 2; ++c)
         for (int k = 0; k < 4; ++k) {
             float& g = diffuser_[c].stage[k].coeff;
@@ -707,10 +724,10 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
         // "Held": the 10 ms power within 3 dB of its 0.5 s power, judged only while over the threshold.
         float release = duckRelease();
         if (duckFastRelease() > 0.0f || duckSustainCut() > 0.0f) {
-            inputSlow_ += blockCoeff(voicing::kDuckSlowSeconds, sampleRate_, n) * (inputPower_ - inputSlow_);
+            inputSlow_ += blockK(voicing::kDuckSlowSeconds, n) * (inputPower_ - inputSlow_);
             if (over > 0.0f) {
                 const float held = inputPower_ < voicing::kDuckSustainCrest * inputSlow_ ? 1.0f : 0.0f;
-                duckSustained_ += blockCoeff(voicing::kDuckSustainSeconds, sampleRate_, n) * (held - duckSustained_);
+                duckSustained_ += blockK(voicing::kDuckSustainSeconds, n) * (held - duckSustained_);
             }
             if (duckFastRelease() > 0.0f) release += duckSustained_ * (duckFastRelease() - release);
             target *= 1.0f - duckSustainCut() * duckSustained_;
@@ -723,13 +740,13 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
         } else {
             const float secs = target > duckGrDb_ ? voicing::kDuckAttackSeconds
                              : (freezeMix_ > 0.0f ? (freezeDuck_ == 1 ? freezeDuckSeconds_ : 0.05f) : release);
-            duckGrDb_ += blockCoeff(secs, sampleRate_, n) * (target - duckGrDb_);
+            duckGrDb_ += blockK(secs, n) * (target - duckGrDb_);
         }
 #else
         // A freeze lets go quickly (50 ms), so a fresh pad doesn't swell up over the release.
         const float secs = target > duckGrDb_ ? voicing::kDuckAttackSeconds
                          : (freezeMix_ > 0.0f ? 0.05f : release);
-        duckGrDb_ += blockCoeff(secs, sampleRate_, n) * (target - duckGrDb_);
+        duckGrDb_ += blockK(secs, n) * (target - duckGrDb_);
 #endif
         if (target == 0.0f && duckGrDb_ < 0.05f) duckGrDb_ = 0.0f; // fully let go (and exact unity)
         duckGainStep_ = (std::pow(10.0f, -duckGrDb_ / 20.0f) - duckGain_) / float(n);
@@ -739,7 +756,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
     // on renders/diffuser_motion, v1.0.16), so repeated hits don't enter the tank identically.
     // Its depth glides in and out with SPACE, so a flip never jumps the read.
     const float motionTarget = activeSpace_ == 0 ? voicing::kDiffuserMotionSeconds * sampleRate_ : 0.0f;
-    diffMotionNow_ += blockCoeff(0.1f, sampleRate_, n) * (motionTarget - diffMotionNow_);
+    diffMotionNow_ += blockK(0.1f, n) * (motionTarget - diffMotionNow_);
     if (diffMotionNow_ > 1e-3f || motionTarget > 0.0f) {
         diffMotionPhase_ += voicing::kDiffuserMotionHz * float(n) / sampleRate_;
         if (diffMotionPhase_ >= 1.0f) diffMotionPhase_ -= 1.0f;
@@ -751,12 +768,19 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
     } else {
         diffuser_[0].stage[0].mod = diffuser_[1].stage[0].mod = 0.0f; // still: the plain read
     }
-    // Smooth every knob toward its value (ParamSpec tiers, ADR 0012).
+    // Smooth every knob toward its value (ParamSpec tiers, ADR 0012). Each knob's coefficient for a chunk of n, kept for
+    // the two lengths the module alternates (CPU save 2: 12 std::exp a block, the same every block).
+    if (n != smoothN_[0] && n != smoothN_[1]) {
+        smoothN_[smoothNext_] = n;
+        for (const auto& p : kParams) smoothK_[smoothNext_][static_cast<size_t>(p.id)] = chunkCoeff(p.smoothingMs, sampleRate_, n);
+        smoothNext_ ^= 1;
+    }
+    const float* smoothK = smoothK_[n == smoothN_[0] ? 0 : 1];
     for (const auto& p : kParams) {
         const size_t i = static_cast<size_t>(p.id);
         if (p.kind == ParamKind::Switch3 || p.smoothing == Smoothing::Slewed) smooth_[i] = values_[i];
         else {
-            smooth_[i] += chunkCoeff(p.smoothingMs, sampleRate_, n) * (values_[i] - smooth_[i]);
+            smooth_[i] += smoothK[i] * (values_[i] - smooth_[i]);
             if (std::fabs(values_[i] - smooth_[i]) < 1e-5f) smooth_[i] = values_[i]; // land exactly (MIX 0 = bit-exact dry)
         }
     }
@@ -1029,7 +1053,7 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             if (activeSpace_ != 0) { // the room's own 50 ms power, under -100 dB: no log a block, the step once per block size
                 if (n != roomStepN_) {
                     roomStepN_ = n;
-                    roomStep_ = blockCoeff(0.05f, sampleRate_, n);
+                    roomStep_ = blockK(0.05f, n);
                 }
                 float p = 0.0f;
                 for (int i = 0; i < n; ++i) p += 0.5f * (twinL_[i] * twinL_[i] + twinR_[i] * twinR_[i]);

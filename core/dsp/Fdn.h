@@ -27,8 +27,17 @@
 
 namespace iv::dsp {
 
+// HALL's and MASSIVE's early-tap layouts (Fdn::layoutEarly), worked out once for every tank that shares this (they
+// depend on the count alone). count[c]: the taps per line of layout c (0: none yet).
+struct EarlyLayouts {
+    float frac[2][voicing::kFdnLines][voicing::kEarlyTaps], gain[2][voicing::kFdnLines][voicing::kEarlyTaps];
+    int   count[2];
+};
+
 class Fdn {
 public:
+    // Where to keep and find the early-tap layouts (before prepare(); nullptr: worked out every time).
+    void setEarlyLayouts(EarlyLayouts* l) { lay_ = l; }
     static constexpr int kN            = voicing::kFdnLines;
     static constexpr int kControlBlock = 32;
 
@@ -214,6 +223,7 @@ private:
     float     xfOff_[kN];    // samples since the line's own trip began, ahead of xfSince_
     float     apAmtNow_[kN], apAmtOld_[kN]; // each line's in-loop amount (it changes with its own fade)
     bool      ready_ IV_ZI;
+    EarlyLayouts* lay_ IV_ZI; // setEarlyLayouts (last: no other member's offset moves)
 };
 
 } // namespace iv::dsp
