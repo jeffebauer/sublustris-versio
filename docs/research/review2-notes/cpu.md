@@ -114,7 +114,7 @@ Flash +16 B (112,580). Renderer bit-identical with the hook off (SAME 60/60).
 ## 5. B1-B4: the same output to the bit
 
 Evidence: `tools/same_render.py` against the pinned ref-main renderer, SAME 60/60 after B1+B2 (twice: before and
-after B2's final form), after B3 (both forms), after B4; ctest 21/21 at the end (see 7). Counts of how often each
+after B2's final form), after B3 (both forms), after B4; ctest 100 % of 21 at e488c61. Counts of how often each
 path runs come from a desktop renderer with counters in `Fdn::control` (scratch build, not committed), 12 s of
 music at the lap's settings (MASSIVE, SHIMMER, WEAR .5, MOTION 0, DECAY .9), the last 6 s turned by
 `tools/review2/make_size_hands.py` (the lap's four hands through release's 0.003 deadband), per 48-sample block:
@@ -173,4 +173,4 @@ music at the lap's settings (MASSIVE, SHIMMER, WEAR .5, MOTION 0, DECAY .9), the
   skip work whose result is unread or provably 1), so they hold there by construction; `cmp` can't show it since the
   code changes.
 - The release-vs-profile gap ("release runs a point or two heavier"): not looked at.
-- ctest: see the branch's last commit message.
+- ctest at e488c61 (B1-B4, both hooks off): "100% tests passed out of 21".
