@@ -47,19 +47,24 @@ struct FloorGovernor {
     // One output sample's power (mean of the channels' squares).
     void add(float power) { block_ += power; }
 
-    // Once per control chunk of n samples.
-    void control(int n, float sampleRate)
+    // Once per control chunk of n samples (built for size: its three log10f are its cost).
+    IV_SIZE_OPT void control(int n, float sampleRate)
     {
         const float dt = float(n) / sampleRate;
-        if (dt != dt_) { // the same every block: worked out once (std::exp ~110 cycles on the M7)
-            dt_ = dt;
-            cPower_ = 1.0f - std::exp(-dt / voicing::kGovernorSeconds);
-            cSlow_ = 1.0f - std::exp(-dt / voicing::kHoldSeconds);
-            cFast_ = 1.0f - std::exp(-dt / voicing::kGovernorFallSeconds);
+        // Worked out once for each of the two chunk lengths (std::exp ~110 cycles on the M7): 32 and 16 on the module.
+        int k = dt == dt_[0] ? 0 : 1;
+        if (dt != dt_[k]) {
+            dt_[1] = dt_[0];
+            for (int j = 0; j < 3; ++j) c_[1][j] = c_[0][j];
+            k = 0;
+            dt_[0] = dt;
+            c_[0][0] = 1.0f - std::exp(-dt / voicing::kGovernorSeconds);
+            c_[0][1] = 1.0f - std::exp(-dt / voicing::kHoldSeconds);
+            c_[0][2] = 1.0f - std::exp(-dt / voicing::kGovernorFallSeconds);
         }
-        power_ += cPower_ * (block_ / float(n) - power_);
-        slow_ += cSlow_ * (block_ / float(n) - slow_);
-        fast_ += cFast_ * (block_ / float(n) - fast_);
+        power_ += c_[k][0] * (block_ / float(n) - power_);
+        slow_ += c_[k][1] * (block_ / float(n) - slow_);
+        fast_ += c_[k][2] * (block_ / float(n) - fast_);
         block_ = 0.0f;
         levelDb = 10.0f * std::log10(power_ + 1e-20f);
         slowLevelDb = 10.0f * std::log10(slow_ + 1e-20f);
@@ -96,7 +101,7 @@ struct FloorGovernor {
 
 private:
     float power_ IV_ZI, slow_ IV_ZI, block_ IV_ZI, fast_ IV_ZI;
-    float dt_ = -1.0f, cPower_ IV_ZI, cSlow_ IV_ZI, cFast_ IV_ZI; // the smoothing coefficients for dt_
+    float dt_[2] IV_ZI, c_[2][3] IV_ZI; // the smoothing coefficients (power, slow, fast) for dt_[k] (dt is never 0)
 };
 
 // A tank segment's absorbent filter (Jot): a first-order shelf crossing at
@@ -143,15 +148,20 @@ struct AbsorbMemo {
     }
 };
 
-// One-argument maths (std::exp and the like) worked out again only when its argument changes.
+// One-argument maths (std::exp and the like) worked out again only when its argument changes. Two
+// arguments kept (CPU hunt, 28 Oct 2026): the module's 48-sample blocks run as control chunks of 32 and
+// 16, so a time step's argument alternated and a one-place memo missed every time.
 struct Memo1 {
-    float x = 3.0e38f, y IV_ZI;
-    template <typename F> float get(float arg, F&& f)
+    float x IV_ZI, y IV_ZI, x2 IV_ZI, y2 IV_ZI; // (never asked for 0: a time step)
+    // One shared copy (flash): f a plain function (a lambda without captures).
+    IV_NOINLINE IV_SIZE_OPT float get(float arg, float (*f)(float))
     {
-        if (arg != x) {
-            x = arg;
-            y = f(arg);
-        }
+        if (arg == x) return y;
+        if (arg == x2) return y2;
+        x2 = x;
+        y2 = y;
+        x = arg;
+        y = f(arg);
         return y;
     }
 };

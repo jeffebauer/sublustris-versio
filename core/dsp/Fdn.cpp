@@ -69,8 +69,8 @@ bool isPrimeFast(uint32_t n)
     return !(gOddComposite[(n / 2) >> 5] & (1u << ((n / 2) & 31u)));
 }
 
-// The nearest prime at or above n not already taken by a lower line.
-uint32_t primeAtOrAbove(uint32_t n, const float* taken, int count)
+// The nearest prime at or above n not already taken by a lower line. Built for size (a SIZE move's 16 lines).
+IV_SIZE_OPT uint32_t primeAtOrAbove(uint32_t n, const float* taken, int count)
 {
     for (;; ++n) {
         if (!isPrimeFast(n)) continue;
@@ -79,6 +79,9 @@ uint32_t primeAtOrAbove(uint32_t n, const float* taken, int count)
         if (!clash) return n;
     }
 }
+
+// The 80 ms glides' one-pole coefficient for a step of t seconds (Memo1, one copy for its two users).
+float glide80(float t) { return 1.0f - std::exp(-t / 0.08f); }
 
 constexpr float kXfAgreeA = 0.004f; // SIZE's crossfade: the reads' agreement follower (Fdn::xfMix), ~5 ms
 
@@ -244,7 +247,7 @@ IV_SIZE_OPT void Fdn::controlInLoop(float dt, int n, float slew, bool pending)
     // While a SIZE move waits for its crossfade the amount holds too, and jumps with the lengths at its
     // start, the old amount fading out with the old lengths (followed on its own, it disagreed with
     // the held lengths: a small HALL jumped across noon clicked at the crossfade's start).
-    if (!pending) inLoopNow_ += glide80Memo_.get(dt, [](float t) { return 1.0f - std::exp(-t / 0.08f); }) * (inLoopTarget_ - inLoopNow_);
+    if (!pending) inLoopNow_ += glide80Memo_.get(dt, glide80) * (inLoopTarget_ - inLoopNow_);
     bool shrunk = true;
     for (int i = 0; i < kN; ++i) shrunk &= apLenGlide_[i][0] <= 0.0f && apLenGlide_[i][1] <= 0.0f;
     // Out of the loop: at once when a SIZE crossfade has taken them out (their coefficient faded with it).
@@ -335,7 +338,7 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     if (staggered()) // a line waiting for its fade keeps its amount; every other line is on the shared one
         for (int i = 0; i < kN; ++i)
             if (!((need >> i) & 1u)) apAmtNow_[i] = inLoopNow_;
-    earlyNow_ += glide80Memo_.get(dt, [](float t) { return 1.0f - std::exp(-t / 0.08f); }) * (earlyTarget_ - earlyNow_);
+    earlyNow_ += glide80Memo_.get(dt, glide80) * (earlyTarget_ - earlyNow_);
     if (earlyNow_ < 1e-4f && earlyTarget_ == 0.0f) earlyNow_ = 0.0f;
     float meanLen = 0.0f;
     for (int i = 0; i < kN; ++i) meanLen += lenNow_[i];
@@ -448,15 +451,22 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     if (xfSince_ >= 0) {
         const float s0 = float(xfSince_);
         float       s  = s0;
-        auto corr = [&](float lnGain, float hold) {
-            if (s < hold) return std::exp(lnGain);
+        // Until its hold ends a correction is exp(lnGain), the same as in the trip's first block (s 0: a fade's start),
+        // so it is worked out there only (CPU hunt, 28 Oct 2026: every block, every line and tap of both tanks, up to
+        // ~160 std::exp a block). A line waiting through a fade keeps its own trip (s > 0) or starts none (lnGain 0).
+        auto corr = [&](float lnGain, float hold, float& val) {
+            if (s < hold && s > 0.0f) return;
+            if (s < hold) {
+                val = std::exp(lnGain);
+                return;
+            }
             const float r = (s - hold) / float(xfLen_);
-            return r >= 1.0f ? 1.0f : std::exp(lnGain * (1.0f - r));
+            val = r >= 1.0f ? 1.0f : std::exp(lnGain * (1.0f - r));
         };
         for (int i = 0; i < kN; ++i) {
             if (staggered()) s = s0 + xfOff_[i]; // staggered: each line's own trip
-            xfLineCorr_[i] = corr(xfLnGain_[i], xfHold_[i]);
-            for (int k = 0; k < earlyCount_; ++k) xfTapCorr_[i][k] = corr(earlyFrac_[i][k] * xfLnGain_[i], earlyFrac_[i][k] * xfHold_[i]);
+            corr(xfLnGain_[i], xfHold_[i], xfLineCorr_[i]);
+            for (int k = 0; k < earlyCount_; ++k) corr(earlyFrac_[i][k] * xfLnGain_[i], earlyFrac_[i][k] * xfHold_[i], xfTapCorr_[i][k]);
         }
         s = s0;
         if (s > maxLen_ + float(xfLen_)) { // every line's trip done
@@ -466,6 +476,16 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
                 for (int k = 0; k < kEarlyTaps; ++k) xfTapCorr_[i][k] = 1.0f;
             }
         }
+    }
+    // The loss filters' inputs shared by every line (each line's own: its length): any change, all worked out again.
+    bool absChanged = false;
+    {
+        const float in[5] = {rate, highRatio_, gov.darken, shelfK_, air_};
+        for (int k = 0; k < 5; ++k)
+            if (!(in[k] == absIn_[k])) {
+                absIn_[k] = in[k];
+                absChanged = true;
+            }
     }
     for (int i = 0; i < kN; ++i) {
         // Modulation floor: a new random target every ~1.7–3.1 s per line.
@@ -491,8 +511,14 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
         // floor, then it holds (ADR 0008).
         const float amt = staggered() ? apAmtNow_[i] : inLoopNow_;
         const float apSeconds = amt > 0.0f ? (apLenGlide_[i][0] + apLenGlide_[i][1]) / sampleRate_ : 0.0f;
-        const Absorb& a = absorbMemo_[i].get(lenNow_[i] / sampleRate_ + apSeconds, rate, highRatio_,
-                                             gov.darken, shelfK_, air_);
+        // Worked out again only when its inputs changed (the two powf, ~210 cycles each): its length here, the
+        // rest shared by every line (above).
+        const float seconds = lenNow_[i] / sampleRate_ + apSeconds;
+        if (absChanged || !(seconds == absSec_[i])) {
+            absSec_[i] = seconds;
+            absOut_[i] = absorbent(seconds, rate, highRatio_, gov.darken, shelfK_, air_);
+        }
+        const Absorb& a = absOut_[i];
         // While SIZE crossfades the loss filter goes from the old length's to the new one's with the fade
         // (switched at its start, the old read, all of the mix then, stepped to the new trip's loss: a click).
         const float o = xfLeft_ > 0 && !(staggered() && !xfLine_[i]) ? xfOld_ : 0.0f, w = 1.0f - o; // staggered: its own fade only
@@ -813,29 +839,52 @@ IV_NO_UNSWITCH bool Fdn::lineFast(int i, int m, float apG, float eraIn, float er
 
 // One line over the block while it crossfades (its first q samples), the everyday case: full, and its in-loop
 // allpasses (MASSIVE, a small HALL) in the loop at their exact lengths before and after (or in neither: a large
-// HALL). lineSlow's steps for that case with its state in locals, as lineFast's (lineSlow went through a copy of
-// the line, the members and an out-of-line xfMix every sample): the same float operations in the same order, so
-// the same output to the bit (the SIZE-spike hunt, 27 Oct 2026). Built for size, as lineSlow (flash: 880 B here,
-// ~1.9 KB at -O3). False: lineSlow's case (an allpass joining, leaving or gliding, a line filling).
+// HALL), or joining or leaving with the fade (a small HALL's SIZE across noon: xfAllpass on the new read or the
+// old, CPU hunt 28 Oct 2026: a HALL SIZE sweep's 16 lines in lineSlow took ~30 % of the module). lineSlow's steps
+// for those cases with its state in locals, as lineFast's (lineSlow went through a copy of the line, the members
+// and an out-of-line xfMix every sample): the same float operations in the same order, so the same output to the
+// bit (the SIZE-spike hunt, 27 Oct 2026). Built for size, as lineSlow (flash). False: lineSlow's case (an
+// allpass gliding or not yet full, a line filling).
 IV_SIZE_OPT bool Fdn::lineXf(int i, int m, int q, const float* xn, const float* xo, float apG, float apGOld,
                                 float eraIn, float eraOut, float* y)
 {
     const DelayLine& line = line_[i];
-    if (!line.full() || (apG > 0.0f) != (apGOld > 0.0f)) return false;
+    if (!line.full()) return false;
+    const bool join = apG > 0.0f && !(apGOld > 0.0f), leave = apGOld > 0.0f && !(apG > 0.0f);
     float*   apBuf[2] = {};
     uint32_t apPos[2] = {}, apMask[2] = {}, apL[2] = {};
-    if (apG > 0.0f)
+    float    apX[2] = {}; // the joining or leaving allpasses' lengths (xfAllpass: the new, or the old)
+    if (apG > 0.0f || apGOld > 0.0f)
         for (int k = 0; k < 2; ++k) {
             const DelayLine& a = apLine_[i][k];
             const float      glide = apLenGlide_[i][k];
-            if (!(apLenStep_[i][k] == 0.0f && glide == float(apLenNow_[i][k]) && glide >= 1.0f && apOld_[i][k] == glide
-                  && a.full()))
+            apX[k] = leave ? apOld_[i][k] : glide;
+            // Leaving, or joining with the fade all block (the allpasses run only through apXf: their length still,
+            // where it is, gliding or not): any length from one sample. Else at their exact lengths, still.
+            if (!(a.full() && ((leave || (join && q == m)) ? apX[k] >= 1.0f
+                                                          : apLenStep_[i][k] == 0.0f && glide == float(apLenNow_[i][k])
+                                                                && glide >= 1.0f && (join || apOld_[i][k] == glide))))
                 return false;
             apBuf[k] = a.buf;
             apPos[k] = a.pos;
             apMask[k] = a.mask;
             apL[k] = apLenNow_[i][k];
         }
+    // xfAllpass: the two allpasses at their joining or leaving lengths (between samples), each read and written.
+    auto apXf = [&](float x, float g) {
+        for (int k = 0; k < 2; ++k) {
+            const auto     li = uint32_t(apX[k]);
+            const float    t = apX[k] - float(li);
+            const uint32_t at = apPos[k] - li;
+            const float    a0 = apBuf[k][at & apMask[k]], a1 = apBuf[k][(at - 1u) & apMask[k]];
+            const float    d = a0 + t * (a1 - a0);
+            const float    v = x + g * d;
+            apBuf[k][apPos[k]] = v;
+            apPos[k] = (apPos[k] + 1) & apMask[k];
+            x = d - g * v;
+        }
+        return x;
+    };
     const float*   buf = line.buf;
     const uint32_t mask = line.mask, pos0 = line.pos;
     const float    step = readStep_[i], corr = xfLineCorr_[i], gain = gain_[i], b1 = b1_[i], pole = pole_[i];
@@ -860,14 +909,16 @@ IV_SIZE_OPT bool Fdn::lineXf(int i, int m, int q, const float* xn, const float* 
             const float etaO = (1.0f - fO) / (1.0f + fO);
             const float aO = buf[(pos - dOi) & mask], bO = buf[(pos - dOi - 1) & mask];
             stateOld = bO + etaO * (aO - stateOld);
-            const float od = stateOld;
+            float od = stateOld;
+            if (leave) od = apXf(od, apGOld); // xfMix's: the old read through the allpasses it had
+            if (join) x = apXf(x, apG);       // the new read through the allpasses it joins
             oo += kXfAgreeA * (od * od - oo); // xfMix
             nn += kXfAgreeA * (x * x - nn);
             on += kXfAgreeA * (od * x - on);
             x = K * (xn[s] * x + xo[s] * od);
             g = xn[s] * apG + xo[s] * apGOld;
         }
-        if (apG > 0.0f)
+        if (apG > 0.0f && !(join && s < q)) // (joining, the fade's samples ran them above)
             for (int k = 0; k < 2; ++k) { // in-loop diffusion: read(L) and write()
                 const float d = apBuf[k][(apPos[k] - apL[k]) & apMask[k]];
                 const float v = x + g * d;
@@ -880,7 +931,7 @@ IV_SIZE_OPT bool Fdn::lineXf(int i, int m, int q, const float* xn, const float* 
         y[s] = ay;
     }
     era_[i].run(y, m, eraIn, eraOut);
-    if (apG > 0.0f)
+    if (apG > 0.0f || apGOld > 0.0f)
         for (int k = 0; k < 2; ++k) apLine_[i][k].pos = apPos[k];
     readNow_[i] = read;
     interp_[i] = state;

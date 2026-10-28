@@ -89,6 +89,19 @@ def cases():
         out.append((f'{sp}_paint', base, {'buttons': [[3.0, 3.1], [5.0, 7.0], [9.0, 9.1]]}, 48))
         out.append((f'{sp}_erasweep', base, {'breakpoints': [
             {'t': 0.0, 'key': 'era', 'value': 0.0}, {'t': 10.0, 'key': 'era', 'value': 1.0}]}, 48))
+    # The CPU hunt's overload settings (28 Oct 2026): SHIMMER with WEAR half and MOTION full left (tape), SIZE swept
+    # across noon (a small HALL's in-loop diffusion joining and leaving) and crept near the top, DECAY 0.9.
+    hunt = {'mix': 1.0, 'attack': 'SHIMMER', 'time': 0.5, 'era': 0.5, 'drift': 0.0, 'decay': 0.9}
+    for sp, v in SPACES:
+        out.append((f'{sp}_hunt_sweep', {**hunt, 'space': v}, {'breakpoints': [
+            {'t': 0.0, 'key': 'size', 'value': 0.2}, {'t': 3.0, 'key': 'size', 'value': 0.2},
+            {'t': 3.01, 'key': 'size', 'value': 1.0}, {'t': 6.0, 'key': 'size', 'value': 1.0},
+            {'t': 6.01, 'key': 'size', 'value': 0.2}, {'t': 9.0, 'key': 'size', 'value': 0.2},
+            {'t': 9.01, 'key': 'size', 'value': 0.9}]}, 48))
+    out.append(('massive_hunt_creep', {**hunt, 'space': 'MASSIVE'}, {'breakpoints': [
+        {'t': 0.0, 'key': 'size', 'value': 0.7}, {'t': 2.0, 'key': 'size', 'value': 0.7},
+        {'t': 11.0, 'key': 'size', 'value': 1.0}]}, 48))
+    out.append(('hall_hunt_still', {**hunt, 'space': 'HALL', 'size': 0.3}, None, 48))
     out.append(('flips', {'mix': 1.0}, {'breakpoints': [
         {'t': 0.0, 'key': 'space', 'value': 0.0}, {'t': 2.5, 'key': 'space', 'value': 0.0},
         {'t': 2.51, 'key': 'space', 'value': 0.5}, {'t': 5.0, 'key': 'space', 'value': 0.5},

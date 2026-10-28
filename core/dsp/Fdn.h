@@ -197,7 +197,10 @@ private:
     float     xfTapCorr_[kN][kEarlyTaps] IV_ZI, tapGainNow_[kN][kEarlyTaps] IV_ZI; // tapGainNow_: earlyGain_ x the correction
     float     xfRest_ IV_ZI, xfTrim_ = 1.0f, xfOld_ IV_ZI, xfNew_ = 1.0f, xfRotC_ = 1.0f, xfRotS_ IV_ZI;
     float     xfOO_[kN] IV_ZI, xfNN_[kN] IV_ZI, xfON_[kN] IV_ZI, xfK_[kN] IV_ZI; // the reads' powers, their agreement, the fade's gain
-    AbsorbMemo absorbMemo_[kN]; // each line's loss filter, worked out again only when its inputs change
+    // Each line's loss filter (absorbent()) and the length it was worked out for; the inputs every line shares
+    // (rate, highRatio_, darken, shelfK_, air_) once (a per-line AbsorbMemo until 28 Oct 2026: the same bits).
+    float     absIn_[5] IV_ZI, absSec_[kN] IV_ZI;
+    Absorb    absOut_[kN];
     Memo1     floorCoeffMemo_, glide80Memo_, glideXfMemo_; // per-block smoothing coefficients, worked out once per dt
     float     xfLastInLoop_ IV_ZI, xfAbsOld_[kN][3] IV_ZI; // the loss filter (b1, gain, pole) at the fade's start
     float     xfCos_ = -1.0f, xfSin_ IV_ZI; // the fade's angle (twice it): xfNew_ = (1 - cos) / 2
