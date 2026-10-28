@@ -84,8 +84,10 @@ void Engine::setSwellTapsPrototype(int taps)
 #endif
 
 IV_SIZE_OPT void Engine::attachMemory(float* large, size_t largeCount, float* fast, size_t fastCount, float* axi,
-                                      size_t axiCount)
+                                      size_t axiCount, float* d2, size_t d2Count)
 {
+    attachedD2_ = d2;
+    attachedD2Count_ = d2Count;
     attachedLarge_ = large;
     attachedLargeCount_ = largeCount;
     attachedFast_ = fast;
@@ -106,7 +108,8 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     float* large = attachedLarge_;
     float* fast = attachedFast_;
     float* axi = attachedAxi_;
-    size_t largeCount = attachedLargeCount_, fastCount = attachedFastCount_, axiCount = attachedAxiCount_;
+    float* d2 = attachedD2_;
+    size_t largeCount = attachedLargeCount_, fastCount = attachedFastCount_, axiCount = attachedAxiCount_, d2Count = attachedD2Count_;
 #if !defined(IV_NO_HEAP)
     if (!large) {
         ownLarge_.assign(largeFloats(sampleRate), 0.0f);
@@ -123,10 +126,16 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
         axi = ownAxi_.data();
         axiCount = ownAxi_.size();
     }
+    if (!d2) {
+        ownD2_.assign(d2Floats(sampleRate), 0.0f);
+        d2 = ownD2_.data();
+        d2Count = ownD2_.size();
+    }
 #endif
     large_.reset(large, largeCount, true); // SDRAM: each line on its own cache set (dsp/Memory.h)
     fast_.reset(fast, fastCount);
     axi_.reset(axi, axiCount, true); // AXI SRAM is cached too: the same stagger
+    d2_.reset(d2, d2Count, true);     // and D2 SRAM
 
     ready_ = true;
     for (auto& p : predelay_) ready_ &= p.init(large_, size_t(voicing::kPredelayMaxSeconds * sampleRate));
@@ -147,10 +156,10 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     // The tank and its twin at half the rate (v1.0.35, ADR 0026; dsp/HalfRate.h).
     ready_ &= fdn_.prepare(large_, 0.5f * sampleRate, 0x1D5A7u, voicing::kFdnMaxLineSeconds, &axi_);
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
-    ready_ &= shimmer_.prepare(large_, sampleRate);
     ready_ &= lowFdn_.prepare(large_, sampleRate / float(lowDecimate_), 0x10F7u, voicing::kFdnMaxLineSeconds, &axi_);
+    ready_ &= shimmer_.prepare(d2_, axi_, sampleRate); // on chip (CPU hunt, 28 Oct 2026): after the allpasses
     // HALL's and MASSIVE's twin, the small room (v1.0.43), at the tank's rate; its rings in AXI SRAM, one slice.
-    ready_ &= room_.prepare(0.5f * sampleRate, 0x5A11u, axi_.take(dsp::TwinRoom::memoryFloats(0.5f * sampleRate)));
+    ready_ &= room_.prepare(0.5f * sampleRate, 0x5A11u, d2_.take(dsp::TwinRoom::memoryFloats(0.5f * sampleRate)));
     roomGain_[0] = std::pow(10.0f, voicing::kTwinRoomHallDb / 20.0f);
     roomGain_[1] = std::pow(10.0f, voicing::kTwinRoomMassiveDb / 20.0f);
     roomLevel_ = 0.0f;

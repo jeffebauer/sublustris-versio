@@ -36,17 +36,24 @@ public:
     // maxLineSeconds: the longest a line may get (a smaller FDN can ask for less memory).
     static constexpr size_t memoryFloats(float sampleRate, float maxLineSeconds = voicing::kFdnMaxLineSeconds)
     {
-        return size_t(kN) * (nextPow2(size_t(maxLineSeconds * sampleRate) + 4)
-                             + 2 * nextPow2(size_t(voicing::kInLoopMaxSeconds * sampleRate) + 4));
+        return size_t(kN) * nextPow2(size_t(maxLineSeconds * sampleRate) + 4) + apFloats(sampleRate);
+    }
+    // The longest of the lines' allpass k (k 0: 54 ms, k 1: 91 ms; voicing::kInLoopSeconds).
+    static constexpr float apMaxSeconds(int k)
+    {
+        float m = 0.0f;
+        for (const auto& line : voicing::kInLoopSeconds) m = line[k] > m ? line[k] : m;
+        return k ? voicing::kInLoopMaxSeconds : m;
     }
     // The part of memoryFloats() that is the in-loop allpass lines (kN x 2 slices of apLineFloats()),
     // which prepare() takes from apArena when one is given (the firmware's AXI SRAM: overnight review,
-    // 26 Oct 2026; 32 of the tank's SDRAM streams). Only addresses change, never a sample.
-    static constexpr size_t apLineFloats(float sampleRate)
+    // 26 Oct 2026; 32 of the tank's SDRAM streams). Only addresses change, never a sample. Each line's first
+    // allpass in a ring for its own longest (54 ms; half the second's ring since 28 Oct 2026: room in AXI SRAM).
+    static constexpr size_t apLineFloats(float sampleRate, int k)
     {
-        return nextPow2(size_t(voicing::kInLoopMaxSeconds * sampleRate) + 4);
+        return nextPow2(size_t(apMaxSeconds(k) * sampleRate) + 4);
     }
-    static constexpr size_t apFloats(float sampleRate) { return size_t(kN) * 2 * apLineFloats(sampleRate); }
+    static constexpr size_t apFloats(float sampleRate) { return size_t(kN) * (apLineFloats(sampleRate, 0) + apLineFloats(sampleRate, 1)); }
     static constexpr int    kApSlices = kN * 2;
 
     // apArena: where the in-loop allpass lines go (nullptr: the same arena as the lines).

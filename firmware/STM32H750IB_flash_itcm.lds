@@ -173,6 +173,15 @@ SECTIONS
 		PROVIDE(__sram1_bss_end__ = _esram1_bss);
 	} > RAM_D2
 
+	/* D2 SRAM past the 32 KB libDaisy's MPU region 0 keeps uncached for its DMA buffers (.sram1_bss above):
+	   cached SRAM1-3, the Engine's d2 arena (Engine::d2Floats: a SHIMMER ring and the small room; CPU hunt,
+	   28 Oct 2026). NOLOAD: the Engine's Arena zeroes what it takes. */
+	.d2_bss (ORIGIN(RAM_D2) + 0x8000) (NOLOAD) :
+	{
+		*(.d2_bss)
+		*(.d2_bss*)
+	} > RAM_D2
+
 	/*
 	.sdram_text :
 	{

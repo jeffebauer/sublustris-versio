@@ -246,6 +246,16 @@ IV_DTCM float       gFast[kFastFloats];
 // Overnight review, 26 Oct 2026: 32 of the tanks' ~80 SDRAM streams a tank sample come on chip.
 constexpr size_t kAxiFloats = iv::Engine::axiFloats(48000.0f);
 alignas(32) float gAxi[kAxiFloats];
+// A SHIMMER ring and the twin's small room (Engine::d2Floats, ~197 KB) in D2 SRAM's cached part (the linker
+// script's .d2_bss, past libDaisy's uncached 32 KB): with the other ring in gAxi, the 16 heads read on chip
+// (CPU hunt, 28 Oct 2026). Its clocks are switched on (EnableD2Sram) before the Engine takes it.
+constexpr size_t kD2Floats = iv::Engine::d2Floats(48000.0f);
+__attribute__((section(".d2_bss"))) alignas(32) float gD2[kD2Floats];
+void EnableD2Sram()
+{
+    RCC->AHB2ENR |= RCC_AHB2ENR_D2SRAM1EN | RCC_AHB2ENR_D2SRAM2EN | RCC_AHB2ENR_D2SRAM3EN;
+    (void)RCC->AHB2ENR; // the write lands before the first access
+}
 #endif
 
 // Panel pots P1..P7 (reading order: top to bottom, left to right) -> libDaisy
@@ -1919,7 +1929,8 @@ int main()
 #else
     RunMicroTests(); // before the Engine takes (and zeroes) its memory
 #endif
-    engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats, gAxi, kAxiFloats);
+    EnableD2Sram();
+    engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats, gAxi, kAxiFloats, gD2, kD2Floats);
     engine.prepare(hw.AudioSampleRate(), kBlockSize);
 #if IV_PROFILE_SIZESPIKE
     iv::prof::markHook = SpikeMark;
@@ -2725,7 +2736,8 @@ int main()
     SdramSetTiming(SdtrWith(FMC_Bank5_6_R->SDTR[0], kTightTrp, kTightTrcd), false); // M3 round 11: SDRAMCHK clean
 #endif
     hw.SetAudioBlockSize(kBlockSize);
-    engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats, gAxi, kAxiFloats);
+    EnableD2Sram();
+    engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats, gAxi, kAxiFloats, gD2, kD2Floats);
     engine.prepare(hw.AudioSampleRate(), kBlockSize);
 
     BootPattern(); // then metering

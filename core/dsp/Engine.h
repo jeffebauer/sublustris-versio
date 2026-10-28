@@ -53,7 +53,7 @@ public:
     static constexpr size_t largeFloats(float sampleRate)
     {
         return dsp::Fdn::memoryFloats(0.5f * sampleRate) + 2 * dsp::Swell::memoryFloats(sampleRate) // the tank (at half the rate), the tank's swell and the twin's
-             + dsp::Shimmer::memoryFloats(sampleRate) + 2 * dsp::Plate::memoryFloats(sampleRate, voicing::kPlateMaxScale, true)
+             + 2 * dsp::Plate::memoryFloats(sampleRate, voicing::kPlateMaxScale, true)
              + dsp::Fdn::memoryFloats(sampleRate / float(kLowDecimate)) // still lows' low tank
              + 2 * dsp::nextPow2(size_t(voicing::kPredelayMaxSeconds * sampleRate) + 4)
              + dsp::Arena::skewRoom() // each line's start staggered across the cache's sets
@@ -61,25 +61,33 @@ public:
     }
     // The in-loop allpass lines of the tank and the low tank (not the twin's), which the firmware keeps
     // in AXI SRAM (overnight review, 26 Oct 2026): on chip and cached, ~11 cycles a line fill against
-    // SDRAM's ~200. 256 + 128 KB at 48 kHz, + the cache-set stagger. The twin's (256 KB) stay in SDRAM:
-    // all three don't fit the 512 KB.
+    // SDRAM's ~200. 192 + 96 KB at 48 kHz (each line's first allpass in a ring half the second's since
+    // 28 Oct 2026), + the cache-set stagger. The twin's (PLATE) stay in SDRAM.
     static constexpr size_t axiTankFloats(float sampleRate)
     {
         return dsp::Fdn::apFloats(0.5f * sampleRate) + dsp::Fdn::apFloats(sampleRate / float(kLowDecimate));
     }
+    // AXI SRAM: the allpass lines, then the SHIMMER's right ring (CPU hunt, 28 Oct 2026: off SDRAM).
     static constexpr size_t axiFloats(float sampleRate)
     {
         // The stagger (dsp/Memory.h): the first slice needs up to kSkewLines - 1 lines of padding; when
         // every slice is a whole number of cache ways (4 KB: the allpass lines at 24 and 12 kHz), each
         // later one needs exactly kSkewStep lines; otherwise up to kSkewLines - 1 each.
         constexpr size_t way = dsp::Arena::kSkewLines * dsp::Arena::kLineFloats, slices = 2 * dsp::Fdn::kApSlices;
-        const bool whole = dsp::Fdn::apLineFloats(0.5f * sampleRate) % way == 0
-                        && dsp::Fdn::apLineFloats(sampleRate / float(kLowDecimate)) % way == 0;
+        const bool whole = dsp::Fdn::apLineFloats(0.5f * sampleRate, 0) % way == 0 && dsp::Fdn::apLineFloats(0.5f * sampleRate, 1) % way == 0
+                        && dsp::Fdn::apLineFloats(sampleRate / float(kLowDecimate), 0) % way == 0
+                        && dsp::Fdn::apLineFloats(sampleRate / float(kLowDecimate), 1) % way == 0;
         const size_t padLines = whole ? (dsp::Arena::kSkewLines - 1) + (slices - 1) * dsp::Arena::kSkewStep
                                       : slices * (dsp::Arena::kSkewLines - 1);
-        // The twin's small room (v1.0.43): one slice after them, up to kSkewLines - 1 lines of padding.
         return axiTankFloats(sampleRate) + padLines * dsp::Arena::kLineFloats
-             + dsp::TwinRoom::memoryFloats(0.5f * sampleRate) + (dsp::Arena::kSkewLines - 1) * dsp::Arena::kLineFloats;
+             + dsp::Shimmer::ringFloats(sampleRate) + (dsp::Arena::kSkewLines - 1) * dsp::Arena::kLineFloats;
+    }
+    // D2 SRAM (the firmware's 256 KB of cached SRAM1-3; CPU hunt, 28 Oct 2026): the SHIMMER's left ring and
+    // the twin's small room (v1.0.43, in AXI SRAM until then), one slice each.
+    static constexpr size_t d2Floats(float sampleRate)
+    {
+        return dsp::Shimmer::ringFloats(sampleRate) + dsp::TwinRoom::memoryFloats(0.5f * sampleRate)
+             + 2 * (dsp::Arena::kSkewLines - 1) * dsp::Arena::kLineFloats;
     }
     static constexpr size_t fastFloats(float sampleRate)
     {
@@ -91,10 +99,11 @@ public:
         return n;
     }
 
-    // axi: the in-loop allpass lines' memory (axiFloats(); the firmware's AXI SRAM). Desktop Hosts may
-    // skip it too. With IV_NO_HEAP and none attached, prepare() finds no room and the Engine stays dry.
+    // axi: the in-loop allpass lines' memory and a SHIMMER ring (axiFloats(); the firmware's AXI SRAM); d2: the
+    // other ring and the small room (d2Floats(); its D2 SRAM). Desktop Hosts may skip them too. With IV_NO_HEAP
+    // and none attached, prepare() finds no room and the Engine stays dry.
     void attachMemory(float* large, size_t largeCount, float* fast, size_t fastCount, float* axi = nullptr,
-                      size_t axiCount = 0);
+                      size_t axiCount = 0, float* d2 = nullptr, size_t d2Count = 0);
 
     void prepare(float sampleRate, int maxBlockSize);
     void reset();
@@ -228,7 +237,7 @@ public:
     float limiterGain() const { return limiter_.gain(); }
     float duckAmount() const { return duck_; }
     // Bytes of delay memory the Engine uses (firmware serial report).
-    size_t memoryBytes() const { return (large_.used + fast_.used + axi_.used) * sizeof(float); }
+    size_t memoryBytes() const { return (large_.used + fast_.used + axi_.used + d2_.used) * sizeof(float); }
     // False when the attached memory was too small: the Engine then passes
     // the dry only.
     bool  ready() const { return ready_; }
@@ -290,7 +299,7 @@ private:
 
     dsp::Arena large_, fast_;
 #if !defined(IV_NO_HEAP)
-    std::vector<float> ownLarge_, ownFast_, ownAxi_;
+    std::vector<float> ownLarge_, ownFast_, ownAxi_, ownD2_;
 #endif
     float* attachedLarge_ IV_ZI;
     float* attachedFast_ IV_ZI;
@@ -451,6 +460,9 @@ private:
     dsp::Arena axi_;
     float*     attachedAxi_ IV_ZI;
     size_t     attachedAxiCount_ IV_ZI;
+    dsp::Arena d2_; // attachMemory's d2 (likewise last)
+    float*     attachedD2_ IV_ZI;
+    size_t     attachedD2Count_ IV_ZI;
 };
 
 } // namespace iv
