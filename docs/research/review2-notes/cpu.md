@@ -22,7 +22,7 @@ the ABSEXP lines, which are **measured** (docs/research/m3-cpusave2-7ee389e-full
 
 Flash: the branch's release with everything is **112,620 B** (B1-B4; 20 B under the 112,640 budget);
 B1-B4 + A + S **112,652 B, 12 B over**. Fits: B1 + B2 + A + S = **112,596 B** (44 B left), and one of B4 (+24) or
-B3 (+32). My pick: B1 + B2 + B4 + A + S ≈ 112,620 (est.; see 4) for about **−4.5 points** on the sweep's worst
+B3 (+32). My pick: B1 + B2 + B4 + A + S = **112,620 B** (measured, 20 B left; B1 + B2 + B4 alone 112,588) for about **−4.5 points** on the sweep's worst
 block (est.: 94.8 → ~90), ~−4 on the twists and creep. That is about the target in the profile, not in release
 if release really runs 1-2 points heavier: the measurement on the module decides.
 
