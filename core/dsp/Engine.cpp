@@ -934,7 +934,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
     wetStep_ = (g.wet - wetNow_) / float(n);
 }
 
-void Engine::process(const float* inL, const float* inR, float* outL, float* outR, int numSamples)
+IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* outL, float* outR, int numSamples)
 {
     if (!ready_) {
         for (int i = 0; i < numSamples; ++i) {

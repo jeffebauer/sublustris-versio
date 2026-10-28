@@ -626,7 +626,7 @@ IV_SIZE_OPT bool Fdn::blockFits(int m) const
 }
 
 // m samples on this control block's values (m = the block, or 1 when it doesn't fit).
-IV_NO_UNSWITCH void Fdn::runBlock(const float* inL, const float* inR, float* outL, float* outR, int m)
+IV_LEAN_RUNBLOCK void Fdn::runBlock(const float* inL, const float* inR, float* outL, float* outR, int m)
 {
     constexpr float kNorm = 0.35355339f; // 1 / sqrt(8): keeps the Hadamard mix energy-preserving
     // The level that follows SIZE (a longer loop holds the same energy over more samples) and the

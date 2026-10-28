@@ -815,6 +815,16 @@ volatile uint32_t gFlipAt = 0;
 constexpr uint32_t kFlipRec = 4400;
 IV_DTCM uint32_t  gBlockCyc[kFlipRec]; // DTCM: AXI SRAM is full in this build (written before read)
 #endif
+#if IV_PROFILE_SIZESPIKE >= 5
+// The audit lap (SIZESPIKE=5; review 2 audit, 28 Oct 2026): the combinations no lap had timed. gUnfreezeAt: a tap
+// (unfreeze) at that block (-1 none); gFreezeSize: the SIZE a line freezes at (< 0: its hand's start), so the hand's
+// sends wait under the freeze and land at the unfreeze as one SIZE jump (or keep moving after it); gPaintFrom: the
+// button pressed at that block and held to the line's end (painting a frozen pad; -1 none); gCvAll: every other knob
+// wobbling through release's knob path as a CV would (gCvBase their centres).
+volatile int gUnfreezeAt = -1, gPaintFrom = -1;
+volatile bool gCvAll = false;
+float gFreezeSize = -1.0f, gCvBase[7];
+#endif
 void SpikeMark(int section)
 {
     const uint32_t now = DWT->CYCCNT;
@@ -892,6 +902,29 @@ void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer ou
     }
 #if IV_PROFILE_SIZESPIKE >= 3
     if (gFlipTo >= 0 && gBlocks == gFlipAt) engine.setParam(ParamId::Space, iv::switchToNormalised(gFlipTo));
+#endif
+#if IV_PROFILE_SIZESPIKE >= 5
+    if (gUnfreezeAt >= 0) {
+        if (gBlocks == uint32_t(gUnfreezeAt)) engine.button(true, 0);
+        if (gBlocks == uint32_t(gUnfreezeAt) + 10u) engine.button(false, 0);
+    }
+    if (gPaintFrom >= 0 && gBlocks == uint32_t(gPaintFrom)) engine.button(true, 0); // released after the line
+    if (gCvAll) { // MIX, DECAY, TONE, WEAR, MOTION, DEPTH: +-0.04 at 0.7-2.3 Hz each, release's 10 ms one-pole and deadbands
+        static float smooth[7], sent[7];
+        static const float kHz[7] = {0.7f, 1.1f, 1.7f, 2.3f, 0.0f, 1.3f, 0.9f};
+        const float t = float(gBlocks) * float(kBlockSize) / 48000.0f;
+        for (int k = 0; k < 7; ++k) {
+            if (k == 4) continue; // SIZE: its hand (above)
+            const float raw = gCvBase[k] + 0.04f * std::sin(6.2831853f * kHz[k] * t);
+            if (gBlocks == 0) smooth[k] = sent[k] = raw;
+            smooth[k] += (1.0f / 11.0f) * (raw - smooth[k]);
+            const float v = ivpot::endStops(smooth[k]);
+            if (std::fabs(v - sent[k]) > (k == 6 ? 0.003f : 0.001f)) {
+                sent[k] = v;
+                engine.setParam(kKnobParams[k], v);
+            }
+        }
+    }
 #endif
 #if IV_PROFILE_SIZESPIKE
     for (int k = 0; k < kNumSections; ++k) gSpkSec[k] = 0;
@@ -1607,7 +1640,11 @@ void RunSpike(const Spike& c, float fs)
     engine.setParam(ParamId::Era, c.wear);
     engine.setParam(ParamId::Drift, c.motion);
     engine.setParam(ParamId::Tone, c.tone);
+#if IV_PROFILE_SIZESPIKE >= 5
+    engine.setParam(ParamId::Size, gFreezeSize >= 0.0f ? gFreezeSize : ivpot::endStops(SizeHand(c.hand, 0)));
+#else
     engine.setParam(ParamId::Size, ivpot::endStops(SizeHand(c.hand, 0)));
+#endif
     engine.reset(); // at the settings (unfrozen, the tanks empty, no glide in from the last line)
     const int blocks1s = int(fs) / kBlockSize;
     RunSpikeUntimed(6 * blocks1s, c.input); // past the lines' first trip after the reset (5.5 s: until then they read as filling)
@@ -1806,6 +1843,65 @@ void RunFlip(int from, int to, int attack, int input, float fs, float wear = 0.0
 // One lap, ~11 min: SPACES (MASSIVE and HALL: silence and music, playing and frozen, sweep / twists / creep / nudges;
 // PLATE: sweep and twists), KNOBS (MASSIVE, music, creep: WEAR 0 / 0.5 / 1 x MOTION noon / full left, playing and
 // frozen; TONE at its ends; the twists near the top), STILL (each SPACE with SIZE still: the reference).
+#if IV_PROFILE_SIZESPIKE >= 5
+// STACK: the gap between DTCM's .bss and the stack's top painted at boot (PaintStack, first thing in main), read back
+// after each lap: the deepest the stack has reached, the audio interrupt's chain included.
+extern "C" uint32_t _edtcmram_bss, _estack;
+constexpr uint32_t kStackPaint = 0xA5A5A5A5u;
+__attribute__((noinline)) void PaintStack()
+{
+    uint32_t* const sp = reinterpret_cast<uint32_t*>(__get_MSP());
+    for (uint32_t* p = &_edtcmram_bss; p < sp - 64; ++p) *p = kStackPaint; // 256 B under the live frame left alone
+}
+uint32_t StackUsed()
+{
+    const uint32_t* p = &_edtcmram_bss;
+    while (p < &_estack && *p == kStackPaint) ++p;
+    return uint32_t(reinterpret_cast<uintptr_t>(&_estack) - reinterpret_cast<uintptr_t>(p));
+}
+// HASH: the Engine from a reset at fixed settings (MASSIVE, SHIMMER, WEAR 0.5, MOTION left, DECAY 0.9, SIZE 0.7, then
+// a SIZE jump to 0.4 at block 1000), 3000 blocks of its own seeded saw notes, the output's bits through CRC-32. The
+// same number from two builds = the same output to the bit on the module (a flash or CPU trim's proof).
+uint32_t HashRun()
+{
+    engine.setParam(ParamId::Space, iv::switchToNormalised(2));
+    engine.setParam(ParamId::Attack, iv::switchToNormalised(2));
+    engine.setParam(ParamId::Decay, 0.9f);
+    engine.setParam(ParamId::Mix, 0.5f);
+    engine.setParam(ParamId::Time, 0.5f);
+    engine.setParam(ParamId::Era, 0.5f);
+    engine.setParam(ParamId::Drift, 0.0f);
+    engine.setParam(ParamId::Tone, 0.5f);
+    engine.setParam(ParamId::Size, 0.7f);
+    engine.reset();
+    static float l[kBlockSize], ol[kBlockSize], orr[kBlockSize];
+    uint32_t crc = 0xFFFFFFFFu, seed = 12345u;
+    float    phase = 0.0f, env = 0.0f;
+    for (int b = 0; b < 3000; ++b) {
+        if (b == 1000) engine.setParam(ParamId::Size, 0.4f);
+        for (int i = 0; i < kBlockSize; ++i) {
+            if ((b * kBlockSize + i) % 6000 == 0) {
+                seed = seed * 1664525u + 1013904223u;
+                env  = 0.5f;
+            }
+            phase += (110.0f + float(seed >> 24)) / 48000.0f;
+            if (phase >= 1.0f) phase -= 1.0f;
+            env *= 0.99965f;
+            l[i] = env * (2.0f * phase - 1.0f);
+        }
+        engine.process(l, l, ol, orr, kBlockSize);
+        for (int i = 0; i < kBlockSize; ++i)
+            for (const float* o : {ol, orr}) {
+                uint32_t w;
+                std::memcpy(&w, &o[i], 4);
+                crc ^= w;
+                for (int k = 0; k < 32; ++k) crc = (crc >> 1) ^ (0xEDB88320u & (0u - (crc & 1u)));
+            }
+    }
+    return ~crc;
+}
+#endif
+
 void RunSpikeLap(float fs)
 {
     gPeriodCycles = uint32_t(float(SystemCoreClock) / fs * float(kBlockSize));
@@ -1813,7 +1909,34 @@ void RunSpikeLap(float fs)
     gSpkLate = gSpkNearAll = 0;
     gSpkWorst = 0.0f;
     gSpkWorstName[0] = '\0';
-#if IV_PROFILE_SIZESPIKE >= 4
+#if IV_PROFILE_SIZESPIKE >= 5
+    // The audit lap (~3.5 min): SHIMMER, WEAR 0.5, MOTION left, DECAY 0.9, music unless named.
+    // UNFRZ: frozen at SIZE 0.3, the hand moves under the freeze, a tap unfreezes at 0.2 s: the SIZE crossfade(s) with
+    // the twin ringing out. PAINT: frozen, the button held from 0.2 s. CVALL: SIZE's hand and every other knob moving.
+    // GRIT: WEAR 1 (the BBD clock and the grain).
+    struct AuditLine { const char* group; int space, hand, attack; float wear, freezeSize; int unfreeze, paint; bool cv; };
+    static const AuditLine kAudit[] = {
+        {"UNFRZ", 2, 5, 2, 0.5f, 0.3f, 200, -1, false}, {"UNFRZ", 2, 2, 2, 0.5f, 0.3f, 200, -1, false},
+        {"UNFRZ", 2, 1, 2, 0.5f, 0.3f, 200, -1, false}, {"UNFRZ", 1, 0, 2, 0.5f, 0.3f, 200, -1, false},
+        {"UNFRZ", 2, 2, 1, 1.0f, 0.3f, 200, -1, false}, {"PAINT", 2, 5, 2, 0.5f, -1.0f, -1, 200, false},
+        {"CVALL", 2, 2, 2, 0.5f, -1.0f, -1, -1, true},  {"CVALL", 1, 0, 2, 0.5f, -1.0f, -1, -1, true},
+        {"GRIT", 2, 2, 2, 1.0f, -1.0f, -1, -1, false},  {"GRIT", 2, 5, 2, 1.0f, -1.0f, -1, -1, false},
+    };
+    for (const AuditLine& a : kAudit) {
+        const bool frozen = a.unfreeze >= 0 || a.paint >= 0;
+        gFreezeSize = a.freezeSize;
+        gUnfreezeAt = a.unfreeze;
+        gPaintFrom  = a.paint;
+        const float base[7] = {0.5f, 0.9f, 0.5f, a.wear, 0.7f, 0.0f, 0.5f}; // MIX DECAY TONE WEAR SIZE MOTION DEPTH
+        for (int k = 0; k < 7; ++k) gCvBase[k] = base[k] < 0.04f ? 0.04f : base[k]; // MOTION wobbles near its left end
+        gCvAll = a.cv;
+        RunSpike({a.group, a.space, a.hand, 1, frozen, a.wear, 0.0f, 0.5f, a.attack, 0.9f}, fs);
+        if (a.paint >= 0) engine.button(false, 0);
+        gCvAll = false;
+        gUnfreezeAt = gPaintFrom = -1;
+        gFreezeSize = -1.0f;
+    }
+#elif IV_PROFILE_SIZESPIKE >= 4
     // The CPU-save lap (~7 min; 28 Oct 2026, claude/cpu-save against 5e38080): the overloads the CPU-hunt lap found,
     // SHIMMER with WEAR 0.5 and MOTION full left (tape), DECAY 0.9, music: HALL and MASSIVE each hand, PLATE's sweep
     // and twists; then WEAR and MOTION apart (and neither, and BLOOM) on HALL's sweep and MASSIVE's creep; SIZE still
@@ -1918,6 +2041,12 @@ void RunSpikeLap(float fs)
     AppendUInt(p, end, gSpkLate);
     AppendStr(p, end, ", near ");
     AppendUInt(p, end, gSpkNearAll);
+#if IV_PROFILE_SIZESPIKE >= 5
+    AppendStr(p, end, " | STACK ");
+    AppendUInt(p, end, StackUsed());
+    AppendStr(p, end, " B of ");
+    AppendUInt(p, end, unsigned(reinterpret_cast<uintptr_t>(&_estack) - reinterpret_cast<uintptr_t>(&_edtcmram_bss)));
+#endif
     AppendStr(p, end, "\r\n");
     TransmitLine(eb, size_t(p - eb));
 }
@@ -1929,6 +2058,9 @@ int main()
 {
 #if IV_ITCM
     CopyItcm(); // first: the Engine's constructor may live in Engine.o
+#endif
+#if IV_PROFILE_SIZESPIKE >= 5
+    PaintStack(); // before anything else uses the stack deeply
 #endif
     new (gEngineStorage) iv::Engine(); // before anything touches it (see gEngineStorage)
     // DaisyVersio::Init minus the parts this build never uses (flash; Resilio's
@@ -1989,8 +2121,23 @@ int main()
 
 #if IV_PROFILE_SIZESPIKE
     System::Delay(3000); // time to open the serial log
+#if IV_PROFILE_SIZESPIKE >= 5
+    {
+        gRealtime = false; // the callback idles (silence) while the Engine runs here
+        const uint32_t h = HashRun();
+        static char hb[64];
+        char*       p   = hb;
+        const char* end = hb + sizeof(hb);
+        AppendStr(p, end, "HASH ");
+        AppendHex(p, end, h);
+        AppendStr(p, end, " (3000 blocks, MASSIVE SHIMMER W.5 M0, SIZE .7 -> .4)\r\n");
+        TransmitLine(hb, size_t(p - hb));
+    }
+#endif
     while (true) {
-#if IV_PROFILE_SIZESPIKE >= 4
+#if IV_PROFILE_SIZESPIKE >= 5
+        static const char kHello[] = "AUDIT START (unfreeze after SIZE moved, paint, every knob moving, WEAR's grit; 10 lines, ~3.5 min a lap)\r\n";
+#elif IV_PROFILE_SIZESPIKE >= 4
         static const char kHello[] = "CPUSAVE START (SHIMMER + WEAR 0.5 + MOTION left: SIZE moves, apart, still, SPACE flips, the ABSEXP trial; 36 lines, ~7.5 min a lap)\r\n";
 #elif IV_PROFILE_SIZESPIKE >= 3
         static const char kHello[] = "CPUHUNT START (SIZE moves SHIMMER vs BLOOM, SPACE flips; 40 lines, ~7 min a lap)\r\n";
@@ -2648,22 +2795,29 @@ private:
     {
         *reinterpret_cast<volatile uint32_t*>(d.StreamBaseAddress + 8u) = 0x3Fu << (d.StreamIndex & 0x1Fu);
     }
+    // LEAN=1 (review 2 audit): gLedPwm has static storage, zeroed by startup, and start() sets every port's id before
+    // reading it, so these initialisers only cost flash (the static constructor's stores and memsets, 48 B).
+#if IV_LEAN_LOOPS
+#define IV_LED_INIT(...)
+#else
+#define IV_LED_INIT(...) = __VA_ARGS__
+#endif
     struct Port {
-        GPIOPort      id      = PORTX;
-        int           numPins = 0;
-        bool          dirty   = false;
+        GPIOPort      id      IV_LED_INIT(PORTX);
+        int           numPins IV_LED_INIT(0);
+        bool          dirty   IV_LED_INIT(false);
         ivled::PwmPin pins[kNumLeds * kPinsPerLed];
-        int           counts[kNumLeds * kPinsPerLed] = {};
+        int           counts[kNumLeds * kPinsPerLed] IV_LED_INIT({});
     };
     struct Slot {
-        int port = 0, pin = 0;
+        int port IV_LED_INIT(0), pin IV_LED_INIT(0);
     };
     Port              ports_[kMaxPorts];
-    int               numPorts_   = 0;
-    int               numStarted_ = 0;
+    int               numPorts_   IV_LED_INIT(0);
+    int               numStarted_ IV_LED_INIT(0);
     Slot              slot_[kNumLeds][kPinsPerLed];
     TimerHandle       timer_;
-    DMA_HandleTypeDef dma_[kMaxPorts] = {};
+    DMA_HandleTypeDef dma_[kMaxPorts] IV_LED_INIT({});
 };
 
 LedPwm gLedPwm;
@@ -2785,6 +2939,39 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
 #endif
 }
 
+#if IV_AUDIO_DIRECT
+// AUDIO_DIRECT=1 (flash trial, review 2 audit, 28 Oct 2026): the SAI's DMA straight to this callback, without
+// libDaisy's AudioHandle::Impl::InternalCallback (3,500 B: every bit depth, interleaved and 4-channel cases) and its
+// Start / ChangeCallback. The same conversions as its 24-bit stereo case (daisy_core.h s242f / f2s24, its postgain
+// and output_compensation factors from the AudioHandle's config), the same buffers' layout (blocksize x 2 channels x
+// 2 halves, in the uncached D2 window), the same SaiHandle (DaisySeed configured it), so the same samples both ways.
+DMA_BUFFER_MEM_SECTION int32_t gSaiRx[kBlockSize * 2 * 2], gSaiTx[kBlockSize * 2 * 2];
+float gInScale = 1.0f, gOutScale = 1.0f; // AudioHandle's postgain_recip_ and output_adjust_
+void SaiCallback(int32_t* in, int32_t* out, size_t size) // size: this half's words, both channels interleaved
+{
+    float fin[2][kBlockSize], fout[2][kBlockSize]; // on the stack (DTCM), as libDaisy's
+    for (size_t i = 0; i < size; i += 2) {
+        fin[0][i / 2] = s242f(in[i]) * gInScale;
+        fin[1][i / 2] = s242f(in[i + 1]) * gInScale;
+    }
+    const float* const ins[2]  = {fin[0], fin[1]};
+    float*             outs[2] = {fout[0], fout[1]};
+    AudioCallback(ins, outs, size / 2);
+    for (size_t i = 0; i < size; i += 2) {
+        out[i]     = f2s24(fout[0][i / 2] * gOutScale);
+        out[i + 1] = f2s24(fout[1][i / 2] * gOutScale);
+    }
+}
+void StartAudioDirect()
+{
+    const AudioHandle::Config& c = hw.seed.audio_handle.GetConfig();
+    gInScale  = 1.f / c.postgain;
+    gOutScale = c.postgain * c.output_compensation;
+    SaiHandle sai = hw.seed.AudioSaiHandle(); // a handle on DaisySeed's SAI1 (pimpl: the same peripheral)
+    sai.StartDma(gSaiRx, gSaiTx, kBlockSize * 2 * 2, SaiCallback);
+}
+#endif
+
 } // namespace
 
 int main()
@@ -2810,7 +2997,11 @@ int main()
     iv::prof::markHook = DiagMark;
     uint32_t diagNext = System::GetNow() + 1000u, diagSeconds = 0;
 #endif
+#if IV_AUDIO_DIRECT
+    StartAudioDirect();
+#else
     hw.StartAudio(AudioCallback);
+#endif
 
     // Our own PWM from here on (see LedPwm); libDaisy's is only the fallback.
     bool ledDma = gLedPwm.start();
