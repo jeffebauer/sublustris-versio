@@ -43,6 +43,8 @@ RELEASE_LATE_LIGHT ?= 0
 #   SIZESPIKE=2   the same machinery, its A / B lap: each SIZE move as v1.0.48 ran its crossfade, then on the faster
 #                 crossfade paths (prof::xfFast; the same output to the bit) (-sizespikeab)
 #   CTL_O3=1      v1.0.51's control-rate flash trims undone (core/dsp/SizeOpt.h IV_CTL_OPT; -ctlo3)
+#   SIZESPIKE=4   the CPU-save lap (28 Oct 2026): the CPU hunt's overloads (SHIMMER, WEAR 0.5, MOTION left), WEAR and
+#                 MOTION apart, SIZE still, SPACE flips at WEAR 0.5 / MOTION left; SPLIT adds flip and tkabs (-cpusave)
 #   SIZESPIKE=3   the CPU-hunt lap (28 Oct 2026, v1.0.52's notes): SIZE moves with ONSET at SHIMMER against BLOOM,
 #                 and SPACE flips timed block by block around the flip (-cpuhunt)
 SIZE_GROUPS ?=
@@ -52,7 +54,7 @@ SIZESPIKE ?=
 TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)
 TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))
 RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)$(if $(filter 1,$(RELEASE_LATE_LIGHT)),-latelight)$(TRIAL_TAG)
-PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)$(if $(SIZESPIKE),$(if $(filter 3,$(SIZESPIKE)),-cpuhunt,-sizespike$(if $(filter 2,$(SIZESPIKE)),ab)))
+PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)$(if $(SIZESPIKE),$(if $(filter 4,$(SIZESPIKE)),-cpusave,$(if $(filter 3,$(SIZESPIKE)),-cpuhunt,-sizespike$(if $(filter 2,$(SIZESPIKE)),ab))))
 
 ifeq ($(MODE),m0test)
   TARGET    = sublustris_versio_m0test
@@ -107,6 +109,7 @@ C_DEFS     += -DIV_NO_HEAP
 # (Resilio's M3 bench). A separate vmul + vadd is three-operand and
 # pipelines. Rounding differs from the desktop build in the last bit only.
 C_DEFS     += -ffp-contract=off
+C_DEFS     += -DIV_FIRMWARE_D2 # core/dsp/SizeOpt.h IV_D2_BSS: the prime sieve in D2 SRAM (.d2_bss)
 CPP_STANDARD = -std=gnu++17
 OPT = -O3
 

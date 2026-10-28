@@ -1689,7 +1689,7 @@ void RunSpike(const Spike& c, float fs)
     AppendFixed1(p, end, FracToPercentTenths(float(gSpkFadeMax) / period), 5);
     AppendStr(p, end, "%\r\n  SPLIT");
     static const char* const kSec[kNumSections] = {"ctl", "in", "shim", "swell", "twin", "tank",
-                                                   "tkctl", "tkloop", "tkout", "tkmix", "wear", "out"};
+                                                   "tkctl", "tkloop", "tkout", "tkmix", "wear", "out", "flip", "tkabs"};
     for (int k = 0; k < kNumSections; ++k) {
         AppendStr(p, end, " ");
         AppendStr(p, end, kSec[k]);
@@ -1706,7 +1706,7 @@ void RunSpike(const Spike& c, float fs)
 // Each block's time is kept (gBlockCyc), so the line gives the worst block before the flip and the worst in each
 // window after it: the fade out (0-50 ms), the tanks' restart at its silent point and the fade in (to ~150 ms),
 // then the new space's lines filling for the first time (lineSlow, the Plate's filling reads) up to 4 s.
-void RunFlip(int from, int to, int attack, int input, float fs)
+void RunFlip(int from, int to, int attack, int input, float fs, float wear = 0.0f, float motion = 0.5f)
 {
     static const char* const kSp[3] = {"PLATE", "HALL", "MASSIVE"};
     engine.setParam(ParamId::Space, iv::switchToNormalised(from));
@@ -1714,8 +1714,8 @@ void RunFlip(int from, int to, int attack, int input, float fs)
     engine.setParam(ParamId::Decay, 0.9f);
     engine.setParam(ParamId::Mix, 0.5f);
     engine.setParam(ParamId::Time, 0.5f);
-    engine.setParam(ParamId::Era, 0.0f);
-    engine.setParam(ParamId::Drift, 0.5f);
+    engine.setParam(ParamId::Era, wear);
+    engine.setParam(ParamId::Drift, motion);
     engine.setParam(ParamId::Tone, 0.5f);
     engine.setParam(ParamId::Size, 0.7f);
     engine.reset();
@@ -1753,6 +1753,12 @@ void RunFlip(int from, int to, int attack, int input, float fs)
     AppendStr(p, end, "->");
     AppendStr(p, end, kSp[to]);
     AppendStr(p, end, input ? " music" : " silence");
+#if IV_PROFILE_SIZESPIKE >= 4
+    AppendStr(p, end, " W");
+    AppendFixed1(p, end, int(wear * 10.0f + 0.5f), 1);
+    AppendStr(p, end, " M");
+    AppendFixed1(p, end, int(motion * 10.0f + 0.5f), 1);
+#endif
     const float mx = float(gMaxCycles) / period;
     if (mx > gSpkWorst) {
         gSpkWorst = mx;
@@ -1786,7 +1792,7 @@ void RunFlip(int from, int to, int attack, int input, float fs)
     }
     AppendStr(p, end, "\r\n  SPLIT");
     static const char* const kSec[kNumSections] = {"ctl", "in", "shim", "swell", "twin", "tank",
-                                                   "tkctl", "tkloop", "tkout", "tkmix", "wear", "out"};
+                                                   "tkctl", "tkloop", "tkout", "tkmix", "wear", "out", "flip", "tkabs"};
     for (int k = 0; k < kNumSections; ++k) {
         AppendStr(p, end, " ");
         AppendStr(p, end, kSec[k]);
@@ -1807,7 +1813,27 @@ void RunSpikeLap(float fs)
     gSpkLate = gSpkNearAll = 0;
     gSpkWorst = 0.0f;
     gSpkWorstName[0] = '\0';
-#if IV_PROFILE_SIZESPIKE >= 3
+#if IV_PROFILE_SIZESPIKE >= 4
+    // The CPU-save lap (~7 min; 28 Oct 2026, claude/cpu-save against 5e38080): the overloads the CPU-hunt lap found,
+    // SHIMMER with WEAR 0.5 and MOTION full left (tape), DECAY 0.9, music: HALL and MASSIVE each hand, PLATE's sweep
+    // and twists; then WEAR and MOTION apart (and neither, and BLOOM) on HALL's sweep and MASSIVE's creep; SIZE still
+    // in each SPACE; the SPACE flips both ways, SHIMMER and BLOOM, at WEAR 0.5 / MOTION left.
+    static const int kHandsAll[4] = {0, 1, 2, 4};
+    for (int space = 1; space <= 2; ++space)
+        for (int h : kHandsAll) RunSpike({"SHIMMER", space, h, 1, false, 0.5f, 0.0f, 0.5f, 2, 0.9f}, fs);
+    for (int h = 0; h < 2; ++h) RunSpike({"SHIMMER", 0, h, 1, false, 0.5f, 0.0f, 0.5f, 2, 0.9f}, fs);
+    static const float kWm[3][2] = {{0.5f, 0.5f}, {0.0f, 0.0f}, {0.0f, 0.5f}}; // WEAR alone, MOTION alone, neither
+    for (const auto& wm : kWm) {
+        RunSpike({"SHIMMER", 1, 0, 1, false, wm[0], wm[1], 0.5f, 2, 0.9f}, fs);
+        RunSpike({"SHIMMER", 2, 2, 1, false, wm[0], wm[1], 0.5f, 2, 0.9f}, fs);
+    }
+    RunSpike({"BLOOM", 1, 0, 1, false, 0.5f, 0.0f, 0.5f, 1, 0.9f}, fs);
+    RunSpike({"BLOOM", 2, 2, 1, false, 0.5f, 0.0f, 0.5f, 1, 0.9f}, fs);
+    for (int space = 0; space <= 2; ++space) RunSpike({"SHIMMER", space, 5, 1, false, 0.5f, 0.0f, 0.5f, 2, 0.9f}, fs);
+    static const int kFlips[6][2] = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {0, 2}, {2, 0}};
+    for (int att = 2; att >= 1; --att)
+        for (const auto& f : kFlips) RunFlip(f[0], f[1], att, 1, fs, 0.5f, 0.0f);
+#elif IV_PROFILE_SIZESPIKE >= 3
     // The CPU-hunt lap (~7 min; 28 Oct 2026, v1.0.52 at the rack: overloads moving SIZE in HALL / MASSIVE at high
     // DECAY with SHIMMER, and the late light on SPACE flips). Every earlier lap ran ONSET at BLOOM. The shipping
     // crossfade paths (prof::xfFast stays on).
@@ -1906,6 +1932,7 @@ int main()
     hw.seed.Configure();
     hw.seed.Init(true); // boost to 480 MHz
     SdramWriteAllocate();
+    EnableD2Sram(); // before the micro-tests (their tanks' prime sieve lives there)
     {
         constexpr Pin kLedPins[DaisyVersio::LED_LAST][3] = {
             {seed::D10, seed::D3, seed::D4},
@@ -1929,7 +1956,6 @@ int main()
 #else
     RunMicroTests(); // before the Engine takes (and zeroes) its memory
 #endif
-    EnableD2Sram();
     engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats, gAxi, kAxiFloats, gD2, kD2Floats);
     engine.prepare(hw.AudioSampleRate(), kBlockSize);
 #if IV_PROFILE_SIZESPIKE
@@ -1957,7 +1983,9 @@ int main()
 #if IV_PROFILE_SIZESPIKE
     System::Delay(3000); // time to open the serial log
     while (true) {
-#if IV_PROFILE_SIZESPIKE >= 3
+#if IV_PROFILE_SIZESPIKE >= 4
+        static const char kHello[] = "CPUSAVE START (SHIMMER + WEAR 0.5 + MOTION left: SIZE moves, apart, still, SPACE flips; 33 lines, ~7 min a lap)\r\n";
+#elif IV_PROFILE_SIZESPIKE >= 3
         static const char kHello[] = "CPUHUNT START (SIZE moves SHIMMER vs BLOOM, SPACE flips; 40 lines, ~7 min a lap)\r\n";
 #elif IV_PROFILE_SIZESPIKE >= 2
         static const char kHello[] = "SIZESPIKE A/B START (AS-SHIP then FASTER, each SIZE move; 38 lines, ~8 min a lap)\r\n";
@@ -2027,7 +2055,7 @@ int main()
             // Where the time goes, each section as % of the whole budget
             // (10,000 cycles per sample): cycles / (samples x 10) = tenths of a %.
             static const char* const kSectionNames[kNumSections] = {"ctl", "in", "shim", "swell", "twin", "tank",
-                                                                    "tkctl", "tkloop", "tkout", "tkmix", "wear", "out"};
+                                                                    "tkctl", "tkloop", "tkout", "tkmix", "wear", "out", "flip", "tkabs"};
             AppendStr(p, end, "  SPLIT");
             for (int k = 0; k < kNumSections; ++k) {
                 AppendStr(p, end, " ");
@@ -2837,7 +2865,7 @@ int main()
             AppendUInt(q, end, unsigned(gNearBlocks));
             AppendStr(q, end, "\r\n  PEAK");
             static const char* const kSec[iv::prof::kNumSections] = {"ctl", "in", "shim", "swell", "twin", "tank", "tkctl",
-                                                                     "tkloop", "tkout", "tkmix", "wear", "out"};
+                                                                     "tkloop", "tkout", "tkmix", "wear", "out", "flip", "tkabs"};
             for (int k = 0; k < iv::prof::kNumSections; ++k) {
                 AppendStr(q, end, " ");
                 AppendStr(q, end, kSec[k]);

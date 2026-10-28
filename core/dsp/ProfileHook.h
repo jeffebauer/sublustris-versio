@@ -16,7 +16,10 @@ namespace iv::prof {
 // (read, in-loop allpasses, loss filter, ERA's in-loop stages); kTankOut, its output and early taps;
 // kTankMix, the Hadamard mix and the writes. kTank keeps the rest (the Plate's loop, the still-lows split).
 // kEraWear: ERA's wear on the wet (v1.0.42, dsp/EraTexture.h; until then kEraTape, kEraBbd, kEraRadio).
-enum Section { kControl, kInput, kShimmer, kSwell, kTwin, kTank, kTankCtl, kTankLoop, kTankOut, kTankMix, kEraWear, kOutput, kNumSections };
+// CPU hunt (28 Oct 2026): kFlip, a SPACE flip's restart inside the control tick (out of kControl); kTankAbs, the
+// tanks' loss filters worked out again (absorbent()'s two powf a line, out of kTankCtl).
+enum Section { kControl, kInput, kShimmer, kSwell, kTwin, kTank, kTankCtl, kTankLoop, kTankOut, kTankMix, kEraWear, kOutput,
+               kFlip, kTankAbs, kNumSections };
 
 #if defined(IV_PROFILE_HOOKS)
 // Set by the host (profile firmware) before audio starts; null = no timing.

@@ -50,11 +50,13 @@ bool isPrime(uint32_t n)
 // at every SIZE change and SPACE flip: blocks of 150-210 % on the module, drop-outs (M3 round 9b).
 // Odd n <-> bit n / 2; beyond the table, trial division as before. The same primes either way.
 constexpr uint32_t kSieveMax = uint32_t(voicing::kFdnMaxLineSeconds * 48000.0f) + 64u;
-uint32_t           gOddComposite[(kSieveMax / 2 + 31) / 32];
+// In the firmware's D2 SRAM (IV_D2_BSS, SizeOpt.h; CPU hunt, 28 Oct 2026: AXI SRAM is full), not zeroed at start-up.
+IV_D2_BSS uint32_t gOddComposite[(kSieveMax / 2 + 31) / 32];
 bool               gSieved = false;
 
 IV_NOINLINE IV_SIZE_OPT void sievePrimes()
 {
+    for (auto& w : gOddComposite) w = 0u;
     for (uint32_t p = 3; p * p < kSieveMax; p += 2)
         if (!(gOddComposite[(p / 2) >> 5] & (1u << ((p / 2) & 31u))))
             for (uint32_t q = p * p; q < kSieveMax; q += 2 * p) gOddComposite[(q / 2) >> 5] |= 1u << ((q / 2) & 31u);
@@ -516,7 +518,9 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
         const float seconds = lenNow_[i] / sampleRate_ + apSeconds;
         if (absChanged || !(seconds == absSec_[i])) {
             absSec_[i] = seconds;
+            prof::mark(prof::kTankCtl);
             absOut_[i] = absorbent(seconds, rate, highRatio_, gov.darken, shelfK_, air_);
+            prof::mark(prof::kTankAbs);
         }
         const Absorb& a = absOut_[i];
         // While SIZE crossfades the loss filter goes from the old length's to the new one's with the fade

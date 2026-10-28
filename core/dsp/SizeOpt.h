@@ -59,3 +59,11 @@
 #else
 #define IV_ZI = {}
 #endif
+
+// IV_D2_BSS: a Core array the firmware places in its D2 SRAM (the linker script's .d2_bss, NOLOAD: whoever uses it
+// zeroes it). Only with IV_FIRMWARE_D2 (firmware/Makefile); elsewhere an ordinary array.
+#if defined(IV_FIRMWARE_D2)
+#define IV_D2_BSS __attribute__((section(".d2_bss")))
+#else
+#define IV_D2_BSS
+#endif

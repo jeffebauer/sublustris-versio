@@ -825,6 +825,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
             // the freeze, so the pad came out silent).
             flipPhase_ = 2;
         } else if (flipGain_ <= 0.0f) {
+            prof::mark(prof::kControl);
             activeSpace_ = space;
             setEarlyTapsForSpace(); // the tanks restart here, so their early taps re-lay out unheard
             // Targets first, so the resets below land on them (the FDN's output trim). The predelay
@@ -855,6 +856,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
             // as clicks, hiss over its tail's highs for seconds (owner: a burst switching MASSIVE and HALL).
             for (auto& d : diffuser_) d.clear();
             flipPhase_ = 2;
+            prof::mark(prof::kFlip);
         }
     }
     if (flipPhase_ == 2) {
