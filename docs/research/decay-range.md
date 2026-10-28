@@ -1,6 +1,6 @@
 # DECAY's range: longer tails before the hold (28 Oct 2026)
 
-**Built as SPEC v1.0.53-decay (ADR 0034): the owner picked B on every card of `renders/decay_range`.** The page was rendered with a renderer-only hook (`IV_DECAY_PLATE_MAX`, `IV_DECAY_HALL_MAX`, `IV_DECAY_TOP`, `IV_DECAY_GAMMA`, at ed11f65), removed at the build; `tools/pages/decay_range.py --built <59ce205's iv_render>` checks the build against the page.
+**Built as SPEC v1.0.53 (ADR 0034): the owner picked B on every card of `renders/decay_range`.** The page was rendered with a renderer-only hook (`IV_DECAY_PLATE_MAX`, `IV_DECAY_HALL_MAX`, `IV_DECAY_TOP`, `IV_DECAY_GAMMA`, at ed11f65), removed at the build; `tools/pages/decay_range.py --built <59ce205's iv_render>` checks the build against the page.
 
 The owner said: "i often find myself wanting longer lush decays, but the knob biases towards smaller decays until you hit the 3 oclock mark and it turns into perpetual tails. I'd like more usable range so i can access longer decays without hitting the perpetual holds. I'd still like the held tails to kick in at the 3 oclock position. This applies to plate and hall".
 

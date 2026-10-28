@@ -245,7 +245,7 @@ constexpr double kMassiveWhiteNoiseOffsetDb = 3.8;
 // v1.0.35 (ADR 0026): HALL's and MASSIVE's tanks run at 24 kHz, so white noise (mostly treble) loses its
 // top octave there: 2.7 dB (HALL) and 1.9 dB (MASSIVE) quieter on these bursts, 0.2-0.9 dB on music.
 constexpr double kHalfRateWhiteNoiseOffsetDb = 2.3;
-// v1.0.53-decay (ADR 0034): PLATE's and HALL's longer tails are trimmed to their old level while playing (music,
+// v1.0.53 (ADR 0034): PLATE's and HALL's longer tails are trimmed to their old level while playing (music,
 // renders/decay_range: within 0.45 dB on the chord, -0.66..+0.13 dB on pad and keys at DECAY noon), which leaves
 // these sparse white-noise bursts 0.5-1.2 dB quieter at noon than v1.0.52 (-32.3 / -30.3 / -31.3 / -30.6 dB then).
 constexpr double kDecayRangeWhiteNoiseOffsetDb = 0.8;

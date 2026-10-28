@@ -64,7 +64,7 @@ double level(const std::vector<float>& music, int space, float size, float decay
     e->prepare(kSr, kBlock);
     e->setParam(iv::ParamId::Space, iv::switchToNormalised(space));
     e->setParam(iv::ParamId::Size, size);
-    e->setParam(iv::ParamId::Decay, decaySameTailAsV1052(decay, space)); // the page's tail length (v1.0.53-decay)
+    e->setParam(iv::ParamId::Decay, decaySameTailAsV1052(decay, space)); // the page's tail length (v1.0.53)
     e->setParam(iv::ParamId::Era, 0.0f); // the Neve alone (as the pages)
     e->setParam(iv::ParamId::Mix, 1.0f);
     e->reset();

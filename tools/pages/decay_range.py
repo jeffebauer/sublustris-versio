@@ -18,7 +18,7 @@ Knob positions are the module's (a 300 degree pot, 7 to 5 o'clock, with the firm
     decay_range.py [--render build-decay/iv_render] [--verify-only] [--skip-safety]
     decay_range.py --built <59ce205's iv_render> [--render build-decay/iv_render]   the build against the page
 
-Built as SPEC v1.0.53-decay (ADR 0034, the owner's pick B). The IV_DECAY_* hook the page was rendered with (ed11f65)
+Built as SPEC v1.0.53 (ADR 0034, the owner's pick B). The IV_DECAY_* hook the page was rendered with (ed11f65)
 is gone, so only --built (and --table) work on the build.
 """
 import argparse
@@ -377,7 +377,7 @@ def safety(binary, root, versions=None):
 
 
 def built(ref, new, root):
-    """The build (v1.0.53-decay, B) against the page: each card rendered by the new renderer (no hooks) against the
+    """The build (v1.0.53, B) against the page: each card rendered by the new renderer (no hooks) against the
     page's B (as heard: scaled by its _gains.json) and A; endless (DECAY >= 0.85) against the reference renderer
     (59ce205) bit for bit; then the safety checks with A = the reference renderer, B = the build."""
     out = root / "renders" / "decay_range"

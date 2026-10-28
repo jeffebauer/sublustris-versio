@@ -26,7 +26,7 @@ IV_CTL_OPT inline MixGains mixGains(float v) { return {std::cos(v * 0.5f * kPi),
 
 // DECAY (P2), SPEC §3: 0–0.80 T60 exponential per SPACE; 0.80–0.85 a
 // crossover to infinite (1/T60 falls linearly to 0); 0.85–1 infinite.
-// PLATE's and HALL's tops 30 / 60 s since v1.0.53-decay (ADR 0034; were 12 / 25).
+// PLATE's and HALL's tops 30 / 60 s since v1.0.53 (ADR 0034; were 12 / 25).
 constexpr float kDecayFiniteTop   = 0.80f;
 constexpr float kDecayInfiniteAt  = 0.85f;
 struct T60Range {
@@ -234,7 +234,7 @@ IV_CTL_OPT inline float massiveDecayLevelTrim(float v, float size)
 // DECAY's level make-up on the wet (v1.0.28): what a tail shorter than the v1.0.28 finite top
 // (kDecayLevelTopSeconds) loses by being shorter (SpaceVoicing.h, kDecayLevelPower). The plain decayRate
 // curve: HALL's SIZE has hallSizeLevelTrim, MASSIVE's longer shortest tails massiveDecayLevelTrim. 1 at
-// that top and past it, and at infinite. PLATE and HALL (v1.0.53-decay, ADR 0034): their longer tails are
+// that top and past it, and at infinite. PLATE and HALL (v1.0.53, ADR 0034): their longer tails are
 // trimmed back to the level the same DECAY had before (kDecayLongTrimDb), 0 dB again at infinite.
 IV_CTL_OPT inline float decayLevelMakeup(float v, int space)
 {

@@ -1,6 +1,6 @@
 # 0034 — DECAY reaches longer tails before the hold: PLATE 30 s, HALL 60 s
 
-**Status:** Accepted, 28 Oct 2026 (owner, pick B on every card of `renders/decay_range`, the repeated cards agreeing). SPEC v1.0.53-decay. Amends ADR 0020 (DECAY keeps the loudness) for PLATE and HALL; ADR 0008's crossover and endless are unchanged.
+**Status:** Accepted, 28 Oct 2026 (owner, pick B on every card of `renders/decay_range`, the repeated cards agreeing). SPEC v1.0.53. Amends ADR 0020 (DECAY keeps the loudness) for PLATE and HALL; ADR 0008's crossover and endless are unchanged.
 
 **Context:**
 - **The owner's note:** "i often find myself wanting longer lush decays, but the knob biases towards smaller decays until you hit the 3 oclock mark and it turns into perpetual tails. I'd like more usable range so i can access longer decays without hitting the perpetual holds. I'd still like the held tails to kick in at the 3 oclock position. This applies to plate and hall".

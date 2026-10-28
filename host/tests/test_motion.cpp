@@ -80,7 +80,7 @@ Setting pageSetting(int space, float drift) // the page's SPACEs: SIZE 0.6 (MASS
     s.space = space;
     s.size = space == 2 ? 0.7f : 0.6f;
     s.drift = drift;
-    s.decay = decaySameTailAsV1052(0.7f, space); // the page's tail length (v1.0.53-decay: PLATE / HALL tops 30 / 60 s)
+    s.decay = decaySameTailAsV1052(0.7f, space); // the page's tail length (v1.0.53: PLATE / HALL tops 30 / 60 s)
     return s;
 }
 

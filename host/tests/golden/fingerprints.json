@@ -1,5 +1,5 @@
 {
-  "spec": "v1.0.53-decay",
+  "spec": "v1.0.53",
   "why": "DECAY range B: PLATE 30 s, HALL 60 s (owner pick, renders/decay_range)",
   "corners": {
     "plate_small": {

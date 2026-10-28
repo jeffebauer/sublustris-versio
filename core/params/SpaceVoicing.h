@@ -75,10 +75,10 @@ constexpr float kDecayLevelRefSeconds = 15.0f;
 constexpr float kDecayLevelPower[3]     = {0.18f, 0.47f, 0.445f}; // PLATE, HALL, MASSIVE: below 15 s
 constexpr float kDecayLevelPowerLong[3] = {0.0f, 0.09f, 0.29f};   // from 15 s to the finite top
 // The finite tops the make-up above was measured to (v1.0.28): PLATE 12 s, HALL 25 s, MASSIVE 120 s. Since
-// v1.0.53-decay (ADR 0034, the owner's pick B on renders/decay_range) PLATE's and HALL's tops are 30 / 60 s, at
+// v1.0.53 (ADR 0034, the owner's pick B on renders/decay_range) PLATE's and HALL's tops are 30 / 60 s, at
 // the level today's had: a tail longer than these gets no make-up, and the trim below.
 constexpr float kDecayLevelTopSeconds[3] = {12.0f, 25.0f, 120.0f};
-// The longer tails' trim (v1.0.53-decay, ADR 0034): PLATE / HALL ring longer than they did at every DECAY and
+// The longer tails' trim (v1.0.53, ADR 0034): PLATE / HALL ring longer than they did at every DECAY and
 // sound louder while you play (the chord on renders/decay_range: up to +2.1 dB at 0.80), so the wet is taken down
 // by up to this many dB, eased in across DECAY (a smoothstep from .. to) and back out across the crossover to
 // infinite (x (1 - governor weight)^3: 0 dB at 0.85, so infinite is as before). Fitted to the page's level
