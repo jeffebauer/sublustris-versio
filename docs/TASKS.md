@@ -1,24 +1,32 @@
 # Owner tasks
 
-**Last updated:** 28 Oct 2026, end of session 10: v1.0.55 on main and in Ableton; v1.0.55 waiting for you at the rack; the overnight review's prompt ready.
+**Last updated:** 29 Oct 2026, after overnight review 2: three listening pages and a profile build waiting for you; v1.0.55 still waiting at the rack. The review's report: `docs/research/review-2026-10-29.md` on branch `review/overnight-2` (sent to your phone).
 **Plugin installed:** `4658d91` on `main` (v1.0.55, Sublustris Versio), 28 Oct 2026 22:42; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan).
 
 ## To do
 
 ### Decide
+- [ ] **Merge the review's same-sound savings into main** (branch `review2/neutral`): four CPU savings that give the same output to the bit (MASSIVE's worst case ~1 point lighter), the firmware's trial switches made to work properly, and doc fixes. Release grows 56 B (112,620 B, 20 B under budget). Say "merge neutral" and I'll do it with the gates.
 
 ### Listen (after your notes)
 
 ### Listen (first time)
+Pick pages from overnight review 2 (ask me to start the page server). Each one asks a question and has pick buttons; MIX starts at 50 %.
+- [ ] **`review2_endless`**: *should an endless tail keep its colour for minutes, or slowly sink into the bass as it does now?* A as built; B the fix for your rumble note (the hold changes only the level, not the tone, plus a filter that keeps DC out). As built, PLATE's and HALL's highs drain 25-40 dB over 10 minutes, and a HALL freeze's highs drain too; the fix holds them steady. Start with the "first 30 s" card, then 5 min, then 10 min. Not level-matched on purpose. Costs 568 B of flash, so it waits for the flash savings below.
+- [ ] **`review2_bump`**: *turning DECAY slowly down from endless (or up into it), should the level glide, or is the drop at about 3 o'clock fine?* MASSIVE and PLATE, A as built, B a gentle ramp. Identical at endless and below about 2 o'clock. The difference is clearest played hot, and held at about 2:45 (B is 2.5-3.3 dB quieter in MASSIVE). Not level-matched on purpose. +64 B.
+- [ ] **`review2_halltail`**: *should HALL's long tails stay bright in the upper mids and move a little more, like your Valhalla Room, or stay as they are?* A as built, B brighter mids, C more movement, D both; a 15 s tail and a 5 s tail. Level-matched on the tails. B partly undoes your tone_shelf pick (v1.0.15, "a warmer noon"), for HALL only. +150-520 B.
+- [ ] **`review2_hole_draft`** (two files, not a page yet): MASSIVE at SIZE noon has a dip around 250 Hz (its two inner reverbs cancel there; also at SIZE 0.70, 0.75 and full). `as_built.wav` against `fixed.wav`, level-matched. If you hear it, I'll make a proper page. +24 B.
 
 ### Try in Ableton
-- [ ] **Play the plugin** (Sublustris Versio, AU or VST3; rescan first): v1.0.54, the same sound as the module build. Notes welcome on anything.
+- [ ] **Play the plugin** (Sublustris Versio, AU or VST3; rescan first): v1.0.55, the same sound as the module build. Notes welcome on anything.
+- [ ] **Check Ableton's sample rate** (Settings → Audio): at 96 kHz the plugin's HALL and MASSIVE come out much brighter above 12 kHz than the module (found by the review). At 48 kHz they match.
 
 ### At the rack
 - [ ] **v1.0.55 at the rack** (rack power, USB unplugged): `dist/sublustris_versio-v1.0.55-3eb5e1c-latelight.bin` (or the plain `...-3eb5e1c.bin`). v1.0.54 plus your DECAY-swell pick B. Check: the LEDs look as always, steady, no flicker; SHIMMER sounds normal; SIZE moves in HALL and MASSIVE with SHIMMER, WEAR and MOTION's tape side (no glitches; MASSIVE may flash amber); SPACE switches (no red); TIME moves in HALL BLOOM (no noise); DECAY's new range; turning DECAY down from long (no swell).
+- [ ] **The review's profile lap** (**USB power only, never with rack power**): flash `dist/sublustris_versio-review2-212b68b-profile-audit.bin`, then in Terminal from the main checkout `screen /dev/tty.usbmodem* 115200`, Ctrl-A then Shift-H to log, and wait for "SIZESPIKE LAP 1 DONE" (about 4-6 minutes). Then flash `dist/sublustris_versio-review2-212b68b-profile-audit-lean.bin` and log until its first DONE line (or the HASH line at boot). Send me `screenlog.0`. It tells us: whether MASSIVE fits with the two maths shortcuts, the one untimed case that may glitch (unfreezing after SIZE moved while frozen), and, if the two HASH lines match, that 2 KB of flash savings are the same sound on the module.
+- [ ] **Optional rack boot test** (rack power, USB unplugged): `dist/sublustris_versio-review2-212b68b-lean-audiodirect.bin`. Same sound, 5 KB smaller. Check both outputs at the usual level, left and right not swapped, no hiss, buzz or crackle, knobs working. If it's clean, the flash squeeze is over and the fixes on the pages above can all fit.
 
 ### When convenient
-- [ ] **The overnight review**: clear this session, start a new one (Fable 5.1, high effort) and paste everything below the line in `docs/handoff/overnight-review-2-prompt.md`. It covers the sound and character against your Valhalla recordings and the classic hardware, every knob's range, CV and the gate, robustness, CPU / flash / RAM, code health, and your three open items (MASSIVE's bump, the rumble, MASSIVE's CPU margin). In the morning: a report, up to three listening pages and maybe one profile build.
 - [ ] **Send your friend the new package**: `dist/release/v1.0.54-05122e3/SublustrisVersio_v1.0.54-05122e3.zip` (universal Mac VST3 + AU; its read-me lists what's new since v1.0.41 and says to remove the old Immensio copy). The old v1.0.41 package is still in `dist/release/` if you want it kept.
 - [ ] **Empty the Trash** when you're happy: `sublustris-cleanup-2026-10-28` (1.8 GB: judged pages `level_glue`, `hall_level`, `decay_range`, old firmware builds, the old Immensio plugin copies).
 - [ ] **Re-record Supermassive's short settings at a feedback that sounds like a reverb** (your note: at 0 % and 12 % it's separate delays): about 5 % for Andromeda's 2 s, or skip 2 s and record the longer settings you like (15 s, 30 s, infinite). Also **re-export three clipped Valhalla takes about 6 dB lower**: Plate Chrome 15 s, Plate Lithium 15 s and Supermassive Andromeda 100 % (measure and music). Also check Supermassive's DELAY: its first sound came at different times between takes (Sagittarius 421 / 38 / 3 ms, Andromeda 1.1 / 0.7 / 0.65 s).
@@ -26,21 +34,51 @@
 
 ## Waiting on Claude
 
-- **Your first note on v1.0.54** (the swell turning DECAY down): built as v1.0.55 (your pick B), merged and in Ableton; at the rack next. Found on the way: MASSIVE is ~4 dB louder while playing just before endless than at endless; the overnight review looks at it.
+- **Overnight review 2** (29 Oct 2026; report `docs/research/review-2026-10-29.md` on `review/overnight-2`, prototypes on `review2/*` branches, nothing merged). Your three questions:
+  - MASSIVE's bump is really a cliff at 3 o'clock (the endless hold switches on within a few degrees): page `review2_bump`.
+  - The rumble: the endless hold's level nudges also tilt the tone, and incoming DC is kept forever: page `review2_endless`.
+  - MASSIVE's CPU: ~4.5 more points available, the profile lap confirms.
+
+  The rest of the next steps are in the report's "What I'd do next". Waiting on your listening and the lap.
+- **Your first note on v1.0.54** (the swell turning DECAY down): built as v1.0.55 (your pick B), merged and in Ableton; at the rack next.
 - **Your three notes from the v1.0.52 rack test** (28 Oct 2026), all addressed in v1.0.54 (At the rack). (1)-(2) The overloads with SHIMMER + WEAR + MOTION's tape side, and the red on SPACE switches: not new (v1.0.49 measured the same); two rounds of CPU savings, same sound to the bit. Your laps (`docs/research/m3-cpuhunt-*`, `m3-cpusave*`): late blocks in a lap 11,897 → 0; HALL's SIZE sweep 104 → 85 %; switches into MASSIVE 102-106 → 80 %; MASSIVE's SIZE moves 97-99 → 93-95 % (may still flash amber). If MASSIVE still glitches, an optional maths shortcut takes 1.5-4 more points (not the same bits, far below hearing). (3) The noise when TIME moves in HALL BLOOM: the swell's copies glided across the recording; now each crossfades to its new place once TIME rests. Not new either.
 - **Merged into main** (28 Oct 2026, your OK): through v1.0.55. 22 of 22 tests pass on main; release firmware 112,564 B.
-- **Flash: 76 B left** (release 112,564 B, v1.0.55). Anything new needs bytes found first.
+- **Flash: 76 B left** (release 112,564 B, v1.0.55). The review found ~5.4 KB with no change to the sound (`LEAN=1` −2,144 B, `AUDIO_DIRECT=1` −3,240 B, on `review2/neutral`); each becomes the default once the profile lap's HASH lines match and the rack boot test is clean.
 - **Optional: record your Ribbons and Magneto** so the tape side can be matched to measured numbers (for analysis only, never committed or shared). Play `test_audio/stimulus/08_held_tones.wav` (its first 8 s, a held 1 kHz tone) and `renders/_material_drift_rethink/held_organ.wav`, 20 s each, fully wet, into `test_audio/reference/incoming/` named `<unit>_<control>_<setting>.wav`. **Ribbons** (saturation and noise off): wow depth ¼, ½, full; wow frequency min and full; flutter depth ½ and full; flutter frequency full; crinkle ¼, ½, full; dropouts ½; your usual tape setting. **Magneto** (wet only): wow & flutter ¼, ½, full; crinkle ¼, ½, full; slow and fast tape speed with crinkle ½.
-- **A rumble at endless DECAY with TONE bright** (found on the way): PLATE (and HALL, less) at DECAY 1 and TONE fully CW slowly turns into sub-20 Hz rumble over ~10 minutes while the audible tail fades ~40 dB. In today's sound too; to look at.
-- **The review's housekeeping list** (report section 8, item 7): the desktop Core built without fused multiply-adds like the firmware, the stimulus as a CTest fixture, the Plugin's mono-input aliasing fix, the NaN guard, the sieve as a static initialiser, ~1-2 KB of flash from `queueEdge` and the constructors, dead headers and stale comments, SPEC §5.2 / §6.2 brought in line with the code.
+- **The rumble at endless DECAY with TONE bright**: cause found by the review (above); fix on page `review2_endless`.
+- **The review's housekeeping list**:
+  - **From review 1** (26 Oct, section 8 item 7):
+    - the desktop Core built without fused multiply-adds like the firmware;
+    - the stimulus as a CTest fixture;
+    - the Plugin's mono-input aliasing fix;
+    - the sieve as a static initialiser;
+    - ~1.7 KB of flash in the constructors (not `queueEdge`, which is 98 B);
+    - dead headers and stale comments.
+  - **Added by review 2** (report sections 4, 5 and 7):
+    - a NaN guard on the Plugin's input (one bad sample from the host silences it until reload; 0 B of firmware);
+    - SPEC §3, §4.1, §4.5, §5, §5.1-5.3, §6.2 and §7 brought in line with the code;
+    - the stale comments listed in section 5 (including `main.cpp`'s "libDaisy's 2 ms" slew, which does nothing);
+    - tests for: DC in an endless tail, the long-hold spectrum (not just level), the Plugin's mono bus, 44.1 / 96 kHz and odd block sizes, gate chatter;
+    - a desktop build of the shipped configuration;
+    - a note for CV users that SIZE and DEPTH follow slow CV only.
+- **Found by review 2, for later** (each needs the module or your ears):
+  - libDaisy refreshes the SDRAM ~2.6× slower than the chip's datasheet (the lap's REFRESH line prices the fix, +16 B);
+  - the tight SDRAM timing has only been checked on USB power (needs a check on rack power, warm);
+  - absolute levels on the module (volts to dBFS) are unmeasured;
+  - the gate can miss triggers under ~1 ms (a latch, ~30-60 B);
+  - a brushed SPACE switch that returns still restarts the tank (~20-40 B);
+  - in an endless SHIMMER hold the octave mellows away over 2-4 minutes (keep or hold?);
+  - HALL's and MASSIVE's first 50 ms lean out of phase (0 B fix);
+  - MASSIVE moves 1.5 cents in pitch against Supermassive's 15-17.
 - **PLATE's SIZE by crossfade** (phase 2 of your pick C): it still slides; BLOOM's TIME is done (v1.0.54), HALL and MASSIVE's SIZE and TIME's pre-delay since v1.0.34.
 - **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): build it for real. For 3 s after a flip both spaces hear the music while one crossfades into the other; it needs a second reverb running for those 3 s (the freeze's spare) and ~0.5-1 KB of flash, which has to be freed first (804 B left). A plan before building.
-- **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper; a later round if the shimmer is kept.
+- **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper (found by review 2: Dal Santo et al., DAFx26 §4.1: a DC blocker and an adaptive gain after each in-loop shifter; ~10-19 % CPU per shifter); after v1.0.
 - **The rest of the Valhalla comparison** (`docs/research/valhalla-comparison.md`): the loudness one is done (v1.0.28); MASSIVE's highs are on a page to pick from (above). Still to come: Supermassive moves more in pitch at long settings (a DRIFT comparison). Found on the way: the Immensio beside Valhalla page's MASSIVE settings now ring longer than labelled (a 21 Oct 2026 DECAY change, v1.0.21: "15 s" rings ~20 s, "2 s" ~4.7 s); DECAY 0.08 / 0.33 give 5 / 15 s at SIZE 0.7, and 2 s is below MASSIVE's shortest at that SIZE.
 - **Resilio to Ombra Audio** (its own repo): same maker name and code. Its plugin is already in Ableton under Rslo, so changing the code makes Ableton see a new plugin; saved sets that use it need a check first.
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 
 ## Done
+- [x] **Overnight review 2** (night of 28-29 Oct 2026): report `docs/research/review-2026-10-29.md` (branch `review/overnight-2`), three pick pages, a draft pair, a profile lap and an optional rack test build. Nothing merged, flashed or installed.
 - [x] **Turning DECAY down: B, capped** (28 Oct 2026, `renders/decay_swell`, MIX 50 %, B on every card). The make-up for shorter tails rises no faster than the old tail dies away, so the level only falls. Being built as v1.0.55 (needs ~20 B of flash found first), then a rack build.
 - [x] **The merge into main, the plugin install, a package for your friend** (28 Oct 2026, your request). Judged pages and old builds moved to the Trash.
 - [x] **The second CPU lap** (28 Oct 2026).
