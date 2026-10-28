@@ -43,7 +43,7 @@ The M0 release figure is the platform's floor before any DSP: libDaisy, the HAL,
 
 Memory at M5: `gLarge` 16 MB in SDRAM (FDN lines and in-loop allpasses, the PLATE, swell, REVERSE segments, predelay), `gFast` 100.6 KB of DTCM's 128 KB (the companion plate and the input diffusers), the Engine object in AXI SRAM. M3 decides whether the PLATE moves from SDRAM to AXI SRAM (SPEC §5.2).
 
-Memory since the overnight review (26 Oct 2026, release map): the Engine object (24,232 B) in DTCM with `gFast` (36,864 B): 61,096 B of 128 KB from 0x20000000, the stack grows down from 0x20020000 (~68 KB for it). `gAxi` (433,984 B, `Engine::axiFloats`) in AXI SRAM's `.bss`: the in-loop allpass lines of the tank and the low tank (16 × 16 KB + 16 × 8 KB, staggered across the cache's sets); AXI SRAM 452,024 B used of 512 KB. The twin's allpasses stay in SDRAM (all three tanks' don't fit). `gLarge` 24.9 MB in SDRAM.
+Memory since the overnight review (26 Oct 2026, release map; the numbers of that day, today's are under **Memory** below): the Engine object (24,232 B) in DTCM with `gFast` (36,864 B): 61,096 B of 128 KB from 0x20000000, the stack grows down from 0x20020000 (~68 KB for it). `gAxi` (433,984 B, `Engine::axiFloats`) in AXI SRAM's `.bss`: the in-loop allpass lines of the tank and the low tank (16 × 16 KB + 16 × 8 KB, staggered across the cache's sets); AXI SRAM 452,024 B used of 512 KB. The twin's allpasses stay in SDRAM (all three tanks' don't fit). `gLarge` 24.9 MB in SDRAM.
 
 ### Flash-budget techniques in use (from Resilio's flash study, SPEC §5.3)
 
@@ -138,7 +138,7 @@ MICRO (cycles per op) sdr1 10.0 sdr32 33.0 ... fdnMassiveApAxit 4321.0
 ```
 
 - `FZ on/off (irq on/off)` — flush-to-zero, read from the FPU now: this thread's FPSCR (the corners run here) and FPDSCR (what the audio interrupt starts with: the headroom test). On by default in the profile build only; `make -C firmware MODE=profile PROFILE_FZ=0` builds `sublustris_versio_profile-nofz.bin` to compare.
-- `sdram TRP n TRCD n (libDaisy|tight)` — the SDRAM's precharge and row-to-column waits in SDRAM clock cycles, read from the FMC now. libDaisy sets 16 / 10; the profile build tries **3 / 3** (the AS4C16M32MSA-6 datasheet needs 18 ns each: 2 cycles at 100 MHz) and **keeps it for the corner lap** by default. `PROFILE_SDRAM_TIGHT=0` builds `sublustris_versio_profile-sdlibdaisy.bin`, whose corners run at libDaisy's timing (its micro-tests still try 3 / 3 and then put 16 / 10 back). `sdclk` is the SDRAM clock worked out from PLL2 and the FMC divider. **The release build never changes the timing.**
+- `sdram TRP n TRCD n (libDaisy|tight)` — the SDRAM's precharge and row-to-column waits in SDRAM clock cycles, read from the FMC now. libDaisy sets 16 / 10; the profile build tries **3 / 3** (the AS4C16M32MSA-6 datasheet needs 18 ns each: 2 cycles at 100 MHz) and **keeps it for the corner lap** by default. `PROFILE_SDRAM_TIGHT=0` builds `sublustris_versio_profile-sdlibdaisy.bin`, whose corners run at libDaisy's timing (its micro-tests still try 3 / 3 and then put 16 / 10 back). `sdclk` is the SDRAM clock worked out from PLL2 and the FMC divider. Release sets 3 / 3 too, at boot, since v1.0.37 (`RELEASE_SDRAM_TIGHT ?= 1` in the Makefile, `SdramSetTiming` in `main.cpp`'s release `main`); `RELEASE_SDRAM_TIGHT=0` builds `sublustris_versio-sdlibdaisy.bin` at libDaisy's 16 / 10. (Until 29 Oct 2026 this line said the release build never changes the timing: true only before v1.0.37.)
 - `engine` / `axi` — where the Engine object (DTCM: 0x2000xxxx) and the allpass lines' array (AXI SRAM: 0x240xxxxx) landed.
 - `SDRAMCHK` — **read this before trusting the tight timing.** 8 MB of SDRAM nobody else uses (24–32 MB) written with a pattern, read back scattered (every read opens another SDRAM row, which is what TRP / TRCD time), then the opposite pattern written scattered and read back in order: 4,194,304 words checked each time. `libdaisy` = at boot at 16 / 10 (the control), `tight` = at boot at 3 / 3, `laps` = wrong words summed over every lap so far, at the lap's timing (the module warming up: leave it running a while). **Every number should be 0.** Anything else: the tight timing is not safe on this module; don't use it.
 - `MICRO` — what each building block costs, in cycles per operation (one decimal), measured once at boot. Round 6–10's entries keep their names and meaning, except **`axi32`**, which until now timed nothing (the compiler had removed its array; 3.0 was the adder's latency) and now really reads AXI SRAM. New entries:
@@ -229,7 +229,16 @@ same output to the bit on the desktop (`tools/same_render.py` SAME 60/60 against
 
 ## Memory
 
-Nothing yet (M0 passthrough). The plan (SPEC §5.2): the FDN lines, swell stage, predelay and REVERSE segments in the 64 MB SDRAM; the input diffusers and the companion plate in DTCM (`IV_DTCM` in `main.cpp`: zero-wait, NOLOAD, so cleared by whoever uses it); the Plate engine in AXI SRAM. libDaisy's linker script already puts the stack in AXI SRAM, leaving DTCM free (Resilio measured this).
+Release map, v1.0.55 with review2/neutral's B1-B4 (29 Oct 2026; `arm-none-eabi-size -A` / `nm -S` on `build/sublustris_versio.elf`):
+
+| Region | Used | What |
+|---|---:|---|
+| DTCM 0x20000000 (128 KB, zero-wait, never cached) | 70,896 B `.dtcmram_bss` | `gFast` 36,864 B (the input diffusers), the Engine object 34,032 B (`gEngineStorage`, placement-new at boot). **The stack is here too**: it grows down from `_estack` 0x20020000 into the 60,176 B above `.dtcmram_bss` (libDaisy's linker script, not AXI SRAM as this section once said). The review 2 audit's estimate of the deepest path (audio interrupt over the main loop): ~6.6 KB; the `SIZESPIKE=5` lap's `STACK` field measures it on the module. |
+| AXI SRAM 0x24000000 (512 KB, cached) | 502,752 B (`.data` 232 + `.bss` 502,520) | `gAxi` 493,584 B: the tank's and the low tank's in-loop allpass lines, SHIMMER's right ring, staggered across the cache's sets; libDaisy's handles. |
+| D2 SRAM 0x30000000 (288 KB) | 26,944 B uncached (`.sram1_bss`: DMA buffers, LED PWM tables) + 213,256 B `.d2_bss` | `gD2` 204,340 B: SHIMMER's left ring, the twin room. |
+| ITCM 0x400 (63 KB) | 56,464 B | the Core's hot code (Engine.o, Fdn.o, Plate.o), copied from flash at boot. |
+| SDRAM 0xC0000000 (64 MB, 100 MHz, 3 / 3 in release) | 19,952,232 B `gLarge` | FDN lines, plates, swells, predelay. Refreshed at libDaisy's rate (FMC_SDRTR COUNT 2054: a row every 20.6 us, the whole chip every 168 ms, against the 64 ms the 8192-row part asks); `SDRAM_REFRESH=1` is the trial at the datasheet's rate (review2/neutral notes). |
+| Heap | 0 | `IV_NO_HEAP`: no malloc linked. |
 
 ## Carried over from Resilio's M0 check (re-checked in Immensio's)
 

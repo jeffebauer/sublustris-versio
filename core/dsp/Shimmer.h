@@ -88,6 +88,9 @@ public:
     // Always records (cheap); with shift, also returns the octave in l and r. Both channels' feed filters
     // first, then each channel's heads (the random onsets drawn in the same order as ever: channel by
     // channel, head by head), the same float operations as before, so the same output to the bit.
+#if defined(IV_PROFILE_SHPOLY_AB)
+    IV_INLINE // with both head loops GCC calls it out of line; as built it is inlined into Engine::process
+#endif
     void process(float& l, float& r, bool shift)
     {
         float x[2] = {l, r};
@@ -104,6 +107,13 @@ public:
             l = r = 0.0f;
             return;
         }
+#if defined(IV_PROFILE_SHPOLY_AB)
+        // The audit lap's A / B (SIZESPIKE=5, review2/neutral): Bhaskara's window or the polynomial, chosen per sample
+        // (prof::shimmerPoly), each a copy of the loop below, so neither side carries the other's branch per head.
+        float out[2];
+        if (prof::shimmerPoly) headsAB<true>(out);
+        else headsAB<false>(out);
+#else
         const float step = step_, window = window_;
         float out[2];
         for (int c = 0; c < 2; ++c) {
@@ -158,11 +168,56 @@ public:
             lowCut_[c] += lowCutA_ * (after_[c] - lowCut_[c]);
             out[c] = after_[c] - lowCut_[c];
         }
+#endif
         l = out[0];
         r = out[1];
     }
 
 private:
+#if defined(IV_PROFILE_SHPOLY_AB)
+    // The head loop of process() above (its firmware text), with the window picked at compile time.
+    template <bool kPoly> IV_INLINE void headsAB(float (&out)[2])
+    {
+        const float step = step_, window = window_;
+        for (int c = 0; c < 2; ++c) {
+            const Ring&    ln   = line_[c];
+            const float*   buf  = ln.buf;
+            const uint32_t n    = ln.n, pos = ln.pos, fill = ln.fill;
+            float y = 0.0f;
+            for (int h = 0; h < kHeads; ++h) {
+                float& p = phase_[c][h];
+                p -= step;
+                if (p < 0.0f) {
+                    p += 1.0f;
+                    seed_ = seed_ * 1664525u + 1013904223u;
+                    const float extra = voicing::kShimmerScatter * window * (float(seed_ >> 8) * (1.0f / 16777216.0f));
+                    base_[c][h] = 2.0f + extra;
+                }
+                const float q = p * (1.0f - p);
+                float       w;
+                if constexpr (kPoly) w = shimmerWindowPoly(q);
+                else {
+                    const float s = 16.0f * q / (5.0f - 4.0f * q);
+                    w = s * s;
+                }
+                const float d = base_[c][h] + window * p;
+                const auto  di = uint32_t(d);
+                const float t = d - float(di);
+                uint32_t i0 = pos - di;
+                if (pos < di) i0 += n;
+                const uint32_t i1 = (i0 ? i0 : n) - 1;
+                float a = buf[i0], b = buf[i1];
+                if (di > fill) a = 0.0f;
+                if (di >= fill) b = 0.0f;
+                y += w * (a + t * (b - a));
+            }
+            y *= 2.0f / float(kHeads);
+            after_[c] += afterA_ * (y - after_[c]);
+            lowCut_[c] += lowCutA_ * (after_[c] - lowCut_[c]);
+            out[c] = after_[c] - lowCut_[c];
+        }
+    }
+#endif
     // PROTOTYPE (review2/cpu, 28 Oct 2026; not the same bits): each head's window sin²(πp) as a polynomial in
     // q = p(1 − p), with no divide (Bhaskara's above costs a 16-cycle divide a head and sample, which holds up the
     // M7's FPU: 16 heads, ~2 % of the module). A least-squares fit, within 4e-5 of sin² (Bhaskara's square is within

@@ -132,6 +132,22 @@ uint32_t SdtrWith(uint32_t base, uint32_t trp, uint32_t trcd)
          | ((trcd - 1u) << FMC_SDTRx_TRCD_Pos);
 }
 
+#if IV_SDRAM_REFRESH || IV_PROFILE_SIZESPIKE >= 5
+// SDRAM refresh (review2/neutral, 29 Oct 2026; SDRAM_REFRESH=1 trial, and the audit lap's REFRESH line).
+// libDaisy (src/dev/sdram.cpp) programs FMC_SDRTR COUNT 0x81A - 20 = 2054: one auto-refresh every 2055 SDCLK
+// = 20.6 us at this board's 100 MHz, all 8192 rows every 168 ms. The chip (AS4C16M32MSA: 13 row bits, the FMC's
+// own RowBitsNumber 13) asks 8192 refreshes in 64 ms, 7.8 us apart: COUNT = 7.8125 us x 100 MHz - 20 = 761
+// (RM0433 "SDRAM refresh timer register": refresh rate = (COUNT + 1) x SDCLK, COUNT = period / rows - 20, the 20
+// a margin for a refresh that waits behind a read). A row that the tank activates is refreshed by that access too,
+// but a long delay line's middle is left alone between its write and its read (seconds in MASSIVE), so only the
+// timer keeps it. COUNT may be changed at any time (the HAL's HAL_SDRAM_ProgramRefreshRate does just this write).
+constexpr uint32_t kRefreshLibDaisy = 0x81Au - 20u, kRefreshDatasheet = 761u;
+void SdramSetRefresh(uint32_t count)
+{
+    FMC_Bank5_6_R->SDRTR = (FMC_Bank5_6_R->SDRTR & ~(FMC_SDRTR_COUNT | FMC_SDRTR_CRE)) | (count << FMC_SDRTR_COUNT_Pos);
+}
+#endif
+
 // ITCM (STM32H750IB_flash_itcm.lds; release, and the profile unless PROFILE_ITCM=0): the Core's hot code
 // (Engine.o, Fdn.o, Plate.o) is linked to run from ITCM but stored in flash; copy it there before
 // anything calls it, first thing in main(). Code in flash (main.o), word by word. M3 round 12 (26 Oct
@@ -220,8 +236,9 @@ void TransmitLine(const char* buf, size_t len)
 // and written every sample) sat in cached AXI SRAM and fought the delay lines for the 16 KB data
 // cache; DTCM is zero-wait and never cached. .dtcmram_bss is NOLOAD, but `iv::Engine()` (value
 // initialisation) zeroes the whole object before constructing it (a memset in main), so nothing
-// depends on startup's .bss clear. DTCM budget (release map): gFast 36,864 + this 24,232 = 61,096 B
-// from 0x20000000; the stack grows down from _estack = 0x20020000, leaving ~68 KB for it.
+// depends on startup's .bss clear. DTCM budget (release map, v1.0.55 + review2/neutral, 29 Oct 2026): gFast 36,864
+// + this 34,032 = 70,896 B of .dtcmram_bss from 0x20000000; the stack grows down from _estack = 0x20020000 into the
+// 60,176 B left (the audit's estimate of the deepest path: ~6.6 KB; the SIZESPIKE=5 lap's STACK field measures it).
 IV_DTCM alignas(iv::Engine) unsigned char gEngineStorage[sizeof(iv::Engine)];
 iv::Engine& engine = *reinterpret_cast<iv::Engine*>(gEngineStorage);
 
@@ -1862,6 +1879,7 @@ uint32_t StackUsed()
 // HASH: the Engine from a reset at fixed settings (MASSIVE, SHIMMER, WEAR 0.5, MOTION left, DECAY 0.9, SIZE 0.7, then
 // a SIZE jump to 0.4 at block 1000), 3000 blocks of its own seeded saw notes, the output's bits through CRC-32. The
 // same number from two builds = the same output to the bit on the module (a flash or CPU trim's proof).
+uint32_t gHash = 0; // HashRun's result, repeated on every DONE line (the boot line comes before a late serial log)
 uint32_t HashRun()
 {
     engine.setParam(ParamId::Space, iv::switchToNormalised(2));
@@ -1936,6 +1954,31 @@ void RunSpikeLap(float fs)
         gUnfreezeAt = gPaintFrom = -1;
         gFreezeSize = -1.0f;
     }
+    // review2/neutral (29 Oct 2026): the CPU trials on MASSIVE's worst timed corner (SHIMMER, WEAR 0.5, MOTION left,
+    // DECAY 0.9, music, the SIZE sweep: 94.8 % in the CPU-save lap). SHIMMER is the line as built (the reference for
+    // the four after it, in this lap); ABSEXP the loss filters on std::exp (prof::absExp); SHPOLY the shimmer heads'
+    // window as a polynomial (prof::shimmerPoly); ABS+SHP both; REFRESH as built with the SDRAM refreshed at the
+    // datasheet's rate (COUNT 761, 2.7x as often as libDaisy's 2054): what the SDRAM_REFRESH=1 trial costs. Then the
+    // likeliest late corner (UNFRZ MASSIVE creep) with both trials. The trials aren't the same bits: timing only.
+    RunSpike({"SHIMMER", 2, 0, 1, false, 0.5f, 0.0f, 0.5f, 2, 0.9f}, fs);
+    iv::prof::absExp = true;
+    RunSpike({"ABSEXP", 2, 0, 1, false, 0.5f, 0.0f, 0.5f, 2, 0.9f}, fs);
+    iv::prof::absExp = false;
+#if defined(IV_PROFILE_SHPOLY_AB)
+    iv::prof::shimmerPoly = true;
+    RunSpike({"SHPOLY", 2, 0, 1, false, 0.5f, 0.0f, 0.5f, 2, 0.9f}, fs);
+    iv::prof::absExp = true;
+    RunSpike({"ABS+SHP", 2, 0, 1, false, 0.5f, 0.0f, 0.5f, 2, 0.9f}, fs);
+    gFreezeSize = 0.3f;
+    gUnfreezeAt = 200;
+    RunSpike({"UNFRZ+AS", 2, 2, 1, true, 0.5f, 0.0f, 0.5f, 2, 0.9f}, fs);
+    gUnfreezeAt = -1;
+    gFreezeSize = -1.0f;
+    iv::prof::absExp = iv::prof::shimmerPoly = false;
+#endif
+    SdramSetRefresh(kRefreshDatasheet);
+    RunSpike({"REFRESH", 2, 0, 1, false, 0.5f, 0.0f, 0.5f, 2, 0.9f}, fs);
+    SdramSetRefresh(kRefreshLibDaisy);
 #elif IV_PROFILE_SIZESPIKE >= 4
     // The CPU-save lap (~7 min; 28 Oct 2026, claude/cpu-save against 5e38080): the overloads the CPU-hunt lap found,
     // SHIMMER with WEAR 0.5 and MOTION full left (tape), DECAY 0.9, music: HALL and MASSIVE each hand, PLATE's sweep
@@ -2026,7 +2069,7 @@ void RunSpikeLap(float fs)
         for (int input = 0; input < 2; ++input) RunSpike({"STILL", space, 5, input, false, 0.0f, 0.5f, 0.5f}, fs);
 #endif
     ++gSpkLaps;
-    static char eb[200];
+    static char eb[IV_PROFILE_SIZESPIKE >= 5 ? 256 : 200];
     char*       p   = eb;
     const char* end = eb + sizeof(eb);
     AppendStr(p, end, "SIZESPIKE LAP ");
@@ -2046,6 +2089,8 @@ void RunSpikeLap(float fs)
     AppendUInt(p, end, StackUsed());
     AppendStr(p, end, " B of ");
     AppendUInt(p, end, unsigned(reinterpret_cast<uintptr_t>(&_estack) - reinterpret_cast<uintptr_t>(&_edtcmram_bss)));
+    AppendStr(p, end, " | HASH ");
+    AppendHex(p, end, gHash);
 #endif
     AppendStr(p, end, "\r\n");
     TransmitLine(eb, size_t(p - eb));
@@ -2124,19 +2169,21 @@ int main()
 #if IV_PROFILE_SIZESPIKE >= 5
     {
         gRealtime = false; // the callback idles (silence) while the Engine runs here
-        const uint32_t h = HashRun();
+        const uint32_t h = gHash = HashRun();
         static char hb[64];
         char*       p   = hb;
         const char* end = hb + sizeof(hb);
         AppendStr(p, end, "HASH ");
         AppendHex(p, end, h);
-        AppendStr(p, end, " (3000 blocks, MASSIVE SHIMMER W.5 M0, SIZE .7 -> .4)\r\n");
+        AppendStr(p, end, " (3000 blocks, MASSIVE SHIMMER W.5 M0, SIZE .7 -> .4) | refresh COUNT ");
+        AppendUInt(p, end, (FMC_Bank5_6_R->SDRTR & FMC_SDRTR_COUNT) >> FMC_SDRTR_COUNT_Pos);
+        AppendStr(p, end, "\r\n");
         TransmitLine(hb, size_t(p - hb));
     }
 #endif
     while (true) {
 #if IV_PROFILE_SIZESPIKE >= 5
-        static const char kHello[] = "AUDIT START (unfreeze after SIZE moved, paint, every knob moving, WEAR's grit; 10 lines, ~3.5 min a lap)\r\n";
+        static const char kHello[] = "AUDIT START (unfreeze after SIZE moved, paint, every knob moving, WEAR's grit; 10 lines, then the CPU trials on the sweep: 16 lines, ~5.5 min a lap)\r\n";
 #elif IV_PROFILE_SIZESPIKE >= 4
         static const char kHello[] = "CPUSAVE START (SHIMMER + WEAR 0.5 + MOTION left: SIZE moves, apart, still, SPACE flips, the ABSEXP trial; 36 lines, ~7.5 min a lap)\r\n";
 #elif IV_PROFILE_SIZESPIKE >= 3
@@ -2983,6 +3030,9 @@ int main()
     StartCycleCounter();
 #if !defined(IV_RELEASE_SDRAM_TIGHT) || IV_RELEASE_SDRAM_TIGHT
     SdramSetTiming(SdtrWith(FMC_Bank5_6_R->SDTR[0], kTightTrp, kTightTrcd), false); // M3 round 11: SDRAMCHK clean
+#endif
+#if IV_SDRAM_REFRESH
+    SdramSetRefresh(kRefreshDatasheet); // SDRAM_REFRESH=1: the datasheet's rate, not libDaisy's (a trial)
 #endif
     hw.SetAudioBlockSize(kBlockSize);
     EnableD2Sram();

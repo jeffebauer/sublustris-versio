@@ -60,9 +60,13 @@ RELEASE_LATE_LIGHT ?= 0
 #                 initialisers dropped (review 2 audit: -2,144 B, the same output; -lean)
 #   AUDIO_DIRECT=1 release only: the SAI's DMA straight to main.cpp's callback, not through libDaisy's
 #                 AudioHandle (main.cpp IV_AUDIO_DIRECT; review 2 audit: -3,240 B, the same samples; -direct)
+#   SDRAM_REFRESH=1 the SDRAM refreshed at the datasheet's rate (8192 rows in 64 ms: FMC_SDRTR COUNT 761), not
+#                 libDaisy's (COUNT 2054, 168 ms a pass); main.cpp IV_SDRAM_REFRESH (review2/neutral, 29 Oct 2026;
+#                 the same samples; -refresh). The SIZESPIKE=5 lap's REFRESH line times it.
 SIZE_GROUPS ?=
 LEAN ?=
 AUDIO_DIRECT ?=
+SDRAM_REFRESH ?=
 CTL_O3 ?=
 #   SHIMMER_POLY=1 the shimmer heads' window as a polynomial, no divide (core/dsp/Shimmer.h shimmerWindowPoly,
 #                 IV_SHIMMER_POLY; not the same bits: review2/cpu 28 Oct 2026), release or profile (-shpoly)
@@ -70,8 +74,8 @@ ABSORB_EXP ?=
 SHIMMER_POLY ?=
 CANDIDATE ?=
 SIZESPIKE ?=
-TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)$(if $(filter 1,$(LEAN)),-lean)$(if $(filter 1,$(AUDIO_DIRECT)),-direct)$(if $(filter 1,$(ABSORB_EXP)),-absexp)$(if $(filter 1,$(SHIMMER_POLY)),-shpoly)
-TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(filter 1,$(LEAN)), -DIV_LEAN_LOOPS)$(if $(filter 1,$(AUDIO_DIRECT)), -DIV_AUDIO_DIRECT=1)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))$(if $(filter 1,$(ABSORB_EXP)), -DIV_ABSORB_EXP)$(if $(filter 1,$(SHIMMER_POLY)), -DIV_SHIMMER_POLY)
+TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)$(if $(filter 1,$(LEAN)),-lean)$(if $(filter 1,$(AUDIO_DIRECT)),-direct)$(if $(filter 1,$(ABSORB_EXP)),-absexp)$(if $(filter 1,$(SHIMMER_POLY)),-shpoly)$(if $(filter 1,$(SDRAM_REFRESH)),-refresh)
+TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(filter 1,$(LEAN)), -DIV_LEAN_LOOPS)$(if $(filter 1,$(AUDIO_DIRECT)), -DIV_AUDIO_DIRECT=1)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))$(if $(filter 1,$(ABSORB_EXP)), -DIV_ABSORB_EXP)$(if $(filter 1,$(SHIMMER_POLY)), -DIV_SHIMMER_POLY)$(if $(filter 1,$(SDRAM_REFRESH)), -DIV_SDRAM_REFRESH=1)$(if $(filter 5,$(SIZESPIKE)),$(if $(filter 1,$(SHIMMER_POLY)),, -DIV_PROFILE_SHPOLY_AB))
 RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)$(if $(filter 1,$(RELEASE_LATE_LIGHT)),-latelight)$(TRIAL_TAG)
 PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)$(if $(SIZESPIKE),$(if $(filter 5,$(SIZESPIKE)),-audit,$(if $(filter 4,$(SIZESPIKE)),-cpusave,$(if $(filter 3,$(SIZESPIKE)),-cpuhunt,-sizespike$(if $(filter 2,$(SIZESPIKE)),ab)))))
 

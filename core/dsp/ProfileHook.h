@@ -48,6 +48,11 @@ inline bool xfFast = true;
 // The CPU-save-2 lap's A / B (28 Oct 2026): true works the tanks' loss filters out on std::exp instead of std::pow
 // (Governor.h absorbLine; the build option IV_ABSORB_EXP in any build): not the same bits, a trial.
 inline bool absExp = false;
+#if defined(IV_PROFILE_SHPOLY_AB)
+// The audit lap's A / B (SIZESPIKE=5, review2/neutral, 29 Oct 2026): true runs the shimmer heads' window as the
+// polynomial (Shimmer.h headsAB; the firmware's SHIMMER_POLY=1 at compile time): not the same bits, a trial.
+inline bool shimmerPoly = false;
+#endif
 #else
 inline void mark(Section) {}
 inline void countXfStart() {}
