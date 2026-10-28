@@ -185,3 +185,15 @@ daisy::Wm8731::Result daisy::Wm8731::Init(const daisy::Wm8731::Config&, daisy::I
     return daisy::Wm8731::Result::OK;
 }
 #endif
+
+// libgcc's __aeabi_l2d (int64 -> double), which newlib's sinf / cosf call in their range reduction, lives in
+// _arm_addsubdf3.o with the whole soft-float double add (888 B): this FPU has double precision, so two exact
+// conversions and one rounded add give the same correctly rounded double (|hi| < 2^31, so hi * 2^32 is exact)
+// and that archive member never links (CPU hunt, 28 Oct 2026: flash for the savings). The run-time helpers use
+// the base procedure call standard (arguments and result in core registers: sinf moves r0:r1 into a d register).
+extern "C" __attribute__((pcs("aapcs"))) double __aeabi_l2d(long long v)
+{
+    const auto hi = static_cast<int>(v >> 32);
+    const auto lo = static_cast<unsigned>(v);
+    return static_cast<double>(hi) * 4294967296.0 + static_cast<double>(lo);
+}
