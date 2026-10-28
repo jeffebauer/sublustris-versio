@@ -48,12 +48,15 @@ RELEASE_LATE_LIGHT ?= 0
 #                 since CPU save 2, three ABSEXP lines last (prof::absExp: the loss filters on std::exp, a trial)
 #   SIZESPIKE=3   the CPU-hunt lap (28 Oct 2026, v1.0.52's notes): SIZE moves with ONSET at SHIMMER against BLOOM,
 #                 and SPACE flips timed block by block around the flip (-cpuhunt)
+#   LEAN=1        Engine::process without loop unswitching and Fdn::runBlock without loop splitting (core/dsp/SizeOpt.h
+#                 IV_LEAN_LOOPS; review 2 audit: -1,0xx B, the same output; -lean)
 SIZE_GROUPS ?=
+LEAN ?=
 CTL_O3 ?=
 CANDIDATE ?=
 SIZESPIKE ?=
-TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)
-TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))
+TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)$(if $(LEAN),-lean)
+TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(LEAN), -DIV_LEAN_LOOPS)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))
 RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)$(if $(filter 1,$(RELEASE_LATE_LIGHT)),-latelight)$(TRIAL_TAG)
 PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)$(if $(SIZESPIKE),$(if $(filter 4,$(SIZESPIKE)),-cpusave,$(if $(filter 3,$(SIZESPIKE)),-cpuhunt,-sizespike$(if $(filter 2,$(SIZESPIKE)),ab))))
 
