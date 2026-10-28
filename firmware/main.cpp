@@ -2785,6 +2785,39 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
 #endif
 }
 
+#if IV_AUDIO_DIRECT
+// AUDIO_DIRECT=1 (flash trial, review 2 audit, 28 Oct 2026): the SAI's DMA straight to this callback, without
+// libDaisy's AudioHandle::Impl::InternalCallback (3,500 B: every bit depth, interleaved and 4-channel cases) and its
+// Start / ChangeCallback. The same conversions as its 24-bit stereo case (daisy_core.h s242f / f2s24, its postgain
+// and output_compensation factors from the AudioHandle's config), the same buffers' layout (blocksize x 2 channels x
+// 2 halves, in the uncached D2 window), the same SaiHandle (DaisySeed configured it), so the same samples both ways.
+DMA_BUFFER_MEM_SECTION int32_t gSaiRx[kBlockSize * 2 * 2], gSaiTx[kBlockSize * 2 * 2];
+float gInScale = 1.0f, gOutScale = 1.0f; // AudioHandle's postgain_recip_ and output_adjust_
+void SaiCallback(int32_t* in, int32_t* out, size_t size) // size: this half's words, both channels interleaved
+{
+    float fin[2][kBlockSize], fout[2][kBlockSize]; // on the stack (DTCM), as libDaisy's
+    for (size_t i = 0; i < size; i += 2) {
+        fin[0][i / 2] = s242f(in[i]) * gInScale;
+        fin[1][i / 2] = s242f(in[i + 1]) * gInScale;
+    }
+    const float* const ins[2]  = {fin[0], fin[1]};
+    float*             outs[2] = {fout[0], fout[1]};
+    AudioCallback(ins, outs, size / 2);
+    for (size_t i = 0; i < size; i += 2) {
+        out[i]     = f2s24(fout[0][i / 2] * gOutScale);
+        out[i + 1] = f2s24(fout[1][i / 2] * gOutScale);
+    }
+}
+void StartAudioDirect()
+{
+    const AudioHandle::Config& c = hw.seed.audio_handle.GetConfig();
+    gInScale  = 1.f / c.postgain;
+    gOutScale = c.postgain * c.output_compensation;
+    SaiHandle sai = hw.seed.AudioSaiHandle(); // a handle on DaisySeed's SAI1 (pimpl: the same peripheral)
+    sai.StartDma(gSaiRx, gSaiTx, kBlockSize * 2 * 2, SaiCallback);
+}
+#endif
+
 } // namespace
 
 int main()
@@ -2810,7 +2843,11 @@ int main()
     iv::prof::markHook = DiagMark;
     uint32_t diagNext = System::GetNow() + 1000u, diagSeconds = 0;
 #endif
+#if IV_AUDIO_DIRECT
+    StartAudioDirect();
+#else
     hw.StartAudio(AudioCallback);
+#endif
 
     // Our own PWM from here on (see LedPwm); libDaisy's is only the fallback.
     bool ledDma = gLedPwm.start();

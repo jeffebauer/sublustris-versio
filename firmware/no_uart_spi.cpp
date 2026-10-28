@@ -105,6 +105,19 @@ extern "C" void exit(int)
 }
 #endif
 
+// sqrtf (review 2 audit, 28 Oct 2026; LEAN=1 trial): newlib's is a wrapper that sets errno for a negative argument
+// around the FPU's own square root (wf_sqrt.o, 80 B). VSQRT is IEEE 754's correctly rounded square root, as newlib's
+// result is, so every non-negative argument gives the same bits; nothing here reads errno (a negative argument gives
+// the same NaN, without errno). The Core's 12 calls land here instead.
+#if defined(IV_LEAN_LOOPS) && !defined(IV_MODE_M0TEST)
+extern "C" float sqrtf(float x)
+{
+    float r;
+    asm("vsqrt.f32 %0, %1" : "=t"(r) : "t"(x));
+    return r;
+}
+#endif
+
 // QSPI (4 Oct 2026, flash): DaisySeed::Init() always brings up the Seed's
 // external QSPI flash chip (qspi.Init(qspi_config)): pins, clock, a reset
 // and quad-enable sequence that writes the chip's status register, then
