@@ -46,6 +46,9 @@ RELEASE_LATE_LIGHT ?= 0
 #   SIZESPIKE=4   the CPU-save lap (28 Oct 2026): the CPU hunt's overloads (SHIMMER, WEAR 0.5, MOTION left), WEAR and
 #                 MOTION apart, SIZE still, SPACE flips at WEAR 0.5 / MOTION left; SPLIT adds flip and tkabs (-cpusave);
 #                 since CPU save 2, three ABSEXP lines last (prof::absExp: the loss filters on std::exp, a trial)
+#   SIZESPIKE=5   the audit lap (review 2 audit, 28 Oct 2026): unfreeze after SIZE moved while frozen, paint, every knob
+#                 moving, WEAR's grit; a HASH line at boot (CRC-32 of a fixed render: equal across two builds = the same
+#                 output on the module) and the stack's high-water mark on each DONE line (-audit)
 #   SIZESPIKE=3   the CPU-hunt lap (28 Oct 2026, v1.0.52's notes): SIZE moves with ONSET at SHIMMER against BLOOM,
 #                 and SPACE flips timed block by block around the flip (-cpuhunt)
 #   LEAN=1        Engine::process without loop unswitching and Fdn::runBlock without loop splitting (core/dsp/SizeOpt.h
@@ -61,7 +64,7 @@ SIZESPIKE ?=
 TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)$(if $(LEAN),-lean)$(if $(AUDIO_DIRECT),-direct)
 TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(LEAN), -DIV_LEAN_LOOPS)$(if $(AUDIO_DIRECT), -DIV_AUDIO_DIRECT=1)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))
 RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)$(if $(filter 1,$(RELEASE_LATE_LIGHT)),-latelight)$(TRIAL_TAG)
-PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)$(if $(SIZESPIKE),$(if $(filter 4,$(SIZESPIKE)),-cpusave,$(if $(filter 3,$(SIZESPIKE)),-cpuhunt,-sizespike$(if $(filter 2,$(SIZESPIKE)),ab))))
+PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)$(if $(SIZESPIKE),$(if $(filter 5,$(SIZESPIKE)),-audit,$(if $(filter 4,$(SIZESPIKE)),-cpusave,$(if $(filter 3,$(SIZESPIKE)),-cpuhunt,-sizespike$(if $(filter 2,$(SIZESPIKE)),ab)))))
 
 ifeq ($(MODE),m0test)
   TARGET    = sublustris_versio_m0test
