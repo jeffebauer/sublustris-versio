@@ -12,14 +12,14 @@ Start with `/sublustris-start`.
 
 | Milestone | State |
 |---|---|
-| Spec | v1.0 frozen plus amendments to **v1.0.54**, on `claude/combined` only. Main's SPEC stops at v1.0.33 |
+| Spec | v1.0 frozen plus amendments to **v1.0.54**, on main |
 | M0 | Passed (25 Oct) |
 | M1/M4-M8 | Built and listened |
-| M2 | Plugin installed `b39d451` (v1.0.34, still named Immensio Versio). v1.0.35-54 not installed |
+| M2 | Plugin installed `05122e3` (v1.0.54, Sublustris Versio), 28 Oct |
 | M3 | v1.0.49 confirmed at the rack. The v1.0.52 rack test found overloads with SHIMMER + WEAR + MOTION's tape side; v1.0.54's laps show 0 late blocks. **v1.0.54 not yet heard at the rack** |
 | M9 | Not started |
 
-**`claude/combined` HEAD `674a2ca`** (worktree `.claude/worktrees/combined`) holds everything. `main` HEAD holds docs, skills and the lap logs only. The merge into main waits for the owner's OK after v1.0.54 is heard.
+**Update, end of session 10:** at the owner's request `claude/combined` (674a2ca) is **merged into main** (`05122e3`), so main holds everything now: 22 of 22 tests (main builds the plugin tests too), release 112,588 B, the same bytes as `dist/sublustris_versio-v1.0.54-7ee389e.bin`. Plugin installed `05122e3` (AU check passed; old Immensio bundles to the Trash). Friend package `dist/release/v1.0.54-05122e3/` (universal, read-me with what's new since v1.0.41). Judged pages, old builds and log tails are in `~/.Trash/sublustris-cleanup-2026-10-28`. The `combined` worktree can be removed; new work branches from main.
 
 **Gates on `674a2ca`, re-run by me:**
 - ctest: **"100% tests passed out of 21"**.
@@ -70,7 +70,7 @@ Rack builds in `dist/`:
 
 1. **The owner plays v1.0.54 at the rack** (TASKS "At the rack" lists what to check): the LEDs (driver changed), SHIMMER (memory moved), SIZE moves with SHIMMER + WEAR + MOTION, SPACE switches, TIME in HALL BLOOM, DECAY's range.
    - If MASSIVE still glitches or flashes amber a lot, turn on `IV_ABSORB_EXP` in release (see In flight). It needs bytes found first if it grows the build.
-2. **Merge `claude/combined` into main**, with the owner's OK.
+2. ~~Merge into main, install the plugin~~ done (05122e3).
    - Take main's TASKS / HANDOFF / CLAUDE.md / skills / `docs/research/m3-*` logs.
    - `docs/research/level-at-infinite.md` exists on both sides; keep both halves.
    - Then install the plugin with `tools/install_plugin.sh <commit>` (Ableton closed; `auval -v aumf ImVs Ombr` only), tell the owner to remove the old "Immensio Versio" bundles, and update the TASKS "Plugin installed" line.

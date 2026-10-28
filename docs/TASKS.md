@@ -1,33 +1,33 @@
 # Owner tasks
 
-**Last updated:** 28 Oct 2026, end of session 10: v1.0.51-54 built (level D + E, HALL +3 dB, DECAY range B, TIME in BLOOM, two CPU rounds), all on `claude/combined`; v1.0.54 waiting for you at the rack.
-**Plugin installed:** `b39d451` on branch `claude/massive-air` (v1.0.34: v1.0.33 plus SIZE and TIME by crossfade in HALL and MASSIVE, no pitch bend on SIZE moves), 25 Oct 2026; AU check passed. Not yet in it: v1.0.35-36 (the 24 kHz tank, 12-point swell, fewer early reflections) and the review's speed-ups; say when you'd like it installed (Ableton closed).
+**Last updated:** 28 Oct 2026, end of session 10: everything merged into main (v1.0.54); the plugin installed; a package for your friend built; v1.0.54 waiting for you at the rack.
+**Plugin installed:** `05122e3` on `main` (v1.0.54, as **Sublustris Versio**), 28 Oct 2026; AU check passed. The old "Immensio Versio" copies are in `~/.Trash/sublustris-cleanup-2026-10-28/old-plugin`. Rescan plug-ins in Ableton (Option-click Rescan); saved sets that used Immensio Versio load the same plugin (same codes).
 
 ## To do
 
 ### Decide
-- [ ] **One merge into main** (`claude/combined`: everything since v1.0.41, renamed Sublustris Versio, through v1.0.54). After v1.0.54 is heard at the rack; then the plugin install. Your OK first.
 
 ### Listen (after your notes)
 
 ### Listen (first time)
 
 ### Try in Ableton
-- [ ] **Play the plugin** (Immensio Versio, AU or VST3; rescan plug-ins first). It's v1.0.33 from branch `claude/massive-air`: everything in `main` plus MASSIVE's highs and shortest tail, ERA's era names, and **SHIMMER** on ATTACK's third position (TIME is how much). Notes welcome on anything; it goes into `main` when you say so.
+- [ ] **Play the plugin** (Sublustris Versio, AU or VST3; rescan first): v1.0.54, the same sound as the module build. Notes welcome on anything.
 
 ### At the rack
 - [ ] **v1.0.54 to play** (rack power, USB unplugged): `dist/sublustris_versio-v1.0.54-7ee389e-latelight.bin` (or the plain `...-7ee389e.bin`). Your DECAY pick B (PLATE to 30 s, HALL to 60 s before the hold), the TIME fix in BLOOM, both CPU rounds. Check: the LEDs look as always, steady, no flicker (their driver changed); SHIMMER sounds normal; SIZE moves in HALL and MASSIVE with SHIMMER, WEAR and MOTION's tape side (no glitches; MASSIVE may still flash amber); SPACE switches (no red); TIME moves in HALL BLOOM (no noise); DECAY's new range.
 
 ### When convenient
+- [ ] **Send your friend the new package**: `dist/release/v1.0.54-05122e3/SublustrisVersio_v1.0.54-05122e3.zip` (universal Mac VST3 + AU; its read-me lists what's new since v1.0.41 and says to remove the old Immensio copy). The old v1.0.41 package is still in `dist/release/` if you want it kept.
+- [ ] **Empty the Trash** when you're happy: `sublustris-cleanup-2026-10-28` (1.8 GB: judged pages `level_glue`, `hall_level`, `decay_range`, old firmware builds, the old Immensio plugin copies).
 - [ ] **Re-record Supermassive's short settings at a feedback that sounds like a reverb** (your note: at 0 % and 12 % it's separate delays): about 5 % for Andromeda's 2 s, or skip 2 s and record the longer settings you like (15 s, 30 s, infinite). Also **re-export three clipped Valhalla takes about 6 dB lower**: Plate Chrome 15 s, Plate Lithium 15 s and Supermassive Andromeda 100 % (measure and music). Also check Supermassive's DELAY: its first sound came at different times between takes (Sagittarius 421 / 38 / 3 ms, Andromeda 1.1 / 0.7 / 0.65 s).
 - [ ] **Reference recordings** (when convenient; `docs/reference-recording-guide.md`): Valhalla Room, Plate and Supermassive are in (I read them straight from your Ableton set; no need to export). Still to record: the **H9 Reverse** (the yardstick for REVERSE), Mercury7 Cathedra, VintageVerb, then the rest. For Supermassive, Andromeda at 0 % feedback rang only 0.5 s; about 5 % should give the 2 s target. LMC can't go short: even at 20 % it rings 26 s.
 
 ## Waiting on Claude
 
 - **Your three notes from the v1.0.52 rack test** (28 Oct 2026), all addressed in v1.0.54 (At the rack). (1)-(2) The overloads with SHIMMER + WEAR + MOTION's tape side, and the red on SPACE switches: not new (v1.0.49 measured the same); two rounds of CPU savings, same sound to the bit. Your laps (`docs/research/m3-cpuhunt-*`, `m3-cpusave*`): late blocks in a lap 11,897 → 0; HALL's SIZE sweep 104 → 85 %; switches into MASSIVE 102-106 → 80 %; MASSIVE's SIZE moves 97-99 → 93-95 % (may still flash amber). If MASSIVE still glitches, an optional maths shortcut takes 1.5-4 more points (not the same bits, far below hearing). (3) The noise when TIME moves in HALL BLOOM: the swell's copies glided across the recording; now each crossfades to its new place once TIME rests. Not new either.
-- **Before the merge:** (1) ✓ the spec lines and decision records through v1.0.54 (on `claude/combined`); (2) ✓ the rename; (3) v1.0.54 heard at the rack; (4) the merge into main with your OK, and the plugin installed in Ableton.
+- **Merged into main** (28 Oct 2026, your OK): `claude/combined` through v1.0.54. 22 of 22 tests pass on main; release firmware 112,588 B.
 - **Flash: 52 B left** (release 112,588 B, v1.0.54). Anything new needs bytes found first.
-- **The plugin** has v1.0.34 (as Immensio Versio); it gets v1.0.50+ at the merge (Ableton closed; remove the old Immensio bundles).
 - **Optional: record your Ribbons and Magneto** so the tape side can be matched to measured numbers (for analysis only, never committed or shared). Play `test_audio/stimulus/08_held_tones.wav` (its first 8 s, a held 1 kHz tone) and `renders/_material_drift_rethink/held_organ.wav`, 20 s each, fully wet, into `test_audio/reference/incoming/` named `<unit>_<control>_<setting>.wav`. **Ribbons** (saturation and noise off): wow depth ¼, ½, full; wow frequency min and full; flutter depth ½ and full; flutter frequency full; crinkle ¼, ½, full; dropouts ½; your usual tape setting. **Magneto** (wet only): wow & flutter ¼, ½, full; crinkle ¼, ½, full; slow and fast tape speed with crinkle ½.
 - **A rumble at endless DECAY with TONE bright** (found on the way): PLATE (and HALL, less) at DECAY 1 and TONE fully CW slowly turns into sub-20 Hz rumble over ~10 minutes while the audible tail fades ~40 dB. In today's sound too; to look at.
 - **The review's housekeeping list** (report section 8, item 7): the desktop Core built without fused multiply-adds like the firmware, the stimulus as a CTest fixture, the Plugin's mono-input aliasing fix, the NaN guard, the sieve as a static initialiser, ~1-2 KB of flash from `queueEdge` and the constructors, dead headers and stale comments, SPEC §5.2 / §6.2 brought in line with the code.
@@ -39,6 +39,7 @@
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 
 ## Done
+- [x] **The merge into main, the plugin install, a package for your friend** (28 Oct 2026, your request). Judged pages and old builds moved to the Trash.
 - [x] **The second CPU lap** (28 Oct 2026).
 - [x] **Two CPU laps for the savings** (28 Oct 2026; `docs/research/m3-cpusave-*.log`).
 - [x] **DECAY's range: longer longest tails (B)** (28 Oct 2026, `renders/decay_range`, MIX 50 %, B on every card, repeated cards agreeing). Same curve, PLATE up to 30 s and HALL up to 60 s before the run into endless (HALL noon 12 s, 2 o'clock 37 s); endless still from about 3 o'clock. Being built at the level you heard (the page matched the longer tails to today's level while playing).
