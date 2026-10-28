@@ -25,6 +25,7 @@
 
 ## Waiting on Claude
 
+- **Your first note on v1.0.54** (28 Oct 2026, a brief listen): "with massive/hall with long decay, moving the decay from large to small can create a swell in amplitude". Being reproduced on the desktop and compared with v1.0.52 (before the new DECAY range); a fix and a short before/after page to follow.
 - **Your three notes from the v1.0.52 rack test** (28 Oct 2026), all addressed in v1.0.54 (At the rack). (1)-(2) The overloads with SHIMMER + WEAR + MOTION's tape side, and the red on SPACE switches: not new (v1.0.49 measured the same); two rounds of CPU savings, same sound to the bit. Your laps (`docs/research/m3-cpuhunt-*`, `m3-cpusave*`): late blocks in a lap 11,897 → 0; HALL's SIZE sweep 104 → 85 %; switches into MASSIVE 102-106 → 80 %; MASSIVE's SIZE moves 97-99 → 93-95 % (may still flash amber). If MASSIVE still glitches, an optional maths shortcut takes 1.5-4 more points (not the same bits, far below hearing). (3) The noise when TIME moves in HALL BLOOM: the swell's copies glided across the recording; now each crossfades to its new place once TIME rests. Not new either.
 - **Merged into main** (28 Oct 2026, your OK): `claude/combined` through v1.0.54. 22 of 22 tests pass on main; release firmware 112,588 B.
 - **Flash: 52 B left** (release 112,588 B, v1.0.54). Anything new needs bytes found first.
