@@ -1044,6 +1044,8 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
                     bufL_[i] += pg * twinL_[i];
                     bufR_[i] += pg * twinR_[i];
                 }
+        } else if (!room_.cleared()) {
+            room_.clearSome(kRoomClearSlice); // resting: its rings zeroed a slice a chunk (TwinRoom::reset)
         }
 
         prof::mark(prof::kTwin);
@@ -1077,9 +1079,16 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             wr *= eraMakeup_;
             if (transportLive) transport_.process(wl, wr); // MOTION's tape transport (dsp/Transport.h)
             else transport_.write(wl, wr);
+            wetL_[i] = wl;
+            wetR_[i] = wr;
             prof::mark(prof::kOutput);
-            if (texOn_) texture_.process(wl, wr); // ERA's wear (dsp/EraTexture.h)
-            prof::mark(prof::kEraWear);
+        }
+        // ERA's wear (dsp/EraTexture.h) over the chunk, between the two halves of the output loop (CPU save 2): the
+        // same operations on each sample in the same order.
+        if (texOn_) texture_.processBlock(wetL_, wetR_, n);
+        prof::mark(prof::kEraWear);
+        for (int i = 0; i < n; ++i) {
+            float wl = wetL_[i], wr = wetR_[i];
             tilt_.process(wl, wr);
 #ifndef IV_FIXED_VOICINGS
             if (!toneBellOff_)

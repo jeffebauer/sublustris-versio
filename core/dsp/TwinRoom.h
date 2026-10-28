@@ -43,6 +43,9 @@ public:
     {
         sr_ = sampleRate;
         ok_ = mem != nullptr;
+        mem_ = mem;
+        memFloats_ = mem ? int(memoryFloats(sampleRate)) : 0;
+        clearedTo_ = 0; // (zeroed before the first process(): reset() below)
         float* p = mem;
         for (int c = 0; c < 2; ++c)
             for (int k = 0; k < 2; ++k) {
@@ -70,11 +73,18 @@ public:
         set(0.5f, 1.0f / 8.0f, voicing::kDampingHighT60Ratio);
         return ok_;
     }
+    // The rings restart at 0 and must read as silence. Zeroing them all here (42 KB of D2 SRAM, ~10,500
+    // stores, every cache line it passed evicted) was most of a SPACE flip's restart block on the module (the
+    // flip section ~23 % of a block, the tank's reads after it missing; CPU save 2, 28 Oct 2026). Now the
+    // zeroing waits: clearSome() does it a slice a block while the room rests (Engine), and the first
+    // process() after the reset finishes whatever is left. The same zeros before the first read, so the
+    // same output to the bit.
     IV_SIZE_OPT void reset()
     {
         for (auto& side : inAp_)
-            for (auto& a : side) a.clear();
-        for (auto& l : line_) l.clear();
+            for (auto& a : side) a.pos = 0;
+        for (auto& l : line_) l.pos = 0;
+        fresh_ = true;
         for (int i = 0; i < kN; ++i) ay_[i] = ax_[i] = ap_[i] = 0.0f;
         snap_ = true; // the next set() lands at once: the lines are empty
         for (auto& c : hz_)
@@ -95,9 +105,25 @@ public:
     }
     // Built for size (IV_SIZE_OPT, firmware only): at -O3 it was 2,808 B of flash, at -Os 1.4 KB less (the
     // integration dry run's candidate profile measured its CPU).
+    // Zeroes up to `floats` more of the rings' memory (only between process() calls that a reset() separates:
+    // the Engine calls it while the twin rests, and a twin starts with a reset()). True once all of it is zero.
+    IV_SIZE_OPT bool clearSome(int floats)
+    {
+        const int end = memFloats_ - clearedTo_ > floats ? clearedTo_ + floats : memFloats_;
+        for (int i = clearedTo_; i < end; ++i) mem_[i] = 0.0f;
+        clearedTo_ = end;
+        return clearedTo_ >= memFloats_;
+    }
+    bool cleared() const { return clearedTo_ >= memFloats_; }
+
     IV_SIZE_OPT void process(const float* inL, const float* inR, float* outL, float* outR, int n)
     {
         if (!ok_) return;
+        if (fresh_) { // the first call since a reset(): the rest of the zeroing (none if the rest did it all)
+            clearSome(memFloats_);
+            fresh_ = false;
+        }
+        clearedTo_ = 0; // written from here on
         constexpr float kNorm = 0.35355339f;
         constexpr float kInS[2][kN] = {{1, -1, 1, -1, 1, -1, 1, -1}, {1, 1, -1, -1, 1, 1, -1, -1}};
         constexpr float kOutS[2][kN] = {{1, 1, -1, -1, 1, 1, -1, -1}, {1, -1, -1, 1, 1, -1, -1, 1}};
@@ -183,12 +209,6 @@ private:
             len = n;
             pos = 0;
         }
-        void clear()
-        {
-            if (buf)
-                for (int i = 0; i < len; ++i) buf[i] = 0.0f;
-            pos = 0;
-        }
         float at(int d) const
         {
             int i = pos - d;
@@ -215,7 +235,9 @@ private:
     static constexpr float kRatio[kN] = {0.31f, 0.42f, 0.51f, 0.60f, 0.70f, 0.79f, 0.90f, 1.0f};
     // IV_ZI (SizeOpt.h): a member of the Engine only, never a local; prepare() sets the rest.
     float sr_ = 24000.0f, gain_ = 1.0f, shelfK_ IV_ZI;
-    bool  ok_ IV_ZI, snap_ = true;
+    bool  ok_ IV_ZI, snap_ = true, fresh_ = true;
+    float* mem_ IV_ZI; // the rings' memory (prepare()): memFloats_ floats, [0, clearedTo_) zero since the last process()
+    int   memFloats_ IV_ZI, clearedTo_ IV_ZI;
     float target_[kN] IV_ZI;
     float hb_ IV_ZI, ha1_ IV_ZI, ha2_ IV_ZI, hz_[2][2] IV_ZI;
     Ring  line_[kN];

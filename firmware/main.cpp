@@ -2547,12 +2547,22 @@ public:
             d.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
             // GPIOA..GPIOK sit 0x400 apart in the same order as GPIOPort.
             GPIO_TypeDef* gpio = reinterpret_cast<GPIO_TypeDef*>(GPIOA_BASE + 0x400u * uint32_t(ports_[p].id));
-            if (HAL_DMA_Init(&d) != HAL_OK
-                || HAL_DMA_Start(&d, uint32_t(gPwmWords[p]), uint32_t(&gpio->BSRR), ivled::kPwmSteps) != HAL_OK) {
+            if (HAL_DMA_Init(&d) != HAL_OK) {
                 stop();
                 return false;
             }
             ++numStarted_;
+            // HAL_DMA_Start's register writes for this stream (its DMA_SetConfig, memory to peripheral), without
+            // the HAL's general version: it and HAL_DMA_Abort were ~1.9 KB of flash for these five streams (CPU
+            // save 2, 28 Oct 2026). HAL_DMA_Init above has left the stream off and worked out its flag registers.
+            auto* st = static_cast<DMA_Stream_TypeDef*>(d.Instance);
+            d.DMAmuxChannelStatus->CFR = d.DMAmuxChannelStatusMask; // the DMAMUX synchro overrun flag
+            clearFlags(d);
+            st->CR &= ~DMA_SxCR_DBM;
+            st->NDTR = ivled::kPwmSteps;
+            st->PAR  = uint32_t(&gpio->BSRR);
+            st->M0AR = uint32_t(gPwmWords[p]);
+            st->CR |= DMA_SxCR_EN;
         }
         if (timer_.Start() != TimerHandle::Result::OK) {
             stop();
@@ -2577,7 +2587,19 @@ public:
     {
         TIM5->DIER &= ~(TIM_DIER_UDE | TIM_DIER_CC1DE | TIM_DIER_CC2DE | TIM_DIER_CC3DE | TIM_DIER_CC4DE);
         timer_.Stop();
-        for (int p = 0; p < numStarted_; ++p) HAL_DMA_Abort(&dma_[p]);
+        for (int p = 0; p < numStarted_; ++p) { // HAL_DMA_Abort's steps for a DMA stream (see start())
+            DMA_HandleTypeDef& d  = dma_[p];
+            auto*              st = static_cast<DMA_Stream_TypeDef*>(d.Instance);
+            st->CR &= ~(DMA_IT_TC | DMA_IT_TE | DMA_IT_DME | DMA_IT_HT);
+            st->FCR &= ~DMA_IT_FE;
+            d.DMAmuxChannel->CCR &= ~DMAMUX_CxCR_SOIE;
+            st->CR &= ~DMA_SxCR_EN;
+            const uint32_t t0 = System::GetNow();
+            while ((st->CR & DMA_SxCR_EN) && System::GetNow() - t0 < 5u) { // HAL_TIMEOUT_DMA_ABORT, 5 ms
+            }
+            clearFlags(d);
+            d.DMAmuxChannelStatus->CFR = d.DMAmuxChannelStatusMask;
+        }
         numStarted_ = 0;
     }
 
@@ -2614,6 +2636,11 @@ public:
     }
 
 private:
+    // A stream's six interrupt flags cleared (its LIFCR / HIFCR, at +8 from the base HAL_DMA_Init worked out).
+    static void clearFlags(const DMA_HandleTypeDef& d)
+    {
+        *reinterpret_cast<volatile uint32_t*>(d.StreamBaseAddress + 8u) = 0x3Fu << (d.StreamIndex & 0x1Fu);
+    }
     struct Port {
         GPIOPort      id      = PORTX;
         int           numPins = 0;

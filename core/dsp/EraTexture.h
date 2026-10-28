@@ -162,6 +162,12 @@ public:
     // off while the hold still made up a level, the wet stepped (a click turning ERA down to 0).
     bool settled() const { return std::fabs(hold_ - 1.0f) < 1e-4f && std::fabs(holdAim_ - 1.0f) < 1e-4f; }
 
+    // process() over a block in place (out of line: the Engine's one call, its two sides side by side).
+    IV_NOINLINE IV_NO_UNSWITCH void processBlock(float* l, float* r, int n)
+    {
+        for (int i = 0; i < n; ++i) process(l[i], r[i]);
+    }
+
     void process(float& l, float& r)
     {
         float x[2] = {l, r};
@@ -173,20 +179,36 @@ public:
             tick_ = clock_ >= 1.0f;
             if (tick_) clock_ -= 1.0f;
         }
-        for (int c = 0; c < 2; ++c) {
-            float v = x[c];
-            if (m_.tapeW > 0.0f) v += m_.tapeW * (tape(v, c) - v);
-            if (m_.breathW > 0.0f) v += m_.breathW * (breath(v, c) - v);
-            if (m_.clockW > 0.0f) {
-                if (tick_) held_[c] = v;
-                v += m_.clockW * (held_[c] - v);
+        // Stage by stage, both sides in each (CPU save 2, 28 Oct 2026): side by side, the M7 overlaps the two
+        // sides' dependent chains; a side's whole chain at a time, each stage waited on the last's result. The
+        // same operations for each side, the breath's noise drawn left then right as before: the same bits.
+        if (m_.tapeW > 0.0f) {
+            const float t0 = tape(x[0], 0), t1 = tape(x[1], 1);
+            x[0] += m_.tapeW * (t0 - x[0]);
+            x[1] += m_.tapeW * (t1 - x[1]);
+        }
+        if (m_.breathW > 0.0f) {
+            const float b0 = breath(x[0], 0), b1 = breath(x[1], 1);
+            x[0] += m_.breathW * (b0 - x[0]);
+            x[1] += m_.breathW * (b1 - x[1]);
+        }
+        if (m_.clockW > 0.0f) {
+            if (tick_) {
+                held_[0] = x[0];
+                held_[1] = x[1];
             }
-            if (m_.grainW > 0.0f) {
-                gSum_[c] += std::fabs(v);
-                v += m_.grainW * (float(int32_t(v * invQ_[c])) * q_[c] - v);
+            x[0] += m_.clockW * (held_[0] - x[0]);
+            x[1] += m_.clockW * (held_[1] - x[1]);
+        }
+        if (m_.grainW > 0.0f)
+            for (int c = 0; c < 2; ++c) {
+                gSum_[c] += std::fabs(x[c]);
+                x[c] += m_.grainW * (float(int32_t(x[c] * invQ_[c])) * q_[c] - x[c]);
             }
-            if (m_.bandW > 0.0f) v += m_.bandW * (band(v, c) - v);
-            x[c] = v;
+        if (m_.bandW > 0.0f) {
+            const float b0 = band(x[0], 0), b1 = band(x[1], 1);
+            x[0] += m_.bandW * (b0 - x[0]);
+            x[1] += m_.bandW * (b1 - x[1]);
         }
         hpOut_ += wHp_ * (0.5f * (x[0] + x[1]) - hpOut_);
         const float out = 0.5f * (x[0] + x[1]) - hpOut_;

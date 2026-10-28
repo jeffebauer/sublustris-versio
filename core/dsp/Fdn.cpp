@@ -4,6 +4,7 @@
 #include "dsp/SizeOpt.h"
 
 #include <cmath>
+#include <cstring>
 
 // The tank's rare paths (lineSlow, tapsMoving, tapsOld) are built for size, with the small DelayLine and
 // LoopEra steps inlined into them: called out of line from -Os code, every read and write paid a call
@@ -82,6 +83,10 @@ IV_SIZE_OPT uint32_t primeAtOrAbove(uint32_t n, const float* taken, int count)
     }
 }
 
+// layoutEarly()'s kept layouts, HALL's count and MASSIVE's (the same for every tank: they depend on the count alone).
+float gLayFrac[2][voicing::kFdnLines][voicing::kEarlyTaps], gLayGain[2][voicing::kFdnLines][voicing::kEarlyTaps];
+int   gLayCount[2] = {0, 0}; // (0: none yet)
+
 // The 80 ms glides' one-pole coefficient for a step of t seconds (Memo1, one copy for its two users).
 float glide80(float t) { return 1.0f - std::exp(-t / 0.08f); }
 
@@ -114,6 +119,14 @@ IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed, flo
     for (int i = 0; i < kN; ++i) {
         era_[i].prepare(sampleRate);
         driftGen_[i].prepare(sampleRate, seed * 2654435761u + uint32_t(i) * 40503u + 1u, float(i) / float(kN - 1));
+    }
+    { // both SPACEs' layouts ready (layoutEarly()), then the one in use
+        const int keep = earlyCount_;
+        earlyCount_ = voicing::kHallEarlyTaps;
+        layoutEarly();
+        earlyCount_ = voicing::kMassiveEarlyTaps;
+        layoutEarly();
+        earlyCount_ = keep;
     }
     layoutEarly();
     for (auto& t : lenTarget_) t = 0.0f;
@@ -181,6 +194,14 @@ IV_SIZE_OPT void Fdn::reset()
 // MASSIVE 4, the owner's pick on renders/early_hits), at the same early energy as all six.
 IV_SIZE_OPT void Fdn::layoutEarly()
 {
+    // HALL's and MASSIVE's layouts are worked out once (prepare()) and copied at a SPACE flip, whose restart
+    // block paid ~200 divides a tank for them (CPU save 2, 28 Oct 2026). The same values.
+    for (int c = 0; c < 2; ++c)
+        if (gLayCount[c] == earlyCount_) {
+            std::memcpy(earlyFrac_, gLayFrac[c], sizeof earlyFrac_);
+            std::memcpy(earlyGain_, gLayGain[c], sizeof earlyGain_);
+            return;
+        }
     uint32_t es = 0xEA51u;
     for (int i = 0; i < kN; ++i)
         for (int k = 0; k < kEarlyTaps; ++k) {
@@ -201,6 +222,12 @@ IV_SIZE_OPT void Fdn::layoutEarly()
             }
         const float norm = std::sqrt(full / used);
         for (auto& row : earlyGain_) for (auto& g : row) g *= norm;
+    }
+    const int c = earlyCount_ == voicing::kMassiveEarlyTaps ? 1 : (earlyCount_ == voicing::kHallEarlyTaps ? 0 : -1);
+    if (c >= 0) { // (another count, a prototype's, isn't kept)
+        gLayCount[c] = earlyCount_;
+        std::memcpy(gLayFrac[c], earlyFrac_, sizeof earlyFrac_);
+        std::memcpy(gLayGain[c], earlyGain_, sizeof earlyGain_);
     }
 }
 

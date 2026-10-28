@@ -119,14 +119,21 @@ public:
                     const float extra = voicing::kShimmerScatter * window * (float(seed_ >> 8) * (1.0f / 16777216.0f));
                     base_[c][h] = 2.0f + extra; // its own statement: never fused (2 + extra + window p, as before)
                 }
+                // sin(pi p), Bhaskara's approximation (within 0.2 %): no libm call per head and sample. Its divide
+                // first, so the M7 works out the read below while the divide runs (CPU save 2: placed after the reads
+                // it was the last thing before its own use, a ~14-cycle stall a head). The same operations.
+                const float q = p * (1.0f - p), s = 16.0f * q / (5.0f - 4.0f * q);
                 const float d = base_[c][h] + window * p;
                 const auto  di = uint32_t(d);
                 const float t = d - float(di);
-                // Ring::read(di) and read(di + 1): silence from before a clear().
-                const uint32_t i0 = pos >= di ? pos - di : pos + n - di, i1 = i0 ? i0 - 1 : n - 1;
-                const float a = di <= fill ? buf[i0] : 0.0f, b = di < fill ? buf[i1] : 0.0f;
-                // sin(pi p), Bhaskara's approximation (within 0.2 %): no libm call per head and sample.
-                const float q = p * (1.0f - p), s = 16.0f * q / (5.0f - 4.0f * q);
+                // Ring::read(di) and read(di + 1): silence from before a clear(). Both reads are always in the ring
+                // (di < n), so they load unconditionally and the clear's test only picks zero instead (no branches).
+                uint32_t i0 = pos - di;
+                if (pos < di) i0 += n;
+                const uint32_t i1 = (i0 ? i0 : n) - 1;
+                float a = buf[i0], b = buf[i1];
+                if (di > fill) a = 0.0f;
+                if (di >= fill) b = 0.0f;
                 y += s * s * (a + t * (b - a));
             }
             y *= 2.0f / float(kHeads);

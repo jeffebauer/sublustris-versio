@@ -254,6 +254,8 @@ public:
 
 private:
     static constexpr int kChunk = dsp::Fdn::kControlBlock;
+    // The resting twin room's rings zeroed this many floats a chunk (TwinRoom::clearSome; 1 KB, ~41 chunks for all).
+    static constexpr int kRoomClearSlice = 256;
     static constexpr int kLowDecimate = 4; // still lows' low tank runs at 12 kHz
 #ifndef IV_FIXED_VOICINGS
     static constexpr int kLowDecimateMax = 8; // setLowDecimatePrototype; the chunk buffers below fit any d >= 4
