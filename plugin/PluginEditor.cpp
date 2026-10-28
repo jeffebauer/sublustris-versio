@@ -7,7 +7,7 @@
 
 #include "PluginEditor.h"
 
-#include "params/EraVoicing.h"
+#include "KnobText.h"
 
 #include "../firmware/LedMeter.h"
 #include "params/ParamSpec.h"
@@ -36,10 +36,6 @@ struct Knob {
     bool    labelAbove; // P6: the toggles sit below it
 };
 
-// DRIFT's noon dead zone (SPEC §3 P6): still, only the modulation floor.
-constexpr float kDriftDeadLo = iv::voicing::kDriftDeadLo;
-constexpr float kDriftDeadHi = iv::voicing::kDriftDeadHi;
-
 constexpr Knob kKnobs[] = {
     {ParamId::Mix,   {7.770f, 18.530f}, false},  // P1
     {ParamId::Decay, {43.330f, 18.530f}, false}, // P2
@@ -64,7 +60,7 @@ constexpr Toggle kToggles[] = {
 
 // The button sits at the module's height (69.33 mm), nudged right of its
 // 26.185 mm centre and drawn wider than the 7 mm cap, so FREEZE reads in
-// full at 1x and still clears ATTACK's REVERSE.
+// full at 1x and still clears ATTACK's SHIMMER.
 constexpr Part kButton{28.0f, 69.330f};
 // The plugin's own ZOOM control (panel scale) in the bottom row.
 constexpr float kBottomRowYMm = 121.0f;
@@ -118,19 +114,6 @@ juce::Colour ledColour(const ivled::Rgb& drive)
     return juce::Colour::fromFloatRGBA(channel(drive.r), channel(drive.g), channel(drive.b), 1.0f);
 }
 
-// Knob value text, shown while dragging or hovering: percent of travel, and
-// DRIFT as its side and amount (ADR 0012: left tape wow/flutter, right
-// Cathedra drift, noon still).
-juce::String knobText(ParamId id, double value)
-{
-    const float v = float(value);
-    if (id == ParamId::Drift) {
-        if (v < kDriftDeadLo) return "Tape " + juce::String(juce::roundToInt(100.0f * (kDriftDeadLo - v) / kDriftDeadLo)) + " %";
-        if (v > kDriftDeadHi) return "Drift " + juce::String(juce::roundToInt(100.0f * (v - kDriftDeadHi) / (1.0f - kDriftDeadHi))) + " %";
-        return "Still";
-    }
-    return juce::String(juce::roundToInt(100.0f * v)) + " %";
-}
 
 // JUCE's standard look with three tweaks for a dark panel: the value arc
 // and the chosen toggle position in the accent colour (the dark scheme's
@@ -241,7 +224,8 @@ public:
         // freeze, a hold while frozen paints. Every press and release goes
         // to the audio thread, which hands it to the Engine at the start of
         // its next block; the Engine's gesture reader does the rest.
-        button_.setButtonText("FREEZE");
+        button_.setButtonText("FREEZE / PAINT"); // the owner's label (27 Oct 2026): tap freezes, hold paints
+        button_.setTooltip("Tap: freeze. Hold while frozen: paint.");
         button_.onStateChange = [this] {
             const bool down = button_.isDown();
             if (down == buttonDown_) return;
@@ -312,7 +296,7 @@ public:
             g.drawFittedText(s, centred(at, wMm, hMm), j, 1, 0.8f);
         };
 
-        text("IMMENSIO VERSIO", {kPanelW * 0.5f, 9.0f}, 3.0f, 12.0f, kTextColour, juce::Justification::centred, 30.0f);
+        text("SUBLUSTRIS VERSIO", {kPanelW * 0.5f, 9.0f}, 3.0f, 12.0f, kTextColour, juce::Justification::centred, 30.0f);
 
         // Meter labels: left pair is the input, right pair the output.
         text("IN", {(kLeds[0].x + kLeds[1].x) * 0.5f, 15.6f}, kLabelHMm, 9.0f, kDimTextColour);
@@ -386,6 +370,7 @@ private:
     std::array<std::array<juce::TextButton, 3>, std::size(kToggles)> toggles_;
     std::array<std::unique_ptr<juce::ParameterAttachment>, std::size(kToggles)> toggleAttach_;
     juce::TextButton                button_;
+    juce::TooltipWindow             tooltips_{this, 600}; // shows the button's tooltip (tap / hold)
     bool                            buttonDown_ = false;
     std::array<juce::TextButton, 3> sizes_;
 

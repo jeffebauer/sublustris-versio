@@ -30,6 +30,8 @@
 
 
 
+#include "dsp/SizeOpt.h"
+
 #include <array>
 #include <cmath>
 
@@ -86,7 +88,7 @@ class Oversampler {
 public:
     static constexpr int kFactor = 2; // 2x: Resilio M3 profiling (its ADR 0030)
 
-    void reset()
+    IV_SIZE_OPT void reset()
     {
         for (auto& h : up_) h.reset();
         for (auto& h : down_) h.reset();

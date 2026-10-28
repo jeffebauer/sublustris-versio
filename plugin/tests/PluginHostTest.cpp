@@ -308,6 +308,16 @@ int main()
                     check(labelsMatch, what + " choice labels match ParamSpec");
                 }
             }
+            // The host shows WEAR (key "era") as its amount, DRIFT as its side (KnobText.h).
+            if (auto* era = byId[size_t(iv::ParamId::Era)]) {
+                const juce::String a = era->getText(0.0f, 64), b = era->getText(0.5f, 64), c = era->getText(0.7f, 64),
+                                   d = era->getText(1.0f, 64);
+                check(a == "Wear 0 %" && b == "Wear 50 %" && c == "Wear 70 %" && d == "Wear 100 %",
+                      "WEAR's text is its amount: " + (a + " / " + b + " / " + c + " / " + d).toStdString());
+            }
+            if (auto* drift = byId[size_t(iv::ParamId::Drift)])
+                check(drift->getText(0.5f, 64) == "Still" && drift->getText(1.0f, 64) == "Drift 100 %",
+                      "MOTION's (DRIFT's) text names its side (host view)");
         }
     }
 
@@ -345,7 +355,7 @@ int main()
         const auto hosted = renderPlugin(fm, vst3Path, stimulus, blocks, 0.0f);
         if (!hosted.outL.empty())
             check(hosted.outL == stimulus && hosted.outR == stimulus,
-                  "MIX 0 nulls against the dry input, bit-identical (the dry path is untouched, SPEC §4.10)");
+                  "BLEND (MIX) 0 nulls against the dry input, bit-identical (the dry path is untouched, SPEC §4.10)");
     }
 
     // ---- 5. MIDI gate (MidiGate.h): edges reach Engine::gate sample-accurately ----

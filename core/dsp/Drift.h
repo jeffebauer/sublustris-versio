@@ -9,6 +9,7 @@
 //
 // Pitch deviation p from a delay swinging by A samples at f Hz is
 // 2π f A / fs, so for a depth in cents A = (2^(c/1200) − 1) fs / (2π f).
+#include "dsp/SizeOpt.h"
 #include "params/EraVoicing.h"
 
 #include <cmath>
@@ -41,7 +42,7 @@ public:
 
     // Advances dt seconds; returns the read offset in samples. maxSamples
     // caps the swing (a share of the line's length, the room in memory).
-    float control(float dt, const DriftAmounts& a, float maxSamples)
+    IV_SIZE_OPT float control(float dt, const DriftAmounts& a, float maxSamples) // once per block: built for size (flash)
     {
         const float rateSkew = 1.0f - 0.5f * a.rateSpread + a.rateSpread * spread_;
         // Wow: a smooth random line (new target every ~1/rate, smoothed twice).
@@ -50,14 +51,32 @@ public:
             wowTarget_ = uniform();
             wowCountdown_ = (0.7f + 0.6f * (0.5f + 0.5f * uniform())) / (a.wowHz * rateSkew);
         }
-        const float wc = 1.0f - std::exp(-6.2831853f * a.wowHz * rateSkew * dt);
+        const float arg = -6.2831853f * a.wowHz * rateSkew * dt;
+        // The same every block until DRIFT or ERA moves (std::exp ~110 cycles on the M7), for each of the two
+        // chunk lengths the module alternates (32 and 16: CPU hunt, 28 Oct 2026).
+        float wc;
+        if (arg == wcArg_[0]) wc = wc_[0];
+        else if (arg == wcArg_[1]) wc = wc_[1];
+        else {
+            wcArg_[1] = wcArg_[0];
+            wc_[1] = wc_[0];
+            wcArg_[0] = arg;
+            wc = wc_[0] = 1.0f - std::exp(arg);
+        }
         wowA_ += wc * (wowTarget_ - wowA_);
         wowB_ += wc * (wowA_ - wowB_);
         flutterPhase_ += a.flutterHz * rateSkew * dt;
         flutterPhase_ -= float(int(flutterPhase_));
 
-        float v = samplesFor(a.wowCents, a.wowHz) * wowB_
-                + samplesFor(a.flutterCents, a.flutterHz) * std::sin(6.2831853f * flutterPhase_);
+        if (a.wowCents != depthIn_[0] || a.wowHz != depthIn_[1] || a.flutterCents != depthIn_[2] || a.flutterHz != depthIn_[3]) {
+            depthIn_[0] = a.wowCents; // the depths' std::pow, only when DRIFT or ERA moves
+            depthIn_[1] = a.wowHz;
+            depthIn_[2] = a.flutterCents;
+            depthIn_[3] = a.flutterHz;
+            wowDepth_ = samplesFor(a.wowCents, a.wowHz);
+            flutterDepth_ = samplesFor(a.flutterCents, a.flutterHz);
+        }
+        float v = wowDepth_ * wowB_ + (flutterDepth_ != 0.0f ? flutterDepth_ * std::sin(6.2831853f * flutterPhase_) : 0.0f);
         if (v > maxSamples) v = maxSamples;
         if (v < -maxSamples) v = -maxSamples;
         value_ = v;
@@ -77,9 +96,11 @@ private:
         return float(int32_t(rng_)) * (1.0f / 2147483648.0f);
     }
 
-    float    sampleRate_ = 48000.0f, spread_ = 0.0f, value_ = 0.0f;
+    float    sampleRate_ = 48000.0f, spread_ IV_ZI, value_ IV_ZI;
     uint32_t rng_ = 1;
-    float    wowA_ = 0, wowB_ = 0, wowTarget_ = 0, wowCountdown_ = 0, flutterPhase_ = 0;
+    float    wowA_ IV_ZI, wowB_ IV_ZI, wowTarget_ IV_ZI, wowCountdown_ IV_ZI, flutterPhase_ IV_ZI;
+    float    wcArg_[2] IV_ZI, wc_[2] IV_ZI; // the wow's smoothing for wcArg_[k] (an argument of 0 gives 0: the zeros agree)
+    float    depthIn_[4] = {-1.0f, -1.0f, -1.0f, -1.0f}, wowDepth_ IV_ZI, flutterDepth_ IV_ZI;
 };
 
 } // namespace iv::dsp

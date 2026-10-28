@@ -1,4 +1,6 @@
-# Immensio Versio
+# Sublustris Versio
+
+Called Immensio Versio until 27 Oct 2026 (ADR 0032): the repo, folder and internal identifiers (`iv::`, `IV_*`, the plugin codes `ImVs` / `Ombr`, the bundle ID) keep the old name on purpose.
 
 A huge, warm, lush reverb firmware for the Noise Engineering Versio (Daisy Seed, STM32H750), sibling to Resilio Versio. One DSP Core, three Hosts: Renderer (offline CLI), JUCE Plugin (AU/VST3 test bench), Versio Firmware.
 

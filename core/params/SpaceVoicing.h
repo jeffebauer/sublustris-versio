@@ -35,6 +35,16 @@ constexpr float kHallInLoopUntilSize = 0.5f; // fades to 0 by SIZE noon (the own
 // second per second, which is at most a semitone of bend (2^(1/12) − 1).
 // SPEC §4.3, ADR 0012.
 constexpr float kSizeSlewPerSecond = 0.0595f;
+// SIZE and TIME (NORMAL's pre-delay) move by crossfade, not by sliding (v1.0.34, ADR 0025; owner's pick
+// C on renders/knob_moves): once the knob has rested kSizeRestSeconds the delays jump and the old
+// ones fade out over kSizeCrossfadeSeconds (in the loop: summing to one where the two reads agree,
+// keeping their power where they don't). kSizeSlewPerSecond still glides HALL's
+// in-loop allpasses when they come in or go out without a SIZE move.
+constexpr float kSizeCrossfadeSeconds = 0.3f;
+constexpr float kSizeRestSeconds      = 0.05f;
+// SIZE's hysteresis in HALL and MASSIVE (v1.0.37; Engine::hysteresisSize): SIZE moves on once the mean
+// line length would move by more than 0.1 % (1.7 cents), so a knob's noise never restarts the rest timer.
+constexpr float kSizeHysteresis       = 1e-3f;
 
 // Modulation floor (SPEC §2.3 rule 1, CONTEXT "Modulation floor"): every
 // line's read wanders slowly at random. Depth in seconds of delay (0.46 ms
@@ -64,6 +74,19 @@ constexpr float kHallOutputTrim = 0.767f;
 constexpr float kDecayLevelRefSeconds = 15.0f;
 constexpr float kDecayLevelPower[3]     = {0.18f, 0.47f, 0.445f}; // PLATE, HALL, MASSIVE: below 15 s
 constexpr float kDecayLevelPowerLong[3] = {0.0f, 0.09f, 0.29f};   // from 15 s to the finite top
+// The finite tops the make-up above was measured to (v1.0.28): PLATE 12 s, HALL 25 s, MASSIVE 120 s. Since
+// v1.0.53 (ADR 0034, the owner's pick B on renders/decay_range) PLATE's and HALL's tops are 30 / 60 s, at
+// the level today's had: a tail longer than these gets no make-up, and the trim below.
+constexpr float kDecayLevelTopSeconds[3] = {12.0f, 25.0f, 120.0f};
+// The longer tails' trim (v1.0.53, ADR 0034): PLATE / HALL ring longer than they did at every DECAY and
+// sound louder while you play (the chord on renders/decay_range: up to +2.1 dB at 0.80), so the wet is taken down
+// by up to this many dB, eased in across DECAY (a smoothstep from .. to) and back out across the crossover to
+// infinite (x (1 - governor weight)^3: 0 dB at 0.85, so infinite is as before). Fitted to the page's level
+// match (the owner heard B there at A's level while playing): within 0.45 dB of it on the chord, PLATE and
+// HALL at SIZE 0.3 / 0.8 / 1.
+constexpr float kDecayLongTrimDb[2]   = {1.95f, 2.10f}; // PLATE, HALL
+constexpr float kDecayLongTrimFrom[2] = {0.15f, 0.35f};
+constexpr float kDecayLongTrimTo[2]   = {0.85f, 0.75f};
 // Still lows (v1.0.18, docs/research/still-lows.md): below this the HALL / MASSIVE tank's input goes to
 // a second, unmodulated tank (Butterworth split), so the bass never wavers; above it moves as before.
 constexpr float kStillLowsHz = 300.0f;
@@ -72,6 +95,10 @@ constexpr float kFloorStepSeconds  = 1.7f;
 // Fixed damping (SPEC §4.6): the high end's T60 as a share of the low
 // end's, at TONE noon. TONE moves it (Mappings.h toneHighT60Ratio).
 constexpr float kDampingHighT60Ratio = 0.45f;
+// MASSIVE's own share (v1.0.31, ADR 0022; owner's pick D on renders/massive_highs): × the Neve's
+// darkening (EraVoicing kNeveHighRatio 0.7) it's 1, so at TONE noon its highs ring as long as its
+// body, as Supermassive's Andromeda and Sagittarius do (they don't damp in the loop).
+constexpr float kMassiveHighT60Ratio = 1.43f;
 
 // At infinite DECAY the lows hold but the highs still fade, over about this
 // long at TONE noon, so an infinite tail darkens toward its floor (ADR 0008)
@@ -109,12 +136,18 @@ constexpr float kMassiveOutputTrim  = 0.60f; // −3.3 dB: MASSIVE matches HALL'
 // owner's pick on renders/knob_feel: the swell no longer dips before its peak,
 // "uneven on Hits"; it dipped 5.8 dB at large SIZE, now 3.5).
 constexpr int   kEarlyTaps     = 6;
+// Of them, in use (v1.0.36, ADR 0026; owner's pick B on renders/early_hits, for the CPU): HALL 2, MASSIVE 4.
+constexpr int   kHallEarlyTaps    = 2;
+constexpr int   kMassiveEarlyTaps = 4;
 constexpr float kEarlyTapLow   = 0.3f;
 constexpr float kEarlyTapLevel = 0.5f * 0.71f;
 // MASSIVE's shortest DECAY rings at least this many passes of its mean line
-// (v1.0.21, knob_feel): at 2 s and a 0.84 s line one pass lost 25 dB, so DECAY's
-// first notch jumped from "the build and one echo" to a real tail.
-constexpr float kMassiveMinPasses = 3.0f;
+// (v1.0.21, knob_feel: 3; at 2 s and a 0.84 s line one pass lost 25 dB, so DECAY's
+// first notch jumped from "the build and one echo" to a real tail). 6 since v1.0.32
+// (owner's pick E on renders/massive_drop): at 3 a short MASSIVE at a big SIZE lost ~14 dB a
+// pass, held one pass after the input stopped and then dropped; at 6 (≤10 dB a pass) it fades
+// smoothly, and the shortest MASSIVE is longer at big SIZEs (~7 s at SIZE 0.7, 12 s at full).
+constexpr float kMassiveMinPasses = 6.0f;
 
 // In-loop diffusion (MASSIVE, ADR 0007): two allpasses inside each line,
 // coefficient kInLoopCoeff × SIZE's diffusion, so long lines blur into a
@@ -129,8 +162,13 @@ constexpr float kInLoopCoeff = 0.62f;
 
 // Floor governor (ADR 0008): an infinite tail's wet settles at this RMS
 // level; each dB above it adds kGovernorRatePerDb of loss (1/T60, 1/s),
-// measured over kGovernorSeconds.
-constexpr float kFloorDbfs          = -24.0f;
+// measured over kGovernorSeconds. -21 since v1.0.51 (ADR 0033, the owner's pick D on renders/level_duck:
+// "on hall and massive with Long decays, I feel the limiter is keeping the level a bit too low"; was -24).
+constexpr float kFloorDbfs          = -21.0f;
+// HALL's endless tail settles this much above kFloorDbfs, so at -18 dBFS (v1.0.52, ADR 0033 amended: the owner's
+// pick C on renders/hall_level, "Hall infinite examples feel slightly less level matched than massive ... reverb
+// feels a bit too quiet so when the set stops, there's a less seamless transition").
+constexpr float kHallTailDb         = 3.0f;
 constexpr float kGovernorRatePerDb  = 0.08f;
 constexpr float kGovernorSeconds    = 1.5f;
 constexpr float kHoldSeconds        = 8.0f; // the slow level a held tail's ceiling is judged on
@@ -139,7 +177,7 @@ constexpr float kHoldSeconds        = 8.0f; // the slow level a held tail's ceil
 constexpr float kGovernorFallSeconds = 0.05f;
 
 // SPACE flips fade out, then in, over this long each (ADR 0013: ~100 ms
-// in all). ATTACK into or out of REVERSE crossfades over kAttackFadeSeconds.
+// in all). ATTACK into or out of SHIMMER fades the octave's send over kAttackFadeSeconds.
 constexpr float kSpaceFlipSeconds  = 0.05f;
 constexpr float kAttackFadeSeconds = 0.05f;
 
@@ -147,18 +185,18 @@ constexpr float kAttackFadeSeconds = 0.05f;
 constexpr float kPlateLongModSeconds = 0.0006f; // depth: ~2 cents at these rates *(start)*
 constexpr float kPlateLongModHz[4]   = {0.23f, 0.31f, 0.19f, 0.37f}; // L d1, L d2, R d1, R d2: none shared with ap1 *(start)*
 
-// ---- REVERSE (SPEC §4.11, ADR 0015 amendment 22 Oct 2026) ------------------------
-// Rising taps over TIME into a short reverb of its own (Reverse.h). Tuned
-// together: tap spacing (TIME / kReverseTaps) against the short reverb's
-// line lengths, and the rise against how sudden the stop is.
-constexpr int   kReverseTaps            = 32;     // per side *(start)*
-constexpr float kReverseRiseDb          = 30.0f;  // first tap to last *(start)*
-constexpr float kReverseMeanMinSeconds  = 0.02f;  // the short reverb's mean line at SIZE fully CCW *(start)*
-constexpr float kReverseMeanMaxSeconds  = 0.09f;  // at SIZE fully CW *(start)*
-constexpr float kReverseMaxLineSeconds  = 0.25f;  // its memory: mean × 1.41 + DRIFT's room
-constexpr float kReverseTailMinSeconds  = 0.15f;  // its T60 at DECAY fully CCW: a sharp stop *(start)*
-constexpr float kReverseTailMaxSeconds  = 1.0f;   // at DECAY's top: a softer stop *(start)*
-constexpr float kReverseLevel           = 6.0f;   // +15.5 dB: loudness matches the forward wet (skank, vibes; every space)
+// ---- SHIMMER (SPEC §4.11, ADR 0024; owner's picks on renders/shimmer4, attack_alts2) ----------
+// The input an octave up, sent into the tank with it, no feedback (dsp/Shimmer.h). Measured (rounds
+// 1-4): fold-back above 12 kHz heard as "bit crushing" (the 8th-order feed filter: -68 dB at 16 kHz);
+// heads at fixed spacings combing certain notes' octaves (random onsets: within 2.6 dB across notes,
+// the detuned copies -38 dB); in the reverb, no more off-pitch sound than the plain reverb.
+constexpr int   kShimmerHeads         = 8;
+constexpr float kShimmerWindowSeconds = 0.4f;    // each grain; its octave starts this smeared
+constexpr float kShimmerScatter       = 1.0f;    // random extra delay per grain, x the window
+constexpr float kShimmerFeedHz        = 6000.0f; // the feed's 8th-order low-pass: its octave reaches 12 kHz
+constexpr float kShimmerAfterHz       = 9000.0f; // a one-pole after: each octave a little softer than the note
+constexpr float kShimmerLowCutHz      = 80.0f;   // a one-pole high-pass after
+constexpr float kShimmerSend          = 1.2f;    // x TIME: the octave's level into the tank at TIME full
 
 // ---- Plate (SPEC §4.2) -----------------------------------------------------
 constexpr float kPlateMaxScale     = 1.59f; // SIZE fully CW (1.6 lined a 9.8 kHz mode up, v1.0.11)
@@ -182,13 +220,26 @@ constexpr float kPaintLevel          = 0.5f;  // the twin's share sent into the 
 // few cents a pass into a seasick wobble (owner, M5 listening).
 constexpr float kFrozenPlateModDepth = 0.15f;
 // The freeze twin (ADR 0009, owner's picks on freeze_options and
-// freeze_twin): what you play over a pad goes into a twin of the frozen tank
-// (the same space, SIZE and DECAY playing it), heard as a quieter layer over
+// freeze_twin): what you play over a pad goes into a twin (PLATE: a second Plate; HALL and MASSIVE: a small
+// room since v1.0.43; SIZE and DECAY playing it), heard as a quieter layer over
 // the untouched pad, fading back out within kTwinMaxT60 so the pad returns
 // to what it was. No predelay or swell on its input ("too much
 // predelay... disjointed"). (start)
 constexpr float kTwinLevel     = 0.5f;  // −6 dB against the pad (was 0.3, −10.5 dB): "the sweet spot is between plus3 and plus6" (owner, renders/twin_level, v1.0.14)
 constexpr float kTwinMaxT60    = 8.0f;  // it always fades, even when DECAY is infinite
+// HALL's and MASSIVE's twin is a small room (v1.0.43, the owner's pick E on renders/small_room; dsp/TwinRoom.h), at
+// these gains on its output (dB, then kTwinLevel): matched on the page to v1.0.41's twin, which sat about 8 dB under
+// a frozen pad (owner, renders/twin_louder: "Let's shoot for 8db under the pad"). PLATE's twin is a second Plate.
+constexpr float kTwinRoomHallDb    = -8.63f;
+constexpr float kTwinRoomMassiveDb = -7.65f;
+// Elsewhere it follows the pad (v1.0.43, the owner's pick B on renders/room_level; Engine::applySpace): v1.0.41's lift
+// for a twin cut short, up to this (+5.4 dB), is where the gains above hold; a room under a shorter tank tail is that
+// much under them.
+constexpr float kTwinRoomLift = 1.862f;
+// v1.0.47: the room's wander scaled with its lines (owner's pick B, renders/room_motion) made it louder on short lines;
+// the page level-matched B to the room as before, and the owner chose it at that level: these trims on the room's
+// output at SIZE 0 / 0.5 / 0.9 (dB, straight between them, held above 0.9).
+constexpr float kTwinRoomTrimDb[3] = {-0.93f, -0.88f, -0.53f};
 constexpr float kTwinFadeSeconds = 0.02f; // its input opens / closes at freeze / unfreeze
 constexpr float kPaintHeadroomDb     = 1.5f;  // a painted pad may grow this far above its frozen level (or the floor)
 constexpr float kPaintFadeDb         = 1.0f;  // painting eases off over the last this-many dB below that
@@ -221,18 +272,31 @@ constexpr float kToneDarkHighDb   = -9.0f;
 constexpr float kToneBrightLowDb  = -4.0f; // TONE fully CW
 constexpr float kToneBrightHighDb = 6.0f;
 
-// ---- Ducking: 4:1 compression of the wet (ADR 0014 amended, SPEC v1.0.17) --
-// The wet is compressed 4:1 above kDuckThresholdDbfs of input (its ~10 ms
+// ---- Ducking: 2:1 compression of the wet (ADR 0014 amended, SPEC v1.0.17, v1.0.51) --
+// The wet is compressed above kDuckThresholdDbfs of input (its ~10 ms
 // power), with this attack and release, scaled by how far into infinite
 // DECAY is (0 below 0.85, full at 1) and off while frozen. No darkening: the
 // owner picked it over DARKEN on renders/ducking ("closer to 4:1 compression
-// than extreme ducking, so it feels cohesive"; D on all 18 cards). About 3 dB
-// of reduction while playing at the materials' level.
+// than extreme ducking, so it feels cohesive"; D on all 18 cards). 2:1 since
+// v1.0.51 (renders/level_duck D: "ducking on large washy sounds still feels a
+// bit heavy handed"; was 4:1).
 constexpr float kDuckThresholdDbfs  = -24.0f;
-constexpr float kDuckRatio          = 4.0f;
+constexpr float kDuckRatio          = 2.0f;
 constexpr float kDuckAttackSeconds  = 0.03f;
 constexpr float kDuckReleaseSeconds = 0.4f;
 constexpr float kDuckFullDb         = 6.0f; // reduction the LEDs show as full ducking
+// The duck follows the playing (v1.0.51, the owner's pick E on renders/level_glue: "glue the dry and wet
+// at points of transition so they sound more integrated rather than two separate layers"). Held playing
+// (a chord, a pad: the input's ~10 ms power within kDuckSustainCrest, 3 dB, of its kDuckSlowSeconds power,
+// judged while over the threshold and smoothed over kDuckSustainSeconds) is ducked less (x (1 -
+// kDuckSustainCut)) and let go faster (kDuckSustainReleaseSeconds) when it stops; short sounds (stabs)
+// keep the full reduction and kDuckReleaseSeconds, so they don't pump. A program-dependent release
+// (Giannoulis, Massberg and Reiss, JAES 2012).
+constexpr float kDuckSlowSeconds           = 0.5f;
+constexpr float kDuckSustainSeconds        = 0.3f;
+constexpr float kDuckSustainCrest          = 1.99526231f; // 3 dB, as a power ratio
+constexpr float kDuckSustainCut            = 0.6f;  // held playing gets 40 % of the reduction
+constexpr float kDuckSustainReleaseSeconds = 0.08f;
 
 // ---- Output soft limiter (SPEC §4.10): the wet only, before MIX ------------
 constexpr float kLimitCeiling        = 0.891f; // −1 dBFS

@@ -25,7 +25,13 @@ struct Rig {
     int block;
     std::vector<float> inL, inR, outL, outR;
     uint32_t noise = 1;
-    Rig(float fs, int b) : block(b), inL(size_t(b)), inR(size_t(b)), outL(size_t(b)), outR(size_t(b)) { e.prepare(fs, b); }
+    // ERA 0, the Neve alone (as ERA's default was until v1.0.42): the click watch's second difference reads
+    // the wear's grit (its grain, clock and breath noise) as clicks everywhere; ERA's own clicks are test_era's.
+    Rig(float fs, int b) : block(b), inL(size_t(b)), inR(size_t(b)), outL(size_t(b)), outR(size_t(b))
+    {
+        e.prepare(fs, b);
+        e.setParam(ParamId::Era, 0.0f);
+    }
     double phase = 0.0;
     // Click watch: the worst |second difference| of the output over its own recent level (10 ms).
     float y1[2] = {}, y2[2] = {}, dp[2] = {};
@@ -240,7 +246,7 @@ void smallHallSizeJumpsDontClick()
 // stopped, had its hold level taken while the tail was rising. Now the floor judges a falling tail
 // on a 50 ms level too (first only once the input was quiet, which missed an input fading out over
 // seconds: a decaying hit still plunged 64 dB), and the hold waits for the tank's own input to go
-// quiet. ERA's cassette compression, judged on the same lagging level, did the same (fixed alike).
+// quiet. ERA's tape compression (the cassette's until v1.0.42), judged on the same lagging level, did the same (fixed alike).
 // A tail now settles at the floor within a couple of dB and holds there.
 void infiniteTailDoesntPlungeWhenTheInputStops()
 {
@@ -274,11 +280,12 @@ void infiniteTailDoesntPlungeWhenTheInputStops()
     }
 }
 
-// Soak finding 6: a SPACE flip while playing in REVERSE cleared REVERSE's recording line, which
+// Soak finding 6 (found with REVERSE, kept for SHIMMER, ADR 0024: ATTACK's third position keeps
+// running through flips): a SPACE flip while playing in REVERSE cleared REVERSE's recording line, which
 // then held a hard edge where the input was cut off: the swell clicked when its taps reached it, up
 // to a TIME after the flip. REVERSE doesn't depend on SPACE, so it now keeps running through flips
 // (faded with the wet). After the flip's own fade, the sharpest step stays near the steady sound's.
-void reverseFlipWhilePlayingDoesntClickLater()
+void thirdAttackFlipWhilePlayingDoesntClickLater()
 {
     for (int from = 0; from < 3; ++from) {
         Rig r(48000.0f, 48);
@@ -297,16 +304,16 @@ void reverseFlipWhilePlayingDoesntClickLater()
         r.clearWatch();
         r.run(3.0, 0.3f, -330.0f);
         char what[160];
-        std::snprintf(what, sizeof what, "REVERSE: a flip %d->%d while playing doesn't click later (sharpest step x%.1f the steady sound's)", from,
+        std::snprintf(what, sizeof what, "SHIMMER: a flip %d->%d while playing doesn't click later (sharpest step x%.1f the steady sound's)", from,
                       (from + 1) % 3, r.maxD2 / steady);
         check(r.maxD2 < 2.6f * steady, what); // it measured x3.0-6.2; a pure sine still shows x7-9 (see the audit)
     }
 }
 
-// Soak finding 7: REVERSE coming in while playing (an ATTACK switch, or the unfreeze that ends
+// Soak finding 7 (found with REVERSE, kept for SHIMMER): REVERSE coming in while playing (an ATTACK switch, or the unfreeze that ends
 // REVERSE's rest) fed its freshly restarted short reverb the whole swell at once, which clicked
 // when it first came round the reverb's lines, 25-80 ms later (x18-46). The taps now fade in.
-void reverseComingInDoesntClick()
+void thirdAttackComingInDoesntClick()
 {
     for (int sp = 0; sp < 3; ++sp)
         for (int how = 0; how < 2; ++how) {
@@ -318,7 +325,7 @@ void reverseComingInDoesntClick()
             r.e.setParam(ParamId::Attack, iv::switchToNormalised(how == 0 ? 2 : 0));
             r.e.reset();
             r.run(3.0, 0.3f, -330.0f);
-            if (how == 0) { // freeze (REVERSE rests), then unfreeze
+            if (how == 0) { // freeze (SHIMMER rests), then unfreeze
                 r.e.button(true, 0);
                 r.run(0.05, 0.3f, -330.0f);
                 r.e.button(false, 0);
@@ -334,7 +341,7 @@ void reverseComingInDoesntClick()
             }
             r.run(0.5, 0.3f, -330.0f);
             char what[160];
-            std::snprintf(what, sizeof what, "space %d: REVERSE coming in (%s) while playing doesn't click (worst x%.1f)", sp,
+            std::snprintf(what, sizeof what, "space %d: SHIMMER coming in (%s) while playing doesn't click (worst x%.1f)", sp,
                           how == 0 ? "unfreeze" : "ATTACK switch", r.worstClick);
             check(r.worstClick < 6.0f, what);
         }
@@ -397,8 +404,8 @@ void padFrozenFromADyingTailHolds()
     }
 }
 
-// The same plunge from ERA's cassette compression, which also judged the tail on the 1.5 s level:
-// an infinite PLATE in the cassette range, a loud tone, then silence (soak seed 225's settings).
+// The same plunge from ERA's tape compression (the cassette's until v1.0.42), which also judged the tail on
+// the 1.5 s level: an infinite PLATE at ERA 0.82, a loud tone, then silence (soak seed 225's settings).
 void cassetteCompressionDoesntPlunge()
 {
     Rig r(44100.0f, 64);
@@ -417,45 +424,106 @@ void cassetteCompressionDoesntPlunge()
     const double lowest = *std::min_element(levels.begin(), levels.begin() + 30);
     const double end = 0.5 * (levels[58] + levels[59]);
     char what[160];
-    std::snprintf(what, sizeof what, "PLATE infinite, ERA's cassette: no plunge when a loud tone stops (lowest %.1f dB, %.1f under where it holds)",
+    std::snprintf(what, sizeof what, "PLATE infinite, ERA 0.82's tape compression: no plunge when a loud tone stops (lowest %.1f dB, %.1f under where it holds)",
                   lowest, end - lowest);
     check(end - lowest < 4.0, what);
 }
 
-// ...and with TIME and SIZE still gliding when the flip reaches its silent point: the flip snapped
+// ...and with TIME and SIZE still gliding when the flip reaches its silent point (found with REVERSE,
+// kept for SHIMMER): the flip snapped
 // REVERSE's taps and short reverb to their targets, a jump now that REVERSE runs on (a click
 // 20-35 ms into the fade back in; confirmation soak). Now they glide on, as without a flip.
-void reverseFlipWhileTimeGlidesDoesntClick()
+void thirdAttackFlipWhileTimeGlidesDoesntClick()
 {
-    auto sharpest = [](int from, bool flip) {
+    // SHIMMER plays the forward wet (REVERSE replaced it), so the flip's own restart is heard: a sine
+    // through a freshly restarted PLATE starts with a small edge in NORMAL too (x3.6-4 its steady
+    // sound's sharpest step). The test asks what it was for: the third position adds nothing to a flip.
+    auto sharpestAt = [](int from, bool flip, int attack, double offset) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(from));
         r.e.setParam(ParamId::Decay, 0.7f);
         r.e.setParam(ParamId::Time, 0.4f);
         r.e.setParam(ParamId::Size, 0.3f);
-        r.e.setParam(ParamId::Attack, iv::switchToNormalised(2));
+        r.e.setParam(ParamId::Attack, iv::switchToNormalised(attack));
         r.e.setParam(ParamId::Mix, 1.0f);
         r.e.reset();
-        r.run(4.0, 0.3f, -330.0f);
+        r.run(4.0 + offset, 0.3f, -330.0f);
         if (flip) r.e.setParam(ParamId::Space, iv::switchToNormalised((from + 1) % 3));
         r.e.setParam(ParamId::Time, 0.5f); // both glide on past the flip's silent point (~50 ms)
         r.e.setParam(ParamId::Size, 0.5f);
         r.run(0.045, 0.3f, -330.0f);
         r.clearWatch();
         r.run(0.2, 0.3f, -330.0f);
-        return r.maxD2;
+        return r.worstClick; // each sample's sharpness against its own recent sound's (brightness cancels)
+    };
+    // The restart's own edge depends on where in the waveform the flip lands (x3-11 in NORMAL), so
+    // each mode's worst over a few flip moments.
+    auto sharpest = [&](int from, bool flip, int attack = 2) {
+        float worst = 0.0f;
+        for (double offset : {0.0, 0.0131, 0.0277, 0.0413}) worst = std::fmax(worst, sharpestAt(from, flip, attack, offset));
+        return worst;
     };
     for (int from = 0; from < 3; ++from) {
-        const float withFlip = sharpest(from, true), without = sharpest(from, false);
+        const float withFlip = sharpest(from, true), normal = sharpest(from, true, 0);
         char what[180];
         std::snprintf(what, sizeof what,
-                      "REVERSE: a flip %d->%d while TIME and SIZE glide adds no click (sharpest step x%.1f the same glide's without a flip)",
-                      from, (from + 1) % 3, withFlip / without);
-        check(withFlip < 1.5f * without, what);
+                      "SHIMMER: a flip %d->%d while TIME and SIZE glide adds no click (worst x%.1f, NORMAL's x%.1f)",
+                      from, (from + 1) % 3, withFlip, normal);
+        check(withFlip < 1.5f * normal, what);
     }
 }
 
 } // namespace
+
+// The owner's "slight burst of noise" (v1.0.49, rack): switching ONSET (SHIMMER to BLOOM) with DECAY,
+// SIZE and TIME past noon. BLOOM's attack is TIME, the others' MASSIVE's own or none, so the swell's
+// attack glided across the change and its taps swept over seconds of their line in ~0.3 s, re-set once
+// a chunk: scrambled, sped-up sound into the tank, hiss in the tail's highs for its whole length (into
+// or out of BLOOM, x18-53 the steady sound's sharpest step here). Now the swell dips out, restarts in
+// its new voicing and dips back in. And a SPACE flip (HALL to and from MASSIVE) faded the tank's input
+// after the input diffusers and the swell, so the predelay's jump at the silent point (and the swell's
+// cleared line under an unfaded input) rang into the new space as clicks (HALL to MASSIVE x2.2 here);
+// now the input side fades too. Both while a chord plays, after the change's own dip.
+void onsetAndSpaceChangesDontBurst()
+{
+    // The sharpest step over the 3 s after a change at 4 s (after its own 0.15 s dip or fade), against the
+    // sharpest of the two settings' own over the same 3 s unchanged (SHIMMER's octave is sharper).
+    auto worst = [](int space, int onset, int toSpace, int toOnset) {
+        Rig r(48000.0f, 48);
+        r.e.setParam(ParamId::Space, iv::switchToNormalised(space));
+        r.e.setParam(ParamId::Decay, 0.75f);
+        r.e.setParam(ParamId::Size, 0.75f);
+        r.e.setParam(ParamId::Time, 0.75f);
+        r.e.setParam(ParamId::Attack, iv::switchToNormalised(onset));
+        r.e.setParam(ParamId::Mix, 1.0f);
+        r.e.reset();
+        r.run(4.0, 0.3f, -220.0f);
+        r.e.setParam(ParamId::Space, iv::switchToNormalised(toSpace));
+        r.e.setParam(ParamId::Attack, iv::switchToNormalised(toOnset));
+        r.run(0.15, 0.3f, -220.0f);
+        r.clearWatch();
+        r.run(3.0, 0.3f, -220.0f);
+        return r.maxD2;
+    };
+    char what[160];
+    for (int sp = 1; sp < 3; ++sp)
+        for (int from = 0; from < 3; ++from)
+            for (int to = 0; to < 3; ++to) {
+                if (to == from) continue;
+                const float steady = std::max(worst(sp, from, sp, from), worst(sp, to, sp, to));
+                const float x = worst(sp, from, sp, to) / steady;
+                std::snprintf(what, sizeof what, "%s: ONSET %d->%d while playing doesn't burst (sharpest step x%.2f the steady sound's)",
+                              sp == 1 ? "HALL" : "MASSIVE", from, to, x);
+                check(x < 1.5f, what);
+            }
+    for (int from = 1; from < 3; ++from) {
+        const float steady = std::max(worst(from, 0, from, 0), worst(3 - from, 0, 3 - from, 0));
+        const float x = worst(from, 0, 3 - from, 0) / steady;
+        std::snprintf(what, sizeof what, "a flip %s while playing doesn't burst (sharpest step x%.2f the steady sound's)",
+                      from == 1 ? "HALL->MASSIVE" : "MASSIVE->HALL", x);
+        check(x < 1.5f, what);
+    }
+}
 
 int main()
 {
@@ -464,12 +532,13 @@ int main()
     freezeInsideAFlipKeepsThePad();
     smallHallSizeJumpsDontClick();
     infiniteTailDoesntPlungeWhenTheInputStops();
-    reverseFlipWhilePlayingDoesntClickLater();
-    reverseComingInDoesntClick();
+    thirdAttackFlipWhilePlayingDoesntClickLater();
+    thirdAttackComingInDoesntClick();
     paintReleaseDoesntBurst();
     padFrozenFromADyingTailHolds();
     cassetteCompressionDoesntPlunge();
-    reverseFlipWhileTimeGlidesDoesntClick();
+    thirdAttackFlipWhileTimeGlidesDoesntClick();
+    onsetAndSpaceChangesDontBurst();
     std::printf("%s\n", failures ? "SOME TESTS FAILED" : "ALL TESTS PASSED");
     return failures ? 1 : 0;
 }

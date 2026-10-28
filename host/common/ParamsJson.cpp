@@ -20,6 +20,8 @@ bool switchPosition(ParamId id, const std::string& label, int& position)
     for (int pos = 0; pos < 3; ++pos) {
         if (s.choices[pos] && label == s.choices[pos]) { position = pos; return true; }
     }
+    // Earlier labels still read (presets, sweeps and scripts written before the owner's names, 27 Oct 2026).
+    if (id == ParamId::Attack && label == "NORMAL") { position = 0; return true; }
     return false;
 }
 

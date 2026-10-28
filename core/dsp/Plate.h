@@ -102,6 +102,7 @@ private:
         float     y1 = 0, y2 = 0, x1 = 0, x2 = 0;               // absorbent filter states
         float     i1 = 0, i2 = 0, i3 = 0, i4 = 0;               // allpass-interpolation states
         Absorb    loss1{1, 0}, loss2{1, 0};
+        AbsorbMemo memo1, memo2; // loss1 / loss2, worked out again only when their inputs change
         float     lfoPhase = 0, lfoRate = 0, floorA = 0, floorB = 0, floorTarget = 0, floorCountdown = 0;
         float     modNow = 0, modStep = 0; // ap1's extra delay, samples
         // d1 and d2's own slow wander (setLongDelayMod), samples.

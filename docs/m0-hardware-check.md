@@ -1,6 +1,6 @@
 # M0 hardware check
 
-Test firmware: **`firmware/build/immensio_versio_m0test.bin`** (`make -C firmware MODE=m0test`). It passes audio straight through and shows every control on the LEDs and over USB serial. Criteria: SPEC §7 M0.
+Test firmware: **`firmware/build/sublustris_versio_m0test.bin`** (`make -C firmware MODE=m0test`). It passes audio straight through and shows every control on the LEDs and over USB serial. Criteria: SPEC §7 M0.
 
 **Shorter than Resilio's.** Your module already passed Resilio's full M0 check (29 Sep 2026): the pot wiring (P1 = K0, P2 = K4, P3 = K2, P4 = K1, P5 = K5, P6 = K3, P7 = K6), switch direction (left reads 0), CV at 0 / 5 V, the gate, and the analog path (polarity-inverted, +1.17 dB hot, undone by `kOutputTrim` in release). Those are hardware facts and carry over. This check confirms that Immensio's firmware loads and that every control lands where ADR 0017 puts it.
 
@@ -8,7 +8,7 @@ Test firmware: **`firmware/build/immensio_versio_m0test.bin`** (`make -C firmwar
 
 ## Session 1: USB only (rack power unplugged)
 
-1. Flash `immensio_versio_m0test.bin` with NE Firmware Swap → **Select Custom File**.
+1. Flash `sublustris_versio_m0test.bin` with NE Firmware Swap → **Select Custom File**.
 2. **Boot pattern:** the four LEDs step through **blue, violet, blue, white** for about half a second. This is not Resilio's red/green/blue/white.
 3. Serial monitor:
    ```bash
@@ -37,4 +37,4 @@ LED key (pots in panel order, ADR 0017):
 9. **Gate:** a clock into Gate in → LED_3 red on every pulse. **Button:** LED_3 white while held.
 10. **Passthrough** (quick listen is enough; Resilio already measured the path): play `test_audio/stimulus/04_skank.wav` through. Both outputs should sound like the input, and In L alone should come out of both outputs.
 
-Tell me the results and I'll tick the M0 boxes. After this, flash `immensio_versio.bin` (release) only when there's DSP to play. At M0 it's a passthrough with meters.
+Tell me the results and I'll tick the M0 boxes. After this, flash `sublustris_versio.bin` (release) only when there's DSP to play. At M0 it's a passthrough with meters.

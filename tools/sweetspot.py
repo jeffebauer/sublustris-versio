@@ -127,7 +127,7 @@ def main():
         stimulus(stim)
         for space in ("PLATE", "HALL", "MASSIVE"):
             jobs = [(knob, knob, [] if knob == "era" else ["--set", "era=0"]) for knob in KNOBS]
-            jobs += [(f"time ({a})", "time", ["--set", "era=0", "--set", f"attack={a}"]) for a in ("NORMAL", "BLOOM", "REVERSE")]
+            jobs += [(f"time ({a})", "time", ["--set", "era=0", "--set", f"attack={a}"]) for a in ("NORMAL", "BLOOM", "SHIMMER")]
             for label, knob, fixed in jobs:
                 if only is not None and f"{space}:{label}" not in only:
                     continue

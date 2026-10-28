@@ -1,6 +1,6 @@
 // M1: the FDN Hall (SPEC §4.3, §7 M1). Stability at every DECAY × SIZE ×
 // TONE corner, T60 against the DECAY mapping, no metallic ringing, SIZE
-// moves glide (at most a semitone of bend, no clicks), determinism, the
+// and TIME move by crossfade (ADR 0025: pitch kept, no sweep, no clicks), determinism, the
 // same tail at 44.1 / 48 / 96 kHz, and true stereo in (ADR 0013).
 
 #include "Metrics.h"
@@ -8,6 +8,7 @@
 #include "dsp/Engine.h"
 #include "params/Mappings.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -50,6 +51,7 @@ Stereo render(const std::vector<float>& in, const Setting& s, float sampleRate =
     e.setParam(iv::ParamId::Tone, s.tone);
     e.setParam(iv::ParamId::Mix, s.mix);
     e.setParam(iv::ParamId::Time, 0.0f);
+    e.setParam(iv::ParamId::Era, 0.0f); // the Neve alone (as ERA's default was until v1.0.42): the wear's tape compression takes more loss on a hot tank
     e.reset();
     Stereo out{std::vector<float>(in.size()), std::vector<float>(in.size())};
     const std::vector<float> silent(in.size(), 0.0f);
@@ -169,43 +171,163 @@ void notMetallic()
             }
 }
 
-// SIZE glides: a full sweep on a held sound has no clicks, and no line
-// ever changes length faster than a semitone of bend.
-void sizeSweepGlides()
+// Runs an engine on in, with a parameter moved at sample points (key, sample, value), 48 at a time.
+struct Move {
+    iv::ParamId id;
+    size_t      at;
+    float       value;
+};
+Stereo renderMoves(const std::vector<float>& in, int space, float decay, float size, int attack, const std::vector<Move>& moves)
 {
-    const float sr = 48000.0f;
-    const size_t n = size_t(8.0f * sr);
-    std::vector<float> in(n), ramp(n);
-    for (size_t i = 0; i < n; ++i) {
-        in[i] = 0.2f * std::sin(2.0f * 3.14159265f * 220.0f * float(i) / sr) + 0.02f * noise();
-        const float t = float(i) / sr;
-        ramp[i] = t < 1.0f ? 0.0f : (t < 3.0f ? (t - 1.0f) * 0.5f : (t < 5.0f ? 1.0f - (t - 3.0f) * 0.5f : 0.0f));
-    }
-    const Stereo out = render(in, {0.6f, 0.0f, 0.5f, 1.0f}, sr, false, &ramp);
-    const auto m = iv::metrics::compute({out.l, out.r}, sr);
-    check(finite(out) && m.clickCount == 0, "SIZE swept 0 -> 1 -> 0 on a held tone: no clicks (" +
-                                                std::to_string(m.clickCount) + ")");
-
     iv::Engine e;
-    e.prepare(sr, 48);
-    e.setParam(iv::ParamId::Size, 0.0f);
+    e.prepare(48000.0f, 48);
+    e.setParam(iv::ParamId::Space, iv::switchToNormalised(space));
+    e.setParam(iv::ParamId::Attack, iv::switchToNormalised(attack));
+    e.setParam(iv::ParamId::Decay, decay);
+    e.setParam(iv::ParamId::Size, size);
+    e.setParam(iv::ParamId::Time, 0.1f);
+    e.setParam(iv::ParamId::Mix, 1.0f);
     e.reset();
-    std::vector<float> z(48, 0.0f), ol(48), orr(48);
-    e.setParam(iv::ParamId::Size, 1.0f);
-    float worst = 0.0f;
-    float prev[iv::dsp::Fdn::kN];
-    for (int i = 0; i < iv::dsp::Fdn::kN; ++i) prev[i] = e.fdn().lineSeconds(i);
-    for (int b = 0; b < 2000; ++b) {
-        e.process(z.data(), z.data(), ol.data(), orr.data(), 48);
-        for (int i = 0; i < iv::dsp::Fdn::kN; ++i) {
-            const float now = e.fdn().lineSeconds(i);
-            worst = std::fmax(worst, std::fabs(now - prev[i]) / (48.0f / sr)); // seconds of length per second
-            prev[i] = now;
+    Stereo out{std::vector<float>(in.size()), std::vector<float>(in.size())};
+    size_t next = 0;
+    for (size_t pos = 0; pos < in.size(); pos += 48) {
+        while (next < moves.size() && moves[next].at <= pos) {
+            e.setParam(moves[next].id, moves[next].value);
+            ++next;
+        }
+        const int n = int(std::min<size_t>(48, in.size() - pos));
+        e.process(in.data() + pos, in.data() + pos, out.l.data() + pos, out.r.data() + pos, n);
+    }
+    return out;
+}
+
+// The power left after a narrow notch at f (Q 30), against all of it, in dB: how much isn't the note.
+double offNoteDb(const std::vector<float>& x, double f, size_t from, size_t to)
+{
+    const double w = 2.0 * 3.141592653589793 * f / 48000.0, al = std::sin(w) / 60.0, a0 = 1.0 + al;
+    const double b0 = 1.0 / a0, b1 = -2.0 * std::cos(w) / a0, a1 = b1, a2 = (1.0 - al) / a0;
+    double x1 = 0, x2 = 0, y1 = 0, y2 = 0, all = 0, rest = 0;
+    for (size_t i = 0; i < to && i < x.size(); ++i) {
+        const double y = b0 * x[i] + b1 * x1 + b0 * x2 - a1 * y1 - a2 * y2;
+        x2 = x1; x1 = x[i]; y2 = y1; y1 = y;
+        if (i >= from) {
+            all += double(x[i]) * x[i];
+            rest += y * y;
         }
     }
-    char msg[160];
-    std::snprintf(msg, sizeof msg, "SIZE jump glides: fastest length change %.4f s/s (<= one semitone, 0.0595)", worst);
-    check(worst <= iv::voicing::kSizeSlewPerSecond + 1e-4f, msg);
+    return 10.0 * std::log10(rest / (all + 1e-30) + 1e-30);
+}
+
+// The strongest frequency within +-2 semitones of f over [from, to) (Goertzel, 0.25 Hz steps).
+double peakHz(const std::vector<float>& x, double f, size_t from, size_t to)
+{
+    double best = 0.0, bestHz = f;
+    for (double h = f * 0.89; h <= f * 1.12; h += 0.25) {
+        const double c = 2.0 * std::cos(2.0 * 3.141592653589793 * h / 48000.0);
+        double s1 = 0, s2 = 0;
+        for (size_t i = from; i < to && i < x.size(); ++i) {
+            const double s0 = x[i] + c * s1 - s2;
+            s2 = s1;
+            s1 = s0;
+        }
+        const double p = s1 * s1 + s2 * s2 - c * s1 * s2;
+        if (p > best) {
+            best = p;
+            bestHz = h;
+        }
+    }
+    return bestHz;
+}
+
+// SIZE and TIME move by crossfade (ADR 0025): a glide in a loop retuned the whole tail by the length
+// ratio and swept everything passing through. The tail keeps its pitch through a SIZE move; quick SIZE
+// and TIME moves on a held note add nothing but the note; no clicks; an infinite tail holds through
+// minutes of SIZE sweeps; and a jump doesn't step the tail's level off its own fade.
+void sizeAndTimeCrossfade()
+{
+    const float sr = 48000.0f;
+    {   // a full SIZE sweep on a held tone: no clicks
+        const size_t n = size_t(8.0f * sr);
+        std::vector<float> in(n), ramp(n);
+        for (size_t i = 0; i < n; ++i) {
+            in[i] = 0.2f * std::sin(2.0f * 3.14159265f * 220.0f * float(i) / sr) + 0.02f * noise();
+            const float t = float(i) / sr;
+            ramp[i] = t < 1.0f ? 0.0f : (t < 3.0f ? (t - 1.0f) * 0.5f : (t < 5.0f ? 1.0f - (t - 3.0f) * 0.5f : 0.0f));
+        }
+        const Stereo out = render(in, {0.6f, 0.0f, 0.5f, 1.0f}, sr, false, &ramp);
+        const auto m = iv::metrics::compute({out.l, out.r}, sr);
+        check(finite(out) && m.clickCount == 0, "SIZE swept 0 -> 1 -> 0 on a held tone: no clicks (" + std::to_string(m.clickCount) + ")");
+    }
+    {   // MASSIVE's tail keeps its pitch through SIZE 0.3 -> 0.8 (a fast glide left it an octave flat)
+        const size_t n = size_t(12.0f * sr);
+        std::vector<float> in(n, 0.0f);
+        for (size_t i = 0; i < size_t(5.0f * sr); ++i) in[i] = 0.2f * std::sin(2.0f * 3.14159265f * 440.0f * float(i) / sr);
+        const Stereo out = renderMoves(in, 2, 0.6f, 0.3f, 0, {{iv::ParamId::Size, size_t(6.0f * sr), 0.8f}});
+        const double hz = peakHz(out.l, 440.0, size_t(8.0f * sr), size_t(11.0f * sr));
+        const double cents = 1200.0 * std::log2(hz / 440.0);
+        check(std::fabs(cents) < 15.0, "MASSIVE's tail keeps its pitch through a SIZE move (" + std::to_string(int(cents)) + " cents)");
+    }
+    for (int what = 0; what < 2; ++what) { // quick moves on a held note add nothing but the note
+        const size_t n = size_t(9.0f * sr);
+        std::vector<float> in(n);
+        for (size_t i = 0; i < n; ++i) in[i] = 0.2f * std::sin(2.0f * 3.14159265f * 440.0f * float(i) / sr);
+        std::vector<Move> moves;
+        const iv::ParamId id = what == 0 ? iv::ParamId::Size : iv::ParamId::Time;
+        for (int k = 0; k < 5; ++k) moves.push_back({id, size_t((6.0f + 0.3f * float(k)) * sr), k % 2 ? 0.1f : 0.9f});
+        const Stereo out = renderMoves(in, 1, 0.5f, 0.1f, 0, moves);
+        const double still = offNoteDb(out.l, 440.0, size_t(3.0f * sr), size_t(6.0f * sr));
+        const double moving = offNoteDb(out.l, 440.0, size_t(6.0f * sr), size_t(8.5f * sr));
+        const auto m = iv::metrics::compute({out.l, out.r}, sr);
+        char msg[200];
+        std::snprintf(msg, sizeof msg, "HALL, %s flicked on a held note: off the note %.1f dB while moving (%.1f still), no clicks (%d)",
+                      what == 0 ? "SIZE" : "TIME", moving, still, m.clickCount);
+        // Sliding: -1 dB. A crossfade between two reads of one held sine dips where they're out of phase,
+        // so SIZE keeps a little more (-17 dB, back-to-back fades) than TIME's (-22, outside the loop).
+        check(moving < still + 8.0 && moving < -15.0 && m.clickCount == 0, msg);
+    }
+    {   // an infinite MASSIVE holds through a minute of SIZE moves (back-to-back crossfades drained 45 dB;
+        // equal-power fades grew the lows to a DC offset). Each SIZE has its own level (a bigger room is
+        // louder), so: steady between moves, and back at SIZE 0.5 where it began.
+        const size_t n = size_t(76.0f * sr);
+        std::vector<float> in(n, 0.0f);
+        for (size_t i = 0; i < size_t(3.0f * sr); ++i) in[i] = 0.25f * noise();
+        std::vector<Move> moves;
+        const float sizes[] = {0.2f, 0.9f, 0.4f, 1.0f, 0.0f, 0.7f, 0.3f, 0.8f, 0.5f};
+        for (int k = 0; k < 9; ++k) moves.push_back({iv::ParamId::Size, size_t((10.0f + 7.0f * float(k)) * sr), sizes[k]});
+        const Stereo out = renderMoves(in, 2, 0.95f, 0.5f, 0, moves);
+        double drift = 0.0;
+        for (int k = 0; k < 9; ++k) { // 1.5 s after each move against 5.5 s after
+            const double t = 10.0 + 7.0 * k;
+            drift = std::fmax(drift, std::fabs(rmsDb(out.l, size_t((t + 5.0) * sr), size_t((t + 6.0) * sr))
+                                               - rmsDb(out.l, size_t((t + 1.5) * sr), size_t((t + 2.5) * sr))));
+        }
+        const double back = rmsDb(out.l, size_t(73.0 * sr), size_t(75.0 * sr)) - rmsDb(out.l, size_t(7.0 * sr), size_t(9.0 * sr));
+        char msg[200];
+        std::snprintf(msg, sizeof msg, "an infinite MASSIVE holds through SIZE moves (drift between moves %.1f dB, back at the start %+.1f dB)", drift, back);
+        check(finite(out) && drift < 1.5 && std::fabs(back) < 2.0, msg);
+    }
+    // A SIZE jump in a tail goes from the old room's fade to the new one's (HALL's decay and every
+    // room's level follow SIZE) without dipping under or rising over both (a read further back is louder;
+    // small HALLs' diffusion joining in the allpass's own loop passed 14 % mid-fade).
+    const float jumps[][2] = {{0.3f, 0.8f}, {0.8f, 0.3f}, {1.0f, 0.0f}, {0.0f, 1.0f}};
+    for (int space : {1, 2})
+        for (const auto& j : jumps) {
+            const size_t n = size_t(8.0f * sr);
+            std::vector<float> in(n, 0.0f);
+            for (size_t i = 0; i < size_t(3.0f * sr); ++i) in[i] = 0.25f * noise();
+            const Stereo out = renderMoves(in, space, 0.5f, j[0], 0, {{iv::ParamId::Size, size_t(5.0f * sr), j[1]}});
+            auto db = [&](double t) { return rmsDb(out.l, size_t(t * sr), size_t((t + 0.1) * sr)); };
+            const double s0 = (db(4.8) - db(3.8)) / 1.0, s1 = (db(6.8) - db(5.8)) / 1.0; // dB per second, each room
+            double worst = 0.0;
+            for (double t = 4.9; t < 5.8; t += 0.05) {
+                const double a = db(4.8) + s0 * (t - 4.8), b = db(5.8) + s1 * (t - 5.8), x = db(t);
+                worst = std::fmax(worst, std::fmax(std::fmin(a, b) - x, x - std::fmax(a, b)));
+            }
+            char msg[160];
+            std::snprintf(msg, sizeof msg, "%s: a SIZE jump %.1f->%.1f in a tail stays between the two rooms' fades (%.1f dB out, within 3)",
+                          space == 1 ? "HALL" : "MASSIVE", j[0], j[1], worst);
+            check(worst < 3.0, msg);
+        }
 }
 
 void deterministic()
@@ -259,7 +381,7 @@ int main()
     stabilityGrid();
     t60FollowsDecay();
     notMetallic();
-    sizeSweepGlides();
+    sizeAndTimeCrossfade();
     deterministic();
     sampleRates();
     stereo();

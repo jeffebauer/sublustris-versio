@@ -4,7 +4,7 @@
 // metallic check; all three SPACEs matched in loudness; a frozen pad holds
 // its level for 5 minutes in every SPACE; painting adds a quiet layer to the
 // pad, boundedly; unfreeze and freeze are click-free; the twin answers SIZE
-// and DECAY while frozen and fades back out to the pad; REVERSE rests while
+// and DECAY while frozen and fades back out to the pad; SHIMMER rests while
 // frozen.
 
 #include "Metrics.h"
@@ -52,6 +52,7 @@ struct Setting {
     float decay = 0.5f, size = 0.5f, mix = 1.0f, time = 0.0f;
     float mod = 1.0f;  // the tanks' own modulation (Engine::setModulationScale)
     float era = -1.0f; // < 0: ERA's default
+    bool  layerSolo = false; // the twin alone (Engine::setLayerSoloPrototype: the pad out of the wet)
 };
 
 // knobAt: optional {seconds, SIZE, DECAY} change while running.
@@ -73,6 +74,7 @@ Stereo render(const std::vector<float>& in, const Setting& s, const std::vector<
     e.setParam(iv::ParamId::Time, s.time);
     if (s.era >= 0.0f) e.setParam(iv::ParamId::Era, s.era);
     e.setModulationScale(s.mod);
+    e.setLayerSoloPrototype(s.layerSolo);
     e.reset();
     Stereo out{std::vector<float>(in.size()), std::vector<float>(in.size())};
     size_t pi = 0, mi = 0;
@@ -175,6 +177,7 @@ void plate()
         Setting s;
         s.space = 0;
         s.decay = d;
+        s.era = 0.0f; // the Neve alone: ERA's wear (v1.0.42) has the tape's in-loop compression, more loss on a hot tank
         const double got = lowBandT60(render(in, s));
         char msg[160];
         std::snprintf(msg, sizeof msg, "PLATE T60 at DECAY %.1f: %.2f s, mapping %.2f s (within 10%%)", d, got, want);
@@ -234,6 +237,18 @@ void plate()
     check(bad == 0, "PLATE stable at 18 DECAY x SIZE x ATTACK corners");
 }
 
+// MASSIVE's highs ring as long as its body (v1.0.31, ADR 0022), so on these white-noise bursts (mostly
+// treble) it reads 3.8 dB louder than before; on music (LUFS, six materials, DECAY 0.33 and 0.5) it
+// rose 0-0.9 dB and stays within ~0.2 dB of HALL on average. The SPACEs are matched on music
+// (ADR 0020); this check takes the white-noise offset off MASSIVE.
+constexpr double kMassiveWhiteNoiseOffsetDb = 3.8;
+// v1.0.35 (ADR 0026): HALL's and MASSIVE's tanks run at 24 kHz, so white noise (mostly treble) loses its
+// top octave there: 2.7 dB (HALL) and 1.9 dB (MASSIVE) quieter on these bursts, 0.2-0.9 dB on music.
+constexpr double kHalfRateWhiteNoiseOffsetDb = 2.3;
+// v1.0.53 (ADR 0034): PLATE's and HALL's longer tails are trimmed to their old level while playing (music,
+// renders/decay_range: within 0.45 dB on the chord, -0.66..+0.13 dB on pad and keys at DECAY noon), which leaves
+// these sparse white-noise bursts 0.5-1.2 dB quieter at noon than v1.0.52 (-32.3 / -30.3 / -31.3 / -30.6 dB then).
+constexpr double kDecayRangeWhiteNoiseOffsetDb = 0.8;
 // SPEC §7 M5: PLATE, HALL and MASSIVE loudness within ±1.5 dB.
 void loudness()
 {
@@ -247,7 +262,8 @@ void loudness()
             Setting s;
             s.space = space;
             s.size = z;
-            const double db = rmsDb(render(in, s), 0.0, 12.0);
+            const double db = rmsDb(render(in, s), 0.0, 12.0) - (space == 2 ? kMassiveWhiteNoiseOffsetDb : 0.0)
+                            + (space != 0 ? kHalfRateWhiteNoiseOffsetDb : 0.0) + (space != 2 ? kDecayRangeWhiteNoiseOffsetDb : 0.0);
             lo = std::fmin(lo, db);
             hi = std::fmax(hi, db);
             char buf[40];
@@ -314,17 +330,30 @@ void twin()
     check(early > -60.0 && longTail > shortTail + 6.0 && gone < early - 40.0, msg);
 }
 
+// Paint (ADR 0010): holding while frozen copies a little of the twin into the pad, which grows while held, at
+// most kPaintHeadroomDb (1.5 dB) over its frozen level, and stays after. The pad is judged alone, before and after:
+// noise builds it (0-3 s, frozen at 2.5 s), silence lets the input's tail go (to 20 s), then noise plays over it
+// (20-45 s, painted 30-45 s) and stops, and the twin (from v1.0.43 HALL's and MASSIVE's small room) has gone by
+// 55 s. Every SPACE fed loud enough (HALL, MASSIVE 0.9; PLATE 0.5, 0.35 until the floor rose to -21 dBFS in
+// v1.0.51) that its pad freezes above the floor: below it painting may grow a pad to the floor + 1.5 dB by design.
 void paint()
 {
-    std::vector<float> in(size_t(60.0f * kSr));
-    for (auto& x : in) x = 0.25f * noise();
-    Setting s;
-    const Stereo out = render(in, s, {{1.0, true}, {1.1, false}, {30.0, true}, {45.0, false}});
-    const double before = rmsDb(out, 26.0, 29.0), during = rmsDb(out, 40.0, 44.0), after = rmsDb(out, 55.0, 59.0);
-    char msg[200];
-    std::snprintf(msg, sizeof msg, "paint: a quiet layer grows into the pad while held (%.1f -> %.1f dBFS, more than +0.3 dB, "
-                                   "at most +1.5 dB + the twin: never dominant) and stays after (%.1f)", before, during, after);
-    check(finite(out) && during > before + 0.3 && during < before + 3.0 && after > before, msg);
+    std::vector<float> in(size_t(60.0f * kSr), 0.0f);
+    for (int space : {1, 2, 0}) {
+        const float amp = space == 0 ? 0.5f : 0.9f;
+        for (size_t i = 0; i < in.size(); ++i) {
+            const double t = double(i) / kSr;
+            in[i] = (t < 3.0 || (t >= 20.0 && t < 45.0)) ? amp * noise() : 0.0f;
+        }
+        Setting s;
+        s.space = space;
+        const Stereo out = render(in, s, {{2.5, true}, {2.6, false}, {30.0, true}, {45.0, false}});
+        const double before = rmsDb(out, 14.0, 19.0), during = rmsDb(out, 40.0, 44.0), after = rmsDb(out, 55.0, 59.0);
+        char msg[240];
+        std::snprintf(msg, sizeof msg, "SPACE %d paint: the pad alone grows (%.1f -> %.1f dBFS: more than +0.1, at most +1.5 dB) "
+                                       "and stays; while painting, twin and all, %.1f", space, before, after, during);
+        check(finite(out) && after > before + 0.1 && after < before + 1.5 + 0.1, msg); // HALL: the room paints gently (+0.2 dB)
+    }
 }
 
 void clickFree()
@@ -344,8 +373,9 @@ void clickFree()
     }
 }
 
-// ADR 0015: REVERSE rests while frozen (a still pad reversed is the same pad).
-void reverseRestsWhileFrozen()
+// ADR 0015, 0024: ATTACK's third position rests while frozen (REVERSE then, SHIMMER now): the pad
+// stays the still pad, no octave piling onto it.
+void shimmerRestsWhileFrozen()
 {
     std::vector<float> in(size_t(10.0f * kSr), 0.0f);
     for (size_t i = 0; i < size_t(2.0f * kSr); ++i) in[i] = 0.25f * noise();
@@ -353,15 +383,14 @@ void reverseRestsWhileFrozen()
     s.attack = 2;
     s.time = 0.4f;
     const Stereo out = render(in, s, {{2.0, true}, {2.1, false}});
-    // A pad played forwards is steady; one still reversing would cut out at
-    // every segment edge. Steady = small spread of 50 ms levels.
+    // A still pad is steady. Steady = small spread of 50 ms levels.
     double lo = 1e9, hi = -1e9;
     for (double t = 5.0; t < 9.0; t += 0.05) {
         const double db = rmsDb(out, t, t + 0.05);
         lo = std::fmin(lo, db);
         hi = std::fmax(hi, db);
     }
-    check(hi - lo < 6.0, "REVERSE rests while frozen: the pad is steady (50 ms levels within " + std::to_string(hi - lo) + " dB)");
+    check(hi - lo < 6.0, "SHIMMER rests while frozen: the pad is steady (50 ms levels within " + std::to_string(hi - lo) + " dB)");
 }
 
 } // namespace
@@ -416,7 +445,7 @@ int main()
     twin();
     paint();
     clickFree();
-    reverseRestsWhileFrozen();
+    shimmerRestsWhileFrozen();
     notMetallicUnmodulated();
     std::printf("%d failure(s)\n", failures);
     return failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;

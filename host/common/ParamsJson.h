@@ -14,7 +14,7 @@ namespace iv::paramsjson {
 bool findParamId(const std::string& key, ParamId& id);
 
 // A Switch3 label (SPACE PLATE / HALL / MASSIVE, ATTACK NORMAL / BLOOM /
-// REVERSE) -> its position (0, 1, 2). Returns false for anything else.
+// SHIMMER) -> its position (0, 1, 2). Returns false for anything else.
 bool switchPosition(ParamId id, const std::string& label, int& position);
 
 bool applyValue(Engine& engine, ParamId id, const json::Value& val, std::string& error);

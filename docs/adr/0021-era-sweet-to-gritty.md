@@ -1,6 +1,6 @@
 # 0021 — ERA runs from sweet to gritty: five eras, each on its own, over the Neve
 
-**Status:** Accepted, 25 Oct 2026 (owner's picks on `renders/era_discrete`, `era_v2`, `era_v2b`, `era_v2c`). SPEC v1.0.30. Supersedes ADR 0003 (stacking, travel weighting) and the μ-law parts of ADR 0004 and ADR 0019.
+**Status:** Superseded by ADR 0027 (26-27 Oct 2026: one wear amount, shown as WEAR). Accepted, 25 Oct 2026 (owner's picks on `renders/era_discrete`, `era_v2`, `era_v2b`, `era_v2c`). SPEC v1.0.30. Supersedes ADR 0003 (stacking, travel weighting) and the μ-law parts of ADR 0004 and ADR 0019.
 
 **Context:**
 - **Stacking hid the eras.** ERA stacked Clean → Neve → Cassette → μ-law → Midiverb (ADR 0003): each era kept the ones before it. Heard on their own (`renders/era_discrete`), the owner chose them that way "hands down" ("MidiVerb sounds beautiful").
@@ -46,3 +46,7 @@
   - ERA on the dry too (ADR 0004 amendment, 24 Oct);
   - stronger stacked stages (superseded; branch `claude/era-strength` deleted, last commit 3608c89);
   - the early sampler, the round-1 and round-2 radios, whistles and polar flutter.
+
+## Amendment, 26 Oct 2026 (v1.0.40): a narrower overlap
+
+The owner heard the tape → radio hand-over as abrupt even with the overlap, and picked between a third (as built), a sixth and a timed 0.75 s crossfade on `renders/era_overlap` after hearing `era_switch` (no overlap, a 50 ms swap): keep a position-based blend (it follows ERA's CV continuously), but narrower: **each era comes in over the first fifth of its stretch** (`kEraFadeShare` 0.2). Two eras' stages now run together over 16 % of the knob instead of 27 %, which also takes CPU off the dearest positions (the cassette with the radio, measured on the module only as single eras so far). The tape's sparkle still fades with the cassette's drive, early in the overlap; if that hand-over still sounds abrupt, the drive's own curve is the next thing to look at.

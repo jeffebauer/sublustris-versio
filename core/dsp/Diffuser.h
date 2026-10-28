@@ -11,9 +11,9 @@ struct Allpass {
     DelayLine line;
     uint32_t  length = 1;
     float     coeff = 0.5f;
-    float     mod = 0.0f; // the PLATE's wandering first stage (v1.0.16, MI idea 2): extra delay in samples, ±
+    float     mod IV_ZI; // the PLATE's wandering first stage (v1.0.16, MI idea 2): extra delay in samples, ±
 
-    bool init(Arena& arena, uint32_t samples, float g)
+    IV_SIZE_OPT bool init(Arena& arena, uint32_t samples, float g)
     {
         length = samples < 1 ? 1 : samples;
         coeff = g;

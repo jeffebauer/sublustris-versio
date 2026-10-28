@@ -19,6 +19,10 @@
 #include "Sweep.h"
 #include "Wav.h"
 #include "dsp/Engine.h"
+#if defined(IV_PROFILE_HOOKS)
+#include "dsp/ProfileHook.h"
+#include <chrono>
+#endif
 
 #include <algorithm>
 #include <cmath>
@@ -40,6 +44,12 @@ void usage(const char* argv0)
         "       %s --sweep sweep.json --out-dir DIR [--set key=value ...]\n"
         "       %s --analyze <in.wav> [--sidecar-out x.json] [--channel L|R|mix]\n",
         argv0, argv0, argv0);
+    std::fprintf(stderr, "keys (--set key=value, 0..1; the panel's name in brackets):");
+    for (const auto& p : iv::kParams) {
+        if (p.kind == iv::ParamKind::Switch3) std::fprintf(stderr, " %s [%s: %s %s %s]", p.key, p.name, p.choices[0], p.choices[1], p.choices[2]);
+        else std::fprintf(stderr, " %s [%s]", p.key, p.name);
+    }
+    std::fprintf(stderr, "\n  (attack=NORMAL still reads as NATURAL)\n");
 }
 
 // Mono downmix used by every analysis metric (sum of channels / channel
@@ -90,7 +100,24 @@ Audio renderWithAutomation(iv::Engine& engine, const Audio& in, int block, const
     if (autom)
         for (const auto& [t, down] : autom->buttonEvents) buttonSamples.emplace_back(size_t(std::lround(t * double(sr))), down);
     size_t nextButton = 0;
-    const int microBlock = autom ? std::min(block, 16) : block;
+    int microBlock = autom ? std::min(block, 16) : block;
+#if defined(IV_PROFILE_HOOKS)
+    // Per-block, per-section timing on the desktop (a build with -DIV_PROFILE_HOOKS only; env
+    // IV_BLOCK_PROFILE=<file.csv>): one row a block, the ns each prof::Section took. Desktop timings are
+    // a relative guide to the module's (which block spikes, and in which section), not its numbers.
+    static FILE* profFile = nullptr;
+    static std::chrono::steady_clock::time_point profLast;
+    static double profNs[iv::prof::kNumSections];
+    if (const char* pf = std::getenv("IV_BLOCK_PROFILE")) {
+        profFile = std::fopen(pf, "w");
+        microBlock = block; // the module's blocks (automation read once a block, as the release reads knobs)
+        iv::prof::markHook = [](int sec) {
+            const auto now = std::chrono::steady_clock::now();
+            profNs[sec] += double(std::chrono::duration_cast<std::chrono::nanoseconds>(now - profLast).count());
+            profLast = now;
+        };
+    }
+#endif
     for (size_t pos = 0; pos < frames; pos += size_t(microBlock)) {
         const int n = int(std::min<size_t>(size_t(microBlock), frames - pos));
         if (autom) {
@@ -108,8 +135,26 @@ Audio renderWithAutomation(iv::Engine& engine, const Audio& in, int block, const
             engine.button(buttonSamples[nextButton].second, int(at - pos));
             ++nextButton;
         }
+#if defined(IV_PROFILE_HOOKS)
+        if (profFile) {
+            for (double& v : profNs) v = 0.0;
+            profLast = std::chrono::steady_clock::now();
+        }
+#endif
         engine.process(srcL.data() + pos, srcR.data() + pos, out.channels[0].data() + pos, dstR + pos, n);
+#if defined(IV_PROFILE_HOOKS)
+        if (profFile) {
+            std::fprintf(profFile, "%zu", pos);
+            for (double v : profNs) std::fprintf(profFile, ",%.0f", v);
+            std::fprintf(profFile, ",%d,%d,%d", iv::prof::xfStarts, iv::prof::xfLineBlocks, iv::prof::xfTanks); // SIZE crossfades
+            iv::prof::xfStarts = iv::prof::xfLineBlocks = iv::prof::xfTanks = 0;
+            std::fprintf(profFile, "\n");
+        }
+#endif
     }
+#if defined(IV_PROFILE_HOOKS)
+    if (profFile) std::fclose(profFile);
+#endif
     return out;
 }
 
@@ -122,9 +167,107 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* hd = std::getenv("IV_HALL_DIFFUSION")) engine.setHallInLoopDiffusion(float(std::atof(hd)));
     if (const char* di = std::getenv("IV_DIFF_INDEPENDENT")) engine.setDiffuserIndependent(std::atoi(di) != 0);
     if (const char* sl = std::getenv("IV_STILL_LOWS")) engine.setStillLows(std::atoi(sl) != 0);
-    if (const char* to = std::getenv("IV_TAPE_OUT")) engine.setTapeOut(std::atoi(to) != 0);
     if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
     if (const char* dm = std::getenv("IV_DECAY_MAKEUP")) engine.setDecayMakeup(float(std::atof(dm)));
+    if (const char* et = std::getenv("IV_FIT_EARLY_TAPS")) engine.setEarlyTapPrototype(std::atoi(et)); // fit_cpu's D (re-prepares)
+    if (const char* ss = std::getenv("IV_SWELL_SEED")) engine.setSwellSeedPrototype(uint32_t(std::strtoul(ss, nullptr, 0))); // swell_seed
+    if (const char* sh = std::getenv("IV_SIZE_HYST")) engine.setSizeHysteresis(float(std::atof(sh))); // overnight review, arch F1
+    if (const char* hp = std::getenv("IV_HALFRATE_PRIME")) engine.setHalfRatePrime(std::atoi(hp) != 0); // overnight review, arch F2
+    if (const char* ts = std::getenv("IV_TWIN_STOP_FAST")) engine.setTwinStopFast(std::atoi(ts) != 0); // overnight review, lit-plate 6
+    // The overnight review's CPU options (26 Oct 2026), each re-preparing the Engine so the layout is
+    // made for it; stderr confirms what was built (a count set after prepare() once mislabelled a page).
+    if (const char* ld = std::getenv("IV_LOW_DECIMATE")) {
+        engine.setLowDecimatePrototype(std::atoi(ld)); // renders/still_lows_rate
+        std::fprintf(stderr, "iv_render: IV_LOW_DECIMATE: still lows' tank at 1/%d (%.0f Hz)\n", engine.lowDecimate(),
+                     double(sampleRate) / engine.lowDecimate());
+    }
+    if (const char* ls = std::getenv("IV_LAYER_SOLO")) { // renders/twin_alternatives: the layer alone
+        engine.setLayerSoloPrototype(std::atoi(ls) != 0);
+        std::fprintf(stderr, "iv_render: IV_LAYER_SOLO: %s\n", std::atoi(ls) ? "the pad out of the wet" : "off");
+    }
+    if (std::getenv("IV_TWIN_ALT") || std::getenv("IV_TWIN_LIGHT")) // the twin prototypes before v1.0.43: the twin tank is gone
+        std::fprintf(stderr, "iv_render: IV_TWIN_ALT / IV_TWIN_LIGHT ignored: HALL's and MASSIVE's twin is the small room (E) since v1.0.43\n");
+    if (std::getenv("IV_TRANSPORT_ALWAYS")) // renders/motion_entry: A (as built) was the pick
+        std::fprintf(stderr, "iv_render: IV_TRANSPORT_ALWAYS ignored: the tape transport comes in on MOTION's left side only (A, as built) since v1.0.46\n");
+    if (std::getenv("IV_ROOM_WANDER")) // renders/room_motion: B is built in since v1.0.47
+        std::fprintf(stderr, "iv_render: IV_ROOM_WANDER ignored: the small room's wander scales with each line's length (B) since v1.0.47\n");
+    if (std::getenv("IV_ROOM_LEVEL")) // renders/room_level: B is built in since v1.0.43
+        std::fprintf(stderr, "iv_render: IV_ROOM_LEVEL ignored: the room's level follows the pad (B) since v1.0.43\n");
+    if (const char* fd = std::getenv("IV_FREEZE_DUCK")) { // renders/freeze_moment: mode[:seconds]
+        const char* colon = std::strchr(fd, ':');
+        engine.setFreezeDuckPrototype(std::atoi(fd), colon ? float(std::atof(colon + 1)) : 0.0f);
+        std::fprintf(stderr, "iv_render: IV_FREEZE_DUCK: %s (0 as built, 1 hold, 2 glide)\n", fd);
+    }
+    if (const char* tg = std::getenv("IV_TWIN_GAIN_DB")) { // renders/twin_louder: dB, or "off"
+        const bool off = std::strcmp(tg, "off") == 0;
+        engine.setTwinGainPrototype(off ? 0.0f : float(std::atof(tg)), off);
+        std::fprintf(stderr, "iv_render: IV_TWIN_GAIN_DB: %s\n", off ? "no twin" : tg);
+    }
+#ifndef IV_FIXED_VOICINGS
+    // renders/level_duck and renders/level_glue's hooks; as built since v1.0.51 (ratio 2, floor -21, release 0.4,
+    // 0.08 after held playing, held playing keeps 40 % of the reduction).
+    if (const char* dr = std::getenv("IV_DUCK_RATIO")) {
+        engine.setDuckRatioPrototype(float(std::atof(dr)));
+        std::fprintf(stderr, "iv_render: IV_DUCK_RATIO: %s:1\n", dr);
+    }
+    if (const char* fl = std::getenv("IV_FLOOR_DB")) {
+        engine.setFloorPrototype(float(std::atof(fl)));
+        std::fprintf(stderr, "iv_render: IV_FLOOR_DB: %s dBFS\n", fl);
+    }
+    if (const char* rl = std::getenv("IV_DUCK_RELEASE")) {
+        engine.setDuckReleasePrototype(float(std::atof(rl)));
+        std::fprintf(stderr, "iv_render: IV_DUCK_RELEASE: %s s\n", rl);
+    }
+    if (const char* ad = std::getenv("IV_DUCK_ADAPTIVE")) { // 0: no faster release after held playing
+        engine.setDuckAdaptivePrototype(float(std::atof(ad)));
+        std::fprintf(stderr, "iv_render: IV_DUCK_ADAPTIVE: %s s after held playing\n", ad);
+    }
+    { // renders/hall_level: HALL's endless tail over the floor, dB (IV_HALL_TAIL_DB; as built 3, v1.0.52) and/or brighter (IV_HALL_TAIL_TILT "low,high" dB)
+        const char* td = std::getenv("IV_HALL_TAIL_DB");
+        const char* tt = std::getenv("IV_HALL_TAIL_TILT");
+        if (td || tt) {
+            float lo = 0.0f, hi = 0.0f;
+            if (tt && std::sscanf(tt, "%f,%f", &lo, &hi) != 2) lo = hi = 0.0f;
+            engine.setHallTailPrototype(td ? float(std::atof(td)) : iv::voicing::kHallTailDb, lo, hi);
+            std::fprintf(stderr, "iv_render: IV_HALL_TAIL: HALL's endless tail %+.2f dB over the floor, tilt lows %+.2f / highs %+.2f dB\n",
+                         td ? std::atof(td) : double(iv::voicing::kHallTailDb), double(lo), double(hi));
+        }
+    }
+    if (const char* sc = std::getenv("IV_DUCK_SUSTAIN_CUT")) { // 0: held playing ducked in full
+        engine.setDuckSustainCutPrototype(float(std::atof(sc)));
+        std::fprintf(stderr, "iv_render: IV_DUCK_SUSTAIN_CUT: %s\n", sc);
+    }
+#endif
+    if (const char* st = std::getenv("IV_SWELL_TAPS")) {
+        engine.setSwellTapsPrototype(std::atoi(st));
+        std::fprintf(stderr, "iv_render: IV_SWELL_TAPS: %d swell points a side\n", engine.swellTaps());
+    }
+    if (const char* st = std::getenv("IV_SIZE_STAGGER")) { // renders/size_stagger
+        engine.setSizeStagger(std::atoi(st));
+        std::fprintf(stderr, "iv_render: IV_SIZE_STAGGER: SIZE crossfades in %d group(s)\n", std::atoi(st) == 1 || std::atoi(st) == 2 || std::atoi(st) == 8 ? std::atoi(st) : 4);
+    }
+    if (std::getenv("IV_ERA_LAYOUT") || std::getenv("IV_ERA_SWITCH") || std::getenv("IV_ERA_FADE_SHARE") || std::getenv("IV_TAPE_OUT")
+        || std::getenv("IV_TAPE_OS")) // the ERA prototypes before v1.0.42: their eras are gone
+        std::fprintf(stderr, "iv_render: IV_ERA_LAYOUT / _SWITCH / _FADE_SHARE, IV_TAPE_OUT / _OS ignored: WEAR (key \"era\") is one wear amount (layout C) since v1.0.42\n");
+    if (std::getenv("IV_DRIFT_GROW") || std::getenv("IV_DRIFT_RATE_GROW") || std::getenv("IV_DRIFT_SINE")
+        || std::getenv("IV_TAPE_TRANSPORT")) // renders/drift_rethink: the picks are built in since v1.0.46, the rest gone
+        std::fprintf(stderr, "iv_render: IV_DRIFT_* / IV_TAPE_TRANSPORT ignored: MOTION's picks (the tape transport with "
+                             "Magneto crinkle and a third of the dips; Wander stronger) are built in since v1.0.46\n");
+    if (std::getenv("IV_TONE_CHAR")) // renders/tone_character: A is built in since v1.0.44, B and C are gone
+        std::fprintf(stderr, "iv_render: IV_TONE_CHAR ignored: TONE's resonant tilt (A) is built in since v1.0.44\n");
+    {   // renders/wear_grit, wear_fizz, wear_saturation: the picks are built in since v1.0.49, the rest gone
+        static const char* const wearHooks[] = {"IV_WEAR_GRIT_START", "IV_WEAR_GRIT_PARTS", "IV_WEAR_CLOCK_LO", "IV_WEAR_HOLD_MAX_DB",
+                                                "IV_WEAR_TAPE_DRIVE", "IV_WEAR_OVERMOD", "IV_WEAR_BREATH_HARM", "IV_WEAR_FIZZ_DB",
+                                                "IV_WEAR_PREFILTER", "IV_WEAR_CLOCK_JITTER"};
+        for (const char* h : wearHooks)
+            if (std::getenv(h))
+                std::fprintf(stderr, "iv_render: %s ignored: WEAR's picks (grit from 0.65, a 28 kHz clock, the hold to +15 dB, "
+                                     "softer saturation: E) are built in since v1.0.49\n", h);
+    }
+    if (const char* sz = std::getenv("IV_SHIMMER_LAZY")) {
+        engine.setShimmerLazyPrototype(std::atoi(sz) != 0);
+        std::fprintf(stderr, "iv_render: IV_SHIMMER_LAZY: shimmer records %s\n", std::atoi(sz) != 0 ? "only in SHIMMER" : "always");
+    }
     if (!presetPath.empty()) {
         iv::json::Value preset;
         if (!iv::json::loadFile(presetPath, preset, error)) return false;
