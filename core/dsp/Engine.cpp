@@ -1101,12 +1101,14 @@ void Engine::process(const float* inL, const float* inR, float* outL, float* out
             float wr = (fr + tr) * flipGain_;
             wl *= eraMakeup_;
             wr *= eraMakeup_;
-            if (transportLive) transport_.process(wl, wr); // MOTION's tape transport (dsp/Transport.h)
-            else transport_.write(wl, wr);
             wetL_[i] = wl;
             wetR_[i] = wr;
             prof::mark(prof::kOutput);
         }
+        // MOTION's tape transport (dsp/Transport.h) over the chunk.
+        if (transportLive) transport_.processBlock(wetL_, wetR_, n);
+        else transport_.writeBlock(wetL_, wetR_, n);
+        prof::mark(prof::kOutput);
         // ERA's wear (dsp/EraTexture.h) over the chunk, between the two halves of the output loop (CPU save 2): the
         // same operations on each sample in the same order.
         if (texOn_) texture_.processBlock(wetL_, wetR_, n);

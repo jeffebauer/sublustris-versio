@@ -208,56 +208,87 @@ public:
     }
 
     bool idle() const { return idle_; }
-    // Out: only the history, so coming back in reads nothing stale.
-    void write(float l, float r)
+    // Out: only the history, so coming back in reads nothing stale (a block of n in place).
+    void writeBlock(const float* l, const float* r, int n)
     {
-        bufL_[w_] = l;
-        bufR_[w_] = r;
-        w_ = (w_ + 1) & (kSize - 1);
+        int w = w_;
+        for (int s = 0; s < n; ++s) {
+            bufL_[w] = l[s];
+            bufR_[w] = r[s];
+            w = (w + 1) & (kSize - 1);
+        }
+        w_ = w;
     }
-    // One sample through, in place; one copy out of line (flash: inlined, it grew Engine::process by 2.5 KB).
-    IV_NOINLINE void process(float& l, float& r)
+    // A block of n samples through, in place; one copy out of line (flash: inlined, it grew Engine::process by
+    // 2.5 KB). A block at a time with its state in registers (CPU save 2, 28 Oct 2026: a call and every member's load
+    // and store a sample, as process() was); each sample's operations in the same order, so the same bits.
+    IV_NOINLINE IV_NO_UNSWITCH void processBlock(float* l, float* r, int n)
     {
-        bufL_[w_] = l;
-        bufR_[w_] = r;
-        delayNow_ += dStep_;
-        gainNow_ += gStep_;
-        lpNow_ += lStep_;
-        // The per-chunk ramps (read point, level, the highs), smoothed at 150 Hz so nothing steps every chunk.
-        // Cubic (Catmull-Rom) read, the same point for both channels.
-        delaySm_ += smooth_ * (delayNow_ - delaySm_);
-        gainSm_ += smooth_ * (gainNow_ - gainSm_);
-        lpSm_ += smooth_ * (lpNow_ - lpSm_);
-        float pos = float(w_) - delaySm_;
-        if (scrapeAmt_ > 0.0f || scrapeNow_ != 0.0f) { // the scrape bed: noise low-passed at ~200 Hz
-            scrapeNow_ += 0.001f * (scrapeAmt_ - scrapeNow_);
-            scrape_ += 0.026f * (uniform() - scrape_);
-            pos += scrapeNow_ * 6.0f * scrape_; // ~±0.4 samples: ~±10 c of roughness around 100-200 Hz at full
-            if (scrapeNow_ < 1e-6f && scrapeAmt_ <= 0.0f) scrapeNow_ = 0.0f;
+        float* const bl = bufL_;
+        float* const br = bufR_;
+        int          w = w_;
+        uint32_t     rng = rng_;
+        const float  dStep = dStep_, gStep = gStep_, lStep = lStep_, sm = smooth_, mStep = mStep_, scrapeAmt = scrapeAmt_;
+        float delayNow = delayNow_, gainNow = gainNow_, lpNow = lpNow_, delaySm = delaySm_, gainSm = gainSm_, lpSm = lpSm_;
+        float scrapeNow = scrapeNow_, scrape = scrape_, lpL = lpL_, lpR = lpR_, mixNow = mixNow_;
+        for (int s = 0; s < n; ++s) {
+            bl[w] = l[s];
+            br[w] = r[s];
+            delayNow += dStep;
+            gainNow += gStep;
+            lpNow += lStep;
+            // The per-chunk ramps (read point, level, the highs), smoothed at 150 Hz so nothing steps every chunk.
+            // Cubic (Catmull-Rom) read, the same point for both channels.
+            delaySm += sm * (delayNow - delaySm);
+            gainSm += sm * (gainNow - gainSm);
+            lpSm += sm * (lpNow - lpSm);
+            float pos = float(w) - delaySm;
+            if (scrapeAmt > 0.0f || scrapeNow != 0.0f) { // the scrape bed: noise low-passed at ~200 Hz
+                scrapeNow += 0.001f * (scrapeAmt - scrapeNow);
+                rng = rng * 1664525u + 1013904223u; // uniform()
+                scrape += 0.026f * (float(int32_t(rng)) * (1.0f / 2147483648.0f) - scrape);
+                pos += scrapeNow * 6.0f * scrape; // ~±0.4 samples: ~±10 c of roughness around 100-200 Hz at full
+                if (scrapeNow < 1e-6f && scrapeAmt <= 0.0f) scrapeNow = 0.0f;
+            }
+            if (pos < 0.0f) pos += float(kSize);
+            const int i1 = int(pos);
+            const float f = pos - float(i1);
+            const int i0 = (i1 - 1) & (kSize - 1), i2 = (i1 + 1) & (kSize - 1), i3 = (i1 + 2) & (kSize - 1);
+            auto cr = [f](float a, float b, float c, float e) {
+                return b + 0.5f * f * (c - a + f * (2.0f * a - 5.0f * b + 4.0f * c - e + f * (3.0f * (b - c) + e - a)));
+            };
+            const float yl = cr(bl[i0], bl[i1], bl[i2], bl[i3]);
+            const float yr = cr(br[i0], br[i1], br[i2], br[i3]);
+            w = (w + 1) & (kSize - 1);
+            // The head's highs: a one-pole low-pass whose coefficient lpSm is 1 (open) to ~0.5 (a dip's ~5 kHz).
+            lpL += lpSm * (yl - lpL);
+            lpR += lpSm * (yr - lpR);
+            const float ol = gainSm * lpL, orr = gainSm * lpR;
+            mixNow += mStep;
+            if (mixNow >= 1.0f) {
+                l[s] = ol;
+                r[s] = orr;
+            } else { // crossing in or out at kMin: a crossfade with the direct wet
+                l[s] += mixNow * (ol - l[s]);
+                r[s] += mixNow * (orr - r[s]);
+            }
         }
-        if (pos < 0.0f) pos += float(kSize);
-        const int i1 = int(pos);
-        const float f = pos - float(i1);
-        const int i0 = (i1 - 1) & (kSize - 1), i2 = (i1 + 1) & (kSize - 1), i3 = (i1 + 2) & (kSize - 1);
-        auto cr = [f](float a, float b, float c, float e) {
-            return b + 0.5f * f * (c - a + f * (2.0f * a - 5.0f * b + 4.0f * c - e + f * (3.0f * (b - c) + e - a)));
-        };
-        const float yl = cr(bufL_[i0], bufL_[i1], bufL_[i2], bufL_[i3]);
-        const float yr = cr(bufR_[i0], bufR_[i1], bufR_[i2], bufR_[i3]);
-        w_ = (w_ + 1) & (kSize - 1);
-        // The head's highs: a one-pole low-pass whose coefficient lpSm_ is 1 (open) to ~0.5 (a dip's ~5 kHz).
-        lpL_ += lpSm_ * (yl - lpL_);
-        lpR_ += lpSm_ * (yr - lpR_);
-        const float ol = gainSm_ * lpL_, orr = gainSm_ * lpR_;
-        mixNow_ += mStep_;
-        if (mixNow_ >= 1.0f) {
-            l = ol;
-            r = orr;
-        } else { // crossing in or out at kMin: a crossfade with the direct wet
-            l += mixNow_ * (ol - l);
-            r += mixNow_ * (orr - r);
-        }
+        w_ = w;
+        rng_ = rng;
+        delayNow_ = delayNow;
+        gainNow_ = gainNow;
+        lpNow_ = lpNow;
+        delaySm_ = delaySm;
+        gainSm_ = gainSm;
+        lpSm_ = lpSm;
+        scrapeNow_ = scrapeNow;
+        scrape_ = scrape;
+        lpL_ = lpL;
+        lpR_ = lpR;
+        mixNow_ = mixNow;
     }
+    // One sample (the tests'): processBlock() of one.
+    void process(float& l, float& r) { processBlock(&l, &r, 1); }
     int crinkles() const { return crinkles_; } // bursts so far (tests)
     int dips() const { return dips_; }         // of them with a dip
     float centre() const { return base_; }     // the read point's centre, samples (tests)
