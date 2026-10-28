@@ -10,6 +10,7 @@
 ### Listen (after your notes)
 
 ### Listen (first time)
+- [ ] **`decay_swell`**: http://192.168.1.30:8766/decay_swell/ (or `/Users/jesse/Documents/Sites/immensio-versio/renders/decay_swell/index.html`). Your note on v1.0.54, MASSIVE and HALL with DECAY turned down from long, playing and on a tail; MIX starts at 50 %, not level-matched (the level over the move is the point). A today: the swell (up to +9 dB in MASSIVE, +4.6 in HALL). B: the loudness make-up shorter tails get may only rise as fast as the old tail dies away, so the level only falls; the cost is that on a tail the sound dies a little slower for a few seconds (up to ~8 s in MASSIVE) while it catches up. B needs ~4-20 B of flash found first.
 
 ### Try in Ableton
 - [ ] **Play the plugin** (Sublustris Versio, AU or VST3; rescan first): v1.0.54, the same sound as the module build. Notes welcome on anything.
@@ -25,7 +26,7 @@
 
 ## Waiting on Claude
 
-- **Your first note on v1.0.54** (28 Oct 2026, a brief listen): "with massive/hall with long decay, moving the decay from large to small can create a swell in amplitude". Being reproduced on the desktop and compared with v1.0.52 (before the new DECAY range); a fix and a short before/after page to follow.
+- **Your first note on v1.0.54** (28 Oct 2026): "with massive/hall with long decay, moving the decay from large to small can create a swell in amplitude". Found, and old (since v1.0.28; v1.0.53 made HALL's a little bigger): shorter DECAYs get a make-up gain so short tails are as loud as long ones, and it came in within 40 ms while the tank still held the long tail, turning that up by as much as ~9 dB until the new tail took over (2-3 s). A fix is on the `decay_swell` page (Listen). Also found: while playing, MASSIVE is ~4 dB louder just before the endless range (DECAY ~2:30-3 o'clock) than at endless, since the ducking and governor fade out there; a slow turn down from endless passes through that bump (+3 dB). A separate question if you hear it.
 - **Your three notes from the v1.0.52 rack test** (28 Oct 2026), all addressed in v1.0.54 (At the rack). (1)-(2) The overloads with SHIMMER + WEAR + MOTION's tape side, and the red on SPACE switches: not new (v1.0.49 measured the same); two rounds of CPU savings, same sound to the bit. Your laps (`docs/research/m3-cpuhunt-*`, `m3-cpusave*`): late blocks in a lap 11,897 → 0; HALL's SIZE sweep 104 → 85 %; switches into MASSIVE 102-106 → 80 %; MASSIVE's SIZE moves 97-99 → 93-95 % (may still flash amber). If MASSIVE still glitches, an optional maths shortcut takes 1.5-4 more points (not the same bits, far below hearing). (3) The noise when TIME moves in HALL BLOOM: the swell's copies glided across the recording; now each crossfades to its new place once TIME rests. Not new either.
 - **Merged into main** (28 Oct 2026, your OK): `claude/combined` through v1.0.54. 22 of 22 tests pass on main; release firmware 112,588 B.
 - **Flash: 52 B left** (release 112,588 B, v1.0.54). Anything new needs bytes found first.
