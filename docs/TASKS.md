@@ -23,7 +23,6 @@ Pick pages from overnight review 2 (ask me to start the page server). Each one a
 
 ### At the rack
 - [ ] **v1.0.55 at the rack** (rack power, USB unplugged): `dist/sublustris_versio-v1.0.55-3eb5e1c-latelight.bin` (or the plain `...-3eb5e1c.bin`). v1.0.54 plus your DECAY-swell pick B. Check: the LEDs look as always, steady, no flicker; SHIMMER sounds normal; SIZE moves in HALL and MASSIVE with SHIMMER, WEAR and MOTION's tape side (no glitches; MASSIVE may flash amber); SPACE switches (no red); TIME moves in HALL BLOOM (no noise); DECAY's new range; turning DECAY down from long (no swell).
-- [ ] **The LEAN file's HASH** (USB power only): flash `dist/sublustris_versio-review2-212b68b-profile-audit-lean.bin`, keep logging, and tell me when a DONE line appears (~5 minutes). Its HASH must read `0x3b18a2ac`, like the first file's. If it does, 2 KB of flash savings are proven the same sound on the module.
 - [ ] **Optional rack boot test** (rack power, USB unplugged): `dist/sublustris_versio-review2-212b68b-lean-audiodirect.bin`. Same sound, 5 KB smaller. Check both outputs at the usual level, left and right not swapped, no hiss, buzz or crackle, knobs working. If it's clean, the flash squeeze is over and the fixes on the pages above can all fit.
 
 ### When convenient
@@ -39,7 +38,8 @@ Pick pages from overnight review 2 (ask me to start the page server). Each one a
   - The rumble: the endless hold's level nudges also tilt the tone, and incoming DC is kept forever: page `review2_endless`.
   - MASSIVE's CPU: ~4.5 more points available, the profile lap confirms.
 
-  The rest of the next steps are in the report's "What I'd do next". Waiting on your listening and the LEAN file's HASH.
+  The rest of the next steps are in the report's "What I'd do next". Waiting on your listening.
+- **LEAN proven on the module** (29 Oct 2026): its HASH matched (`0x3b18a2ac`), and its timing is the same within 0.4 points. The 2,144 B it frees cost nothing; it becomes the default with the merge of `review2/neutral` (Decide).
 - **Your audit lap** (29 Oct 2026, `docs/research/m3-review2-audit-212b68b.log` on `review/overnight-2`):
   - **Unfreezing after SIZE moved while frozen overloads MASSIVE** (up to 107.5 %, two-thirds of the blocks late while it settles: a crackle). The whole SIZE move lands as one crossfade at the moment the twin room is still running. Next: a prototype that glides SIZE or waits for the twin after an unfreeze, then a page.
   - **Playing MASSIVE with SHIMMER + WEAR + MOTION while SIZE moves now fits:** 90.8 %, and 88.4 % with both maths shortcuts.
@@ -83,6 +83,7 @@ Pick pages from overnight review 2 (ask me to start the page server). Each one a
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 
 ## Done
+- [x] **The review's two profile laps** (29 Oct 2026): the audit lap and the LEAN file's HASH (they match).
 - [x] **Overnight review 2** (night of 28-29 Oct 2026): report `docs/research/review-2026-10-29.md` (branch `review/overnight-2`), three pick pages, a draft pair, a profile lap and an optional rack test build. Nothing merged, flashed or installed.
 - [x] **Turning DECAY down: B, capped** (28 Oct 2026, `renders/decay_swell`, MIX 50 %, B on every card). The make-up for shorter tails rises no faster than the old tail dies away, so the level only falls. Being built as v1.0.55 (needs ~20 B of flash found first), then a rack build.
 - [x] **The merge into main, the plugin install, a package for your friend** (28 Oct 2026, your request). Judged pages and old builds moved to the Trash.
