@@ -19,9 +19,6 @@ PROFILE_BLOCK ?= 48
 #   PROFILE_FZ=0          the profile build without flush-to-zero (FPSCR/FPDSCR.FZ)
 #   PROFILE_SDRAM_TIGHT=0 the corner lap at libDaisy's SDRAM timing (the micro-tests still try 3 / 3)
 #   PROFILE_ITCM=0        the profile with the Core's hot code in flash, as before ITCM (round 12)
-#   DECAY_RISE=0.3f       (release or profile, a trial) DECAY's make-up rise capped at that share of the tank's decay
-#                         (renders/decay_swell, Engine::applySpace); -decayrise in the .bin's name. With DECAY_NO_POW=1
-#                         the make-up's std::pow(x, decayMakeup_) goes too (the module never sets it): -nopow
 # A non-default value gets its own object directory and .bin name (sublustris_versio_profile-nofz.bin, ...).
 # Release and profile run Engine.o, Fdn.o and Plate.o from ITCM (STM32H750IB_flash_itcm.lds; M3 round 12,
 # 26 Oct 2026: it boots, 2.5-3.5 points off every corner); m0test doesn't link the Core.
@@ -55,8 +52,8 @@ SIZE_GROUPS ?=
 CTL_O3 ?=
 CANDIDATE ?=
 SIZESPIKE ?=
-TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)$(if $(DECAY_RISE),-decayrise)$(if $(DECAY_NO_POW),-nopow)
-TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))$(if $(DECAY_RISE), -DIV_DECAY_RISE_CAP=$(DECAY_RISE))$(if $(DECAY_NO_POW), -DIV_DECAY_NO_POW)
+TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)
+TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))
 RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)$(if $(filter 1,$(RELEASE_LATE_LIGHT)),-latelight)$(TRIAL_TAG)
 PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)$(if $(SIZESPIKE),$(if $(filter 4,$(SIZESPIKE)),-cpusave,$(if $(filter 3,$(SIZESPIKE)),-cpuhunt,-sizespike$(if $(filter 2,$(SIZESPIKE)),ab))))
 

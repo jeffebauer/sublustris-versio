@@ -78,6 +78,10 @@ constexpr float kDecayLevelPowerLong[3] = {0.0f, 0.09f, 0.29f};   // from 15 s t
 // v1.0.53 (ADR 0034, the owner's pick B on renders/decay_range) PLATE's and HALL's tops are 30 / 60 s, at
 // the level today's had: a tail longer than these gets no make-up, and the trim below.
 constexpr float kDecayLevelTopSeconds[3] = {12.0f, 25.0f, 120.0f};
+// The make-up rises at most this share of the tank's own decay rate (60 / T60 dB/s) at finite DECAYs (v1.0.55,
+// the owner's pick B on renders/decay_swell): a long tail turned down fades at 0.7 of its new rate while the
+// make-up catches up, never louder; played, the shorter tail grows in at the level it had.
+constexpr float kDecayRiseShare = 0.3f;
 // The longer tails' trim (v1.0.53, ADR 0034): PLATE / HALL ring longer than they did at every DECAY and
 // sound louder while you play (the chord on renders/decay_range: up to +2.1 dB at 0.80), so the wet is taken down
 // by up to this many dB, eased in across DECAY (a smoothstep from .. to) and back out across the crossover to

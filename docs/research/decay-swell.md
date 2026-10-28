@@ -1,6 +1,6 @@
 # DECAY turned down: the swell (28 Oct 2026)
 
-**Status: a prototype behind a renderer hook (`IV_DECAY_RISE`, `Engine::setDecayRiseCapPrototype`), on `renders/decay_swell` for the owner's pick. Nothing has changed in the build.**
+**Built as SPEC v1.0.55 (ADR 0020 amendment): the owner picked B on every card of `renders/decay_swell`.** `voicing::kDecayRiseShare` is 0.3, applied in `Engine::applySpace`, and builds equal the page's B renders to the bit. The page was rendered with a renderer hook (`IV_DECAY_RISE`, at 7cb493e), which is now gone.
 
 The owner, on v1.0.54 at the rack: "with massive/hall with long decay, moving the decay from large to small can create a swell in amplitude".
 
@@ -50,4 +50,7 @@ Tags: **[S]** a source says it; **[M]** we measured it; **[I]** our inference.
   - Clicks: B/A level ratio steps ≤ 0.09 dB per 1 ms frame.
   - Bursts: >3 kHz against the unmoved render is never above A's.
   - Fed holds: 117 s with DECAY wiggled 0.95 ↔ 0.25 every 4 s stay bounded in all three SPACEs. B is steadier than A (MASSIVE peaks −8 to −10 dBFS against A's −3 to −5).
-- **Flash.** With the hook off, the firmware is byte-identical to 48b49c1 (112,588 B). Built in (`make -C firmware MODE=release DECAY_RISE=0.3f`): **112,660 B, +72 B**, which is 20 B over the 112,640 B budget. With `DECAY_NO_POW=1` the make-up's `std::pow(x, decayMakeup_)` goes too (the module never sets `decayMakeup_`; desktop-only demo hook): **112,644 B, 4 B over**. The last bytes have to come from elsewhere, or the budget moves.
+- **Flash (prototype).** With the hook off, the firmware is byte-identical to 48b49c1 (112,588 B). Built in (`make -C firmware MODE=release DECAY_RISE=0.3f`): **112,660 B, +72 B**, which is 20 B over the 112,640 B budget. With `DECAY_NO_POW=1` the make-up's `std::pow(x, decayMakeup_)` goes too (the module never sets `decayMakeup_`; desktop-only demo hook): **112,644 B, 4 B over**. The last bytes have to come from elsewhere, or the budget moves.
+- **Flash as built (v1.0.55):** release 112,564 B, 76 B under the budget. The cap costs 72 B. Paid for by:
+  - the module's make-up without its demo `std::pow` (−16 B);
+  - four float-to-`uint64_t` casts through 32 bits, so libgcc's `__aeabi_f2ulz` no longer links (−80 B, bit-identical).

@@ -19,6 +19,8 @@ CARDS = [
     ("2_hall", "HALL", 0.6, "tail", 0.78, 0.2, 0.2),
 ]
 T0 = {"playing": 18.0, "tail": 15.0}
+# The page was rendered at 7cb493e, where IV_DECAY_RISE=k was a hook; B is built in since v1.0.55 (the hook is ignored),
+# so to remake it run A with a v1.0.54 renderer (IV_RENDER_A) and B with today's.
 VERS = [("A_today", {}), ("B_capped", {"IV_DECAY_RISE": K})]
 
 
