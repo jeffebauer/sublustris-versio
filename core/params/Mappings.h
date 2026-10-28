@@ -244,6 +244,40 @@ IV_SIZE_OPT inline float decayLevelMakeup(float v, int space)
     return shortGain * longGain;
 }
 
+#ifndef IV_FIXED_VOICINGS
+// PROTOTYPE (renders/decay_range; owner: "i often find myself wanting longer lush decays, but the knob biases
+// towards smaller decays until you hit the 3 oclock mark and it turns into perpetual tails"): DECAY's curve for
+// PLATE and HALL with its finite top `maxS`, reached at `top` (the crossover then runs top → kDecayInfiniteAt,
+// 1/T60 falling linearly, so a wider one lengthens gradually), and `gamma` bending the exponential (x^gamma; 1 as
+// built). Endless still starts at kDecayInfiniteAt; governorWeight and the ducking keep 0.80-0.85. With
+// {12 | 25, 0.80, 1} it is decayRate(v, space). MASSIVE never uses it.
+struct DecayCurvePrototype {
+    float maxS[2] = {kT60Plate.maxS, kT60Hall.maxS};
+    float top = kDecayFiniteTop, gamma = 1.0f;
+};
+inline float decayRatePrototype(float v, int space, const DecayCurvePrototype& p)
+{
+    const float lo = t60Range(space).minS, hi = p.maxS[space];
+    if (v <= p.top) {
+        const float x = v / p.top;
+        return 1.0f / expLerp(lo, hi, p.gamma == 1.0f ? x : std::pow(x, p.gamma));
+    }
+    if (v >= kDecayInfiniteAt) return 0.0f;
+    return (kDecayInfiniteAt - v) / (kDecayInfiniteAt - p.top) / hi;
+}
+// decayLevelMakeup as a function of the tail's length (1/T60 = r) rather than the knob: a tail keeps the gain a
+// tail that long has as built (made up to the as-built finite top's level); one longer than that top gets none,
+// as the as-built crossover's do.
+inline float decayLevelMakeupForRate(float r, int space)
+{
+    if (r <= 0.0f) return 1.0f;
+    const float t = 1.0f / r, top = t60Range(space).maxS, ref = std::fmin(voicing::kDecayLevelRefSeconds, top);
+    const float shortGain = std::pow(ref / std::fmin(t, ref), voicing::kDecayLevelPower[space]);
+    const float longGain = top > ref ? std::pow(top / std::fmin(std::fmax(t, ref), top), voicing::kDecayLevelPowerLong[space]) : 1.0f;
+    return shortGain * longGain;
+}
+#endif
+
 // HALL: The level a finite tail loses by being shorter (its energy goes with its
 // T60), made up on the output; none at infinite, where nothing is shorter.
 IV_SIZE_OPT inline float hallSizeLevelTrim(float size, float decay)
