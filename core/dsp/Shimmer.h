@@ -13,6 +13,7 @@
 // an octave up doubles every frequency, and above 12 kHz that passes 24 kHz and folds back as
 // inharmonic tones, what a sample-rate reducer does (round 1-2's "bit crushing").
 #include "dsp/Memory.h"
+#include "dsp/ProfileHook.h"
 #include "dsp/SizeOpt.h"
 #include "params/SpaceVoicing.h"
 
@@ -122,7 +123,19 @@ public:
                 // sin(pi p), Bhaskara's approximation (within 0.2 %): no libm call per head and sample. Its divide
                 // first, so the M7 works out the read below while the divide runs (CPU save 2: placed after the reads
                 // it was the last thing before its own use, a ~14-cycle stall a head). The same operations.
+#if defined(IV_SHIMMER_POLY) // the trial (SHIMMER_POLY=1): the window with no divide
+                const float q = p * (1.0f - p), w = shimmerWindowPoly(q);
+#elif !defined(IV_FIXED_VOICINGS) // the Renderer: as built, or the trial (IV_SHIMMER_POLY=1)
+                const float q = p * (1.0f - p);
+                float       w;
+                if (prof::shimmerPoly) w = shimmerWindowPoly(q);
+                else {
+                    const float s = 16.0f * q / (5.0f - 4.0f * q);
+                    w = s * s;
+                }
+#else
                 const float q = p * (1.0f - p), s = 16.0f * q / (5.0f - 4.0f * q);
+#endif
                 const float d = base_[c][h] + window * p;
                 const auto  di = uint32_t(d);
                 const float t = d - float(di);
@@ -134,7 +147,11 @@ public:
                 float a = buf[i0], b = buf[i1];
                 if (di > fill) a = 0.0f;
                 if (di >= fill) b = 0.0f;
+#if defined(IV_SHIMMER_POLY) || !defined(IV_FIXED_VOICINGS)
+                y += w * (a + t * (b - a));
+#else
                 y += s * s * (a + t * (b - a));
+#endif
             }
             y *= 2.0f / float(kHeads);
             after_[c] += afterA_ * (y - after_[c]); // each octave a little softer than the note
@@ -146,6 +163,13 @@ public:
     }
 
 private:
+    // PROTOTYPE (review2/cpu, 28 Oct 2026; not the same bits): each head's window sin²(πp) as a polynomial in
+    // q = p(1 − p), with no divide (Bhaskara's above costs a 16-cycle divide a head and sample, which holds up the
+    // M7's FPU: 16 heads, ~2 % of the module). A least-squares fit, within 4e-5 of sin² (Bhaskara's square is within
+    // 2.1e-3); the 8 heads' windows still sum to 4 within 1e-5. The firmware's SHIMMER_POLY=1, the Renderer's
+    // IV_SHIMMER_POLY=1.
+    static float shimmerWindowPoly(float q) { return q * q * (9.91795635f + q * (18.8437901f + q * 21.9274197f)); }
+
     static constexpr float maxDelaySeconds()
     {
         return voicing::kShimmerWindowSeconds * (1.0f + voicing::kShimmerScatter) + 0.001f;

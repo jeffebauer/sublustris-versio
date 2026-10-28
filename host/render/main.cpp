@@ -170,6 +170,11 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         iv::prof::absExp = std::atoi(ae) != 0;
         std::fprintf(stderr, "iv_render: IV_ABSORB_EXP: the tanks' loss filters on %s\n", iv::prof::absExp ? "std::exp (a trial)" : "std::pow (as built)");
     }
+    // review2/cpu: the shimmer heads' window as a polynomial, no divide (the firmware's SHIMMER_POLY=1; a trial).
+    if (const char* sp = std::getenv("IV_SHIMMER_POLY")) {
+        iv::prof::shimmerPoly = std::atoi(sp) != 0;
+        std::fprintf(stderr, "iv_render: IV_SHIMMER_POLY: the shimmer heads' window %s\n", iv::prof::shimmerPoly ? "as a polynomial (a trial)" : "on Bhaskara's divide (as built)");
+    }
 #endif
     engine.prepare(sampleRate, block);
     if (const char* hd = std::getenv("IV_HALL_DIFFUSION")) engine.setHallInLoopDiffusion(float(std::atof(hd)));

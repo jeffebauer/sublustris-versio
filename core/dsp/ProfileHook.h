@@ -56,6 +56,9 @@ inline void countXfLines(const void*) {}
 // The desktop's A / B of the same trial (the Renderer's IV_ABSORB_EXP=1, review2/cpu, 28 Oct 2026): false (as
 // built) runs the same operations as before, so the same output to the bit. The module's builds never have it.
 inline bool absExp = false;
+// The shimmer heads' window as a polynomial, no divide (Shimmer.h shimmerWindowPoly; the Renderer's IV_SHIMMER_POLY=1):
+// a trial, not the same bits. False runs the same operations as before.
+inline bool shimmerPoly = false;
 #endif
 #endif
 

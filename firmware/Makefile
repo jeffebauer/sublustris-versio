@@ -54,11 +54,14 @@ RELEASE_LATE_LIGHT ?= 0
 #                 obj-release-48's objects (make doesn't track flags), a byte-identical .bin, and dropped SIZESPIKE.
 SIZE_GROUPS ?=
 CTL_O3 ?=
+#   SHIMMER_POLY=1 the shimmer heads' window as a polynomial, no divide (core/dsp/Shimmer.h shimmerWindowPoly,
+#                 IV_SHIMMER_POLY; not the same bits: review2/cpu 28 Oct 2026), release or profile (-shpoly)
 ABSORB_EXP ?=
+SHIMMER_POLY ?=
 CANDIDATE ?=
 SIZESPIKE ?=
-TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)$(if $(filter 1,$(ABSORB_EXP)),-absexp)
-TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))$(if $(filter 1,$(ABSORB_EXP)), -DIV_ABSORB_EXP)
+TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)$(if $(filter 1,$(ABSORB_EXP)),-absexp)$(if $(filter 1,$(SHIMMER_POLY)),-shpoly)
+TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))$(if $(filter 1,$(ABSORB_EXP)), -DIV_ABSORB_EXP)$(if $(filter 1,$(SHIMMER_POLY)), -DIV_SHIMMER_POLY)
 RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)$(if $(filter 1,$(RELEASE_LATE_LIGHT)),-latelight)$(TRIAL_TAG)
 PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)$(if $(SIZESPIKE),$(if $(filter 4,$(SIZESPIKE)),-cpusave,$(if $(filter 3,$(SIZESPIKE)),-cpuhunt,-sizespike$(if $(filter 2,$(SIZESPIKE)),ab))))
 
