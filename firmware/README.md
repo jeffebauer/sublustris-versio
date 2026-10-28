@@ -227,7 +227,17 @@ same output to the bit on the desktop (`tools/same_render.py` SAME 60/60 against
   `std::pow` (`prof::absExp`; the build option `IV_ABSORB_EXP`): not the same bits (desktop: ~1e-6 apart, up to ~1e-3
   where WEAR's grain rounds the other way), a trial. Compare each with its `SHIMMER` line.
 
-## Memory
+### The audit lap (SIZESPIKE=5; review 2, 28-29 Oct 2026)
+
+`make -C firmware MODE=profile SIZESPIKE=5` → `sublustris_versio_profile-audit.bin` (`LEAN=1` → `-lean-audit`).
+At boot, before `AUDIT START`: `HASH xxxxxxxx (3000 blocks, ...) | refresh COUNT n`: a CRC-32 of a fixed 3,000-block
+render (MASSIVE, SHIMMER, WEAR 0.5, MOTION left, DECAY 0.9, a SIZE jump), so two builds that print the same HASH give
+the same output to the bit on the module; `refresh COUNT` is the SDRAM refresh libDaisy left (2054). Then 16
+`SPIKE` lines (the format above): `UNFRZ` x 5, `PAINT`, `CVALL` x 2, `GRIT` x 2 (the audit's untimed combinations), then
+MASSIVE's SHIMMER sweep (WEAR 0.5, MOTION left, DECAY 0.9, music) as built (`SHIMMER`), with the loss filters on
+`std::exp` (`ABSEXP`), with the shimmer window as a polynomial (`SHPOLY`), with both (`ABS+SHP`), the creep unfreeze
+with both (`UNFRZ+AS`), and as built with the SDRAM refreshed at the datasheet's rate (`REFRESH`, COUNT 761). The
+`DONE` line adds `| STACK n B of 60176` (the deepest the stack has reached since boot) and the HASH again.
 
 Release map, v1.0.55 with review2/neutral's B1-B4 (29 Oct 2026; `arm-none-eabi-size -A` / `nm -S` on `build/sublustris_versio.elf`):
 
