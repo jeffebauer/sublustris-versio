@@ -1,12 +1,11 @@
 # Owner tasks
 
-**Last updated:** 29 Oct 2026, after overnight review 2: three listening pages and a profile build waiting for you; v1.0.55 still waiting at the rack. The review's report: `docs/research/review-2026-10-29.md` on branch `review/overnight-2` (sent to your phone).
+**Last updated:** 29 Oct 2026: the review's same-sound savings and LEAN merged into main (release 110,476 B); three listening pages waiting for you; v1.0.55 waiting at the rack (new builds `...-248ec3d`). The review's report: `docs/research/review-2026-10-29.md`.
 **Plugin installed:** `4658d91` on `main` (v1.0.55, Sublustris Versio), 28 Oct 2026 22:42; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan).
 
 ## To do
 
 ### Decide
-- [ ] **Merge the review's same-sound savings into main** (branch `review2/neutral`): four CPU savings that give the same output to the bit (MASSIVE's worst case ~1 point lighter), the firmware's trial switches made to work properly, and doc fixes. Release grows 56 B (112,620 B, 20 B under budget). Say "merge neutral" and I'll do it with the gates.
 
 ### Listen (after your notes)
 
@@ -22,7 +21,7 @@ Pick pages from overnight review 2 (ask me to start the page server). Each one a
 - [ ] **Check Ableton's sample rate** (Settings → Audio): at 96 kHz the plugin's HALL and MASSIVE come out much brighter above 12 kHz than the module (found by the review). At 48 kHz they match.
 
 ### At the rack
-- [ ] **v1.0.55 at the rack** (rack power, USB unplugged): `dist/sublustris_versio-v1.0.55-3eb5e1c-latelight.bin` (or the plain `...-3eb5e1c.bin`). v1.0.54 plus your DECAY-swell pick B. Check: the LEDs look as always, steady, no flicker; SHIMMER sounds normal; SIZE moves in HALL and MASSIVE with SHIMMER, WEAR and MOTION's tape side (no glitches; MASSIVE may flash amber); SPACE switches (no red); TIME moves in HALL BLOOM (no noise); DECAY's new range; turning DECAY down from long (no swell).
+- [ ] **v1.0.55 at the rack** (rack power, USB unplugged): `dist/sublustris_versio-v1.0.55-248ec3d-latelight.bin` (or the plain `...-248ec3d.bin`): today's main, v1.0.54 plus your DECAY-swell pick B, with the review's same-sound savings and LEAN in (the same sound; this also tries LEAN in the release build). The older `...-3eb5e1c` pair is the same sound without them. Check: the LEDs look as always, steady, no flicker; SHIMMER sounds normal; SIZE moves in HALL and MASSIVE with SHIMMER, WEAR and MOTION's tape side (no glitches; MASSIVE may flash amber); SPACE switches (no red); TIME moves in HALL BLOOM (no noise); DECAY's new range; turning DECAY down from long (no swell).
 - [ ] **Optional rack boot test** (rack power, USB unplugged): `dist/sublustris_versio-review2-212b68b-lean-audiodirect.bin`. Same sound, 5 KB smaller. Check both outputs at the usual level, left and right not swapped, no hiss, buzz or crackle, knobs working. If it's clean, the flash squeeze is over and the fixes on the pages above can all fit.
 
 ### When convenient
@@ -39,16 +38,15 @@ Pick pages from overnight review 2 (ask me to start the page server). Each one a
   - MASSIVE's CPU: ~4.5 more points available, the profile lap confirms.
 
   The rest of the next steps are in the report's "What I'd do next". Waiting on your listening.
-- **LEAN proven on the module** (29 Oct 2026): its HASH matched (`0x3b18a2ac`), and its timing is the same within 0.4 points. The 2,144 B it frees cost nothing; it becomes the default with the merge of `review2/neutral` (Decide).
-- **Your audit lap** (29 Oct 2026, `docs/research/m3-review2-audit-212b68b.log` on `review/overnight-2`):
+- **Merged into main** (29 Oct 2026, your OK): `review2/neutral` (`248ec3d`), the review's same-sound savings, with **LEAN=1 the default** (its HASH matched on your module, `0x3b18a2ac`, timing within 0.4 points). Gates: 22 of 22 tests, SAME 60/60 against the renderer before the merge, release **110,476 B** (2,164 B under budget), m0test unchanged. The report, the agents' notes and your two laps are on main too (`docs/research/review-2026-10-29.md`). The plugin needs no reinstall: the same sound.
+- **Your audit lap** (29 Oct 2026, `docs/research/m3-review2-audit-212b68b.log`):
   - **Unfreezing after SIZE moved while frozen overloads MASSIVE** (up to 107.5 %, two-thirds of the blocks late while it settles: a crackle). The whole SIZE move lands as one crossfade at the moment the twin room is still running. Next: a prototype that glides SIZE or waits for the twin after an unfreeze, then a page.
   - **Playing MASSIVE with SHIMMER + WEAR + MOTION while SIZE moves now fits:** 90.8 %, and 88.4 % with both maths shortcuts.
   - The datasheet's SDRAM refresh costs nothing measurable.
   - The stack is 6.6 KB of 60 KB.
 - **Your first note on v1.0.54** (the swell turning DECAY down): built as v1.0.55 (your pick B), merged and in Ableton; at the rack next.
 - **Your three notes from the v1.0.52 rack test** (28 Oct 2026), all addressed in v1.0.54 (At the rack). (1)-(2) The overloads with SHIMMER + WEAR + MOTION's tape side, and the red on SPACE switches: not new (v1.0.49 measured the same); two rounds of CPU savings, same sound to the bit. Your laps (`docs/research/m3-cpuhunt-*`, `m3-cpusave*`): late blocks in a lap 11,897 → 0; HALL's SIZE sweep 104 → 85 %; switches into MASSIVE 102-106 → 80 %; MASSIVE's SIZE moves 97-99 → 93-95 % (may still flash amber). If MASSIVE still glitches, an optional maths shortcut takes 1.5-4 more points (not the same bits, far below hearing). (3) The noise when TIME moves in HALL BLOOM: the swell's copies glided across the recording; now each crossfades to its new place once TIME rests. Not new either.
-- **Merged into main** (28 Oct 2026, your OK): through v1.0.55. 22 of 22 tests pass on main; release firmware 112,564 B.
-- **Flash: 76 B left** (release 112,564 B, v1.0.55). The review found ~5.4 KB with no change to the sound (`LEAN=1` −2,144 B, `AUDIO_DIRECT=1` −3,240 B, on `review2/neutral`); each becomes the default once the profile lap's HASH lines match and the rack boot test is clean.
+- **Flash: 2,164 B left** (release 110,476 B on main, LEAN in). `AUDIO_DIRECT=1` frees 3,240 B more, the same sound; it becomes the default once its rack boot test is clean (At the rack).
 - **Optional: record your Ribbons and Magneto** so the tape side can be matched to measured numbers (for analysis only, never committed or shared). Play `test_audio/stimulus/08_held_tones.wav` (its first 8 s, a held 1 kHz tone) and `renders/_material_drift_rethink/held_organ.wav`, 20 s each, fully wet, into `test_audio/reference/incoming/` named `<unit>_<control>_<setting>.wav`. **Ribbons** (saturation and noise off): wow depth ¼, ½, full; wow frequency min and full; flutter depth ½ and full; flutter frequency full; crinkle ¼, ½, full; dropouts ½; your usual tape setting. **Magneto** (wet only): wow & flutter ¼, ½, full; crinkle ¼, ½, full; slow and fast tape speed with crinkle ½.
 - **The rumble at endless DECAY with TONE bright**: cause found by the review (above); fix on page `review2_endless`.
 - **The review's housekeeping list**:
