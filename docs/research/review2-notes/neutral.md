@@ -64,14 +64,16 @@ LEAN pays for both CPU trials many times over: with LEAN, B1-B4 + ABSEXP + SHPOL
 
 ## 4. The profile build for the morning
 
-Files in `dist/` (`<hash>` = this branch's HEAD, the commit after the code commit 86561de; the code is the same):
-- `sublustris_versio-review2-<hash>-profile-audit.bin` (121,296 B): **the one to flash.** LEAN off, so its HASH is
+Files in `dist/`, built at **212b68b** (the commit after it only writes these names into the notes):
+- `sublustris_versio-review2-212b68b-profile-audit.bin` (121,296 B): **the one to flash.** LEAN off, so its HASH is
   the reference.
-- `sublustris_versio-review2-<hash>-profile-audit-lean.bin` (120,824 B): the same lap with LEAN=1. Its only job: its
+- `sublustris_versio-review2-212b68b-profile-audit-lean.bin` (120,824 B): the same lap with LEAN=1. Its only job: its
   HASH line. Flash it after the first, wait for the HASH (or the first DONE line), compare.
-- `sublustris_versio-review2-<hash>-profile-audit-v1.0.55.bin` (120,016 B): optional, the audit branch's own lap on
+- `sublustris_versio-review2-212b68b-profile-audit-v1.0.55.bin` (120,016 B): optional, the audit branch's own lap on
   v1.0.55's code (no B1-B4; built from review2/audit f2eea0e). Its HASH proves B1-B4 the same on the module.
-  Its lap has only the first 10 lines.
+  Its lap has only the first 10 lines, and it prints its HASH **only at boot** (3 s after power-up, not on the DONE
+  line): have `screen` running before the 3 s are up (if missed: quit screen, unplug and replug USB, start screen at
+  once). Its HASH line has no `refresh COUNT` part.
 
 **Steps (USB power only: never with the rack power cable connected):**
 1. Unplug the rack power cable from the Versio. Connect USB.
@@ -172,7 +174,7 @@ multiply-add difference between libDaisy's flags and ours. The same samples in p
 
 ## 8. The optional rack-boot release
 
-`dist/sublustris_versio-review2-<hash>-lean-audiodirect.bin` (107,236 B): LEAN=1 AUDIO_DIRECT=1, otherwise the
+`dist/sublustris_versio-review2-212b68b-lean-audiodirect.bin` (107,236 B): LEAN=1 AUDIO_DIRECT=1, otherwise the
 default release (B1-B4, no sound trials). Built cleanly; the code read against libDaisy (section 6). On **rack power**
 (USB unplugged): it should boot to the usual LED pattern and sound exactly like v1.0.55. Listen for: both outputs
 present and at the usual level (compare with v1.0.55 at the same knob settings), left and right not swapped (a
