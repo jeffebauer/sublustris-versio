@@ -23,8 +23,7 @@ Pick pages from overnight review 2 (ask me to start the page server). Each one a
 - [ ] **Optional rack boot test** (rack power, USB unplugged): `dist/sublustris_versio-review2-212b68b-lean-audiodirect.bin`. Same sound, 5 KB smaller. Check both outputs at the usual level, left and right not swapped, no hiss, buzz or crackle, knobs working. If it's clean, the flash squeeze is over and the fixes on the pages above can all fit.
 
 ### When convenient
-- [ ] **Send your friend the new package**: `dist/release/v1.0.54-05122e3/SublustrisVersio_v1.0.54-05122e3.zip` (universal Mac VST3 + AU; its read-me lists what's new since v1.0.41 and says to remove the old Immensio copy). The old v1.0.41 package is still in `dist/release/` if you want it kept.
-- [ ] **Empty the Trash** when you're happy: `sublustris-cleanup-2026-10-28` (1.8 GB: judged pages `level_glue`, `hall_level`, `decay_range`, old firmware builds, the old Immensio plugin copies).
+- [ ] **Judged pages can go**: say OK and I'll move them to the Trash: `renders/review2_bump` and `review2_halltail` (picked, now built as v1.0.56 and v1.0.57), `review2_endless` (replaced by `review2_endless2`) and `review2_hole_draft` (replaced by `review2_hole`), about 0.7 GB.
 - [ ] **Re-record Supermassive's short settings at a feedback that sounds like a reverb** (your note: at 0 % and 12 % it's separate delays): about 5 % for Andromeda's 2 s, or skip 2 s and record the longer settings you like (15 s, 30 s, infinite). Also **re-export three clipped Valhalla takes about 6 dB lower**: Plate Chrome 15 s, Plate Lithium 15 s and Supermassive Andromeda 100 % (measure and music). Also check Supermassive's DELAY: its first sound came at different times between takes (Sagittarius 421 / 38 / 3 ms, Andromeda 1.1 / 0.7 / 0.65 s).
 - [ ] **Reference recordings** (when convenient; `docs/reference-recording-guide.md`): Valhalla Room, Plate and Supermassive are in (I read them straight from your Ableton set; no need to export). Still to record: the **H9 Reverse** (the yardstick for REVERSE), Mercury7 Cathedra, VintageVerb, then the rest. For Supermassive, Andromeda at 0 % feedback rang only 0.5 s; about 5 % should give the 2 s target. LMC can't go short: even at 20 % it rings 26 s.
 
@@ -80,6 +79,8 @@ Pick pages from overnight review 2 (ask me to start the page server). Each one a
 - **REVERSE tuning**, only if you have notes as you play it (shape, stop, grain); its page was deleted once confirmed (`tools/render_review_pages.sh reverse` brings it back).
 
 ## Done
+- [x] **The new package sent to your friend** (29 Oct 2026): `dist/release/v1.0.54-05122e3/` (v1.0.54; v1.0.55-57 came after it, so a newer package is possible when you want one).
+- [x] **Trash emptied** (29 Oct 2026): `sublustris-cleanup-2026-10-28` and the old Immensio copies.
 - [x] **The review's two profile laps** (29 Oct 2026): the audit lap and the LEAN file's HASH (they match).
 - [x] **Overnight review 2** (night of 28-29 Oct 2026): report `docs/research/review-2026-10-29.md` (branch `review/overnight-2`), three pick pages, a draft pair, a profile lap and an optional rack test build. Nothing merged, flashed or installed.
 - [x] **Turning DECAY down: B, capped** (28 Oct 2026, `renders/decay_swell`, MIX 50 %, B on every card). The make-up for shorter tails rises no faster than the old tail dies away, so the level only falls. Being built as v1.0.55 (needs ~20 B of flash found first), then a rack build.
