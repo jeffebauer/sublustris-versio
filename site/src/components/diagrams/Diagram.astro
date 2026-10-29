@@ -1,59 +1,25 @@
 ---
 // A tiny diagram (DESIGN-v2 V10): 1.5 px lines in currentColor, one highlight in the
 // signal colour. Labelled for screen readers with what it shows.
-// `variant` picks a drawing set (variants.ts); `line` (shapes.ts) is the default and the
-// only one the site uses until the owner picks another on /style/diagrams.
 import { shape, type DiagramKind } from './shapes';
-import { altShape, nextGradientId, type Role, type Variant } from './variants';
-interface Props { kind: DiagramKind; class?: string; decorative?: boolean; variant?: Variant }
-const { kind, class: cls = '', decorative = false, variant = 'line' } = Astro.props;
+interface Props { kind: DiagramKind; class?: string; decorative?: boolean }
+const { kind, class: cls = '', decorative = false } = Astro.props;
 const s = shape(kind);
-const alt = altShape(kind, variant);
-const label = alt?.label ?? s.label;
-const gid = alt ? nextGradientId() : '';
-const paint = (r: Role) => (r === 'hot' ? 'var(--signal)' : 'currentColor');
-const stroke = (r: Role, w = 1.5, dash?: string, cap?: string) =>
-  `stroke:${paint(r)};stroke-width:${w}px${r === 'faint' ? ';stroke-opacity:0.3' : ''}${dash ? `;stroke-dasharray:${dash}` : ''}${cap ? `;stroke-linecap:${cap}` : ''}`;
-const fillOf = (r: Role, o?: number) => `fill:${paint(r)};fill-opacity:${o ?? (r === 'faint' ? 0.13 : 1)}`;
 ---
 <svg
-  class={`diagram ${alt ? `diagram-${variant}` : ''} ${cls}`.replace(/\s+/g, ' ').trim()}
+  class={`diagram ${cls}`.trim()}
   viewBox="0 0 160 64"
   preserveAspectRatio="xMinYMid meet"
   fill="none"
   stroke-linecap="round"
   stroke-linejoin="round"
   role={decorative ? undefined : 'img'}
-  aria-label={decorative ? undefined : label}
+  aria-label={decorative ? undefined : s.label}
   aria-hidden={decorative ? 'true' : undefined}
   focusable="false"
 >
-  {!decorative && <title>{label}</title>}
-  {alt ? (
-    <>
-      <defs>
-        <linearGradient id={`${gid}-hot`} gradientUnits="userSpaceOnUse" x1="0" y1="8" x2="0" y2="58">
-          <stop offset="0" style="stop-color: var(--signal); stop-opacity: 0.5" />
-          <stop offset="1" style="stop-color: var(--signal); stop-opacity: 0.04" />
-        </linearGradient>
-        <linearGradient id={`${gid}-ink`} gradientUnits="userSpaceOnUse" x1="0" y1="8" x2="0" y2="58">
-          <stop offset="0" style="stop-color: currentColor; stop-opacity: 0.3" />
-          <stop offset="1" style="stop-color: currentColor; stop-opacity: 0.03" />
-        </linearGradient>
-      </defs>
-      {alt.els.map((e) =>
-        e.k === 'line' ? <path d={e.d} style={stroke(e.role, e.w, e.dash, e.cap)} />
-        : e.k === 'area' ? <path d={e.d} style={`fill:url(#${gid}-${e.role === 'hot' ? 'hot' : 'ink'});stroke:none`} />
-        : e.k === 'tint' ? <path d={e.d} style={`${fillOf(e.role, e.o)};stroke:none`} />
-        : e.k === 'dot' ? <circle cx={e.x} cy={e.y} r={e.r} style={fillOf(e.role, e.o)} />
-        : <rect x={e.x} y={e.y} width={e.w} height={e.h} rx="0.6" style={fillOf(e.role, e.o)} />
-      )}
-    </>
-  ) : (
-    <>
-      {(s.faint ?? []).map((d) => <path class="d-faint" d={d} />)}
-      {s.ink.map((d) => <path class="d-ink" d={d} />)}
-      {s.hot.map((d) => <path class="d-hot" d={d} />)}
-    </>
-  )}
+  {!decorative && <title>{s.label}</title>}
+  {(s.faint ?? []).map((d) => <path class="d-faint" d={d} />)}
+  {s.ink.map((d) => <path class="d-ink" d={d} />)}
+  {s.hot.map((d) => <path class="d-hot" d={d} />)}
 </svg>

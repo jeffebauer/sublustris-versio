@@ -1,70 +1,48 @@
 ---
-// The tiny diagrams, four ways (stop 3, direction B): today's line set and three alternative
-// drawing sets, side by side, on paper, on tiles and on a dark band, then in a real bento tile
-// and audio tile each. For the owner to compare; not in the sitemap, noindex.
+// The tiny diagrams, other pictures (stop 3, direction B): for each of the eight ideas,
+// today's drawing as option 1 and two or three other metaphors in the same line style, on
+// paper, on a tile and on a dark band, then all of them at the audio tile's size. Numbered
+// per idea so the owner can answer "endless 3, freeze 2". Not in the sitemap, noindex.
 import Base from '../../layouts/Base.astro';
 import Button from '../../components/Button.astro';
-import AudioAB from '../../components/AudioAB.astro';
-import BlendFader from '../../components/BlendFader.astro';
 import Diagram from '../../components/diagrams/Diagram.astro';
-import { SV_KINDS, VARIANTS, type SvKind, type Variant } from '../../components/diagrams/variants';
-import { getDemos } from '../../lib/demos';
-import { SV_TILES } from '../../data/sublustris';
+import { CONCEPTS } from '../../components/diagrams/metaphors';
 import '../../styles/directions/b.css';
 
-const SETS: Variant[] = ['line', 'glow', 'dust', 'meter'];
-const NAMES: Record<SvKind, string> = {
-  endless: 'The endless hold', longtail: 'A long tail', freeze: 'Freeze', swell: 'BLOOM: a swell',
-  octave: 'SHIMMER: an octave up', tape: 'MOTION: tape wobble', spaces: 'PLATE · HALL · MASSIVE', cv: 'CV inputs',
-};
 const GROUNDS = [
-  { id: 'paper', title: 'On paper', note: 'The page itself: how the diagrams sit in running text and on the manual.', band: '', cell: '' },
+  { id: 'paper', title: 'On paper', note: 'The page itself, at about bento size.', band: '', cell: '' },
   { id: 'tile', title: 'On a tile', note: 'Inside a tile, as in the bento and the audio tiles.', band: '', cell: 'tile' },
   { id: 'dark', title: 'On a dark band', note: 'The hero and the sound band: light ink, the brighter blue.', band: 'band-dark', cell: '' },
 ];
-const tile = SV_TILES.find((t) => t.diagram === 'endless') ?? SV_TILES[0];
-const { clips } = await getDemos();
-const clip = clips.find((c) => c.file.startsWith('02')) ?? clips[0];
+const risky = CONCEPTS.flatMap((c) => c.options.map((o, i) => ({ c, o, n: i + 1 })).filter((x) => x.o.risk));
 ---
-<Base title="Diagrams: Sublustris Versio" description="The tiny diagrams for the Sublustris Versio site in four drawing sets, side by side, for choosing one." noindex bodyClass="dir-b" darkTop>
+<Base title="Diagram Metaphors" description="For each of the eight ideas the Sublustris Versio site draws, today's diagram and other pictures of it in the same line style, numbered for choosing." noindex bodyClass="dir-b" darkTop>
   <section class="st-section st-hero band-dark" aria-labelledby="dg-title">
     <div class="column">
       <p class="micro quiet st-kicker">Style tile B · tiny diagrams</p>
-      <h1 class="display" id="dg-title">Four ways to draw the sound</h1>
+      <h1 class="display" id="dg-title">Other pictures of the same ideas</h1>
     </div>
     <div class="column flow st-intro">
-      <p class="lede">The same eight diagrams in four drawing sets. Each set is drawn from the same curves, so they all say the same thing about the sound; only the hand changes.</p>
+      <p class="lede">The same line style throughout: the 160 × 64 grid, 1.5 px lines in the text colour, the blue on the reverb, faint guides. What changes is the picture. Option 1 is today’s drawing; the others are different ways to show the same sound.</p>
+      <p class="quiet">Answer with the numbers, for example “endless 3, freeze 2”. The site keeps today’s drawings until you pick.</p>
       <p class="demo-row">
         <Button href="/style/b/" variant="ghost">Style tile B</Button>
         <Button href="/style/" variant="ghost">All three directions</Button>
       </p>
     </div>
-    <ul class="wide dg-legend">
-      {SETS.map((v) => (
-        <li>
-          <Diagram kind="endless" variant={v} class="dg-legend-diagram" decorative />
-          <span class="h3">{VARIANTS[v].name}{v === 'line' && <span class="micro quiet"> · today</span>}</span>
-          <span class="small quiet">{VARIANTS[v].line}</span>
-        </li>
-      ))}
-    </ul>
   </section>
 
   {GROUNDS.map((g) => (
     <section class:list={['st-section', g.band]} aria-labelledby={`dg-${g.id}`}>
       <div class="column"><h2 class="h2" id={`dg-${g.id}`}>{g.title}</h2><p class="quiet">{g.note}</p></div>
       <div class="wide dg-matrix">
-        <div class="dg-row dg-head" aria-hidden="true">
-          <span></span>
-          {SETS.map((v) => <span class="micro">{VARIANTS[v].name}</span>)}
-        </div>
-        {SV_KINDS.map((k) => (
+        {CONCEPTS.map((c) => (
           <div class="dg-row">
-            <p class="dg-name micro">{NAMES[k]}</p>
-            {SETS.map((v) => (
+            <p class="dg-name micro">{c.name}</p>
+            {c.options.map((o, i) => (
               <figure class:list={['dg-cell', g.cell]}>
-                <Diagram kind={k} variant={v} />
-                <figcaption class="micro quiet dg-cap">{VARIANTS[v].name}</figcaption>
+                <Diagram kind={o.kind} />
+                <figcaption class="dg-cap small"><span class="dg-n" aria-label={`${c.id} ${i + 1}`}>{i + 1}</span><span>{o.caption}</span></figcaption>
               </figure>
             ))}
           </div>
@@ -74,57 +52,60 @@ const clip = clips.find((c) => c.file.startsWith('02')) ?? clips[0];
   ))}
 
   <section class="st-section" aria-labelledby="dg-real">
-    <div class="column"><h2 class="h2" id="dg-real">At real size</h2><p class="quiet">Each set in the biggest bento tile and in an audio tile, the largest and the smallest the diagrams get on the site. The players work; the BLEND fader floats up while one plays.</p></div>
-    {SETS.map((v) => (
-      <div class="wide dg-real">
-        <h3 class="h3 dg-real-head">{VARIANTS[v].name}</h3>
-        <ul class="bento dg-bento" aria-label={`${VARIANTS[v].name}: a feature tile`}>
-          <li class="tile feature is-big">
-            <h4 class="feature-big">{tile.big}</h4>
-            <p class="feature-line small">{tile.line}</p>
-            <Diagram kind={tile.diagram} variant={v} class="feature-diagram" />
-          </li>
-        </ul>
-        <ul class="demos dg-demos" aria-label={`${VARIANTS[v].name}: an audio tile`}>
-          <AudioAB clip={clip} n={2} idPrefix={`dg-${v}`} headingLevel="h4" diagramVariant={v} />
+    <div class="column"><h2 class="h2" id="dg-real">At real size</h2><p class="quiet">Every option at the audio tile’s size (3.25 rem high), the smallest the diagrams get on the site.</p></div>
+    <div class="wide dg-strip">
+      {CONCEPTS.map((c) => (
+        <div class="dg-strip-row">
+          <p class="dg-name micro">{c.name}</p>
+          <ul class="dg-strip-list">
+            {c.options.map((o, i) => (
+              <li class="tile dg-small">
+                <span class="dg-n" aria-hidden="true">{i + 1}</span>
+                <Diagram kind={o.kind} class="demo-diagram" />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  {risky.length > 0 && (
+    <section class="st-section" aria-labelledby="dg-risk">
+      <div class="column flow">
+        <h2 class="h2" id="dg-risk">Might misread</h2>
+        <p class="quiet">Resilio retired pictograms that read as a magnifying glass, a ghost and a face. These are the ones to look at twice.</p>
+        <ul class="dg-risks">
+          {risky.map(({ c, o, n }) => <li><strong>{c.id} {n}</strong>, {o.caption.toLowerCase()}: {o.risk}</li>)}
         </ul>
       </div>
-    ))}
-    <BlendFader />
-  </section>
+    </section>
+  )}
 </Base>
 
-<script>
-  import '../../scripts/player';
-</script>
-
 <style is:global>
-  .dg-legend { list-style: none; padding: 0; margin-top: var(--stack-5); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gutter); }
-  .dg-legend li { display: grid; gap: var(--stack-1); align-content: start; }
-  .dg-legend-diagram { width: 100%; height: auto; margin-bottom: var(--stack-1); color: var(--ink); }
-  @media (max-width: 63.99rem) { .dg-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (max-width: 29.99rem) { .dg-legend { grid-template-columns: minmax(0, 1fr); } }
-
   .dg-matrix { display: grid; }
-  .dg-row { display: grid; grid-template-columns: minmax(0, 9rem) repeat(4, minmax(0, 1fr)); gap: var(--gutter); align-items: center; padding-block: var(--stack-2); }
+  .dg-row { display: grid; grid-template-columns: minmax(0, 9rem) repeat(4, minmax(0, 1fr)); gap: var(--gutter); align-items: start; padding-block: var(--stack-3); }
   .dg-row + .dg-row { border-top: var(--hair) solid var(--line); }
-  .dg-head { padding-block: 0 var(--stack-1); color: var(--ink-2); }
-  .dg-name { color: var(--ink-2); }
-  .dg-cell { margin: 0; display: grid; gap: var(--stack-1); color: var(--ink); }
+  .dg-name { color: var(--ink-2); padding-top: var(--stack-1); }
+  .dg-cell { margin: 0; display: grid; gap: var(--stack-2); color: var(--ink); align-content: start; }
   .dg-cell.tile { padding: clamp(0.75rem, 0.5rem + 0.6vw, 1.25rem); }
   .dg-cell .diagram { width: 100%; height: auto; }
-  .dg-cap { display: none; }
+  .dg-cap { display: flex; gap: 0.5em; align-items: baseline; color: var(--ink-2); margin: 0; }
+  .dg-n {
+    flex: none; display: inline-grid; place-items: center; min-width: 1.6em; height: 1.6em; padding-inline: 0.3em;
+    border: var(--hair) solid currentColor; border-radius: 999px; font-variant-numeric: tabular-nums;
+    font-size: 0.8125rem; line-height: 1; color: var(--ink);
+  }
   @media (max-width: 63.99rem) {
-    .dg-head { display: none; }
-    .dg-row { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--stack-2); padding-block: var(--stack-3); }
+    .dg-row { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--stack-3); }
     .dg-name { grid-column: 1 / -1; }
-    .dg-cap { display: block; }
   }
 
-  .dg-real { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--gutter); align-items: start; }
-  .dg-real + .dg-real { margin-top: var(--stack-5); }
-  .dg-real-head { grid-column: 1 / -1; }
-  .dg-bento, .dg-demos { grid-template-columns: minmax(0, 1fr); }
-  .dg-bento .feature.is-big { grid-column: auto; grid-row: auto; }
-  @media (max-width: 47.99rem) { .dg-real { grid-template-columns: minmax(0, 1fr); } }
+  .dg-strip { display: grid; gap: var(--stack-4); }
+  .dg-strip-list { list-style: none; padding: 0; margin: var(--stack-1) 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr)); gap: var(--stack-2); }
+  .dg-small { display: flex; gap: 0.75rem; align-items: center; padding: 0.75rem 1rem; }
+  .dg-small .demo-diagram { flex: 1; min-width: 0; }
+
+  .dg-risks { padding-left: 1.2em; display: grid; gap: var(--stack-1); }
 </style>

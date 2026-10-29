@@ -3,12 +3,16 @@
 // box; `ink` paths take the text colour, `hot` paths the signal red (one highlight). Where a
 // drawing shows a sound and its reverb, the dry hit is ink and the reverb or echo is red, as
 // on the players' waveforms (owner, 8 Oct).
+import { metaphor, type MetaphorKind } from './metaphors';
+
 export type DiagramKind =
   | 'decay' | 'throw' | 'echo' | 'bigknob' | 'wobble'
   | 'tanks' | 'attitude' | 'splash' | 'hold' | 'howl' | 'drywet' | 'cv'
   | 'mulaw' | 'bits12' | 'bits10' | 'rate' | 'wetonly'
   // Sublustris Versio (BRIEF section 10): drawn here on the same grid, in the same style.
-  | 'endless' | 'longtail' | 'freeze' | 'swell' | 'octave' | 'tape' | 'spaces';
+  | 'endless' | 'longtail' | 'freeze' | 'swell' | 'octave' | 'tape' | 'spaces'
+  // Alternative metaphors for those, for the owner to choose from (metaphors.ts).
+  | MetaphorKind;
 
 export interface Shape { ink: string[]; hot: string[]; faint?: string[]; label: string }
 
@@ -385,5 +389,7 @@ export function shape(kind: DiagramKind): Shape {
         hot: ['M48 36H84V56H48Z', 'M54 52H60V48H66V44H72V41H78'],
       };
     }
+    default:
+      return metaphor(kind);
   }
 }
