@@ -1,17 +1,17 @@
 # Owner tasks
 
-**Last updated:** 29 Oct 2026, afternoon: v1.0.58 (endless tails, confirmed) and v1.0.59 (dropouts from 7:30) built and waiting for your OK to merge; the `input_stop` page (smoothing the moment you stop playing) is being built; v1.0.57 is what's on main, in Ableton and at the rack.
+**Last updated:** 29 Oct 2026, afternoon: v1.0.58 (endless tails, confirmed) and v1.0.59 (dropouts from 7:30) built and waiting for your OK to merge; the `input_stop` page is ready to listen to; v1.0.57 is what's on main, in Ableton and at the rack.
 **Plugin installed:** `1328898` on `main` (v1.0.57, Sublustris Versio), 29 Oct 2026 12:03; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan).
 
 ## To do
 
 ### Decide
-- [ ] **Merge v1.0.58 and v1.0.59 into main** (both built and checked; you confirmed v1.0.58 on `endless_bright_settle` and picked v1.0.59's dropouts on `motion_dips`). Then I'd install the plugin and build v1.0.60 (the HALL/MASSIVE level match) on top. Or wait for `input_stop` first, if you'd rather fold a smoother stop in before merging.
+- [ ] **Merge v1.0.58 and v1.0.59 into main** (both built and checked; you confirmed v1.0.58 on `endless_bright_settle` and picked v1.0.59's dropouts on `motion_dips`). Then I'd install the plugin and build v1.0.60 (the HALL/MASSIVE level match) on top. Or wait until you've picked on `input_stop`, if you'd rather fold a smoother stop in before merging.
 
 ### Listen (after your notes)
 
 ### Listen (first time)
-Nothing waiting right now: `input_stop` is being built (see Waiting on Claude).
+- [ ] **`input_stop`**: *when you stop playing, should the reverb carry on smoothly?* **Correction:** card 5's dip wasn't the first reflections vanishing, as I first said. It was the output limiter catching one stray peak of the tail (+2.75 dBFS) just after the stop and pulling the whole reverb down 3.7 dB for about half a second; with the limiter out there's no dip. Stray peaks are about 3× likelier in the second after you stop, and nothing masks them there. A as now. B: the limiter lets a lone peak go in ~10 ms (a run of peaks is held as before; the ceiling always holds); every DECAY; +96 B. C: B plus a cushion: after held playing stops at endless, the tail starts at the playing's level and eases down over 1.5 s; +376 B. D: C at every DECAY; +360 B. Full mixes at MIX 50 % with the dry (no live fader). Cards: the noise swell, pad and strummed chord stopped in each SPACE, a pad at DECAY 0.6, stabs and drums (identical in every version: nothing pumps). Not level-matched. Note: the dry leaving still takes ~3 dB off the mix at the stop in every version. Flash: after v1.0.59 and v1.0.60, B leaves ~426 B, C/D ~150 B.
 
 ### Try in Ableton
 - [ ] **Play the plugin** (Sublustris Versio, AU or VST3; rescan first): v1.0.57, the same sound as the module build. New since v1.0.55: turning DECAY towards endless in MASSIVE and PLATE glides instead of dropping at 3 o'clock (v1.0.56); HALL's long tails keep their upper mids and move a little more (v1.0.57). Worth a try: freezing a long or endless HALL now captures a slightly more chorused pad (the deeper movement was already in the tail; it wasn't on the page). Notes welcome.
@@ -28,7 +28,7 @@ Nothing waiting right now: `input_stop` is being built (see Waiting on Claude).
 
 ## Waiting on Claude
 
-- **In progress (29 Oct 2026):** the `input_stop` page: measuring what makes the step when you stop playing (the wet's first reflections vanish as the dry stops), then 2-3 ways to smooth it, as full mixes at MIX 50 % with the dry in, with drums/stabs to check nothing pumps. It goes under "Listen (first time)" when ready. **Queued:** v1.0.60, the HALL/MASSIVE level match (your pick C on `rack_levels`), built on top of v1.0.58 once that's merged.
+- **Queued (29 Oct 2026):** v1.0.60, the HALL/MASSIVE level match (your pick C on `rack_levels`), built on top of v1.0.58 once that's merged.
 - **Your picks on `rack_levels`** (29 Oct 2026): **HALL and MASSIVE: C, meet halfway, on every card** (at endless HALL comes down 2 dB and MASSIVE up 2 dB, so they match; below about 2 o'clock unchanged; this takes back 2 of `hall_level` pick C's 3 dB). **MIX at noon: A, as built, on every card** (keep the equal-power knob). To build as v1.0.60 on top of v1.0.58 once v1.0.58 is confirmed (both act at endless DECAY).
 - **Your picks on `motion_dips`** (29 Oct 2026, MIX 100 %, level-matched): **C, dropouts from 7:30, on every card.** The warbles and crinkle stay as they are; fully CCW unchanged. **Built as v1.0.59** (branch `claude/v159-dips`, `c3e2920`; not merged): equal to the page's C to the bit; 22 of 22 tests; release +64 B. To try it at the rack before the merge: `dist/sublustris_versio-v1.0.57-plus-dips-c3e2920{,-latelight}.bin` (v1.0.57 with only this change). It merges after v1.0.58; the HALL/MASSIVE level match follows as v1.0.60.
 - **Your picks on `review2_hole`** (29 Oct 2026, MIX 34 %): **A, as now, on every card.** MASSIVE's low mids stay as they are; the 250 Hz fix is shelved (branch `review2/hole`). The page can go to the Trash with the next batch.
