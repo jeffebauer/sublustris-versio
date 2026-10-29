@@ -6,7 +6,7 @@ Everything the Sublustris Versio minisite says and shows: the brief (`BRIEF.md`)
 |---|---|
 | `BRIEF.md` | What the site must say and do, and where it differs from Resilio's |
 | `content/*.md` | The copy, one file per page, with front-matter (`title`, `description`, `slug`, `order`): `overview`, `manual`, `install`, `presets`, `changelog`, `faq`, `credits`. **Draft** (29 Oct 2026, at v1.0.59), for the owner's review |
-| `demos-plan.md` | The ten demo scenes, their material and settings, for the owner's pick |
+| `demos-plan.md` | The eight demo scenes, their material and settings (approved 29 Oct 2026) |
 | `assets/panel/sublustris-versio-panel.svg` | Panel diagram, to scale, panel names only, themeable |
 | `panel/versio_panel_coordinates.csv` | The Versio's hole positions, from Noise Engineering's printable panel template (copied from Resilio's `docs/panel/`) |
 | `tools/make_site_panel_svg.py` | Makes the panel diagram (run from the repo root) |
@@ -37,7 +37,7 @@ The plugin screenshot can be made now from the plugin; the rest wait for the pan
 
 1. **The design direction** (the style tile, stop 3).
 2. ~~**The story section's topic.**~~ The endless hold (owner, 29 Oct 2026); the sourced draft to come.
-3. **The demos:** the final list, then each clip's approval on a listening page.
+3. ~~**The demos.**~~ Eight clips, approved on their listening page (owner, 29 Oct 2026); `assets/audio/demos.json`.
 4. **Which Versio module(s)** it has been played on: not sure yet (29 Oct 2026), so the FAQ names none.
 5. ~~**The macOS minimum.**~~ Built for macOS 12+, Apple Silicon and Intel; played on Apple Silicon only, and the copy says so (29 Oct 2026).
 6. ~~**The feedback channel.**~~ GitHub Issues with two forms, as Resilio (29 Oct 2026); the forms are in `.github/ISSUE_TEMPLATE/`.
