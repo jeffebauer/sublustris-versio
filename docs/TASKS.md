@@ -28,6 +28,7 @@ Pick pages from overnight review 2 (ask me to start the page server). Each one a
 
 ## Waiting on Claude
 
+- **Your notes from v1.0.57 at the rack** (29 Oct 2026): (1) MASSIVE sounds a bit quieter overall than HALL, so you re-balance MIX against the dry when switching; (2) at 50 % MIX the reverb feels a little too loud; (3) MOTION's left side (tape): the warbles are good, but the dropouts should start nearer fully CCW instead of at ~9 o'clock. Next: measure each against a control, then listening pages.
 - **Overnight review 2** (29 Oct 2026; report `docs/research/review-2026-10-29.md` on `review/overnight-2`, prototypes on `review2/*` branches, nothing merged). Your three questions:
   - MASSIVE's bump is really a cliff at 3 o'clock (the endless hold switches on within a few degrees): page `review2_bump`.
   - The rumble: the endless hold's level nudges also tilt the tone, and incoming DC is kept forever: page `review2_endless`.
