@@ -11,7 +11,6 @@
 
 ### Listen (first time)
 Pick pages from overnight review 2 (ask me to start the page server). Each one asks a question and has pick buttons; MIX starts at 50 %.
-- [ ] **`review2_hole`**: *MASSIVE's low mids: as now, or filled in?* At SIZE noon (the default) MASSIVE's two inner reverbs partly cancel around 250 Hz; B fills it in (its low-mid reverb's lines 6 % shorter). Columns: SIZE noon, SIZE 0.75 (another dip), SIZE 0.30 (only a small dip: A and B close). Rows: pad with synth bass, low keys, low male voice. Level-matched, so B may also sound a touch darker up top as well as fuller. +24 B. (The old two-file `review2_hole_draft` folder can go to the Trash.)
 
 ### Try in Ableton
 - [ ] **Play the plugin** (Sublustris Versio, AU or VST3; rescan first): v1.0.57, the same sound as the module build. New since v1.0.55: turning DECAY towards endless in MASSIVE and PLATE glides instead of dropping at 3 o'clock (v1.0.56); HALL's long tails keep their upper mids and move a little more (v1.0.57). Worth a try: freezing a long or endless HALL now captures a slightly more chorused pad (the deeper movement was already in the tail; it wasn't on the page). Notes welcome.
@@ -30,6 +29,7 @@ Pick pages from overnight review 2 (ask me to start the page server). Each one a
 
 - **Your picks on `rack_levels`** (29 Oct 2026): **HALL and MASSIVE: C, meet halfway, on every card** (at endless HALL comes down 2 dB and MASSIVE up 2 dB, so they match; below about 2 o'clock unchanged; this takes back 2 of `hall_level` pick C's 3 dB). **MIX at noon: A, as built, on every card** (keep the equal-power knob). To build as v1.0.60 on top of v1.0.58 once v1.0.58 is confirmed (both act at endless DECAY).
 - **Your picks on `motion_dips`** (29 Oct 2026, MIX 100 %, level-matched): **C, dropouts from 7:30, on every card.** The warbles and crinkle stay as they are; fully CCW unchanged. Being built as v1.0.59 (independent of v1.0.58's endless change; the HALL/MASSIVE level match follows as v1.0.60).
+- **Your picks on `review2_hole`** (29 Oct 2026, MIX 34 %): **A, as now, on every card.** MASSIVE's low mids stay as they are; the 250 Hz fix is shelved (branch `review2/hole`). The page can go to the Trash with the next batch.
 - **Your notes from v1.0.57 at the rack** (29 Oct 2026): (1) MASSIVE sounds a bit quieter overall than HALL, so you re-balance MIX against the dry when switching; (2) at 50 % MIX the reverb feels a little too loud; (3) MOTION's left side (tape): the warbles are good, but the dropouts should start nearer fully CCW instead of at ~9 o'clock. Next: measure each against a control, then listening pages.
 - **Overnight review 2** (29 Oct 2026; report `docs/research/review-2026-10-29.md` on `review/overnight-2`, prototypes on `review2/*` branches, nothing merged). Your three questions:
   - MASSIVE's bump is really a cliff at 3 o'clock (the endless hold switches on within a few degrees): page `review2_bump`.
