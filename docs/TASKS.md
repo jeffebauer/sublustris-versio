@@ -10,6 +10,7 @@
 ### Listen (after your notes)
 
 ### Listen (first time)
+- [ ] **`motion_dips`** (your note: dropouts should start nearer fully CCW): *where should the tape dropouts come in?* Today they start at about 9 o'clock, together with the crinkle (jittery pitch bursts), and grow to 15 a minute at fully CCW. A now (from 9); B from 8 o'clock; C from 7:30; D only at the stop. Fully CCW is the same in every version, and the warbles (wow, flutter, crinkle) are untouched. Cards: slow turns from noon to fully CCW (HALL pad, MASSIVE guitar), and settings at 8:40, 8:00, 7:30. Level-matched. If what you heard at 9 o'clock was the crinkle rather than the dips, say so: that's a separate change. +72 B.
 Pick pages from overnight review 2 (ask me to start the page server). Each one asks a question and has pick buttons; MIX starts at 50 %.
 - [ ] **`review2_hole`**: *MASSIVE's low mids: as now, or filled in?* At SIZE noon (the default) MASSIVE's two inner reverbs partly cancel around 250 Hz; B fills it in (its low-mid reverb's lines 6 % shorter). Columns: SIZE noon, SIZE 0.75 (another dip), SIZE 0.30 (only a small dip: A and B close). Rows: pad with synth bass, low keys, low male voice. Level-matched, so B may also sound a touch darker up top as well as fuller. +24 B. (The old two-file `review2_hole_draft` folder can go to the Trash.)
 
