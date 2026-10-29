@@ -667,7 +667,6 @@ ul > li::marker { color: var(--signal); }
 .theme-switch button { border: 0; background: none; color: var(--ink-2); padding: 0.4rem 0.8rem; border-radius: 999px; font: var(--wt-reg) var(--fs-micro) / 1 var(--font-mono); text-transform: uppercase; cursor: pointer; }
 .theme-switch button:hover { color: var(--ink); }
 .theme-switch button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-.theme-switch button { padding-top: calc(0.4rem + 1px); padding-bottom: calc(0.4rem - 1px); }   /* optical centring, as .chip (tokens.css) */
 
 /* ---- The floating BLEND fader (owner, 8 Oct; after an Intellijel crossfader) -------
    One control for the playing demo: Dry and Wet at the ends, a dark slot with tick marks

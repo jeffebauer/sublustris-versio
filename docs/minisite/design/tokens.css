@@ -174,12 +174,6 @@ strong, b { font-weight: var(--wt-display); }
   font-size: var(--fs-micro); text-transform: uppercase;
 }
 .chip .dot { width: 0.5em; height: 0.5em; border-radius: 50%; background: var(--signal); }
-/* Optical centring (Sublustris owner, 29 Oct): in a line box MD UI and MD IO sit their capitals
-   about 1 px high at these sizes (measured at 4x: 0.9 px in a 14 px button, 1.1 px in a 12 px chip).
-   Move 1 px of padding from the bottom to the top; outer sizes stay the same. (text-box-trim
-   doesn't reach the text inside a flex pill, so it can't do this.) */
-.btn { padding-top: calc(0.5rem + 1px); padding-bottom: calc(0.5rem - 1px); }
-.chip, .badge { padding-top: calc(0.25rem + 1px); padding-bottom: calc(0.25rem - 1px); }
 
 /* ---- Tiles (V9, V11) ----------------------------------------------------- */
 .tile { background: var(--tile); border-radius: var(--radius-tile); padding: clamp(1.25rem, 0.8rem + 1.4vw, 2.25rem); }
