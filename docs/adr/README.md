@@ -11,7 +11,7 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0005](0005-hiss-into-the-tank.md) | Cassette hiss goes into the tank, ducked by the input | 3 |
 | [0006](0006-two-engines-and-licence-rules.md) | Two engines: a Plate (also the companion) and one FDN; licence rules | 22 |
 | [0007](0007-massive-mass-and-echoes-to-wash.md) | MASSIVE: mass, and SIZE from echoes to wash | 6, 7, 9 (amended by 29) |
-| [0008](0008-infinite-evolves-to-a-floor.md) | Infinite tails evolve to a warm floor (its level: ADR 0033) | 8 |
+| [0008](0008-infinite-evolves-to-a-floor.md) | Infinite tails evolve to a warm floor (its level: ADR 0033; amended v1.0.56: eases in from DECAY 0.70 in PLATE and MASSIVE) | 8 |
 | [0009](0009-freeze-tap-latches-pad-holds-still.md) | Freeze: a tap latches, the pad holds still, unfreeze glides | 10, 25, 26 |
 | [0010](0010-hold-to-paint.md) | Hold to paint into the frozen pad | 11 |
 | [0011](0011-gate-mirrors-the-button.md) | The gate mirrors the button: one gesture reader | 12, 13 |

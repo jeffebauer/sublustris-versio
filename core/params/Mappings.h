@@ -202,6 +202,17 @@ IV_CTL_OPT inline float governorWeight(float decay)
     return clamp01((decay - kDecayFiniteTop) / (kDecayInfiniteAt - kDecayFiniteTop));
 }
 
+// The floor governor's own weight (v1.0.56, ADR 0008 amended): PLATE and MASSIVE ease it in from
+// voicing::kGovernorEaseFrom as t^3, so turning towards endless glides instead of dropping at 0.80;
+// HALL as governorWeight. 0 at and below 0.70 and 1 from 0.85 in every SPACE. The duck, the hold and
+// everything else DECAY's crossover fades keep governorWeight.
+IV_CTL_OPT inline float floorWeight(float decay, int space)
+{
+    if (space == 1) return governorWeight(decay);
+    const float t = clamp01((decay - voicing::kGovernorEaseFrom) / (kDecayInfiniteAt - voicing::kGovernorEaseFrom));
+    return t * t * t;
+}
+
 // MASSIVE's high-end T60 share (v1.0.31, ADR 0022): TONE and ERA's share scaled to MASSIVE's own
 // (kMassiveHighT60Ratio), gliding back to the shared one across DECAY's crossover, so an infinite
 // MASSIVE still darkens towards its floor (ADR 0008).
@@ -235,7 +246,8 @@ IV_CTL_OPT inline float massiveDecayLevelTrim(float v, float size)
 // (kDecayLevelTopSeconds) loses by being shorter (SpaceVoicing.h, kDecayLevelPower). The plain decayRate
 // curve: HALL's SIZE has hallSizeLevelTrim, MASSIVE's longer shortest tails massiveDecayLevelTrim. 1 at
 // that top and past it, and at infinite. PLATE and HALL (v1.0.53, ADR 0034): their longer tails are
-// trimmed back to the level the same DECAY had before (kDecayLongTrimDb), 0 dB again at infinite.
+// trimmed back to the level the same DECAY had before (kDecayLongTrimDb), 0 dB again at infinite; the trim
+// lets go on the floor governor's weight (PLATE's eases in from 0.70 since v1.0.56).
 IV_CTL_OPT inline float decayLevelMakeup(float v, int space)
 {
     const float r = decayRate(v, space);
@@ -245,7 +257,7 @@ IV_CTL_OPT inline float decayLevelMakeup(float v, int space)
     const float longGain = top > ref ? std::pow(top / std::fmin(std::fmax(t, ref), top), voicing::kDecayLevelPowerLong[space]) : 1.0f;
     float g = shortGain * longGain;
     if (space != 2) {
-        const float w = 1.0f - governorWeight(v);
+        const float w = 1.0f - floorWeight(v, space);
         const float db = voicing::kDecayLongTrimDb[space] * layer(v, voicing::kDecayLongTrimFrom[space], voicing::kDecayLongTrimTo[space]) * (w * w * w);
         g *= std::pow(10.0f, -db / 20.0f);
     }

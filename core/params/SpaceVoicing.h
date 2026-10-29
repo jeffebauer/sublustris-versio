@@ -174,6 +174,11 @@ constexpr float kFloorDbfs          = -21.0f;
 // feels a bit too quiet so when the set stops, there's a less seamless transition").
 constexpr float kHallTailDb         = 3.0f;
 constexpr float kGovernorRatePerDb  = 0.08f;
+// PLATE and MASSIVE: the floor governor eases in from this DECAY, its weight t^3 (t 0..1 from here to the
+// crossover's end, 0.85), and PLATE's long-tail trim lets go on the same curve (v1.0.56, ADR 0008 amended: the
+// owner's pick B on renders/review2_bump). Switched on across 0.80-0.85 it dropped the level played hot by up to
+// 4-5 dB in one 0.01 of DECAY, "a drop at about 3 o'clock". HALL's weight stays linear over 0.80-0.85.
+constexpr float kGovernorEaseFrom   = 0.70f;
 constexpr float kGovernorSeconds    = 1.5f;
 constexpr float kHoldSeconds        = 8.0f; // the slow level a held tail's ceiling is judged on
 // A falling infinite tail is judged on this faster level too (soak audit: with the 1.5 s level

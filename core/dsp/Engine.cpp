@@ -438,8 +438,9 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // weight at once, not glided with freezeMix_: gliding it pulled a fed pad (above the floor) down
     // hard on unfreeze, "a pronounced immediate drop" and a too-steep decay (owner, freeze options).
     // Freezing glides the weight up with freezeMix_ (a jump to full changed a finite tail's loss in
-    // one sample: a click).
-    const float governor = frozen ? std::fmax(map::governorWeight(decay), freezeMix_) : map::governorWeight(decay);
+    // one sample: a click). PLATE and MASSIVE ease the weight in from DECAY 0.70 (v1.0.56, map::floorWeight).
+    const float floorW = map::floorWeight(decay, activeSpace_);
+    const float governor = frozen ? std::fmax(floorW, freezeMix_) : floorW;
     // DECAY keeps the loudness (v1.0.28): a shorter tail is made up to the finite top's level, on the
     // wet and the twin alike. A frozen pad keeps heldDecay_, so freezing doesn't move it.
     const float gainWas = decayGain_;
