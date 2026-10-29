@@ -1,128 +1,174 @@
 # Handoff
 
-**Written:** 28 Oct 2026, end of session 10. That session:
-- built v1.0.51-54 from the owner's picks and rack notes: level D + glue E, HALL's endless tail +3 dB (C), DECAY's range B, TIME in BLOOM by crossfade, two rounds of CPU savings;
-- ran six CPU laps with the owner.
+**Written:** 29 Oct 2026, end of session 11.
+
+This session covered six pieces of work:
+- **Overnight review 2,** with its report, prototypes and the module's audit laps.
+- **Five versions merged:**
+  - v1.0.56, DECAY's gentle ramp into endless;
+  - v1.0.57, HALL's long tails;
+  - v1.0.58, endless tails keep still notes, only bright tails settle, the bass and DC stay clean;
+  - v1.0.59, tape dropouts from about 7:30;
+  - the review's same-sound savings, with LEAN the default.
+- **Three pages judged:**
+  - `rack_levels` (the HALL/MASSIVE level match picked, not built yet);
+  - `review2_hole` (as now);
+  - `input_stop` (D picked; refined on `input_stop2`, waiting for the owner).
+- **The GitHub repo renamed** to `sublustris-versio`, with a new README.
+- **A website brief and a prompt** for a new session.
+- **Old builds and judged pages moved to the Trash.**
 
 Start with `/sublustris-start`.
 
-**Nothing running:** no agents, no nested sessions. The owner worked over Remote Control, where `start_session` is refused. All delegated work ran as background `Agent` subagents in hand-made worktrees (memory "Remote Control: no nested sessions"). The LAN page server (`preview_start` `review-pages-lan`, port 8766) was started this session; assume it is gone. The module was still looping its profile lap into `screenlog.0` at the end.
+**Nothing running:** no agents, no nested sessions, no worktrees. The owner works over Remote Control from their phone: `start_session` is refused, so delegated work runs as background `Agent` subagents in hand-made worktrees (memory "Remote Control: no nested sessions"). The LAN page server may still be running from earlier; check with `preview_list`.
+
+## Folder move (not done yet; owner's choice)
+
+The GitHub repo is already `jeffebauer/sublustris-versio` (ADR 0032 amendment; `origin` points at it). The local folder moves `~/Documents/Sites/immensio-versio` → `~/Documents/Sites/sublustris-versio`, but **only at a wrap-up when the owner is at the computer and will open a new session in the new folder**. Never before a `/clear` or from the phone: a cleared session stays in the old folder (memory "Folder move needs a new session"). Checklist:
+
+1. **Prepare:** everything committed and pushed; no agents running; no worktrees; the page server stopped.
+2. **Paths:**
+   - Replace `/Users/jesse/Documents/Sites/immensio-versio` with `/Users/jesse/Documents/Sites/sublustris-versio` in tracked files that aren't history: CLAUDE.md, `.claude/skills/*`, `tools/**/*.py`, SPEC §6's tree. `git grep -l immensio-versio` finds them; leave `docs/research/` and past handoff prompts as history.
+   - Change the memory path in `.claude/skills/sublustris-wrap/SKILL.md` to `-Users-jesse-Documents-Sites-sublustris-versio`.
+   - Commit and push.
+3. **Memory:** `mkdir -p ~/.claude/projects/-Users-jesse-Documents-Sites-sublustris-versio && cp -R ~/.claude/projects/-Users-jesse-Documents-Sites-immensio-versio/memory ~/.claude/projects/-Users-jesse-Documents-Sites-sublustris-versio/`.
+4. **Last command:** `mv ~/Documents/Sites/immensio-versio ~/Documents/Sites/sublustris-versio`. Then tell the owner to open a new session in the new folder and run `/sublustris-start`.
+5. **The new session's first steps:**
+   - `git worktree prune`.
+   - Recreate the `.venv` (`python3 -m venv .venv && .venv/bin/pip install numpy soundfile`): a moved venv's scripts still point at the old path.
+   - `build/`'s CMake cache records the old path, so remove only `build/CMakeCache.txt` and `build/CMakeFiles`. Then `cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build` and ctest (expect 22).
+   - Run `make -C firmware all-variants` and `cmp` the release against `dist/sublustris_versio-v1.0.59-4371335.bin`.
+   - Update CLAUDE.md's first paragraph to say the folder has moved.
 
 ## State
 
 | Milestone | State |
 |---|---|
-| Spec | v1.0 frozen plus amendments to **v1.0.54**, on main |
+| Spec | v1.0 frozen plus amendments to **v1.0.59**, on main |
 | M0 | Passed (25 Oct) |
 | M1/M4-M8 | Built and listened |
-| M2 | Plugin installed `05122e3` (v1.0.54, Sublustris Versio), 28 Oct |
-| M3 | v1.0.49 confirmed at the rack. The v1.0.52 rack test found overloads with SHIMMER + WEAR + MOTION's tape side; v1.0.54's laps show 0 late blocks. **v1.0.54 not yet heard at the rack** |
+| M2 | Plugin installed `4371335` (v1.0.59), 29 Oct 17:27; AU check passed |
+| M3 | v1.0.57 played at the rack (the owner's three notes: levels and dropouts, both since picked). **v1.0.59 not yet at the rack** |
 | M9 | Not started |
 
-**Folder move, to do as the LAST step of a wrap-up when the owner is at the computer and will open a new session in the new folder (owner's choice, 29 Oct 2026; ADR 0032 amendment). Never before a `/clear` or from the phone: a cleared session stays in the old folder.** The GitHub repo is already `jeffebauer/sublustris-versio`. The local folder moves `~/Documents/Sites/immensio-versio` → `~/Documents/Sites/sublustris-versio`; moving it ends the session running inside it, so:
-1. Everything committed and pushed; no agents running; remove every worktree (`git worktree remove`, branches kept); stop the page server.
-2. Replace `/Users/jesse/Documents/Sites/immensio-versio` with `/Users/jesse/Documents/Sites/sublustris-versio` in tracked files that aren't history (CLAUDE.md, `.claude/skills/*`, `tools/**/*.py`, SPEC §6's tree; `git grep -l immensio-versio`), and the memory path in `.claude/skills/sublustris-wrap/SKILL.md` to `-Users-jesse-Documents-Sites-sublustris-versio`. Commit, push.
-3. Copy Claude's memory: `cp -R ~/.claude/projects/-Users-jesse-Documents-Sites-immensio-versio/memory ~/.claude/projects/-Users-jesse-Documents-Sites-sublustris-versio/` (make the folder first).
-4. Last command: `mv ~/Documents/Sites/immensio-versio ~/Documents/Sites/sublustris-versio`. Tell the owner to open a new session in the new folder and run `/sublustris-start`.
-5. **The new session's first steps:** `git worktree prune`; recreate `.venv` (`python3 -m venv .venv && .venv/bin/pip install numpy soundfile`: a moved venv's scripts point at the old path); `build/`'s CMake cache records the old path, so remove `build/CMakeCache.txt` and `build/CMakeFiles` only, then `cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build` and ctest (expect 22); `make -C firmware all-variants` and `cmp` the release against `dist/`'s current build. CLAUDE.md's first paragraph then says the folder has moved.
+- **main HEAD:** the commits after this handoff; code as of the v1.0.59 merge `4371335`. Pushed to `origin`.
+- **Gates, re-run at wrap-up on main:**
+  - ctest: **"100% tests passed out of 22"**.
+  - `same_render`: SAME 60/60 against the v1.0.58 renderer at the v1.0.59 merge.
+- **Firmware:**
 
-**Update 4, 29 Oct 2026 (session 11):** v1.0.56 (owner pick B on `review2_bump`: the floor governor eases in from DECAY 0.70 in PLATE and MASSIVE, ADR 0008 amendment) and v1.0.57 (pick D on `review2_halltail`: HALL's loss shelf at 6 kHz and a deeper modulation floor on long tails, ADR 0035) merged into main (`1328898`): 22 of 22 tests, release **110,924 B** (1,716 B under budget), m0test 83,556, profile 127,840. Plugin installed `1328898` (AU check passed). Rack builds `dist/sublustris_versio-v1.0.57-a90d3bc{,-latelight}.bin`. Waiting on the owner: pages `review2_endless2` (A-F; F = the held endless tail's movement settles) and `review2_hole` (MASSIVE's 250 Hz hole). Branches with live prototypes: `review2/endless2` (IV_RUMBLE_FIX, IV_ENDLESS_TOP, IV_ENDLESS_CALM; it also edits Engine.cpp/Governor.h, so merge carefully onto v1.0.57), `review2/holepage` (IV_HOLE_FIX). Next CPU job: the unfreeze-after-SIZE overload (audit lap UNFRZ, up to 107.5 %).
+  | Variant | Bytes | |
+  |---|---|---|
+  | release | **112,012** | 85 %; **628 B under the 112,640 budget** |
+  | m0test | 83,556 | |
+  | profile | 128,848 | 98 %; warning as usual |
+  | release `AUDIO_DIRECT=1` | 108,772 | |
 
-**Update 3, 29 Oct 2026 (session 11):** overnight review 2 ran (report `docs/research/review-2026-10-29.md`, now on main with the agents' notes; prototype branches `review2/*`, pages `renders/review2_endless`, `review2_bump`, `review2_halltail`, draft `review2_hole_draft`). The owner ran its audit lap and the LEAN HASH lap (`docs/research/m3-review2-audit*-212b68b.log`): HASH matched, so `review2/neutral` was merged into main (`248ec3d`, owner's OK) with **LEAN=1 the default**: 22 of 22 tests, SAME 60/60 against the pre-merge renderer, **release 110,476 B (2,164 B under budget)**, m0test 83,556, profile 127,408. Rack builds `dist/sublustris_versio-v1.0.55-248ec3d{,-latelight}.bin` (same sound as v1.0.55). Plugin not reinstalled (same sound). **The one overload left:** unfreezing after SIZE moved while frozen, MASSIVE up to 107.5 % (next: a prototype). AUDIO_DIRECT=1 (−3,240 B) waits for its rack boot test. Sections below this paragraph predate the review.
+- **Rack builds in `dist/`:**
+  - `sublustris_versio-v1.0.59-4371335{,-latelight}.bin`;
+  - `...-4371335-audiodirect{,-latelight}.bin`, the owner's next flash: it combines the AUDIO_DIRECT boot test with v1.0.59's rack check.
+  - Also kept: `dist/release/v1.0.54-05122e3/`, the friend package the owner sent.
 
-**Update 2, end of session 10:** v1.0.55 (the owner's pick B on `renders/decay_swell`: DECAY's make-up rises no faster than the old tail fades) merged into main (`4658d91`): 22 of 22 tests, **release 112,564 B (76 B under budget)**, m0test 83,556, profile 127,808. Plugin installed `4658d91` (AU check passed). Rack builds `dist/sublustris_versio-v1.0.55-3eb5e1c{,-latelight}.bin` (and `-profile-cpusave.bin`), not yet heard at the rack. **Next: the overnight review**, prompt in `docs/handoff/overnight-review-2-prompt.md`; the morning session reads its report (`docs/research/review-2026-10-29.md` on `review/overnight-2`), starts the page server for the owner and files TASKS. Sizes and versions below this paragraph are from v1.0.54.
+## What changed this session (on main)
 
-**Update 1, end of session 10:** at the owner's request `claude/combined` (674a2ca) is **merged into main** (`05122e3`), so main holds everything now: 22 of 22 tests (main builds the plugin tests too), release 112,588 B, the same bytes as `dist/sublustris_versio-v1.0.54-7ee389e.bin`. Plugin installed `05122e3` (AU check passed; old Immensio bundles to the Trash). Friend package `dist/release/v1.0.54-05122e3/` (universal, read-me with what's new since v1.0.41). Judged pages, old builds and log tails are in `~/.Trash/sublustris-cleanup-2026-10-28`. The `combined` worktree can be removed; new work branches from main.
+- **Review 2** (report `docs/research/review-2026-10-29.md`, agents' notes in `docs/research/review2-notes/`, laps in `docs/research/m3-review2-audit*-212b68b.log`).
+- **`review2/neutral` merged** (`248ec3d`):
+  - B1-B4 same-output CPU savings;
+  - trial switches done properly: `ABSORB_EXP`, `SHIMMER_POLY`, `LEAN`, `AUDIO_DIRECT`, `SDRAM_REFRESH` (each needs `=1`, own tag and obj dir);
+  - the audit lap `SIZESPIKE=5`;
+  - **`LEAN=1` the default:** its HASH matched on the module, `0x3b18a2ac`, and its timing is the same within 0.4 points; `LEAN=0` → `-nolean`.
+- **v1.0.56** (ADR 0008 amendment): PLATE and MASSIVE ease the floor governor in from DECAY 0.70 (`voicing::kGovernorEaseFrom`, `map::floorWeight`).
+- **v1.0.57** (ADR 0035, ADR 0012 amendment): HALL's loss shelf at 6 kHz; HALL's modulation floor deepens ×1 → ×2 from 5 s to 15 s tails, centred.
+- **v1.0.58** (ADR 0008/0009 amendments):
+  - the governor's correction is a flat gain;
+  - the still lows take no hold correction;
+  - a 5 Hz DC blocker on the wet input;
+  - endless PLATE and HALL calm their modulation over 10 s once held ("still notes");
+  - the light settle (`kEndlessTop*`) applies only as far as the playing was bright (`Engine::trackBrightness`);
+  - a new test checks that a held tail keeps its spectrum.
+- **v1.0.59** (ADR 0030 amendment): `kTransportDipsFrom = 0.026`, so dips start at about 7:30.
+- **Repo and docs:**
+  - README rewritten in Resilio's style;
+  - NOTICE and `tools/make_release.sh` point at the new repo URL;
+  - the website brief is `docs/minisite/BRIEF.md`, and the new session's prompt `docs/handoff/website-prompt.md`.
 
-**Gates on `674a2ca`, re-run by me:**
-- ctest: **"100% tests passed out of 21"**.
-- Desktop `same_render`: the CPU savings are SAME 60/60 against the pre-savings code.
+## In flight (branches kept on purpose, no worktrees)
 
-Firmware:
+- **`claude/rack-levels`** (`6eab077`): `IV_SPACE_TRIM="plate,hall,massive"` dB at endless, plus `IV_MIX_TAPER`. **The owner picked C, meet halfway: `0,-2,2`**, and MIX as built. Next: build it as v1.0.60 (step 1 below). Notes: `docs/research/rack-levels.md` on the branch.
+- **`claude/input-stop`** (`1ef34bc`, on top of v1.0.58): `IV_INPUT_STOP` modes.
 
-| Variant | Bytes | |
-|---|---|---|
-| release | **112,588** | **52 B under the 112,640 budget** |
-| m0test | 83,556 | 63 % |
-| profile | 127,832 | 97 %; warning expected |
+  | Mode | What it is | Flash |
+  |---|---|---|
+  | 1 = B | quick limiter release | |
+  | 2 = C | B + the cushion at endless | |
+  | 3 = D | the owner's pick on `input_stop`: the cushion at every DECAY | +352 |
+  | 4 = E | the cushion follows the tail closely and holds 0.8 s | +392 |
+  | 5 = F | E + a +1.5 dB bloom as the dry leaves | +440 |
 
-Rack builds in `dist/`:
-- `sublustris_versio-v1.0.54-7ee389e.bin` and `-latelight.bin`. Same code as `674a2ca`: that commit only adds docs and renumbering.
-- Older ones can go to the Trash: v1.0.48-53 and every `-profile-cpu*` file. Keep the v1.0.54 pair.
-
-## What changed this session (all on `claude/combined`)
-
-- **v1.0.51**, ADR 0014 amendment and ADR 0033:
-  - ducking 2:1, eased on held playing (40 %), fast 0.08 s release after held sounds;
-  - endless floor −21 dBFS;
-  - 816 B freed by building the control-rate maths `-Os`. The laps showed this isn't a CPU cost.
-- **v1.0.52** (ADR 0033 amendment):
-  - HALL's floor at −18 dBFS;
-  - WEAR's compander clamp is now a soft knee; it was the cause of a tick on louder tails.
-- **v1.0.53** (ADR 0034, ADR 0020 amendment): DECAY tops PLATE 30 s, HALL 60 s. Same curve, endless still from 0.85. Longer tails are trimmed to today's level while playing.
-- **v1.0.54** (ADR 0025 amendment, phase 2):
-  - BLOOM's swell taps crossfade on TIME moves instead of gliding.
-  - CPU savings (`firmware/README.md` "CPU save" and "CPU save 2"):
-    - shimmer rings in D2/AXI SRAM;
-    - tank control maths once a block;
-    - the twin room zeroed while it rests (that was the flip spike);
-    - WEAR's two sides interleaved;
-    - LED DMA without HAL.
-- **New lap:** `SIZESPIKE=4` (CPUSAVE) in the profile build.
-
-## In flight
-
-- **Nothing unmerged that matters.** Every branch made this session is contained in `claude/combined`: `glue-e`, `time-noise`, `cpu-hunt`, `cpu-save`, `cpu-save2`, `decay-range`, `v153`. Their worktrees are removed and the branches kept. `claude/level-duck` (the prototype hooks, superseded by v1.0.51) is shelved, its worktree removed.
-- **Pages judged this session**, in the main checkout's `renders/`, can go to the Trash after the owner's OK: `level_glue`, `hall_level`, `decay_range`, `_material_level_glue`, `_material_decay_range`. That's about 1.8 GB.
-- **Local-only artefacts in the main checkout**, not committed: `screenlog.0` (the cpusave2 lap still looping) and `screenlog-2026-10-2*.0` (leftover lap tails). All can go.
-- **The optional `IV_ABSORB_EXP`** (loss filters on `exp`, not bit-identical, ~1e-6): measured −1.5 to −4 points on MASSIVE's SIZE moves (ABSEXP lines in `docs/research/m3-cpusave2-7ee389e-full.log`). It's off in release.
-  - Turning it on via `make 'TRIAL_DEFS= -DIV_ABSORB_EXP'` gave a byte-identical binary, so that route doesn't work.
-  - To enable it properly: add a Makefile option to `C_DEFS`, then measure the size.
+  - Diagnostic hooks: `IV_LIMIT_OFF`, `IV_TRACE`.
+  - Its page `renders/input_stop2` (A/D/E/F) waits for the owner.
+  - Notes: `docs/research/input-stop.md` on the branch.
+  - The branch is built on v1.0.58, not v1.0.59, so merge main into it before building.
+- **Shelved or done prototypes** (keep): `claude/motion-dips`, `review2/endless`, `review2/endless2`, `review2/hole` and `review2/holepage` (the owner kept MASSIVE's low mids as now), `review2/bump(page)`, `review2/halltail`, `review2/knobs` (`IV_KNOBPATH`: the firmware's knob path in the renderer), `review2/robust` (`IV_DC_BLOCK_HZ`, `IV_INPUT_GUARD`, the robustness harness), `review2/valhalla`, and the rest of `review2/*` and `review/overnight-2`. Older: `claude/level-duck`, `claude/drift-rethink-8838a7`, `claude/swell-motion`, `claude/wear-onset`.
+- **Pages in `renders/`:** `input_stop2` (waiting), `endless_bright_settle`, `rack_levels`, `motion_dips` and `review2_hole` (all judged: can go to the Trash on the owner's OK).
 
 ## Next steps
 
-1. **The owner plays v1.0.54 at the rack** (TASKS "At the rack" lists what to check): the LEDs (driver changed), SHIMMER (memory moved), SIZE moves with SHIMMER + WEAR + MOTION, SPACE switches, TIME in HALL BLOOM, DECAY's range.
-   - If MASSIVE still glitches or flashes amber a lot, turn on `IV_ABSORB_EXP` in release (see In flight). It needs bytes found first if it grows the build.
-2. ~~Merge into main, install the plugin~~ done (05122e3).
-   - Take main's TASKS / HANDOFF / CLAUDE.md / skills / `docs/research/m3-*` logs.
-   - `docs/research/level-at-infinite.md` exists on both sides; keep both halves.
-   - Then install the plugin with `tools/install_plugin.sh <commit>` (Ableton closed; `auval -v aumf ImVs Ombr` only), tell the owner to remove the old "Immensio Versio" bundles, and update the TASKS "Plugin installed" line.
-3. **Later** (TASKS "Waiting on Claude"):
-   - the sub-20 Hz rumble at endless DECAY with TONE CW;
-   - PLATE's SIZE by crossfade;
-   - the SPACE-flip morph (needs ~0.5-1 KB of flash);
+1. **v1.0.60, the HALL/MASSIVE level match:** at endless, HALL −2 dB and MASSIVE +2 dB, coming in as DECAY nears endless (the owner's pick C on `rack_levels`).
+   - Port `claude/rack-levels`'s `IV_SPACE_TRIM` (only the trim, not `IV_MIX_TAPER`: MIX stays as built) into a voicing constant on main, now at v1.0.58/59.
+   - Prove it equals the prototype with `"0,-2,2"` on a branch rebased onto main; everything below the trim's range is bit-identical to main.
+   - Goldens, SPEC line, and an ADR 0033 amendment (it takes back 2 of `hall_level` pick C's 3 dB).
+   - About +90 B; it fits in 628 B.
+2. **The owner's pick on `input_stop2`,** built as the next version from `claude/input-stop` (merge main in first).
+   - Flash: D +352, E +392, F +440 B. After v1.0.60 that leaves about 180 B for D and almost nothing for F, so **AUDIO_DIRECT's rack test (−3,240 B) decides the room.**
+   - If the owner picks F, check its bloom at MIX 0.3 / 0.8 once more.
+3. **The unfreeze-after-SIZE overload:** MASSIVE with SHIMMER, WEAR 0.5 and MOTION tape reaches 100.6-107.5 % in the audit lap's UNFRZ lines, up to two-thirds of the blocks late, a crackle.
+   - Cause: the frozen tank holds its SIZE, so the unfreeze lands the whole move as one crossfade while the twin room still runs.
+   - Options (sound changes, so a page): glide SIZE after an unfreeze; wait for the twin to stop; stop the twin sooner.
+   - `ABSORB_EXP` + `SHIMMER_POLY` only take it to 103.4 %.
+   - Profile lap: `make MODE=profile SIZESPIKE=5`.
+4. **AUDIO_DIRECT the default** once the owner's rack boot test is clean: `firmware/Makefile` `AUDIO_DIRECT ?= 1`, with a `-libaudio` tag for the old path, the same way LEAN was done.
+5. **The website** runs in its own session from `docs/handoff/website-prompt.md`. This repo's sessions shouldn't touch `site/` or `docs/minisite/` while it runs.
+6. **Later** (TASKS "Waiting on Claude"):
    - the review's housekeeping list;
-   - the low tank's crossover reset on a SPACE flip.
+   - "Found by review 2, for later";
+   - PLATE's SIZE by crossfade;
+   - the SPACE-flip morph;
+   - the Plugin input NaN guard;
+   - desktop `-ffp-contract=off`.
 
 ## Waiting on the owner (`docs/TASKS.md`)
 
-- At the rack: v1.0.54.
-- Decide: the merge into main.
-- Empty the Trash: old `immensio-*` folders.
-- Optional reference recordings and Ribbons/Magneto takes.
+- **Listen:** `input_stop2`.
+- **At the rack:** v1.0.59 with the AUDIO_DIRECT boot test, in one flash.
+- **Try in Ableton:** v1.0.59, and check Ableton's sample rate (at 96 kHz HALL and MASSIVE come out much brighter than the module).
+- **When convenient:**
+  - start the website session;
+  - empty the Trash (`sublustris-cleanup-2026-10-29`, `sublustris-old-builds-2026-10-29b`);
+  - reference recordings.
 
 ## Will bite
 
-- **Flash: 52 B left.** Anything new needs bytes found first. Known tools:
-  - `IV_ZI`, `IV_SIZE_OPT` / `IV_CTL_OPT`, `IV_NOINLINE`, no new libm calls;
-  - check what links from libgcc (`__aeabi_*`): the VFP `__aeabi_l2d` saved 840 B;
-  - ~1-2 KB is still in `queueEdge` and the constructors (review item).
-- **CPU headroom is thin in MASSIVE.** With SHIMMER + WEAR 0.5 + MOTION's tape side while SIZE moves, the profile lap peaks at 93-95 %. Release may be a point or two heavier.
-  - Any per-sample addition in MASSIVE needs a lap.
-  - D2 SRAM now holds the left shimmer ring, the twin room and the prime sieve (`.d2_bss`, clocks on at boot). AXI SRAM is nearly full.
-- **Lap logs.** Moving `screenlog.0` mid-run stops logging. Laps repeat, so logs mix builds: slice one lap between START and DONE, and trust the DONE line's late count (memory "Moving screenlog stops logging").
-- **The late-light build's output file** is `firmware/build/sublustris_versio-latelight.bin`; `cmp` the dist pair (memory).
-- **The shell's cwd drifts into worktrees.** Commit main's docs with `git -C <main checkout>`.
-- **The click check misses broadband bursts:** compare energy above 3 kHz against an unswitched render.
-- **The level governor holds an absolute level** (HALL −18, PLATE/MASSIVE −21 dBFS at endless); the module's jack calibration is unknown.
-- **Test changes this session to keep in mind:**
-  - `test_plate_freeze` feeds PLATE at 0.5 and carries a 0.8 dB white-noise offset for the DECAY trim.
-  - `test_motion` and `test_twin_level` set DECAY via `host/tests/DecayV1052.h` to keep the old tail lengths.
+- **Flash: 628 B left.** v1.0.60 (~90 B) fits. The `input_stop` pick needs ~350-440 B, which is tight to impossible without `AUDIO_DIRECT` (−3,240 B, waiting on the rack test). Profile is at 98 % of 128 KB: every new profile line counts.
+- **CPU:**
+  - The unfreeze case above is the one known overload.
+  - v1.0.58 adds a per-chunk brightness measure (`trackBrightness`, every 4th sample, out of line) and the endless modulation calm. Neither has been profiled on the module; the next profile lap should include them.
+  - Playing MASSIVE's worst SIZE-move line is 90.8 % (88.4 % with both shortcuts).
+- **Agents and the main checkout:**
+  - An agent once reconfigured main's `build/` by losing its `cd`. Briefs must say: absolute paths only (`cmake -S <worktree> -B <worktree>/build`), never cmake or make in the main checkout. Check `grep IV_BUILD_PLUGIN build/CMakeCache.txt` reads ON after agents finish.
+  - The scratchpad is shared: give each agent its own named folder.
+- **Explain owner notes only after a control run.** This session's first explanation of `input_stop`'s dip (the first reflections) was wrong; it was the limiter (memory "Measure owner notes first").
+- **Version numbers on branches:** build a version's rack files from main after the merge, not from a branch that lacks the version before it (v1.0.59's branch builds were v1.0.57 + dips; renamed and retired).
+- **Goldens:** `IV_GOLDEN_UPDATE` refuses a second update at the same SPEC version.
+- **Desktop vs module:** release has **no** flush-to-zero and no fused multiply-adds; the desktop fuses (901 `vfma` in `libiv_core.a`). `same_render` proves desktop against desktop; firmware-only claims need `cmp` or the module's HASH line (`SIZESPIKE=5` lap).
+- **`screenlog.0`** in the main checkout is the module's serial log (local only; laps from it are filed in `docs/research/`). It appends across flashes: slice laps by their START and DONE lines.
+- **The shell's cwd drifts into worktrees;** commit main's docs with `git -C <main checkout>`.
 
 ## Where to look
 
-- `docs/TASKS.md`
-- `SPEC.md` changelog v1.0.51-54 on `claude/combined`
-- `firmware/README.md` "CPU save" / "CPU save 2" (lap `SIZESPIKE=4`, memory placement)
-- `docs/research/m3-cpusave2-7ee389e-full.log` (latest lap, main)
-- ADRs 0014, 0025, 0033, 0034 (on `claude/combined`)
+- `docs/TASKS.md`: "Waiting on Claude", whose first item is "Next, in order".
+- `SPEC.md`: changelog v1.0.56-v1.0.59.
+- `docs/research/review-2026-10-29.md`: the review, including "The module's answer".
+- `docs/research/m3-review2-audit-212b68b.log`: the UNFRZ lines.
+- Branches `claude/rack-levels` and `claude/input-stop`: their notes `docs/research/rack-levels.md` and `input-stop.md`.
+- `docs/minisite/BRIEF.md` and `docs/handoff/website-prompt.md`, for the website session.
