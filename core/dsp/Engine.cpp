@@ -186,6 +186,8 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     roomLevel_ = 0.0f;
     roomStepN_ = -1;
     lowFdn_.setGovernorLeader(&fdn_);
+    inDcR_ = 1.0f - 2.0f * map::kPi * voicing::kInputDcHz / sampleRate_; // dsp::DcBlocker::setCutoff's
+    inDcB_ = 0.5f * (1.0f + inDcR_);
     {
         // The split: a 2nd-order Butterworth pair (bilinear). The two tanks' outputs are uncorrelated,
         // so they add in power, and a Butterworth pair is power complementary (|L|² + |H|² = 1).
@@ -242,6 +244,8 @@ IV_SIZE_OPT void Engine::reset()
     tankInPower_ = 0.0f;
     quietSince_ = 0;
     tailCaptured_ = false;
+    endlessCalm_ = 0.0f;
+    inDcX_[0] = inDcX_[1] = inDcY_[0] = inDcY_[1] = 0.0f;
     smooth_ = values_;
     for (auto& p : predelay_) p.clear();
     for (auto& d : diffuser_) d.clear();
@@ -476,6 +480,30 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     float holdDb = 0.0f;
     if (frozen) holdDb = padFloorDb_;
     else if (tailCaptured_) holdDb = tailCeilingDb_;
+    // A held endless tail (v1.0.58, ADR 0008 amended; the owner's pick F with E's tone on renders/review2_endless2).
+    // Held: the input quiet for kQuietSeconds at full endless DECAY (tailCaptured_); new playing starts both over.
+    // - Its top end mellows: the highs lose at least endlessTop (1/T60 in 1/s, absorbShared()'s top), which fades
+    //   over kEndlessTopSeconds while the tail is held, so the top end goes down by about kEndlessTopDb above the
+    //   loss shelf and settles. Where TONE's or the infinite fade's own high loss is larger (TONE noon and below),
+    //   that one stands. Not while frozen (a pad keeps what it froze with); not MASSIVE (no air, ADR 0022's own).
+    if (tailCaptured_) endlessTopLeft_ -= endlessTopLeft_ * (float(n) / (sampleRate_ * voicing::kEndlessTopSeconds));
+    else endlessTopLeft_ = 1.0f;
+    float endlessTop = 0.0f;
+    if (!frozen)
+        endlessTop = voicing::kEndlessTopDb / (60.0f * voicing::kEndlessTopSeconds) * endlessTopLeft_ * map::governorWeight(decay)
+                   * (1.0f - freezeMix_);
+    // - Its modulation calms: what FREEZE glides out (the floor, PLATE's chorus and long-line wander) glides out of
+    //   the tail too, over kEndlessCalmSeconds, so held notes stay notes (the smear has nothing to die with at
+    //   endless: it built into a noisy haze). New playing brings it back over kUnfreezeSeconds, as an unfreeze does;
+    //   frozen, it waits (the freeze's own glide rules). MOTION's own movement stays, as on a pad. PLATE and HALL.
+    //   modStill: the share of that modulation glided out, freezeMix_'s or the calm's, whichever is further in.
+    float modStill = freezeMix_;
+    if (!massive) {
+        if (!frozen)
+            endlessCalm_ = tailCaptured_ ? approach(endlessCalm_, 1.0f, float(n) / (sampleRate_ * voicing::kEndlessCalmSeconds))
+                                         : approach(endlessCalm_, 0.0f, float(n) / (sampleRate_ * voicing::kUnfreezeSeconds));
+        if (endlessCalm_ > modStill) modStill = endlessCalm_;
+    }
 
     if (plate) {
         plate_.setScale(map::plateScale(size), snap);
@@ -483,13 +511,14 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         plate_.setHighT60Ratio(highRatio);
         plate_.setGovernor(governor);
         plate_.setFloorDb(floorDb);
-        plate_.setModDepth(1.0f - freezeMix_ * (1.0f - voicing::kFrozenPlateModDepth));
-        plate_.setLongDelayMod(1.0f - freezeMix_);
+        plate_.setModDepth(1.0f - modStill * (1.0f - voicing::kFrozenPlateModDepth));
+        plate_.setLongDelayMod(1.0f - modStill);
         // A frozen PLATE's chorus and floor glide out too, so a held chord stays pure (v1.0.22, the
         // DSP audit's A3; it kept 0.15 of the chorus and slowly shimmered out of tune).
-        plate_.setModScale(modScale_ * (1.0f - freezeMix_));
+        plate_.setModScale(modScale_ * (1.0f - modStill));
         plate_.setHoldDb(holdDb);
         plate_.setAir(voicing::kAirPlateDbPerSecond / 60.0f); // v1.0.25
+        plate_.setEndlessTop(endlessTop);
     } else {
         const float mean = massive ? map::massiveMeanSeconds(size) : map::hallMeanSeconds(size);
         const float spread = massive ? map::massiveSpread(size) : 1.0f;
@@ -519,7 +548,9 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
                                    : voicing::kHallOutputTrim * map::hallSizeLevelTrim(hallSize_, decay));
         fdn_.setEarlyTaps(1.0f); // HALL too (v1.0.25: no gap after the note, its "slap-back")
         fdn_.setAir(massive ? 0.0f : voicing::kAirHallDbPerSecond / 60.0f); // v1.0.25
-        // The floor glides out with the freeze (v1.0.22, A3; Costello: mod depth to 0 for a freeze).
+        fdn_.setEndlessTop(massive ? 0.0f : endlessTop);
+        // The floor glides out with the freeze (v1.0.22, A3; Costello: mod depth to 0 for a freeze), and with a held
+        // endless tail's calm (v1.0.58, above).
         // HALL's deepens with its tail (v1.0.57, ADR 0035): x1 up to a 5 s tail, x2 from 15 s and at infinite, on
         // the lows' T60 (`rate`: 0 at infinite, and towards 0 while freezing, as the floor glides out); centred on
         // the lines' mean read (Fdn::setFloorCentre), so a DECAY move doesn't retune what the tail holds.
@@ -533,7 +564,7 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
             floorScale = voicing::kHallFloorScale * hallFloorNow_;
         }
         fdn_.setFloorCentre(massive ? 0.0f : 1.0f - 1.0f / hallFloorNow_);
-        fdn_.setModDepth(modScale_ * floorScale * (1.0f - freezeMix_));
+        fdn_.setModDepth(modScale_ * floorScale * (1.0f - modStill));
         // Still lows: the low tank follows, unmodulated.
         lowFdn_.setDecayRate(rate);
         lowFdn_.setHighT60Ratio(highRatio);
@@ -980,7 +1011,8 @@ IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* 
             flipGain_ = clamp01(flipGain_ + flipStep_);
             tankIn_ = tankIn_ < tankInTarget_ ? std::fmin(tankInTarget_, tankIn_ + tankInStep_)
                                               : std::fmax(tankInTarget_, tankIn_ - tankInStep_);
-            const float l = inL[start + i], r = inR[start + i];
+            // The wet's input without its DC (v1.0.58): at endless DECAY the loop's gain at DC is 1, so it built up.
+            const float l = inputDc(0, inL[start + i]), r = inputDc(1, inR[start + i]);
             inputPower_ += 0.002f * (0.5f * (l * l + r * r) - inputPower_); // ~10 ms follower
             predelay_[0].write(l);
             predelay_[1].write(r);

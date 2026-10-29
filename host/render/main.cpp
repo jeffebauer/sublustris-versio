@@ -268,6 +268,9 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         || std::getenv("IV_TAPE_TRANSPORT")) // renders/drift_rethink: the picks are built in since v1.0.46, the rest gone
         std::fprintf(stderr, "iv_render: IV_DRIFT_* / IV_TAPE_TRANSPORT ignored: MOTION's picks (the tape transport with "
                              "Magneto crinkle and a third of the dips; Wander stronger) are built in since v1.0.46\n");
+    if (std::getenv("IV_RUMBLE_FIX") || std::getenv("IV_ENDLESS_TOP") || std::getenv("IV_ENDLESS_CALM")) // review2_endless2: F + E since v1.0.58
+        std::fprintf(stderr, "iv_render: IV_RUMBLE_FIX / IV_ENDLESS_TOP / IV_ENDLESS_CALM ignored: the endless-tail fix (19), the light "
+                             "settle (24:60) and the still notes (10) are built in since v1.0.58\n");
     if (std::getenv("IV_TONE_CHAR")) // renders/tone_character: A is built in since v1.0.44, B and C are gone
         std::fprintf(stderr, "iv_render: IV_TONE_CHAR ignored: TONE's resonant tilt (A) is built in since v1.0.44\n");
     {   // renders/wear_grit, wear_fizz, wear_saturation: the picks are built in since v1.0.49, the rest gone

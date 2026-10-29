@@ -363,7 +363,10 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     if (leader_) governor_.skip();
     else governor_.control(n, sampleRate_);
     const FloorGovernor& gov = leader_ ? leader_->governor_ : governor_; // a low tank follows its leader
-    const float governRate = gov.extraRate;
+    // The still lows take their leader's floor loss but not its hold's correction (v1.0.58): a held endless tail's
+    // make-up, lifting the lows for minutes while the leader dithered round its level, built a rumble; with no
+    // loss of their own at endless (DECAY's rate 0, the loop's gain 1) they hold their level as they are.
+    const float governRate = leader_ ? gov.extraRate - gov.holdRate : gov.extraRate;
 
     // A SIZE move waiting for its crossfade (below): new lengths, or the in-loop diffusion joining or
     // leaving (it started after a crossfade that had already gone, and joined on its own: a dropout).
@@ -531,8 +534,8 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     // The loss filters' inputs shared by every line (each line's own: its length): any change, all worked out again.
     bool absChanged = false;
     {
-        const float in[5] = {rate, highRatio_, gov.darken, shelfK_, air_};
-        for (int k = 0; k < 5; ++k)
+        const float in[7] = {decayRate_ + extraRate_, governRate, highRatio_, gov.darken, shelfK_, air_, endlessTop_};
+        for (int k = 0; k < 7; ++k)
             if (!(in[k] == absIn_[k])) {
                 absIn_[k] = in[k];
                 absChanged = true;
@@ -572,7 +575,7 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
             absSec_[i] = seconds;
             prof::mark(prof::kTankCtl);
             if (!absReady) { // the shared half, once for every line that needs it
-                absShared = absorbShared(rate, highRatio_, gov.darken, shelfK_, air_);
+                absShared = absorbShared(decayRate_ + extraRate_, highRatio_, gov.darken, shelfK_, air_, governRate, endlessTop_);
                 absReady = true;
             }
             absOut_[i] = absorbLine(seconds, absShared);

@@ -181,7 +181,8 @@ IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash;
     const float k = scaleNow_ * sampleRate_ / kPaperRate;
 
     governor_.control(n, sampleRate_);
-    const float lowRate = decayRate_ * voicing::kPlateRateCalibration + governor_.extraRate + extraRate_;
+    // DECAY's own loss; the floor governor's correction rides on it flat (absorbShared(), v1.0.58).
+    const float lowRate = decayRate_ * voicing::kPlateRateCalibration + extraRate_;
     levelGain_ = voicing::kPlateOutputTrim * std::sqrt(scaleNow_ / kLevelRefScale);
 
     const float excursion = kExcursion * sampleRate_ / kPaperRate; // not scaled: the chorus depth stays put
@@ -192,8 +193,10 @@ IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash;
         br.d1Len = kD1[b] * k;
         br.ap2Len = kAp2[b] * k;
         br.d2Len = kD2[b] * k;
-        br.loss1 = br.memo1.get((br.ap1Len + br.d1Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfK_, air_);
-        br.loss2 = br.memo2.get((br.ap2Len + br.d2Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfK_, air_);
+        br.loss1 = br.memo1.get((br.ap1Len + br.d1Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfK_, air_,
+                                governor_.extraRate, endlessTop_);
+        br.loss2 = br.memo2.get((br.ap2Len + br.d2Len) / sampleRate_, lowRate, highRatio_, governor_.darken, shelfK_, air_,
+                                governor_.extraRate, endlessTop_);
 
         // The modulated allpass: Dattorro's slow sine, plus the modulation
         // floor's slow random wander (as every tank's, SPEC §2.3 rule 1).

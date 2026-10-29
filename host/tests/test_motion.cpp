@@ -363,10 +363,13 @@ void energy()
 }
 
 // 10-minute infinite holds (DECAY 1) at both ends, every SPACE: finite, and the level at the end within 1.5 dB of
-// its level 10-20 s in.
+// its level 60-70 s in, once the hold has settled (v1.0.58; was 10-20 s, as test_room_motion's painted pads are judged):
+// after a loud burst stops, an endless tail dips while its hold is taken and the make-up brings it back over the next
+// ~30 s, in HALL 2.4-2.8 dB since v1.0.58 (v1.0.57 1.3-1.4: its still lows took the make-up meant for the main tank);
+// that rise is held to 3.5 dB.
 void holds()
 {
-    struct Job { int space; float drift; double a = 0, b = 0; bool ok = false; };
+    struct Job { int space; float drift; double a = 0, b = 0, early = 0; bool ok = false; };
     std::vector<Job> jobs;
     for (int space : {0, 1, 2})
         for (float d : {0.0f, 1.0f}) jobs.push_back({space, d});
@@ -388,15 +391,17 @@ void holds()
             const Stereo out = render(in, s);
             bool fin = true;
             for (size_t i = 0; i < n && fin; ++i) fin = std::isfinite(out.l[i]) && std::isfinite(out.r[i]);
-            j.a = rmsDb(out.l, out.r, 10.0, 20.0);
+            j.early = rmsDb(out.l, out.r, 10.0, 20.0);
+            j.a = rmsDb(out.l, out.r, 60.0, 70.0);
             j.b = rmsDb(out.l, out.r, 590.0, 600.0);
-            j.ok = fin && j.a > -60.0 && std::fabs(j.b - j.a) <= 1.5;
+            j.ok = fin && j.a > -60.0 && std::fabs(j.b - j.a) <= 1.5 && std::fabs(j.b - j.early) <= 3.5;
         });
     for (auto& t : threads) t.join();
     for (const auto& j : jobs) {
-        char msg[200];
-        std::snprintf(msg, sizeof msg, "%s infinite, MOTION %s: 10 minutes hold (%.1f dB at 10-20 s, %+.2f dB at the end; within 1.5)",
-                      kSpaceName[j.space], j.drift == 0.0f ? "full left" : "full right", j.a, j.b - j.a);
+        char msg[260];
+        std::snprintf(msg, sizeof msg, "%s infinite, MOTION %s: 10 minutes hold (%.1f dB at 60-70 s, %+.2f dB at the end; within 1.5; "
+                      "%+.2f from 10-20 s, within 3.5)", kSpaceName[j.space], j.drift == 0.0f ? "full left" : "full right", j.a, j.b - j.a,
+                      j.b - j.early);
         check(j.ok, msg);
     }
 }
