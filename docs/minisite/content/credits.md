@@ -31,7 +31,12 @@ These are the reverbs whose character shaped Sublustris, named only to say where
 
 ## The demos
 
-<!-- OWNER: filled in at the demos stop: every clip is Sublustris itself, rendered offline by its own renderer, and the samples' sources and licences are credited here (as Resilio's page does). -->
+Every clip on this site is Sublustris itself, rendered offline by its own renderer, with a dry and a wet version so you can blend between them. Most parts are synthesised in code: the pad, the electric piano, the leads, the piano, the chord stabs and the drone. Two use free, CC0 samples:
+
+- Drums from [Virtuosity Drums](https://github.com/sfzinstruments/virtuosity_drums) by Versilian Studios and Karoryfer.
+- [Emilyguitar](https://github.com/sfzinstruments/karoryfer.emilyguitar) by Karoryfer.
+
+There are no recordings of other reverbs.
 
 ## The endless hold
 
