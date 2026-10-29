@@ -1,5 +1,6 @@
 // Small structural fixes on the rendered Markdown, so the copy stays untouched:
 // - heading levels never skip (the FAQ goes # → ###, so its questions become h2), for screen readers;
+// - code blocks are focusable (they scroll sideways on phones);
 // - tables become hairline .spec tables, wrapped so wide ones scroll on phones
 //   (the wrapper is focusable so keyboard users can scroll it too).
 function headingLevel(el) {
@@ -31,6 +32,11 @@ export function rehypeDocs() {
           child.tagName = `h${fixed}`;
           last = fixed;
           lastHeading = text(child);
+          return child;
+        }
+        if (child.tagName === 'pre') {
+          // Long commands scroll sideways: focusable, so keyboard users can scroll them too.
+          child.properties = { ...child.properties, tabIndex: 0 };
           return child;
         }
         if (child.tagName === 'table') {

@@ -1,6 +1,6 @@
 # Sublustris Versio minisite package
 
-Everything the Sublustris Versio minisite says and shows: the brief (`BRIEF.md`), the copy, the demos and the panel diagram. A sister site to Resilio Versio's (`https://resilio-versio.vercel.app`); the site itself will be built in this repo's `site/` (Astro, static, on Vercel), from a copy of Resilio's.
+Everything the Sublustris Versio minisite says and shows: the brief (`BRIEF.md`), the copy, the demos and the panel diagram. A sister site to Resilio Versio's (`https://resilio-versio.vercel.app`); the site itself is in this repo's `site/` (Astro, static, on Vercel), built from a copy of Resilio's (`site/README.md`).
 
 | Path | What it is |
 |---|---|
@@ -35,7 +35,7 @@ The plugin screenshot can be made now from the plugin; the rest wait for the pan
 
 ## Before launch (for the owner)
 
-1. **The design direction** (the style tile, stop 3).
+1. ~~**The design direction.**~~ Direction B, white with the freeze LED's blue, and the small diagrams picked (owner, 29–30 Oct 2026).
 2. ~~**The story section's topic.**~~ The endless hold (owner, 29 Oct 2026); the sourced draft to come.
 3. ~~**The demos.**~~ Eight clips, approved on their listening page (owner, 29 Oct 2026); `assets/audio/demos.json`.
 4. **Which Versio module(s)** it has been played on: not sure yet (29 Oct 2026), so the FAQ names none.
