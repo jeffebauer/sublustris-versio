@@ -9,7 +9,7 @@ The next session knows nothing this one knew. Write down **what is true now, wha
 
 **Wrap before you have to**, at the end of a coherent piece of work, not when the window is nearly full.
 
-**One-off (29 Oct 2026):** if `docs/handoff/HANDOFF.md` has a "Folder move" checklist still to do, do it as the very last step of this wrap-up, after the handoff is written and pushed.
+**One-off (29 Oct 2026):** `docs/handoff/HANDOFF.md` has a "Folder move" checklist. **Only do it if the owner says they're at the computer and will open a new session in the new folder.** Never when they'll `/clear` or continue this session, or work from the phone: `/clear` keeps the session in the old folder, which the move deletes. Otherwise leave it for a later wrap-up.
 
 ## Steps
 

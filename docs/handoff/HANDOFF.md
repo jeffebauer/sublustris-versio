@@ -19,7 +19,7 @@ Start with `/sublustris-start`.
 | M3 | v1.0.49 confirmed at the rack. The v1.0.52 rack test found overloads with SHIMMER + WEAR + MOTION's tape side; v1.0.54's laps show 0 late blocks. **v1.0.54 not yet heard at the rack** |
 | M9 | Not started |
 
-**Folder move, to do as the LAST step of the next wrap-up (owner's choice, 29 Oct 2026; ADR 0032 amendment).** The GitHub repo is already `jeffebauer/sublustris-versio`. The local folder moves `~/Documents/Sites/immensio-versio` → `~/Documents/Sites/sublustris-versio`; moving it ends the session running inside it, so:
+**Folder move, to do as the LAST step of a wrap-up when the owner is at the computer and will open a new session in the new folder (owner's choice, 29 Oct 2026; ADR 0032 amendment). Never before a `/clear` or from the phone: a cleared session stays in the old folder.** The GitHub repo is already `jeffebauer/sublustris-versio`. The local folder moves `~/Documents/Sites/immensio-versio` → `~/Documents/Sites/sublustris-versio`; moving it ends the session running inside it, so:
 1. Everything committed and pushed; no agents running; remove every worktree (`git worktree remove`, branches kept); stop the page server.
 2. Replace `/Users/jesse/Documents/Sites/immensio-versio` with `/Users/jesse/Documents/Sites/sublustris-versio` in tracked files that aren't history (CLAUDE.md, `.claude/skills/*`, `tools/**/*.py`, SPEC §6's tree; `git grep -l immensio-versio`), and the memory path in `.claude/skills/sublustris-wrap/SKILL.md` to `-Users-jesse-Documents-Sites-sublustris-versio`. Commit, push.
 3. Copy Claude's memory: `cp -R ~/.claude/projects/-Users-jesse-Documents-Sites-immensio-versio/memory ~/.claude/projects/-Users-jesse-Documents-Sites-sublustris-versio/` (make the folder first).
