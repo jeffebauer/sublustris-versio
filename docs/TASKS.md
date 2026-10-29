@@ -1,16 +1,17 @@
 # Owner tasks
 
-**Last updated:** 29 Oct 2026: v1.0.56 (DECAY's gentle ramp) and v1.0.57 (HALL's long tails) merged into main and in Ableton; pages `review2_endless2` and `review2_hole` waiting for you; v1.0.57 waiting at the rack. The review's report: `docs/research/review-2026-10-29.md`.
+**Last updated:** 29 Oct 2026, afternoon: v1.0.58 (endless tails, confirmed) and v1.0.59 (dropouts from 7:30) built and waiting for your OK to merge; the `input_stop` page (smoothing the moment you stop playing) is being built; v1.0.57 is what's on main, in Ableton and at the rack.
 **Plugin installed:** `1328898` on `main` (v1.0.57, Sublustris Versio), 29 Oct 2026 12:03; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan).
 
 ## To do
 
 ### Decide
+- [ ] **Merge v1.0.58 and v1.0.59 into main** (both built and checked; you confirmed v1.0.58 on `endless_bright_settle` and picked v1.0.59's dropouts on `motion_dips`). Then I'd install the plugin and build v1.0.60 (the HALL/MASSIVE level match) on top. Or wait for `input_stop` first, if you'd rather fold a smoother stop in before merging.
 
 ### Listen (after your notes)
 
 ### Listen (first time)
-Pick pages from overnight review 2 (ask me to start the page server). Each one asks a question and has pick buttons; MIX starts at 50 %.
+Nothing waiting right now: `input_stop` is being built (see Waiting on Claude).
 
 ### Try in Ableton
 - [ ] **Play the plugin** (Sublustris Versio, AU or VST3; rescan first): v1.0.57, the same sound as the module build. New since v1.0.55: turning DECAY towards endless in MASSIVE and PLATE glides instead of dropping at 3 o'clock (v1.0.56); HALL's long tails keep their upper mids and move a little more (v1.0.57). Worth a try: freezing a long or endless HALL now captures a slightly more chorused pad (the deeper movement was already in the tail; it wasn't on the page). Notes welcome.
@@ -27,16 +28,12 @@ Pick pages from overnight review 2 (ask me to start the page server). Each one a
 
 ## Waiting on Claude
 
+- **In progress (29 Oct 2026):** the `input_stop` page: measuring what makes the step when you stop playing (the wet's first reflections vanish as the dry stops), then 2-3 ways to smooth it, as full mixes at MIX 50 % with the dry in, with drums/stabs to check nothing pumps. It goes under "Listen (first time)" when ready. **Queued:** v1.0.60, the HALL/MASSIVE level match (your pick C on `rack_levels`), built on top of v1.0.58 once that's merged.
 - **Your picks on `rack_levels`** (29 Oct 2026): **HALL and MASSIVE: C, meet halfway, on every card** (at endless HALL comes down 2 dB and MASSIVE up 2 dB, so they match; below about 2 o'clock unchanged; this takes back 2 of `hall_level` pick C's 3 dB). **MIX at noon: A, as built, on every card** (keep the equal-power knob). To build as v1.0.60 on top of v1.0.58 once v1.0.58 is confirmed (both act at endless DECAY).
 - **Your picks on `motion_dips`** (29 Oct 2026, MIX 100 %, level-matched): **C, dropouts from 7:30, on every card.** The warbles and crinkle stay as they are; fully CCW unchanged. **Built as v1.0.59** (branch `claude/v159-dips`, `c3e2920`; not merged): equal to the page's C to the bit; 22 of 22 tests; release +64 B. To try it at the rack before the merge: `dist/sublustris_versio-v1.0.57-plus-dips-c3e2920{,-latelight}.bin` (v1.0.57 with only this change). It merges after v1.0.58; the HALL/MASSIVE level match follows as v1.0.60.
 - **Your picks on `review2_hole`** (29 Oct 2026, MIX 34 %): **A, as now, on every card.** MASSIVE's low mids stay as they are; the 250 Hz fix is shelved (branch `review2/hole`). The page can go to the Trash with the next batch.
 - **Your notes from v1.0.57 at the rack** (29 Oct 2026): (1) MASSIVE sounds a bit quieter overall than HALL, so you re-balance MIX against the dry when switching; (2) at 50 % MIX the reverb feels a little too loud; (3) MOTION's left side (tape): the warbles are good, but the dropouts should start nearer fully CCW instead of at ~9 o'clock. Next: measure each against a control, then listening pages.
-- **Overnight review 2** (29 Oct 2026; report `docs/research/review-2026-10-29.md` on `review/overnight-2`, prototypes on `review2/*` branches, nothing merged). Your three questions:
-  - MASSIVE's bump is really a cliff at 3 o'clock (the endless hold switches on within a few degrees): page `review2_bump`.
-  - The rumble: the endless hold's level nudges also tilt the tone, and incoming DC is kept forever: page `review2_endless`.
-  - MASSIVE's CPU: ~4.5 more points available, the profile lap confirms.
-
-  The rest of the next steps are in the report's "What I'd do next". Waiting on your listening.
+- **Overnight review 2** (29 Oct 2026; report `docs/research/review-2026-10-29.md` on main): your three questions are answered and built (the bump: v1.0.56; the rumble: v1.0.58; MASSIVE's CPU: the audit lap, with the unfreeze-after-SIZE overload still to fix). The report's "What I'd do next" lists the rest.
 - **Merged into main** (29 Oct 2026, your OK): `review2/neutral` (`248ec3d`), the review's same-sound savings, with **LEAN=1 the default** (its HASH matched on your module, `0x3b18a2ac`, timing within 0.4 points). Gates: 22 of 22 tests, SAME 60/60 against the renderer before the merge, release **110,476 B** (2,164 B under budget), m0test unchanged. The report, the agents' notes and your two laps are on main too (`docs/research/review-2026-10-29.md`). The plugin needs no reinstall: the same sound.
 - **Your audit lap** (29 Oct 2026, `docs/research/m3-review2-audit-212b68b.log`):
   - **Unfreezing after SIZE moved while frozen overloads MASSIVE** (up to 107.5 %, two-thirds of the blocks late while it settles: a crackle). The whole SIZE move lands as one crossfade at the moment the twin room is still running. Next: a prototype that glides SIZE or waits for the twin after an unfreeze, then a page.
