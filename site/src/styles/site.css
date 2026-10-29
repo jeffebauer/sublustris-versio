@@ -435,6 +435,8 @@ figure.wide > .caption, .figure .caption { padding-block: var(--stack-1) 0; }
 }
 .placeholder .ph-label { display: block; max-width: 100%; }   /* the dot stays on the label's first line */
 .placeholder .ph-label .dot { display: inline-block; width: 0.5em; height: 0.5em; margin-right: 0.6em; vertical-align: 0.1em; border-radius: 50%; background: var(--signal); }
+/* The hero's placeholder, on the dark band (until hero-still.jpg exists). */
+.hero-placeholder { background: var(--tile-dark); color: var(--on-dark-2); }
 
 /* ---- Doc pages ----------------------------------------------------------------- */
 .doc-hero { padding-top: calc(var(--header-h) + clamp(3rem, 2rem + 4vw, 6rem)); padding-bottom: var(--stack-4); width: min(100% - 2 * var(--margin), 42rem); }   /* lines up with the reading column */

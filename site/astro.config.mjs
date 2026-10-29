@@ -12,7 +12,7 @@ const site =
   process.env.SITE_URL ??
   (process.env.VERCEL_PROJECT_PRODUCTION_URL
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : 'https://resilio-versio.vercel.app');
+    : 'https://sublustris-versio.vercel.app');
 
 // Mesurer, the measuring/annotation overlay, in `astro dev` only (src/scripts/mesurer-dev.ts).
 /** @type {import('astro').AstroIntegration} */

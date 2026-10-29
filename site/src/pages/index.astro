@@ -1,15 +1,286 @@
 ---
-// A holding page until stop 4 builds Home from docs/minisite/content/overview.md (Resilio's
-// pages wait in pages/_resilio/, out of the routes). Noindex.
+// Home (BRIEF §4, in Resilio's DESIGN-v2 order): hero (dark) → intro → the sound (dark) →
+// get it → the endless hold (the story) → the panel → features → two ways to play →
+// help shape it → its sibling → download (tile band) → footer.
+// Copy comes from docs/minisite/content/overview.md, split at its headings. Image slots are
+// labelled placeholders until the renders exist (docs/minisite/README.md, "Renders to come").
 import Base from '../layouts/Base.astro';
 import Button from '../components/Button.astro';
+import HeroMedia from '../components/HeroMedia.astro';
+import AnnotatedPanel from '../components/AnnotatedPanel.astro';
+import FeatureTiles from '../components/FeatureTiles.astro';
+import DemoList from '../components/DemoList.astro';
+import DownloadBlock from '../components/DownloadBlock.astro';
+import Placeholder from '../components/Placeholder.astro';
+import Diagram from '../components/diagrams/Diagram.astro';
+import { DOWNLOADS_LIVE, LINKS } from '../data/site';
+import { Picture } from 'astro:assets';
+import { render, widthsFor } from '../lib/renders';
+import { getPage, pageHtml, section, splitSections, splitSlots, stripTags, takeH1 } from '../lib/content';
+
+const page = await getPage('overview');
+const macro = render('panel-macro.jpg');
+const patched = render('patched.jpg');
+const wideSizes = '(min-width: 92rem) 92rem, calc(100vw - 2rem)';
+const { h1, rest } = takeH1(pageHtml(page));
+const { lead, sections } = splitSections(rest);
+const noSlots = (html: string) => splitSlots(html).filter((p) => p.kind === 'html').map((p) => (p as { html: string }).html).join('');
+const paras = (html: string) => html.match(/<p>[\s\S]*?<\/p>/g) ?? [];
+const inner = (p = '') => p.replace(/^<p>|<\/p>$/g, '');
+/** "**Title.** line" list items, as title and line. */
+const items = (html: string) => [...html.matchAll(/<li>\s*<strong>([\s\S]*?)<\/strong>\s*([\s\S]*?)<\/li>/g)]
+  .map((m) => ({ title: stripTags(m[1]).replace(/\.$/, ''), line: m[2].trim() }));
+
+// Lead: the tagline (bold line), the lede, and the name's meaning.
+const leadParas = paras(noSlots(lead));
+const tagline = stripTags(leadParas[0] ?? '');
+const lede = inner(leadParas[1]);
+// The intro's bold statement is the lede's first sentence; the rest follows as the paragraph.
+const cut = lede.indexOf('. ') + 1;
+const statement = cut > 0 ? lede.slice(0, cut) : lede;
+const ledeRest = cut > 0 ? lede.slice(cut + 1) : '';
+const etymology = inner(leadParas[2]);
+
+const sound = section(sections, 'what-it-sounds-like');
+const story = section(sections, 'the-endless-hold');
+const tails = section(sections, 'built-for-long-tails');
+const panel = section(sections, 'the-panel');
+const ways = section(sections, 'two-ways-to-play');
+const safe = section(sections, 'safe-to-try');
+const shape = section(sections, 'help-shape-it');
+const sibling = section(sections, 'its-sibling');
+const status = section(sections, 'status');
+
+const soundPoints = items(sound.html);
+// The story: its first line is the statement, the last paragraph before the sources is
+// Sublustris's own part (set apart), and the sources link closes it.
+const storyParas = paras(story.html);
+const sources = storyParas.find((p) => /\/credits#/.test(p)) ?? '';
+const storyBody = storyParas.filter((p) => p !== sources);
+const [storyLede = '', ...storyRest] = storyBody;
+const storyOurs = storyRest.at(-1) ?? '';
+const storyMiddle = storyRest.slice(0, -1);
+const panelParas = paras(noSlots(panel.html));
+const panelList = noSlots(panel.html).match(/<ul>[\s\S]*?<\/ul>/)?.[0] ?? '';
+// Two ways to play: "**On the module.** …" and "**In your DAW.** …".
+const wayText = (title: RegExp) => inner(paras(ways.html).find((p) => title.test(p))).replace(/^<strong>[\s\S]*?<\/strong>\s*/, '');
+const onModule = wayText(/On the module/);
+const inDaw = wayText(/In your DAW/);
+const safeHtml = safe.html.replace(/<p><a href="\/install">How to install<\/a><\/p>/, '');
+const shapeIntro = paras(shape.html)[0] ?? '';
+const shapeSteps = items(shape.html);
 ---
-<Base title="Sublustris Versio" description="A huge, warm, lush reverb for the Noise Engineering Versio. The site is being built." noindex>
-  <section class="section" style="padding-top: calc(var(--header-h) + var(--section-y))">
+<Base title={page.data.title} description={page.data.description} bodyClass="home" darkTop>
+  <!-- 1 Hero (dark) -->
+  <section class="hero band-dark" aria-labelledby="title">
+    <div class="wide">
+      <HeroMedia />
+      <div class="hero-title">
+        <h1 class="display" id="title">{h1}</h1>
+        <p class="hero-tagline">{tagline}</p>
+        <div class="actions">
+          <Button href="#sound" variant="ghost">Listen</Button>
+          <Button href="#download" variant="primary" arrow>Download</Button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 Intro (white): why it exists, and the name -->
+  <section class="section intro-plain" aria-labelledby="intro-h">
+    <h2 id="intro-h" class="visually-hidden">Introduction</h2>
     <div class="column flow">
-      <h1 class="display">Sublustris Versio</h1>
-      <p class="lede">A huge, warm, lush reverb for the Noise Engineering Versio, also as an AU/VST3 plugin for macOS. The site is being built.</p>
-      <p><Button href="/style/" variant="dark" arrow>The style tiles</Button></p>
+      <p class="statement" data-rise set:html={statement} />
+      {ledeRest && <p class="lede quiet" set:html={ledeRest} />}
+      {etymology && <p class="name-note small"><span class="micro quiet">The name</span><span set:html={etymology} /></p>}
+    </div>
+  </section>
+
+  <!-- 3 The sound (dark): the demos, then the four points -->
+  <section class="section band-dark sound" id="sound" aria-labelledby="sound-h">
+    <div class="column flow centered">
+      <h2 class="h2" id="sound-h">{sound.title}</h2>
+    </div>
+    <div class="wide flow">
+      <DemoList />
+      <ul class="sound-points" aria-label="In four points">
+        {soundPoints.map((s) => (
+          <li>
+            <h3 class="sound-title">{s.title}</h3>
+            <p class="small" set:html={s.line} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- 4 Get it (white): a pointer to the two downloads (the band at the end has them in full) -->
+  <section class="section get-it" aria-labelledby="get-h">
+    <div class="column flow centered">
+      <h2 class="h2" id="get-h">Get it</h2>
+      <p class="lede">Firmware for your Versio, and the same sound as an AU/VST3 plugin for macOS.{!DOWNLOADS_LIVE && ' Both are coming with the first public release.'}</p>
+      <p class="demo-row get-actions">
+        <Button href="#download" variant="primary">{DOWNLOADS_LIVE ? 'Download' : 'The downloads'}</Button>
+        <Button href="/install/" variant="ghost" arrow>How to install</Button>
+      </p>
+    </div>
+  </section>
+
+  <!-- 5 The endless hold (the story, BRIEF §4.6: the owner's pick, 29 Oct) -->
+  <section class="section story" id="endless-hold" aria-labelledby="story-h">
+    <div class="column flow">
+      <p class="micro quiet">A short history</p>
+      <h2 class="statement" id="story-h">{story.title}</h2>
+      <p class="lede" set:html={inner(storyLede)} />
+    </div>
+    <figure class="wide story-figure" aria-hidden="true">
+      <Diagram kind="endless-infinity" class="story-diagram" decorative />
+    </figure>
+    <div class="column flow story-body">
+      <Fragment set:html={storyMiddle.join('')} />
+      <div class="tile story-ours flow" set:html={storyOurs} />
+      <p class="small"><a href="/credits/#the-endless-hold">Sources</a></p>
+    </div>
+  </section>
+
+  <!-- 6 The panel (white) -->
+  <section class="section" id="panel" aria-labelledby="panel-h">
+    <div class="column flow centered">
+      <h2 class="h2" id="panel-h">{panel.title}</h2>
+      <div class="lede" set:html={inner(panelParas[0])} />
+    </div>
+    <div class="wide panel-wrap">
+      <AnnotatedPanel prefix="home-panel" />
+    </div>
+    <div class="column flow">
+      <div class="panel-list" set:html={panelList} />
+      <p><Button href="/manual/#controls" variant="ghost" arrow>All the controls in the manual</Button></p>
+    </div>
+  </section>
+
+  <!-- 7 Features (white) -->
+  <section class="section features" id="features" aria-labelledby="features-h">
+    <div class="column flow centered">
+      <h2 class="h2" id="features-h">{tails.title}</h2>
+      <p><Button href="/manual/" variant="ghost" arrow>Read the manual</Button></p>
+    </div>
+    <div class="wide">
+      <FeatureTiles />
+    </div>
+    <figure class="wide macro" data-reveal>
+      {macro ? (
+        <div class="card-media" style="aspect-ratio: 2400 / 1028">
+          <Picture src={macro} widths={widthsFor(macro)} sizes={wideSizes} formats={['avif', 'webp']} loading="lazy"
+            alt="Close-up of the Sublustris panel: the SPACE and ONSET switches beside the FREEZE / PAINT button, with MOTION and DEPTH above." />
+        </div>
+      ) : (
+        <Placeholder id="panel-macro.jpg" name="Panel close-up" ratio="21:9" />
+      )}
+    </figure>
+  </section>
+
+  <!-- 8 Two ways to play (white) -->
+  <section class="section two-ways-section" id="two-ways" aria-labelledby="two-ways-h">
+    <div class="column centered">
+      <h2 class="h2" id="two-ways-h">{ways.title}</h2>
+    </div>
+    <div class="wide two-ways">
+      <div class="tile way">
+        <h3 class="h3">On the module</h3>
+        <p class="small quiet">Firmware for the Noise Engineering Versio</p>
+        <div class="flow">
+          <p set:html={onModule} />
+          <h4 class="way-sub">{safe.title}</h4>
+          <Fragment set:html={safeHtml} />
+        </div>
+        <Button href="/install/#on-the-versio" variant="ghost" arrow>How to install</Button>
+      </div>
+      <div class="tile way">
+        <h3 class="h3">In your DAW</h3>
+        <p class="small quiet">AU/VST3 plugin for macOS</p>
+        <div class="flow"><p set:html={inDaw} /></div>
+        <Button href="/install/#in-a-daw-macos" variant="ghost" arrow>Install the plugin</Button>
+      </div>
+    </div>
+    <figure class="wide" data-reveal>
+      {patched ? (
+        <div class="card-media" style="aspect-ratio: 16 / 9">
+          <Picture src={patched} widths={widthsFor(patched)} sizes={wideSizes} formats={['avif', 'webp']} loading="lazy"
+            alt="The Sublustris Versio module patched into both inputs and both outputs." />
+        </div>
+      ) : (
+        <Placeholder id="patched.jpg" name="Patched module" ratio="16:9" />
+      )}
+      {patched && <figcaption class="caption">Patched into both inputs and both outputs.</figcaption>}
+    </figure>
+  </section>
+
+  <!-- 9 Help shape it (white): three steps; the forms open once the repository is public -->
+  <section class="section shape" id="feedback" aria-labelledby="shape-h">
+    <div class="column flow centered">
+      <h2 class="h2" id="shape-h">{shape.title}</h2>
+      <div class="lede" set:html={inner(shapeIntro)} />
+    </div>
+    <ol class="column shape-steps">
+      {shapeSteps.map((s, i) => (
+        <li>
+          <span class="shape-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+          <h3 class="shape-title">{s.title}</h3>
+          <p class="small" set:html={s.line} />
+        </li>
+      ))}
+    </ol>
+    <div class="column shape-actions">
+      {DOWNLOADS_LIVE ? (
+        <>
+          <Button href={LINKS.soundIdea} variant="primary" arrow>Suggest a sound</Button>
+          <Button href={LINKS.bugReport} variant="ghost" arrow>Report a bug</Button>
+          <a class="small" href={LINKS.feedbackFaq}>How to give feedback</a>
+        </>
+      ) : (
+        <p class="small quiet">The forms open on GitHub when the repository goes public. <a href={LINKS.feedbackFaq}>How to give feedback</a></p>
+      )}
+    </div>
+  </section>
+
+  <!-- 10 Its sibling (white) -->
+  <section class="section sibling" aria-labelledby="sibling-h">
+    <div class="column flow centered">
+      <h2 class="h2" id="sibling-h">{sibling.title}</h2>
+      <div class="lede" set:html={sibling.html} />
+      <p><Button href="https://resilio-versio.vercel.app" variant="ghost" arrow>Visit Resilio Versio</Button></p>
+    </div>
+  </section>
+
+  <!-- 11 Download (light grey band) -->
+  <section class="section band-tile" id="download" aria-labelledby="download-h">
+    <div class="wide download-grid">
+      <h2 class="h2 download-title" id="download-h">Download</h2>
+      <div class="flow">
+        <div class="flow small quiet" set:html={status.html} />
+      </div>
+      <DownloadBlock />
     </div>
   </section>
 </Base>
+
+<style>
+  .intro-plain .statement { text-wrap: balance; }
+  .name-note { display: grid; gap: 0.25rem; padding-top: var(--stack-3); border-top: var(--hair) solid var(--line); color: var(--ink-2); }
+  .sound-points { list-style: none; padding: 0; margin: var(--stack-5) 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gutter); }
+  .sound-points li { display: grid; gap: 0.4rem; align-content: start; padding-top: var(--stack-2); border-top: var(--hair) solid var(--line-dark); }
+  .sound-title { font-size: var(--fs-body); line-height: 1.2; color: var(--on-dark); }
+  .sound-points p { color: var(--on-dark-2); text-wrap: pretty; }
+  .story-figure { margin-block: var(--stack-4); color: var(--ink); }
+  .story-diagram { display: block; width: min(100%, 26rem); height: auto; margin-inline: auto; }
+  .story-ours { padding: clamp(1.25rem, 0.75rem + 1.5vw, 2rem); }
+  .get-actions { justify-content: center; }
+  .way-sub { font-size: var(--fs-body); color: var(--ink); }
+  .macro { margin-top: var(--section-gap, var(--stack-5)); }
+  @media (max-width: 63.99rem) { .sound-points { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 29.99rem) { .sound-points { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<script>
+  import '../scripts/motion';
+</script>

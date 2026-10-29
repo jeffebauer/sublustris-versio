@@ -1,18 +1,39 @@
 ---
 // The panel map, inlined from docs/minisite/assets/panel/sublustris-versio-panel.svg and
-// redrawn as linework: no fills, 1 px strokes at any size, text in mono. The signal
-// colour marks the button and the LEDs. With `draw`, Home's motion script draws the
-// lines in as you scroll (every shape has pathLength="1"); without JS it's simply there.
+// themed by the --sv-* tokens. With `draw`, Home's motion script draws the lines in as you
+// scroll (every shape has pathLength="1"); without JS it's simply there.
+// With `settings` (the presets page), each knob's mark points at its value (0 = 7 o'clock,
+// 1 = 5 o'clock), the chosen switch positions stand out, and `controls` crops off the jacks.
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { MINISITE } from '../lib/paths';
+import { KNOBS, SWITCHES, type PanelSettings } from '../lib/panel';
 
-interface Props { prefix?: string; draw?: boolean; class?: string }
-const { prefix = 'pd', draw = false, class: cls = '' } = Astro.props;
+interface Props { prefix?: string; draw?: boolean; class?: string; settings?: PanelSettings; controls?: boolean; label?: string }
+const { prefix = 'pd', draw = false, class: cls = '', settings, controls = false, label } = Astro.props;
 
 const raw = await readFile(join(MINISITE, 'assets', 'panel', 'sublustris-versio-panel.svg'), 'utf8');
-const svg = raw
-  .replace(/<\?xml[^>]*>\s*/, '')
+let svg = raw.replace(/<\?xml[^>]*>\s*/, '');
+
+if (settings) {
+  for (const k of KNOBS) {
+    const deg = (-150 + 300 * settings[k.key]).toFixed(1);
+    svg = svg.replace(new RegExp(`(<g id="${k.key}"><circle class="knob" cx="([\\d.]+)" cy="([\\d.]+)"[^>]*/>\\s*<line class="knobmark")`),
+      (_m, head: string, cx: string, cy: string) => `${head} transform="rotate(${deg} ${cx} ${cy})"`);
+  }
+  for (const s of SWITCHES) {
+    svg = svg.replace(new RegExp(`(<g id="${s.key}">[\\s\\S]*?<text class="pos"[^>]*>)([^<]*)(</text>)`),
+      (_m, open: string, _text: string, close: string) => open + s.options
+        .map((o) => `<tspan class="${o === settings[s.key] ? 'pos-on' : 'pos-off'}">${o}</tspan>`).join(' · ') + close);
+  }
+  const values = [...SWITCHES.map((s) => `${s.name} ${settings[s.key]}`), ...KNOBS.map((k) => `${k.name} ${settings[k.key]}`)].join(', ');
+  svg = svg
+    .replace(/(<title id="sv-title">)[^<]*/, `$1${label ?? 'Sublustris panel settings'}`)
+    .replace(/(<desc id="sv-desc">)[^<]*/, `$1${values}`);
+}
+if (controls) svg = svg.replace(/viewBox="0 0 50.5 128.5"/, 'viewBox="0 0 50.5 77.5"');
+
+svg = svg
   // ids must be unique on the page (the manual has #blend, #decay … as headings)
   .replace(/\bid="([^"]+)"/g, `id="${prefix}-$1"`)
   .replace(/aria-labelledby="([^"]+)"/, (_, ids: string) =>
@@ -24,4 +45,10 @@ const svg = raw
     `<style>${css.replace(/(^|})\s*([^{}]+)\{/g, (_m, end: string, sel: string) =>
       `${end}${sel.split(',').map((x) => `.panel-diagram ${x.trim()}`).join(',')}{`)}</style>`);
 ---
-<div class={`panel-diagram ${cls}`.trim()} data-draw={draw ? '' : undefined} set:html={svg} />
+<div class:list={['panel-diagram', settings && 'is-set', cls]} data-draw={draw ? '' : undefined} set:html={svg} />
+
+<style is:global>
+  .panel-diagram.is-set .knobmark { stroke-width: 0.7; }
+  .panel-diagram.is-set .pos-off { opacity: 0.45; }
+  .panel-diagram.is-set .pos-on { font-weight: 700; fill: var(--sv-ink, currentColor); }
+</style>

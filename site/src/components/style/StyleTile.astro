@@ -10,13 +10,13 @@ import Logo from '../Logo.astro';
 import AudioAB from '../AudioAB.astro';
 import BlendFader from '../BlendFader.astro';
 import Placeholder from '../Placeholder.astro';
-import PanelCallouts from '../PanelCallouts.astro';
+import AnnotatedPanel from '../AnnotatedPanel.astro';
 import Diagram from '../diagrams/Diagram.astro';
 import { shape, type DiagramKind } from '../diagrams/shapes';
 import { getDemos } from '../../lib/demos';
 import { fontPlan } from '../../lib/fonts';
 import { DIRECTIONS, contrastTable, textOn, tokensFor, type DirectionId } from '../../lib/directions';
-import { SV_TILES } from '../../data/sublustris';
+import { FEATURE_TILES as SV_TILES } from '../../data/controls';
 
 type Band = '' | 'band-dark' | 'band-slate' | 'band-tile';
 type Key = 'hero' | 'palette' | 'type' | 'header' | 'buttons' | 'tiles' | 'diagrams' | 'panel' | 'audio' | 'renders' | 'themes';
@@ -193,7 +193,7 @@ const others = (['a', 'b', 'c'] as DirectionId[]).filter((d) => d !== id);
 <!-- Annotated panel -->
 <section class:list={['st-section', band('panel')]} aria-labelledby="st-panel">
   <div class="column"><h2 class="h2" id="st-panel">Annotated panel</h2><p class="quiet">Callouts on leader lines on wide screens, numbered markers and a list when narrower. The panel map stands in for the front-on render, themed with the direction’s colours.</p></div>
-  <div class="wide"><PanelCallouts prefix={`pc-${id}`} /></div>
+  <div class="wide"><AnnotatedPanel prefix={`pc-${id}`} /></div>
 </section>
 
 <!-- Audio -->

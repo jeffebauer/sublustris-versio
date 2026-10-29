@@ -1,12 +1,17 @@
 ---
 // Renders a page's Markdown with its slot markers swapped for components.
-import PanelWire from './PanelWire.astro';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import PanelDiagram from './PanelDiagram.astro';
 import DownloadBlock from './DownloadBlock.astro';
 import MediaCard from './MediaCard.astro';
 import type { Part } from '../lib/content';
+import { PUBLIC_DIR } from '../lib/paths';
 
 interface Props { parts: Part[] }
 const { parts: given } = Astro.props;
+// The plugin screenshot, once docs/minisite/assets/screenshots/plugin-panel.png exists.
+const shot = existsSync(join(PUBLIC_DIR, 'screenshots', 'plugin-panel.png'));
 // The panel map's table sits beside the drawing on wide screens (owner, 7 Oct): when the
 // panel slot is followed straight away by a table, it moves into the slot.
 const TABLE = /^\s*(<div class="table-scroll"[^>]*>\s*<table[\s\S]*?<\/table>\s*<\/div>)/;
@@ -25,18 +30,19 @@ parts.forEach((p, i) => {
   ) : p.slot === 'panel' ? (
     <div class="slot manual-panel">
       <figure class="panel-figure">
-        <PanelWire />
-        <figcaption class="small panel-note">Resilio’s panel, drawn to scale. Your Versio’s printed labels will differ: the table maps them.</figcaption>
+        <PanelDiagram prefix="manual-panel" class="is-themed" />
+        <figcaption class="small panel-note">Sublustris’s panel, drawn to scale. Your Versio’s printed labels will differ: the table maps them.</figcaption>
       </figure>
       {p.table && <div class="panel-table" set:html={p.table} />}
     </div>
   ) : p.slot === 'screenshot' ? (
     <div class="slot manual-screenshot">
       <MediaCard
-        caption="The plugin: the same panel layout, plus SIZE and the GATE (the gate jack's stand-in) on the bottom row"
-        src="/screenshots/plugin-panel.png"
-        alt="The Resilio Versio plugin window: seven knobs (BLEND, DECAY, TONE, SPLASH, TENSION, WOBBLE, DRIVE), the TANK and ATTITUDE switches, the THROW button, input and output meters, and a bottom row with SIZE 1x, 1.5x, 2x and a GATE button."
+        caption="The plugin: the same panel layout as the module"
+        src={shot ? '/screenshots/plugin-panel.png' : undefined}
+        alt="The Sublustris Versio plugin window: seven knobs (BLEND, DECAY, TONE, WEAR, SIZE, MOTION, DEPTH), the SPACE and ONSET switches, the FREEZE / PAINT button, input and output meters, and the ZOOM setting."
         ratio="253:643"
+        render={{ id: 'plugin-panel.png', name: 'Plugin screenshot' }}
       />
     </div>
   ) : p.slot === 'downloads' || p.slot === 'latest' ? (
