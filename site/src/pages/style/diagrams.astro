@@ -38,7 +38,7 @@ const risky = CONCEPTS.flatMap((c) => c.options.map((o, i) => ({ c, o, n: i + 1 
       <div class="wide dg-matrix">
         {CONCEPTS.map((c) => (
           <div class="dg-row">
-            <p class="dg-name micro">{c.name}</p>
+            <p class="dg-name micro" style={`--rows: ${Math.ceil(c.options.length / 4)}`}>{c.name}</p>
             {c.options.map((o, i) => (
               <figure class:list={['dg-cell', g.cell]}>
                 <Diagram kind={o.kind} />
@@ -88,6 +88,7 @@ const risky = CONCEPTS.flatMap((c) => c.options.map((o, i) => ({ c, o, n: i + 1 
   .dg-row { display: grid; grid-template-columns: minmax(0, 9rem) repeat(4, minmax(0, 1fr)); gap: var(--gutter); align-items: start; padding-block: var(--stack-3); }
   .dg-row + .dg-row { border-top: var(--hair) solid var(--line); }
   .dg-name { color: var(--ink-2); padding-top: var(--stack-1); }
+  .dg-row > .dg-name { grid-row: span var(--rows, 1); }
   .dg-cell { margin: 0; display: grid; gap: var(--stack-2); color: var(--ink); align-content: start; }
   .dg-cell.tile { padding: clamp(0.75rem, 0.5rem + 0.6vw, 1.25rem); }
   .dg-cell .diagram { width: 100%; height: auto; }
@@ -100,6 +101,7 @@ const risky = CONCEPTS.flatMap((c) => c.options.map((o, i) => ({ c, o, n: i + 1 
   @media (max-width: 63.99rem) {
     .dg-row { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--stack-3); }
     .dg-name { grid-column: 1 / -1; }
+    .dg-row > .dg-name { grid-row: auto; }
   }
 
   .dg-strip { display: grid; gap: var(--stack-4); }

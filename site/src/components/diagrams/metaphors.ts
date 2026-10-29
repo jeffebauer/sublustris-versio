@@ -10,9 +10,11 @@ export const METAPHOR_KINDS = [
   'longtail-rulers', 'longtail-trail',
   'freeze-frame', 'freeze-repeat', 'freeze-paint',
   'swell-hairpin', 'swell-bud', 'swell-light',
+  'swell-measure', 'swell-family', 'swell-apart', 'swell-natural',
   'octave-string', 'octave-keys', 'octave-staff',
   'tape-drift', 'tape-head', 'tape-ticks',
   'spaces-paths', 'spaces-nested', 'spaces-forms',
+  'spaces-plans', 'spaces-figure', 'spaces-depth', 'spaces-rays',
   'cv-sum', 'cv-scale', 'cv-plug',
 ] as const;
 export type MetaphorKind = (typeof METAPHOR_KINDS)[number];
@@ -252,8 +254,8 @@ export function metaphor(kind: MetaphorKind): Shape {
       // A keyboard from C to C: the played C marked in ink, the C an octave up in the accent.
       const x0 = 8, w = 18, top = 8, bot = 58;
       const whites = [rect(x0, top, x0 + 8 * w, bot), ...Array.from({ length: 7 }, (_, i) => `M${x0 + (i + 1) * w} ${top}V${bot}`)];
-      // A solid bar at the foot of a key (three close lines read as one filled mark).
-      const bar = (xa: number, xb: number) => [46, 48, 50, 52].map((y) => `M${xa} ${y}H${xb}`).join('');
+      // A solid bar at the foot of a key (close lines read as one filled mark).
+      const bar = (xa: number, xb: number) => [45, 46, 47, 48, 49, 50, 51, 52, 53].map((y) => `M${xa} ${y}H${xb}`).join('');
       const blacks = [1, 2, 4, 5, 6].map((i) => rect(x0 + i * w - 5, top, x0 + i * w + 5, 38));
       return {
         label: 'SHIMMER on a keyboard: the key you play, and the same note an octave up, added to the reverb.',
@@ -355,6 +357,114 @@ export function metaphor(kind: MetaphorKind): Shape {
       };
     }
 
+    // ---- BLOOM, second round: the late arrival as the subject (owner, 29 Oct) ----------
+    // BLOOM is a swell time (about 0.1 to 4 s): the reverb starts near nothing and rises on
+    // a smooth curve to a peak well after the note, then falls for a long time. It is not a
+    // silent gap; that is NATURAL's predelay (0 to 250 ms), drawn only in swell-natural.
+    case 'swell-measure': {
+      // A dimension line from the hit to the peak: the swell time, measured like a drawing.
+      return {
+        label: 'BLOOM measured: after the note the reverb rises from almost nothing to a peak well after it; the swell time, about 0.1 to 4 seconds, runs from the note to the peak.',
+        faint: ['M10 56H156', 'M80 9V14'],
+        ink: ['M10 56V16', 'M10 2V9M80 2V9', 'M10 5.5H80', 'M15 3L10 5.5L15 8', 'M75 3L80 5.5L75 8'],
+        hot: ['M12 55.6C44 55.6 54 14 80 14C106 14 124 41 156 50'],
+      };
+    }
+    case 'swell-family': {
+      // Three swell times on one note: short, middle and long (DEPTH turned up), the longest
+      // in the accent. Each rises from nothing, peaks later, then falls.
+      const env = (tp: number) =>
+        `M12 55.6C${f(12 + (tp - 12) * 0.55)} 55.6 ${f(tp - (tp - 12) * 0.4)} 14 ${tp} 14C${f(tp + (156 - tp) * 0.3)} 14 ${f(tp + (156 - tp) * 0.55)} 44 156 51`;
+      return {
+        label: 'BLOOM from short to long: the same note with three swell times; the longer DEPTH is set, the later the reverb peaks.',
+        faint: ['M10 56H156', env(26), env(52)],
+        ink: ['M10 56V8'],
+        hot: [env(104)],
+      };
+    }
+    case 'swell-apart': {
+      // The note as one stroke; the swell as a soft curve of its own, starting low beside it.
+      return {
+        label: 'BLOOM: the note, then, beside it, a soft swell that lifts slowly, peaks late and fades for a long time.',
+        faint: [],
+        ink: ['M12 58V10'],
+        hot: ['M22 57C50 57 62 18 90 18C116 18 132 42 156 48'],
+      };
+    }
+    case 'swell-natural': {
+      // For contrast, NATURAL: a silent gap (the predelay, bracketed), then the reverb at once.
+      return {
+        label: 'For contrast, NATURAL’s predelay: a silent gap of up to a quarter of a second, then the reverb arrives at once and fades.',
+        faint: ['M10 56H156'],
+        ink: ['M10 56V16', 'M10 2V9M40 2V9', 'M10 5.5H40', 'M14 3L10 5.5L14 8', 'M36 3L40 5.5L36 8'],
+        hot: ['M40 56V14C70 16 112 42 156 51'],
+      };
+    }
+
+    // ---- Spaces, second round: real spaces at growing scale (owner, 29 Oct) ------------
+    case 'spaces-plans': {
+      // Floor plans to one scale: a small chamber, a long hall with a stage at its end, and
+      // MASSIVE, whose walls open out and run off the drawing.
+      return {
+        label: 'Three spaces as floor plans to one scale: a small chamber for PLATE, a long hall with a stage for HALL, and MASSIVE, whose walls open out and run off the page.',
+        faint: ['M4 61H24M4 59V63M24 59V63'],
+        ink: [rect(6, 40, 22, 56), rect(30, 28, 104, 56), 'M92 34H101V50H92Z'],
+        hot: ['M160 4L112 22V46L160 60'],
+      };
+    }
+    case 'spaces-figure': {
+      // Sections with the same small listener in each: a low chamber, a vaulted hall, and
+      // MASSIVE: a floor to the edge, one wall fading up into open air.
+      const person = (x: number, b = 58) =>
+        [circle(x, b - 11.2, 1.8), `M${x} ${b - 9.2}V${b - 4}`, `M${x - 2.6} ${b}L${x} ${b - 4}L${x + 2.6} ${b}`, `M${x - 2.6} ${b - 5.2}L${x} ${b - 7.8}L${x + 2.6} ${b - 5.2}`].join('');
+      return {
+        label: 'Three spaces in section, each with the same small listener: a low chamber, a tall vaulted hall, and MASSIVE, open to the sky with no far wall.',
+        faint: ['M108 30V2'],
+        ink: ['M4 58V40H30V58H4', 'M38 58V30A40 40 0 0 1 98 30V58H38', person(17), person(68), person(132)],
+        hot: ['M104 58H160', 'M108 58V30'],
+      };
+    }
+    case 'spaces-depth': {
+      // Rooms in one-point perspective: a shallow one, a deep one, and MASSIVE with no walls:
+      // open ground running to a horizon (an open box would draw an X).
+      const box = (x0: number, x1: number, y0: number, y1: number, d: number) => {
+        const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+        const k = 1 - d;
+        const bx0 = cx + (x0 - cx) * k, bx1 = cx + (x1 - cx) * k, by0 = cy + (y0 - cy) * k, by1 = cy + (y1 - cy) * k;
+        return [rect(bx0, by0, bx1, by1), line([[x0, y0], [bx0, by0]]), line([[x1, y0], [bx1, by0]]), line([[x0, y1], [bx0, by1]]), line([[x1, y1], [bx1, by1]])];
+      };
+      return {
+        label: 'Three spaces in perspective: a shallow room for PLATE, a deep one for HALL, and MASSIVE, no walls at all, open ground running to the horizon.',
+        faint: [rect(4, 22, 38, 56), rect(46, 10, 100, 58), 'M106 62L129.8 33.8M120 62L131.4 33.8M146 62L134.6 33.8M160 62L136.2 33.8', 'M106.0 62.0H160.0M118.2 47.6H147.8M124.9 39.6H141.1'],
+        ink: [...box(4, 38, 22, 56, 0.3), ...box(46, 100, 10, 58, 0.72)],
+        hot: ['M106 30H160'],
+      };
+    }
+    case 'spaces-rays': {
+      // Plans with one sound ray each, from a source: many short bounces in the chamber,
+      // fewer, longer ones in the hall; in MASSIVE the ray leaves through walls that fade.
+      const bounce = (x0: number, y0: number, x1: number, y1: number, sx: number, sy: number, dx: number, dy: number, len: number) => {
+        const pts: Pt[] = [[sx, sy]];
+        let x = sx, y = sy, left = len;
+        const n = Math.hypot(dx, dy); dx /= n; dy /= n;
+        while (left > 0) {
+          const tx = dx > 0 ? (x1 - x) / dx : (x0 - x) / dx;
+          const ty = dy > 0 ? (y1 - y) / dy : (y0 - y) / dy;
+          const t = Math.min(tx, ty, left);
+          x += dx * t; y += dy * t; left -= t;
+          pts.push([x, y]);
+          if (t === tx) dx = -dx; else if (t === ty) dy = -dy;
+        }
+        return line(pts);
+      };
+      return {
+        label: 'Three spaces as a sound ray in each: many short bounces in a small PLATE, fewer, longer ones in HALL, and in MASSIVE it travels off through walls that fade.',
+        faint: ['M112 6H136', 'M112 58H136', 'M112 6V58'],
+        ink: [rect(4, 36, 26, 58), rect(34, 18, 96, 58), dot(9, 52), dot(42, 50), dot(120, 46)],
+        hot: [bounce(4, 36, 26, 58, 9, 52, 1, -1.7, 120), bounce(34, 18, 96, 58, 42, 50, 1, -0.42, 230), 'M120 46L160 22'],
+      };
+    }
+
     // ---- CV --------------------------------------------------------------------------
     case 'cv-sum': {
       // A sum: the knob where your hand set it, plus a voltage (0 to 5 V), equals the knob
@@ -419,6 +529,10 @@ export const CONCEPTS: Concept[] = [
     { kind: 'swell-hairpin', caption: 'Crescendo, then diminuendo', risk: 'the two hairpins together can close into a flat diamond or a lens, which edges towards an eye.' },
     { kind: 'swell-bud', caption: 'A bud opening', risk: 'the open stage can read as a tulip, a flame or a fork.' },
     { kind: 'swell-light', caption: 'A light coming up', risk: 'reads as the screen-brightness icon, or a row of suns from a weather app.' },
+    { kind: 'swell-measure', caption: 'Note to peak, measured' },
+    { kind: 'swell-family', caption: 'Short, middle, long swell' },
+    { kind: 'swell-apart', caption: 'A note, then a soft rise' },
+    { kind: 'swell-natural', caption: 'Contrast: NATURAL’s predelay gap' },
   ] },
   { id: 'octave', name: 'SHIMMER: an octave up', options: [
     { kind: 'octave', caption: 'Today: a wave at twice the speed' },
@@ -437,6 +551,10 @@ export const CONCEPTS: Concept[] = [
     { kind: 'spaces-paths', caption: 'Sound paths bouncing' },
     { kind: 'spaces-nested', caption: 'Rooms inside rooms' },
     { kind: 'spaces-forms', caption: 'Plate, hall, horizon', risk: 'the hung plate can read as a picture on a wall, the hall as a doorway.' },
+    { kind: 'spaces-plans', caption: 'Floor plans, one scale', risk: 'MASSIVE’s fan-shaped plan can read as a megaphone or a funnel.' },
+    { kind: 'spaces-figure', caption: 'Sections with a listener' },
+    { kind: 'spaces-depth', caption: 'Rooms in perspective', risk: 'PLATE’s shallow box can read as a picture frame, and MASSIVE’s open ground as a road.' },
+    { kind: 'spaces-rays', caption: 'A sound ray in each' },
   ] },
   { id: 'cv', name: 'CV inputs', options: [
     { kind: 'cv', caption: 'Today: a voltage turning the arc' },
