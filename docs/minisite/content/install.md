@@ -20,11 +20,9 @@ You can play Sublustris as firmware on a Noise Engineering Versio, or as a plugi
 - The Sublustris firmware file (`.bin`) from the download above.
 
 **Plugin**
-- A Mac with **macOS 12 or newer**, Apple Silicon or Intel.
+- A Mac with **macOS 12 or newer**, Apple Silicon or Intel. (It's built for both; I play it on Apple Silicon.)
 - A DAW that loads **Audio Unit** or **VST3** plugins. (I use it day to day in Ableton Live.)
 - There's no Windows or Linux version.
-
-<!-- OWNER: macOS 12 is the plugin build's deployment target, and the release script builds Apple Silicon + Intel. Has it been run on macOS 12 or an Intel Mac? If not, keep "12 or newer" as the build target and drop nothing, or say "built for". -->
 
 ## On the Versio
 
@@ -38,11 +36,9 @@ Sublustris replaces the module's firmware entirely. The rest of the module stays
 4. Choose **Select Custom File** and pick the Sublustris `.bin` file you downloaded.
 5. Click **Connect**, then **Change Firmware**. Wait until it reports that it's done.
 6. **Unplug USB**, put the module back in the case, and reconnect the Eurorack power.
-7. Power on. The LEDs meter the input and output.
+7. Power on. The four LEDs play a short sweep, cool blue to violet to white, to show Sublustris has loaded. Then they meter the input and output.
 
 Your Versio's printed labels won't match Sublustris's controls, so keep the [panel map](/manual#panel-map) handy.
-
-<!-- OWNER: step 7: is there a power-up LED sign that Sublustris has loaded? -->
 
 ### Going back to Noise Engineering's firmware
 
@@ -91,6 +87,7 @@ Delete `Sublustris Versio.vst3` from `~/Library/Audio/Plug-Ins/VST3/` and `Sublu
 | What you see | Try |
 |---|---|
 | Firmware Swap doesn't find the module | Use Chrome. Try another micro-USB cable (many only charge). Check the rack power is unplugged and USB goes to the Daisy Seed on the back. |
+| No colour sweep at power-up | Check the module is getting power, then flash the firmware again. |
 | The knobs don't do what the printed labels say | Expected: Sublustris has its own layout. See the [panel map](/manual#panel-map). |
 | "Sublustris Versio can't be opened" / the DAW doesn't list it | Run the two Terminal lines (step 3) and rescan. |
 | The output LEDs turn blue | The reverb is frozen. Tap the button (or send a short gate) to unfreeze. |

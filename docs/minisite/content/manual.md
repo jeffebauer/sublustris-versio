@@ -156,8 +156,6 @@ The same gestures as the button. A short pulse toggles the freeze; a gate held h
 
 0–5 V, added to the knob's position (turn the knob down to give CV room). Every knob has one.
 
-<!-- OWNER: the CV range and response were checked on hardware? Resilio's line is "0–5 V, added to the knob's position". -->
-
 ### Audio in and out
 
 - **In L / In R:** true stereo in: left and right enter the reverb at different points. For mono, patch In L only and it feeds both sides.
@@ -171,7 +169,7 @@ The same gestures as the button. A short pulse toggles the freeze; a gate held h
   - **Output red:** the output limiter is catching peaks.
 - **Cool blue** under the output pair: frozen. It **pulses slowly** while you paint.
 
-<!-- OWNER: is there a power-up LED sweep, as on Resilio? -->
+- **At power-up** a short sweep across the four LEDs, cool blue to violet to white, says the firmware has loaded.
 
 ## Quick start
 

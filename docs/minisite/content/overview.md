@@ -28,9 +28,8 @@ I wanted a reverb I could live inside. Tails long enough for dub techno, ambient
 - **Three spaces.** A dense PLATE, a big HALL, and MASSIVE, which swells in slowly and grows into a boundless wash.
 - **Tape-style wear.** One WEAR knob brings in tape saturation, a bucket-brigade delay's breathing, bit grit and a radio's narrow band, all at once. MOTION adds tape wow and flutter, or a quick, shimmering wander.
 
-<!-- STORY: the owner picks the topic (BRIEF §4.6): the plate (EMT 140), the endless hold, the name, or the tape transport.
-     Written once picked, with checked and cited sources. -->
-<!-- OWNER: which story goes here? -->
+<!-- STORY: the endless hold: infinite reverb, from tape loops to the Lexicon 224 and freeze pedals (owner's pick, 29 Oct 2026).
+     Written with checked and cited sources; draft to come. -->
 
 ## Built for long tails
 
@@ -67,16 +66,22 @@ Sublustris replaces the module's firmware completely, and it's just as easy to g
 
 [How to install](/install)
 
+## Help shape it
+
+If something sounds wrong, or you want a sound it can't make yet, tell me. Ideas from the people playing it are how Sublustris gets better.
+
+- **Play it.** On the module or in your DAW, with your own sounds.
+- **Tell me.** Open a GitHub issue with an idea for the sound, or a bug.
+- **Hear it change.** I try ideas by ear, and credit the ones that ship.
+
 ## Its sibling
 
 Sublustris has a sibling, [Resilio Versio](https://resilio-versio.vercel.app): a dub spring reverb and tape echo for the same module. Resilio is for throwing hits into springs. Sublustris is for long, deep spaces.
 
 ## Status
 
-Sublustris isn't released yet. The firmware runs on real hardware and I play it at the rack, but the sound still changes from version to version.
+Sublustris isn't released yet. The firmware runs on real hardware and I play it at the rack, but the sound still changes from version to version. Once it's public, I'd like to hear what you think on [GitHub Issues](https://github.com/jeffebauer/sublustris-versio/issues).
 
 I'm a designer, not a DSP engineer. I made every sound decision by ear, and Claude (Anthropic's AI) wrote the DSP, the firmware and the tools. [Credits](/credits)
-
-<!-- OWNER: the feedback channel (GitHub Issues once the repository is public, as Resilio?). -->
 
 Sublustris Versio is an independent project. It is not affiliated with or endorsed by Noise Engineering.

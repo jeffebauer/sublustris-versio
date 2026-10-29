@@ -24,8 +24,6 @@ Plateau Versio is another reverb firmware for the same platform, built around a 
 ### Which modules does it run on?
 The Noise Engineering Versio. All Versio modules share one hardware platform with different panels and firmware, so your printed labels will be those of whichever Versio you have. The [panel map](/manual#panel-map) shows which control is which.
 
-<!-- OWNER: which Versio modules has it been played on? -->
-
 ### Is flashing safe? Can I go back?
 Yes. You install it with Noise Engineering's own Firmware Swap app, and the same app takes you back to any Noise Engineering firmware. Sublustris doesn't install a bootloader or change anything else on the module. There's one rule: **never connect USB and Eurorack power at the same time.** [Install guide](/install)
 
@@ -38,9 +36,7 @@ Hard. A reverb this big is a lot of sums for a small processor, and its busiest 
 Yes. The firmware and plugin are free, and the source will be open. My code is MIT licensed, and the plugin is under AGPLv3 because it's built on JUCE.
 
 ### Does the plugin run on Apple Silicon and Intel?
-Yes, one plugin for both, on macOS 12 or newer, as Audio Unit and VST3. There's no Windows or Linux version.
-
-<!-- OWNER/verify: tested on an Intel Mac? -->
+It's built as one plugin for both, for macOS 12 or newer, as Audio Unit and VST3. I play it on an Apple Silicon Mac; if you try it on an Intel Mac, I'd like to hear how it goes. There's no Windows or Linux version.
 
 ### Why does macOS block the plugin?
 It's free, and Apple hasn't notarised it. Two Terminal lines on the [install page](/install#in-a-daw-macos) let macOS open it.
@@ -67,4 +63,9 @@ Neither. It's a set of feedback loops, delay lines that feed back into each othe
 It will be at [github.com/jeffebauer/sublustris-versio](https://github.com/jeffebauer/sublustris-versio) once the repository is public. It includes the full specification and the reasons behind each design decision.
 
 ### How do I give feedback or report a bug?
-<!-- OWNER: the feedback channel (GitHub Issues with Resilio's two forms, "Suggest a sound" and "Report a bug"?). -->
+On GitHub Issues, with a free GitHub account, once the repository is public. I'd really like to hear from you, because Sublustris gets better through the people playing it. There are two short forms.
+
+- **[Suggest a sound](https://github.com/jeffebauer/sublustris-versio/issues/new?template=sound_idea.yml)** if there's a sound, a move or a control you'd like, or one that could feel better. A reference helps (a track, a recording, another reverb), and so does a note on how close Sublustris gets today.
+- **[Report a bug](https://github.com/jeffebauer/sublustris-versio/issues/new?template=bug_report.yml)** if something clicks, crackles, glitches, crashes or doesn't do what its name says. Tell me whether it was the Versio or the plugin, which version, and the settings in panel names (BLEND, DECAY, SPACE, ONSET…). A short recording helps most.
+
+Plain impressions are useful too, like how it sounds next to reverbs you know, or a knob that feels dead or too touchy. I read every issue, and I try out sound ideas and listen to them before anything changes. When a change comes from someone playing it, the [changelog](/changelog/) credits them.

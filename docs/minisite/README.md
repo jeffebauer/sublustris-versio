@@ -36,11 +36,11 @@ The plugin screenshot can be made now from the plugin; the rest wait for the pan
 ## Before launch (for the owner)
 
 1. **The design direction** (the style tile, stop 3).
-2. **The story section's topic** on the home page: the plate (EMT 140), the endless hold, the name, or the tape transport.
+2. ~~**The story section's topic.**~~ The endless hold (owner, 29 Oct 2026); the sourced draft to come.
 3. **The demos:** the final list, then each clip's approval on a listening page.
-4. **Which Versio module(s)** it has been played on, for the FAQ.
-5. **The macOS minimum:** 12.0 is the build's deployment target and the release script builds Apple Silicon + Intel; confirm it has been run where the site says.
-6. **The feedback channel** (GitHub Issues, as Resilio?), in the overview, FAQ and changelog.
+4. **Which Versio module(s)** it has been played on: not sure yet (29 Oct 2026), so the FAQ names none.
+5. ~~**The macOS minimum.**~~ Built for macOS 12+, Apple Silicon and Intel; played on Apple Silicon only, and the copy says so (29 Oct 2026).
+6. ~~**The feedback channel.**~~ GitHub Issues with two forms, as Resilio (29 Oct 2026); the forms are in `.github/ISSUE_TEMPLATE/`.
 7. **The Vercel project and address** (for example `sublustris-versio.vercel.app`): created by the owner.
 8. **The renders,** once the panel art exists.
 9. **Go-public switch.** Download links and the source link are live only once the repository is public and the first release is out (`DOWNLOADS_LIVE`). `tools/make_release.sh` builds only the friend package today; teaching it the release upload (`sublustris-versio-firmware.bin`, `sublustris-versio-plugin-macos.zip`, `SHA256SUMS.txt`) is a separate small job.

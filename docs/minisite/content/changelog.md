@@ -11,7 +11,7 @@ Newest first. There's no public release yet, so below is the story so far, in a 
 
 <!-- LATEST: show the current version, date and download buttons here, from the release data. -->
 
-<!-- OWNER: the feedback link and "credits players" line, once the channel is decided. -->
+When a player suggests a change, I credit them in its entry. If you have an idea, [suggest a sound](https://github.com/jeffebauer/sublustris-versio/issues/new?template=sound_idea.yml).
 
 ## In development
 
