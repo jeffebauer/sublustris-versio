@@ -4,7 +4,7 @@ Copyright (c) 2026 Jesse Bauer (https://jessebauer.xyz)
 Sublustris Versio is firmware for the Noise Engineering Versio. Not affiliated
 with or endorsed by Noise Engineering.
 
-Source: https://github.com/jeffebauer/immensio-versio
+Source: https://github.com/jeffebauer/sublustris-versio
 
 
 Parts of this project's code and tools were copied from its sibling,
@@ -30,7 +30,7 @@ WHAT LICENCE COVERS WHAT
   JUCE licence. The plugin binaries are therefore distributed under AGPLv3.
   The full text is in LICENSES/AGPL-3.0.txt. The corresponding source for
   each release is the repository at that release's tag:
-  https://github.com/jeffebauer/immensio-versio/tree/<tag>
+  https://github.com/jeffebauer/sublustris-versio/tree/<tag>
   Our own source files stay MIT; MIT code can be combined into an AGPLv3 work.
 
 

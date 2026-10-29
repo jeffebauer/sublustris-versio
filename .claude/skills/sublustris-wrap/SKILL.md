@@ -9,6 +9,8 @@ The next session knows nothing this one knew. Write down **what is true now, wha
 
 **Wrap before you have to**, at the end of a coherent piece of work, not when the window is nearly full.
 
+**One-off (29 Oct 2026):** if `docs/handoff/HANDOFF.md` has a "Folder move" checklist still to do, do it as the very last step of this wrap-up, after the handoff is written and pushed.
+
 ## Steps
 
 1. **Wait for, or account for, running agents and nested sessions.** List the sessions this one started (`list_sessions` with `linked: true`): each one's state, branch and what's left; a finished one's branch is reviewed, merged on the owner's OK, or kept on purpose and named in the handoff. Background agents report only to the session that started them. If any are still running, tell the owner and wait for them. Otherwise their work will sit unreviewed in the working tree. Anything you can't wait for goes in the handoff under "In flight", with what the agent was doing and what to check.

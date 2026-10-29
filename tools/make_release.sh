@@ -52,7 +52,7 @@ else
     NAME="Sublustris Versio" CODE="ImVs" BUNDLE="com.OmbraAudio.ImmensioVersio" TAG="$SOUND-$SHA"
 fi
 OUT="$MAIN/dist/release/$TAG"
-SOURCE_URL="https://github.com/jeffebauer/immensio-versio/tree/$(git rev-parse "$SHA")"
+SOURCE_URL="https://github.com/jeffebauer/sublustris-versio/tree/$(git rev-parse "$SHA")"
 mkdir -p "$OUT"
 
 WT="$MAIN/.claude/worktrees/release"
@@ -87,7 +87,7 @@ EOF
 LIC="$WT"; [ -f "$LIC/NOTICE" ] || LIC="$REPO"
 rm -rf "$OUT/LICENSES"; mkdir -p "$OUT/LICENSES"
 cp "$LIC/LICENSE" "$OUT/LICENSE"
-sed "s#https://github.com/jeffebauer/immensio-versio/tree/<tag>#$SOURCE_URL#" "$LIC/NOTICE" > "$OUT/NOTICE"
+sed "s#https://github.com/jeffebauer/sublustris-versio/tree/<tag>#$SOURCE_URL#" "$LIC/NOTICE" > "$OUT/NOTICE"
 cp "$LIC/LICENSES/AGPL-3.0.txt" "$OUT/LICENSES/AGPL-3.0.txt"
 ZIP="SublustrisVersio_$TAG.zip"
 (cd "$OUT" && rm -f "$ZIP" && zip -q -r -y "$ZIP" "$NAME.vst3" "$NAME.component" "$(basename "$README")" LICENSE NOTICE LICENSES)
