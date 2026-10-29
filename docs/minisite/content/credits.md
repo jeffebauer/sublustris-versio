@@ -33,6 +33,18 @@ These are the reverbs whose character shaped Sublustris, named only to say where
 
 <!-- OWNER: filled in at the demos stop: every clip is Sublustris itself, rendered offline by its own renderer, and the samples' sources and licences are credited here (as Resilio's page does). -->
 
+## The endless hold
+
+The sources for the story on the home page:
+
+- Robert Fripp, interviewed in *Musician* (1982), quoted in "Robert Fripp on the device that made him feel truly liberated", *Guitar Player*: the two Revoxes, 1972, and the name Frippertronics (1977). [guitarplayer.com](https://www.guitarplayer.com/guitarists/robert-fripp-on-the-device-that-made-him-feel-truly-liberated)
+- Sean Costello, "Early tape loop experiments with Eno, Fripp, Terry Riley, and Pauline Oliveros", Valhalla DSP, 2010: how the two-machine loop is wired. [Archived copy](https://web.archive.org/web/2015/https://valhalladsp.com/2010/05/26/early-tape-loop-experiments-with-eno-fripp-terry-riley-and-pauline-oliveros/)
+- "Brian Eno is More Dark Than Shark", on Eno's covers (October 2009): the operational diagram on the back of *Discreet Music*. [moredarkthanshark.org](https://moredarkthanshark.org/eno_int_print-oct09.html)
+- Paul White, "Illusions of Space", an interview with David Griesinger, *Recording Musician*, August 1992: the 224's reverb in the PCM70. [muzines.co.uk](https://www.muzines.co.uk/articles/illusions-of-space/2902)
+- Curtis Schwartz, "Lexicon PCM 70 Digital Effects Processor", *International Musician & Recording World*, February 1986: the Infinite Reverb program and the held chord. [muzines.co.uk](https://www.muzines.co.uk/articles/lexicon-pcm-70-digital-effects-processor/6783)
+- Electro-Harmonix, Freeze product page, and James Lewin, "New Electro Harmonix Pedal Freezes Time", SonicState, 19 July 2010. [ehx.com](https://www.ehx.com/products/freeze/), [sonicstate.com](https://sonicstate.com/news/2010/07/19/new-electro-harmonix-pedal-freezes-time/)
+- Strymon, Cloudburst support page: infinite takes in new notes, freeze doesn't. [strymon.net](https://www.strymon.net/support/cloudburst/)
+
 ## References
 
 - J. Dattorro, "Effect Design, Part 1: Reverberator and Other Filters", *Journal of the Audio Engineering Society* 45(9), 660–684, 1997.

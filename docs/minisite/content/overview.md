@@ -28,8 +28,19 @@ I wanted a reverb I could live inside. Tails long enough for dub techno, ambient
 - **Three spaces.** A dense PLATE, a big HALL, and MASSIVE, which swells in slowly and grows into a boundless wash.
 - **Tape-style wear.** One WEAR knob brings in tape saturation, a bucket-brigade delay's breathing, bit grit and a radio's narrow band, all at once. MOTION adds tape wow and flutter, or a quick, shimmering wander.
 
-<!-- STORY: the endless hold: infinite reverb, from tape loops to the Lexicon 224 and freeze pedals (owner's pick, 29 Oct 2026).
-     Written with checked and cited sources; draft to come. -->
+## The endless hold
+
+Infinite reverb began as a trick with two tape machines.
+
+In 1972 Robert Fripp spent an evening with Brian Eno, who "had a system of recording with two Revoxes." The tape ran from the first machine to the second, and the second machine's playback fed back into the first one's record head. Each sound came round again a few seconds later, a little quieter each time. Fripp played into it, and the result became *(No Pussyfooting)*. By 1977 his version had a name: Frippertronics. In 1975 Eno released *Discreet Music* and printed a diagram of his echo setup on the back cover.
+
+A reverb works the same way inside. Each trip round its loop loses a little level, and that loss is the decay. Set the loop to lose nothing and the tail goes on forever. By 1986 Lexicon's PCM70, which used David Griesinger's reverb from the Lexicon 224, had a program called Infinite Reverb. One reviewer held the reverb of a single note, then added a second to build a chord.
+
+Pedals brought it to the floor. The Electro-Harmonix Freeze (2010) holds any note or chord while you press its footswitch. Reverbs now often offer two versions: infinite keeps taking in what you play, and freeze holds what's there and lets nothing new in.
+
+**Sublustris has both.** Past about 3 o'clock, DECAY makes the tail endless. It settles at a steady level and ducks a little under new playing, and in PLATE and HALL its notes hold still when you stop. FREEZE holds the tail as a still pad you play over. Hold the button while frozen and it paints a little of what you play into the pad.
+
+[Sources](/credits#the-endless-hold)
 
 ## Built for long tails
 
