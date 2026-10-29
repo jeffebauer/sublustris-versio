@@ -46,7 +46,7 @@
   --fs-display: clamp(3rem, 1.6rem + 6vw, 7.5rem);         /* 48 -> 120: MD UI Bold, the title and big numbers */
   --fs-h2:      clamp(2.25rem, 1.3rem + 4vw, 5.5rem);      /* 36 -> 88: section headings, Bold */
   --fs-h3:      clamp(1.5rem, 1.1rem + 1.6vw, 2.5rem);     /* 24 -> 40: tile statements, Bold */
-  --fs-lede:    clamp(1.125rem, 0.98rem + 0.55vw, 1.5rem);  /* 18 -> 24 (owner, 7 Oct: was 20 -> 30) */
+  --fs-lede:    clamp(1.3125rem, 1.15rem + 0.7vw, 1.75rem); /* 21 -> 28: a clear step above body on phones (Sublustris owner, 29 Oct; Resilio's 18 -> 24 sat one pixel above body) */
   --fs-body:    clamp(1.0625rem, 0.9rem + 0.55vw, 1.375rem); /* 17 -> 22 */
   --fs-small:   clamp(0.9375rem, 0.85rem + 0.3vw, 1.125rem); /* 15 -> 18 */
   --fs-ui:      0.875rem;  /* 14: header links, buttons */
@@ -174,6 +174,12 @@ strong, b { font-weight: var(--wt-display); }
   font-size: var(--fs-micro); text-transform: uppercase;
 }
 .chip .dot { width: 0.5em; height: 0.5em; border-radius: 50%; background: var(--signal); }
+/* Optical centring (Sublustris owner, 29 Oct): in a line box MD UI and MD IO sit their capitals
+   about 1 px high at these sizes (measured at 4x: 0.9 px in a 14 px button, 1.1 px in a 12 px chip).
+   Move 1 px of padding from the bottom to the top; outer sizes stay the same. (text-box-trim
+   doesn't reach the text inside a flex pill, so it can't do this.) */
+.btn { padding-top: calc(0.5rem + 1px); padding-bottom: calc(0.5rem - 1px); }
+.chip, .badge { padding-top: calc(0.25rem + 1px); padding-bottom: calc(0.25rem - 1px); }
 
 /* ---- Tiles (V9, V11) ----------------------------------------------------- */
 .tile { background: var(--tile); border-radius: var(--radius-tile); padding: clamp(1.25rem, 0.8rem + 1.4vw, 2.25rem); }

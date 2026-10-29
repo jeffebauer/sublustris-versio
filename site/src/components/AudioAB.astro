@@ -6,11 +6,12 @@
 // A clip with a `dry` file is mixed by the floating BLEND fader (BlendFader.astro), which
 // starts at the clip's own BLEND (data-blend).
 import Diagram from './diagrams/Diagram.astro';
+import type { Variant } from './diagrams/variants';
 import SpecTable from './SpecTable.astro';
 import { audioUrl, clock, diagramFor, getPeaks, type Clip } from '../lib/demos';
 
-interface Props { clip: Clip; n: number; headingLevel?: 'h3' | 'h4'; idPrefix?: string; wide?: boolean }
-const { clip, n, headingLevel: H = 'h3', idPrefix = 'demo', wide = false } = Astro.props;
+interface Props { clip: Clip; n: number; headingLevel?: 'h3' | 'h4'; idPrefix?: string; wide?: boolean; diagramVariant?: Variant }
+const { clip, n, headingLevel: H = 'h3', idPrefix = 'demo', wide = false, diagramVariant } = Astro.props;
 const id = `${idPrefix}-${String(n).padStart(2, '0')}`;
 const peaks = await getPeaks(clip.file);
 const W = peaks.length;
@@ -35,7 +36,7 @@ const blend = clip.blend ?? 0.5;
 <li class:list={['demo', 'tile', wide && 'is-wide']} data-reveal>
   <div class="demo-head">
     <H id={`${id}-title`} class="demo-title">{clip.title}</H>
-    {diagram && <Diagram kind={diagram} class="demo-diagram" />}
+    {diagram && <Diagram kind={diagram} class="demo-diagram" variant={diagramVariant} />}
   </div>
   <p class="demo-caption" id={`${id}-caption`}>{clip.caption}</p>
   <p class="visually-hidden" id={`${id}-transcript`}>Transcript: {clip.transcript}</p>

@@ -16,7 +16,7 @@ const cards = ids.map((id) => {
   return { id, dir: DIRECTIONS[id], chips: [...SWATCHES, ...extra].filter((k) => t[k]).map((k) => ({ k, hex: t[k] })) };
 });
 ---
-<Base title="Style tiles: Sublustris Versio" description="Three design directions for the Sublustris Versio site: dark with a faint glow, white with a dusk accent, and night-blue bands." noindex bodyClass="dir-b">
+<Base title="Style tiles: Sublustris Versio" description="Three design directions for the Sublustris Versio site: dark with a faint glow, white with freeze blue, and night-blue bands." noindex bodyClass="dir-b">
   <section class="st-section st-index" aria-labelledby="st-index-title">
     <div class="column flow">
       <p class="micro quiet">Style tile · stop 3</p>
@@ -41,6 +41,7 @@ const cards = ids.map((id) => {
         </li>
       ))}
     </ul>
+    <p class="wide st-index-more small"><a href="/style/diagrams/">The tiny diagrams, four ways</a>: today’s line set and three alternatives, side by side.</p>
   </section>
 </Base>
 
@@ -57,5 +58,6 @@ const cards = ids.map((id) => {
   .st-card-body .small { color: var(--ink-2); }
   .st-card-chips { display: flex; gap: 6px; flex-wrap: wrap; }
   .st-card-chips span { width: 1.5rem; height: 1.5rem; border-radius: 50%; box-shadow: 0 0 0 1px rgb(127 127 127 / 0.35); }
+  .st-index-more { margin-top: var(--stack-4); }
   .st-card-link:hover .h3 { text-decoration: underline; text-decoration-thickness: var(--hair); text-underline-offset: 0.15em; }
 </style>

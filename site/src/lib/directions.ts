@@ -52,10 +52,10 @@ export const DIRECTIONS: Record<DirectionId, Direction> = {
     marks: [{ token: 'signal', name: 'Glow', use: 'LEDs, playheads, dots, diagram highlights' }],
   },
   b: {
-    id: 'b', name: 'White body, a dusk accent', short: 'White, dusk accent', hasDark: true,
-    summary: 'Resilio’s white page and near-black hero and sound bands, the closest sibling. The greys turn cool and the signal red becomes a dusk indigo, the blue-violet of the sky just after sunset.',
+    id: 'b', name: 'White body, freeze blue', short: 'White, freeze blue', hasDark: true,
+    summary: 'Resilio’s white page and near-black hero and sound bands, the closest sibling. The greys turn cool and the signal red becomes freeze blue, the cool blue the output LEDs show while the tail is frozen.',
     surfaces: [...PAGE, ...DARK, ...BUTTON, ...PANEL],
-    marks: [{ token: 'signal', name: 'Dusk', use: 'LEDs, playheads, dots, diagram highlights' }],
+    marks: [{ token: 'signal', name: 'Freeze blue', use: 'LEDs, playheads, dots, diagram highlights' }],
   },
   c: {
     id: 'c', name: 'Night-blue bands', short: 'Night-blue bands', hasDark: true,

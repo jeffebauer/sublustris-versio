@@ -1,7 +1,9 @@
-/* Direction B: Resilio's white body, a cool dusk accent (style tile, stop 3).
+/* Direction B: Resilio's white body, a freeze-blue accent (style tile, stop 3; the owner's
+   pick, 29 Oct 2026, with the accent changed from dusk indigo to the freeze LED's blue).
    The closest sibling: the same white page and near-black hero and sound bands as Resilio,
-   but the greys are tuned cool and the hot signal red becomes a dusk indigo, the blue-violet
-   of the sky just after sunset. Light and dark themes, like Resilio's.
+   but the greys are tuned cool and the hot signal red becomes the cool blue the output LEDs
+   show while frozen (firmware LedMeter.h kFreezeTint, RGB 0 / 0.25 / 0.6: hue about 215°).
+   Light and dark themes, like Resilio's.
    Scoped to .dir-b (on <body>). The style tile reads the hex values between the @tokens
    markers to compute contrast. */
 
@@ -18,22 +20,22 @@
   --on-dark:      #f4f5fa;
   --on-dark-2:    #a4a7b9;
   --line-dark:    #2a2c39;
-  --signal:       #6a63f0;  /* dusk indigo: LEDs, playheads, dots, diagram highlights (marks only) */
-  --signal-ink:   #4c45d6;  /* the one filled button, white text */
-  --signal-hover: #3f38bd;
+  --signal:       #2f6fe4;  /* freeze blue: LEDs, playheads, dots, diagram highlights (marks only) */
+  --signal-ink:   #1a5bd6;  /* the one filled button, white text */
+  --signal-hover: #164db6;
   --on-signal:    #ffffff;
-  --signal-text:  #4c45d6;  /* the accent as text */
-  --focus:        #4c45d6;
-  --signal-on-dark:      #8f8aff;
-  --signal-text-on-dark: #8f8aff;
+  --signal-text:  #1a5bd6;  /* the accent as text */
+  --focus:        #1a5bd6;
+  --signal-on-dark:      #6ea2ff;
+  --signal-text-on-dark: #6ea2ff;
   --ap-ground:    #f1f2f6;
   --sv-panel:     #fbfbfd;
   --sv-ink:       #0b0c12;
   --sv-ink-soft:  #5b5e6e;
   --sv-knob:      #1b1c24;
   --sv-metal:     #c9ccd6;
-  --sv-led:       #6a63f0;
-  --sv-accent:    #4c45d6;
+  --sv-led:       #2f6fe4;
+  --sv-accent:    #1a5bd6;
 }
 /* @end */
 
@@ -41,15 +43,15 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .dir-b {
     --paper: #121319; --tile: #1c1d26; --raised: #262833; --ink: #f4f5fa; --ink-2: #a4a7b9; --line: #2c2e3a;
-    --signal-text: #9792ff; --focus: #9792ff; --ap-ground: #1c1d26;
-    --sv-panel: #262833; --sv-ink: #f4f5fa; --sv-ink-soft: #a4a7b9; --sv-knob: #0c0d14; --sv-metal: #5d6070; --sv-accent: #8f8aff;
+    --signal-text: #7aa9ff; --focus: #7aa9ff; --ap-ground: #1c1d26;
+    --sv-panel: #262833; --sv-ink: #f4f5fa; --sv-ink-soft: #a4a7b9; --sv-knob: #0c0d14; --sv-metal: #5d6070; --sv-accent: #6ea2ff;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] .dir-b, .dir-b .force-dark {
   --paper: #121319; --tile: #1c1d26; --raised: #262833; --ink: #f4f5fa; --ink-2: #a4a7b9; --line: #2c2e3a;
-  --signal-text: #9792ff; --focus: #9792ff; --ap-ground: #1c1d26;
-  --sv-panel: #262833; --sv-ink: #f4f5fa; --sv-ink-soft: #a4a7b9; --sv-knob: #0c0d14; --sv-metal: #5d6070; --sv-accent: #8f8aff;
+  --signal-text: #7aa9ff; --focus: #7aa9ff; --ap-ground: #1c1d26;
+  --sv-panel: #262833; --sv-ink: #f4f5fa; --sv-ink-soft: #a4a7b9; --sv-knob: #0c0d14; --sv-metal: #5d6070; --sv-accent: #6ea2ff;
   color-scheme: dark;
 }
 /* @end */
