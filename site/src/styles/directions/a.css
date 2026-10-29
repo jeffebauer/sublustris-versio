@@ -1,0 +1,64 @@
+/* Direction A: dark-first, a faint glow (style tile, stop 3).
+   The whole page is a cool near-black, never pure black; text is softly lit, not white.
+   One accent: a dim blue-violet LED behind frosted glass (the module's power-up sweep runs
+   cool blue -> violet -> white). The glow is used sparingly: focus rings, LEDs, playheads
+   and the one primary action. Dark only: there is no light theme in this direction.
+   Scoped to .dir-a (on <body>), so this page shows this direction only.
+   The style tile reads the hex values between the @tokens markers to compute contrast. */
+
+/* @tokens light */
+.dir-a {
+  --paper:        #0f1016;  /* the page: a cool near-black */
+  --tile:         #181a23;  /* bento tiles, one step up */
+  --raised:       #21232e;  /* a card on a tile band */
+  --ink:          #e6e4ee;  /* text: softly lit, a touch of violet */
+  --ink-2:        #9997aa;  /* secondary text */
+  --line:         #272935;  /* hairlines */
+  --dark:         #090a0f;  /* the hero and sound bands: a step deeper than the page */
+  --tile-dark:    #13141c;
+  --on-dark:      #e6e4ee;
+  --on-dark-2:    #9997aa;
+  --line-dark:    #20222c;
+  --signal:       #8f8cff;  /* the glow: LEDs, playheads, dots, diagram highlights (marks only) */
+  --signal-ink:   #b3b0ff;  /* the one lit fill: the primary button, with dark text */
+  --signal-hover: #c6c4ff;
+  --on-signal:    #0f1016;
+  --signal-text:  #aaa7ff;  /* the accent as text */
+  --focus:        #aaa7ff;
+  --signal-on-dark:      #8f8cff;
+  --signal-text-on-dark: #aaa7ff;
+  --ap-ground:    #181a23;  /* the annotated panel's well */
+  --sv-panel:     #1d1f29;  /* the panel map, themed */
+  --sv-ink:       #d6d4e2;
+  --sv-ink-soft:  #8c8aa0;
+  --sv-knob:      #0a0b10;
+  --sv-metal:     #4a4c5a;
+  --sv-led:       #8f8cff;
+  --sv-accent:    #b3b0ff;
+}
+/* @end */
+
+.dir-a {
+  --glow: rgb(143 140 255 / 0.45);
+  --glow-faint: rgb(143 140 255 / 0.1);
+  --wt-display: 600;   /* a softer display weight: dimly lit, not shouted */
+  --sv-font: var(--font-mono);
+  color-scheme: dark;
+}
+/* The bands, and the header over them, keep the lit accent. */
+.dir-a .band-dark, .dir-a .site-header.is-over-dark {
+  --signal: var(--signal-on-dark); --signal-text: var(--signal-text-on-dark); --focus: var(--signal-text-on-dark);
+}
+.dir-a ::selection { background: var(--signal-ink); color: var(--on-signal); }
+
+/* The glow, sparingly. */
+.dir-a :focus-visible { box-shadow: 0 0 0.9rem 0.1rem var(--glow); }
+.dir-a .btn-primary { box-shadow: 0 0 0 var(--hair) rgb(198 196 255 / 0.6), 0 0 1.5rem -0.2rem var(--glow); }
+.dir-a .btn-primary:hover { box-shadow: 0 0 0 var(--hair) rgb(198 196 255 / 0.8), 0 0 2rem 0 var(--glow); }
+.dir-a .player .wave .head { filter: drop-shadow(0 0 3px var(--glow)); }
+.dir-a .chip .dot, .dir-a .placeholder .ph-label .dot, .dir-a .led-dot { box-shadow: 0 0 0.5rem 0.05rem var(--glow); }
+.dir-a .panel-diagram .led { filter: drop-shadow(0 0 1.5px var(--glow)); }
+/* A faint light from above, behind the first band: the one place the page itself glows. */
+.dir-a .st-hero { background: radial-gradient(90% 70% at 50% 0%, var(--glow-faint), transparent 70%); }
+/* Dark only: the footer's theme switch has nothing to switch. */
+.dir-a .theme-switch { display: none; }

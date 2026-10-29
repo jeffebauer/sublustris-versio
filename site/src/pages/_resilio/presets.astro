@@ -1,0 +1,103 @@
+---
+import Doc from '../../layouts/Doc.astro';
+import PanelWire from '../../components/PanelWire.astro';
+import KnobGlyph from '../../components/KnobGlyph.astro';
+import { getPage, pageHtml, splitSections, stripTags, takeH1 } from '../../lib/content';
+import { KNOBS, SWITCHES, type PanelSettings, type KnobKey } from '../../lib/panel';
+
+const page = await getPage('presets');
+const { h1, rest } = takeH1(pageHtml(page));
+
+// The settings table in the copy is the one source of the numbers. The page reads it and
+// draws each row as a set panel beside its starting point, instead of showing the table.
+const table = rest.match(/<table[\s\S]*?<\/table>/)?.[0] ?? '';
+const cells = (row: string) => [...row.matchAll(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/g)].map((m) => stripTags(m[1]));
+const [head, ...rows] = [...table.matchAll(/<tr>([\s\S]*?)<\/tr>/g)].map((m) => cells(m[1]));
+if (!head || !rows.length) throw new Error('presets.md: the settings table is missing');
+const col = (name: string) => {
+  const i = head.findIndex((h) => h.toUpperCase() === name);
+  if (i < 0) throw new Error(`presets.md: no ${name} column`);
+  return i;
+};
+const settings = new Map<string, PanelSettings>();
+for (const r of rows) {
+  const s: Record<string, number | string> = {
+    tank: r[col('TANK')],
+    attitude: r[col('ATTITUDE')],
+  };
+  for (const k of KNOBS) s[k.key] = parseFloat(r[col(k.name)]);
+  settings.set(r[0], s as PanelSettings);
+}
+
+const { lead, sections } = splitSections(rest.replace(table, ''));
+
+// A section is either one starting point (its h2 names a table row), or a group (the dub
+// and dub techno characters): its own copy, then h3 starting points that name table rows.
+type Block =
+  | { kind: 'html'; html: string }
+  | { kind: 'preset'; level: 'h2' | 'h3'; id: string; title: string; html: string; s: PanelSettings };
+const blocks: Block[] = [];
+for (const sec of sections) {
+  const s = settings.get(sec.title);
+  if (s) { blocks.push({ kind: 'preset', level: 'h2', id: sec.id, title: sec.title, html: sec.html, s }); continue; }
+  const [intro, ...subs] = sec.html.split(/(?=<h3[\s>])/);
+  blocks.push({ kind: 'html', html: `<h2 id="${sec.id}">${sec.title}</h2>${intro}` });
+  for (const sub of subs) {
+    const m = sub.match(/^<h3(?:\s+id="([^"]*)")?[^>]*>([\s\S]*?)<\/h3>/);
+    const title = stripTags(m?.[2] ?? '');
+    const ss = settings.get(title);
+    if (m && ss) blocks.push({ kind: 'preset', level: 'h3', id: m[1] ?? '', title, html: sub.slice(m[0].length), s: ss });
+    else blocks.push({ kind: 'html', html: sub });
+  }
+}
+const characters = sections.find((sec) => !settings.has(sec.title))?.id;
+const values = (s: PanelSettings) => [
+  ...SWITCHES.map((w) => [w.name, s[w.key]]),
+  ...KNOBS.map((k) => [k.name, String(s[k.key as KnobKey])]),
+];
+---
+<Doc page={page} h1={h1} kicker="Resilio Versio · dub and dub techno settings" expand={characters ? [characters] : []}>
+  <Fragment set:html={lead} />
+  {blocks.map((b) => b.kind === 'html' ? <Fragment set:html={b.html} /> : (
+    <>
+      {b.level === 'h2' ? <h2 id={b.id}>{b.title}</h2> : <h3 id={b.id}>{b.title}</h3>}
+      <div class="preset">
+        <figure class="preset-panel">
+          <PanelWire settings={b.s} controls label={`${b.title}: panel settings`} />
+        </figure>
+        <div class="preset-text">
+          <Fragment set:html={b.html} />
+          <dl class="preset-values" aria-label={`${b.title}: exact values`}>
+            {values(b.s).map(([k, v]) => <div><dt>{k}</dt><dd>{SWITCHES.some((w) => w.name === k) ? v : <span class="knob-value"><KnobGlyph value={Number(v)} />{v}</span>}</dd></div>)}
+            {values(b.s).length % 2 === 1 && <div class="filler" aria-hidden="true" />}
+          </dl>
+        </div>
+      </div>
+    </>
+  ))}
+</Doc>
+
+<style>
+  /* Same gap between drawing and text as the manual's panel map; titles get more room (owner, 7 Oct). */
+  .preset { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: var(--stack-3) 3.5rem; align-items: start; margin-block: var(--stack-4) var(--stack-4); }
+  .preset-panel { margin: 0; }
+  /* The section copy arrives as HTML (set:html), so these reach it unscoped. */
+  .preset-text > :global(:first-child) { margin-top: 0; }
+  .preset-text > :global(* + *) { margin-top: var(--stack-2); }
+  .preset-text > .preset-values { margin-top: var(--stack-3); }
+  /* The exact values: a small two-across definition list under the text, hairlines running
+     unbroken across both pairs (owner, 7 Oct). */
+  .preset-values {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0;
+    font: var(--wt-reg) var(--fs-small) / 1.3 var(--font-sans); border-bottom: var(--hair) solid var(--line);
+  }
+  .preset-values div { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); align-items: center; padding: 0.45rem 0; border-top: var(--hair) solid var(--line); }
+  .preset-values div:nth-child(odd) { padding-right: var(--gutter); }
+  .preset-values dt { color: var(--ink-2); font: var(--wt-reg) var(--fs-micro) / 1.3 var(--font-mono); text-transform: uppercase; }
+  .preset-values dd { margin: 0; color: var(--ink); font-variant-numeric: tabular-nums; }
+  @media (max-width: 29.99rem) { .preset-values { grid-template-columns: minmax(0, 1fr); } .preset-values div:nth-child(odd) { padding-right: 0; } }
+  @media (max-width: 39.99rem) {
+    .preset { grid-template-columns: minmax(0, 1fr); }
+    .preset-panel { max-width: 18rem; }
+  }
+</style>

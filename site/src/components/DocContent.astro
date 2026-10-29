@@ -1,0 +1,45 @@
+---
+// Renders a page's Markdown with its slot markers swapped for components.
+import PanelWire from './PanelWire.astro';
+import DownloadBlock from './DownloadBlock.astro';
+import MediaCard from './MediaCard.astro';
+import type { Part } from '../lib/content';
+
+interface Props { parts: Part[] }
+const { parts: given } = Astro.props;
+// The panel map's table sits beside the drawing on wide screens (owner, 7 Oct): when the
+// panel slot is followed straight away by a table, it moves into the slot.
+const TABLE = /^\s*(<div class="table-scroll"[^>]*>\s*<table[\s\S]*?<\/table>\s*<\/div>)/;
+const parts = given.map((p) => ({ ...p })) as (Part & { table?: string })[];
+parts.forEach((p, i) => {
+  const next = parts[i + 1];
+  if (p.kind === 'slot' && p.slot === 'panel' && next?.kind === 'html') {
+    const m = next.html.match(TABLE);
+    if (m) { p.table = m[1]; next.html = next.html.slice(m[0].length); }
+  }
+});
+---
+{parts.map((p) =>
+  p.kind === 'html' ? (
+    <Fragment set:html={p.html} />
+  ) : p.slot === 'panel' ? (
+    <div class="slot manual-panel">
+      <figure class="panel-figure">
+        <PanelWire />
+        <figcaption class="small panel-note">Resilio’s panel, drawn to scale. Your Versio’s printed labels will differ: the table maps them.</figcaption>
+      </figure>
+      {p.table && <div class="panel-table" set:html={p.table} />}
+    </div>
+  ) : p.slot === 'screenshot' ? (
+    <div class="slot manual-screenshot">
+      <MediaCard
+        caption="The plugin: the same panel layout, plus SIZE and the GATE (the gate jack's stand-in) on the bottom row"
+        src="/screenshots/plugin-panel.png"
+        alt="The Resilio Versio plugin window: seven knobs (BLEND, DECAY, TONE, SPLASH, TENSION, WOBBLE, DRIVE), the TANK and ATTITUDE switches, the THROW button, input and output meters, and a bottom row with SIZE 1x, 1.5x, 2x and a GATE button."
+        ratio="253:643"
+      />
+    </div>
+  ) : p.slot === 'downloads' || p.slot === 'latest' ? (
+    <div class="slot"><DownloadBlock compact idPrefix={`dl-${p.slot}`} /></div>
+  ) : null
+)}

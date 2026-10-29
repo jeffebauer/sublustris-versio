@@ -1,0 +1,15 @@
+---
+// A holding page until stop 4 builds Home from docs/minisite/content/overview.md (Resilio's
+// pages wait in pages/_resilio/, out of the routes). Noindex.
+import Base from '../layouts/Base.astro';
+import Button from '../components/Button.astro';
+---
+<Base title="Sublustris Versio" description="A huge, warm, lush reverb for the Noise Engineering Versio. The site is being built." noindex>
+  <section class="section" style="padding-top: calc(var(--header-h) + var(--section-y))">
+    <div class="column flow">
+      <h1 class="display">Sublustris Versio</h1>
+      <p class="lede">A huge, warm, lush reverb for the Noise Engineering Versio, also as an AU/VST3 plugin for macOS. The site is being built.</p>
+      <p><Button href="/style/" variant="dark" arrow>The style tiles</Button></p>
+    </div>
+  </section>
+</Base>
