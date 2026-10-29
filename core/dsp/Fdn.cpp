@@ -102,7 +102,7 @@ IV_SIZE_OPT bool Fdn::prepare(Arena& arena, float sampleRate, uint32_t seed, flo
     Arena& ap = apArena ? *apArena : arena;
     if (!gSieved) sievePrimes();
     sampleRate_ = sampleRate;
-    shelfK_ = lossShelfK(sampleRate);
+    setLossShelfHz(voicing::kLossShelfHz);
     maxLen_ = maxLineSeconds * sampleRate - 4.0f;
     ready_ = true;
     for (auto& l : line_) ready_ &= l.init(arena, size_t(maxLineSeconds * sampleRate));
@@ -228,6 +228,11 @@ IV_SIZE_OPT void Fdn::layoutEarly()
     }
 }
 
+IV_SIZE_OPT void Fdn::setLossShelfHz(float hz) // one copy for prepare and HALL's restart (flash)
+{
+    shelfK_ = bilinearK(hz, sampleRate_);
+}
+
 IV_SIZE_OPT void Fdn::setEarlyTapCount(int n)
 {
     n = n > 0 && n < kEarlyTaps ? n : kEarlyTaps;
@@ -348,6 +353,9 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     const float dt = float(n) / sampleRate_;
     const float slew = voicing::kSizeSlewPerSecond * float(n); // samples of length per block
     const float floorDepth = voicing::kFloorDepthSeconds * sampleRate_ * modDepth_;
+    float floorMean = 0.0f; // the lines' floor positions (last block's), averaged: setFloorCentre
+    for (int i = 0; i < kN; ++i) floorMean += floorB_[i];
+    const float floorCentre = floorDepth * floorCentre_ * floorMean * (1.0f / float(kN)); // samples
     const float floorCoeff = floorCoeffMemo_.get(dt, [](float t) { return 1.0f - std::exp(-2.0f * 3.14159265f * 0.3f * t); });
 
     // The floor governor's extra loss (ADR 0008). A low tank follows its leader's and nothing reads its own levels, so
@@ -544,7 +552,8 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
 
         float driftRoom = voicing::kDriftMaxShareOfLine * lenNow_[i];
         if (driftRoom > voicing::kDriftMaxSeconds * sampleRate_) driftRoom = voicing::kDriftMaxSeconds * sampleRate_;
-        float target = lenNow_[i] + floorDepth * floorB_[i] + driftGen_[i].control(dt, drift_, driftRoom);
+        // (the centre last: 0 but in HALL's long tails, and x - 0 is x)
+        float target = lenNow_[i] + floorDepth * floorB_[i] + driftGen_[i].control(dt, drift_, driftRoom) - floorCentre;
         if (target < 4.0f) target = 4.0f;
         if (target > maxLen_) target = maxLen_;
         readStep_[i] = (target - readNow_[i]) / float(n);

@@ -13,7 +13,8 @@
 // DECAY 0.5 / 0.9 the room follows the pad (v1.0.43, the owner's pick B on renders/room_level), so it keeps
 // v1.0.41's distance under the pad within 3 dB (the page's constant gain sat up to 8 dB closer); HALL at SIZE 0
 // within 4 dB since v1.0.47 (the owner chose the scaled wander at the room_motion page's level, 0.93 dB under the
-// unscaled room there). Every room figure is pinned within 0.3 dB of v1.0.47's.
+// unscaled room there). Every room figure is pinned within 0.3 dB of v1.0.47's; HALL's at DECAY 0.9 to v1.0.57's (ADR
+// 0035: HALL's frozen pad itself changed, 0.2-0.5 dB quieter there; the room as before; v1.0.47's -9.63 / -9.00 / -9.18).
 
 #include "DecayV1052.h"
 #include "Wav.h"
@@ -115,7 +116,7 @@ int main()
     // The page's setting first (the anchor), then the grid of renders/room_level.
     const Case cases[] = {
         {"MASSIVE S0.9 D0.9 (the page's)", 2, 0.9f, 0.9f, -4.04, 1.5, -4.18},
-        {"HALL S0.9 D0.9 (the page's)", 1, 0.9f, 0.9f, -8.29, 1.5, -9.63},
+        {"HALL S0.9 D0.9 (the page's)", 1, 0.9f, 0.9f, -8.29, 1.5, -9.17},
         {"PLATE S0.9 D0.9", 0, 0.9f, 0.9f, -10.00, 0.2, -10.00},
         {"MASSIVE S0 D0.5", 2, 0.0f, 0.5f, -4.76, 3.0, -5.11},
         {"MASSIVE S0 D0.9", 2, 0.0f, 0.9f, -4.84, 3.0, -5.59},
@@ -123,9 +124,9 @@ int main()
         {"MASSIVE S0.5 D0.9", 2, 0.5f, 0.9f, -4.45, 3.0, -3.60},
         {"MASSIVE S0.9 D0.5", 2, 0.9f, 0.5f, -3.18, 3.0, -2.95},
         {"HALL S0 D0.5", 1, 0.0f, 0.5f, -5.51, 4.0, -8.71},
-        {"HALL S0 D0.9", 1, 0.0f, 0.9f, -5.11, 4.0, -9.00},
+        {"HALL S0 D0.9", 1, 0.0f, 0.9f, -5.11, 4.0, -8.51},
         {"HALL S0.5 D0.5", 1, 0.5f, 0.5f, -9.13, 3.0, -10.27},
-        {"HALL S0.5 D0.9", 1, 0.5f, 0.9f, -7.68, 3.0, -9.18},
+        {"HALL S0.5 D0.9", 1, 0.5f, 0.9f, -7.68, 3.0, -8.97},
         {"HALL S0.9 D0.5", 1, 0.9f, 0.5f, -10.13, 3.0, -11.32},
     };
     for (const auto& c : cases) {

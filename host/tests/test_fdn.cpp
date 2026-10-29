@@ -374,12 +374,33 @@ void stereo()
     check(std::isfinite(m.stereoCorrelation) && m.stereoCorrelation < 0.5, msg);
 }
 
+// The floor governor's weight across DECAY (v1.0.56, ADR 0008 amended): PLATE and MASSIVE ease it in
+// from 0.70 (t^3), HALL as before; 0 at and below 0.70 and 1 from 0.85 in every SPACE (so short settings
+// and endless are as they were), never falling as DECAY rises.
+void floorWeightRamp()
+{
+    bool ends = true, hall = true, rising = true;
+    for (int space = 0; space < 3; ++space) {
+        float was = 0.0f;
+        for (int i = 0; i <= 100; ++i) {
+            const float d = 0.01f * float(i), w = iv::map::floorWeight(d, space);
+            if (d <= 0.70f) ends &= w == 0.0f;
+            if (d >= 0.85f) ends &= w == 1.0f;
+            if (space == 1) hall &= w == iv::map::governorWeight(d);
+            rising &= w >= was;
+            was = w;
+        }
+    }
+    check(ends && hall && rising, "floor governor's weight: 0 to DECAY 0.70, 1 from 0.85, rising; HALL's as governorWeight");
+}
+
 } // namespace
 
 int main()
 {
     stabilityGrid();
     t60FollowsDecay();
+    floorWeightRamp();
     notMetallic();
     sizeAndTimeCrossfade();
     deterministic();

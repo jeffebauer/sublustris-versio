@@ -1,0 +1,22 @@
+# 0035 — HALL's long tails keep their upper mids and move a little more
+
+**Status:** Accepted, 29 Oct 2026 (owner, pick D on every card of `renders/review2_halltail`: 15 s and 5 s tails; drums, keys and pad). SPEC v1.0.57. HALL only. Partly reverses ADR 0012's v1.0.15 amendment (the tone_shelf pick) for HALL; deepens ADR 0012's v1.0.25 amendment (HALL's floor ×3) on long tails.
+
+**Context:**
+- **What was measured** (overnight review 2, `docs/research/review-2026-10-29.md` §1.1; `docs/research/review2-notes/valhalla.md` and `halltail.md`), against the Valhalla Room takes the owner recorded: in a 15 s HALL the upper mids died early (2 / 4 kHz rang 0.72 / 0.48 as long as 1 kHz; Room Large 0.95 / 0.77, Dark Chamber 0.90 / 0.65), the bass rang a quarter longer than the body (125 Hz 1.28; Room 0.94-1.07), the drums' tail held more fixed ringing notes (4.5 ‰ of its spectrum spiking over +10 dB; Room 1.2-1.3) and a tail's partials barely moved (a pad's spread 4.7 cents; Room 12.8-20.2). At 5 s the gap was small; at 2 s there was none.
+- **The causes:** every tank's loss is a first-order shelf crossing at 2.5 kHz (v1.0.15), which already shortens 1 kHz and with air on top (v1.0.25) takes 2-4 kHz down early in a long tail; and HALL's modulation floor (×3 of the base since v1.0.25) is the same depth at every tail length, too little to blur a long tail's closely spaced modes. Every source puts modulation first against long-lived modes (the Lexicon 480L's random delays, Schlecht's time-varying FDNs).
+- **The page** offered A as built, B (HALL's shelf at 6 kHz), C (HALL's floor deepening on long tails) and D (both), each matched to the same 1 kHz tail length and level-matched on the tail. The owner picked D everywhere.
+
+**Decision:**
+- **HALL's tank crosses at 6 kHz** (`voicing::kHallLossShelfHz`), set where the tank restarts (`Engine::setEarlyTapsForSpace`, with the early taps; `Fdn::setLossShelfHz`). MASSIVE goes back to 2.5 kHz at a flip's silent restart; PLATE and the still lows keep 2.5 kHz. The very top still fades (8 kHz 0.48 of 1 kHz at 15 s), and nothing returns to the pre-v1.0.15 one-pole. TONE and air act as before.
+- **HALL's floor deepens with its tail:** as built (×3) up to a 5 s tail, rising in a straight line to twice that from a 15 s tail, and twice at endless (`kHallFloorLongFromSeconds` 5, `kHallFloorLongAtSeconds` 15, `kHallFloorLongScale` 2), on the lows' T60 (DECAY's own, with SIZE's scale). It glides over about a second (`kHallFloorGlideSeconds`), so a DECAY move never jumps the reads, and the extra depth wanders round the lines' mean read (`Fdn::setFloorCentre`): eight slow random positions seldom average zero, so without it a DECAY move retuned a held note like a SIZE glide (20 cents, a 15 s HALL turned to 5 s; 9.4 with it, A 6.4). Freezing still glides the floor out.
+
+**Consequences:**
+- At the same DECAY a HALL's mids ring longer than before (DECAY's T60 is the lows'; SIZE 0.6, DECAY 0.60: 1 kHz 12.2 → 14.3 s) and short HALLs get brighter upper mids too (a 5 s tail's 4 kHz 0.73 → 0.87 of 1 kHz). Level at the same DECAY: 0.1-0.6 dB louder (integrated), its first 4 s of tail −0.1 to +0.9 dB; DECAY's make-up needs no trim.
+- A held note in a long or endless HALL wavers about 4-5 cents more (p95 of a held 1 kHz, SIZE 0.6: 10.0 → 14.7 cents at 15 s); with MOTION at either end within 3 cents of as built and never past MOTION's own Wander.
+- A HALL frozen from a long or endless tail holds a more chorused snapshot: the floor glides out with the freeze as before, but what the loop already holds was spread by the deeper floor (a frozen 1 kHz at SIZE 0.6: within ±3 Hz 0.40 → 0.09 of its energy; at SIZE 1 0.37 → 0.34; a 5 s HALL as before). Not on the page; a freeze card would settle it.
+- Unfreezing a short HALL: while frozen the floor's scale heads for ×2 (the tank's loss is none), so for about a second after the unfreeze it is up to ×1.65 deeper, gliding back.
+- Goldens: the six HALL ones moved. `test_motion` and `test_twin_level` pin HALL to v1.0.57's own figures (its long-tail MOTION depths and its frozen pad 0.2-0.5 dB lower against the room).
+- Flash +384 B (release 110,924 B): the shelf +50 B, the floor (glide, scale, centring) the rest. CPU ~0: control rate only (a division, a glide and an eight-term mean per block).
+
+**Not picked (heard on the page):** B (the shelf alone), C (the floor alone), A (as built). A deeper floor (×3 from 15 s) was measured, not offered: a held 1 kHz wavered 18.5 cents p95.

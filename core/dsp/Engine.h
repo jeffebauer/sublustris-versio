@@ -480,6 +480,9 @@ private:
     float     smoothK_[2][static_cast<size_t>(ParamId::Count)] IV_ZI;
     int       smoothN_[2] IV_ZI, smoothNext_ IV_ZI;
     dsp::EarlyLayouts earlyLayouts_; // the tanks' early-tap layouts (Fdn::layoutEarly)
+    // HALL's floor scale over kHallFloorScale (v1.0.57: 1 up to a 5 s tail, 2 from 15 s), glided; set on every
+    // way into HALL (applySpace's snap), so it needs no initialiser. Last: no other member's offset moves.
+    float hallFloorNow_ IV_ZI;
 };
 
 } // namespace iv
