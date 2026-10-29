@@ -288,6 +288,30 @@ constexpr float kTailSettleSeconds = 10.0f;
 // above it, it loses kGovernorRatePerDb per dB, as at the floor.
 constexpr float kHoldRatePerDb = 0.004f;
 constexpr float kMakeupMaxRate = 0.005f;
+// A held endless tail (v1.0.58, ADR 0008 amended; the owner's pick F with E's tone on renders/review2_endless2):
+// - its top end mellows by about kEndlessTopDb above the loss shelf, at as built's early pace (0.4 dB/s at
+//   first), most of it within ~2 x kEndlessTopSeconds of the tail being held, then settles (as built it drained
+//   for ever, 40+ dB at 4 kHz by 5 minutes, and left a few low resonances ringing; without it, it kept its haze);
+// - the modulation FREEZE glides out (the floor, PLATE's chorus and long-line wander) glides out of it too, over
+//   kEndlessCalmSeconds, so held notes stay notes instead of smearing into a noisy haze. PLATE and HALL; MASSIVE's
+//   slow wash is its own. New playing brings both back (the calm over kUnfreezeSeconds, as an unfreeze).
+constexpr float kEndlessTopDb       = 24.0f;
+constexpr float kEndlessTopSeconds  = 60.0f;
+constexpr float kEndlessCalmSeconds = 10.0f;
+// The settle acts in proportion to how bright the playing was (v1.0.58 as built; the owner's picks on
+// renders/review2_endless_final: "still notes everywhere, with a light settle only when the held tail is bright").
+// Brightness: the playing's mean frequency by its slope, sqrt(power of the sample-to-sample difference / power) x
+// fs / 2 pi (a sine reads its own frequency, white noise ~10.8 kHz), followed over kEndlessBrightSeconds while
+// the input is above kQuietDbfs and held once it goes quiet. None up to kEndlessBrightFromHz, all of it from
+// kEndlessBrightFullHz, in a straight line between. Measured on the pages' material: the pad chord 449 Hz (at most
+// 579 while playing), keys 299 (844), stabs 471 (816): none; a saw chord 1.4 kHz (0.04); hats over the pad 4.0 kHz
+// (0.59); a cymbal or noise swell over the pad, white noise 9.9-10.8 kHz: all.
+constexpr float kEndlessBrightFromHz  = 1200.0f;
+constexpr float kEndlessBrightFullHz  = 6000.0f;
+constexpr float kEndlessBrightSeconds = 1.0f;
+// The wet's input loses its DC below this (one pole, v1.0.58): at endless DECAY the loop's gain at DC is 1, so an
+// input's DC offset built up in the tail for good. -0.2 dB at 20-40 Hz, -3 dB at 5 Hz.
+constexpr float kInputDcHz = 5.0f;
 
 // ---- TONE's tilt on the wet (Output.h Tilt; M1 notes) (start) ----------
 constexpr float kToneTiltHz       = 600.0f;

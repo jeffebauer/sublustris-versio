@@ -91,6 +91,8 @@ public:
     float scale() const { return scaleNow_; }
 
     void setAir(float air) { air_ = air; } // 1/T60 in 1/s: see absorbent() (v1.0.25)
+    // The least the highs lose, 1/T60 in 1/s: an endless tail's settling mellow (v1.0.58; Engine::applySpace). 0 = none.
+    void setEndlessTop(float top) { endlessTop_ = top; }
 
 private:
     void control(int n);
@@ -121,6 +123,7 @@ private:
     float    modDepth_ = 1.0f;
     float    shelfK_ = 0.0f, modScale_ = 1.0f; // lossShelfK(sampleRate_)
     float    air_ = 0.0f;
+    float    endlessTop_ IV_ZI; // setEndlessTop (v1.0.58)
     float    longMod_ = 1.0f; // d1 and d2 wander; 0 while frozen
     DriftAmounts drift_;
     FloorGovernor governor_;

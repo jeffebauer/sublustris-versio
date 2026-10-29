@@ -21,13 +21,14 @@ struct FloorGovernor {
     float slowLevelDb = -200.0f;           // the level over ~kHoldSeconds (an echoey MASSIVE tail swings for seconds)
     float levelDb = -200.0f;
     float extraRate IV_ZI;              // added loss, 1/T60 in 1/s
+    float holdRate IV_ZI;               // the hold's share of extraRate (the still lows leave it out, Fdn::control)
     float darken = 1.0f;                 // share of the infinite high-end fade to keep
 
     void reset()
     {
         power_ = slow_ = block_ = fast_ = 0.0f;
         levelDb = slowLevelDb = -200.0f;
-        extraRate = 0.0f;
+        extraRate = holdRate = 0.0f;
         darken = 1.0f;
     }
     // The slow level starts over from the fast one (a fresh freeze: judge
@@ -88,6 +89,7 @@ struct FloorGovernor {
         // amendment): above it, loss in proportion (as the floor); below
         // it, a gentle capped makeup, because fast DRIFT or the cassette's
         // wow and flutter (moving allpass reads) lose a little energy.
+        const float floorRate = extraRate;
         if (holdDb < 0.0f) {
             const float off = slowLevelDb - holdDb;
             if (off > 0.0f) extraRate += weight * voicing::kGovernorRatePerDb * off;
@@ -97,6 +99,7 @@ struct FloorGovernor {
                 extraRate -= weight * up;
             }
         }
+        holdRate = extraRate - floorRate;
         float above = (floorLevelDb - (floorDb - 3.0f)) / 6.0f;
         above = above < 0.0f ? 0.0f : (above > 1.0f ? 1.0f : above);
         darken = 1.0f - weight * (1.0f - above);
@@ -130,22 +133,26 @@ inline float lossShelfK(float sampleRate) { return bilinearK(voicing::kLossShelf
 
 // air (1/T60 in 1/s; v1.0.25): the highs lose this much more than the lows at every finite DECAY, as
 // air does in a room, scaled by TONE's ratio against noon. 0 = a fixed share of the decay (MASSIVE).
-inline Absorb absorbent(float seconds, float lowRate, float highRatio, float darken, float shelfK, float air = 0.0f);
+// flat (1/T60 in 1/s; v1.0.58): the floor governor's correction, a flat gain, the same at the highs as at the
+// lows; top: the least the highs lose, an endless tail's settling mellow (Engine). See absorbShared().
+inline Absorb absorbent(float seconds, float lowRate, float highRatio, float darken, float shelfK, float air = 0.0f,
+                        float flat = 0.0f, float top = 0.0f);
 
 // absorbent() for one line, worked out again only when one of its inputs has changed: its two powf
 // calls (~210 cycles each on the M7, M3 round 6) ran for every line every block, where most blocks
 // ask the same. The same inputs give the same coefficients, to the bit.
 struct AbsorbMemo {
-    float  in[6] = {-1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    float  in[8] = {-1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
     Absorb out{};
-    IV_NOINLINE IV_SIZE_OPT const Absorb& get(float seconds, float lowRate, float highRatio, float darken, float shelfK, float air)
+    IV_NOINLINE IV_SIZE_OPT const Absorb& get(float seconds, float lowRate, float highRatio, float darken, float shelfK, float air,
+                                              float flat, float top)
     {
-        const float x[6] = {seconds, lowRate, highRatio, darken, shelfK, air};
+        const float x[8] = {seconds, lowRate, highRatio, darken, shelfK, air, flat, top};
         bool same = true;
-        for (int k = 0; k < 6; ++k) same = same && x[k] == in[k];
+        for (int k = 0; k < 8; ++k) same = same && x[k] == in[k];
         if (!same) {
-            for (int k = 0; k < 6; ++k) in[k] = x[k];
-            out = absorbent(seconds, lowRate, highRatio, darken, shelfK, air);
+            for (int k = 0; k < 8; ++k) in[k] = x[k];
+            out = absorbent(seconds, lowRate, highRatio, darken, shelfK, air, flat, top);
         }
         return out;
     }
@@ -174,14 +181,24 @@ struct Memo1 {
 struct AbsorbShared {
     float lowRate, highRate, k, onePlusK, pole;
 };
-IV_INLINE AbsorbShared absorbShared(float lowRate, float highRatio, float darken, float shelfK, float air)
+// lowRate is DECAY's own loss; TONE's ratio and the air shape it alone. The floor governor's correction (flat: its
+// loss above the floor or a held tail's ceiling, the hold's make-up below it) comes on top as a flat gain, the same
+// at the highs as at the lows (v1.0.58, ADR 0008 amended). Until then it rode inside lowRate: any loss at all from it
+// switched the air on (air > 0 && lowRate > 0), several dB a second of highs, while its make-up (lowRate < 0) lifted
+// the lows alone (the highs clamped at infiniteHigh), so an endless tail held round its level lost its highs and
+// gained its lows for minutes: the top end drained and a few low resonances were left ringing.
+// top (1/T60 in 1/s): the highs lose at least this much (an endless tail's settling mellow, Engine::applySpace);
+// where TONE's or the infinite fade's own high loss is larger (TONE noon and below), that one stands.
+IV_INLINE AbsorbShared absorbShared(float lowRate, float highRatio, float darken, float shelfK, float air, float flat = 0.0f,
+                                    float top = 0.0f)
 {
     float highRate = air > 0.0f && lowRate > 0.0f ? lowRate + air * (voicing::kDampingHighT60Ratio / highRatio)
                                                   : lowRate / highRatio;
     const float infiniteHigh = darken * (1.0f / highRatio - 1.0f) / voicing::kInfiniteHighT60Seconds;
     if (highRate < infiniteHigh) highRate = infiniteHigh;
+    if (highRate < top) highRate = top;
     const float K = shelfK;
-    return {lowRate, highRate, K, 1.0f + K, (1.0f - K) / (1.0f + K)};
+    return {lowRate + flat, highRate + flat, K, 1.0f + K, (1.0f - K) / (1.0f + K)};
 }
 IV_INLINE Absorb absorbLine(float seconds, const AbsorbShared& a)
 {
@@ -201,9 +218,9 @@ IV_INLINE Absorb absorbLine(float seconds, const AbsorbShared& a)
     const float K = a.k;
     return {(gHigh + gLow * K) / a.onePlusK, a.pole, (gLow * K - gHigh) / a.onePlusK};
 }
-inline Absorb absorbent(float seconds, float lowRate, float highRatio, float darken, float shelfK, float air)
+inline Absorb absorbent(float seconds, float lowRate, float highRatio, float darken, float shelfK, float air, float flat, float top)
 {
-    return absorbLine(seconds, absorbShared(lowRate, highRatio, darken, shelfK, air));
+    return absorbLine(seconds, absorbShared(lowRate, highRatio, darken, shelfK, air, flat, top));
 }
 
 } // namespace iv::dsp

@@ -113,6 +113,9 @@ public:
     // re-lays them out, so call it where the tank restarts (a SPACE flip, reset).
     void setEarlyTapCount(int n);
     void setAir(float air) { air_ = air; } // 1/T60 in 1/s: see absorbent() (v1.0.25)
+    // The least the highs lose, 1/T60 in 1/s: an endless tail's settling mellow (v1.0.58; Engine::applySpace,
+    // absorbShared()'s top). 0 = none.
+    void setEndlessTop(float top) { endlessTop_ = top; }
     // The loss shelf's corner (prepare(): kLossShelfHz; HALL's kHallLossShelfHz since v1.0.57, set at its restart).
     void setLossShelfHz(float hz);
     // The modulation floor's depth × modDepth (Engine::setModulationScale, a test hook).
@@ -215,8 +218,9 @@ private:
     float     xfRest_ IV_ZI, xfTrim_ = 1.0f, xfOld_ IV_ZI, xfNew_ = 1.0f, xfRotC_ = 1.0f, xfRotS_ IV_ZI;
     float     xfOO_[kN] IV_ZI, xfNN_[kN] IV_ZI, xfON_[kN] IV_ZI, xfK_[kN] IV_ZI; // the reads' powers, their agreement, the fade's gain
     // Each line's loss filter (absorbent()) and the length it was worked out for; the inputs every line shares
-    // (rate, highRatio_, darken, shelfK_, air_) once (a per-line AbsorbMemo until 28 Oct 2026: the same bits).
-    float     absIn_[5] IV_ZI, absSec_[kN] IV_ZI;
+    // (DECAY's rate, the governor's, highRatio_, darken, shelfK_, air_, endlessTop_) once (a per-line AbsorbMemo
+    // until 28 Oct 2026: the same bits).
+    float     absIn_[7] IV_ZI, absSec_[kN] IV_ZI;
     Absorb    absOut_[kN];
     Memo1     floorCoeffMemo_, glide80Memo_, glideXfMemo_; // per-block smoothing coefficients, worked out once per dt
     float     xfLastInLoop_ IV_ZI, xfAbsOld_[kN][3] IV_ZI; // the loss filter (b1, gain, pole) at the fade's start
@@ -233,6 +237,7 @@ private:
     bool      ready_ IV_ZI;
     EarlyLayouts* lay_ IV_ZI; // setEarlyLayouts (last: no other member's offset moves)
     float     floorCentre_ IV_ZI; // setFloorCentre (v1.0.57, after lay_ for the same reason); 0 = none
+    float     endlessTop_ IV_ZI;  // setEndlessTop (v1.0.58, last for the same reason); 0 = none
 };
 
 } // namespace iv::dsp
