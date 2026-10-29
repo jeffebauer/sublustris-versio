@@ -469,6 +469,7 @@ private:
     // Control maths kept between blocks (CPU save 2, 28 Oct 2026; last, so no other member's offset moves): blockK()'s
     // recent coefficients; the knobs' smoothing coefficients for two chunk lengths (controlTick).
     float blockK(float seconds, int n);
+    void  trackBrightness(const float* inL, const float* inR, int n); // a held endless tail's settle (v1.0.58)
     struct BlockMemo {
         float seconds;
         int   n; // 0: empty
@@ -486,6 +487,9 @@ private:
     // A held endless tail (v1.0.58, applySpace): the share of its top end's mellow still to come (1 on every block
     // until the tail is held, so it needs no initialiser), and how far its modulation has calmed (0..1).
     float endlessTopLeft_ IV_ZI, endlessCalm_ IV_ZI;
+    // The playing's brightness (v1.0.58, voicing::kEndlessBright*): its slope's power and its power, followed while
+    // the input is above the quiet level (process()), so a held tail keeps what was played into it.
+    float brightSlope_ IV_ZI, brightPower_ IV_ZI;
     // The wet's input without its DC (v1.0.58, voicing::kInputDcHz): dsp::DcBlocker's one pole (prepare: its
     // coefficients), without its constructor (flash).
     float inDcR_ IV_ZI, inDcB_ IV_ZI, inDcX_[2] IV_ZI, inDcY_[2] IV_ZI;

@@ -89,6 +89,21 @@ void Engine::setSwellTapsPrototype(int taps)
 // blockCoeff() for this block, kept (CPU save 2, 28 Oct 2026): its callers ask for the same few time constants
 // every block, at the two chunk lengths the module alternates, and each std::exp is ~110 cycles on the M7. The same
 // function of the same arguments: the same bits. Out of line, so its callers share one copy (flash, v1.0.51).
+// The playing's brightness for a held endless tail's settle (v1.0.58, applySpace): every 4th sample's slope and level,
+// followed over kEndlessBrightSeconds. Once a chunk, out of line and built for size (flash).
+IV_NOINLINE IV_SIZE_OPT void Engine::trackBrightness(const float* inL, const float* inR, int n)
+{
+    float slope = 0.0f, power = 0.0f;
+    for (int i = 3; i < n; i += 4) {
+        const float x = inL[i] + inR[i], d = x - (inL[i - 1] + inR[i - 1]);
+        slope += d * d;
+        power += x * x;
+    }
+    const float k = blockK(voicing::kEndlessBrightSeconds, n);
+    brightSlope_ += k * (slope - brightSlope_);
+    brightPower_ += k * (power - brightPower_);
+}
+
 IV_NOINLINE IV_SIZE_OPT float Engine::blockK(float seconds, int n)
 {
     for (const auto& m : blockMemo_)
@@ -244,7 +259,7 @@ IV_SIZE_OPT void Engine::reset()
     tankInPower_ = 0.0f;
     quietSince_ = 0;
     tailCaptured_ = false;
-    endlessCalm_ = 0.0f;
+    endlessCalm_ = brightSlope_ = brightPower_ = 0.0f;
     inDcX_[0] = inDcX_[1] = inDcY_[0] = inDcY_[1] = 0.0f;
     smooth_ = values_;
     for (auto& p : predelay_) p.clear();
@@ -488,10 +503,15 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     //   that one stands. Not while frozen (a pad keeps what it froze with); not MASSIVE (no air, ADR 0022's own).
     if (tailCaptured_) endlessTopLeft_ -= endlessTopLeft_ * (float(n) / (sampleRate_ * voicing::kEndlessTopSeconds));
     else endlessTopLeft_ = 1.0f;
+    //   Only as far as the playing was bright (kEndlessBrightFromHz .. FullHz, process()): a dark chord gets none
+    //   (the owner's picks: still notes alone), a bright wash all of it. Held, nothing is played, so its share holds.
     float endlessTop = 0.0f;
-    if (!frozen)
+    if (!frozen) {
+        const float brightHz = std::sqrt(brightSlope_ / (brightPower_ + 1e-20f)) * (sampleRate_ * (0.5f / map::kPi));
+        const float bright = clamp01((brightHz - voicing::kEndlessBrightFromHz) * (1.0f / (voicing::kEndlessBrightFullHz - voicing::kEndlessBrightFromHz)));
         endlessTop = voicing::kEndlessTopDb / (60.0f * voicing::kEndlessTopSeconds) * endlessTopLeft_ * map::governorWeight(decay)
-                   * (1.0f - freezeMix_);
+                   * (1.0f - freezeMix_) * bright;
+    }
     // - Its modulation calms: what FREEZE glides out (the floor, PLATE's chorus and long-line wander) glides out of
     //   the tail too, over kEndlessCalmSeconds, so held notes stay notes (the smear has nothing to die with at
     //   endless: it built into a noisy haze). New playing brings it back over kUnfreezeSeconds, as an unfreeze does;
@@ -1004,6 +1024,8 @@ IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* 
         // starts a twin), a freeze clears its diffusers and swell before it starts one (onGesture), and
         // their output is read only while it runs.
         const bool twinRuns = twinActive_;
+
+        if (inputPower_ > 1e-7f) trackBrightness(inL + start, inR + start, n); // above the quiet level (kQuietDbfs, -70 dB)
 
         // Input side: predelay, diffusion; the swell feeds the big tank; the
         // twin hears the input through its own diffusers.

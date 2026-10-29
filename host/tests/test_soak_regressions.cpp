@@ -289,17 +289,21 @@ void infiniteTailDoesntPlungeWhenTheInputStops()
 // has settled by two minutes. Below: on bright material, whose total is its top end's, the hold's flat make-up lifts
 // the rest as the top mellows (PLATE: under 500 Hz +8.3 dB, under 20 Hz +8.9, ~35 dB under the total; v1.0.57 +1.5 /
 // +0.8 on this noise; on the review's pad +0.2 / +3.7, v1.0.57 -0.8 / +1.5), bounded here at 10 dB. (As built's drain
-// depends on the material: it doesn't show on this noise, so this guards v1.0.58's settle, not its fix.)
+// depends on the material: it doesn't show on this noise, so this guards v1.0.58's settle, not its fix.) And the settle
+// follows the playing's brightness (voicing::kEndlessBright*): a dark chord (220-440 Hz) in PLATE gets none, so its
+// top end keeps where it settled (within 1 dB; the noise falls 6 dB).
 void endlessHoldKeepsItsSpectrum()
 {
-    for (int space = 0; space < 2; ++space) {
+    for (int c3 = 0; c3 < 3; ++c3) {
+        const int space = c3 == 1 ? 1 : 0;
+        const bool chord = c3 == 2;
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(space));
         r.e.setParam(ParamId::Decay, 1.0f);
         r.e.setParam(ParamId::Tone, 1.0f);
         r.e.setParam(ParamId::Mix, 1.0f);
         r.e.reset();
-        r.run(6.0, 0.3f);
+        r.run(6.0, chord ? 0.5f : 0.3f, chord ? -220.0f : 0.0f);
         iv::dsp::Biquad hi[2][2], lo[2][2], mid[2][2];
         for (int c = 0; c < 2; ++c)
             for (int k = 0; k < 2; ++k) {
@@ -332,9 +336,10 @@ void endlessHoldKeepsItsSpectrum()
         const double subRise = *std::max_element(sub.begin(), sub.end()) - sub[0];
         const double underRise = *std::max_element(under.begin(), under.end()) - under[0];
         char what[240];
-        std::snprintf(what, sizeof what, "%s endless hold of noise, 4 min: >2 kHz falls %.1f dB (< 12), moves %.1f after 2 min (< 2); "
-                      "<20 Hz rises %.1f (< 10); <500 Hz %.1f (< 10)", space ? "HALL" : "PLATE", topFall, topLate, subRise, underRise);
-        check(topFall < 12.0 && topLate < 2.0 && subRise < 10.0 && underRise < 10.0, what);
+        std::snprintf(what, sizeof what, "%s endless hold of %s, 4 min: >2 kHz falls %.1f dB (< %s), moves %.1f after 2 min (< 2); "
+                      "<20 Hz rises %.1f (< 10); <500 Hz %.1f (< 10)", space ? "HALL" : "PLATE", chord ? "a dark chord" : "noise", topFall,
+                      chord ? "1, no settle" : "12", topLate, subRise, underRise);
+        check((chord ? std::fabs(topFall) < 1.0 : topFall < 12.0) && topLate < 2.0 && subRise < 10.0 && underRise < 10.0, what);
     }
 }
 
