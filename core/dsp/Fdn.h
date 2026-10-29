@@ -113,8 +113,16 @@ public:
     // re-lays them out, so call it where the tank restarts (a SPACE flip, reset).
     void setEarlyTapCount(int n);
     void setAir(float air) { air_ = air; } // 1/T60 in 1/s: see absorbent() (v1.0.25)
+    // The loss shelf's corner (prepare(): kLossShelfHz; HALL's kHallLossShelfHz since v1.0.57, set at its restart).
+    void setLossShelfHz(float hz);
     // The modulation floor's depth × modDepth (Engine::setModulationScale, a test hook).
     void setModDepth(float k) { modDepth_ = k; }
+    // Every line's floor read pulled back by this share of the depth times the lines' mean floor position, so a
+    // deeper floor spreads the lines round the mean read a shallower one had (HALL's long tails, v1.0.57: share
+    // 1 - 1 / its scale). Eight slow random positions (-1..1) seldom average 0, so without it the depth gliding
+    // with a DECAY move moved every line's read together and retuned a held note (20 cents at worst, a 15 s HALL
+    // turned to 5 s; 9.4 with it, as built 6.4).
+    void setFloorCentre(float share) { floorCentre_ = share; }
     // Extra output level for a voicing (MASSIVE's loudness match).
     void setOutputTrim(float trim) { outputTrim_ = trim; }
     float levelDb() const { return governor_.levelDb; }
@@ -224,6 +232,7 @@ private:
     float     apAmtNow_[kN], apAmtOld_[kN]; // each line's in-loop amount (it changes with its own fade)
     bool      ready_ IV_ZI;
     EarlyLayouts* lay_ IV_ZI; // setEarlyLayouts (last: no other member's offset moves)
+    float     floorCentre_ IV_ZI; // setFloorCentre (v1.0.57, after lay_ for the same reason); 0 = none
 };
 
 } // namespace iv::dsp

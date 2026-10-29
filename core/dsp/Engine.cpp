@@ -45,14 +45,18 @@ float approach(float now, float target, float step)
 // Early taps per line by SPACE (v1.0.36, ADR 0026; owner's pick B on renders/early_hits): HALL 2,
 // MASSIVE 4, of the six laid out (one per line opened MASSIVE's dip before a hit's tail back up:
 // 16.9 dB at SIZE full; four 2.9, six 1.9). The twin follows its space.
+// And the big tank's loss shelf: HALL's crosses at 6 kHz (v1.0.57, ADR 0035), MASSIVE's at 2.5; the still
+// lows keep 2.5 kHz. Set here, where the tanks restart.
 IV_SIZE_OPT void Engine::setEarlyTapsForSpace()
 {
-    int n = activeSpace_ == 2 ? voicing::kMassiveEarlyTaps : voicing::kHallEarlyTaps;
+    const bool massive = activeSpace_ == 2;
+    int n = massive ? voicing::kMassiveEarlyTaps : voicing::kHallEarlyTaps;
 #ifndef IV_FIXED_VOICINGS
     if (fitEarlyTaps_ > 0) n = fitEarlyTaps_;
 #endif
     fdn_.setEarlyTapCount(n);
     lowFdn_.setEarlyTapCount(n);
+    fdn_.setLossShelfHz(massive ? voicing::kLossShelfHz : voicing::kHallLossShelfHz);
 }
 
 #ifndef IV_FIXED_VOICINGS
@@ -516,7 +520,20 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         fdn_.setEarlyTaps(1.0f); // HALL too (v1.0.25: no gap after the note, its "slap-back")
         fdn_.setAir(massive ? 0.0f : voicing::kAirHallDbPerSecond / 60.0f); // v1.0.25
         // The floor glides out with the freeze (v1.0.22, A3; Costello: mod depth to 0 for a freeze).
-        fdn_.setModDepth(modScale_ * (massive ? 1.0f : voicing::kHallFloorScale) * (1.0f - freezeMix_));
+        // HALL's deepens with its tail (v1.0.57, ADR 0035): x1 up to a 5 s tail, x2 from 15 s and at infinite, on
+        // the lows' T60 (`rate`: 0 at infinite, and towards 0 while freezing, as the floor glides out); centred on
+        // the lines' mean read (Fdn::setFloorCentre), so a DECAY move doesn't retune what the tail holds.
+        float floorScale = 1.0f; // MASSIVE
+        if (!massive) {
+            constexpr float kFrom = voicing::kHallFloorLongFromSeconds, kAt = voicing::kHallFloorLongAtSeconds;
+            float t = rate > 1.0f / kAt ? (1.0f / rate - kFrom) * (1.0f / (kAt - kFrom)) : 1.0f;
+            if (t < 0.0f) t = 0.0f;
+            const float target = 1.0f + (voicing::kHallFloorLongScale - 1.0f) * t;
+            hallFloorNow_ = snap ? target : hallFloorNow_ + blockK(voicing::kHallFloorGlideSeconds, n) * (target - hallFloorNow_);
+            floorScale = voicing::kHallFloorScale * hallFloorNow_;
+        }
+        fdn_.setFloorCentre(massive ? 0.0f : 1.0f - 1.0f / hallFloorNow_);
+        fdn_.setModDepth(modScale_ * floorScale * (1.0f - freezeMix_));
         // Still lows: the low tank follows, unmodulated.
         lowFdn_.setDecayRate(rate);
         lowFdn_.setHighT60Ratio(highRatio);

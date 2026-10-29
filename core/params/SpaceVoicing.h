@@ -55,6 +55,16 @@ constexpr float kFloorDepthSeconds = 0.00046f;
 // HALL's tail held sharper resonances than Valhalla Room's, drums 11 dB over their surroundings
 // against 8.5; ×3 gives 8.9, and a held 1 kHz wavers 6.5 → 7.3 cents).
 constexpr float kHallFloorScale = 3.0f;
+// HALL's long tails move more (v1.0.57, ADR 0035; the owner's pick D on renders/review2_halltail, after the
+// Valhalla Room takes): the floor stays at kHallFloorScale up to a 5 s tail (the lows' T60), rises in a straight
+// line to kHallFloorLongScale times that from a 15 s tail and stays there at infinite, gliding over about
+// kHallFloorGlideSeconds; the extra depth wanders round the lines' mean read (Fdn::setFloorCentre), so a DECAY
+// move doesn't retune a held note. A 15 s HALL's partials spread 4.7 -> 7.5 cents (pad); a held 1 kHz wavers
+// 10 -> 15 cents p95 (SIZE 0.6).
+constexpr float kHallFloorLongFromSeconds = 5.0f;
+constexpr float kHallFloorLongAtSeconds   = 15.0f;
+constexpr float kHallFloorLongScale       = 2.0f;
+constexpr float kHallFloorGlideSeconds    = 1.0f;
 // "Air" (v1.0.25, valhalla_round2): HALL's and PLATE's highs lose this much more than their lows
 // at every finite DECAY, in dB/s, as air does in a room (Valhalla Room measured 3-7), instead of a
 // fixed share of the decay (which made short tails go dull fast: a 2 s HALL's 8 kHz rang 1.1 s
@@ -108,8 +118,13 @@ constexpr float kMassiveHighT60Ratio = 1.43f;
 // long at TONE noon, so an infinite tail darkens toward its floor (ADR 0008)
 // instead of ringing bright forever.
 // Every tank's loss is a shelf crossing here (Governor.h absorbent): the upper
-// mids fade with the highs (owner's pick on renders/tone_shelf, v1.0.15).
+// mids fade with the highs (owner's pick on renders/tone_shelf, v1.0.15). HALL's: below.
 constexpr float kLossShelfHz = 2500.0f;
+// HALL's tank crosses higher (v1.0.57, ADR 0035; the owner's pick D on renders/review2_halltail): a long HALL's
+// upper mids ring nearer the body, as Valhalla Room's (15 s: 2 / 4 kHz at 0.91 / 0.73 of 1 kHz's T60, was 0.72 /
+// 0.48), and its bass no longer rings a quarter longer than 1 kHz. The top still fades (8 kHz 0.48). MASSIVE,
+// PLATE and the still lows keep kLossShelfHz.
+constexpr float kHallLossShelfHz = 6000.0f;
 
 constexpr float kInfiniteHighT60Seconds = 30.0f;
 

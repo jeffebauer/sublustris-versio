@@ -161,19 +161,21 @@ void glideOut()
 }
 
 // The left side against the confirm page's B (left_tape_final/_verify.txt): p95 cents and the transport's counts.
+// HALL's p95s are v1.0.57's own (ADR 0035: in this long tail HALL's floor is twice as deep, so a held note moves more
+// with MOTION too; the page's B: 9.2 / 12.6 / 18.5).
 void leftSide()
 {
     const std::vector<float> tones = heldTones();
     struct Pos { float drift; const char* name; double p95[3]; int crinkles, dips; }; // p95: PLATE, HALL, MASSIVE
-    const Pos pos[] = {{0.2f, "9 o'clock (0.2)", {13.8, 9.2, 5.7}, 0, 0},
-                       {0.1175f, "3/4 left (0.1175)", {16.0, 12.6, 9.6}, 13, 6},
-                       {0.0f, "full left", {19.9, 18.5, 15.1}, 34, 15}};
+    const Pos pos[] = {{0.2f, "9 o'clock (0.2)", {13.8, 15.3, 5.7}, 0, 0},
+                       {0.1175f, "3/4 left (0.1175)", {16.0, 15.2, 9.6}, 13, 6},
+                       {0.0f, "full left", {19.9, 19.8, 15.1}, 34, 15}};
     for (const Pos& p : pos) {
         for (int space : {0, 1, 2}) {
             const double c = p95Of(render(tones, pageSetting(space, p.drift)));
             char msg[200];
-            std::snprintf(msg, sizeof msg, "MOTION %s, %s: p95 %.1f c on a held 1.3 kHz (the page's B: %.1f, within 10 %%)",
-                          p.name, kSpaceName[space], c, p.p95[space]);
+            std::snprintf(msg, sizeof msg, "MOTION %s, %s: p95 %.1f c on a held 1.3 kHz (%s: %.1f, within 10 %%)",
+                          p.name, kSpaceName[space], c, space == 1 ? "v1.0.57" : "the page's B", p.p95[space]);
             check(std::fabs(c / p.p95[space] - 1.0) <= 0.10, msg);
         }
         std::vector<float> minute(size_t(60.0f * kSr), 0.0f);
@@ -191,10 +193,11 @@ void leftSide()
 // The right side: Wander, stronger over its last half (B). 3/4 right is unchanged by B, so it is pinned to the round-2
 // right page's measure of today's (docs/research/drift-rethink.md: 14.0 / 11.9 / 8.1); full right to v1.0.46's own
 // figures (the picked B, bit for bit against the prototype), and deeper than today's full right (17.9 / 20.3 / 13.1).
+// HALL's are v1.0.57's (ADR 0035, its floor twice as deep in this long tail; were 11.9 and 22.4).
 void rightSide()
 {
     const std::vector<float> tones = heldTones();
-    const double pinned[2][3] = {{14.0, 11.9, 8.1}, {23.6, 22.4, 17.3}}; // 3/4 right, full right: PLATE, HALL, MASSIVE
+    const double pinned[2][3] = {{14.0, 14.7, 8.1}, {23.6, 23.6, 17.3}}; // 3/4 right, full right: PLATE, HALL, MASSIVE
     const double before[3] = {17.9, 20.3, 13.1};                         // full right before v1.0.46
     const float drifts[2] = {0.75f, 1.0f}; // the right page's positions
     for (int k = 0; k < 2; ++k)
