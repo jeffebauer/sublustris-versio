@@ -29,12 +29,12 @@ export interface SvTile { big: string; line: string; diagram: DiagramKind; size?
 // Big statements, checked against the manual: DECAY's top tails are about 30 s (PLATE),
 // 60 s (HALL) and 120 s (MASSIVE) before endless; SHIMMER is one octave; 7 CV inputs, 0–5 V.
 export const SV_TILES: SvTile[] = [
-  { big: 'Endless hold', size: 'big', diagram: 'endless', line: 'Past about 3 o’clock DECAY never lets go. The tail settles at a steady level, steps back about 3 dB while you play, and its notes stay notes when you stop.' },
+  { big: 'Endless hold', size: 'big', diagram: 'endless-infinity', line: 'Past about 3 o’clock DECAY never lets go. The tail settles at a steady level, steps back about 3 dB while you play, and its notes stay notes when you stop.' },
   { big: '3 spaces', diagram: 'spaces', line: 'A dense PLATE, a big HALL, and MASSIVE, which swells in and grows into a boundless wash.' },
   { big: '120 s tails', diagram: 'longtail', line: 'About 30 s in PLATE, 60 s in HALL and 120 s in MASSIVE. Then endless.' },
   { big: 'Freeze / paint', size: 'wide', diagram: 'freeze', line: 'Tap to freeze the tail into a still pad and play over it. Hold while frozen to paint a little of what you play into the pad.' },
-  { big: 'Swells', diagram: 'swell', line: 'ONSET on BLOOM: the reverb swells in behind each sound, from a breath to four seconds.' },
+  { big: 'Swells', diagram: 'swell-family', line: 'ONSET on BLOOM: the reverb swells in behind each sound, from a breath to four seconds.' },
   { big: '1 octave', diagram: 'octave', line: 'SHIMMER: one steady octave up, in tune, that doesn’t climb.' },
-  { big: 'Tape wobble', diagram: 'tape', line: 'MOTION to the left: tape wow and flutter, with dropouts at the very end. To the right, a quick, wide wander.' },
-  { big: '7 CV inputs', diagram: 'cv', line: 'One per knob, 0–5 V, added to the knob’s position. Plus a gate for FREEZE.' },
+  { big: 'Tape wobble', diagram: 'tape-head', line: 'MOTION to the left: tape wow and flutter, with dropouts at the very end. To the right, a quick, wide wander.' },
+  { big: '7 CV inputs', diagram: 'cv-scale', line: 'One per knob, 0–5 V, added to the knob’s position. Plus a gate for FREEZE.' },
 ];

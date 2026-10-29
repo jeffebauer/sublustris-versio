@@ -44,8 +44,8 @@ const TYPE = [
 const NAV = ['Home', 'Manual', 'Install', 'Presets', 'Changelog', 'FAQ'];
 
 const DIAGRAMS: [DiagramKind, string][] = [
-  ['endless', 'The endless hold'], ['longtail', 'A long tail'], ['freeze', 'Freeze'], ['swell', 'BLOOM: a swell'],
-  ['octave', 'SHIMMER: an octave up'], ['tape', 'MOTION: tape wobble'], ['spaces', 'PLATE · HALL · MASSIVE'], ['cv', 'CV inputs'],
+  ['endless-infinity', 'The endless hold'], ['longtail', 'A long tail'], ['freeze', 'Freeze'], ['swell-family', 'BLOOM: a swell'],
+  ['octave', 'SHIMMER: an octave up'], ['tape-head', 'MOTION: tape wobble'], ['spaces', 'PLATE · HALL · MASSIVE'], ['cv-scale', 'CV inputs'],
 ];
 
 // docs/minisite/README.md, "Renders to come".
@@ -182,7 +182,7 @@ const others = (['a', 'b', 'c'] as DirectionId[]).filter((d) => d !== id);
 
 <!-- Diagrams -->
 <section class:list={['st-section', band('diagrams')]} aria-labelledby="st-diagrams">
-  <div class="column"><h2 class="h2" id="st-diagrams">Tiny diagrams</h2><p class="quiet">New for Sublustris, on Resilio’s 160 × 64 grid: 1.5 px lines in the text colour, the accent on the reverb, faint guides. Shared by all three directions. <a href="/style/diagrams/">Other pictures of the same ideas</a>, in this style, are side by side for choosing.</p></div>
+  <div class="column"><h2 class="h2" id="st-diagrams">Tiny diagrams</h2><p class="quiet">New for Sublustris, on Resilio’s 160 × 64 grid: 1.5 px lines in the text colour, the accent on the reverb, faint guides. Shared by all three directions. These are your picks (30 Oct); <a href="/style/diagrams/">the other options</a> stay on their own page.</p></div>
   <div class="wide">
     <ul class="diagram-grid">
       {DIAGRAMS.map(([kind, label]) => <li class="tile"><Diagram kind={kind} /><span class="micro">{label}</span><span class="small quiet">{shape(kind).label}</span></li>)}

@@ -24,7 +24,7 @@ const risky = CONCEPTS.flatMap((c) => c.options.map((o, i) => ({ c, o, n: i + 1 
     </div>
     <div class="column flow st-intro">
       <p class="lede">The same line style throughout: the 160 × 64 grid, 1.5 px lines in the text colour, the blue on the reverb, faint guides. What changes is the picture. Option 1 is today’s drawing; the others are different ways to show the same sound.</p>
-      <p class="quiet">Answer with the numbers, for example “endless 3, freeze 2”. The site keeps today’s drawings until you pick.</p>
+      <p class="quiet">Your picks (30 Oct) are marked “Picked”; the style tiles and demo cards use them.</p>
       <p class="demo-row">
         <Button href="/style/b/" variant="ghost">Style tile B</Button>
         <Button href="/style/" variant="ghost">All three directions</Button>
@@ -40,9 +40,9 @@ const risky = CONCEPTS.flatMap((c) => c.options.map((o, i) => ({ c, o, n: i + 1 
           <div class="dg-row">
             <p class="dg-name micro" style={`--rows: ${Math.ceil(c.options.length / 4)}`}>{c.name}</p>
             {c.options.map((o, i) => (
-              <figure class:list={['dg-cell', g.cell]}>
+              <figure class:list={['dg-cell', g.cell, c.picked === i + 1 && 'is-picked']}>
                 <Diagram kind={o.kind} />
-                <figcaption class="dg-cap small"><span class="dg-n" aria-label={`${c.id} ${i + 1}`}>{i + 1}</span><span>{o.caption}</span></figcaption>
+                <figcaption class="dg-cap small"><span class="dg-n" aria-label={`${c.id} ${i + 1}`}>{i + 1}</span><span>{o.caption}{c.picked === i + 1 && <strong class="dg-picked"> · Picked</strong>}</span></figcaption>
               </figure>
             ))}
           </div>
@@ -109,5 +109,7 @@ const risky = CONCEPTS.flatMap((c) => c.options.map((o, i) => ({ c, o, n: i + 1 
   .dg-small { display: flex; gap: 0.75rem; align-items: center; padding: 0.75rem 1rem; }
   .dg-small .demo-diagram { flex: 1; min-width: 0; }
 
+  .dg-picked { color: var(--sv-accent, var(--signal-text)); font-weight: 600; }
+  .is-picked .dg-n { background: var(--ink); color: var(--paper); border-color: var(--ink); }
   .dg-risks { padding-left: 1.2em; display: grid; gap: var(--stack-1); }
 </style>

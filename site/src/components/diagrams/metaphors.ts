@@ -1,8 +1,8 @@
 // Alternative metaphors for the eight Sublustris diagrams (stop 3, the owner's ask: same line
 // style, a different picture of each idea). Same 160 × 64 grid as shapes.ts, same roles:
 // `ink` is what you play (and plain objects), `hot` the reverb in the signal colour, `faint`
-// guides. Each kind is a different idea of what to picture, not a restyle. The site keeps
-// today's kinds until the owner picks; /style/diagrams shows these beside them.
+// guides. Each kind is a different idea of what to picture, not a restyle. The owner picked one per
+// concept on 30 Oct 2026 (`picked` in CONCEPTS); the tiles and demos use those kinds.
 import type { DiagramKind, Shape } from './shapes';
 
 export const METAPHOR_KINDS = [
@@ -505,26 +505,27 @@ export function metaphor(kind: MetaphorKind): Shape {
 
 /** The eight concepts, each with today's drawing as option 1 and the alternatives after. */
 export interface Option { kind: DiagramKind; caption: string; risk?: string }
-export interface Concept { id: string; name: string; options: Option[] }
+/** `picked`: the owner's choice, 1-based (30 Oct 2026). */
+export interface Concept { id: string; name: string; picked: number; options: Option[] }
 export const CONCEPTS: Concept[] = [
-  { id: 'endless', name: 'The endless hold', options: [
+  { id: 'endless', name: 'The endless hold', picked: 2, options: [
     { kind: 'endless', caption: 'Today: a tail that levels off' },
     { kind: 'endless-infinity', caption: 'A level line into ∞' },
     { kind: 'endless-tie', caption: 'A note tied off the page', risk: 'at audio-tile size the note head shrinks to a small oval on a swoosh; without the staff it could pass for a magnifier on a cord.' },
     { kind: 'endless-bars', caption: 'A meter that stays up' },
   ] },
-  { id: 'longtail', name: 'A long tail', options: [
+  { id: 'longtail', name: 'A long tail', picked: 1, options: [
     { kind: 'longtail', caption: 'Today: a slow-fading wave' },
     { kind: 'longtail-rulers', caption: 'Rulers: 30, 60, 120 s' },
     { kind: 'longtail-trail', caption: 'A thinning trail' },
   ] },
-  { id: 'freeze', name: 'Freeze', options: [
+  { id: 'freeze', name: 'Freeze', picked: 1, options: [
     { kind: 'freeze', caption: 'Today: one cycle held at a line' },
     { kind: 'freeze-frame', caption: 'A still in a frame' },
     { kind: 'freeze-repeat', caption: 'Repeat signs' },
     { kind: 'freeze-paint', caption: 'A pad, painted into' },
   ] },
-  { id: 'swell', name: 'BLOOM: a swell', options: [
+  { id: 'swell', name: 'BLOOM: a swell', picked: 6, options: [
     { kind: 'swell', caption: 'Today: a wave swelling in' },
     { kind: 'swell-hairpin', caption: 'Crescendo, then diminuendo', risk: 'the two hairpins together can close into a flat diamond or a lens, which edges towards an eye.' },
     { kind: 'swell-bud', caption: 'A bud opening', risk: 'the open stage can read as a tulip, a flame or a fork.' },
@@ -534,19 +535,19 @@ export const CONCEPTS: Concept[] = [
     { kind: 'swell-apart', caption: 'A note, then a soft rise' },
     { kind: 'swell-natural', caption: 'Contrast: NATURAL’s predelay gap' },
   ] },
-  { id: 'octave', name: 'SHIMMER: an octave up', options: [
+  { id: 'octave', name: 'SHIMMER: an octave up', picked: 1, options: [
     { kind: 'octave', caption: 'Today: a wave at twice the speed' },
     { kind: 'octave-string', caption: 'A string in halves' },
     { kind: 'octave-keys', caption: 'Two keys, C to C' },
     { kind: 'octave-staff', caption: 'Two notes on a staff' },
   ] },
-  { id: 'tape', name: 'MOTION: tape wobble', options: [
+  { id: 'tape', name: 'MOTION: tape wobble', picked: 3, options: [
     { kind: 'tape', caption: 'Today: a wavering tone' },
     { kind: 'tape-drift', caption: 'Pitch drifting round true' },
     { kind: 'tape-head', caption: 'Tape over a head', risk: 'the head is an arched block, which can read as a door, a tombstone or a letterbox.' },
     { kind: 'tape-ticks', caption: 'Time marks stretching', risk: 'two rows of ticks can read as a barcode or a comb.' },
   ] },
-  { id: 'spaces', name: 'PLATE · HALL · MASSIVE', options: [
+  { id: 'spaces', name: 'PLATE · HALL · MASSIVE', picked: 1, options: [
     { kind: 'spaces', caption: 'Today: three rooms in a row' },
     { kind: 'spaces-paths', caption: 'Sound paths bouncing' },
     { kind: 'spaces-nested', caption: 'Rooms inside rooms' },
@@ -556,7 +557,7 @@ export const CONCEPTS: Concept[] = [
     { kind: 'spaces-depth', caption: 'Rooms in perspective', risk: 'PLATE’s shallow box can read as a picture frame, and MASSIVE’s open ground as a road.' },
     { kind: 'spaces-rays', caption: 'A sound ray in each' },
   ] },
-  { id: 'cv', name: 'CV inputs', options: [
+  { id: 'cv', name: 'CV inputs', picked: 3, options: [
     { kind: 'cv', caption: 'Today: a voltage turning the arc' },
     { kind: 'cv-sum', caption: 'Knob + voltage = further' },
     { kind: 'cv-scale', caption: 'A push along a scale' },
