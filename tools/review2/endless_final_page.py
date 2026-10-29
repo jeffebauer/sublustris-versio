@@ -8,7 +8,11 @@ silence) and keeps three excerpts named to sort in time order: 1_first30s (0-30 
 3_after10min (9:35-10:00), written 16-bit with TPDF dither. The checks (nulls, 1 ms steps, >3 kHz) run on the 32-bit
 excerpts in memory. Not level-matched. Writes the page folder (cards, _dry, README.txt, _verify.txt); then run
 make_review.py on it (--wet-only --dry <page>/_dry --no-level-match).
-Usage: endless_final_page.py --main R --proto R --v158 R [--page DIR] [--work DIR]"""
+--add-bright adds card 5 to an existing page (the coordinator's request after v1.0.58's open risk 1): PLATE at endless
+DECAY, TONE fully clockwise, on a bright noise swell over the pad (white noise rising over 7 s under the pad's first
+8.5 s, then silence), its first excerpt named 1_first30s_bright (its own dry), with each excerpt's band envelopes
+(<20 Hz, <500 Hz, >2 kHz) in _verify.txt.
+Usage: endless_final_page.py --main R --proto R --v158 R [--page DIR] [--work DIR] [--add-bright]"""
 import argparse, os, shutil, subprocess
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np, soundfile as sf
@@ -21,6 +25,7 @@ ap.add_argument('--v158', required=True)
 ap.add_argument('--page', default=REPO + '/renders/review2_endless_final')
 ap.add_argument('--work', required=True)
 ap.add_argument('--versions', default='', help='text appended to _verify.txt (the renderers\' commits)')
+ap.add_argument('--add-bright', action='store_true', help='add card 5 (bright) to an existing page')
 a = ap.parse_args()
 SR = 48000
 CARDS = [
@@ -40,6 +45,14 @@ os.makedirs(a.work, exist_ok=True)
 x, sr = sf.read(REPO + '/renders/_material/pad.wav'); assert sr == SR
 c = x[:int(8.5 * SR)].copy(); f = int(0.5 * SR); c[-f:] *= np.linspace(1, 0, f)[:, None]
 stim = np.concatenate([c, np.zeros((600 * SR - len(c), 2))]).astype(np.float32)
+if a.add_bright:  # a bright noise swell over the pad: white noise rising (t/7 s)^2 to 0.35 peak, the pad at -6 dB
+    n = len(c); t = np.arange(n) / SR
+    fade = np.ones(n); fade[-SR // 2:] = np.linspace(1, 0, SR // 2)
+    sw = np.random.default_rng(7).uniform(-1, 1, (n, 2)) * (np.minimum(t / 7, 1) ** 2 * fade * 0.35)[:, None]
+    stim = np.concatenate([0.5 * c + sw, np.zeros((600 * SR - n, 2))]).astype(np.float32)
+    CARDS = [('5_plate_bright_tone_cw', 'PLATE', {'decay': 1, 'tone': 1},
+              'PLATE, DECAY fully up (endless), TONE fully clockwise, on a bright noise swell over the pad')]
+    EXC = [('1_first30s_bright', 0, 30), ('2_after5min', 300, 325), ('3_after10min', 575, 600)]
 STIM = a.work + '/chord600f.wav'
 sf.write(STIM, stim, SR, subtype='FLOAT')
 
@@ -50,9 +63,11 @@ def write16(path, y):  # TPDF dither (+-1 LSB), 16-bit
     sf.write(path, np.clip(np.round((y + d) / q) * q, -1.0, 32767 / 32768), SR, subtype='PCM_16')
 
 
-if os.path.isdir(a.page): shutil.rmtree(a.page)
-os.makedirs(a.page + '/_dry')
+if not a.add_bright:
+    if os.path.isdir(a.page): shutil.rmtree(a.page)
+    os.makedirs(a.page + '/_dry')
 for name, t0, t1 in EXC:
+    if a.add_bright and name != '1_first30s_bright': continue  # the later dries are silence in both stimuli
     write16(f'{a.page}/_dry/{name}.wav', stim[t0 * SR:t1 * SR].astype(np.float64))
 
 
@@ -82,6 +97,9 @@ def hp3k(m):
 
 
 OCT = [125, 500, 1000, 2000, 4000, 8000]
+def bands(y):  # <20 Hz, <500 Hz, >2 kHz and the total, dBFS (both channels' mean power)
+    P = (np.abs(np.fft.rfft(y, axis=0)) ** 2).mean(axis=1) / len(y) ** 2 * 2; fr = np.fft.rfftfreq(len(y), 1 / SR)
+    return [10 * np.log10(P[(fr >= lo) & (fr < hi)].sum() + 1e-30) for lo, hi in ((1, 20), (1, 500), (2000, 24000), (0, 24000))]
 def octs(y):
     P = (np.abs(np.fft.rfft(y, axis=0)) ** 2).mean(axis=1) / len(y) ** 2 * 2; fr = np.fft.rfftfreq(len(y), 1 / SR)
     return [10 * np.log10(P[(fr >= o / 2 ** 0.5) & (fr < o * 2 ** 0.5)].sum() + 1e-30) for o in OCT]
@@ -92,6 +110,8 @@ V = ['renders/review2_endless_final: one 10-minute render per card and version (
      'Octave bands (dBFS) of 10 s windows at 25 s, 300 s, 590 s: ' + ', '.join(f'{o} Hz' for o in OCT) + '.',
      'Per excerpt: level; residual against A and against B (dB under the reference; "identical" = bit for bit); the largest',
      '1 ms step (dB, frames above -80 dBFS); >3 kHz against A (median of 50 ms frames) and its largest 50 ms rise.', a.versions]
+if a.add_bright:
+    V = ['', '== Card 5 added (bright material); same renderers and checks. Band envelopes: 1-20 Hz, 1-500 Hz, >2 kHz and total, dBFS.', a.versions]
 for folder, sp, knobs, what in CARDS:
     os.makedirs(f'{a.page}/{folder}')
     V.append(f'\n== {folder}: {what}')
@@ -105,6 +125,9 @@ for folder, sp, knobs, what in CARDS:
         for t in (25, 300, 590):
             w = y[t * SR:(t + 10) * SR]
             V.append(f'      {t:3d} s: total {10 * np.log10(np.mean(w ** 2) + 1e-30):6.1f} | ' + ' '.join(f'{v:6.1f}' for v in octs(w)))
+            if a.add_bright:
+                bb = bands(w)
+                V.append(f'             bands <20 Hz {bb[0]:6.1f}, <500 Hz {bb[1]:6.1f}, >2 kHz {bb[2]:6.1f}')
         V.append(f'      peak over 10 min {20 * np.log10(np.abs(y).max() + 1e-30):.1f} dBFS; wet DC at 9:50 {y[590 * SR:].mean():+.5f}')
         exc[tag] = {}
         for name, t0, t1 in EXC:
@@ -124,9 +147,12 @@ for folder, sp, knobs, what in CARDS:
             f1 = 10 * np.log10(frames(m, 48) + 1e-14); ok = f1[1:] > -80
             step = np.diff(f1)[ok].max() if ok.any() else 0.0
             h = 10 * np.log10(frames(hp3k(m), 2400) + 1e-14); g0 = 2 if t0 > 0 else 0
+            if a.add_bright:
+                bb = bands(e)
+                V.append(f'    {tag:27s} bands <20 Hz {bb[0]:6.1f}, <500 Hz {bb[1]:6.1f}, >2 kHz {bb[2]:6.1f}, total {bb[3]:6.1f} dBFS')
             V.append(f'    {tag:27s} level {lvl:6.1f} dBFS; vs A {res(A):>10s}, vs B {res(B):>10s}; largest 1 ms step {step:5.1f} dB; '
                      f'>3 kHz {np.median(h - hA):+6.1f} dB vs A; largest 50 ms rise of >3 kHz {np.diff(h[g0:-2]).max():4.1f} dB')
-open(f'{a.page}/_verify.txt', 'w').write('\n'.join(V) + '\n')
+open(f'{a.page}/_verify.txt', 'a' if a.add_bright else 'w').write('\n'.join(V) + '\n')
 print('\n'.join(V))
 os.remove(STIM)
 shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'endless_final_readme.txt'), f'{a.page}/README.txt')
