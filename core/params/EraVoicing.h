@@ -23,6 +23,11 @@ constexpr float kWanderGrow = 0.4f, kWanderRateGrow = 0.2f;
 constexpr float kTransportWowCents = 12.0f, kTransportWowHzMin = 0.5f, kTransportWowHzMax = 1.2f;
 constexpr float kTransportFlutterCents = 3.0f, kTransportFlutterHzMin = 6.0f, kTransportFlutterHzMax = 10.0f;
 constexpr float kTransportCrinklePerSecond = 0.6f, kTransportDipShare = 0.43f;
+// v1.0.59 (owner's pick C, "from 7:30", on renders/motion_dips; their note: "it'd be good if the dropouts start
+// entering closer to fully CCW instead of ~9 o'clock"): the dips no longer come in with the crinkle (MOTION 0.188,
+// ~9 o'clock) but from here, about 7:30 on the module (the pots' end stops map raw 0.025-0.975 to 0-1,
+// firmware/PotEndStops.h), their share rising straight to kTransportDipShare at fully left (the same there).
+constexpr float kTransportDipsFrom = 0.026f;
 // The tank's own per-line wow and flutter keep this share on the left side: at full, its incoherent ~20 cents
 // buried the transport's coherent movement (docs/research/drift-rethink.md).
 constexpr float kTransportLineShare = 0.33f;

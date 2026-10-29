@@ -33,7 +33,7 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0027](0027-wear-replaces-era.md) | WEAR replaces ERA: one wear amount over the Neve | owner, 26-27 Oct 2026 |
 | [0028](0028-small-room-replaces-the-twin.md) | HALL's and MASSIVE's freeze twin is a small room | owner, 26-27 Oct 2026 |
 | [0029](0029-panel-names.md) | The panel names: BLEND, WEAR, MOTION, DEPTH, ONSET, FREEZE / PAINT | owner, 27 Oct 2026 |
-| [0030](0030-motion-tape-transport-and-stronger-wander.md) | MOTION: a tape transport on the left, a stronger Wander on the right | owner, 27 Oct 2026 |
+| [0030](0030-motion-tape-transport-and-stronger-wander.md) | MOTION: a tape transport on the left, a stronger Wander on the right (amended v1.0.59: the dips come in from ~7:30) | owner, 27 Oct 2026 |
 | [0031](0031-tone-resonant-tilt.md) | TONE gets a resonant tilt on the wet | owner, 27 Oct 2026 |
 | [0032](0032-the-name-sublustris-versio.md) | The name: Sublustris Versio (was Immensio Versio) | owner, 27 Oct 2026 |
 | [0033](0033-governor-floor-21.md) | The endless tail settles 3 dB higher: the floor at −21 dBFS (amended v1.0.52: HALL's at −18) | owner, 28 Oct 2026 |
