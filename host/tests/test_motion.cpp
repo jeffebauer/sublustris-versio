@@ -162,13 +162,14 @@ void glideOut()
 
 // The left side against the confirm page's B (left_tape_final/_verify.txt): p95 cents and the transport's counts.
 // HALL's p95s are v1.0.57's own (ADR 0035: in this long tail HALL's floor is twice as deep, so a held note moves more
-// with MOTION too; the page's B: 9.2 / 12.6 / 18.5).
+// with MOTION too; the page's B: 9.2 / 12.6 / 18.5). v1.0.59 (motion_dips C): the dips come in from ~7:30
+// (kTransportDipsFrom), so 3/4 left has none (the page's B: 6); its crinkle and warbles are unchanged.
 void leftSide()
 {
     const std::vector<float> tones = heldTones();
     struct Pos { float drift; const char* name; double p95[3]; int crinkles, dips; }; // p95: PLATE, HALL, MASSIVE
     const Pos pos[] = {{0.2f, "9 o'clock (0.2)", {13.8, 15.3, 5.7}, 0, 0},
-                       {0.1175f, "3/4 left (0.1175)", {16.0, 15.2, 9.6}, 13, 6},
+                       {0.1175f, "3/4 left (0.1175)", {16.0, 15.2, 9.6}, 13, 0},
                        {0.0f, "full left", {19.9, 19.8, 15.1}, 34, 15}};
     for (const Pos& p : pos) {
         for (int space : {0, 1, 2}) {
@@ -188,6 +189,13 @@ void leftSide()
         check(std::abs(cr - p.crinkles) <= std::max(0, int(std::floor(0.1 * p.crinkles)))
                   && std::abs(di - p.dips) <= std::max(0, int(std::floor(0.1 * p.dips))), msg);
     }
+    // The dips' share (v1.0.59): none from kTransportDipsFrom up, rising straight to kTransportDipShare at full left.
+    using namespace iv::voicing;
+    const float from = kTransportDipsFrom;
+    check(iv::map::transportAmounts(from).crinkleDip == 0.0f && iv::map::transportAmounts(0.188f).crinkleDip == 0.0f
+              && iv::map::transportAmounts(0.0f).crinkleDip == kTransportDipShare
+              && std::fabs(iv::map::transportAmounts(0.5f * from).crinkleDip - 0.5f * kTransportDipShare) < 1e-6f,
+          "MOTION's tape dips: none from ~7:30 (MOTION 0.026) up, half the share half way, the full share fully left");
 }
 
 // The right side: Wander, stronger over its last half (B). 3/4 right is unchanged by B, so it is pinned to the round-2

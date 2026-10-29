@@ -135,7 +135,8 @@ inline float layer(float v, float from, float to)
 
 // MOTION's left side (v1.0.46, dsp/Transport.h), t 0 at the dead zone, 1 fully left: the transport's wow and
 // flutter, more variance over the side's last half (eased in), crinkle over its last 40 % (rising straight), and
-// a counted share of the crinkle bursts with a dip.
+// a counted share of the crinkle bursts with a dip: none above kTransportDipsFrom (~7:30, v1.0.59), rising
+// straight to kTransportDipShare at fully left.
 IV_SIZE_OPT inline dsp::TransportAmounts transportAmounts(float drift)
 {
     using namespace voicing;
@@ -149,7 +150,7 @@ IV_SIZE_OPT inline dsp::TransportAmounts transportAmounts(float drift)
     a.variance = layer(t, 0.5f, 1.0f);
     a.wowCents *= 1.0f + 0.7f * a.variance;    // 12 -> ~20 c at full
     a.flutterCents *= 1.0f + 0.5f * a.variance; // 3 -> 4.5 c
-    a.crinkleDip = kTransportDipShare;
+    a.crinkleDip = kTransportDipShare * clamp01((kTransportDipsFrom - drift) / kTransportDipsFrom);
     return a;
 }
 
