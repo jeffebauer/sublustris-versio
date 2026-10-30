@@ -1,6 +1,6 @@
 ---
 // The hero frame (DESIGN-v2, Home 1), as Resilio's. Until the renders exist, a labelled
-// placeholder (docs/minisite/README.md, "Renders to come"). With hero-still.jpg, the still;
+// placeholder (docs/minisite/README.md, "Renders to come"). With hero-still.png, the still;
 // when the prebuild has also copied hero-reveal.(webm|mp4) and hero-hold-loop.(webm|mp4) into
 // public/renders/, the reveal plays once (muted, inline), then the hold loops, with a pause
 // button. The still is what shows without JavaScript, when autoplay is blocked (iOS Low Power
@@ -8,7 +8,12 @@
 // Two stacked videos (owner, 7 Oct: flicker on mobile at the switch): the hold preloads
 // while the reveal plays and takes over on the reveal's last frame, which it matches, so
 // nothing reloads. When the film will play, the lit still is hidden from the first paint
-// (the reveal opens on black), so it never flashes lit → black → lit.
+// (the reveal opens in darkness), so it never flashes lit → dark → lit.
+// Everything is transparent (owner, 30 Oct 2026): the module stands in the band's haze. The
+// still is a PNG with alpha (served as AVIF/WebP, which keep it). Each film comes twice: WebM
+// VP9 with alpha for Chrome, Firefox and Edge, and MP4 HEVC with alpha for Safari. Safari can
+// also play WebM but drops its alpha, so on WebKit the WebM is removed before the film loads.
+
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { Picture } from 'astro:assets';
@@ -17,18 +22,18 @@ import Placeholder from './Placeholder.astro';
 import { render, widthsFor } from '../lib/renders';
 
 const has = (f: string) => existsSync(join(PUBLIC_DIR, 'renders', f));
-const stillImg = render('hero-still.jpg');
+const stillImg = render('hero-still.png');
 const sizes = '(min-width: 92rem) 92rem, calc(100vw - 2rem)';
 const sources = (name: string) =>
   (['webm', 'mp4'] as const)
     .filter((ext) => has(`${name}.${ext}`))
-    .map((ext) => ({ src: `/renders/${name}.${ext}`, type: `video/${ext}` }));
+    .map((ext) => ({ src: `/renders/${name}.${ext}`, type: ext === 'mp4' ? 'video/mp4; codecs="hvc1"' : 'video/webm' }));
 const reveal = sources('hero-reveal');
 const hold = sources('hero-hold-loop');
 const film = Boolean(stillImg) && reveal.length > 0 && hold.length > 0;
 const alt = 'The Sublustris Versio module in half-light, seen from the floor against a dark background, its four LEDs glowing blue.';
 ---
-{!stillImg && <Placeholder id="hero-still.jpg" name="Hero still (the film’s poster)" ratio="16:9" class="hero-placeholder" />}
+{!stillImg && <Placeholder id="hero-still.png" name="Hero still (the film’s poster)" ratio="16:9" class="hero-placeholder" />}
 {film && (
 <script is:inline>
   // Before first paint: the film will play, so start on black, not on the lit still.
@@ -66,6 +71,14 @@ const alt = 'The Sublustris Versio module in half-light, seen from the floor aga
     const frame = document.querySelector<HTMLElement>('[data-hero]');
     const showStill = () => document.documentElement.classList.remove('hero-film');
     if (reveal && hold && pause && frame && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      // WebKit (Safari, and every browser on iOS): the HEVC film, the only one it shows with alpha
+      const ua = navigator.userAgent;
+      if (/AppleWebKit/.test(ua) && !/Chrome|Chromium|Edg|Android/.test(ua)) {
+        for (const v of [reveal, hold]) {
+          v.querySelectorAll('source[type="video/webm"]').forEach((s) => s.remove());
+          v.load();
+        }
+      }
       let active = reveal;
       let userPaused = false;
       reveal.preload = 'auto';

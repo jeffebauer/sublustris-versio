@@ -126,23 +126,23 @@ code { font-family: var(--font-mono); font-size: 0.88em; overflow-wrap: anywhere
 .has-haze > :not(.haze) { position: relative; z-index: 1; }
 .haze.haze-top { bottom: auto; height: min(100%, 64rem); mask-image: linear-gradient(to bottom, #000 55%, transparent); }
 .hero { padding-top: calc(var(--header-h) + var(--stack-2)); padding-bottom: clamp(3.5rem, 2rem + 5vw, 7rem); }
+/* The film is transparent and stands in the haze, with no card (owner, 30 Oct 2026). Its box
+   is 16:9 at most and never taller than the screen leaves room for, so on short screens the
+   module shrinks and the title stays above the fold; the film is contained, never cropped. */
 .hero-frame {
-  position: relative; overflow: hidden; border-radius: var(--radius-tile); background: #060505;
-  aspect-ratio: 16 / 9; width: 100%;   /* the whole film, uncropped; the title follows below (owner, 7 Oct) */
-  /* iOS Safari doesn't clip a video to rounded corners while it composites (the light floor
-     showed at the corners as white edges on load, owner 7 Oct): force the clip. */
-  isolation: isolate; -webkit-mask-image: -webkit-radial-gradient(white, black);
+  position: relative; width: 100%; aspect-ratio: 16 / 9;
+  max-height: max(18rem, calc(100svh - var(--header-h) - 21rem));   /* the title, tagline and buttons */
 }
-.hero-still, .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; }
-.hero-video { opacity: 0; transition: opacity var(--dur-3) var(--ease-out); border-radius: inherit; }
+.hero-still, .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: 50% 50%; }
+.hero-video { opacity: 0; transition: opacity var(--dur-3) var(--ease-out); }
 .hero-frame.is-playing .hero-video:not(.hero-hold) { opacity: 1; }
 /* The hold sits on top and appears in one step, on the reveal's matching last frame. */
 .hero-hold { transition: none; }
 .hero-hold.is-on { opacity: 1; }
-/* The film will play (set before first paint): start on black, never on the lit still. */
+/* The film will play (set before first paint): start on the haze, never on the lit still. */
 html.hero-film .hero-still { visibility: hidden; }
-/* Once the film is in, hide the still under it: its lighter floor showed through the film's
-   anti-aliased right edge as a thin white line (owner, 7 Oct). */
+/* Once the film is in, hide the still under it, or the two would double up through the
+   transparent edges. */
 .hero-frame.is-playing .hero-still { visibility: hidden; transition: visibility 0s linear var(--dur-3); }
 .hero-pause {
   position: absolute; right: 0.75rem; bottom: 0.75rem; width: 2.75rem; height: 2.75rem; display: grid; place-items: center;
@@ -167,9 +167,9 @@ html.hero-film .hero-still { visibility: hidden; }
 /* The buttons' bottom edge sits on the tagline's last baseline (owner, 7 Oct): MD UI's baseline
    is 0.283 em above the bottom of a 1.2 line box. */
 .hero-title .actions { grid-column: 2; grid-row: 1 / 3; align-self: end; margin-bottom: calc(var(--tagline-fs) * 0.283); display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: end; }
-/* Portrait phones and tablets (owner, 8 Oct: the module was small in a 16:9 frame): the frame
-   fills the screen as first seen, Safari's bars showing (svh), less the header, the gap and the
-   title's first line, so the h1 stays in view; the film and still crop in around the module. */
+/* Portrait phones and tablets (owner, 8 Oct: the module was small in a 16:9 frame): a taller
+   frame, cut to leave the title in view (svh: Safari's bars showing), and the film and still
+   crop in around the module (the sides are only transparent haze). */
 @media (orientation: portrait) and (max-width: 63.99rem) {
   .hero-frame {
     --hero-cut: calc(var(--header-h) + var(--stack-2) + clamp(1.5rem, 1rem + 2vw, 3rem) + var(--fs-display) * var(--lh-display) + 1.25rem);
@@ -177,6 +177,7 @@ html.hero-film .hero-still { visibility: hidden; }
     height: calc(100vh - var(--hero-cut));
     height: calc(100svh - var(--hero-cut));
   }
+  .hero-still, .hero-video { object-fit: cover; }
 }
 @media (max-width: 47.99rem) {
   .hero-title { grid-template-columns: minmax(0, 1fr); }
@@ -440,7 +441,7 @@ figure.wide > .caption, .figure .caption { padding-block: var(--stack-1) 0; }
 }
 .placeholder .ph-label { display: block; max-width: 100%; }   /* the dot stays on the label's first line */
 .placeholder .ph-label .dot { display: inline-block; width: 0.5em; height: 0.5em; margin-right: 0.6em; vertical-align: 0.1em; border-radius: 50%; background: var(--signal); }
-/* The hero's placeholder, on the dark band (until hero-still.jpg exists). */
+/* The hero’s placeholder, on the dark band (until hero-still.png exists). */
 .hero-placeholder { background: var(--tile-dark); color: var(--on-dark-2); }
 
 /* ---- Doc pages ----------------------------------------------------------------- */

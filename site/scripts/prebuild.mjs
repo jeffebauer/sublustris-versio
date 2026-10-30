@@ -71,7 +71,7 @@ const audio = await copyDir(join(minisite, 'assets', 'audio'), join(pub, 'audio'
 // The panel map only (the panel art, sublustris-versio-panel-art.svg, is the renders' source).
 const panel = await copyDir(join(minisite, 'assets', 'panel'), join(pub, 'panel'), (f) => f.endsWith('.svg') && !f.endsWith('-art.svg'));
 const shots = await copyDir(join(minisite, 'assets', 'screenshots'), join(pub, 'screenshots'), (f) => f.endsWith('.png'));
-// Stills, plus the hero reveal film when it exists (hero_reveal / hero_hold_loop .mp4 + .webm, hero_still.jpg).
+// Stills, plus the hero reveal film when it exists (hero-reveal / hero-hold-loop .mp4 HEVC + .webm VP9, both with alpha; the still is hero-still.png).
 const renders = await copyDir(join(minisite, 'assets', 'renders'), join(pub, 'renders'), (f) => /\.(jpe?g|webp|avif|mp4|webm)$/.test(f));
 console.log(`prebuild: ${audio} demo clip(s), ${panel} panel art file(s), ${shots} screenshot(s), ${renders} render(s) copied`);
 console.log(`prebuild: ${await fonts()}`);

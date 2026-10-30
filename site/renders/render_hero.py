@@ -3,7 +3,9 @@
     /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \\
         --python site/renders/render_hero.py -- --frames DIR [--samples 64] [--res 2400x1350] [--only 1,120,240]
 
-then encode with make_hero_video.sh. Ported from Resilio Versio's
+then encode with make_hero_video.sh. Frames are transparent PNGs (owner, 30 Oct 2026): the
+floor is a shadow catcher, so the site's haze shows through and only the module's soft contact
+shadow is kept. Frame 240 at 192 samples is also the site's hero-still.png. Ported from Resilio Versio's
 render_hero.py (the owner's MIT code): same camera move and light build, the
 "night" look (render_clay hero_d / hero_e) instead of Resilio's monolith, and
 the LEDs tell a different story (see below).
@@ -149,6 +151,33 @@ def build():
     return ref
 
 
+def _contact_shadow_only():
+    """The floor becomes a shadow catcher that keeps only a soft pool under the module.
+    As a plain catcher it also kept the long shadows the key, rim and LED lights throw
+    across the whole floor, with hard edges. So (light linking) none of the scene's lights
+    reach the floor, and one large soft light overhead lights the floor alone: its shadow,
+    fading in with the key, is the only one caught."""
+    cyc = bpy.data.objects["cyclorama"]
+    cyc.is_shadow_catcher = True
+    excl = bpy.data.collections.new("floor_unlit")
+    excl.objects.link(cyc)
+    excl.collection_objects[0].light_linking.link_state = "EXCLUDE"
+    for ob in [o for o in bpy.data.objects if o.type == "LIGHT"]:
+        ob.light_linking.receiver_collection = excl
+    incl = bpy.data.collections.new("floor_only")
+    incl.objects.link(cyc)
+    incl.collection_objects[0].light_linking.link_state = "INCLUDE"
+    size, height = (float(v) for v in os.environ.get("IV_HERO_SHADOW", "420,520").split(","))   # mm; env for tests
+    top = C.area_light("contact_shadow", (0, -20, height), (0, -20, 0), size, C.watts(40))
+    top.light_linking.receiver_collection = incl
+    full = top.data.energy
+    for f in range(1, REVEAL_END + 1, 3):
+        top.data.energy = full * _ease(f, *LIGHTS_ON)
+        top.data.keyframe_insert("energy", frame=f)
+    top.data.energy = full
+    top.data.keyframe_insert("energy", frame=REVEAL_END)
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     out = argv[argv.index("--frames") + 1]
@@ -157,17 +186,21 @@ def main():
     res = argv[argv.index("--res") + 1] if "--res" in argv else "2400x1350"
     w, h = (int(n) for n in res.split("x"))
     build()
-    C.setup_cycles(samples=samples, width=w, height=h)
+    C.setup_cycles(samples=samples, width=w, height=h, fmt="PNG")
     sc = bpy.context.scene
     sc.render.use_persistent_data = True
-    sc.render.image_settings.file_format = "JPEG"
-    sc.render.image_settings.quality = 95
+    # Transparent (owner, 30 Oct 2026): the site's haze shows through.
+    sc.render.film_transparent = True
+    _contact_shadow_only()
+    sc.render.image_settings.file_format = "PNG"
+    sc.render.image_settings.color_mode = "RGBA"
+    sc.render.image_settings.compression = 15
     os.makedirs(out, exist_ok=True)
     frames = only or range(sc.frame_start, sc.frame_end + 1)
     t0 = time.time()
     for f in frames:
         sc.frame_set(f)
-        sc.render.filepath = os.path.join(out, f"f_{f:04d}.jpg")
+        sc.render.filepath = os.path.join(out, f"f_{f:04d}.png")
         bpy.ops.render.render(write_still=True)
         print(f"[hero] frame {f} done, {time.time() - t0:.0f} s elapsed", flush=True)
 
