@@ -167,26 +167,13 @@ html.hero-film .hero-still { visibility: hidden; }
 /* The buttons sit under the tagline (owner, 30 Oct 2026). */
 .hero-title .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; padding-top: var(--stack-1); }
 /* Wide landscape screens (owner, 30 Oct 2026): the module moves right and the title comes up
-   beside it, over the film's empty left side; the film's box fills the screen's height. The
-   title's cap height lines up with the module's top and the buttons' bottom with its foot: in
-   the film's last frame (hero-still.png, 1350 px tall) the panel runs from 225 to 1246 px. The
-   film is contained, so it always fills the box's height: --hero-h is that height. */
+   beside it, over the film's empty left side; the film's box fills the screen's height. */
 @media (orientation: landscape) and (min-width: 64rem) {
-  .hero > .wide {
-    display: grid; container-type: inline-size;
-    --hero-max: max(24rem, calc(100svh - var(--header-h) - var(--stack-2) - 3rem));
-    --hero-h: min(100cqw * 9 / 16, var(--hero-max));
-  }
+  .hero > .wide { display: grid; }
   .hero-frame, .hero-title { grid-area: 1 / 1; }
-  .hero-frame { max-height: var(--hero-max); }
+  .hero-frame { max-height: max(24rem, calc(100svh - var(--header-h) - var(--stack-2) - 3rem)); }
   .hero-still, .hero-video { translate: 24% 0; }
-  .hero-title {
-    max-width: 58%;
-    padding-top: calc(var(--hero-h) * 225 / 1350);
-    padding-bottom: calc(var(--hero-h) * (1350 - 1246) / 1350);
-  }
-  .hero-title h1 { text-box: trim-start cap alphabetic; }
-  .hero-title .actions { margin-top: auto; }
+  .hero-title { align-self: center; padding-top: 0; max-width: 58%; }
 }
 /* Portrait phones and tablets (owner, 8 Oct: the module was small in a 16:9 frame): a taller
    frame, cut to leave the title in view (svh: Safari's bars showing), and the film and still
