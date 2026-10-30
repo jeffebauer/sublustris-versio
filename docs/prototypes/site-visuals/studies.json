@@ -1,0 +1,69 @@
+{
+  "loop_seconds": 10,
+  "fps": 24,
+  "capture_size": [1280, 720],
+  "still_phase": 0.3,
+  "render_scale": 0.5,
+  "max_fps": 30,
+  "placements": [
+    {"id": "hero", "code": "P1", "name": "Behind the hero title", "mode": "dark", "amt": 0.8},
+    {"id": "band", "code": "P2", "name": "Behind “What it sounds like”", "mode": "dark", "amt": 0.6},
+    {"id": "haze", "code": "P3", "name": "A barely-there haze behind the white page", "mode": "light", "amt": 0.5}
+  ],
+  "studies": [
+    {
+      "id": "diffusion", "title": "Diffusion",
+      "line": "One note scatters into thousands of echoes that blur into a cloud: what a reverb does in its first half-second.",
+      "best": 0,
+      "variants": [
+        {"name": "Echo cloud", "line": "Crisp points near the source; the further an echo travels, the softer and dimmer it gets, until the points merge into mist."},
+        {"name": "Ink in water", "line": "Slow folded swirls that thicken and thin, like ink spreading in still water."}
+      ]
+    },
+    {
+      "id": "waves", "title": "Waves",
+      "line": "Sound as rings of pressure moving out through the room, losing their edge as they go.",
+      "best": 0,
+      "variants": [
+        {"name": "Ripples", "line": "Rings spread from below the frame and soften with distance; a copy bounced off a wall above crosses them faintly."},
+        {"name": "Contour lines", "line": "A stack of thin level lines lifted by a slow swell through the middle, like a waveform drawn in relief."}
+      ]
+    },
+    {
+      "id": "reflections", "title": "Reflections",
+      "line": "Every echo is the sound bounced off a surface: the early reflections that tell you the size of the space.",
+      "best": 0,
+      "variants": [
+        {"name": "Mirror room", "line": "A small light in a room and all its mirror images in the walls, each bounce fainter and softer (the way acousticians model a room)."},
+        {"name": "Light on water", "line": "A faint light low in the sky and its broken reflection: a path of glints that spreads and dims toward you."}
+      ]
+    },
+    {
+      "id": "shimmer", "title": "Shimmer",
+      "line": "The octave-up sparkle that rises out of a long tail and hangs above it.",
+      "best": 0,
+      "variants": [
+        {"name": "Rising glints", "line": "Sparse points that twinkle as they drift upward and thin out toward the top."},
+        {"name": "Caustic veil", "line": "A soft net of light, like sun on a pool floor, slowly re-knotting itself."}
+      ]
+    },
+    {
+      "id": "haze", "title": "Haze",
+      "line": "The late tail, where the echoes are too dense to hear apart and turn into one soft wash.",
+      "best": 0,
+      "variants": [
+        {"name": "Moon behind cloud", "line": "A faint glow, never the moon itself, behind slow cloud, lit at the edges where the cloud thins: the name, pictured."},
+        {"name": "Ground mist", "line": "Low banks of fog in layers that drift and thin as they rise."}
+      ]
+    },
+    {
+      "id": "tail", "title": "Tail and freeze",
+      "line": "The extra idea: the decay itself, drawn like a spectrogram (time runs left to right, pitch bottom to top), and the freeze that holds it.",
+      "best": 0,
+      "variants": [
+        {"name": "Warm decay", "line": "A note strikes at the left edge and its partials stretch out and fade, the high ones first, the low ones last: what “warm” means in a reverb."},
+        {"name": "Freeze", "line": "The same partials held forever in freeze blue: nothing decays, the field only breathes."}
+      ]
+    }
+  ]
+}
