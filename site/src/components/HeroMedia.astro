@@ -1,57 +1,101 @@
 ---
-// The hero frame (DESIGN-v2, Home 1). Until the panel art and its renders exist, a labelled
-// placeholder at the still's 16:9 (docs/minisite/README.md, "Renders to come"). Dropping
-// hero-still.jpg into docs/minisite/assets/renders/ shows the still; adding hero-loop.mp4 and/or
-// hero-loop.webm plays that film over it, muted and looping, with a pause button. The still is
-// what shows without JavaScript, when autoplay is blocked, and to everyone under reduced motion.
+// The hero frame (DESIGN-v2, Home 1), as Resilio's. Until the renders exist, a labelled
+// placeholder (docs/minisite/README.md, "Renders to come"). With hero-still.jpg, the still;
+// when the prebuild has also copied hero-reveal.(webm|mp4) and hero-hold-loop.(webm|mp4) into
+// public/renders/, the reveal plays once (muted, inline), then the hold loops, with a pause
+// button. The still is what shows without JavaScript, when autoplay is blocked (iOS Low Power
+// Mode), and all reduced-motion users see.
+// Two stacked videos (owner, 7 Oct: flicker on mobile at the switch): the hold preloads
+// while the reveal plays and takes over on the reveal's last frame, which it matches, so
+// nothing reloads. When the film will play, the lit still is hidden from the first paint
+// (the reveal opens on black), so it never flashes lit → black → lit.
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { Picture } from 'astro:assets';
-import Placeholder from './Placeholder.astro';
 import { PUBLIC_DIR } from '../lib/paths';
+import Placeholder from './Placeholder.astro';
 import { render, widthsFor } from '../lib/renders';
 
-const still = render('hero-still.jpg');
+const has = (f: string) => existsSync(join(PUBLIC_DIR, 'renders', f));
+const stillImg = render('hero-still.jpg');
 const sizes = '(min-width: 92rem) 92rem, calc(100vw - 2rem)';
-const film = (['webm', 'mp4'] as const)
-  .filter((ext) => existsSync(join(PUBLIC_DIR, 'renders', `hero-loop.${ext}`)))
-  .map((ext) => ({ src: `/renders/hero-loop.${ext}`, type: `video/${ext}` }));
-const alt = 'The Sublustris Versio module in half-light, its output LEDs glowing blue.';
+const sources = (name: string) =>
+  (['webm', 'mp4'] as const)
+    .filter((ext) => has(`${name}.${ext}`))
+    .map((ext) => ({ src: `/renders/${name}.${ext}`, type: `video/${ext}` }));
+const reveal = sources('hero-reveal');
+const hold = sources('hero-hold-loop');
+const film = Boolean(stillImg) && reveal.length > 0 && hold.length > 0;
+const alt = 'The Sublustris Versio module in half-light, seen from the floor against a dark background, its four LEDs glowing blue.';
 ---
-{still ? (
-  <div class="hero-frame" data-hero>
-    <Picture class="hero-still" src={still} widths={widthsFor(still)} sizes={sizes} formats={['avif', 'webp']} fetchpriority="high" loading="eager" alt={alt} />
-    {film.length > 0 && (
-      <>
-        <video class="hero-video hero-hold" muted playsinline loop preload="none" aria-hidden="true" data-hero-video>
-          {film.map((s) => <source src={s.src} type={s.type} />)}
-        </video>
-        <button class="hero-pause" type="button" data-hero-pause hidden>
-          <span class="visually-hidden">Pause the film</span>
-          <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z" fill="currentColor" /></svg>
-          <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9.5-5.5z" fill="currentColor" /></svg>
-        </button>
-      </>
-    )}
-  </div>
-) : (
-  <Placeholder id="hero-still.jpg" name="Hero still (the film’s poster)" ratio="16:9" class="hero-placeholder" />
+{!stillImg && <Placeholder id="hero-still.jpg" name="Hero still (the film’s poster)" ratio="16:9" class="hero-placeholder" />}
+{film && (
+<script is:inline>
+  // Before first paint: the film will play, so start on black, not on the lit still.
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('hero-film');
+</script>
 )}
-{still && film.length > 0 && (
+{stillImg && (
+<div class="hero-frame" data-hero>
+  {film ? (
+    <>
+      <Picture class="hero-still" src={stillImg} widths={widthsFor(stillImg)} sizes={sizes} formats={['avif', 'webp']} fetchpriority="high" loading="eager" alt={alt} />
+      <video class="hero-video" muted playsinline preload="none" aria-hidden="true" data-hero-video>
+        {reveal.map((s) => <source src={s.src} type={s.type} />)}
+      </video>
+      <video class="hero-video hero-hold" muted playsinline loop preload="none" aria-hidden="true" data-hero-hold>
+        {hold.map((s) => <source src={s.src} type={s.type} />)}
+      </video>
+      <button class="hero-pause" type="button" data-hero-pause hidden>
+        <span class="visually-hidden">Pause the film</span>
+        <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z" fill="currentColor" /></svg>
+        <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9.5-5.5z" fill="currentColor" /></svg>
+      </button>
+    </>
+  ) : (
+    <Picture class="hero-still" src={stillImg} widths={widthsFor(stillImg)} sizes={sizes} formats={['avif', 'webp']} fetchpriority="high" loading="eager" alt={alt} />
+  )}
+</div>
+)}
+{film && (
   <script>
-    // Play the loop once it can; nothing plays under reduced motion, and the still stays.
-    const video = document.querySelector<HTMLVideoElement>('[data-hero-video]');
+    // Reveal once, then the hold loops in a second video. Nothing plays under reduced motion.
+    const reveal = document.querySelector<HTMLVideoElement>('[data-hero-video]');
+    const hold = document.querySelector<HTMLVideoElement>('[data-hero-hold]');
     const pause = document.querySelector<HTMLButtonElement>('[data-hero-pause]');
-    if (video && pause && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      video.preload = 'auto';
-      video.addEventListener('playing', () => { video.classList.add('is-on'); pause.hidden = false; }, { once: true });
-      video.play().catch(() => {});
+    const frame = document.querySelector<HTMLElement>('[data-hero]');
+    const showStill = () => document.documentElement.classList.remove('hero-film');
+    if (reveal && hold && pause && frame && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      let active = reveal;
+      let userPaused = false;
+      reveal.preload = 'auto';
+      reveal.addEventListener('playing', () => {
+        frame.classList.add('is-playing');
+        pause.hidden = false;
+        hold.preload = 'auto';
+        hold.load();
+      }, { once: true });
+      reveal.addEventListener('ended', () => {
+        hold.play().then(() => {
+          hold.classList.add('is-on');   // shown only once it's actually playing
+          active = hold;
+        }).catch(() => {});              // if the loop can't play, the reveal's last frame stays
+      }, { once: true });
+      reveal.play().catch(showStill);    // autoplay blocked: the still, not a black frame
+      // Chrome pauses muted autoplay when the film scrolls offscreen and doesn't resume a
+      // script-started one: carry on when the hero is back in view, unless the visitor paused.
+      new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting && !userPaused && active.paused && !active.ended) active.play().catch(() => {});
+      }, { threshold: 0.25 }).observe(frame);
       pause.addEventListener('click', () => {
-        const paused = !video.paused;
-        if (paused) video.pause(); else video.play().catch(() => {});
+        const paused = !active.paused;
+        userPaused = paused;
+        if (paused) active.pause(); else active.play().catch(() => {});
         pause.classList.toggle('is-paused', paused);
         pause.querySelector('.visually-hidden')!.textContent = paused ? 'Play the film' : 'Pause the film';
       });
+    } else {
+      showStill();
     }
   </script>
 )}
