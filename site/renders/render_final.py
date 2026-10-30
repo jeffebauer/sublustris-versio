@@ -23,15 +23,13 @@ import render_clay  # noqa: E402
 
 FINAL_OUT = os.path.join(render_clay.MAIN_CHECKOUT, "renders", "site_final")
 
-# The owner's picks: clay variant id -> site file. Empty until the owner picks
-# from the clay contact sheet (renders/site_clay/index.html).
+# The owner's picks: clay variant id -> site file.
+# Round 1 picks (owner, 30 Oct 2026); hero, macro and story wait for round 2.
+# Don't run until the revised (blue) panel art is in and the decal re-made.
 PICKS = {
-    # "hero_a": "hero-still.jpg",
-    # "front_a": "front-on-wide.jpg",
-    # "macro_a": "panel-macro.jpg",
-    # "patched_a": "patched.jpg",
-    # "og_a": "og-hero.jpg",
-    # "story_tape_a": "story.jpg",
+    "front_b": "front-on-wide.jpg",
+    "patched_a": "patched.jpg",
+    "og_a": "og-hero.jpg",
 }
 
 # final width per slot (heights follow the clay frame's aspect)

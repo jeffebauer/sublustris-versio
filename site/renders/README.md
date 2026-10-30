@@ -34,9 +34,23 @@ The front-on variants solve their camera so the panel lands on the annotated pan
 | `common.py` | scene units (mm), Cycles setup, studio lights, sweep, cameras, materials |
 | `module.py` | the Versio: panel with the decal, knobs, jacks, toggles, button, LEDs (freeze blue), screws, PCBs |
 | `props.py` | patch cables (black L, freeze-blue R) |
-| `story.py` | generic, unbranded story gear: two tape decks with one tape loop, a 1980s rack reverb, a plate in its frame |
+| `story.py` | round 1 story gear (generic, unbranded): two decks sharing one tape, a 1U rack reverb, a plate in its frame |
+| `studio.py` | round 2 story gear, researched (`STORY_RESEARCH.md`): two A77-layout decks cross-patched, a lamp-lit home studio with a rack of period units and the reverb's remote |
+| `render_hero.py` | the animated hero: the reveal (frames 1-240) and the hold loop (241-360) |
+| `make_hero_video.sh` | encodes the hero frames to MP4 + WebM and posters (`preview` = MP4 only) |
 | `render_clay.py` | the variants, moods (lighting), cameras, front-on solver + measurement, contact sheet |
 | `render_final.py` | the picked variants at final size and quality |
+
+Round 2 (the owner's notes on round 1): `--round 2` renders only the round-2 variants into `renders/site_clay_r2/` and lists the round-1 picks there for reference.
+
+## 2b. Hero film
+
+```bash
+$BLENDER -b --factory-startup --python site/renders/render_hero.py -- --frames /tmp/hero_frames [--samples 64] [--res 2400x1350]
+site/renders/make_hero_video.sh /tmp/hero_frames docs/minisite/assets/renders   # hero-reveal + hero-hold-loop (.mp4, .webm), posters
+```
+
+A preview: `--samples 12 --res 960x540`, then `make_hero_video.sh FRAMES OUT preview`. Full quality is about 18 s a frame on the Metal GPU (2400 × 1350, 64 samples): 360 frames ≈ 1 h 50 min, ~150 MB of frames (delete them after encoding).
 
 ## 3. Finals (after the owner's picks)
 

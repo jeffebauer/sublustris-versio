@@ -38,9 +38,13 @@ import common as C  # noqa: E402
 import module  # noqa: E402
 import props  # noqa: E402
 import story  # noqa: E402
+import studio  # noqa: E402
 
 MAIN_CHECKOUT = "/Users/jesse/Documents/Sites/immensio-versio"
 DEFAULT_OUT = os.path.join(MAIN_CHECKOUT, "renders", "site_clay")
+OUT_R2 = os.path.join(MAIN_CHECKOUT, "renders", "site_clay_r2")
+# round 2 (owner, 30 Oct 2026): the picks from round 1, shown on the r2 sheet for reference
+R1_PICKS = ["front_b", "patched_a", "og_a"]
 
 # The site's annotated panel (site/src/components/AnnotatedPanel.astro) draws
 # its callouts on a 2116 x 1190 stage with the panel at this box: the
@@ -114,12 +118,71 @@ def module_variants(ref):
         dict(id="patched_c", slot="patched", mood="cables4", res=W169,
              note="High three-quarter, 50 mm: looking down on the cords fanning out across the floor.",
              target=c + C.Vector((0, -80, -30)), az=28, el=38, f=50, fit=0.6, fstop=16, focus=c + C.Vector((0, -20, -10))),
+        # ---- round 2 (owner's notes, 30 Oct 2026)
+        dict(id="hero_e", slot="hero", mood="night", res=W169, rnd=2,
+             note="hero_d's half-light, centred and square like Resilio's hero still (and the film's last frame): "
+                  "level with the panel's centre, 100 mm, the panel 72 % of the frame height.",
+             loc=(0, -HERO_DIST, module.PH / 2), target=(0, 0, module.PH / 2), f=100, fstop=16,
+             focus=(0, 0, module.PH / 2)),
+        dict(id="hero_f", slot="hero", mood="night", res=W169, rnd=2,
+             note="The half-light, centred, from a little below: 40 mm, the camera low, looking up, so the "
+                  "module towers a touch while staying square.",
+             loc=(0, -330, 22), target=(0, 0, 70), f=40, fstop=11, focus=(0, 0, 64)),
+        dict(id="macro_d", slot="macro", mood="studio", res=W219, rnd=2,
+             note="macro_a's camera brought down to 6 deg (at macro_a's 16 deg the WEAR cap hides PLT), focus on "
+                  "the SPACE switch's labels (PLT / HAL / MAS); f/11.",
+             target=ctrl + C.Vector((0, -6, 0)), az=30, el=6, f=100, dist=175, fstop=11, focus=SPACE_LABELS),
+        dict(id="macro_e", slot="macro", mood="studio", res=W219, rnd=2,
+             note="Same, shallower (f/4): only the SPACE labels and the switch sharp, the rest melting away.",
+             target=ctrl + C.Vector((0, -6, 0)), az=30, el=6, f=100, dist=175, fstop=4, focus=SPACE_LABELS),
     ]
+
+
+# the hero still's camera: Resilio's (render_hero.py), square to the panel
+HERO_DIST = (128.5 / 0.72) * 100.0 / (36.0 / (16 / 9))
+# the SPACE switch's labels (PLT / HAL / MAS) on the panel face, from the art
+SPACE_LABELS = C.Vector((13.2 - 25.25, 0.0, 128.5 - 59.0))
 
 
 def story_variants(refs):
     t, r, p = refs.get("tape"), refs.get("rack"), refs.get("plate")
+    t2, r2 = refs.get("tape2"), refs.get("rack2")
     v = []
+    if t2:
+        v += [
+            dict(id="story_tape2_a", slot="story", mood="tape2", res=W169, rnd=2,
+                 note="(a) Two 1970s Swiss-style decks (the Revox A77 layout, unbranded), each running its own tape, "
+                      "on a desk in a lamp-lit room; three-quarter from the front, 40 mm. Their outs and ins are "
+                      "cross-patched at the back (the cables loop across the gap).",
+                 target=t2["center"] + C.Vector((0, 0, 10)), az=-22, el=16, f=40, fit=0.95, by="width"),
+            dict(id="story_tape2_b", slot="story", mood="tape2", res=W169, rnd=2,
+                 note="(a) From behind and above: the cross-patch itself, A's outputs into B's inputs (black) and "
+                      "B's outputs back into A's (grey), the reels standing up beyond; 50 mm.",
+                 loc=(420, 690, 1520), target=t2["patch"] + C.Vector((0, -90, 60)), f=24, fstop=8,
+                 focus=t2["patch"]),
+        ]
+    if r2:
+        v += [
+            dict(id="story_rack2_a", slot="story", mood="rack2", res=W169, rnd=2,
+                 note="(b) A cosy late-70s/80s home studio: oak desk, lamp, small mixer, the reverb's remote on the "
+                      "desk, a walnut rack of period units (reverb mainframe, delay, pitch shifter, EQ, patch bay), "
+                      "records and tape boxes, a plant; 35 mm from the room's corner.",
+                 target=r2["center"] + C.Vector((100, 0, 0)), az=-18, el=14, f=35, dist=4300),
+            dict(id="story_rack2_a2", slot="story", mood="rack2", res=W169, rnd=2,
+                 note="(b) The same room, nearer the rack: the units at eye level, the desk and lamp to the left; 50 mm.",
+                 target=r2["rack"] + C.Vector((-450, 0, 200)), az=-32, el=8, f=50, dist=2700, fstop=8,
+                 focus=r2["reverb"]),
+            dict(id="story_rack2_b", slot="story", mood="rack2", res=W169, rnd=2,
+                 note="(b) Close on the reverb mainframe: the red display reading 99.9, program buttons and their "
+                      "LEDs, headroom ladders, level pots, rack ears and screws, rubbed edges; 100 mm f/5.6.",
+                 target=r2["reverb"] + C.Vector((-40, 0, 0)), az=-24, el=8, f=100, dist=900, fstop=5.6,
+                 focus=r2["reverb"] + C.Vector((-110, 0, 20))),
+            dict(id="story_rack2_b2", slot="story", mood="rack2", res=W169, rnd=2,
+                 note="(b) Close on the remote on the desk: the six sliders, the red display, the buttons; the rack "
+                      "soft behind; 85 mm f/4.",
+                 target=r2["remote"] + C.Vector((0, -40, -10)), az=-28, el=30, f=85, dist=800, fstop=4,
+                 focus=r2["remote"] + C.Vector((0, -40, -10))),
+        ]
     if t:
         v += [
             dict(id="story_tape_a", slot="story", mood="tape", res=W169,
@@ -217,6 +280,8 @@ def build_story(mood):
     """Story subjects in a dim studio: dark sweep, a warm soft key from the
     upper left, a cool rim from behind, very little world light."""
     C.reset_scene()
+    if mood in ("tape2", "rack2"):  # round 2: the room brings its own lamp-lit lighting
+        return {"tape2": studio.tape_cross, "rack2": studio.studio_rack}[mood]()
     ref = {"tape": story.tape_loop, "rack": story.rack_reverb, "plate": story.plate}[mood]()
     C.world(0.02, rgb=(0.45, 0.45, 0.5))
     L = C.studio(ref["center"], ref["size"] * 1.2, key=0.55, fill=0.06, rim=0.9)
@@ -402,13 +467,15 @@ def measure_panel(cam, out_dir, vid):
 # ------------------------------------------------------------------ contact sheet
 
 SLOTS = {
+    "picks": "Owner's picks from round 1 (for reference: already chosen, final render waits for the blue panel art)",
     "hero": "1 · Hero still (16:9, final 2400 × 1350): the monolith, dim, faintly glowing",
+    "anim": "1b · Hero film, LOW-RES PREVIEW (960 px, 12 samples): the reveal plays once, then the hold loop",
     "front": "2 · Front-on (16:9, final 2116 × 1190): the annotated panel's photo, exact geometry",
     "macro": "3 · Panel macro (21:9, final 2400 × 1028): across the controls, shallow depth",
     "patched": "4 · Patched (16:9, final 2400 × 1350): both inputs and both outputs, black L, blue R",
     "og": "5 · Share image (1200 × 630)",
-    "story": "6 · Story candidates (16:9): a short history of the endless hold — (a) the two-machine tape loop, "
-             "(b) the 1980s rack reverb's infinite hold, (c) the plate",
+    "story": "6 · Story candidates (16:9): a short history of the endless hold — (a) two tape machines, "
+             "(b) the rack reverb's infinite hold, (c) the plate",
 }
 
 
@@ -426,6 +493,12 @@ def write_index(out_dir, variants, title="Sublustris Versio site renders — cla
                 extra = (f'<span class="cam">panel measured x {mb["x"]:.1f}, y {mb["y"]:.1f}, '
                          f'w {mb["w"]:.1f}, h {mb["h"]:.1f} px (target {tb["x"]}, {tb["y"]}, {tb["w"]}, {tb["h"]})</span>')
             f = v["file"]
+            if f.endswith(".mp4"):
+                cards.append(
+                    f'''<figure><video src="{f}" poster="{v.get("poster", "")}" controls muted playsinline preload="metadata"
+{"loop" if v.get("loop") else ""}></video>
+<figcaption><b>{v["id"]}</b><span class="cam">{v["label"]}</span><span>{v["note"]}</span></figcaption></figure>''')
+                continue
             cards.append(
                 f'''<figure><a href="{f}" data-full="{f}" data-cap="{v["id"]} — {v["label"]}">
 <img src="{f}" loading="lazy" alt="{v["id"]}"></a>
@@ -441,7 +514,7 @@ header,section{{padding:16px 24px;border-top:1px solid var(--rule)}}
 h1{{font-weight:400;font-size:28px;margin:0 0 4px}} h2{{font-weight:400;font-size:18px;margin:0 0 12px}}
 p{{margin:0;color:var(--ink2);max-width:60em}}
 .grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(420px,100%),1fr));gap:20px}}
-figure{{margin:0}} img{{width:100%;display:block;border-radius:6px;background:#ddd}}
+figure{{margin:0}} img,video{{width:100%;display:block;border-radius:6px;background:#ddd}}
 figcaption{{display:flex;flex-direction:column;gap:2px;padding-top:6px;font-size:13px;color:var(--ink2)}}
 figcaption b{{font-weight:500;color:var(--ink);font-family:ui-monospace,Menlo,monospace}}
 .cam{{font-family:ui-monospace,Menlo,monospace;font-size:12px}}
@@ -481,7 +554,8 @@ def _dummy_story_refs():
     from mathutils import Vector
     z = Vector()
     return dict(tape=dict(center=z, span=z, deck_l=z, deck_r=z, head_l=z),
-                rack=dict(center=z, unit=z, display=z), plate=dict(center=z, corner=z))
+                rack=dict(center=z, unit=z, display=z), plate=dict(center=z, corner=z),
+                tape2=dict(center=z, patch=z), rack2=dict(center=z, rack=z, reverb=z, remote=z))
 
 
 def main():
@@ -491,16 +565,21 @@ def main():
     ap.add_argument("--exact", action="store_true", help="--only lists exact ids, not prefixes")
     ap.add_argument("--scale", type=int, default=100, help="resolution percentage (tests)")
     ap.add_argument("--samples", type=int, default=48)
-    ap.add_argument("--out", default=DEFAULT_OUT)
+    ap.add_argument("--round", type=int, default=1, choices=(1, 2),
+                    help="which review round's variants (2 also writes to renders/site_clay_r2/)")
+    ap.add_argument("--out", default=None)
     ap.add_argument("--fmt", default="JPEG", choices=("JPEG", "PNG"))
     ap.add_argument("--res-scale", type=float, default=1.0,
                     help="multiply every variant's resolution (final pass: 1.25 = 2400 wide)")
     ap.add_argument("--title", default="Sublustris Versio site renders — clay pass")
     ap.add_argument("--index-only", action="store_true", help="rewrite index.html from variants.json")
     a = ap.parse_args(argv)
+    a.out = a.out or (OUT_R2 if a.round == 2 else DEFAULT_OUT)
     only = [s for s in a.only.split(",") if s]
 
     def want(v):
+        if v.get("rnd", 1) != a.round and not a.exact:
+            return False
         if not only:
             return True
         if a.exact:
@@ -555,11 +634,31 @@ def main():
                 done[v["id"]] = {k: (list(x) if hasattr(x, "to_tuple") else x) for k, x in v.items()}
                 with open(manifest_path, "w") as f:
                     json.dump(sorted(done.values(), key=_order), f, indent=1, default=str)
+    if a.round == 2:
+        _add_r1_picks(a.out, done)
     ordered = sorted(done.values(), key=_order)
     with open(manifest_path, "w") as f:
         json.dump(ordered, f, indent=1, default=str)
-    write_index(a.out, ordered, title=a.title)
+    write_index(a.out, ordered, title=a.title if a.round == 1 else a.title.replace("clay pass", "clay pass, round 2"))
     print(f"[clay] contact sheet: {os.path.join(a.out, 'index.html')}")
+
+
+def _add_r1_picks(out, done):
+    """Copy the round-1 picks' frames into the r2 folder and list them."""
+    import shutil
+    src = os.path.join(DEFAULT_OUT, "variants.json")
+    if not os.path.exists(src):
+        return
+    with open(src) as f:
+        r1 = {v["id"]: v for v in json.load(f)}
+    for vid in R1_PICKS:
+        if vid not in r1:
+            continue
+        v = dict(r1[vid])
+        shutil.copy2(os.path.join(DEFAULT_OUT, v["file"]), os.path.join(out, v["file"]))
+        v["slot"] = "picks"
+        v["note"] = "PICKED (round 1). " + v["note"]
+        done[vid] = v
 
 
 def _order(v):
