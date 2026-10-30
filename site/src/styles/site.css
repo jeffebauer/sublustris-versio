@@ -170,7 +170,7 @@ html.hero-film .hero-still { visibility: hidden; }
 .hero-title h1 { font-size: var(--fs-hero); }
 /* The buttons sit under the tagline, a clear step below it, and a size up from the header's
    (owner, 30 Oct 2026). */
-.hero-title .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; padding-top: clamp(1.25rem, 0.75rem + 1.5vw, 2.5rem); }
+.hero-title .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; padding-top: clamp(2.5rem, 1.5rem + 3vw, 5rem); }
 .hero-title .btn { min-height: 3rem; padding: 0.75rem 1.5rem; font-size: 1.0625rem; }
 /* Wide landscape screens (owner, 30 Oct 2026): the module moves right and the title comes up
    beside it, over the film's empty left side; the film's box fills the screen's height. */
@@ -187,7 +187,7 @@ html.hero-film .hero-still { visibility: hidden; }
 @media (orientation: portrait) and (max-width: 63.99rem) {
   .hero-frame {
     --hero-cut: calc(var(--header-h) + var(--stack-2) + clamp(1.5rem, 1rem + 2vw, 3rem) + var(--fs-hero) * var(--lh-display) + 1.25rem);
-    aspect-ratio: auto; min-height: 22rem;
+    aspect-ratio: auto; min-height: 20rem;   /* 20: the buttons stay in view on a 667 px phone */
     height: calc(100vh - var(--hero-cut));
     height: calc(100svh - var(--hero-cut));
   }
