@@ -7,6 +7,7 @@
 import Base from '../layouts/Base.astro';
 import Button from '../components/Button.astro';
 import HeroMedia from '../components/HeroMedia.astro';
+import Haze from '../components/Haze.astro';
 import AnnotatedPanel from '../components/AnnotatedPanel.astro';
 import FeatureTiles from '../components/FeatureTiles.astro';
 import DemoList from '../components/DemoList.astro';
@@ -72,7 +73,8 @@ const shapeSteps = items(shape.html);
 ---
 <Base title={page.data.title} description={page.data.description} bodyClass="home" darkTop>
   <!-- 1 Hero (dark) -->
-  <section class="hero band-dark" aria-labelledby="title">
+  <section class="hero band-dark has-haze" aria-labelledby="title">
+    <Haze strength={0.96} />
     <div class="wide">
       <HeroMedia />
       <div class="hero-title">
@@ -97,7 +99,8 @@ const shapeSteps = items(shape.html);
   </section>
 
   <!-- 3 The sound (dark): the demos, then the four points -->
-  <section class="section band-dark sound" id="sound" aria-labelledby="sound-h">
+  <section class="section band-dark sound has-haze" id="sound" aria-labelledby="sound-h">
+    <Haze strength={0.72} class="haze-top" />
     <div class="column flow centered">
       <h2 class="h2" id="sound-h">{sound.title}</h2>
     </div>

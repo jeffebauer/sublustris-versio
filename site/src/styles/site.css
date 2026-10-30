@@ -120,6 +120,11 @@ code { font-family: var(--font-mono); font-size: 0.88em; overflow-wrap: anywhere
 .section:not(.band-dark, .band-tile) + .section:not(.band-dark, .band-tile) { border-top: var(--hair) solid var(--line); }
 
 /* ---- Hero (dark) ----------------------------------------------------------- */
+/* The haze behind the dark bands (components/Haze.astro): content sits above it. In the tall
+   sound band it covers about the first screen and fades out before the demo cards end. */
+.has-haze { position: relative; isolation: isolate; }
+.has-haze > :not(.haze) { position: relative; z-index: 1; }
+.haze.haze-top { bottom: auto; height: min(100%, 64rem); mask-image: linear-gradient(to bottom, #000 55%, transparent); }
 .hero { padding-top: calc(var(--header-h) + var(--stack-2)); padding-bottom: clamp(3.5rem, 2rem + 5vw, 7rem); }
 .hero-frame {
   position: relative; overflow: hidden; border-radius: var(--radius-tile); background: #060505;
