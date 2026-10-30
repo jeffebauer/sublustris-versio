@@ -37,3 +37,34 @@ Research behind `studio.py` (round 2 of the story renders, 30 Oct 2026). Sources
 
 - The exact A77 front layout (key order, knob count) is from memory and the descriptions above, not from a measured drawing; the service manual's front-panel figure is the place to check before a final.
 - Rack heights of the 224 mainframe are not confirmed by the sources (a dealer lists 16 × 19 × 8 in for a 224X bundle).
+
+## Round 3: the deck in detail (30 Oct 2026)
+
+The owner asked for the deck to be "better and more accurate" in its details, materials and lighting. `studio.deck77()` is modelled on the A77 Mk III/IV (the Dolby-era machines of 1971–77, contemporary with *Discreet Music*). No photograph was traced or copied; the layout comes from the descriptions below.
+
+**What the sources say**
+- **Size.** The 1972 equipment profile gives 16¼ × 14¾ × 8¾ in (413 × 375 × 222 mm, depth over the controls) and 34 lb ([Audio, Nov. 1972](https://gammaelectronics.xyz/audio_11-1972_revox.html)). Radiomuseum lists the Mk III at 415 × 359 × 180 mm and 15 kg ([Radiomuseum](https://radiomuseum.org/r/studer_a77a_7_3.html)). We use 420 × 378 × 215 mm for the walnut case.
+- **Finish.** In the Dolby-era model the upper (transport) part has "a stainless steel front over the plastic main panel", where the first model had dark grey plastic. The lower panel went the other way: brushed stainless at first, dark grey plastic later ([Audio, Nov. 1972](https://gammaelectronics.xyz/audio_11-1972_revox.html)). So we use a brushed stainless transport plate over a dark grey control panel.
+- **Control panel** ([Audio, Nov. 1972](https://gammaelectronics.xyz/audio_11-1972_revox.html)).
+  - Five transport push-buttons at the left: rewind, fast forward, play, stop, and record (the record key is red).
+  - Below them, two knobs with concentric switches (playback level, balance). Each switch is worked by "a clear plastic disc at the base of the knob".
+  - At the right, two VU meters, "flanked by two red push-push switch buttons", with two more knob/switch pairs below them (record levels and source).
+  - At the far right, a bar knob for power and speed, with a pilot light above it. The meters are lit whenever the power is on.
+  - Between the two groups, three jacks (headphones, two microphones), and two toggles below the controls.
+- **Transport** ([Audio, Nov. 1972](https://gammaelectronics.xyz/audio_11-1972_revox.html), [Stereonomono](https://stereonomono.blogspot.com/2011/10/revox-77-1967.html)).
+  - The heads are erase, record and playback (the playback head shielded).
+  - The heads, capstan and tape guides are mounted on one die-cast block.
+  - A plastic tape-path shield swings down for threading.
+  - The reel turntables carry spring-loaded sleeves on splined spindles.
+  - A four-digit counter sits between the reels, with a reset push-button.
+  - The left tape guide is a roller and the right one is fixed; the supply side has a spring-loaded guide post.
+  - Reels up to 26.5 cm (10½ in) are accepted.
+  - The connectors are along the top of the rear.
+
+**What is still a guess**
+- **Reels.** We use 7-inch reels (spun-aluminium flanges, three windows) so that they sit inside the case. The A77 also takes 10½-inch NAB reels on adapters, which overhang the case.
+- **Exact positions.** These were judged, not measured from a drawing: the spindle spacing (±104 mm), reel height, head-cover shape, the capstan and pinch-roller positions and arm, the tension-lever pivots, and the spacing of the controls.
+- **Colours.** The meter faces are warm cream with a black scale and red zone, lit warm. The key colours (grey, with a red record key) and the knob style (black body, brushed aluminium cap, white index line) are also guesses.
+- **Rear sockets.** The phono sockets are drawn as four RCA sockets. The real rear panel has DIN and phono connectors, and a remote socket.
+- **Patching.** The leads hang in the gap between the cases, so that the cross-patch reads from the front.
+- **Text.** No legends or text appear anywhere. The real panel is lettered, but we leave it blank: no names, logos or model numbers.

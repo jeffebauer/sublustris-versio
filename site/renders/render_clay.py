@@ -45,6 +45,9 @@ DEFAULT_OUT = os.path.join(MAIN_CHECKOUT, "renders", "site_clay")
 OUT_R2 = os.path.join(MAIN_CHECKOUT, "renders", "site_clay_r2")
 # round 2 (owner, 30 Oct 2026): the picks from round 1, shown on the r2 sheet for reference
 R1_PICKS = ["front_b", "patched_a", "og_a"]
+OUT_R3 = os.path.join(MAIN_CHECKOUT, "renders", "site_clay_r3")
+# round 3 (owner, 30 Oct 2026): the round-2 frames the notes build on, shown on the r3 sheet for reference
+R2_REFS = ["story_rack2_a", "story_tape2_a"]
 
 # The site's annotated panel (site/src/components/AnnotatedPanel.astro) draws
 # its callouts on a 2116 x 1190 stage with the panel at this box: the
@@ -147,7 +150,34 @@ SPACE_LABELS = C.Vector((13.2 - 25.25, 0.0, 128.5 - 59.0))
 def story_variants(refs):
     t, r, p = refs.get("tape"), refs.get("rack"), refs.get("plate")
     t2, r2 = refs.get("tape2"), refs.get("rack2")
+    t3, r3 = refs.get("tape3"), refs.get("rack3")
     v = []
+    if r3:
+        v += [
+            dict(id="story_rack3_a", slot="story", mood="rack3", res=W169, rnd=3,
+                 note="(b) rack2_a's room and camera, now with the two tape decks on the desk (the round-3 deck: "
+                      "A77 Mk III/IV layout, unbranded), each with both reels loaded and running its own tape, "
+                      "cross-patched (the phono leads hang in the gap between them); 35 mm from the room's corner.",
+                 target=r3["center"] + C.Vector((100, 0, 0)), az=-18, el=14, f=35, dist=4300),
+        ]
+    if t3:
+        v += [
+            dict(id="story_tape3_a", slot="story", mood="tape3", res=W169, rnd=3,
+                 note="(a) tape2_a pulled back: the same three-quarter view and 40 mm lens, framed so neither deck "
+                      "touches an edge. The round-3 deck: brushed stainless transport plate, spun-aluminium 7-inch "
+                      "reels, head block with cover and smoked shield, capstan and pinch roller, tension levers, "
+                      "lit VU meters; cross-patched, leads hanging in the gap.",
+                 target=t3["center"] + C.Vector((-90, 0, 10)), az=-22, el=16, f=40, fit=0.70, by="width"),
+            dict(id="story_tape3_b", slot="story", mood="tape3", res=W169, rnd=3,
+                 note="(a) Front-on: square to both decks' faces at seated eye height, 50 mm; the cross-patch "
+                      "leads hang in the gap between the cases.",
+                 target=t3["decks_center"] + C.Vector((0, 0, 0)), az=0, el=4, f=50, fit=0.76, by="width"),
+            dict(id="story_tape3_c", slot="story", mood="tape3", res=W169, rnd=3,
+                 note="(a) Optional detail: close on the left deck's head block, capstan and pinch roller, the "
+                      "meters soft beyond; 85 mm f/5.6.",
+                 target=t3["heads_a"] + C.Vector((40, 0, -20)), az=-24, el=12, f=85, dist=900, fstop=5.6,
+                 focus=t3["heads_a"]),
+        ]
     if t2:
         v += [
             dict(id="story_tape2_a", slot="story", mood="tape2", res=W169, rnd=2,
@@ -282,6 +312,10 @@ def build_story(mood):
     C.reset_scene()
     if mood in ("tape2", "rack2"):  # round 2: the room brings its own lamp-lit lighting
         return {"tape2": studio.tape_cross, "rack2": studio.studio_rack}[mood]()
+    if mood == "tape3":  # round 3: the new deck
+        return studio.tape_cross3()
+    if mood == "rack3":
+        return studio.studio_rack(decks=True)
     ref = {"tape": story.tape_loop, "rack": story.rack_reverb, "plate": story.plate}[mood]()
     C.world(0.02, rgb=(0.45, 0.45, 0.5))
     L = C.studio(ref["center"], ref["size"] * 1.2, key=0.55, fill=0.06, rim=0.9)
@@ -467,6 +501,7 @@ def measure_panel(cam, out_dir, vid):
 # ------------------------------------------------------------------ contact sheet
 
 SLOTS = {
+    "ref2": "Round-2 frames the owner's round-3 notes build on (for reference)",
     "picks": "Owner's picks from round 1 (for reference: already chosen, final render waits for the blue panel art)",
     "hero": "1 · Hero still (16:9, final 2400 × 1350): the monolith, dim, faintly glowing",
     "anim": "1b · Hero film, LOW-RES PREVIEW (960 px, 12 samples): the reveal plays once, then the hold loop",
@@ -555,7 +590,8 @@ def _dummy_story_refs():
     z = Vector()
     return dict(tape=dict(center=z, span=z, deck_l=z, deck_r=z, head_l=z),
                 rack=dict(center=z, unit=z, display=z), plate=dict(center=z, corner=z),
-                tape2=dict(center=z, patch=z), rack2=dict(center=z, rack=z, reverb=z, remote=z))
+                tape2=dict(center=z, patch=z), rack2=dict(center=z, rack=z, reverb=z, remote=z),
+                tape3=dict(center=z, decks_center=z, heads_a=z), rack3=dict(center=z))
 
 
 def main():
@@ -565,8 +601,8 @@ def main():
     ap.add_argument("--exact", action="store_true", help="--only lists exact ids, not prefixes")
     ap.add_argument("--scale", type=int, default=100, help="resolution percentage (tests)")
     ap.add_argument("--samples", type=int, default=48)
-    ap.add_argument("--round", type=int, default=1, choices=(1, 2),
-                    help="which review round's variants (2 also writes to renders/site_clay_r2/)")
+    ap.add_argument("--round", type=int, default=1, choices=(1, 2, 3),
+                    help="which review round's variants (2 / 3 also write to renders/site_clay_r2/ or _r3/)")
     ap.add_argument("--out", default=None)
     ap.add_argument("--fmt", default="JPEG", choices=("JPEG", "PNG"))
     ap.add_argument("--res-scale", type=float, default=1.0,
@@ -574,7 +610,7 @@ def main():
     ap.add_argument("--title", default="Sublustris Versio site renders — clay pass")
     ap.add_argument("--index-only", action="store_true", help="rewrite index.html from variants.json")
     a = ap.parse_args(argv)
-    a.out = a.out or (OUT_R2 if a.round == 2 else DEFAULT_OUT)
+    a.out = a.out or {2: OUT_R2, 3: OUT_R3}.get(a.round, DEFAULT_OUT)
     only = [s for s in a.only.split(",") if s]
 
     def want(v):
@@ -636,10 +672,13 @@ def main():
                     json.dump(sorted(done.values(), key=_order), f, indent=1, default=str)
     if a.round == 2:
         _add_r1_picks(a.out, done)
+    if a.round == 3:
+        _add_r2_refs(a.out, done)
     ordered = sorted(done.values(), key=_order)
     with open(manifest_path, "w") as f:
         json.dump(ordered, f, indent=1, default=str)
-    write_index(a.out, ordered, title=a.title if a.round == 1 else a.title.replace("clay pass", "clay pass, round 2"))
+    write_index(a.out, ordered, title=a.title if a.round == 1
+                else a.title.replace("clay pass", f"clay pass, round {a.round}"))
     print(f"[clay] contact sheet: {os.path.join(a.out, 'index.html')}")
 
 
@@ -658,6 +697,24 @@ def _add_r1_picks(out, done):
         shutil.copy2(os.path.join(DEFAULT_OUT, v["file"]), os.path.join(out, v["file"]))
         v["slot"] = "picks"
         v["note"] = "PICKED (round 1). " + v["note"]
+        done[vid] = v
+
+
+def _add_r2_refs(out, done):
+    """Copy the round-2 frames the round-3 notes refer to into the r3 folder."""
+    import shutil
+    src = os.path.join(OUT_R2, "variants.json")
+    if not os.path.exists(src):
+        return
+    with open(src) as f:
+        r2 = {v["id"]: v for v in json.load(f)}
+    for vid in R2_REFS:
+        if vid not in r2:
+            continue
+        v = dict(r2[vid])
+        shutil.copy2(os.path.join(OUT_R2, v["file"]), os.path.join(out, v["file"]))
+        v["slot"] = "ref2"
+        v["note"] = "ROUND 2 (reference for the round-3 notes). " + v["note"]
         done[vid] = v
 
 

@@ -212,7 +212,7 @@ def cable(name, pts, r, mat):
 
 # ------------------------------------------------------------------ the room
 
-def room(m, rack=False):
+def room(m, rack=False, lamp_x=-760.0):
     """Floorboards, two walls, a rug, the desk, a desk lamp (the main light),
     a record shelf, a plant. Returns the lamp's bulb position."""
     C.box("floor", (6000, 5000, 20), (0, 0, -10), m["floor"])
@@ -231,7 +231,7 @@ def room(m, rack=False):
             B("drawer", x - 205, x + 205, d["y0"] + 24, d["y0"] + 32, z0, z0 + 210, m["oak"], bevel=2)
             B("pull", x - 40, x + 40, d["y0"] + 12, d["y0"] + 24, z0 + 170, z0 + 182, m["steel"], bevel=2)
     # desk lamp, back left: weighted base, arm, a cone shade with a warm bulb
-    lx, ly = -760.0, 230.0
+    lx, ly = lamp_x, 230.0
     C.cylinder("lamp_base", 75, 22, (lx, ly, DESK_Z + 11), m["knob"], segs=48, bevel=4)
     arm = [(lx, ly, DESK_Z + 20), (lx + 20, ly - 10, DESK_Z + 300), (lx + 140, ly - 60, DESK_Z + 430)]
     cable("lamp_arm", arm, 5, m["steel"])
@@ -615,12 +615,14 @@ def remote(o, m, yaw=0.0):
     return o + Vector((-80, D * 0.75, h0 + (h1 - h0) * 0.75))
 
 
-def studio_rack():
+def studio_rack(decks=False):
     """The room with a wooden rack beside the desk: patch bay, reverb, delay,
     pitch shifter, graphic EQ, blanks; the reverb's remote and a small mixer
-    on the desk, its cable running to the rack."""
-    m = mats()
-    bulb = room(m, rack=True)
+    on the desk, its cable running to the rack.
+    decks (round 3): the two A77-layout decks stand at the back of the desk,
+    cross-patched, reels loaded (the lamp moves 70 mm left to clear them)."""
+    m = mats3() if decks else mats()
+    bulb = room(m, rack=True, lamp_x=-830.0 if decks else -760.0)
     # rack cabinet: walnut sides on a plinth, right of the desk
     rx, ry = 1340.0, -220.0
     n = 16
@@ -665,9 +667,13 @@ def studio_rack():
     cable("remote_cable", [rem + Vector((60, 120, -40)), Vector((700, 150, DESK_Z + 4)),
                            Vector((930, 250, DESK_Z + 2)), Vector((1060, 300, DESK_Z - 300)),
                            Vector((rx - 150, ry + 380, 700)), Vector((rx - 150, ry + 520, zc_rev))], 2.4, m["cable"])
+    tb = (560, 745, -340, -155) if decks else (600, 785, 60, 245)
     for j in range(4):
-        B("desk_tapebox", 600, 785, 60 + j * 4, 245 + j * 4, DESK_Z + j * 24, DESK_Z + j * 24 + 23,
+        B("desk_tapebox", tb[0], tb[1], tb[2] + j * 4, tb[3] + j * 4, DESK_Z + j * 24, DESK_Z + j * 24 + 23,
           m["paper"] if j % 2 else C.clay("box_dark", rgb=(0.18, 0.12, 0.08), rough=0.6), bevel=1.5)
+    deck_refs = None
+    if decks:
+        deck_refs = deck_pair(m, (-310.0, 190.0), 120.0)
     room_lights(bulb, 1500)
     # a warm practical on the rack side so the units read (a second lamp, off-frame right)
     ld = bpy.data.lights.new("rack_lamp", "POINT")
@@ -677,6 +683,465 @@ def studio_rack():
     lo = bpy.data.objects.new("rack_lamp", ld)
     C.link(lo)
     lo.location = (rx + 500, ry - 500, 1300)
-    return dict(center=Vector((300, 0, 900)), size=2600, radius=1500,
-                rack=Vector((rx, ry, base + inner / 2)), reverb=Vector((rx, ry - 3, zc_rev)),
-                remote=rem, desk=Vector((0, 0, DESK_Z)))
+    ref = dict(center=Vector((300, 0, 900)), size=2600, radius=1500,
+               rack=Vector((rx, ry, base + inner / 2)), reverb=Vector((rx, ry - 3, zc_rev)),
+               remote=rem, desk=Vector((0, 0, DESK_Z)))
+    if deck_refs:
+        ref.update(deck_refs)
+        deck_lights(deck_refs, soft=0.6)
+    return ref
+
+
+# ================================================================== round 3
+# Owner's notes (30 Oct 2026): the decks on the desk in the rack room, the
+# tape view pulled back plus a front-on view, and the deck itself more
+# accurate in detail, materials and light. The deck below follows the A77
+# Mk III/IV as described in STORY_RESEARCH.md ("Round 3"): 415 x 375 mm
+# front, a brushed stainless upper (transport) plate over a dark grey plastic
+# control panel, 7-inch reels on spring-sleeved spindles, a head block with
+# erase / record / shielded playback heads under a dark cover and a smoked
+# swing-down tape shield, the capstan right of the heads with the rubber pinch
+# roller below the tape, tension levers with guide rollers left and right,
+# a 4-digit counter between the reels; on the control panel five transport
+# keys (record red) top left with two knob/switch pairs below, three jacks,
+# two lit VU meters flanked by red record buttons with the record-level
+# knob/switch pairs below them, and a bar knob for power and speed at the far
+# right with its pilot above. Phono sockets along the top of the rear.
+# Unbranded: no name, logo or legend text anywhere.
+
+A77_W, A77_H, A77_D = 420.0, 378.0, 215.0   # walnut case (front 415 x 375 mm per the 1972 profile)
+A77_T = 14.0                                # case wall
+A77_F = 3.0                                 # faceplates sit 3 mm behind the case's front edge (deck-local y)
+A77_SPLIT = 122.0                           # transport plate above, control panel below
+A77_REEL_DX, A77_REEL_Z, A77_REEL_R = 104.0, 270.0, 89.0   # 7-inch (178 mm) reels
+A77_TAPE_Z = 150.0                          # the tape's lower edge line across the heads
+A77_YC = A77_F - 20.0                       # tape centre plane
+
+
+def _principled(m):
+    return m.node_tree.nodes["Principled BSDF"]
+
+
+def brushed(name, value=0.62, rough=0.26, aniso=0.75, radial=False, rgb=None, streak=1.0):
+    """Brushed metal: anisotropic highlights along X (plates) or round the
+    part's own axis (radial: reel flanges, knob caps), with fine streaks in
+    colour and roughness from stretched noise."""
+    m = _get(name)
+    if m:
+        return m
+    m = C.clay(name, value, rough, rgb=rgb, metallic=1.0, aniso=aniso)
+    nt = m.node_tree
+    p = _principled(m)
+    if radial:
+        tg = nt.nodes.new("ShaderNodeTangent")
+        tg.direction_type = "RADIAL"
+        tg.axis = "Z"
+        nt.links.new(tg.outputs[0], p.inputs["Tangent"])
+    else:
+        cx = nt.nodes.new("ShaderNodeCombineXYZ")
+        cx.inputs[0].default_value = 1.0
+        nt.links.new(cx.outputs[0], p.inputs["Tangent"])
+    if streak:
+        tc = nt.nodes.new("ShaderNodeTexCoord")
+        mp = nt.nodes.new("ShaderNodeMapping")
+        mp.inputs["Scale"].default_value = (0.003, 9.0, 9.0) if not radial else (6.0, 6.0, 0.02)
+        nz = nt.nodes.new("ShaderNodeTexNoise")
+        nz.inputs["Scale"].default_value = 1.0
+        nz.inputs["Detail"].default_value = 3.0
+        nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+        nt.links.new(mp.outputs["Vector"], nz.inputs["Vector"])
+        rr = nt.nodes.new("ShaderNodeMapRange")
+        rr.inputs["To Min"].default_value = rough * (1 - 0.3 * streak)
+        rr.inputs["To Max"].default_value = rough * (1 + 0.35 * streak)
+        nt.links.new(nz.outputs["Fac"], rr.inputs["Value"])
+        nt.links.new(rr.outputs[0], p.inputs["Roughness"])
+        cv = nt.nodes.new("ShaderNodeMapRange")
+        base = rgb or (value, value, value)
+        cv.inputs["To Min"].default_value = 1 - 0.06 * streak
+        cv.inputs["To Max"].default_value = 1 + 0.03 * streak
+        nt.links.new(nz.outputs["Fac"], cv.inputs["Value"])
+        mul = nt.nodes.new("ShaderNodeMix")
+        mul.data_type = "RGBA"
+        mul.blend_type = "MULTIPLY"
+        mul.inputs["Factor"].default_value = 1.0
+        mul.inputs["A"].default_value = (*base, 1)
+        comb = nt.nodes.new("ShaderNodeCombineColor")
+        for k in range(3):
+            nt.links.new(cv.outputs[0], comb.inputs[k])
+        nt.links.new(comb.outputs[0], mul.inputs["B"])
+        nt.links.new(mul.outputs["Result"], p.inputs["Base Color"])
+    return m
+
+
+def clear_plastic(name, rgb=(0.92, 0.93, 0.93), rough=0.06):
+    m = _get(name)
+    if m:
+        return m
+    m = C.clay(name, rgb=rgb, rough=rough)
+    p = _principled(m)
+    p.inputs["Transmission Weight"].default_value = 1.0
+    p.inputs["IOR"].default_value = 1.49
+    return m
+
+
+def tape_pack_material():
+    """The wound pack's edge: satin brown-black, faint rings where the
+    winding tension changed."""
+    m = _get("tape_pack3")
+    if m:
+        return m
+    m = C.clay("tape_pack3", rgb=(0.05, 0.031, 0.02), rough=0.38)
+    nt = m.node_tree
+    p = _principled(m)
+    p.inputs["Sheen Weight"].default_value = 0.3
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    mp = nt.nodes.new("ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (0.08, 0.08, 0.08)
+    wv = nt.nodes.new("ShaderNodeTexWave")
+    wv.wave_type = "RINGS"
+    wv.inputs["Distortion"].default_value = 1.5
+    nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+    nt.links.new(mp.outputs["Vector"], wv.inputs["Vector"])
+    rr = nt.nodes.new("ShaderNodeMapRange")
+    rr.inputs["To Min"].default_value = 0.30
+    rr.inputs["To Max"].default_value = 0.46
+    nt.links.new(wv.outputs["Fac"], rr.inputs["Value"])
+    nt.links.new(rr.outputs[0], p.inputs["Roughness"])
+    return m
+
+
+def mats3():
+    m = mats()
+    m.update(
+        plate=brushed("a77_plate", 0.62, 0.32, 0.8),                   # brushed stainless transport plate
+        reelalu=brushed("a77_reel", 0.62, 0.36, 0.6, radial=True),      # reel flanges, spun aluminium
+        capalu=brushed("a77_cap", 0.72, 0.18, 0.8, radial=True),       # knob caps
+        ctrl3=worn("a77_ctrl", (0.042, 0.042, 0.045), 0.5, edge=(0.2, 0.2, 0.2), metallic_edge=False),
+        cover=C.clay("a77_cover", rgb=(0.03, 0.03, 0.032), rough=0.35, coat=0.2),
+        casting=C.clay("a77_casting", rgb=(0.16, 0.16, 0.16), rough=0.55, metallic=0.6),
+        headmetal=C.steel("a77_head", 0.75, 0.1),
+        key_grey=worn("a77_key", (0.13, 0.13, 0.135), 0.4, edge=(0.3, 0.3, 0.3), metallic_edge=False),
+        knob3=worn("a77_knob", (0.018, 0.018, 0.02), 0.32, edge=(0.12, 0.12, 0.12), metallic_edge=False),
+        clear=clear_plastic("a77_clear"),
+        smoked=clear_plastic("a77_smoked", rgb=(0.62, 0.55, 0.47), rough=0.1),
+        glass=clear_plastic("a77_glass", rgb=(0.97, 0.97, 0.97), rough=0.02),
+        pack=tape_pack_material(),
+        vu=story.glow("a77_vu_face", "#F4DEB0", 1.6),
+        vu_red=C.clay("a77_vu_red", rgb=(0.5, 0.04, 0.02), rough=0.5),
+        ink=C.clay("a77_ink", 0.015, 0.6),
+        pilot=story.glow("a77_pilot", "#FF5A2A", 6.0),
+        rubber3=C.clay("a77_rubber", 0.018, 0.72),
+    )
+    return m
+
+
+def _rod(name, a, b, size, y0, y1, mat, o, bevel=1.0):
+    """A flat bar in the XZ plane from a to b ((x, z), deck-local), size wide."""
+    a, b = Vector((a[0], 0, a[1])), Vector((b[0], 0, b[1]))
+    d = b - a
+    th = math.atan2(d.x, d.z)
+    mid = (a + b) / 2
+    return C.box(name, (size, y1 - y0, d.length + size), (o.x + mid.x, o.y + (y0 + y1) / 2, o.z + mid.z), mat,
+                 bevel=bevel, rot=(0, th, 0))
+
+
+def reel77(name, cx, cz, yc, pack_r, m, spin=0.0):
+    """A 7-inch reel: two spun-aluminium flanges with three rounded windows
+    and a rolled rim, the hub, the tape pack between them, the spindle's
+    knurled sleeve in front. Axis along Y; yc = the tape's centre plane."""
+    R, hub = A77_REEL_R, 30.0
+    gap = story.TAPE_W + 1.8
+    for s in (-1, 1):
+        yf = yc + s * (gap / 2 + 0.65)
+        fl = C.cylinder(f"{name}_flange", R, 1.3, (cx, yf, cz), m["reelalu"], axis="X", segs=160)
+        cuts = []
+        for k in range(3):
+            a = 2 * math.pi * k / 3 + math.pi / 2 + spin
+            w = story._window(hub + 9, R - 10, a - 0.66, a + 0.66, 8, n=24)
+            w.location = (cx, yf, cz)
+            cuts.append(w)
+            hole = C.cylinder("hole_cut", 3.2, 8, (cx + (hub + 3) * math.cos(a + math.pi / 3), yf,
+                                                   cz + (hub + 3) * math.sin(a + math.pi / 3)), axis="X", segs=16)
+            cuts.append(hole)
+        C.boolean_cut(fl, cuts)
+        C.add_bevel(fl, 0.45, 2)
+        C.torus(f"{name}_rim", R - 0.5, 0.95, (cx, yf, cz), m["reelalu"], axis="X", major=160, minor=10)
+    C.cylinder(f"{name}_hub", hub, gap + 0.4, (cx, yc, cz), m["reelalu"], axis="X", segs=96, bevel=0.4)
+    C.cylinder(f"{name}_bore", 9.5, gap + 4, (cx, yc - 0.5, cz), m["void"], axis="X", segs=48)
+    C.cylinder(f"{name}_spindle", 4.0, 30, (cx, yc, cz), m["steel"], axis="X", segs=24)
+    sl = C.cylinder(f"{name}_sleeve", 9.0, 11, (cx, yc - gap / 2 - 7.5, cz), m["knob3"], axis="X", segs=48,
+                    bevel=1.2)
+    for k in range(3):  # the sleeve's three latch tabs
+        a = 2 * math.pi * k / 3 + spin
+        C.box(f"{name}_tab", (5, 3, 3), (cx + 10 * math.cos(a), yc - gap / 2 - 3.5, cz + 10 * math.sin(a)),
+              m["knob3"], bevel=0.8, rot=(0, -a, 0))
+    if pack_r > hub:
+        C.cylinder(f"{name}_pack", pack_r, story.TAPE_W, (cx, yc, cz), m["pack"], axis="X", segs=160)
+    return sl
+
+
+def knob77(name, x, z, o, m, r=12.5, disc=True, ang=0.0):
+    """The A77's knob: a black skirted body with a brushed aluminium cap and
+    a white index line; a clear plastic disc behind it works the concentric
+    switch."""
+    y = o.y + A77_F
+    if disc:
+        C.cylinder(f"{name}_disc", r * 1.5, 2.4, (o.x + x, y - 1.3, o.z + z), m["clear"], axis="X", segs=64,
+                   bevel=0.6)
+        a = math.radians(ang + 40)
+        C.box(f"{name}_disc_tick", (1.0, 0.4, 4.0), (o.x + x + r * 1.32 * math.sin(a), y - 2.6,
+                                                     o.z + z + r * 1.32 * math.cos(a)), m["cream"], rot=(0, a, 0))
+    C.cylinder(f"{name}_body", r, 13, (o.x + x, y - 2.5 - 6.5, o.z + z), m["knob3"], axis="X", segs=64, r2=r * 0.9,
+               bevel=1.0)
+    C.cylinder(f"{name}_cap", r * 0.74, 1.2, (o.x + x, y - 15.6, o.z + z), m["capalu"], axis="X", segs=64, bevel=0.3)
+    a = math.radians(ang)
+    C.box(f"{name}_line", (1.1, 0.5, r * 0.55), (o.x + x + r * 0.62 * math.sin(a), y - 15.5,
+                                               o.z + z + r * 0.62 * math.cos(a)), m["cream"], rot=(0, a, 0))
+
+
+def vu_meter(name, cx, o, m, needle=-14.0):
+    """A VU meter: black bezel, a warm-lit cream face with an arc of ticks,
+    the red zone, a black needle and its pivot housing, glass in front."""
+    y = o.y + A77_F
+    z0, z1, w = 66.0, 112.0, 27.0
+    bw = 3.5  # the bezel is a frame: four bars round the window
+    for x0_, x1_, za, zb in ((cx - w, cx - w + bw, z0, z1), (cx + w - bw, cx + w, z0, z1),
+                             (cx - w, cx + w, z0, z0 + bw), (cx - w, cx + w, z1 - bw, z1)):
+        B(f"{name}_bezel", x0_, x1_, A77_F - 5, A77_F + 1, za, zb, m["cap_black"], o, bevel=1.2)
+    B(f"{name}_face", cx - w + 3.5, cx + w - 3.5, A77_F - 1.6, A77_F - 1.2, z0 + 3.5, z1 - 3.5, m["vu"], o)
+    B(f"{name}_glass", cx - w + 2.5, cx + w - 2.5, A77_F - 5.6, A77_F - 5.1, z0 + 2.5, z1 - 2.5, m["glass"], o)
+    pz = z0 - 4.0
+    for k in range(13):
+        a = math.radians(-42 + 7 * k)
+        red = k >= 9
+        ln = 5.0 if k % 3 == 0 else 3.0
+        r = 38.0
+        C.box(f"{name}_tick", (0.7, 0.2, ln), (o.x + cx + (r + ln / 2) * math.sin(a), y - 1.8,
+                                               o.z + pz + (r + ln / 2) * math.cos(a)),
+              m["vu_red"] if red else m["ink"], rot=(0, a, 0))
+    for k in range(30):  # the scale's arc line, black then red
+        a = math.radians(-42 + 84 * (k + 0.5) / 30)
+        red = a > math.radians(20)
+        C.box(f"{name}_arc", (3.0, 0.2, 0.6 if not red else 2.2), (o.x + cx + 38 * math.sin(a), y - 1.8,
+                                                                  o.z + pz + 38 * math.cos(a)),
+              m["vu_red"] if red else m["ink"], rot=(0, a, 0))
+    a = math.radians(needle)
+    C.box(f"{name}_needle", (0.7, 0.3, 44), (o.x + cx + 22 * math.sin(a), y - 2.6, o.z + pz + 22 * math.cos(a)),
+          m["ink"], rot=(0, a, 0))
+    B(f"{name}_pivot", cx - 11, cx + 11, A77_F - 4.5, A77_F - 1.2, z0 + 3.5, z0 + 9, m["cap_black"], o, bevel=1.5)
+
+
+def deck77(o, m, name="deck", supply=72.0, takeup=44.0, side=1, spin=0.0, needles=(-14.0, -20.0)):
+    """The round-3 deck (A77 Mk III/IV layout, unbranded). o = the case's
+    bottom-front centre on the desk; front faces -Y. side: +1 puts the rear
+    phono sockets on the right half (towards a partner deck on the right).
+    Returns the rear sockets (world) and reference points."""
+    o = Vector(o)
+    W, H, D, t, F = A77_W, A77_H, A77_D, A77_T, A77_F
+    w2, iw = W / 2, W / 2 - A77_T
+    # --- walnut case: cheeks, top and bottom (the front edges rounded), the back
+    B(f"{name}_cheekL", -w2, -iw, 0, D, 0, H, m["walnut"], o, bevel=3.5)
+    B(f"{name}_cheekR", iw, w2, 0, D, 0, H, m["walnut"], o, bevel=3.5)
+    B(f"{name}_top", -iw - 0.5, iw + 0.5, 0, D, H - t, H, m["walnut"], o, bevel=3.0)
+    B(f"{name}_bottom", -iw - 0.5, iw + 0.5, 0, D, 0, t, m["walnut"], o, bevel=3.0)
+    B(f"{name}_back", -iw, iw, D - 8, D - 3, t, H - t, m["ctrl3"], o, bevel=1)
+    for sx in (-1, 1):  # felt feet
+        for fy in (30, D - 30):
+            C.cylinder(f"{name}_foot", 11, 4, (o.x + sx * (w2 - 32), o.y + fy, o.z - 1.0), m["rubber3"], segs=24,
+                       bevel=1)
+    # --- faceplates: brushed transport plate, dark control panel, a dark seam
+    B(f"{name}_plate", -iw, iw, F, F + 6, A77_SPLIT, H - t, m["plate"], o, bevel=1.2)
+    B(f"{name}_ctrl", -iw, iw, F, F + 6, t, A77_SPLIT - 1.5, m["ctrl3"], o, bevel=1.2)
+    B(f"{name}_seam", -iw, iw, F + 2, F + 6, A77_SPLIT - 1.5, A77_SPLIT, m["void"], o)
+    of = o + Vector((0, F, 0))
+    for sx in (-1, 1):
+        for sz in (A77_SPLIT + 9, H - t - 9):
+            screw(f"{name}_screw", sx * (iw - 9), sz, of, m["steel"], r=2.4)
+    # --- reels on their turntables
+    sleeves = []
+    for s in (-1, 1):
+        x = s * A77_REEL_DX
+        C.cylinder(f"{name}_table", 50, 5, (o.x + x, o.y + F - 2.5, o.z + A77_REEL_Z), m["cap_black"], axis="X",
+                   segs=96, bevel=1.2)
+        C.torus(f"{name}_table_ring", 47, 0.8, (o.x + x, o.y + F - 5.0, o.z + A77_REEL_Z), m["steel"], axis="X")
+        pack = supply if s < 0 else takeup
+        sleeves.append(reel77(f"{name}_reel{'LR'[s > 0]}", o.x + x, o.z + A77_REEL_Z, o.y + A77_YC, pack, m,
+                              spin=spin + (0.7 if s > 0 else 0.0)))
+    # --- counter between the reels, its reset key below
+    B(f"{name}_counter", -21, 21, F - 3, F, 212, 229, m["void"], o, bevel=1.5)
+    B(f"{name}_counter_rim", -23, 23, F - 1.2, F, 210, 231, m["cap_black"], o, bevel=1.0)
+    digits("0127", -14.5, 220.5, 9, o, F - 3.3, C.clay("counter_white", 0.8, 0.5), pitch=9.2)
+    B(f"{name}_reset", -4, 4, F - 5, F, 203, 208, m["key_grey"], o, bevel=1.2)
+    # --- head block: casting, three heads (the playback head in its shield can), the dark cover
+    TZ, YC = A77_TAPE_Z, A77_YC
+    B(f"{name}_casting", -62, 62, F - 9, F, TZ - 8, TZ + 50, m["casting"], o, bevel=3)
+    for k, (hx, hw) in enumerate(((-28, 5.5), (0, 7.0), (28, 7.0))):
+        B(f"{name}_head{k}", hx - hw, hx + hw, YC - 9, YC + 9, TZ + 0.35, TZ + 15, m["headmetal"], o, bevel=3.0)
+        B(f"{name}_headmount{k}", hx - hw - 1, hx + hw + 1, YC - 7, F - 9, TZ + 12, TZ + 20, m["casting"], o,
+          bevel=1)
+    B(f"{name}_can", 28 - 10, 28 + 10, YC - 12, YC + 10, TZ + 6, TZ + 18, m["steel"], o, bevel=1.5)
+    B(f"{name}_cover", -50, 50, F - 42, F - 8, TZ + 16, TZ + 54, m["cover"], o, bevel=6)
+    B(f"{name}_cover_top", -46, 46, F - 38, F - 12, TZ + 53, TZ + 55.5, m["capalu"], o, bevel=1.2)
+    for gx in (-60, 60):  # fixed guide posts each side of the heads
+        C.cylinder(f"{name}_guide", 4.0, 22, (o.x + gx, o.y + YC, o.z + TZ + 4.2), m["headmetal"], axis="X", segs=32,
+                   bevel=0.6)
+        C.cylinder(f"{name}_guide_cap", 6.0, 1.6, (o.x + gx, o.y + YC - 9.5, o.z + TZ + 4.2), m["headmetal"],
+                   axis="X", segs=32, bevel=0.4)
+    # the smoked swing-down tape shield in front of the head area
+    B(f"{name}_shield", -70, 64, F - 46, F - 44, TZ - 12, TZ + 12, m["smoked"], o, bevel=1.0)
+    for hx in (-66, 60):
+        C.cylinder(f"{name}_shield_pivot", 2.4, 30, (o.x + hx, o.y + F - 30, o.z + TZ - 9), m["steel"], axis="X",
+                   segs=16)
+    # capstan above the tape, the rubber pinch roller below it on its arm
+    cx_ = 80.0
+    C.cylinder(f"{name}_capstan", 3.0, 36, (o.x + cx_, o.y + F - 18, o.z + TZ + 3.2), m["headmetal"], axis="X",
+               segs=32)
+    C.cylinder(f"{name}_capstan_collar", 9.0, 4, (o.x + cx_, o.y + F - 2, o.z + TZ + 3.2), m["steel"], axis="X",
+               segs=48, bevel=1)
+    C.cylinder(f"{name}_pinch", 11.5, 13, (o.x + cx_, o.y + YC, o.z + TZ - 11.7), m["rubber3"], axis="X", segs=64,
+               bevel=1.6)
+    C.cylinder(f"{name}_pinch_hub", 4.5, 3, (o.x + cx_, o.y + YC - 7.5, o.z + TZ - 11.7), m["headmetal"], axis="X",
+               segs=32, bevel=0.6)
+    _rod(f"{name}_pinch_arm", (cx_, TZ - 11.7), (cx_ + 38, TZ - 18), 11, YC + 7, F - 1, m["casting"], o, bevel=2)
+    C.cylinder(f"{name}_pinch_pivot", 6.5, 6, (o.x + cx_ + 38, o.y + F - 3, o.z + TZ - 18), m["steel"], axis="X",
+               segs=32, bevel=1)
+    # tension levers with guide rollers, left and right
+    gr = 9.0
+    rollers = []
+    for s in (-1, 1):
+        rc = Vector((o.x + s * 152, o.y + YC, o.z + TZ + gr))
+        piv = (s * 178, TZ + 68)
+        _rod(f"{name}_lever", (s * 152, TZ + gr), piv, 9, YC + 6, F - 1, m["plate"], o, bevel=1.5)
+        C.cylinder(f"{name}_lever_pivot", 8, 6, (o.x + piv[0], o.y + F - 3, o.z + piv[1]), m["steel"], axis="X",
+                   segs=32, bevel=1)
+        C.cylinder(f"{name}_roller", gr, story.TAPE_W + 1.4, tuple(rc), m["headmetal"], axis="X", segs=48, bevel=0.5)
+        for fy in (-1, 1):
+            C.cylinder(f"{name}_roller_fl", gr + 2.2, 1.0, (rc.x, rc.y + fy * (story.TAPE_W / 2 + 1.3), rc.z),
+                       m["headmetal"], axis="X", segs=48, bevel=0.3)
+        rollers.append(rc)
+    # --- control panel
+    keys = [m["key_grey"]] * 4 + [m["red_btn"]]
+    for k, km in enumerate(keys):
+        x = -184 + k * 23
+        B(f"{name}_key{k}", x, x + 20, F - 9, F, 90, 108, km, o, bevel=2.2)
+    for k, x in enumerate((-162, -116)):   # playback level and balance, with their switch discs
+        knob77(f"{name}_play{k}", x, 46, o, m, ang=-35 + 60 * k)
+    for k, x in enumerate((-60, -34, -8)):  # headphones, mic L, mic R
+        C.cylinder(f"{name}_jack", 6.5, 3, (o.x + x, o.y + F - 1.5, o.z + 46), m["steel"], axis="X", segs=32,
+                   bevel=0.8)
+        C.cylinder(f"{name}_jack_hole", 3.4, 2, (o.x + x, o.y + F - 2.6, o.z + 46), m["void"], axis="X", segs=24)
+    for k, cx in enumerate((58, 114)):
+        vu_meter(f"{name}_vu{k}", cx, o, m, needle=needles[k])
+        knob77(f"{name}_rec{k}", cx, 40, o, m, r=11.5, ang=-50 + 25 * k)
+    for x in (18, 154):                     # the red record (channel select) buttons flanking the meters
+        B(f"{name}_recbtn", x - 6.5, x + 6.5, F - 7, F, 84, 97, m["red_btn"], o, bevel=1.8)
+    # power / speed bar knob far right, its pilot above
+    C.cylinder(f"{name}_bar_base", 11, 5, (o.x + 180, o.y + F - 2.5, o.z + 40), m["knob3"], axis="X", segs=48,
+               bevel=1)
+    bar = C.box(f"{name}_bar", (7, 12, 30), (o.x + 180, o.y + F - 9, o.z + 40), m["knob3"], bevel=2.2,
+                rot=(0, math.radians(30), 0))
+    C.cylinder(f"{name}_pilot", 2.6, 2.5, (o.x + 180, o.y + F - 1.5, o.z + 82), m["pilot"], axis="X", segs=24,
+               bevel=0.6)
+    C.cylinder(f"{name}_pilot_rim", 4.2, 1.6, (o.x + 180, o.y + F - 0.6, o.z + 82), m["steel"], axis="X", segs=24,
+               bevel=0.4)
+    for x in (-60, -8):   # two small toggles under the jacks
+        C.cylinder(f"{name}_tog_bush", 3.6, 4, (o.x + x, o.y + F - 2, o.z + 24), m["steel"], axis="X", segs=24)
+        lev = C.cylinder(f"{name}_tog", 1.2, 11, (o.x + x, o.y + F - 8, o.z + 26), m["headmetal"], axis="X",
+                         segs=16, r2=0.9)
+        lev.rotation_euler = (math.pi / 2 - 0.35, 0, 0)
+    # --- rear: phono sockets along the top, a power cord low
+    sockets = {}
+    for k, key in enumerate(("out_l", "out_r", "in_l", "in_r")):
+        x = side * (70 + k * 26)
+        p = Vector((o.x + x, o.y + D - 1.5, o.z + H - 52))
+        C.cylinder(f"{name}_sock", 4.6, 6, tuple(p), m["gold"], axis="X", segs=24)
+        sockets[key] = p
+    # --- the tape: supply -> left roller -> guide -> heads -> capstan -> guide -> right roller -> take-up
+    sup_c = (o.x - A77_REEL_DX, o.z + A77_REEL_Z)
+    tak_c = (o.x + A77_REEL_DX, o.z + A77_REEL_Z)
+    rl, rr = rollers
+    g = gr + 0.15
+    pts = [story._tangent(sup_c, supply, (rl.x - g, rl.z), cw=False)]
+    pts += story._wrap((rl.x, rl.z), g, math.pi, 1.5 * math.pi, 10)
+    pts += [(o.x - 60, o.z + TZ), (o.x + 60, o.z + TZ)]
+    pts += story._wrap((rr.x, rr.z), g, 1.5 * math.pi, 2 * math.pi, 10)
+    pts += [story._tangent(tak_c, takeup, (rr.x + g, rr.z), cw=True)]
+    story.tape_strip(f"{name}_tape", pts, o.y + YC)
+    return dict(sockets=sockets, heads=Vector((o.x, o.y + YC, o.z + TZ + 10)),
+                meters=Vector((o.x + 86, o.y, o.z + 88)), center=Vector((o.x, o.y, o.z + H / 2)))
+
+
+def deck_pair(m, xs, y0):
+    """Two decks on the desk at x = xs (case centres), fronts at y0, each
+    running its own tape; A's outputs into B's inputs, B's outputs back into
+    A's. The phono leads leave the rear tops and hang down into the gap
+    between the cases, so the cross-patch reads from the front."""
+    xa, xb = xs
+    a = deck77((xa, y0, DESK_Z), m, "deck_A", supply=74.0, takeup=46.0, side=1, spin=0.2,
+               needles=(-12.0, -18.0))
+    b = deck77((xb, y0, DESK_Z), m, "deck_B", supply=60.0, takeup=58.0, side=-1, spin=1.1,
+               needles=(-16.0, -10.0))
+    sa, sb = a["sockets"], b["sockets"]
+    gx = (xa + A77_W / 2 + xb - A77_W / 2) / 2   # middle of the gap
+    gap = (xb - A77_W / 2) - (xa + A77_W / 2)
+    leads = ((sa["out_l"], sb["in_l"], m["cable"], "AB_L"), (sa["out_r"], sb["in_r"], m["cable_grey"], "AB_R"),
+             (sb["out_l"], sa["in_l"], m["cable"], "BA_L"), (sb["out_r"], sa["in_r"], m["cable_grey"], "BA_R"))
+    for k, (src, dst, mat, tag) in enumerate(leads):
+        p0 = rca(f"plug_{tag}_s", src, 1, m, mat)
+        p1 = rca(f"plug_{tag}_d", dst, 1, m, mat)
+        sag_z = DESK_Z + 40 + 26 * k               # each lead hangs a little differently
+        sag_y = y0 + A77_D - 30 - 34 * k          # inside the gap, front to back
+        dx = (k - 1.5) * gap * 0.12
+        pts = [p0, p0 + Vector((0, 40, 10)), Vector((gx + dx - 0.35 * (gx - p0.x), p0.y + 30, p0.z - 40)),
+               Vector((gx + dx, sag_y, sag_z)),
+               Vector((gx + dx - 0.35 * (gx - p1.x), p1.y + 30, p1.z - 40)), p1 + Vector((0, 40, 10)), p1]
+        cable(f"xpatch_{tag}", pts, 2.6, mat)
+    # power cords off the back of the desk
+    for d, x in ((a, xa), (b, xb)):
+        c0 = Vector((x - 120 * (1 if x < gx else -1), y0 + A77_D + 2, DESK_Z + 40))
+        cable("power_cord", [c0, c0 + Vector((0, 60, -20)), Vector((c0.x, DESK["y1"] - 10, DESK_Z + 4)),
+                             Vector((c0.x + 20, DESK["y1"] + 30, DESK_Z - 60)),
+                             Vector((c0.x + 40, DESK["y1"] + 50, 300))], 2.8, m["cable"])
+    mid = Vector((gx, y0, DESK_Z + A77_H / 2))
+    return dict(decks_center=mid, deck_a=a["center"], deck_b=b["center"], heads_a=a["heads"],
+                meters_a=a["meters"], decks_width=(xb - xa) + A77_W, gap_x=gx)
+
+
+def deck_lights(ref, soft=1.0):
+    """Light for the decks: a soft warm key from the front left, a large dim
+    card above the camera for the brushed plates to reflect, a cool kicker
+    from behind right along the case edges."""
+    c = ref["decks_center"]
+    s = ref["decks_width"]
+    d = 1.7 * s
+    key = c + Vector((-0.62, -0.72, 0.55)).normalized() * d
+    C.area_light("deck_key", key, c, size=0.7 * s, power=C.watts(C.KEY_W * 0.32 * soft) * (d / 1000) ** 2,
+                 rgb=(1.0, 0.86, 0.68))
+    card = c + Vector((0.1, -0.85, 0.75)).normalized() * d * 1.1
+    C.area_light("deck_card", card, c, size=1.3 * s, power=C.watts(C.KEY_W * 0.035 * soft) * (d * 1.1 / 1000) ** 2,
+                 rgb=(1.0, 0.93, 0.84))
+    kick = c + Vector((0.7, 0.75, 0.35)).normalized() * d * 0.8
+    C.area_light("deck_kick", kick, c, size=0.3 * s, power=C.watts(C.KEY_W * 0.18 * soft) * (d * 0.8 / 1000) ** 2,
+                 rgb=(0.82, 0.88, 1.0))
+
+
+def tape_cross3():
+    """Round 3: the two decks on the desk in the lamp-lit room (the round-2
+    tape scene), the new deck model, cross-patched, reels loaded."""
+    m = mats3()
+    bulb = room(m, lamp_x=-880.0)
+    gap = 170.0
+    xa, xb = -(A77_W + gap) / 2, (A77_W + gap) / 2
+    y0 = -150.0
+    ref = deck_pair(m, (xa, xb), y0)
+    for j in range(3):
+        B("desk_tapebox", 560, 745, -320 + j * 6, -135 + j * 6, DESK_Z + j * 24, DESK_Z + j * 24 + 23,
+          m["paper"] if j % 2 else C.clay("box_dark", rgb=(0.18, 0.12, 0.08), rough=0.6), bevel=1.5)
+    B("notebook", -760, -560, -350, -210, DESK_Z, DESK_Z + 9, m["paper"], bevel=1.5)
+    C.cylinder("pencil", 3.5, 170, (-610, -265, DESK_Z + 12.5), C.clay("pencil", rgb=(0.55, 0.38, 0.08), rough=0.5),
+               axis="Y", segs=6).rotation_euler = (0, math.pi / 2, math.radians(18))
+    room_lights(bulb, A77_W)
+    deck_lights(ref)
+    ref.update(center=ref["decks_center"] + Vector((0, 60, 0)), size=ref["decks_width"],
+               radius=ref["decks_width"] / 2 + 30)
+    return ref

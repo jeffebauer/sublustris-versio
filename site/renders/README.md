@@ -35,13 +35,15 @@ The front-on variants solve their camera so the panel lands on the annotated pan
 | `module.py` | the Versio: panel with the decal, knobs, jacks, toggles, button, LEDs (freeze blue), screws, PCBs |
 | `props.py` | patch cables (black L, freeze-blue R) |
 | `story.py` | round 1 story gear (generic, unbranded): two decks sharing one tape, a 1U rack reverb, a plate in its frame |
-| `studio.py` | round 2 story gear, researched (`STORY_RESEARCH.md`): two A77-layout decks cross-patched, a lamp-lit home studio with a rack of period units and the reverb's remote |
+| `studio.py` | round 2/3 story gear, researched (`STORY_RESEARCH.md`): two A77-layout decks cross-patched (round 3: `deck77()`, the detailed Mk III/IV deck), a lamp-lit home studio with a rack of period units and the reverb's remote |
 | `render_hero.py` | the animated hero: the reveal (frames 1-240) and the hold loop (241-360) |
 | `make_hero_video.sh` | encodes the hero frames to MP4 + WebM and posters (`preview` = MP4 only) |
 | `render_clay.py` | the variants, moods (lighting), cameras, front-on solver + measurement, contact sheet |
 | `render_final.py` | the picked variants at final size and quality |
 
 Round 2 (the owner's notes on round 1): `--round 2` renders only the round-2 variants into `renders/site_clay_r2/` and lists the round-1 picks there for reference.
+
+Round 3 (the owner's notes on round 2): `--round 3` renders only the round-3 variants (the decks on the rack-room desk, the tape view pulled back, a front-on view, a head-block detail; the new A77 Mk III/IV deck, `studio.deck77()`, sources in `STORY_RESEARCH.md`) into `renders/site_clay_r3/`, with the two round-2 frames the notes refer to.
 
 ## 2b. Hero film
 
