@@ -162,6 +162,7 @@ html.hero-film .hero-still { visibility: hidden; }
   padding-top: clamp(1.5rem, 1rem + 2vw, 3rem);
   --tagline-fs: clamp(1.375rem, 1rem + 1.5vw, 2.25rem);
 }
+.hero-platform { color: var(--on-dark-2); font-size: var(--fs-body); }   /* under the lede: what it runs on */
 .hero-tagline {
   max-width: 26em; color: var(--ink-2);
   font-weight: var(--wt-light); font-size: var(--tagline-fs); line-height: 1.2; letter-spacing: -0.005em;
@@ -180,15 +181,14 @@ html.hero-film .hero-still { visibility: hidden; }
   .hero-still, .hero-video { translate: 24% 0; }
   .hero-title { align-self: center; padding-top: 0; max-width: 58%; }
 }
-/* Portrait phones and tablets (owner, 8 Oct: the module was small in a 16:9 frame): a taller
-   frame, cut to leave the title in view (svh: Safari's bars showing), and the film and still
-   crop in around the module (the sides are only transparent). */
+/* Portrait phones and tablets (owner, 8 Oct: the module was small in a 16:9 frame; 30 Oct: bigger
+   still, so its details read, even past the fold): a tall frame that the film and still fill,
+   cropping in around the module (the sides are only transparent). The film's top sixth is
+   empty above the panel, so the frame rides up under the header's padding. */
 @media (orientation: portrait) and (max-width: 63.99rem) {
   .hero-frame {
-    --hero-cut: calc(var(--header-h) + var(--stack-2) + clamp(1.5rem, 1rem + 2vw, 3rem) + var(--fs-hero) * var(--lh-display) + 1.25rem);
-    aspect-ratio: auto; min-height: 20rem;   /* 20: the buttons stay in view on a 667 px phone */
-    height: calc(100vh - var(--hero-cut));
-    height: calc(100svh - var(--hero-cut));
+    --hero-fh: min(190vw, 120svh);
+    aspect-ratio: auto; max-height: none; height: var(--hero-fh); margin-top: calc(var(--hero-fh) * -0.12);
   }
   .hero-still, .hero-video { object-fit: cover; }
 }

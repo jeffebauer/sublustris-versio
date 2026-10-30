@@ -11,7 +11,8 @@
 //   - everything is brightest at the centre, behind the module, and falls off toward the ends.
 uniform sampler2D u_hmap;   // r: height (high byte), b: height (low byte), g: coverage
 uniform vec2 u_gRes;        // this canvas, device px
-uniform vec2 u_off;         // this canvas's bottom left in the band, CSS px from its bottom left
+uniform vec2 u_c;           // this canvas's centre in the band, CSS px from its bottom left
+uniform float u_rot;        // 1: the wordmark is turned a quarter left (phones), so its +x runs up the screen
 uniform float u_px2css;     // CSS px per device px of this canvas
 uniform float u_cScale;     // the band canvas's px per CSS px
 uniform float u_bevel;      // the tubes' bevel radius, device px of this canvas
@@ -36,15 +37,19 @@ void main() {
   float x = uv.x;
   float focus = mix(0.3, 1.0, exp(-pow((x - 0.5) / 0.26, 2.0)));
 
-  vec2 css = u_off + gl_FragCoord.xy * u_px2css;
   vec2 o = n.xy * u_refr;
+  vec2 lc = (gl_FragCoord.xy - 0.5 * u_gRes) * u_px2css + o;   // CSS px from the centre, in the wordmark's own frame
+  vec2 css = u_c + (u_rot > 0.5 ? vec2(-lc.y, lc.x) : lc);
   vec3 col;
-  col.r = bandColor((css + o * 1.18) * u_cScale).r;
-  col.g = bandColor((css + o) * u_cScale).g;
-  col.b = bandColor((css + o * 0.84) * u_cScale).b;
+  vec2 ro = u_rot > 0.5 ? vec2(-o.y, o.x) : o;   // the refraction, in the band's frame
+  col.r = bandColor((css + ro * 0.18) * u_cScale).r;
+  col.g = bandColor(css * u_cScale).g;
+  col.b = bandColor((css - ro * 0.16) * u_cScale).b;
 
   // the glass body: a touch brighter and cooler than what it looks through
   col = col * 1.45 + vec3(0.04, 0.05, 0.09) * (0.35 + 0.65 * focus);
+  // a light frosted tint (owner, 30 Oct: a bit more contrast against the lines, not too much)
+  col = mix(col, vec3(0.60, 0.66, 0.82), 0.11 * (0.55 + 0.45 * focus));
   // fresnel rim
   float fr = pow(1.0 - n.z, 2.5);
   col += fr * vec3(0.50, 0.56, 0.72) * (0.35 + 0.65 * focus);

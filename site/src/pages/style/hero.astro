@@ -19,7 +19,7 @@ const logoUrl = `data:image/svg+xml;base64,${Buffer.from(logo).toString('base64'
 const mark = `url("${logoUrl}")`;
 // The logo's paths, for E's lit glass (the filter needs the shapes inline)
 const paths = logo.replace(/^[\s\S]*?<g[^>]*>/, '').replace(/<\/g>[\s\S]*$/, '');
-const now = 'A huge, warm, lush reverb for the Noise Engineering Versio. Also as an AU/VST3 plugin for macOS.';
+const now = 'A half-lit space that never quite ends. Hold a chord forever, play over it, and let it wear like old tape.';   // lede 2, the owner's pick (30 Oct)
 // The ledes leave the platform to a quieter line under them.
 const ledes = [
   // 2: your shortlist (round 2)
@@ -98,7 +98,7 @@ const top = (id: string) => id === 'd' || id === 'e';
             : <h1 class="display">Sublustris Versio</h1>}
           <div class="hs-lede">
             <p class="hero-tagline" data-lede>{now}</p>
-            <p class="hs-platform" data-platform hidden>{platform}</p>
+            <p class="hs-platform" data-platform>{platform}</p>
           </div>
           <div class="actions">
             <Button href="#" variant="ghost">Listen</Button>
@@ -119,8 +119,8 @@ const top = (id: string) => id === 'd' || id === 'e';
 
   <nav class="hs-switch" aria-label="Lede">
     <span class="mono">Lede</span>
-    <button type="button" data-pick="now" aria-pressed="true">Now</button>
-    {ledes.map((_, i) => <button type="button" data-pick={i} aria-pressed="false">{ledeNames[i]}</button>)}
+    <button type="button" data-pick="now" aria-pressed="true">2</button>
+    {ledes.map((_, i) => i > 0 && <button type="button" data-pick={i} aria-pressed="false">{ledeNames[i]}</button>)}
   </nav>
 </Base>
 
@@ -131,7 +131,7 @@ const top = (id: string) => id === 'd' || id === 'e';
     const k = b.dataset.pick;
     const text = k === 'now' ? now : ledes[+k];
     document.querySelectorAll('[data-lede]').forEach((p) => { p.textContent = text; });
-    document.querySelectorAll('[data-platform]').forEach((p) => { p.hidden = k === 'now'; });
+    document.querySelectorAll('[data-platform]').forEach((p) => { p.hidden = false; });
     buttons.forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
   }));
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelectorAll('.hs-glass-light animate').forEach((a) => a.remove());
@@ -215,13 +215,13 @@ const top = (id: string) => id === 'd' || id === 'e';
       if (canvas.width === w && canvas.height === h && ready) return;
       canvas.width = w; canvas.height = h;
       gl.viewport(0, 0, w, h);
-      const bevel = h * 0.11;   // about half a stroke: round tubes
+      const bevel = h * 0.04;   // a narrow bevel on a flat face (owner, 30 Oct: less rounded)
       gl.bindTexture(gl.TEXTURE_2D, tex);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, heightMap(img, w, h, bevel));
       gl.uniform2f(U('u_gRes'), w, h);
       gl.uniform1f(U('u_px2css'), el.clientWidth / w);
       gl.uniform1f(U('u_bevel'), bevel);
-      gl.uniform1f(U('u_refr'), el.clientHeight * 0.16);
+      gl.uniform1f(U('u_refr'), el.clientHeight * 0.09);
       ready = true;
     };
     const draw = () => {
@@ -230,7 +230,8 @@ const top = (id: string) => id === 'd' || id === 'e';
       const cs = lineCanvas.width / lineCanvas.clientWidth;
       gl.uniform2f(U('u_res'), lineCanvas.width, lineCanvas.height);
       gl.uniform1f(U('u_cScale'), cs);
-      gl.uniform2f(U('u_off'), m.left - b.left, b.bottom - m.bottom);
+      gl.uniform2f(U('u_c'), m.left + m.width / 2 - b.left, b.bottom - (m.top + m.height / 2));
+      gl.uniform1f(U('u_rot'), getComputedStyle(el).rotate === 'none' ? 0 : 1);
       const t = parseFloat(lines.dataset.t || '0');
       gl.uniform1f(U('u_t'), t);
       gl.uniform1f(U('u_breath'), 0.5 + 0.5 * Math.sin((t / 4) * Math.PI * 2));
@@ -267,6 +268,8 @@ const top = (id: string) => id === 'd' || id === 'e';
     position: absolute; z-index: 3 !important; right: var(--margin); bottom: 1rem; text-align: right;
     max-width: 34rem; color: var(--on-dark-2); font-family: var(--font-mono);
   }
+  /* .has-contours puts its children in flow (position: relative); these two float over the band */
+  .hs.hs > .hs-tag, .hs.hs > .hs-kicker-top { position: absolute; }
   .hs-tag strong { color: var(--on-dark); margin-right: 0.5em; }
   .hs .hero-frame .hero-video { opacity: 1; }
 
@@ -346,12 +349,37 @@ const top = (id: string) => id === 'd' || id === 'e';
   }
   .hs-switch button[aria-pressed="true"] { background: #f4f5fa; color: #0c0d14; }
 
+  @media (orientation: portrait) and (max-width: 63.99rem) {
+    .hs-b .hero-frame, .hs-d .hero-frame, .hs-e .hero-frame { max-height: none; }
+    /* The module fills the width, so the name stands beside it, turned to read upward, as long
+       as the panel is tall (owner, 30 Oct 2026), and the pair is centred. In the film's frame
+       (1350 tall) the panel runs 225-1246 down and 414 wide, centred. */
+    .hs.hs-b, .hs.hs-d, .hs.hs-e { padding-top: calc(var(--header-h) + 3.25rem); }
+    .hs-kicker-top { top: calc(var(--header-h) + 1rem); }
+    .hs-b > .wide, .hs-d > .wide, .hs-e > .wide {
+      --hero-fh: min(190vw, 120svh);
+      --pan-h: calc(var(--hero-fh) * 1021 / 1350);
+      --pan-w: calc(var(--hero-fh) * 414 / 1350);
+      --mark-t: calc(var(--pan-h) * 40 / 444);
+      --gap: 0.75rem;
+      --shift: calc((var(--mark-t) + var(--gap)) / 2);
+      --top: calc(var(--hero-fh) * -0.12);
+    }
+    .hs-b .hero-video, .hs-d .hero-video, .hs-e .hero-video { translate: var(--shift) 0; }
+    .hs-mark {
+      grid-area: 1 / 1; z-index: 2; align-self: start; justify-self: start;
+      width: var(--pan-h); margin-left: calc(50% - var(--pan-h) / 2);
+      translate: calc(var(--shift) - var(--pan-w) / 2 - var(--gap) - var(--mark-t) / 2)
+                 calc(var(--top) + var(--hero-fh) * 735.5 / 1350 - var(--mark-t) / 2);
+      rotate: -90deg;
+    }
+  }
   @media (max-width: 47.99rem) {
     .hs-b .hero-title, .hs-d .hero-title, .hs-e .hero-title { grid-template-columns: minmax(0, 1fr); }
     .hs-b .hero-title .actions, .hs-d .hero-title .actions, .hs-e .hero-title .actions { grid-column: 1; grid-row: auto; justify-self: start; }
     .hs-tag { left: var(--margin); text-align: left; }
     .hs-note { display: none; }
-    .hs-switch { left: var(--margin); right: auto; }
+    .hs-switch { left: var(--margin); right: var(--margin); top: auto; bottom: max(0.75rem, env(safe-area-inset-bottom, 0px)); justify-content: space-between; }
     .hs-switch button { min-width: 2.2rem; height: 2.2rem; padding: 0 0.45rem; }
   }
   @media (prefers-reduced-motion: reduce) { .hs-c .hero-title h1, .hs-d .hs-mark-lit { animation: none; } }
