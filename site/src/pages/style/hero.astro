@@ -1,10 +1,12 @@
 ---
-// Hero study (owner, 30 Oct 2026: "a bit bland"): four versions of the home hero, each a full
+// Hero study (owner, 30 Oct 2026: "a bit bland"): versions of the home hero, each a full
 // screen, for the owner to compare and pick. A is the hero as it is; B sets a huge SUBLUSTRIS
 // behind the module (the film is transparent); C lights the title from the module's side, as
-// the name says, breathing with the LEDs; D combines B and C. C and D add the name's meaning
-// and a line of real specs. The film here is the hold loop only (no reveal). Not in the
-// sitemap, noindex.
+// the name says, breathing with the LEDs; D combines B and C (the owner's pick, round 1).
+// Round 2: E is D with the name in glass (it blurs and brightens the haze behind it, its edges
+// catch specular light from the module's side, brightest at the centre); the name's meaning
+// sits at the top of D and E; six candidate ledes replace the spec tags, switchable in place.
+// The film here is the hold loop only (no reveal). Not in the sitemap, noindex.
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import Base from '../../layouts/Base.astro';
@@ -12,24 +14,71 @@ import Button from '../../components/Button.astro';
 import Haze from '../../components/Haze.astro';
 import { MINISITE } from '../../lib/paths';
 
-const logo = await readFile(join(MINISITE, 'assets', 'logo', 'sublustris-logo.svg'));
-const mark = `url("data:image/svg+xml;base64,${logo.toString('base64')}")`;
-const tagline = 'A huge, warm, lush reverb for the Noise Engineering Versio. Also as an AU/VST3 plugin for macOS.';
-const specs = ['Plate · Hall · Massive', 'Tails to 2 min, then endless', 'Freeze + paint', 'Versio firmware · AU/VST3'];
+const logo = await readFile(join(MINISITE, 'assets', 'logo', 'sublustris-logo.svg'), 'utf8');
+const mark = `url("data:image/svg+xml;base64,${Buffer.from(logo).toString('base64')}")`;
+// The logo's paths, for E's lit glass (the filter needs the shapes inline)
+const paths = logo.replace(/^[\s\S]*?<g[^>]*>/, '').replace(/<\/g>[\s\S]*$/, '');
+const now = 'A huge, warm, lush reverb for the Noise Engineering Versio. Also as an AU/VST3 plugin for macOS.';
+// Round 2 ledes, from the most poetic (1) to an even balance of evocative and informative (6).
+// 1-5 leave the platform to a quieter line under them.
+const ledes = [
+  'Light that lingers after the room goes dark. Tails that drift for minutes, then never fade, and a chord you can freeze and keep.',
+  'A half-lit space that never quite ends. Hold a chord forever, play over it, and let it wear like old tape.',
+  'Somewhere to stay inside a sound: slow swells, vast halls, an octave of shimmer, and tails that hold for as long as you like.',
+  'Huge, warm and slow to fade. A plate, a hall and a massive wash, an endless hold, and a freeze you can play over.',
+  'A huge, warm reverb with tails from a room to minutes, then endless. Freeze a chord and play over it; add shimmer, swells or tape-style wear.',
+  'A huge, warm, lush reverb for the Noise Engineering Versio: three spaces, tails that run to endless, a freeze you play over, shimmer and tape-style wear. Also as an AU/VST3 plugin for macOS.',
+];
+const platform = 'For the Noise Engineering Versio, and as an AU/VST3 plugin for macOS.';
 const versions = [
   { id: 'a', name: 'A · Now', note: 'The hero as it is.' },
   { id: 'b', name: 'B · The name behind', note: 'SUBLUSTRIS across the hero in the panel’s lettering; the module stands in front of it.' },
-  { id: 'c', name: 'C · Half-lit', note: 'The title lit from the module’s side, fading into shadow, breathing with the freeze LEDs. The name’s meaning above, real specs below.' },
-  { id: 'd', name: 'D · Both', note: 'B’s name behind, lit like C: bright where the module glows, dim at the edges.' },
+  { id: 'c', name: 'C · Half-lit', note: 'The title lit from the module’s side, fading into shadow, breathing with the freeze LEDs.' },
+  { id: 'd', name: 'D · Both', note: 'Your pick: B’s name behind, lit like C. The name’s meaning now at the top.' },
+  { id: 'e', name: 'E · Glass', note: 'D with the name in glass: the haze shows through it, softened; its edges catch the light from the module, brightest at the centre.' },
 ];
+const behind = (id: string) => id === 'b' || id === 'd' || id === 'e';
+const top = (id: string) => id === 'd' || id === 'e';
 ---
-<Base title="Hero study: Sublustris Versio" description="Four versions of the home hero to compare." noindex bodyClass="home" darkTop>
+<Base title="Hero study: Sublustris Versio" description="Versions of the home hero to compare, with six candidate ledes." noindex bodyClass="home" darkTop>
   {versions.map((v) => (
     <section class={`hero band-dark has-haze hs hs-${v.id}`} style={`--mark: ${mark}`} aria-label={v.name}>
       <Haze strength={0.96} />
-      <p class="hs-tag micro"><strong>{v.name}</strong> {v.note}</p>
+      <p class="hs-tag micro"><strong>{v.name}</strong> <span class="hs-note">{v.note}</span></p>
+      {top(v.id) && <p class="hs-kicker hs-kicker-top mono"><em>sublustris</em>, Lat. · dimly lit, faintly glowing</p>}
       <div class="wide">
         {(v.id === 'b' || v.id === 'd') && <div class="hs-mark" aria-hidden="true"><span class="hs-mark-base"></span><span class="hs-mark-lit"></span></div>}
+        {v.id === 'e' && (
+          <div class="hs-mark hs-glass" aria-hidden="true">
+            <span class="hs-glass-body"></span>
+            <svg class="hs-glass-light" viewBox="0 0 444 40" preserveAspectRatio="xMidYMid meet">
+              <defs>
+                <filter id="hs-glass" x="-4%" y="-40%" width="108%" height="180%" color-interpolation-filters="sRGB">
+                  <!-- the letters' bevel: a soft height map from their shape -->
+                  <feGaussianBlur in="SourceAlpha" stdDeviation="1.3" result="bump" />
+                  <!-- a point light above the module (the centre): the hot glints -->
+                  <feSpecularLighting in="bump" surfaceScale="5" specularConstant="1.1" specularExponent="26" lighting-color="#e4ecff" result="glint">
+                    <fePointLight x="222" y="-24" z="70" />
+                    <animate attributeName="specularConstant" values="0.85;1.3;0.85" dur="4s" repeatCount="indefinite" />
+                  </feSpecularLighting>
+                  <!-- a broad, low sheen from the upper left -->
+                  <feSpecularLighting in="bump" surfaceScale="4" specularConstant="0.45" specularExponent="10" lighting-color="#ffffff" result="sheen">
+                    <feDistantLight azimuth="235" elevation="38" />
+                  </feSpecularLighting>
+                  <feMerge result="light"><feMergeNode in="glint" /><feMergeNode in="sheen" /></feMerge>
+                  <feComposite in="light" in2="SourceAlpha" operator="in" result="lit" />
+                  <!-- a hairline rim on every edge -->
+                  <feMorphology in="SourceAlpha" operator="erode" radius="0.45" result="inner" />
+                  <feComposite in="SourceAlpha" in2="inner" operator="out" result="edge" />
+                  <feFlood flood-color="#ffffff" flood-opacity="0.45" />
+                  <feComposite in2="edge" operator="in" result="rim" />
+                  <feMerge><feMergeNode in="lit" /><feMergeNode in="rim" /></feMerge>
+                </filter>
+              </defs>
+              <g fill="#fff" filter="url(#hs-glass)" set:html={paths} />
+            </svg>
+          </div>
+        )}
         <div class="hero-frame is-playing">
           <video class="hero-video" autoplay muted loop playsinline aria-hidden="true" data-hs-video>
             <source src="/renders/hero-hold-loop.webm" type="video/webm" />
@@ -37,21 +86,49 @@ const versions = [
           </video>
         </div>
         <div class="hero-title">
-          {(v.id === 'c' || v.id === 'd') && <p class="hs-kicker mono"><em>sublustris</em>, Lat. · dimly lit, faintly glowing</p>}
-          {v.id === 'b' || v.id === 'd'
+          {behind(v.id)
             ? <h1 class="visually-hidden">Sublustris Versio</h1>
             : <h1 class="display">Sublustris Versio</h1>}
-          <p class="hero-tagline">{tagline}</p>
+          <div class="hs-lede">
+            <p class="hero-tagline" data-lede>{now}</p>
+            <p class="hs-platform" data-platform hidden>{platform}</p>
+          </div>
           <div class="actions">
             <Button href="#" variant="ghost">Listen</Button>
             <Button href="#" variant="primary" arrow>Download</Button>
           </div>
-          {(v.id === 'c' || v.id === 'd') && <ul class="hs-specs mono">{specs.map((s) => <li>{s}</li>)}</ul>}
         </div>
       </div>
     </section>
   ))}
+
+  <section class="section hs-ledes" aria-labelledby="hs-ledes-h">
+    <div class="column flow">
+      <h2 id="hs-ledes-h" class="h2">Six ledes</h2>
+      <p class="quiet">From the most poetic (1) to an even balance of evocative and informative (6). 1–5 move “for the Noise Engineering Versio, and as an AU/VST3 plugin” to a quieter line under them. The buttons at the bottom of the screen swap them into every version above.</p>
+      <ol class="hs-lede-list">{ledes.map((l) => <li>{l}</li>)}</ol>
+    </div>
+  </section>
+
+  <nav class="hs-switch" aria-label="Lede">
+    <span class="mono">Lede</span>
+    <button type="button" data-pick="now" aria-pressed="true">Now</button>
+    {ledes.map((_, i) => <button type="button" data-pick={i} aria-pressed="false">{i + 1}</button>)}
+  </nav>
 </Base>
+
+<script define:vars={{ ledes, now }}>
+  // Swap the lede in every version; 1-5 show the platform line under it.
+  const buttons = document.querySelectorAll('[data-pick]');
+  buttons.forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.pick;
+    const text = k === 'now' ? now : ledes[+k];
+    document.querySelectorAll('[data-lede]').forEach((p) => { p.textContent = text; });
+    document.querySelectorAll('[data-platform]').forEach((p) => { p.hidden = k === 'now' || +k === ledes.length - 1; });
+    buttons.forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+  }));
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelectorAll('.hs-glass-light animate').forEach((a) => a.remove());
+</script>
 
 <script>
   // Safari plays WebM without its alpha: give it the HEVC film (as HeroMedia does).
@@ -68,8 +145,8 @@ const versions = [
 <style is:global>
   .hs { min-height: 100svh; border-bottom: 1px solid rgb(255 255 255 / 0.08); }
   .hs-tag {
-    position: absolute; z-index: 3 !important; left: var(--margin); top: calc(var(--header-h) + 0.5rem);
-    max-width: 40rem; color: var(--on-dark-2); font-family: var(--font-mono);
+    position: absolute; z-index: 3 !important; right: var(--margin); bottom: 1rem; text-align: right;
+    max-width: 34rem; color: var(--on-dark-2); font-family: var(--font-mono);
   }
   .hs-tag strong { color: var(--on-dark); margin-right: 0.5em; }
   .hs .hero-frame .hero-video { opacity: 1; }
@@ -77,14 +154,11 @@ const versions = [
   /* The LEDs' breath: one per 4 s loop, as the film's OUT LEDs (render_hero.led_levels). */
   @keyframes hs-breathe { 0%, 100% { opacity: 0.72; } 50% { opacity: 1; } }
 
-  /* C and D: the name's meaning above, real specs below, in the panel's mono */
-  .hs-kicker { font-size: var(--fs-micro); color: var(--on-dark-2); letter-spacing: 0.02em; margin-bottom: 0.75rem; }
+  /* The name's meaning, at the top of the hero (D, E), in the panel's mono */
+  .hs-kicker { font-size: var(--fs-micro); color: var(--on-dark-2); letter-spacing: 0.02em; }
   .hs-kicker em { color: var(--on-dark); }
-  .hs-specs {
-    display: flex; flex-wrap: wrap; gap: 0.4rem 1.25rem; list-style: none; padding: 0; margin-top: 1.5rem;
-    font-size: var(--fs-micro); color: var(--on-dark-2); text-transform: uppercase; letter-spacing: 0.04em;
-  }
-  .hs-specs { column-gap: 2rem; }
+  .hs-kicker-top { position: absolute; left: var(--margin); top: calc(var(--header-h) + var(--stack-2)); }
+  .hs-platform { margin-top: 0.75rem; font-size: var(--fs-small, 1rem); color: var(--on-dark-2); }
 
   /* C: the title lit from the right (the module's side): dim at the far left, bright and a
      touch of freeze blue near the module; the lit layer breathes. */
@@ -99,10 +173,10 @@ const versions = [
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
 
-  /* B and D: the name behind the module, centred, in the panel's lettering (the logo) */
-  .hs-b > .wide, .hs-d > .wide { display: grid; }
-  .hs-b .hero-frame, .hs-d .hero-frame { grid-area: 1 / 1; z-index: 1; max-height: max(18rem, calc(100svh - var(--header-h) - 17rem)); }
-  .hs-b .hero-still, .hs-b .hero-video, .hs-d .hero-still, .hs-d .hero-video { translate: none; }
+  /* B, D, E: the name behind the module, centred, in the panel's lettering (the logo) */
+  .hs-b > .wide, .hs-d > .wide, .hs-e > .wide { display: grid; }
+  .hs-b .hero-frame, .hs-d .hero-frame, .hs-e .hero-frame { grid-area: 1 / 1; z-index: 1; max-height: max(18rem, calc(100svh - var(--header-h) - 17rem)); }
+  .hs-b .hero-video, .hs-d .hero-video, .hs-e .hero-video { translate: none; }
   .hs-mark {
     grid-area: 1 / 1; align-self: center; z-index: 0; position: relative;
     width: 100%; aspect-ratio: 444 / 40; translate: 0 -12%;
@@ -116,17 +190,47 @@ const versions = [
     background: radial-gradient(ellipse 38% 220% at 50% 50%, #ffffff 0%, #d6e2ff 30%, rgb(160 185 255 / 0.55) 60%, transparent 100%);
     animation: hs-breathe 4s ease-in-out infinite;
   }
-  .hs-b .hero-title, .hs-d .hero-title {
+  /* E: glass. The body blurs and lifts the haze behind it, tinted brightest at the centre; the
+     light layer (an SVG filter) adds the specular glints, the sheen and a hairline rim, and
+     fades towards the ends so the focus stays behind the module. */
+  .hs-glass-body {
+    -webkit-backdrop-filter: blur(14px) brightness(1.7) saturate(1.5); backdrop-filter: blur(14px) brightness(1.7) saturate(1.5);
+    background: radial-gradient(ellipse 45% 260% at 50% 50%, rgb(205 220 255 / 0.30), rgb(205 220 255 / 0.08) 55%, rgb(255 255 255 / 0.02) 100%);
+  }
+  .hs-glass-light {
+    position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible;
+    -webkit-mask: radial-gradient(ellipse 52% 400% at 50% 50%, #000 30%, rgb(0 0 0 / 0.22) 100%);
+    mask: radial-gradient(ellipse 52% 400% at 50% 50%, #000 30%, rgb(0 0 0 / 0.22) 100%);
+  }
+  .hs-b .hero-title, .hs-d .hero-title, .hs-e .hero-title {
     grid-area: 2 / 1; max-width: none; align-self: start; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 1rem 2rem;
     padding-top: clamp(1rem, 0.5rem + 1.5vw, 2rem);
   }
-  .hs-b .hero-title .actions, .hs-d .hero-title .actions { padding-top: 0; grid-column: 2; grid-row: 1 / span 2; align-self: end; justify-self: end; }
-  .hs-d .hs-kicker { grid-column: 1; margin-bottom: 0; }
-  .hs-d .hero-tagline { grid-column: 1; }
-  .hs-d .hs-specs { grid-column: 1 / -1; margin-top: 0.5rem; }
+  .hs-b .hero-title .actions, .hs-d .hero-title .actions, .hs-e .hero-title .actions { padding-top: 0; grid-column: 2; grid-row: 1 / span 2; align-self: end; justify-self: end; }
+  .hs-lede { grid-column: 1; }
+
+  /* The six ledes, listed, and the switcher */
+  .hs-lede-list { display: grid; gap: 1.25rem; padding-left: 1.5rem; font-size: 1.25rem; line-height: 1.35; }
+  .hs-switch {
+    position: fixed; z-index: 20; right: var(--margin); top: calc(var(--header-h) + 0.75rem);
+    display: flex; align-items: center; gap: 0.25rem; padding: 0.35rem 0.4rem 0.35rem 0.9rem; border-radius: 999px;
+    background: rgb(12 13 20 / 0.82); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14); color: #f4f5fa;
+  }
+  .hs-switch .mono { font-size: var(--fs-micro); margin-right: 0.4rem; color: #a8acbb; }
+  .hs-switch button {
+    min-width: 2.5rem; height: 2.5rem; padding: 0 0.6rem; border: 0; border-radius: 999px;
+    background: transparent; color: inherit; font: 600 0.95rem/1 var(--font-sans); cursor: pointer;
+  }
+  .hs-switch button[aria-pressed="true"] { background: #f4f5fa; color: #0c0d14; }
+
   @media (max-width: 47.99rem) {
-    .hs-b .hero-title, .hs-d .hero-title { grid-template-columns: minmax(0, 1fr); }
-    .hs-b .hero-title .actions, .hs-d .hero-title .actions { grid-column: 1; grid-row: auto; }
+    .hs-b .hero-title, .hs-d .hero-title, .hs-e .hero-title { grid-template-columns: minmax(0, 1fr); }
+    .hs-b .hero-title .actions, .hs-d .hero-title .actions, .hs-e .hero-title .actions { grid-column: 1; grid-row: auto; justify-self: start; }
+    .hs-tag { left: var(--margin); text-align: left; }
+    .hs-note { display: none; }
+    .hs-switch { left: var(--margin); right: auto; }
+    .hs-switch button { min-width: 2.2rem; height: 2.2rem; padding: 0 0.45rem; }
   }
   @media (prefers-reduced-motion: reduce) { .hs-c .hero-title h1, .hs-d .hs-mark-lit { animation: none; } }
 </style>
