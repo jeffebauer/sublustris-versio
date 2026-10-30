@@ -3,53 +3,60 @@
 // screen, for the owner to compare and pick. A is the hero as it is; B sets a huge SUBLUSTRIS
 // behind the module (the film is transparent); C lights the title from the module's side, as
 // the name says, breathing with the LEDs; D combines B and C (the owner's pick, round 1).
-// Round 2: E is D with the name in glass (it blurs and brightens the haze behind it, its edges
-// catch specular light from the module's side, brightest at the centre); the name's meaning
+// Round 2: E is D with the name in glass (round 3: a shader bends the contour lines behind it,
+// like Apple's Liquid Glass, brightest at the centre); the name's meaning
 // sits at the top of D and E; six candidate ledes replace the spec tags, switchable in place.
 // The film here is the hold loop only (no reveal). Not in the sitemap, noindex.
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import Base from '../../layouts/Base.astro';
 import Button from '../../components/Button.astro';
-import Haze from '../../components/Haze.astro';
+import Contours from '../../components/Contours.astro';
 import { MINISITE } from '../../lib/paths';
 
 const logo = await readFile(join(MINISITE, 'assets', 'logo', 'sublustris-logo.svg'), 'utf8');
-const mark = `url("data:image/svg+xml;base64,${Buffer.from(logo).toString('base64')}")`;
+const logoUrl = `data:image/svg+xml;base64,${Buffer.from(logo).toString('base64')}`;
+const mark = `url("${logoUrl}")`;
 // The logo's paths, for E's lit glass (the filter needs the shapes inline)
 const paths = logo.replace(/^[\s\S]*?<g[^>]*>/, '').replace(/<\/g>[\s\S]*$/, '');
 const now = 'A huge, warm, lush reverb for the Noise Engineering Versio. Also as an AU/VST3 plugin for macOS.';
-// Round 2 ledes, from the most poetic (1) to an even balance of evocative and informative (6).
-// 1-5 leave the platform to a quieter line under them.
+// The ledes leave the platform to a quieter line under them.
 const ledes = [
-  'Light that lingers after the room goes dark. Tails that drift for minutes, then never fade, and a chord you can freeze and keep.',
+  // 2: your shortlist (round 2)
   'A half-lit space that never quite ends. Hold a chord forever, play over it, and let it wear like old tape.',
-  'Somewhere to stay inside a sound: slow swells, vast halls, an octave of shimmer, and tails that hold for as long as you like.',
-  'Huge, warm and slow to fade. A plate, a hall and a massive wash, an endless hold, and a freeze you can play over.',
-  'A huge, warm reverb with tails from a room to minutes, then endless. Freeze a chord and play over it; add shimmer, swells or tape-style wear.',
-  'A huge, warm, lush reverb for the Noise Engineering Versio: three spaces, tails that run to endless, a freeze you play over, shimmer and tape-style wear. Also as an AU/VST3 plugin for macOS.',
+  // round 3, in 2's voice: short, plain, about what it does to your playing, no feature lists
+  'A dim room that keeps what you play. Let a chord hang for as long as you like, then play over it.',
+  'The sound after the sound. Hold it while you play on top, then let it go when you’re ready.',
+  'Reverb for staying a while. Chords hang in the air until you let them go, and wear a little as they do.',
+  'Play a chord and it stays, faintly glowing, for as long as you leave it there.',
+  'Long tails for late nights. Freeze a chord and it waits for you, warm and a little worn.',
+  'Big, slow and warm. Turn it up and the tail never stops. Press freeze and play over what’s left.',
+  'A reverb that holds on. Let a note ring for minutes, or forever, and keep playing over it.',
 ];
+const ledeNames = ['2', 'A', 'B', 'C', 'D', 'E', 'F', 'G'];
+
 const platform = 'For the Noise Engineering Versio, and as an AU/VST3 plugin for macOS.';
 const versions = [
   { id: 'a', name: 'A · Now', note: 'The hero as it is.' },
   { id: 'b', name: 'B · The name behind', note: 'SUBLUSTRIS across the hero in the panel’s lettering; the module stands in front of it.' },
   { id: 'c', name: 'C · Half-lit', note: 'The title lit from the module’s side, fading into shadow, breathing with the freeze LEDs.' },
   { id: 'd', name: 'D · Both', note: 'Your pick: B’s name behind, lit like C. The name’s meaning now at the top.' },
-  { id: 'e', name: 'E · Glass', note: 'D with the name in glass: the haze shows through it, softened; its edges catch the light from the module, brightest at the centre.' },
+  { id: 'e', name: 'E · Glass', note: 'D with the name in glass: the name as glass tubes that bend the contour lines behind them, with coloured fringes, a bright rim and a highlight from above the module, brightest at the centre.' },
 ];
 const behind = (id: string) => id === 'b' || id === 'd' || id === 'e';
 const top = (id: string) => id === 'd' || id === 'e';
 ---
 <Base title="Hero study: Sublustris Versio" description="Versions of the home hero to compare, with six candidate ledes." noindex bodyClass="home" darkTop>
   {versions.map((v) => (
-    <section class={`hero band-dark has-haze hs hs-${v.id}`} style={`--mark: ${mark}`} aria-label={v.name}>
-      <Haze strength={0.96} />
+    <section class={`hero band-dark has-contours hs hs-${v.id}`} style={`--mark: ${mark}`} aria-label={v.name}>
+      <Contours strength={1} />
       <p class="hs-tag micro"><strong>{v.name}</strong> <span class="hs-note">{v.note}</span></p>
       {top(v.id) && <p class="hs-kicker hs-kicker-top mono"><em>sublustris</em>, Lat. · dimly lit, faintly glowing</p>}
       <div class="wide">
         {(v.id === 'b' || v.id === 'd') && <div class="hs-mark" aria-hidden="true"><span class="hs-mark-base"></span><span class="hs-mark-lit"></span></div>}
         {v.id === 'e' && (
-          <div class="hs-mark hs-glass" aria-hidden="true">
+          <div class="hs-mark hs-glass" aria-hidden="true" data-glass data-logo={logoUrl}>
+            <canvas class="hs-glass-gl"></canvas>
             <span class="hs-glass-body"></span>
             <svg class="hs-glass-light" viewBox="0 0 444 40" preserveAspectRatio="xMidYMid meet">
               <defs>
@@ -104,16 +111,16 @@ const top = (id: string) => id === 'd' || id === 'e';
 
   <section class="section hs-ledes" aria-labelledby="hs-ledes-h">
     <div class="column flow">
-      <h2 id="hs-ledes-h" class="h2">Six ledes</h2>
-      <p class="quiet">From the most poetic (1) to an even balance of evocative and informative (6). 1–5 move “for the Noise Engineering Versio, and as an AU/VST3 plugin” to a quieter line under them. The buttons at the bottom of the screen swap them into every version above.</p>
-      <ol class="hs-lede-list">{ledes.map((l) => <li>{l}</li>)}</ol>
+      <h2 id="hs-ledes-h" class="h2">Ledes</h2>
+      <p class="quiet">2 is your shortlist from round 2. A–G are new, written in its voice: short sentences, plain words, about what it does to your playing rather than a list of features. Each moves “for the Noise Engineering Versio, and as an AU/VST3 plugin” to a quieter line under it. The switcher at the top right swaps them into every version above.</p>
+      <ul class="hs-lede-list">{ledes.map((l, i) => <li><strong class="mono">{ledeNames[i]}</strong> {l}</li>)}</ul>
     </div>
   </section>
 
   <nav class="hs-switch" aria-label="Lede">
     <span class="mono">Lede</span>
     <button type="button" data-pick="now" aria-pressed="true">Now</button>
-    {ledes.map((_, i) => <button type="button" data-pick={i} aria-pressed="false">{i + 1}</button>)}
+    {ledes.map((_, i) => <button type="button" data-pick={i} aria-pressed="false">{ledeNames[i]}</button>)}
   </nav>
 </Base>
 
@@ -124,10 +131,122 @@ const top = (id: string) => id === 'd' || id === 'e';
     const k = b.dataset.pick;
     const text = k === 'now' ? now : ledes[+k];
     document.querySelectorAll('[data-lede]').forEach((p) => { p.textContent = text; });
-    document.querySelectorAll('[data-platform]').forEach((p) => { p.hidden = k === 'now' || +k === ledes.length - 1; });
+    document.querySelectorAll('[data-platform]').forEach((p) => { p.hidden = k === 'now'; });
     buttons.forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
   }));
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelectorAll('.hs-glass-light animate').forEach((a) => a.remove());
+</script>
+
+<script>
+  // E's glass, live: a WebGL layer that draws the wordmark as glass tubes looking through to the
+  // contour lines behind them (shaders/glass.frag). It runs only while the lines run live (so it
+  // samples them at the same time); otherwise the CSS glass under it stays.
+  import CONTOURS from '../../shaders/contours.frag?raw';
+  import GLASS from '../../shaders/glass.frag?raw';
+
+  const FRAG = '#define GLASS\n' + CONTOURS + '\n' + GLASS;
+  const VERT = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.0,1.0);}';
+
+  // The logo's height map: each pixel's distance to the nearest edge (chamfer), shaped into a
+  // round tube profile over the bevel radius. r/b hold the height in 16 bits, g the coverage.
+  function heightMap(img: HTMLImageElement, w: number, h: number, bevel: number) {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const x = c.getContext('2d')!;
+    x.drawImage(img, 0, 0, w, h);
+    const a = x.getImageData(0, 0, w, h).data;
+    const N = w * h, d = new Float32Array(N), BIG = 1e6, D = Math.SQRT2;
+    for (let i = 0; i < N; i++) d[i] = a[i * 4 + 3] > 127 ? BIG : 0;
+    for (let y = 0; y < h; y++) for (let i = 0; i < w; i++) {
+      const k = y * w + i; if (!d[k]) continue;
+      let v = d[k];
+      if (i > 0) v = Math.min(v, d[k - 1] + 1);
+      if (y > 0) { v = Math.min(v, d[k - w] + 1); if (i > 0) v = Math.min(v, d[k - w - 1] + D); if (i < w - 1) v = Math.min(v, d[k - w + 1] + D); }
+      d[k] = v;
+    }
+    for (let y = h - 1; y >= 0; y--) for (let i = w - 1; i >= 0; i--) {
+      const k = y * w + i; if (!d[k]) continue;
+      let v = d[k];
+      if (i < w - 1) v = Math.min(v, d[k + 1] + 1);
+      if (y < h - 1) { v = Math.min(v, d[k + w] + 1); if (i < w - 1) v = Math.min(v, d[k + w + 1] + D); if (i > 0) v = Math.min(v, d[k + w - 1] + D); }
+      d[k] = v;
+    }
+    const out = new Uint8Array(N * 4);
+    for (let y = 0; y < h; y++) for (let i = 0; i < w; i++) {
+      const src = y * w + i, dst = ((h - 1 - y) * w + i) * 4;   // flipped: GL's rows run upward
+      const t = Math.min((d[src] - 0.5) / bevel, 1);
+      const hh = t > 0 ? Math.sqrt(1 - (1 - t) * (1 - t)) : 0;
+      const q = Math.round(hh * 65535);
+      out[dst] = q >> 8; out[dst + 2] = q & 255; out[dst + 1] = a[src * 4 + 3]; out[dst + 3] = 255;
+    }
+    return out;
+  }
+
+  function startGlass(el: HTMLElement) {
+    const band = el.closest('section')!;
+    const lines = band.querySelector<HTMLElement>('[data-contours]');
+    const lineCanvas = lines?.querySelector('canvas');
+    const canvas = el.querySelector<HTMLCanvasElement>('canvas.hs-glass-gl')!;
+    const gl = canvas.getContext('webgl', { premultipliedAlpha: true, antialias: false });
+    if (!lines || !lineCanvas || !gl) return;
+    const sh = (t: number, src: string) => { const s = gl.createShader(t)!; gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { console.warn(gl.getShaderInfoLog(s)); return null; } return s; };
+    const vs = sh(gl.VERTEX_SHADER, VERT), fs = sh(gl.FRAGMENT_SHADER, FRAG);
+    if (!vs || !fs) return;
+    const p = gl.createProgram()!;
+    gl.attachShader(p, vs); gl.attachShader(p, fs); gl.bindAttribLocation(p, 0, 'a'); gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) return;
+    gl.useProgram(p);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    const U = (n: string) => gl.getUniformLocation(p, n);
+    gl.uniform1f(U('u_loopT'), 30); gl.uniform1f(U('u_live'), 1); gl.uniform1f(U('u_amt'), parseFloat(lines.dataset.amt || '1')); gl.uniform1f(U('u_ph'), 0);
+    gl.uniform1i(U('u_hmap'), 0);
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const img = new Image();
+    let ready = false, raf = 0, on = false;
+    const fit = () => {
+      const r = Math.min(devicePixelRatio || 1, 2) * 0.75;
+      const w = Math.max(2, Math.round(el.clientWidth * r)), h = Math.max(2, Math.round(el.clientHeight * r));
+      if (canvas.width === w && canvas.height === h && ready) return;
+      canvas.width = w; canvas.height = h;
+      gl.viewport(0, 0, w, h);
+      const bevel = h * 0.11;   // about half a stroke: round tubes
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, heightMap(img, w, h, bevel));
+      gl.uniform2f(U('u_gRes'), w, h);
+      gl.uniform1f(U('u_px2css'), el.clientWidth / w);
+      gl.uniform1f(U('u_bevel'), bevel);
+      gl.uniform1f(U('u_refr'), el.clientHeight * 0.16);
+      ready = true;
+    };
+    const draw = () => {
+      if (!ready || !lines.classList.contains('is-live')) return;
+      const b = band.getBoundingClientRect(), m = el.getBoundingClientRect();
+      const cs = lineCanvas.width / lineCanvas.clientWidth;
+      gl.uniform2f(U('u_res'), lineCanvas.width, lineCanvas.height);
+      gl.uniform1f(U('u_cScale'), cs);
+      gl.uniform2f(U('u_off'), m.left - b.left, b.bottom - m.bottom);
+      const t = parseFloat(lines.dataset.t || '0');
+      gl.uniform1f(U('u_t'), t);
+      gl.uniform1f(U('u_breath'), 0.5 + 0.5 * Math.sin((t / 4) * Math.PI * 2));
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      el.classList.add('is-gl');
+    };
+    let last = 0;
+    const tick = (now: number) => { raf = requestAnimationFrame(tick); if (now - last < 31) return; last = now; draw(); };
+    img.onload = () => {
+      fit();
+      new ResizeObserver(() => { fit(); draw(); }).observe(el);
+      new IntersectionObserver(([e]) => { on = e.isIntersecting; if (on && !raf) raf = requestAnimationFrame(tick); if (!on) { cancelAnimationFrame(raf); raf = 0; } }).observe(el);
+    };
+    img.src = el.dataset.logo!;
+  }
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelectorAll<HTMLElement>('[data-glass]').forEach(startGlass);
 </script>
 
 <script>
@@ -190,13 +309,16 @@ const top = (id: string) => id === 'd' || id === 'e';
     background: radial-gradient(ellipse 38% 220% at 50% 50%, #ffffff 0%, #d6e2ff 30%, rgb(160 185 255 / 0.55) 60%, transparent 100%);
     animation: hs-breathe 4s ease-in-out infinite;
   }
-  /* E: glass. The body blurs and lifts the haze behind it, tinted brightest at the centre; the
+  /* E: glass, the fallback (no WebGL, reduced motion). The body blurs and lifts the lines behind it, tinted brightest at the centre; the
      light layer (an SVG filter) adds the specular glints, the sheen and a hairline rim, and
      fades towards the ends so the focus stays behind the module. */
   .hs-glass-body {
     -webkit-backdrop-filter: blur(14px) brightness(1.7) saturate(1.5); backdrop-filter: blur(14px) brightness(1.7) saturate(1.5);
     background: radial-gradient(ellipse 45% 260% at 50% 50%, rgb(205 220 255 / 0.30), rgb(205 220 255 / 0.08) 55%, rgb(255 255 255 / 0.02) 100%);
   }
+  .hs-glass-gl { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1.2s ease; }
+  .hs-glass.is-gl .hs-glass-gl { opacity: 1; }
+  .hs-glass.is-gl .hs-glass-body, .hs-glass.is-gl .hs-glass-light { opacity: 0; transition: opacity 1.2s ease; }
   .hs-glass-light {
     position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible;
     -webkit-mask: radial-gradient(ellipse 52% 400% at 50% 50%, #000 30%, rgb(0 0 0 / 0.22) 100%);
@@ -210,7 +332,7 @@ const top = (id: string) => id === 'd' || id === 'e';
   .hs-lede { grid-column: 1; }
 
   /* The six ledes, listed, and the switcher */
-  .hs-lede-list { display: grid; gap: 1.25rem; padding-left: 1.5rem; font-size: 1.25rem; line-height: 1.35; }
+  .hs-lede-list { display: grid; gap: 1.25rem; padding-left: 0; list-style: none; font-size: 1.25rem; line-height: 1.35; }
   .hs-switch {
     position: fixed; z-index: 20; right: var(--margin); top: calc(var(--header-h) + 0.75rem);
     display: flex; align-items: center; gap: 0.25rem; padding: 0.35rem 0.4rem 0.35rem 0.9rem; border-radius: 999px;

@@ -1,21 +1,21 @@
 ---
-// The haze behind a dark band (haze A at "brighter 1", owner's pick, 30 Oct 2026; the study is
-// in docs/prototypes/site-visuals). A still always sits underneath: it is what shows without
-// JavaScript, without WebGL, and under reduced motion. With motion allowed, a live shader
-// fades in over it, drawn at half resolution, at most 30 frames a second, and only while the
-// band is on screen and the tab is visible. Live time only runs forward and starts on the
-// still's frame, so it never repeats.
-// strength: the layer's brightness (the study's P1 hero 0.8, P2 band 0.6, times brighter 1's 1.2).
+// The contour lines behind the hero (waves B, "dissolving": the owner's pick, 30 Oct 2026, in
+// place of the haze; the study is in docs/prototypes/site-visuals). A still always sits
+// underneath: it is what shows without JavaScript, without WebGL, and under reduced motion. With
+// motion allowed, a live shader fades in over it, drawn at half resolution, at most 30 frames a
+// second, and only while the hero is on screen and the tab is visible. Live time only runs
+// forward and starts on the still's frame, so it never repeats.
+// strength: the layer's brightness (opacity of the still, u_amt of the live shader).
 interface Props { strength: number; class?: string }
 const { strength, class: cls } = Astro.props;
 ---
-<div class:list={['haze', cls]} data-haze data-amt={strength} aria-hidden="true">
-  <img class="haze-still" src="/visuals/haze.jpg" alt="" width="1280" height="720" decoding="async" fetchpriority="low" style={`opacity: ${strength}`} />
-  <canvas class="haze-live"></canvas>
+<div class:list={['contours', cls]} data-contours data-amt={strength} aria-hidden="true">
+  <img class="contours-still" src="/visuals/contours.jpg" alt="" width="1280" height="720" decoding="async" fetchpriority="low" style={`opacity: ${strength}`} />
+  <canvas class="contours-live"></canvas>
 </div>
 
 <script>
-  import FRAG from '../shaders/haze.frag?raw';
+  import FRAG from '../shaders/contours.frag?raw';
 
   const VERT = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.0,1.0);}';
   const LOOP_S = 30;          // the study's loop length: sets the drift speed
@@ -81,7 +81,9 @@ const { strength, class: cls } = Astro.props;
     };
     const draw = () => {
       if (dead) return;
-      gl.uniform1f(uT, STILL_AT * LOOP_S + elapsed / 1000);
+      const t = STILL_AT * LOOP_S + elapsed / 1000;
+      gl.uniform1f(uT, t);
+      el.dataset.t = String(t);   // the hero study's glass samples the lines at the same time
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       probe();
       if (!dead && !shown && frame > 6) { shown = true; el.classList.add('is-live'); }
@@ -89,7 +91,7 @@ const { strength, class: cls } = Astro.props;
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
       if (now - last < FRAME_MS - 2) return;
-      elapsed += Math.min(now - last, 100);   // a long gap (tab hidden) doesn't jump the haze
+      elapsed += Math.min(now - last, 100);   // a long gap (tab hidden) doesn't jump the lines
       last = now;
       draw();
     };
@@ -109,7 +111,7 @@ const { strength, class: cls } = Astro.props;
 
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   if (!motion.matches) {
-    const go = () => document.querySelectorAll<HTMLElement>('[data-haze]').forEach(start);
+    const go = () => document.querySelectorAll<HTMLElement>('[data-contours]').forEach(start);
     // after the page has loaded and settled, so the shader never competes with the first paint
     const idle = () => ('requestIdleCallback' in window ? requestIdleCallback(go, { timeout: 2000 }) : setTimeout(go, 200));
     if (document.readyState === 'complete') idle(); else addEventListener('load', idle, { once: true });
@@ -117,9 +119,9 @@ const { strength, class: cls } = Astro.props;
 </script>
 
 <style>
-  .haze { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-  .haze-still, .haze-live { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-  .haze-still { object-fit: cover; }
-  .haze-live { opacity: 0; transition: opacity 1.2s ease; }
-  .haze.is-live .haze-live { opacity: 1; }
+  .contours { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  .contours-still, .contours-live { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .contours-still { object-fit: cover; }
+  .contours-live { opacity: 0; transition: opacity 1.2s ease; }
+  .contours.is-live .contours-live { opacity: 1; }
 </style>

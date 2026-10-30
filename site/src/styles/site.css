@@ -120,19 +120,18 @@ code { font-family: var(--font-mono); font-size: 0.88em; overflow-wrap: anywhere
 .section:not(.band-dark, .band-tile) + .section:not(.band-dark, .band-tile) { border-top: var(--hair) solid var(--line); }
 
 /* ---- Hero (dark) ----------------------------------------------------------- */
-/* The haze behind the dark bands (components/Haze.astro): content sits above it. In the tall
-   sound band it covers about the first screen and fades out before the demo cards end. */
-.has-haze { position: relative; isolation: isolate; }
-.has-haze > :not(.haze) { position: relative; z-index: 1; }
-.haze.haze-top { bottom: auto; height: min(100%, 64rem); mask-image: linear-gradient(to bottom, #000 55%, transparent); }
+/* The contour lines behind the hero (components/Contours.astro; owner, 30 Oct 2026: only the
+   hero has a moving background now): content sits above them. */
+.has-contours { position: relative; isolation: isolate; }
+.has-contours > :not(.contours) { position: relative; z-index: 1; }
 .hero {
   padding-top: calc(var(--header-h) + var(--stack-2)); padding-bottom: clamp(3.5rem, 2rem + 5vw, 7rem);
   --fs-hero: clamp(2.75rem, 1.4rem + 4.2vw, 5.5rem);   /* below the display size, to sit with the tagline (owner, 30 Oct 2026) */
 }
-/* The film is transparent and stands in the haze, with no card (owner, 30 Oct 2026). Its box
+/* The film is transparent and stands among the contour lines, with no card (owner, 30 Oct 2026). Its box
    is 16:9 at most and never taller than the screen leaves room for, so on short screens the
    module shrinks and the title stays above the fold; the film is contained, never cropped. */
-.hero { overflow-x: clip; }   /* the film shifted right runs past the edge (only haze there) */
+.hero { overflow-x: clip; }   /* the film shifted right runs past the edge (only transparent edges there) */
 .hero-frame {
   position: relative; width: 100%; aspect-ratio: 16 / 9;
   max-height: max(18rem, calc(100svh - var(--header-h) - 24rem));   /* the title, tagline and buttons */
@@ -143,7 +142,7 @@ code { font-family: var(--font-mono); font-size: 0.88em; overflow-wrap: anywhere
 /* The hold sits on top and appears in one step, on the reveal's matching last frame. */
 .hero-hold { transition: none; }
 .hero-hold.is-on { opacity: 1; }
-/* The film will play (set before first paint): start on the haze, never on the lit still. */
+/* The film will play (set before first paint): start on the dark band, never on the lit still. */
 html.hero-film .hero-still { visibility: hidden; }
 /* Once the film is in, hide the still under it, or the two would double up through the
    transparent edges. */
@@ -183,7 +182,7 @@ html.hero-film .hero-still { visibility: hidden; }
 }
 /* Portrait phones and tablets (owner, 8 Oct: the module was small in a 16:9 frame): a taller
    frame, cut to leave the title in view (svh: Safari's bars showing), and the film and still
-   crop in around the module (the sides are only transparent haze). */
+   crop in around the module (the sides are only transparent). */
 @media (orientation: portrait) and (max-width: 63.99rem) {
   .hero-frame {
     --hero-cut: calc(var(--header-h) + var(--stack-2) + clamp(1.5rem, 1rem + 2vw, 3rem) + var(--fs-hero) * var(--lh-display) + 1.25rem);
