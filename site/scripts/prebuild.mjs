@@ -68,7 +68,8 @@ async function fonts() {
 }
 
 const audio = await copyDir(join(minisite, 'assets', 'audio'), join(pub, 'audio'), (f) => f.endsWith('.mp3'));
-const panel = await copyDir(join(minisite, 'assets', 'panel'), join(pub, 'panel'), (f) => f.endsWith('.svg'));
+// The panel map only (the panel art, sublustris-versio-panel-art.svg, is the renders' source).
+const panel = await copyDir(join(minisite, 'assets', 'panel'), join(pub, 'panel'), (f) => f.endsWith('.svg') && !f.endsWith('-art.svg'));
 const shots = await copyDir(join(minisite, 'assets', 'screenshots'), join(pub, 'screenshots'), (f) => f.endsWith('.png'));
 // Stills, plus the hero reveal film when it exists (hero_reveal / hero_hold_loop .mp4 + .webm, hero_still.jpg).
 const renders = await copyDir(join(minisite, 'assets', 'renders'), join(pub, 'renders'), (f) => /\.(jpe?g|webp|avif|mp4|webm)$/.test(f));
