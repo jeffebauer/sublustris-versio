@@ -2,7 +2,6 @@
 (function () {
   'use strict';
   var S = window.IV_STUDIES;
-  var LOOP = S.loop_seconds;
   var SCALE = S.render_scale;          // render at 0.5x device pixels, CSS scales it up
   var FRAME_MS = 1000 / S.max_fps;     // slow fields: 30 fps is plenty
   var STILL_PH = S.still_phase * Math.PI * 2;
@@ -13,29 +12,35 @@
   var r = new window.IVRenderer();
   var targets = [];
   var visible = new Set();
+  var t0 = performance.now();
+  var pausedAt = 0;      // live time keeps running forward only while motion is on
+  var offset = 0;
 
   document.querySelectorAll('[data-live]').forEach(function (el) {
-    var t = { el: el, canvas: el.querySelector('canvas'), key: el.dataset.study + '-' + el.dataset.variant,
-      light: el.dataset.mode === 'light' ? 1 : 0, amt: parseFloat(el.dataset.amt || '1'), ctx: null, drawn: false };
-    targets.push(t);
+    var o = S.options[el.dataset.option];
+    targets.push({ el: el, canvas: el.querySelector('canvas'), prog: o.prog, loopT: o.loop,
+      amt: parseFloat(el.dataset.amt || '1') * o.gain, ctx: null, drawn: false });
   });
 
   function sizeOf(t) {
     var rect = t.el.getBoundingClientRect();
     var dpr = window.devicePixelRatio || 1;
-    var w = Math.max(2, Math.min(1800, Math.round(rect.width * dpr * SCALE)));
-    var h = Math.max(2, Math.min(1400, Math.round(rect.height * dpr * SCALE)));
-    return [w, h];
+    return [Math.max(2, Math.min(1800, Math.round(rect.width * dpr * SCALE))),
+            Math.max(2, Math.min(1400, Math.round(rect.height * dpr * SCALE)))];
   }
 
-  function drawTarget(t, ph) {
+  function drawTarget(t, now) {
     var wh = sizeOf(t);
-    if (t.canvas.width !== wh[0] || t.canvas.height !== wh[1]) {
-      t.canvas.width = wh[0];
-      t.canvas.height = wh[1];
-    }
+    if (t.canvas.width !== wh[0] || t.canvas.height !== wh[1]) { t.canvas.width = wh[0]; t.canvas.height = wh[1]; }
     if (!t.ctx) t.ctx = t.canvas.getContext('2d', { alpha: false });
-    r.draw(t.key, S.src[t.key], wh[0], wh[1], ph, t.light, t.amt, false);
+    var u;
+    if (now === null) {
+      u = { ph: STILL_PH, t: 0, loopT: t.loopT, live: 0, amt: t.amt };     // the same frame as the still image
+    } else {
+      var sec = S.still_phase * t.loopT + (now - t0) / 1000 - offset;   // live begins at the still frame
+      u = { ph: (sec % t.loopT) / t.loopT * Math.PI * 2, t: sec, loopT: t.loopT, live: 1, amt: t.amt };
+    }
+    r.draw(t.prog, S.src[t.prog], wh[0], wh[1], u, false);
     r.blit(t.ctx, wh[0], wh[1]);
     if (!t.drawn) { t.drawn = true; t.el.classList.add('is-live'); }
   }
@@ -48,15 +53,16 @@
     raf = requestAnimationFrame(tick);
     if (now - last < FRAME_MS - 2) return;
     last = now;
-    var ph = ((now / 1000) % LOOP) / LOOP * Math.PI * 2;
-    visible.forEach(function (t) { drawTarget(t, ph); });
+    visible.forEach(function (t) { drawTarget(t, now); });
   }
   function start() {
     if (!r.ok) return;
     if (stillMode()) {
-      visible.forEach(function (t) { drawTarget(t, STILL_PH); });
+      if (!pausedAt) pausedAt = performance.now();
+      visible.forEach(function (t) { drawTarget(t, null); });
       return;
     }
+    if (pausedAt) { offset += (performance.now() - pausedAt) / 1000; pausedAt = 0; }
     if (!raf) raf = requestAnimationFrame(tick);
   }
 
@@ -66,7 +72,7 @@
         var t = targets.find(function (x) { return x.el === en.target; });
         if (en.isIntersecting) {
           visible.add(t);
-          if (stillMode()) drawTarget(t, STILL_PH);
+          if (stillMode()) drawTarget(t, null);
         } else {
           visible.delete(t);
         }
@@ -77,7 +83,7 @@
     var rz = 0;
     window.addEventListener('resize', function () {
       clearTimeout(rz);
-      rz = setTimeout(function () { if (stillMode()) visible.forEach(function (t) { drawTarget(t, STILL_PH); }); }, 150);
+      rz = setTimeout(function () { if (stillMode()) visible.forEach(function (t) { drawTarget(t, null); }); }, 150);
     });
   } else {
     document.documentElement.classList.add('no-webgl');

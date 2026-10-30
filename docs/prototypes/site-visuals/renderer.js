@@ -46,14 +46,15 @@
     gl.bindAttribLocation(p, 0, 'a');
     gl.linkProgram(p);
     if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error('link: ' + gl.getProgramInfoLog(p));
-    var prog = { p: p, res: gl.getUniformLocation(p, 'u_res'), ph: gl.getUniformLocation(p, 'u_ph'),
-      light: gl.getUniformLocation(p, 'u_light'), amt: gl.getUniformLocation(p, 'u_amt') };
+    var U = function (n) { return gl.getUniformLocation(p, n); };
+    var prog = { p: p, res: U('u_res'), ph: U('u_ph'), t: U('u_t'), loopT: U('u_loopT'), live: U('u_live'), amt: U('u_amt') };
     this.programs[key] = prog;
     return prog;
   };
 
+  // u: { ph: loop phase 0..2pi, t: seconds (live), loopT: loop seconds, live: 0|1, amt }
   // exact: resize the GL canvas to w x h (capture); otherwise it only grows (shared use)
-  Renderer.prototype.draw = function (key, src, w, h, ph, light, amt, exact) {
+  Renderer.prototype.draw = function (key, src, w, h, u, exact) {
     var gl = this.gl;
     var c = this.canvas;
     if (exact) {
@@ -69,9 +70,11 @@
     gl.enableVertexAttribArray(0);
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
     gl.uniform2f(prog.res, w, h);
-    gl.uniform1f(prog.ph, ph);
-    gl.uniform1f(prog.light, light);
-    gl.uniform1f(prog.amt, amt);
+    gl.uniform1f(prog.ph, u.ph);
+    gl.uniform1f(prog.t, u.t || 0);
+    gl.uniform1f(prog.loopT, u.loopT);
+    gl.uniform1f(prog.live, u.live ? 1 : 0);
+    gl.uniform1f(prog.amt, u.amt);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
 

@@ -11,7 +11,8 @@ from playwright.sync_api import sync_playwright
 URL = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8765/site_visuals/index.html"
 OUT = Path(sys.argv[2] if len(sys.argv) > 2 else "shots")
 OUT.mkdir(parents=True, exist_ok=True)
-SECTIONS = ["diffusion", "waves", "reflections", "shimmer", "haze", "tail"]
+SECTIONS = ["diffusion", "waves", "haze"]
+PLACES = ["diffusion-b1", "diffusion-b2", "waves-a", "waves-b", "haze-a1", "haze-a2", "haze-b1", "haze-b2"]
 
 
 def run(p, name, **ctx):
@@ -47,13 +48,13 @@ def canvas_changes(pg, sel):
 with sync_playwright() as p:
     # desktop
     b, pg, errs = run(p, "desktop", viewport={"width": 1440, "height": 900}, device_scale_factor=2)
-    print("desktop live canvas (size, animating, drawn):", canvas_changes(pg, "#diffusion-a .live"))
+    print("desktop live canvas (size, animating, drawn):", canvas_changes(pg, "#diffusion-b1 .live"))
     scroll_all(pg)
     print("desktop canvases drawn:", pg.evaluate("document.querySelectorAll('.is-live').length"), "of",
           pg.evaluate("document.querySelectorAll('[data-live]').length"))
     for s in SECTIONS:
         pg.locator(f"#{s}").screenshot(path=str(OUT / f"desktop-{s}.png"), scale="css")
-    for s in SECTIONS:
+    for s in PLACES:
         pg.locator(f"#place-{s}").screenshot(path=str(OUT / f"desktop-place-{s}.png"), scale="css")
     pg.evaluate("window.scrollTo(0,0)")
     pg.screenshot(path=str(OUT / "desktop-top.png"), scale="css")
@@ -66,8 +67,8 @@ with sync_playwright() as p:
 
     # reduced motion
     b, pg, errs = run(p, "reduced", viewport={"width": 1440, "height": 900}, reduced_motion="reduce")
-    print("reduced-motion canvas (size, animating, drawn):", canvas_changes(pg, "#haze-a .live"))
-    v = pg.evaluate("""async () => { const v = document.querySelector('#haze-a video'); v.scrollIntoView();
+    print("reduced-motion canvas (size, animating, drawn):", canvas_changes(pg, "#haze-a1 .live"))
+    v = pg.evaluate("""async () => { const v = document.querySelector('#haze-a1 video'); v.scrollIntoView();
         await new Promise(r => setTimeout(r, 800)); return [v.paused, v.hasAttribute('controls')]; }""")
     print("reduced-motion video (paused, has controls):", v)
     print("reduced errors:", errs or "none")
@@ -80,7 +81,7 @@ with sync_playwright() as p:
     pg.evaluate("window.scrollTo(0,0)")
     pg.screenshot(path=str(OUT / "phone-top.png"))
     pg.locator("#waves").screenshot(path=str(OUT / "phone-waves.png"))
-    pg.locator("#place-haze").screenshot(path=str(OUT / "phone-place-haze.png"))
+    pg.locator("#place-haze-a2").screenshot(path=str(OUT / "phone-place-haze-a2.png"))
     print("phone errors:", errs or "none")
     b.close()
 
@@ -89,8 +90,9 @@ with sync_playwright() as p:
     c = b.new_context(java_script_enabled=False, viewport={"width": 1440, "height": 900})
     pg = c.new_page()
     pg.goto(URL, wait_until="load")
-    pg.locator("#reflections-a").scroll_into_view_if_needed()
+    pg.locator("#waves-a").scroll_into_view_if_needed()
     pg.wait_for_timeout(800)
-    pg.locator("#reflections-a").screenshot(path=str(OUT / "nojs-reflections-a.png"))
+    pg.locator("#waves-a").screenshot(path=str(OUT / "nojs-waves-a.png"))
+    print("no-JS: still images loaded:", pg.evaluate("[...document.querySelectorAll('#waves-a img')].map(i => i.complete && i.naturalWidth > 0)"))
     b.close()
 print("shots in", OUT.resolve())
