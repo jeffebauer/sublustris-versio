@@ -16,6 +16,8 @@ export const METAPHOR_KINDS = [
   'spaces-paths', 'spaces-nested', 'spaces-forms',
   'spaces-plans', 'spaces-figure', 'spaces-depth', 'spaces-rays',
   'cv-sum', 'cv-scale', 'cv-plug',
+  'wear-grain', 'wear-roughen', 'wear-floor', 'wear-turn',
+  'wear-sweep', 'wear-layers', 'wear-stages', 'wear-roundtrip',
 ] as const;
 export type MetaphorKind = (typeof METAPHOR_KINDS)[number];
 
@@ -62,6 +64,20 @@ const knob = (cx: number, cy: number, r: number) => {
   };
   const hand = (p: number, r0: number, r1: number) => line([at(p, r0), at(p, r1)]);
   return { at, arc, hand };
+};
+
+
+/** Deterministic noise in -1..1 (the same picture on every build). */
+const noise = (i: number) => {
+  const v = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
+  return 2 * (v - Math.floor(v)) - 1;
+};
+/** A line along y(x) with grain of height g(x) on it, a jitter every `step`. */
+const rough = (x0: number, x1: number, y: (x: number) => number, g: (x: number) => number, step = 1.6, seed = 0) => {
+  const pts: Pt[] = [];
+  let i = 0;
+  for (let x = x0; x <= x1 + 1e-6; x += step, i++) pts.push([x, y(x) + g(x) * noise(i + seed)]);
+  return line(pts);
 };
 
 export function metaphor(kind: MetaphorKind): Shape {
@@ -500,6 +516,112 @@ export function metaphor(kind: MetaphorKind): Shape {
         hot: ['M2 58C18 58 22 36 40 36', k.arc(p, q), k.hand(q, 6, 15)],
       };
     }
+
+    // ---- WEAR (the worn guitar and the dark drone, 1 Nov 2026) --------------------------
+    case 'wear-grain': {
+      // Strummed chords (ink), each with its tail (blue); grain specks gather on the tails as
+      // WEAR comes up across the clip.
+      const hits = [8, 46, 84, 122];
+      const tails = hits.map((x) => plot(x + 1, x + 34, (t) => 34 - 18 * Math.exp(-(t - x) / 11) * Math.sin((t - x) * 0.9), 0.5));
+      const specks: string[] = [];
+      hits.forEach((x, k) => {
+        const n = [0, 4, 9, 15][k];
+        for (let j = 0; j < n; j++) {
+          const sx = x + 6 + ((j * 7.3 + k * 3) % 28), sy = 34 + 14 * noise(j + 10 * k);
+          specks.push(`M${f(sx)} ${f(sy)}h0.6`);
+        }
+      });
+      return {
+        label: 'WEAR turned up across four chords: the first tail is clean, and each one after carries more grain.',
+        ink: hits.map((x) => `M${x} 54V14`),
+        hot: [...tails, ...specks],
+      };
+    }
+    case 'wear-roughen': {
+      // One long tail, fading as tails do, its line growing rough from clean on the left to
+      // grainy on the right as WEAR comes up.
+      return {
+        label: 'WEAR turned up: one long tail whose line goes from clean to rough and grainy.',
+        faint: ['M10 54H156'],
+        ink: ['M10 54V10'],
+        hot: [rough(12, 156, (x) => 54 - 38 * Math.exp(-(x - 12) / 70), (x) => 5.5 * ((x - 12) / 144) ** 1.6, 1.4)],
+      };
+    }
+    case 'wear-floor': {
+      // Chords as strokes over a hiss floor that rises from nothing as WEAR comes up.
+      const hits = [16, 52, 88, 124];
+      return {
+        label: 'WEAR turned up under the chords: a floor of hiss rises from nothing to a band.',
+        faint: ['M6 54H156'],
+        ink: hits.map((x) => `M${x} 54V12`),
+        hot: [rough(6, 156, (x) => 54 - 7 * ((x - 6) / 150), (x) => 6 * ((x - 6) / 150), 1.2, 3)],
+      };
+    }
+    case 'wear-turn': {
+      // The WEAR knob turned from fully left to 2 o'clock; beside it the tail that comes out,
+      // clean, then gaining grain.
+      const k = knob(24, 34, 16);
+      const p = 0.78;
+      return {
+        label: 'The WEAR knob turned from fully left to 2 o\'clock, and beside it a tail going from clean to grainy.',
+        faint: [k.arc(p, 1)],
+        ink: [k.hand(p, 5, 13)],
+        hot: [k.arc(0, p), rough(54, 156, (x) => 34 - 20 * Math.sin((x - 54) * 0.45) * Math.exp(-(x - 54) / 34), (x) => 4 * ((x - 54) / 102) ** 1.4, 1.3, 7)],
+      };
+    }
+    case 'wear-sweep': {
+      // Above, faint: WEAR's position over the clip (up, held, back down). Below, the endless
+      // tail (blue) as a level line that roughens with it and comes clean again.
+      const pos = (x: number) => (x < 30 ? 0 : x < 76 ? (x - 30) / 46 : x < 100 ? 1 : x < 140 ? 1 - (x - 100) / 40 : 0);
+      return {
+        label: 'WEAR over the whole clip: turned up, held, turned back down, and the endless tail grows rough with it, then comes clean.',
+        faint: [plot(6, 156, (x) => 20 - 12 * pos(x), 1), 'M6 20H156'],
+        ink: [],
+        hot: [rough(6, 156, () => 44, (x) => 7 * pos(x), 1.2, 11)],
+      };
+    }
+    case 'wear-layers': {
+      // The drone's lows (ink, a slow wave) stay the same throughout; above them the wear (blue)
+      // thickens into a band of grain and thins away again.
+      const env = (x: number) => Math.sin(Math.PI * Math.min(1, Math.max(0, (x - 14) / 132))) ** 1.5;
+      return {
+        label: 'The drone\'s lows stay the same throughout while the wear above them thickens into grain and thins away again.',
+        ink: [plot(6, 156, (x) => 48 + 4 * Math.sin(x * 0.09), 0.5)],
+        hot: [rough(6, 156, () => 22, (x) => 10 * env(x), 1.1, 5), rough(6, 156, () => 22, (x) => 6 * env(x), 1.7, 41)],
+      };
+    }
+    case 'wear-stages': {
+      // Along the tail, what WEAR adds as it goes: clean, tape's slow wobble, grit, an old
+      // radio's narrow band, then clean again on the way back.
+      const y = 34;
+      return {
+        label: 'WEAR\'s stages along the tail: clean, tape wobble, grit, an old radio\'s narrow band, then clean again.',
+        faint: ['M100 29H128', 'M100 39H128'],
+        ink: [],
+        hot: [
+          `M6 ${y}H26`,
+          plot(26, 62, (x) => y + 5 * Math.sin((x - 26) * 0.35), 0.5),
+          rough(62, 100, () => y, () => 7, 1.2, 17),
+          plot(100, 128, (x) => y + 3.5 * Math.sin((x - 100) * 1.3), 0.25),
+          `M128 ${y}H156`,
+        ],
+      };
+    }
+    case 'wear-roundtrip': {
+      // The WEAR knob's whole range, there and back (two arcs with arrowheads), beside an
+      // endless level line that is rough in the middle.
+      const k = knob(28, 34, 19);
+      const k2 = knob(28, 34, 13);
+      const [ex, ey] = k.at(1), [sx, sy] = k2.at(0);
+      return {
+        label: 'WEAR turned through its whole range and back, beside an endless tail that is rough in the middle and clean at both ends.',
+        faint: [],
+        ink: [k.hand(0, 3, 9)],
+        hot: [k.arc(0, 1), `M${f(ex - 4)} ${f(ey - 2)}L${f(ex)} ${f(ey)}L${f(ex + 1)} ${f(ey - 4.5)}`, k2.arc(0, 1),
+          `M${f(sx - 1)} ${f(sy - 4.5)}L${f(sx)} ${f(sy)}L${f(sx + 4)} ${f(sy - 2)}`,
+          rough(62, 156, () => 34, (x) => 6 * Math.sin(Math.PI * (x - 62) / 94) ** 2, 1.2, 23)],
+      };
+    }
   }
 }
 
@@ -562,5 +684,17 @@ export const CONCEPTS: Concept[] = [
     { kind: 'cv-sum', caption: 'Knob + voltage = further' },
     { kind: 'cv-scale', caption: 'A push along a scale' },
     { kind: 'cv-plug', caption: 'A cable beside a knob', risk: 'the plug, side on, can read as a battery or a USB stick.' },
+  ] },
+  { id: 'wear-guitar', name: 'WEAR turned up (Worn guitar)', picked: 0, options: [
+    { kind: 'wear-grain', caption: 'Grain gathering on each chord’s tail' },
+    { kind: 'wear-roughen', caption: 'One tail, clean to rough' },
+    { kind: 'wear-floor', caption: 'A hiss floor rising under the chords' },
+    { kind: 'wear-turn', caption: 'The knob turned, a tail gaining grain' },
+  ] },
+  { id: 'wear-drone', name: 'WEAR up and back (Dark drone)', picked: 0, options: [
+    { kind: 'wear-sweep', caption: 'The knob’s path, the tail roughening with it' },
+    { kind: 'wear-layers', caption: 'Lows steady, wear thickening and thinning' },
+    { kind: 'wear-stages', caption: 'Clean, tape, grit, radio, clean' },
+    { kind: 'wear-roundtrip', caption: 'The whole range and back', risk: 'the double arc with arrows can read as a refresh or sync icon.' },
   ] },
 ];
