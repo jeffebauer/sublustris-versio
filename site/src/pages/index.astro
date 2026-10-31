@@ -68,9 +68,12 @@ const shapeIntro = paras(shape.html)[0] ?? '';
 const shapeSteps = items(shape.html);
 ---
 <Base title={page.data.title} description={page.data.description} bodyClass="home" darkTop>
+  <!-- The hero and the sound share one dark stage: the contour lines stay put behind them while
+       both scroll over (owner, 1 Nov 2026). -->
+  <div class="hero-stage band-dark has-contours">
+  <Contours strength={1} class="contours-fixed" />
   <!-- 1 Hero (dark) -->
-  <section class="hero band-dark has-contours" aria-labelledby="title">
-    <Contours strength={1} />
+  <section class="hero band-dark" aria-labelledby="title">
     <div class="wide">
       <HeroMedia />
       <div class="hero-title">
@@ -95,6 +98,7 @@ const shapeSteps = items(shape.html);
       <DemoList />
     </div>
   </section>
+  </div>
 
   <!-- 4 Get it (white): a pointer to the two downloads (the band at the end has them in full) -->
   <section class="section get-it" aria-labelledby="get-h">

@@ -124,6 +124,10 @@ code { font-family: var(--font-mono); font-size: 0.88em; overflow-wrap: anywhere
    hero has a moving background now): content sits above them. */
 .has-contours { position: relative; isolation: isolate; }
 .has-contours > :not(.contours) { position: relative; z-index: 1; }
+/* The stage under the hero and the sound (owner, 1 Nov 2026): the contour lines hold still, a
+   screen tall, while both sections scroll over them, then leave with the sound's end. */
+.hero-stage > .contours.contours-fixed { position: sticky; inset: auto; top: 0; height: 100lvh; margin-bottom: -100lvh; }
+.hero-stage > .band-dark { background: transparent; }
 .hero {
   padding-top: calc(var(--header-h) + var(--stack-2)); padding-bottom: clamp(3.5rem, 2rem + 5vw, 7rem);
   --fs-hero: clamp(2.75rem, 1.4rem + 4.2vw, 5.5rem);   /* below the display size, to sit with the tagline (owner, 30 Oct 2026) */
@@ -159,8 +163,8 @@ html.hero-film .hero-still { visibility: hidden; }
    come up with the module's key light (HeroMedia sets --hero-lit from the film's time), so the
    module appears out of the dark. The title comes in quickly, so nobody waits to read or click;
    scrolling, a key or a tap lights everything at once. */
-html.hero-film .hero.has-contours > .contours { opacity: var(--hero-lit, 0); }
-html.hero-film.hero-lit .hero.has-contours > .contours { opacity: 1; transition: opacity 1s var(--ease-out); }
+html.hero-film .hero-stage > .contours { opacity: var(--hero-lit, 0); }
+html.hero-film.hero-lit .hero-stage > .contours { opacity: 1; transition: opacity 1s var(--ease-out); }
 html.hero-film .hero-title { animation: hero-title-in 1.2s var(--ease-out) 0.5s both; }
 @keyframes hero-title-in { from { opacity: 0; } }
 .hero-pause {
@@ -178,7 +182,7 @@ html.hero-film .hero-title { animation: hero-title-in 1.2s var(--ease-out) 0.5s 
   padding-top: clamp(1.5rem, 1rem + 2vw, 3rem);
   --tagline-fs: clamp(1.375rem, 1rem + 1.5vw, 2.25rem);
 }
-.hero-platform { color: var(--on-dark-2); font-size: var(--fs-body); padding-top: 0.5rem; }   /* under the buttons: what it runs on (owner, 31 Oct 2026) */
+.hero-platform { color: var(--on-dark-2); font-size: var(--fs-small); padding-top: 0.5rem; }   /* under the buttons: what it runs on (owner, 31 Oct 2026), a size down (owner, 1 Nov 2026) */
 .hero-tagline {
   max-width: 26em; color: var(--ink-2);
   font-weight: var(--wt-light); font-size: clamp(1.125rem, 0.95rem + 0.45vw, 1.375rem); line-height: 1.5; letter-spacing: 0;
@@ -195,11 +199,17 @@ html.hero-film .hero-title { animation: hero-title-in 1.2s var(--ease-out) 0.5s 
 /* Wide landscape screens (owner, 30 Oct 2026): the module moves right and the title comes up
    beside it, over the film's empty left side; the film's box fills the screen's height. */
 @media (orientation: landscape) and (min-width: 64rem) {
-  .hero > .wide { display: grid; }
+  .hero > .wide { display: grid; container-type: inline-size; }
   .hero-frame, .hero-title { grid-area: 1 / 1; }
   .hero-frame { max-height: max(24rem, calc(100svh - var(--header-h) - var(--stack-2) - 3rem)); }
   .hero-still, .hero-video { translate: 24% 0; }
-  .hero-title { align-self: center; padding-top: 0; max-width: 58%; }
+  /* Centred on the module, not the frame (owner, 1 Nov 2026): the module sits a little low in
+     the film (its middle at 54.4 % of the height), so the title comes down by twice that offset
+     of the frame's height (the frame is 16:9 of the width, capped by the max-height above). */
+  .hero-title {
+    align-self: center; padding-top: 0; max-width: 58%;
+    margin-top: calc(min(100cqw * 9 / 16, max(24rem, calc(100svh - var(--header-h) - var(--stack-2) - 3rem))) * 0.088);
+  }
 }
 /* Portrait phones and tablets (owner, 8 Oct: the module was small in a 16:9 frame; 30 Oct: bigger
    still, so its details read, even past the fold): a tall frame that the film and still fill,
