@@ -68,8 +68,9 @@ async function fonts() {
 }
 
 const audio = await copyDir(join(minisite, 'assets', 'audio'), join(pub, 'audio'), (f) => f.endsWith('.mp3'));
-// The panel map only (the panel art, sublustris-versio-panel-art.svg, is the renders' source).
-const panel = await copyDir(join(minisite, 'assets', 'panel'), join(pub, 'panel'), (f) => f.endsWith('.svg') && !f.endsWith('-art.svg'));
+// The panel map and the panel face (the art without pointers and levers, for PanelArt); the art
+// itself, sublustris-versio-panel-art.svg, is the renders' and the face's source.
+const panel = await copyDir(join(minisite, 'assets', 'panel'), join(pub, 'panel'), (f) => (f.endsWith('.svg') && !f.endsWith('-art.svg')) || f.endsWith('-face.webp'));
 const shots = await copyDir(join(minisite, 'assets', 'screenshots'), join(pub, 'screenshots'), (f) => f.endsWith('.png'));
 // Stills, plus the hero reveal film when it exists (hero-reveal / hero-hold-loop .mp4 HEVC + .webm VP9, both with alpha; the still is hero-still.png).
 const renders = await copyDir(join(minisite, 'assets', 'renders'), join(pub, 'renders'), (f) => /\.(jpe?g|webp|avif|mp4|webm)$/.test(f));

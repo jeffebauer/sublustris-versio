@@ -1,6 +1,6 @@
 ---
 import Doc from '../layouts/Doc.astro';
-import PanelDiagram from '../components/PanelDiagram.astro';
+import PanelArt from '../components/PanelArt.astro';
 import KnobGlyph from '../components/KnobGlyph.astro';
 import { getPage, pageHtml, splitSections, stripTags, takeH1 } from '../lib/content';
 import { KNOBS, SWITCHES, type PanelSettings } from '../lib/panel';
@@ -45,7 +45,7 @@ const { lead, sections } = splitSections(rest.replace(table, ''));
         <h2 id={sec.id}>{sec.title}</h2>
         <div class="preset">
           <figure class="preset-panel">
-            <PanelDiagram settings={p.s} controls prefix={`pre-${sec.id}`} label={`${sec.title}: panel settings`} />
+            <PanelArt settings={p.s} controls prefix={`pre-${sec.id}`} label={`${sec.title}: panel settings`} />
           </figure>
           <div class="preset-text">
             <Fragment set:html={sec.html} />

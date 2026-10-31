@@ -2,7 +2,7 @@
 // Renders a page's Markdown with its slot markers swapped for components.
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import PanelDiagram from './PanelDiagram.astro';
+import PanelArt from './PanelArt.astro';
 import DownloadBlock from './DownloadBlock.astro';
 import MediaCard from './MediaCard.astro';
 import type { Part } from '../lib/content';
@@ -30,8 +30,8 @@ parts.forEach((p, i) => {
   ) : p.slot === 'panel' ? (
     <div class="slot manual-panel">
       <figure class="panel-figure">
-        <PanelDiagram prefix="manual-panel" class="is-themed" />
-        <figcaption class="small panel-note">Sublustris’s panel, drawn to scale. Your Versio’s printed labels will differ: the table maps them.</figcaption>
+        <PanelArt prefix="manual-panel" />
+        <figcaption class="small panel-note">Sublustris’s panel, to scale. Your Versio’s printed labels will differ: the table maps them.</figcaption>
       </figure>
       {p.table && <div class="panel-table" set:html={p.table} />}
     </div>
