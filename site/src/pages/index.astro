@@ -22,6 +22,7 @@ import { getPage, pageHtml, section, splitSections, splitSlots, stripTags, takeH
 const page = await getPage('overview');
 const macro = render('panel-macro.jpg');
 const patched = render('patched.jpg');
+const storyImg = render('story-tape.jpg'); // the owner's pick, 31 Oct 2026: story_tape3_b
 const wideSizes = '(min-width: 92rem) 92rem, calc(100vw - 2rem)';
 const { h1, rest } = takeH1(pageHtml(page));
 const { lead, sections } = splitSections(rest);
@@ -136,9 +137,18 @@ const shapeSteps = items(shape.html);
       <h2 class="statement" id="story-h">{story.title}</h2>
       <p class="lede" set:html={inner(storyLede)} />
     </div>
-    <figure class="wide story-figure" aria-hidden="true">
-      <Diagram kind="endless-infinity" class="story-diagram" decorative />
-    </figure>
+    {storyImg ? (
+      <figure class="wide story-figure story-photo" data-reveal>
+        <div class="card-media" style="aspect-ratio: 2400 / 1350">
+          <Picture src={storyImg} widths={widthsFor(storyImg)} sizes={wideSizes} formats={['avif', 'webp']} loading="lazy"
+            alt="Two 1970s reel-to-reel tape decks side by side on a desk in a lamp-lit room, seen front-on, with the leads that cross-patch them hanging in the gap between." />
+        </div>
+      </figure>
+    ) : (
+      <figure class="wide story-figure" aria-hidden="true">
+        <Diagram kind="endless-infinity" class="story-diagram" decorative />
+      </figure>
+    )}
     <div class="column flow story-body">
       <Fragment set:html={storyMiddle.join('')} />
       <div class="tile story-ours flow" set:html={storyOurs} />
