@@ -525,4 +525,26 @@ def render(cam, path):
     sc.render.filepath = path
     os.makedirs(os.path.dirname(path), exist_ok=True)
     bpy.ops.render.render(write_still=True)
+    vig = float(os.environ.get("IV_VIGNETTE", "0"))
+    if vig > 0:
+        vignette(path, vig)
     print(f"[common] wrote {path}")
+
+
+def vignette(path, amount):
+    """Darken the frame's edges and corners, a lens-like falloff (the owner, 31 Oct 2026: the story
+    image wants some vignetting). amount: how dark the corners go, 0..1."""
+    import numpy as np
+    img = bpy.data.images.load(path)
+    w, h = img.size
+    px = np.empty(w * h * 4, dtype=np.float32)
+    img.pixels.foreach_get(px)
+    px = px.reshape(h, w, 4)
+    y, x = np.mgrid[0:h, 0:w]
+    r = np.hypot((x - w / 2) / (w / 2), (y - h / 2) / (h / 2)) / np.sqrt(2)   # 0 centre, 1 corner
+    k = 1 - amount * np.clip((r - 0.2) / 0.8, 0, 1) ** 1.5
+    px[..., :3] *= k[..., None]
+    img.pixels.foreach_set(px.ravel())
+    img.filepath_raw = path
+    img.save()
+    bpy.data.images.remove(img)

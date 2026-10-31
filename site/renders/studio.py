@@ -23,6 +23,7 @@ and proportions), never traced from a photograph.
 Scene units mm; z = 0 is the floor; the desk top is at DESK_Z; fronts face -Y.
 """
 import math
+import os
 
 import bmesh
 import bpy
@@ -30,6 +31,9 @@ from mathutils import Vector
 
 import common as C
 import story
+
+STORY_DIM = 1.0  # 0: the round-3 light; 1 (the final, owner 31 Oct 2026): the room falls away around the decks.
+# The site's story-tape.jpg: --round 3 --only story_tape3_b --exact --samples 256 --res-scale 1.25 with IV_VIGNETTE=0.75
 
 DESK_Z = 740.0
 DESK = dict(x0=-950.0, x1=950.0, y0=-380.0, y1=380.0)
@@ -285,12 +289,13 @@ def room(m, rack=False, lamp_x=-760.0):
     return bulb
 
 
-def room_lights(bulb, size, warm=1.0, window=0.25):
+def room_lights(bulb, size, warm=1.0, window=0.25, dim=0.0):
     """The lamp (a warm point light in the shade), a dim cool window light from
-    the left, low warm world bounce."""
-    C.world(0.03, rgb=(0.55, 0.45, 0.35))
+    the left, low warm world bounce. dim (0..1) darkens the room around the lamp's pool."""
+    C.world(0.03 * (1 - 0.9 * dim), rgb=(0.55, 0.45, 0.35))
+    window *= 1 - 0.9 * dim
     ld = bpy.data.lights.new("lamp", "POINT")
-    ld.energy = C.watts(60 * warm)
+    ld.energy = C.watts(60 * warm * (1 - 0.4 * dim))  # less spill up the wall
     ld.color = (1.0, 0.72, 0.45)
     ld.shadow_soft_size = 20
     ob = bpy.data.objects.new("lamp", ld)
@@ -300,7 +305,7 @@ def room_lights(bulb, size, warm=1.0, window=0.25):
                  power=C.watts(C.KEY_W * window) * (2.2) ** 2, rgb=(0.75, 0.82, 1.0))
     # a soft warm fill from behind the camera so faces don't go black
     C.area_light("fill", Vector((600, -2600, 1500)), Vector((0, 0, DESK_Z + 150)), size=1200,
-                 power=C.watts(C.KEY_W * 0.12) * (3.0) ** 2, rgb=(1.0, 0.85, 0.7))
+                 power=C.watts(C.KEY_W * 0.12 * (1 - 0.85 * dim)) * (3.0) ** 2, rgb=(1.0, 0.85, 0.7))
 
 
 # ------------------------------------------------------------------ the deck
@@ -1107,7 +1112,7 @@ def deck_pair(m, xs, y0):
                 meters_a=a["meters"], decks_width=(xb - xa) + A77_W, gap_x=gx)
 
 
-def deck_lights(ref, soft=1.0):
+def deck_lights(ref, soft=1.0, dim=0.0):
     """Light for the decks: a soft warm key from the front left, a large dim
     card above the camera for the brushed plates to reflect, a cool kicker
     from behind right along the case edges."""
@@ -1115,10 +1120,10 @@ def deck_lights(ref, soft=1.0):
     s = ref["decks_width"]
     d = 1.7 * s
     key = c + Vector((-0.62, -0.72, 0.55)).normalized() * d
-    C.area_light("deck_key", key, c, size=0.7 * s, power=C.watts(C.KEY_W * 0.32 * soft) * (d / 1000) ** 2,
+    C.area_light("deck_key", key, c, size=0.7 * s, power=C.watts(C.KEY_W * 0.32 * soft * (1 - 0.1 * dim)) * (d / 1000) ** 2,
                  rgb=(1.0, 0.86, 0.68))
     card = c + Vector((0.1, -0.85, 0.75)).normalized() * d * 1.1
-    C.area_light("deck_card", card, c, size=1.3 * s, power=C.watts(C.KEY_W * 0.035 * soft) * (d * 1.1 / 1000) ** 2,
+    C.area_light("deck_card", card, c, size=1.3 * s, power=C.watts(C.KEY_W * 0.035 * soft * (1 - 0.6 * dim)) * (d * 1.1 / 1000) ** 2,
                  rgb=(1.0, 0.93, 0.84))
     kick = c + Vector((0.7, 0.75, 0.35)).normalized() * d * 0.8
     C.area_light("deck_kick", kick, c, size=0.3 * s, power=C.watts(C.KEY_W * 0.18 * soft) * (d * 0.8 / 1000) ** 2,
@@ -1140,8 +1145,10 @@ def tape_cross3():
     B("notebook", -760, -560, -350, -210, DESK_Z, DESK_Z + 9, m["paper"], bevel=1.5)
     C.cylinder("pencil", 3.5, 170, (-610, -265, DESK_Z + 12.5), C.clay("pencil", rgb=(0.55, 0.38, 0.08), rough=0.5),
                axis="Y", segs=6).rotation_euler = (0, math.pi / 2, math.radians(18))
-    room_lights(bulb, A77_W)
-    deck_lights(ref)
+    # dim: the owner, 31 Oct 2026, on the final story image: "moodier lighting" (env for previews)
+    dim = float(os.environ.get("IV_STORY_DIM", STORY_DIM))
+    room_lights(bulb, A77_W, dim=dim)
+    deck_lights(ref, dim=dim)
     ref.update(center=ref["decks_center"] + Vector((0, 60, 0)), size=ref["decks_width"],
                radius=ref["decks_width"] / 2 + 30)
     return ref
