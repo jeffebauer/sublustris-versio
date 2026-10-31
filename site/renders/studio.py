@@ -1258,28 +1258,184 @@ def tape_cross3():
 
 
 def floor_lamp70(m, x, y):
-    """A 1970s floor lamp: a weighted brass base, a slim stem, a big burnt-orange fabric drum
-    shade glowing from the bulb inside (owner, 31 Oct 2026: "soft, diffuse, from a 70s style
-    lamp"). The shade casts no shadow, so its light leaves it soft, as through the fabric."""
-    brass = C.clay("lamp70_brass", rgb=(0.62, 0.45, 0.20), rough=0.3, metallic=1.0)
-    C.cylinder("lamp70_base", 150, 22, (x, y, 11), brass, segs=64, bevel=5, r2=130)
-    C.cylinder("lamp70_stem", 9, 1000, (x, y, 510), brass, segs=24)
-    shade_m = C.clay("lamp70_shade", rgb=(0.30, 0.09, 0.02), rough=0.95)
-    p = shade_m.node_tree.nodes["Principled BSDF"]
-    p.inputs["Emission Color"].default_value = (1.0, 0.30, 0.05, 1)
-    p.inputs["Emission Strength"].default_value = 1.5
-    shade = C.cylinder("lamp70_shade", 220, 300, (x, y, 1150), shade_m, segs=96, r2=190)
-    shade.visible_shadow = False
-    for z in (1001, 1299):
-        C.torus("lamp70_trim", 220 if z < 1150 else 190, 3, (x, y, z), brass, major=96, minor=8)
+    """A 1970s floor lamp: a chrome disc base and stem under a big orange glass mushroom shade,
+    glowing from the bulb inside (owner, 31 Oct 2026: "a more 70s lamp: orange glass maybe").
+    The glass casts no shadow, so the light leaves it soft and warm."""
+    chrome = C.clay("lamp70_chrome", 0.8, 0.12, metallic=1.0)
+    C.cylinder("lamp70_base", 170, 18, (x, y, 9), chrome, segs=64, bevel=5, r2=150)
+    C.cylinder("lamp70_stem", 10, 1080, (x, y, 550), chrome, segs=24)
+    glass = bpy.data.materials.new("lamp70_glass")
+    glass.use_nodes = True
+    p = glass.node_tree.nodes["Principled BSDF"]
+    p.inputs["Base Color"].default_value = (1.0, 0.30, 0.03, 1)
+    p.inputs["Roughness"].default_value = 0.12
+    p.inputs["Coat Weight"].default_value = 0.6
+    p.inputs["Emission Color"].default_value = (1.0, 0.20, 0.01, 1)
+    p.inputs["Emission Strength"].default_value = float(os.environ.get("IV_LAMP70_GLOW", "1.8"))
+    dome = C.sphere("lamp70_shade", 1.0, (x, y, 1150), glass)
+    dome.scale = (230, 230, 150)
+    dome.visible_shadow = False
+    C.cylinder("lamp70_cap", 22, 16, (x, y, 1302), chrome, segs=32, bevel=4)
     ld = bpy.data.lights.new("lamp70", "POINT")
     ld.energy = C.watts(float(os.environ.get("IV_LAMP70_W", "100")))
-    ld.color = (1.0, 0.66, 0.38)
-    ld.shadow_soft_size = 160
+    ld.color = (1.0, 0.55, 0.24)
+    ld.shadow_soft_size = 120
     ob = bpy.data.objects.new("lamp70", ld)
     C.link(ob)
-    ob.location = (x, y, 1140)
+    ob.location = (x, y, 1120)
+    ob.visible_camera = False
+    # the bulb doesn't light its own shade (lit from 15 cm it clipped to white); the glass glows
+    # orange by itself, the bulb lights the room
+    excl = bpy.data.collections.new("lamp70_shade_only")
+    excl.objects.link(dome)
+    excl.collection_objects[0].light_linking.link_state = "EXCLUDE"
+    ob.light_linking.receiver_collection = excl
     return ob
+
+
+def _squircle(w, d, a, n=4.0):
+    """A point on the rounded-rectangle (superellipse) outline w x d at angle a."""
+    c, sn = math.cos(a), math.sin(a)
+    return (w / 2 * math.copysign(abs(c) ** (2 / n), c), d / 2 * math.copysign(abs(sn) ** (2 / n), sn))
+
+
+def _pad(name, w, d, top, bottom, mat, n=4.0, rings=16, segs=96, subsurf=2):
+    """A smooth surface over a rounded-rectangle plan: top(x, y, t) gives the height at a point
+    (t runs 0 at the centre to 1 at the rim); bottom(...) closes it into a solid (a cushion),
+    or None leaves a sheet to thicken (a shell)."""
+    bm = bmesh.new()
+    def rings_of(fz, last):
+        out = []
+        for i in range(1, last + 1):
+            t = i / rings
+            row = []
+            for j in range(segs):
+                bx, by = _squircle(w, d, 2 * math.pi * j / segs, n)
+                row.append(bm.verts.new((t * bx, t * by, fz(t * bx, t * by, t))))
+            out.append(row)
+        return out
+    c_top = bm.verts.new((0, 0, top(0, 0, 0)))
+    tr = rings_of(top, rings)
+    def skin(c, rs, flip):
+        for j in range(segs):
+            f = (c, rs[0][j], rs[0][(j + 1) % segs])
+            bm.faces.new(f[::-1] if flip else f)
+        for i in range(len(rs) - 1):
+            for j in range(segs):
+                f = (rs[i][j], rs[i + 1][j], rs[i + 1][(j + 1) % segs], rs[i][(j + 1) % segs])
+                bm.faces.new(f[::-1] if flip else f)
+    skin(c_top, tr, False)
+    if bottom:
+        c_bot = bm.verts.new((0, 0, bottom(0, 0, 0)))
+        br = rings_of(bottom, rings - 1) + [tr[-1]]
+        skin(c_bot, br, True)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    ob = C.mesh_obj(name, bm, mat, smooth=True)
+    if not bottom:
+        so = ob.modifiers.new("solidify", "SOLIDIFY")
+        so.thickness = 13.0
+        so.offset = -1.0
+    if subsurf:
+        sub = ob.modifiers.new("subsurf", "SUBSURF")
+        sub.levels = sub.render_levels = subsurf
+    return ob
+
+
+def lounge_chair(m, x, y, rot_deg):
+    """A mid-century lounge chair, unbranded (owner, 31 Oct 2026: peeking in from the right
+    edge; then "too blocky and rigid; the antithesis of the natural curves"): three dished
+    rosewood plywood shells (seat, back, headrest) curling up round soft, pleated black leather
+    cushions that roll over their top edges, curved cast arms with leather pads, a five-star
+    swivel base. About 840 wide and high. Built facing -y, then turned by rot_deg about z."""
+    ply = finish(C.clay("lounge_rosewood", rgb=(0.17, 0.06, 0.03), rough=0.32, coat=0.4), bump=0.08, scale=2.0)
+    leather = finish(C.clay("lounge_leather", rgb=(0.010, 0.009, 0.008), rough=0.5, coat=0.0), bump=0.3,
+                     scale=3.0)
+    alu = C.clay("lounge_alu", 0.05, 0.35, metallic=0.7)
+    alu_edge = C.clay("lounge_alu_edge", 0.85, 0.18, metallic=1.0)
+    button = C.clay("lounge_button", 0.004, 0.45)
+    root = bpy.data.objects.new("lounge_chair", None)
+    C.link(root)
+    parts = []
+    def add(ob):
+        parts.append(ob)
+        return ob
+    def group_at(objs, loc, tilt):
+        e = bpy.data.objects.new("lounge_sub", None)
+        C.link(e)
+        e.location = loc
+        e.rotation_euler = (math.radians(tilt), 0, 0)
+        for o in objs:
+            o.parent = e
+            parts.remove(o)
+        parts.append(e)
+        return e
+
+    def section(name, w, d, h, curl, pleats, roll=0.0):
+        """A dished shell and its cushion, lying flat (cushion up +z, +y toward the shell's
+        top edge). The shell's rim curls up, most along the sides; the cushion swells, rolls
+        over the top edge by `roll`, and is tucked along each pleat (fractions of d)."""
+        def shell_z(px, py, t):
+            side = abs(px) / (w / 2)
+            return curl * t ** 4 * (0.3 + 0.7 * side ** 2) + 18 * (2 * py / d) ** 2
+        objs = [add(_pad(f"{name}_shell", w, d, shell_z, None, ply, n=4.5))]
+        cw, cd = w - 34, d - 16
+        def tuck(py):
+            return sum(math.exp(-((py - (p - 0.5) * cd) / 14.0) ** 2) for p in pleats)
+        def cush_top(px, py, t):
+            swell = h * (1 - t ** 5) ** 0.45
+            over = roll * max(0.0, py / (cd / 2)) ** 3 * (1 - t ** 8) ** 0.3
+            return 14 + h * 0.32 + swell + over - 0.28 * h * tuck(py) * (1 - t ** 4)
+        def cush_bot(px, py, t):
+            return 14 + h * 0.32 - h * 0.30 * (1 - t ** 6) ** 0.4
+        objs.append(add(_pad(f"{name}_cush", cw, cd, cush_top, cush_bot, leather, n=4.0)))
+        for p in pleats:   # the buttons along each tuck
+            py = (p - 0.5) * cd
+            for k in (-1, 0, 1):
+                px = k * cw * 0.3
+                objs.append(add(C.sphere(f"{name}_button", 5, (px, py, cush_top(px, py, 0.3) - 1), button)))
+        return objs
+
+    # the five-star base: curved cast legs, dark with polished edges, on glides
+    for k in range(5):
+        a = 2 * math.pi * k / 5 - math.pi / 2
+        ca, sa = math.cos(a), math.sin(a)
+        add(cable(f"lounge_leg{k}", [(ca * 30, sa * 30, 95), (ca * 160, sa * 160, 70), (ca * 300, sa * 300, 30),
+                                     (ca * 320, sa * 320, 18)], 15, alu))
+        add(cable(f"lounge_leg_edge{k}", [(ca * 40, sa * 40, 108), (ca * 160, sa * 160, 84), (ca * 300, sa * 300, 44)],
+                  3, alu_edge))
+        add(C.cylinder("lounge_glide", 17, 12, (ca * 322, sa * 322, 7), alu, segs=20))
+    add(C.cylinder("lounge_column", 38, 190, (0, 0, 175), alu, segs=32, bevel=4))
+    # the seat (front a little higher), the back and the headrest stood up and reclined
+    group_at(section("lounge_seat", 680, 610, 125, 80, (0.62,)), (0, 0, 265), -10)
+    group_at(section("lounge_back", 700, 520, 100, 85, (0.33, 0.66), roll=26), (0, 285, 575), 90 - 28)
+    group_at(section("lounge_head", 620, 290, 90, 70, (0.5,), roll=30), (0, 470, 935), 90 - 22)
+    # the arms: a curved cast arm each side, from the back shell forward and down to the seat,
+    # with a soft leather pad on top
+    for sx in (-1, 1):
+        ax = sx * 352
+        add(cable(f"lounge_arm{sx}", [(ax, 240, 500), (ax, 120, 540), (ax, -100, 538), (ax, -235, 500),
+                                      (ax * 0.98, -255, 430), (ax * 0.95, -215, 360)], 13, alu))
+        pad = add(_pad(f"lounge_arm_pad{sx}", 82, 400,
+                       lambda px, py, t: 30 * (1 - t ** 4) ** 0.5, lambda px, py, t: -6 * (1 - t ** 6) ** 0.5,
+                       leather, n=3.0, rings=8, segs=48))
+        pad.location = (ax, -15, 555)
+        pad.rotation_euler = (math.radians(-3), 0, 0)
+    for o in parts:
+        o.parent = root
+    root.location = (x, y, 0)
+    root.rotation_euler = (0, 0, math.radians(rot_deg))
+    # the lamp beside it would flood the black leather to grey from half a metre: keep the
+    # chair out of its light, so it reads dark against the glow
+    excl = bpy.data.collections.get("lamp70_shade_only")
+    if excl:
+        def walk(o):
+            for c in o.children:
+                if c.type in ("MESH", "CURVE"):
+                    excl.objects.link(c)
+                    excl.collection_objects[-1].light_linking.link_state = "EXCLUDE"
+                walk(c)
+        walk(root)
+    return root
 
 
 def leafy(m, name, base, rng, n, h=(400, 900), spread=(150, 380), leaf=(110, 38, 6), trail=False):
@@ -1368,12 +1524,13 @@ def tape_cross4():
     xa, xb = sx0 - (A77_W + gap) / 2, sx0 + (A77_W + gap) / 2
     ref = deck_pair(m, (xa, xb), 155.0, z0=rz)
     # the AKS open flat, its panel half's far edge just under the shelf
-    syn = gear.place(gear.synthi(), (-330, -230, DESK_Z), (0, 0, 3))
+    syn = gear.place(gear.synthi(), (-560, -230, DESK_Z), (0, 0, 3))
     echo = gear.place(gear.tape_echo(), (720, 70, DESK_Z), (0, 0, -16))
     gtr = gear.place(gear.guitar(), (850, -775, 262), (75, 0, -10))
     # the SH-2000 (owner, 31 Oct: the synth beside the EP-3 in the Met's photo), front right
-    sh = gear.place(gear.sh2000(), (390, -618, DESK_Z), (0, 0, 0))
-    floor_lamp70(m, 1190.0, 520.0)
+    sh = gear.place(gear.sh2000(), (185, -618, DESK_Z), (0, 0, 0))
+    floor_lamp70(m, 1150.0, 620.0)
+    lounge_chair(m, 1540.0, 400.0, -65.0)
     plants70(m, sx0 + 660.0, rz)
     # leads (owner, 31 Oct: the synth and keyboard need cables): the keyboard lid's multi-way
     # lead into the synth's side, the synth's two outputs back to deck A, the guitar into the
