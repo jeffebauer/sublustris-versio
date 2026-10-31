@@ -6,11 +6,15 @@
 // second, and only while the hero is on screen and the tab is visible. Live time only runs
 // forward and starts on the still's frame, so it never repeats.
 // strength: the layer's brightness (opacity of the still, u_amt of the live shader).
-interface Props { strength: number; class?: string }
-const { strength, class: cls } = Astro.props;
+// palette: 'resilio' draws Resilio Versio's orange-red on its warm black (its site's own colours,
+// from its contours.frag; the still is its public/visuals/contours.jpg), for the sibling band
+// (owner, 1 Nov 2026). The band behind it needs Resilio's --dark (#0c0b0a) to match.
+interface Props { strength: number; class?: string; palette?: 'sublustris' | 'resilio' }
+const { strength, class: cls, palette = 'sublustris' } = Astro.props;
+const still = palette === 'resilio' ? '/visuals/contours-resilio.jpg' : '/visuals/contours.jpg';
 ---
-<div class:list={['contours', cls]} data-contours data-amt={strength} aria-hidden="true">
-  <img class="contours-still" src="/visuals/contours.jpg" alt="" width="1280" height="720" decoding="async" fetchpriority="low" style={`opacity: ${strength}`} />
+<div class:list={['contours', cls]} data-contours data-amt={strength} data-palette={palette} aria-hidden="true">
+  <img class="contours-still" src={still} alt="" width="1280" height="720" decoding="async" fetchpriority="low" style={`opacity: ${strength}`} />
   <canvas class="contours-live"></canvas>
 </div>
 
@@ -22,6 +26,11 @@ const { strength, class: cls } = Astro.props;
   const STILL_AT = 0.3;       // the still's phase in the loop
   const FRAME_MS = 1000 / 30;
   const SCALE = 0.5;          // of device pixels
+  // Resilio's palette: its band's black, warm grey and signal orange-red, in place of ours.
+  const RESILIO = (src: string) => src
+    .replace(/vec3 dark = vec3\([^)]*\);/, 'vec3 dark = vec3(0.047, 0.043, 0.039);')
+    .replace(/vec3 mist = vec3\([^)]*\);/, 'vec3 mist = vec3(0.36, 0.34, 0.31);')
+    .replace(/vec3 blue = vec3\([^)]*\);/, 'vec3 blue = vec3(0.74, 0.25, 0.15);');
 
   function start(el: HTMLElement) {
     const canvas = el.querySelector('canvas')!;
@@ -36,7 +45,7 @@ const { strength, class: cls } = Astro.props;
       gl.compileShader(s);
       return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null;
     };
-    const vs = sh(gl.VERTEX_SHADER, VERT), fs = sh(gl.FRAGMENT_SHADER, FRAG);
+    const vs = sh(gl.VERTEX_SHADER, VERT), fs = sh(gl.FRAGMENT_SHADER, el.dataset.palette === 'resilio' ? RESILIO(FRAG) : FRAG);
     if (!vs || !fs) return;   // the still stays
     const p = gl.createProgram()!;
     gl.attachShader(p, vs);

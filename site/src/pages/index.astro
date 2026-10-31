@@ -50,7 +50,7 @@ const panel = section(sections, 'the-panel');
 const ways = section(sections, 'two-ways-to-play');
 const safe = section(sections, 'safe-to-try');
 const shape = section(sections, 'help-shape-it');
-const sibling = section(sections, 'its-sibling');
+const sibling = section(sections, 'meet-resilio-versio');
 const status = section(sections, 'status');
 
 // The story: its first line is the statement, the last paragraph before the sources is
@@ -247,8 +247,9 @@ const shapeSteps = items(shape.html);
     </div>
   </section>
 
-  <!-- 10 Its sibling (white) -->
-  <section class="section sibling" aria-labelledby="sibling-h">
+  <!-- 10 Its sibling (dark, over Resilio's own orange-red contour lines: owner, 1 Nov 2026) -->
+  <section class="section sibling band-dark has-contours" aria-labelledby="sibling-h">
+    <Contours strength={1} palette="resilio" />
     <div class="column flow centered">
       <h2 class="h2" id="sibling-h">{sibling.title}</h2>
       <div class="lede" set:html={sibling.html} />
@@ -269,20 +270,16 @@ const shapeSteps = items(shape.html);
 </Base>
 
 <style>
+  /* The sibling band takes Resilio's warm black, so its contour lines sit on their own ground. */
+  .sibling.band-dark { --dark: #0c0b0a; }
   .intro-plain .statement { text-wrap: balance; }
   .name-note { display: grid; gap: 0.25rem; padding-top: var(--stack-3); border-top: var(--hair) solid var(--line); color: var(--ink-2); }
-  .sound-points { list-style: none; padding: 0; margin: var(--stack-5) 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gutter); }
-  .sound-points li { display: grid; gap: 0.4rem; align-content: start; padding-top: var(--stack-2); border-top: var(--hair) solid var(--line-dark); }
-  .sound-title { font-size: var(--fs-body); line-height: 1.2; color: var(--on-dark); }
-  .sound-points p { color: var(--on-dark-2); text-wrap: pretty; }
   .story-figure { margin-block: var(--stack-4); color: var(--ink); }
   .story-diagram { display: block; width: min(100%, 26rem); height: auto; margin-inline: auto; }
   .story-ours { padding: clamp(1.25rem, 0.75rem + 1.5vw, 2rem); }
   .get-actions { justify-content: center; }
   .way-sub { font-size: var(--fs-body); color: var(--ink); }
   .macro { margin-top: var(--section-gap, var(--stack-5)); }
-  @media (max-width: 63.99rem) { .sound-points { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (max-width: 29.99rem) { .sound-points { grid-template-columns: minmax(0, 1fr); } }
 </style>
 
 <script>

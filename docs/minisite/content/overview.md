@@ -82,7 +82,7 @@ If something sounds wrong, or you want a sound it can't make yet, tell me. Ideas
 - **Tell me.** Open a GitHub issue with an idea for the sound, or a bug.
 - **Hear it change.** I try ideas by ear, and credit the ones that ship.
 
-## Its sibling
+## Meet Resilio Versio
 
 Sublustris has a sibling, [Resilio Versio](https://resilio-versio.vercel.app): a dub spring reverb and tape echo for the same module. Resilio is for throwing hits into springs. Sublustris is for long, deep spaces.
 
