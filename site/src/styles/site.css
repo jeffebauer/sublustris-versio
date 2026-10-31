@@ -147,6 +147,22 @@ html.hero-film .hero-still { visibility: hidden; }
 /* Once the film is in, hide the still under it, or the two would double up through the
    transparent edges. */
 .hero-frame.is-playing .hero-still { visibility: hidden; transition: visibility 0s linear var(--dur-3); }
+/* The film's edges fade out (owner, 31 Oct 2026), so wherever the module runs past the frame it
+   melts into the band instead of stopping on a hard line through the contour lines. */
+.hero-still, .hero-video {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent), linear-gradient(to bottom, transparent, #000 7%, #000 95%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent), linear-gradient(to bottom, transparent, #000 7%, #000 95%, transparent);
+  mask-composite: intersect;
+}
+/* The hero lights up with the film (owner, 31 Oct 2026): the contour lines start in darkness and
+   come up with the module's key light (HeroMedia sets --hero-lit from the film's time), so the
+   module appears out of the dark. The title comes in quickly, so nobody waits to read or click;
+   scrolling, a key or a tap lights everything at once. */
+html.hero-film .has-contours > .contours { opacity: var(--hero-lit, 0); }
+html.hero-film.hero-lit .has-contours > .contours { opacity: 1; transition: opacity 1s var(--ease-out); }
+html.hero-film .hero-title { animation: hero-title-in 1.2s var(--ease-out) 0.5s both; }
+@keyframes hero-title-in { from { opacity: 0; } }
 .hero-pause {
   position: absolute; right: 0.75rem; bottom: 0.75rem; width: 2.75rem; height: 2.75rem; display: grid; place-items: center;
   border: 0; border-radius: 50%; background: rgb(12 11 10 / 0.7); color: var(--on-dark); cursor: pointer;

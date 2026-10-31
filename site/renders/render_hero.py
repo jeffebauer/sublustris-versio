@@ -1,7 +1,7 @@
 """The animated hero: the monolith emerging from the half-light, then holding.
 
     /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \\
-        --python site/renders/render_hero.py -- --frames DIR [--samples 64] [--res 2400x1350] [--only 1,120,240]
+        --python site/renders/render_hero.py -- --frames DIR [--samples 160] [--res 2400x1350] [--only 1,120,240]
 
 then encode with make_hero_video.sh. Frames are transparent PNGs (owner, 30 Oct 2026): the
 floor is a shadow catcher, so the site's haze shows through and only the module's soft contact
@@ -52,6 +52,11 @@ EDGES_ON = (50, 150)      # rim + top light: the edges and knob caps appear firs
 LIGHTS_ON = (110, 225)    # then the soft key and the fill
 CAM_MOVE = (1, 236)
 EDGE_LIGHTS = ("rim", "top")
+# The opening camera: low, wide and close, looking up (mm; lens mm), so the module looms in a
+# wide-angle view and settles square. Wide enough that the whole module
+# stays in frame for the whole move (owner, 31 Oct 2026: over the site's contour lines a module
+# cut off by the film's edge broke the "appearing from the dark").
+START, START_T, LENS0 = (0, -105, 3), (0, 0, 57), 15.0
 BLUE = C.hex_to_linear(C.FREEZE_BLUE)
 
 
@@ -115,9 +120,9 @@ def build():
     # camera: low and close looking steeply up -> hero_f, the owner's pick (30 Oct
     # 2026): centred, from a little below, 40 mm, so the module towers a touch
     hf = next(v for v in render_clay.module_variants(render_clay._dummy_module_ref()) if v["id"] == "hero_f")
-    start, start_t = C.Vector((0, -62, 2.5)), C.Vector((0, 0, 118))
+    start, start_t = C.Vector(START), C.Vector(START_T)
     end, end_t = C.Vector(hf["loc"]), C.Vector(hf["target"])
-    lens0, lens1 = 20.0, float(hf["f"])
+    lens0, lens1 = LENS0, float(hf["f"])
     tgt = bpy.data.objects.new("cam_target", None)
     C.link(tgt)
     cd = bpy.data.cameras.new("hero")
@@ -151,6 +156,22 @@ def build():
     return ref
 
 
+def _steady_edges():
+    """Edge highlights that hold still from frame to frame (owner, 31 Oct 2026: the speculars
+    along the module's edges looked aliased and jittery). A 0.25 mm bevel made a highlight
+    thinner than a pixel, which the tight 1 px filter stair-stepped, so it crawled as the camera
+    moved (with the camera still, frames already matched). So: a wider, rounder panel bevel, the
+    default 1.5 px filter, enough samples on every pixel to antialias, a stricter noise
+    threshold, and a little glossy blur against fireflies."""
+    bev = bpy.data.objects["panel"].modifiers["bevel"]
+    bev.width, bev.segments = 0.6, 4
+    sc = bpy.context.scene
+    sc.render.filter_size = 1.5
+    sc.cycles.adaptive_threshold = 0.01
+    sc.cycles.adaptive_min_samples = 48   # every edge pixel gets enough samples to antialias
+    sc.cycles.blur_glossy = 0.5
+
+
 def _contact_shadow_only():
     """The floor becomes a shadow catcher that keeps only a soft pool under the module.
     As a plain catcher it also kept the long shadows the key, rim and LED lights throw
@@ -181,7 +202,7 @@ def _contact_shadow_only():
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     out = argv[argv.index("--frames") + 1]
-    samples = int(argv[argv.index("--samples") + 1]) if "--samples" in argv else 64
+    samples = int(argv[argv.index("--samples") + 1]) if "--samples" in argv else 160
     only = [int(x) for x in argv[argv.index("--only") + 1].split(",")] if "--only" in argv else None
     res = argv[argv.index("--res") + 1] if "--res" in argv else "2400x1350"
     w, h = (int(n) for n in res.split("x"))
@@ -192,6 +213,7 @@ def main():
     # Transparent (owner, 30 Oct 2026): the site's haze shows through.
     sc.render.film_transparent = True
     _contact_shadow_only()
+    _steady_edges()
     sc.render.image_settings.file_format = "PNG"
     sc.render.image_settings.color_mode = "RGBA"
     sc.render.image_settings.compression = 15
