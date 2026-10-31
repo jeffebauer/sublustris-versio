@@ -25,11 +25,6 @@ I wanted a reverb I could live inside. Tails long enough for dub techno, ambient
 
 ## What it sounds like
 
-- **Warm and lush, never metallic.** Every part of the reverb moves a little, all the time, so a long tail doesn't ring like a can. In HALL and MASSIVE the bass sits still underneath while everything above it moves.
-- **From a room to minutes long, then endless.** DECAY runs from a short room to tails of half a minute in PLATE, a minute in HALL and two in MASSIVE. Past about 3 o'clock the tail is endless.
-- **Three spaces.** A dense PLATE, a big HALL, and MASSIVE, which swells in slowly and grows into a boundless wash.
-- **Tape-style wear.** One WEAR knob brings in tape saturation, a bucket-brigade delay's breathing, bit grit and a radio's narrow band, all at once. MOTION adds tape wow and flutter, or a quick, shimmering wander.
-
 ## The endless hold
 
 Infinite reverb began as a trick with two tape machines.

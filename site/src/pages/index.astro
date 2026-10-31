@@ -53,7 +53,6 @@ const shape = section(sections, 'help-shape-it');
 const sibling = section(sections, 'its-sibling');
 const status = section(sections, 'status');
 
-const soundPoints = items(sound.html);
 // The story: its first line is the statement, the last paragraph before the sources is
 // Sublustris's own part (set apart), and the sources link closes it.
 const storyParas = paras(story.html);
@@ -100,21 +99,13 @@ const shapeSteps = items(shape.html);
     </div>
   </section>
 
-  <!-- 3 The sound (dark): the demos, then the four points -->
+  <!-- 3 The sound (dark): the demos (the four points went, owner 1 Nov 2026) -->
   <section class="section band-dark sound" id="sound" aria-labelledby="sound-h">
     <div class="column flow centered">
       <h2 class="h2" id="sound-h">{sound.title}</h2>
     </div>
     <div class="wide flow">
       <DemoList />
-      <ul class="sound-points" aria-label="In four points">
-        {soundPoints.map((s) => (
-          <li>
-            <h3 class="sound-title">{s.title}</h3>
-            <p class="small" set:html={s.line} />
-          </li>
-        ))}
-      </ul>
     </div>
   </section>
 
