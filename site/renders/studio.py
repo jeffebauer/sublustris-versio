@@ -80,6 +80,59 @@ def wood(name, rgb, rough=0.5, scale=0.012, stretch=(1.0, 8.0, 1.0)):
         nt.links.new(rng.outputs[0], comb.inputs[k])
     nt.links.new(comb.outputs[0], mul.inputs["B"])
     nt.links.new(mul.outputs["Result"], p.inputs["Base Color"])
+    # the grain is felt as well as seen: darker late wood sits a touch lower and is less glossy
+    gb = nt.nodes.new("ShaderNodeBump")
+    gb.inputs["Strength"].default_value = 0.25
+    gb.inputs["Distance"].default_value = 0.15
+    nt.links.new(wave.outputs["Fac"], gb.inputs["Height"])
+    nt.links.new(gb.outputs["Normal"], p.inputs["Normal"])
+    gr = nt.nodes.new("ShaderNodeMapRange")
+    gr.inputs["To Min"].default_value = rough * 1.25
+    gr.inputs["To Max"].default_value = rough * 0.8
+    nt.links.new(wave.outputs["Fac"], gr.inputs["Value"])
+    nt.links.new(gr.outputs[0], p.inputs["Roughness"])
+    return m
+
+
+def finish(m, bump=0.15, scale=0.5, rough_var=0.12, coat=0.0, coat_rough=0.25, detail=8.0):
+    """Surface realism on top of any material (owner, 31 Oct 2026: "realistic rather than
+    clay-like"): a fine noise bump (orange peel, grain, fibre; scale in 1/mm, object space) and
+    roughness that varies +-rough_var across the surface, plus an optional lacquer coat."""
+    nt = m.node_tree
+    p = _principled(m)
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    nz = nt.nodes.new("ShaderNodeTexNoise")
+    nz.inputs["Scale"].default_value = scale
+    nz.inputs["Detail"].default_value = detail
+    nz.inputs["Roughness"].default_value = 0.6
+    nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
+    if bump:
+        bp = nt.nodes.new("ShaderNodeBump")
+        bp.inputs["Strength"].default_value = bump
+        bp.inputs["Distance"].default_value = 0.2   # mm
+        nt.links.new(nz.outputs["Fac"], bp.inputs["Height"])
+        nt.links.new(bp.outputs["Normal"], p.inputs["Normal"])
+        if coat:
+            nt.links.new(bp.outputs["Normal"], p.inputs["Coat Normal"])
+    if rough_var:
+        src = p.inputs["Roughness"].links[0].from_socket if p.inputs["Roughness"].is_linked else None
+        base = p.inputs["Roughness"].default_value
+        rv = nt.nodes.new("ShaderNodeMapRange")
+        rv.inputs["To Min"].default_value = 1 - rough_var
+        rv.inputs["To Max"].default_value = 1 + rough_var
+        nt.links.new(nz.outputs["Fac"], rv.inputs["Value"])
+        mul = nt.nodes.new("ShaderNodeMath")
+        mul.operation = "MULTIPLY"
+        mul.use_clamp = True
+        if src:
+            nt.links.new(src, mul.inputs[0])
+        else:
+            mul.inputs[0].default_value = base
+        nt.links.new(rv.outputs[0], mul.inputs[1])
+        nt.links.new(mul.outputs[0], p.inputs["Roughness"])
+    if coat:
+        p.inputs["Coat Weight"].default_value = coat
+        p.inputs["Coat Roughness"].default_value = coat_rough
     return m
 
 
@@ -196,6 +249,21 @@ def digits(text, x, z, h, o, y, mat, pitch=None):
             continue
         story._digit(ch, o[0] + x + i * pitch, o[2] + z, o[1] + y, h, mat)
         i += 1
+
+
+def drum_digit(ch, x, z, y, h, m):
+    """One wheel of a mechanical counter: a black drum segment with a printed white numeral,
+    facing -Y, centred at (x, z)."""
+    C.cylinder("counter_drum", 5.0, 7.6, (x, y + 5.0, z), m["void"], axis="Y", segs=32)
+    cu = bpy.data.curves.new("counter_num", "FONT")
+    cu.body = ch
+    cu.size = h
+    cu.align_x, cu.align_y = "CENTER", "CENTER"
+    ob = bpy.data.objects.new("counter_num", cu)
+    C.link(ob)
+    ob.location = (x, y - 0.05, z)
+    ob.rotation_euler = (math.pi / 2, 0, 0)
+    C.assign(ob, C.clay("counter_white", 0.78, 0.55))
 
 
 def _digit_top(ch, x, y, h, mat, parent):
@@ -352,7 +420,9 @@ def deck(o, m, name="deck", supply=70.0, takeup=40.0):
         rollers.append(rc)
     # counter window between the reels, near the top, with its reset key
     B(f"{name}_counter", -20, 20, -4, -1, 322, 340, m["void"], o, bevel=1.2)
-    digits("0127", -13, 331, 9, o, -4.3, C.clay("counter_white", 0.8, 0.5), pitch=8.5)
+    # A77 counters are mechanical: white numerals printed on black drums (not seven-segment)
+    for i, ch in enumerate("0127"):
+        drum_digit(ch, o.x - 12.75 + i * 8.5, o.z + 331, o.y - 4.2, 8.0, m)
     B(f"{name}_reset", 26, 34, -6, -2, 327, 335, m["cap_grey"], o, bevel=1.5)
     # --- control front: transport keys left, knobs middle, meters right
     keys = [m["cap_black"]] * 4 + [m["red_btn"]]
@@ -825,6 +895,7 @@ def mats3():
         cover=C.clay("a77_cover", rgb=(0.03, 0.03, 0.032), rough=0.35, coat=0.2),
         casting=C.clay("a77_casting", rgb=(0.16, 0.16, 0.16), rough=0.55, metallic=0.6),
         headmetal=C.steel("a77_head", 0.75, 0.1),
+        rollermetal=C.steel("a77_roller", 0.7, 0.32),   # satin-machined, not mirror (owner, 31 Oct 2026)
         key_grey=worn("a77_key", (0.13, 0.13, 0.135), 0.4, edge=(0.3, 0.3, 0.3), metallic_edge=False),
         knob3=worn("a77_knob", (0.018, 0.018, 0.02), 0.32, edge=(0.12, 0.12, 0.12), metallic_edge=False),
         clear=clear_plastic("a77_clear"),
@@ -837,6 +908,27 @@ def mats3():
         pilot=story.glow("a77_pilot", "#FF5A2A", 6.0),
         rubber3=C.clay("a77_rubber", 0.018, 0.72),
     )
+    # surface realism (owner, 31 Oct 2026): lacquered wood, eggshell wall paint, fine texture on
+    # paint and plastics, fibre on paper and the rug. Scales in 1/mm.
+    for k, kw in dict(walnut=dict(bump=0.04, scale=2.0, rough_var=0.1, coat=0.4, coat_rough=0.16),
+                      oak=dict(bump=0.04, scale=2.0, rough_var=0.12, coat=0.3, coat_rough=0.28),
+                      floor=dict(bump=0.05, scale=1.0, rough_var=0.2, coat=0.15, coat_rough=0.35),
+                      wall=dict(bump=0.3, scale=1.2, rough_var=0.08),
+                      ctrl3=dict(bump=0.06, scale=3.0, rough_var=0.2),
+                      cover=dict(bump=0.02, scale=4.0, rough_var=0.25),
+                      casting=dict(bump=0.25, scale=2.5, rough_var=0.15),
+                      knob3=dict(bump=0.02, scale=5.0, rough_var=0.18),
+                      key_grey=dict(bump=0.02, scale=5.0, rough_var=0.15),
+                      paper=dict(bump=0.35, scale=3.0, rough_var=0.1),
+                      rug=dict(bump=0.7, scale=2.0, rough_var=0.05),
+                      terracotta=dict(bump=0.4, scale=1.0, rough_var=0.1),
+                      cable=dict(bump=0.0, rough_var=0.25),
+                      rubber3=dict(bump=0.05, scale=3.0, rough_var=0.15)).items():
+        finish(m[k], **kw)
+    m["wall"].node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value = 0.75   # eggshell, not chalk
+    leaf = _principled(m["leaf"])
+    leaf.inputs["Subsurface Weight"].default_value = 0.3   # light through the leaves
+    leaf.inputs["Roughness"].default_value = 0.4
     return m
 
 
@@ -869,9 +961,14 @@ def reel77(name, cx, cz, yc, pack_r, m, spin=0.0):
                                                    cz + (hub + 3) * math.sin(a + math.pi / 3)), axis="X", segs=16)
             cuts.append(hole)
         C.boolean_cut(fl, cuts)
+        # Flat faces stay flat (owner, 31 Oct 2026: the reels' lighting looked wrong): smooth shading
+        # over the whole cut disc bent every face's normals towards its edges, so the flanges and
+        # spokes showed smeared, chalky gradients. Smooth only across edges under 30 degrees.
+        fl.data.set_sharp_from_angle(angle=math.radians(30))
         C.add_bevel(fl, 0.45, 2)
         C.torus(f"{name}_rim", R - 0.5, 0.95, (cx, yf, cz), m["reelalu"], axis="X", major=160, minor=10)
-    C.cylinder(f"{name}_hub", hub, gap + 0.4, (cx, yc, cz), m["reelalu"], axis="X", segs=96, bevel=0.4)
+    hb = C.cylinder(f"{name}_hub", hub, gap + 0.4, (cx, yc, cz), m["reelalu"], axis="X", segs=96, bevel=0.4)
+    hb.data.set_sharp_from_angle(angle=math.radians(30))
     C.cylinder(f"{name}_bore", 9.5, gap + 4, (cx, yc - 0.5, cz), m["void"], axis="X", segs=48)
     C.cylinder(f"{name}_spindle", 4.0, 30, (cx, yc, cz), m["steel"], axis="X", segs=24)
     sl = C.cylinder(f"{name}_sleeve", 9.0, 11, (cx, yc - gap / 2 - 7.5, cz), m["knob3"], axis="X", segs=48,
@@ -1019,10 +1116,10 @@ def deck77(o, m, name="deck", supply=72.0, takeup=44.0, side=1, spin=0.0, needle
         _rod(f"{name}_lever", (s * 152, TZ + gr), piv, 9, YC + 6, F - 1, m["plate"], o, bevel=1.5)
         C.cylinder(f"{name}_lever_pivot", 8, 6, (o.x + piv[0], o.y + F - 3, o.z + piv[1]), m["steel"], axis="X",
                    segs=32, bevel=1)
-        C.cylinder(f"{name}_roller", gr, story.TAPE_W + 1.4, tuple(rc), m["headmetal"], axis="X", segs=48, bevel=0.5)
+        C.cylinder(f"{name}_roller", gr, story.TAPE_W + 1.4, tuple(rc), m["rollermetal"], axis="X", segs=48, bevel=0.5)
         for fy in (-1, 1):
             C.cylinder(f"{name}_roller_fl", gr + 2.2, 1.0, (rc.x, rc.y + fy * (story.TAPE_W / 2 + 1.3), rc.z),
-                       m["headmetal"], axis="X", segs=48, bevel=0.3)
+                       m["rollermetal"], axis="X", segs=48, bevel=0.3)
         rollers.append(rc)
     # --- control panel
     keys = [m["key_grey"]] * 4 + [m["red_btn"]]
@@ -1123,8 +1220,13 @@ def deck_lights(ref, soft=1.0, dim=0.0):
     C.area_light("deck_key", key, c, size=0.7 * s, power=C.watts(C.KEY_W * 0.32 * soft * (1 - 0.1 * dim)) * (d / 1000) ** 2,
                  rgb=(1.0, 0.86, 0.68))
     card = c + Vector((0.1, -0.85, 0.75)).normalized() * d * 1.1
-    C.area_light("deck_card", card, c, size=1.3 * s, power=C.watts(C.KEY_W * 0.035 * soft * (1 - 0.6 * dim)) * (d * 1.1 / 1000) ** 2,
+    C.area_light("deck_card", card, c, size=1.3 * s, power=C.watts(C.KEY_W * 0.035 * soft * (1 - 0.1 * dim)) * (d * 1.1 / 1000) ** 2,
                  rgb=(1.0, 0.93, 0.84))
+    # a big, dim card behind the camera at the plates' height: a flat steel plate seen square on
+    # mirrors what is behind the camera, and in the dim room that was nothing, so it read dark grey
+    pc = c + Vector((0.0, -1.0, 0.12)).normalized() * d * 1.6
+    C.area_light("plate_card", pc, c, size=1.6 * s, power=C.watts(C.KEY_W * 0.028 * soft) * (d * 1.6 / 1000) ** 2,
+                 rgb=(1.0, 0.94, 0.86))
     kick = c + Vector((0.7, 0.75, 0.35)).normalized() * d * 0.8
     C.area_light("deck_kick", kick, c, size=0.3 * s, power=C.watts(C.KEY_W * 0.18 * soft) * (d * 0.8 / 1000) ** 2,
                  rgb=(0.82, 0.88, 1.0))

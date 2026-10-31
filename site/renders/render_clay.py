@@ -171,7 +171,8 @@ def story_variants(refs):
             dict(id="story_tape3_b", slot="story", mood="tape3", res=W169, rnd=3,
                  note="(a) Front-on: square to both decks' faces at seated eye height, 50 mm; the cross-patch "
                       "leads hang in the gap between the cases.",
-                 target=t3["decks_center"] + C.Vector((0, 0, 0)), az=0, el=4, f=50, fit=0.76, by="width"),
+                 target=t3["decks_center"] + C.Vector((0, 0, 0)), az=0, el=4, f=50, fit=0.76, by="width",
+                 fstop=4.0, focus=t3["decks_center"]),  # a photographer's depth of field (owner, 31 Oct 2026)
             dict(id="story_tape3_c", slot="story", mood="tape3", res=W169, rnd=3,
                  note="(a) Optional detail: close on the left deck's head block, capstan and pinch roller, the "
                       "meters soft beyond; 85 mm f/5.6.",
