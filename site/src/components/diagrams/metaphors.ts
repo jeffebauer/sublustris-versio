@@ -685,13 +685,13 @@ export const CONCEPTS: Concept[] = [
     { kind: 'cv-scale', caption: 'A push along a scale' },
     { kind: 'cv-plug', caption: 'A cable beside a knob', risk: 'the plug, side on, can read as a battery or a USB stick.' },
   ] },
-  { id: 'wear-guitar', name: 'WEAR turned up (Worn guitar)', picked: 0, options: [
+  { id: 'wear-guitar', name: 'WEAR turned up (Worn guitar)', picked: 2, options: [
     { kind: 'wear-grain', caption: 'Grain gathering on each chord’s tail' },
     { kind: 'wear-roughen', caption: 'One tail, clean to rough' },
     { kind: 'wear-floor', caption: 'A hiss floor rising under the chords' },
     { kind: 'wear-turn', caption: 'The knob turned, a tail gaining grain' },
   ] },
-  { id: 'wear-drone', name: 'WEAR up and back (Dark drone)', picked: 0, options: [
+  { id: 'wear-drone', name: 'WEAR up and back (Dark drone)', picked: 3, options: [
     { kind: 'wear-sweep', caption: 'The knob’s path, the tail roughening with it' },
     { kind: 'wear-layers', caption: 'Lows steady, wear thickening and thinning' },
     { kind: 'wear-stages', caption: 'Clean, tape, grit, radio, clean' },

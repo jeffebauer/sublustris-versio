@@ -90,6 +90,6 @@ export function clock(seconds: number): string {
 // 03 dub stabs, 05 bloom, 06 shimmer, 07 worn guitar, 08 MOTION's tape side, 10 dark drone.
 const DIAGRAMS: Record<string, DiagramKind> = {
   '01': 'endless-infinity', '02': 'freeze', '03': 'longtail', '05': 'swell-family',
-  '06': 'octave', '07': 'longtail', '08': 'tape-head', '10': 'spaces',
+  '06': 'octave', '07': 'wear-roughen', '08': 'tape-head', '10': 'wear-stages',
 };
 export const diagramFor = (file: string): DiagramKind | undefined => DIAGRAMS[file.slice(0, 2)];
