@@ -19,8 +19,9 @@ The website (site/) was copied from Resilio Versio's site (same author, MIT)
 on 29 Oct 2026 and refactored for Sublustris: its layouts, components,
 scripts, Markdown plugins and design tokens (docs/minisite/design/tokens.css),
 and the logo construction (docs/minisite/tools/make_logo.py). The site's
-licensed MD UI / MD IO webfonts are not in this repository; the build fetches
-them (site/README.md). Inter (SIL OFL 1.1) is bundled from @fontsource as the
+licensed MD UI webfont is not in this repository; the build fetches it
+(site/README.md). Paper Mono (Paper, SIL OFL 1.1; site/public/type/, with its
+licence) is the mono, with three of its stylistic sets made the default. Inter (SIL OFL 1.1) is bundled from @fontsource as the
 fallback. The demo clips use two CC0 sample sets (credits page): Virtuosity
 Drums (Versilian Studios, Karoryfer) and Emilyguitar (Karoryfer).
 

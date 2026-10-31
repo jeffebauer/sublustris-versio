@@ -65,6 +65,7 @@ The sources for the story on the home page:
 - Noise Engineering, for the open Versio platform, the Firmware Swap app, and the printable panel template I drew the panel diagram from.
 - Electro-Smith, for the Daisy Seed and libDaisy.
 - JUCE, which the plugin is built with.
+- [Paper](https://paper.design), for Paper Mono, the monospaced type on this site (SIL Open Font License 1.1).
 
 ## Licence
 

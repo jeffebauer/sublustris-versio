@@ -38,7 +38,7 @@ const TYPE = [
   { cls: 'lede', token: '--fs-lede', range: '18 → 24 px', meta: 'Light 300 · section intros', sample: 'Dimly lit, faintly glowing: the half-light of a clouded night.' },
   { cls: '', token: '--fs-body', range: '17 → 22 px', meta: 'Light 300 · line 1.4', sample: 'Past about 3 o’clock DECAY makes the tail endless. It settles at a steady level and ducks a little under new playing, and in PLATE and HALL its notes hold still when you stop.' },
   { cls: 'small', token: '--fs-small', range: '15 → 18 px', meta: 'Light 300 · captions, tile lines', sample: 'Tap to freeze. Hold while frozen to paint what you play into the pad.' },
-  { cls: 'micro', token: '--fs-micro', range: '12 px', meta: 'MD IO 400 · labels, values', sample: 'SPACE · PLATE · HALL · MASSIVE' },
+  { cls: 'micro', token: '--fs-micro', range: '12 px', meta: 'Paper Mono 400 · labels, values', sample: 'SPACE · PLATE · HALL · MASSIVE' },
 ];
 
 const NAV = ['Home', 'Manual', 'Install', 'Presets', 'Changelog', 'FAQ'];
@@ -69,7 +69,7 @@ const others = (['a', 'b', 'c'] as DirectionId[]).filter((d) => d !== id);
     <p class="small quiet">{dir.summary}</p>
     <p class="small quiet">
       {dir.hasDark ? 'Light and dark themes: the footer’s switch (or your system) changes them; both are on this page, under “Light and dark”.' : 'Dark only: this direction has no light theme.'}
-      {' '}Fonts this build: {fonts.sans ? `MD UI${fonts.mono ? ' and MD IO' : ''}.` : 'Inter (the MD UI files weren’t supplied).'}
+      {' '}Fonts this build: {fonts.sans ? 'MD UI and Paper Mono.' : 'Inter and Paper Mono (the MD UI file wasn’t supplied).'}
     </p>
     <p class="demo-row">
       <Button href="/style/" variant="ghost">All three directions</Button>
@@ -112,7 +112,7 @@ const others = (['a', 'b', 'c'] as DirectionId[]).filter((d) => d !== id);
 
 <!-- Type -->
 <section class:list={['st-section', band('type')]} aria-labelledby="st-type">
-  <div class="column"><h2 class="h2" id="st-type">Type</h2><p class="quiet">MD UI for headings and reading, MD IO for labels and values: the same scale as Resilio.</p></div>
+  <div class="column"><h2 class="h2" id="st-type">Type</h2><p class="quiet">MD UI for headings and reading, Paper Mono for labels, values and the lede: the same scale as Resilio.</p></div>
   <div class="wide">
     {TYPE.map((t) => (
       <div class="st-row">
@@ -127,7 +127,7 @@ const others = (['a', 'b', 'c'] as DirectionId[]).filter((d) => d !== id);
         <p style="font-weight: 400">Regular 400 · UI, anything under 15 px</p>
         <p style="font-weight: 600">Semibold 600 · buttons, bold in long text</p>
         <p style="font-weight: 700">Bold 700 · headings and big numbers</p>
-        <p class="mono">MD IO · v1.0.59 · DECAY 2:30 · DEPTH 250 ms</p>
+        <p class="mono">Paper Mono · v1.0.59 · DECAY 2:30 · DEPTH 250 ms</p>
       </div>
     </div>
   </div>
