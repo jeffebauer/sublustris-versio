@@ -1257,6 +1257,94 @@ def tape_cross3():
     return ref
 
 
+def floor_lamp70(m, x, y):
+    """A 1970s floor lamp: a weighted brass base, a slim stem, a big burnt-orange fabric drum
+    shade glowing from the bulb inside (owner, 31 Oct 2026: "soft, diffuse, from a 70s style
+    lamp"). The shade casts no shadow, so its light leaves it soft, as through the fabric."""
+    brass = C.clay("lamp70_brass", rgb=(0.62, 0.45, 0.20), rough=0.3, metallic=1.0)
+    C.cylinder("lamp70_base", 150, 22, (x, y, 11), brass, segs=64, bevel=5, r2=130)
+    C.cylinder("lamp70_stem", 9, 1000, (x, y, 510), brass, segs=24)
+    shade_m = C.clay("lamp70_shade", rgb=(0.30, 0.09, 0.02), rough=0.95)
+    p = shade_m.node_tree.nodes["Principled BSDF"]
+    p.inputs["Emission Color"].default_value = (1.0, 0.30, 0.05, 1)
+    p.inputs["Emission Strength"].default_value = 1.5
+    shade = C.cylinder("lamp70_shade", 220, 300, (x, y, 1150), shade_m, segs=96, r2=190)
+    shade.visible_shadow = False
+    for z in (1001, 1299):
+        C.torus("lamp70_trim", 220 if z < 1150 else 190, 3, (x, y, z), brass, major=96, minor=8)
+    ld = bpy.data.lights.new("lamp70", "POINT")
+    ld.energy = C.watts(float(os.environ.get("IV_LAMP70_W", "100")))
+    ld.color = (1.0, 0.66, 0.38)
+    ld.shadow_soft_size = 160
+    ob = bpy.data.objects.new("lamp70", ld)
+    C.link(ob)
+    ob.location = (x, y, 1140)
+    return ob
+
+
+def leafy(m, name, base, rng, n, h=(400, 900), spread=(150, 380), leaf=(110, 38, 6), trail=False):
+    """Stems from `base` ending in leaves; trail=True arcs them out and down (a trailing plant)."""
+    bx, by, bz = base
+    for k in range(n):
+        a = 2 * math.pi * k / n + rng.uniform(-0.25, 0.25)
+        ca, sa = math.cos(a), math.sin(a)
+        if trail:
+            r = rng.uniform(*spread)
+            drop = rng.uniform(*h)
+            pts = [(bx, by, bz), (bx + ca * r * 0.5, by + sa * r * 0.5, bz + 40),
+                   (bx + ca * r, by + sa * r, bz - drop * 0.3), (bx + ca * r * 1.1, by + sa * r * 1.1, bz - drop)]
+            cable(f"{name}_stem{k}", pts, 1.6, m["leaf"])
+            for j in range(7):
+                t = 0.25 + j * 0.12
+                q = Vector(pts[1]).lerp(Vector(pts[2]), min(1, t * 1.6)) if t < 0.6 else \
+                    Vector(pts[2]).lerp(Vector(pts[3]), (t - 0.6) / 0.6)
+                lf = C.sphere(f"{name}_leaf{k}_{j}", 1.0, q, m["leaf"])
+                lf.scale = (leaf[0] * rng.uniform(0.7, 1.1), leaf[1], leaf[2])
+                lf.rotation_euler = (rng.uniform(-1.0, 1.0), rng.uniform(-0.8, 0.8), a + rng.uniform(-0.8, 0.8))
+        else:
+            hh = rng.uniform(*h)
+            r = rng.uniform(*spread)
+            tip = (bx + ca * r, by + sa * r, bz + hh)
+            mid = (bx + ca * r * 0.2, by + sa * r * 0.2, bz + hh * 0.6)
+            cable(f"{name}_stem{k}", [(bx, by, bz), mid, tip], 3, m["leaf"])
+            lf = C.sphere(f"{name}_leaf{k}", 1.0, tip, m["leaf"])
+            lf.scale = (leaf[0] * rng.uniform(0.8, 1.15), leaf[1], leaf[2])
+            lf.rotation_euler = (rng.uniform(-0.6, 0.6), rng.uniform(-0.5, 0.5), a)
+
+
+def plants70(m, riser_end, rz):
+    """More plants (owner, 31 Oct 2026): a rubber plant on the floor at the right, a trailing
+    plant on the shelf's right end, a macrame hanger with a trailing plant at the left."""
+    import random
+    rng = random.Random(11)
+    # snake plant: a terracotta pot, tall upright blades
+    px, py = 1020.0, 300.0
+    C.cylinder("pot2", 120, 260, (px, py, 130), m["terracotta"], segs=48, r2=150, bevel=4)
+    C.cylinder("soil2", 140, 10, (px, py, 255), m["rubber"], segs=48)
+    for k in range(16):
+        a = 2 * math.pi * k / 16 + rng.uniform(-0.3, 0.3)
+        r = rng.uniform(10, 90)
+        h = rng.uniform(420, 820)
+        bl = C.sphere(f"snake_blade{k}", 1.0, (px + math.cos(a) * r, py + math.sin(a) * r, 255 + h / 2), m["leaf"])
+        bl.scale = (rng.uniform(22, 34), 4, h / 2)
+        bl.rotation_euler = (math.sin(a) * rng.uniform(0.05, 0.2), -math.cos(a) * rng.uniform(0.05, 0.2), a + 1.57)
+    # trailing plant on the shelf
+    sx, sy = riser_end - 55, 255.0
+    C.cylinder("pot3", 52, 95, (sx, sy, rz + 47), m["terracotta"], segs=40, r2=62, bevel=3)
+    C.cylinder("soil3", 58, 6, (sx, sy, rz + 92), m["rubber"], segs=40)
+    leafy(m, "trail", (sx, sy, rz + 95), rng, 9, h=(120, 330), spread=(60, 150), leaf=(46, 30, 4), trail=True)
+    # macrame hanger between the bookshelf and the desk: cords up out of frame, a round pot
+    hx, hy, hz = -1120.0, 470.0, 1210.0
+    rope = C.clay("macrame", rgb=(0.62, 0.52, 0.38), rough=0.95)
+    for k in range(4):
+        a = math.pi / 4 + k * math.pi / 2
+        cable(f"macrame{k}", [(hx + math.cos(a) * 110, hy + math.sin(a) * 110, hz - 40),
+                              (hx + math.cos(a) * 60, hy + math.sin(a) * 60, hz + 260), (hx, hy, hz + 700)], 2.5, rope)
+    C.sphere("pot4", 1.0, (hx, hy, hz), m["terracotta"]).scale = (115, 115, 85)
+    C.cylinder("soil4", 95, 6, (hx, hy, hz + 60), m["rubber"], segs=40)
+    leafy(m, "hang", (hx, hy, hz + 62), rng, 12, h=(250, 650), spread=(110, 230), leaf=(52, 34, 4), trail=True)
+
+
 def tape_cross4():
     """Round 4 (owner, 31 Oct 2026: something on the desk that would be recorded onto the tape,
     and of the era): the cross-patched decks on a low walnut shelf at the back of the desk; in
@@ -1282,7 +1370,11 @@ def tape_cross4():
     # the AKS open flat, its panel half's far edge just under the shelf
     syn = gear.place(gear.synthi(), (-330, -230, DESK_Z), (0, 0, 3))
     echo = gear.place(gear.tape_echo(), (720, 70, DESK_Z), (0, 0, -16))
-    gtr = gear.place(gear.guitar(), (650, -775, 262), (75, 0, -12), mirror=True)
+    gtr = gear.place(gear.guitar(), (850, -775, 262), (75, 0, -10))
+    # the SH-2000 (owner, 31 Oct: the synth beside the EP-3 in the Met's photo), front right
+    sh = gear.place(gear.sh2000(), (390, -618, DESK_Z), (0, 0, 0))
+    floor_lamp70(m, 1190.0, 520.0)
+    plants70(m, sx0 + 660.0, rz)
     # leads (owner, 31 Oct: the synth and keyboard need cables): the keyboard lid's multi-way
     # lead into the synth's side, the synth's two outputs back to deck A, the guitar into the
     # echo's input, the echo's output to deck B, mains leads off the back of the desk
@@ -1297,26 +1389,31 @@ def tape_cross4():
         d_in = Vector((xa + 90 + 20 * j, 130 + A77_D, rz + 60))
         cable(f"synth_out{j}", [o0, o0 + Vector((0, 10, 30)), Vector((o0.x - 10, o0.y + 60, DESK_Z + 120)),
                                 Vector((d_in.x, 340, DESK_Z + 5)), Vector((d_in.x, 390, rz - 40)), d_in], 2.6, mat)
-    e0 = W(echo, (-gear.EC_W / 2 + 10 + 0.47 * (gear.EC_W - 20), 49, gear.EC_H - 34))
+    e0 = bpy.data.objects["ec_jack"].matrix_world.translation.copy()   # INPUT, on the sloped panel
     g0 = W(gtr, (150, -250, 25))   # the guitar's output jack, on the lower bout's rim
-    cable("guitar_lead", [g0, g0 + Vector((60, -40, -60)), Vector((g0.x + 120, -560, 220)),
-                          Vector((e0.x + 40, -470, DESK_Z - 30)), Vector((e0.x + 60, -390, DESK_Z + 4)),
-                          Vector((e0.x + 20, e0.y - 120, DESK_Z + 3)), e0 + Vector((0, -30, -20)), e0], 2.8,
-          m["cable"])
+    # round the desk's right end and behind the SH-2000, so it never crosses the keys
+    x1 = DESK["x1"]
+    cable("guitar_lead", [g0, g0 + Vector((50, -40, -60)), Vector((x1 + 40, -600, 160)),
+                          Vector((x1 + 25, -300, DESK_Z - 120)), Vector((x1 - 10, -300, DESK_Z + 4)),
+                          Vector((x1 - 120, -310, DESK_Z + 3)), Vector((e0.x + 30, e0.y - 140, DESK_Z + 3)),
+                          e0 + Vector((0, -45, 25)), e0], 2.8, m["cable"])
     eo = W(echo, (-120, gear.EC_D, 60))
     cable("echo_out", [eo, eo + Vector((0, 40, -40)), Vector((eo.x - 60, 360, DESK_Z + 4)),
                        Vector((xb + 120, 395, rz - 30)), Vector((xb + 110, 130 + A77_D, rz + 60))], 2.6,
           m["cable_grey"])
-    for p0 in (W(syn, (gear._px(685), gear.SY_D, 40)), W(echo, (100, gear.EC_D, 30))):
+    so = W(sh, (gear._shx(0.67), 225, 113))   # the SH-2000's output, on top of its rear rail
+    cable("sh_out", [so, so + Vector((0, 20, 35)), Vector((so.x - 40, so.y + 120, DESK_Z + 40)),
+                     Vector((so.x - 120, 100, DESK_Z + 4)), Vector((xb - 40, 395, rz - 30)),
+                     Vector((xb - 60, 130 + A77_D, rz + 60))], 2.6, m["cable"])
+    for p0 in (W(syn, (gear._px(685), gear.SY_D, 40)), W(echo, (100, gear.EC_D, 30)), W(sh, (300, gear.SH_D, 40))):
         cable("mains", [p0, p0 + Vector((0, 50, -25)), Vector((p0.x, DESK["y1"] - 15, DESK_Z + 4)),
                         Vector((p0.x + 15, DESK["y1"] + 30, DESK_Z - 60)), Vector((p0.x + 30, DESK["y1"] + 45, 300))],
               2.8, m["cable"])
     dim = float(os.environ.get("IV_STORY_DIM", STORY_DIM))
     room_lights(bulb, A77_W, dim=dim)
     deck_lights(ref, dim=dim)
-    # a soft warm key over the desk front, so the synth panel and the guitar read
-    C.area_light("gear_key", Vector((-300, -1300, DESK_Z + 1200)), Vector((200, -300, DESK_Z - 80)), size=1000,
-                 power=C.watts(C.KEY_W * 0.22) * (1.9) ** 2, rgb=(1.0, 0.84, 0.64))
+    # (the gear's own key light is gone: owner, 31 Oct, it glared in deck A's left reel; the
+    # 1970s floor lamp at the right lights the desk instead)
     ref.update(center=ref["decks_center"] + Vector((0, 60, 0)), size=ref["decks_width"],
                radius=ref["decks_width"] / 2 + 30, desk_front=Vector((0, -330, DESK_Z + 120)))
     DESK = desk0

@@ -94,6 +94,14 @@ def mats(m):
         maroon=studio.finish(C.clay("echo_maroon", rgb=(0.32, 0.02, 0.04), rough=0.3, metallic=0.8), bump=0.01,
                              scale=4, rough_var=0.15),
         gloss_black=C.clay("echo_cover", 0.01, 0.08, coat=0.6),
+        rosewood=studio.finish(C.clay("sh_rosewood", rgb=(0.20, 0.07, 0.035), rough=0.45, coat=0.2), bump=0.15,
+                               scale=2.0),
+        sh_key_white=C.clay("sh_key_white", rgb=(0.80, 0.74, 0.60), rough=0.3, coat=0.3),
+        tab_green=C.clay("sh_tab_green", rgb=(0.03, 0.30, 0.07), rough=0.3, coat=0.4),
+        tab_grey=C.clay("sh_tab_grey", rgb=(0.50, 0.50, 0.48), rough=0.3, coat=0.4),
+        tab_amber=C.clay("sh_tab_amber", rgb=(0.86, 0.36, 0.02), rough=0.3, coat=0.4),
+        tab_red=C.clay("sh_tab_red", rgb=(0.45, 0.015, 0.02), rough=0.3, coat=0.4),
+        tab_cream=C.clay("sh_tab_cream", rgb=(0.80, 0.74, 0.60), rough=0.3, coat=0.4),
         sheet=C.clay("echo_sheet", rgb=(0.72, 0.68, 0.55), rough=0.7),
         black_lacquer=C.clay("lp_black", 0.008, 0.1, coat=1.0),
         binding=C.clay("lp_binding", rgb=(0.72, 0.64, 0.46), rough=0.3, coat=0.5),
@@ -325,59 +333,129 @@ def synthi():
 
 # ------------------------------------------------------------------ the Echoplex EP-3
 
-# About 370 x 240 x 200 mm (sources disagree: STORY_RESEARCH.md); the layout from the Met's photo of
-# Steve Miller's c.1971 EP-3: the maroon panel strip along the front, the glossy black cartridge
-# cover behind it with the delay slider in its slot, a cable well at the left, the lid open behind.
-EC_W, EC_D, EC_H = 370.0, 240.0, 200.0
+# About 370 x 240 mm, the walls 150 mm high (sources disagree: STORY_RESEARCH.md); the layout from the
+# Met's photo of Steve Miller's c.1971 EP-3 (round 4, redone 31 Oct 2026 after "the tape echo looks
+# odd"): a low front wall with the latch, the maroon panel sloping up from its top edge across the
+# full width, the glossy black cartridge cover standing proud behind it, a cable well at the left,
+# and the lid open behind, hinged at the back, its cream instruction sheet facing the player.
+EC_W, EC_D, EC_H = 370.0, 240.0, 150.0
+EC_FRONT = 112.0     # the front wall: the panel's front edge sits on it
+EC_PANEL_D = 88.0    # the panel's depth, front to back
+EC_SLOPE = 16.0      # degrees
+
+
+def _pivot(name, n_before, loc, rot_deg):
+    """Hang every part built since PARTS[n_before] on an empty at loc, turned by rot_deg."""
+    e = bpy.data.objects.new(name, None)
+    C.link(e)
+    e.location = Vector(loc)
+    for ob in PARTS[n_before:]:
+        ob.location -= Vector(loc)
+        ob.parent = e
+    del PARTS[n_before:]
+    _track(e)
+    e.rotation_euler = tuple(math.radians(a) for a in rot_deg)
+    return e
 
 
 def tape_echo():
     w2 = EC_W / 2
-    t = 10.0
-    # the open box: tolex walls, a floor inside
+    t = 9.0
+    # the box: tolex walls round a raised dark floor
     box("ec_floor", -w2, w2, 0, EC_D, 0, 12, M["tolex"], bevel=3)
-    box("ec_wall_f", -w2, w2, 0, t, 0, EC_H - 40, M["tolex"], bevel=3)
+    box("ec_inner", -w2 + t, w2 - t, t, EC_D - t, 0, 90, M["void"])
+    box("ec_wall_f", -w2, w2, 0, t, 0, EC_FRONT, M["tolex"], bevel=3)
     box("ec_wall_b", -w2, w2, EC_D - t, EC_D, 0, EC_H, M["tolex"], bevel=3)
     for sx in (-1, 1):
         box("ec_wall_s", sx * w2 - t / 2 - sx * t / 2, sx * w2 + t / 2 - sx * t / 2, 0, EC_D, 0, EC_H, M["tolex"],
             bevel=3)
-    box("ec_latch", -14, 14, -4, 1, EC_H - 75, EC_H - 48, M["chrome"], bevel=1.5)
-    # the maroon panel strip, tilted back a little, along the front
-    pan = box("ec_panel", -w2 + t, w2 - t, 6, 80, EC_H - 44, EC_H - 41, M["maroon"], bevel=0.8)
-    pan.rotation_euler = (math.radians(12), 0, 0)
-    pz = EC_H - 41 + 0.8
-    py = 43.0
+    box("ec_latch", -15, 15, -4, 1, EC_FRONT - 32, EC_FRONT - 4, M["chrome"], bevel=1.5)
+    box("ec_latch_hasp", -6, 6, -6, -3, EC_FRONT - 26, EC_FRONT - 12, M["chrome"], bevel=1)
+
+    # the maroon panel, built flat and then sloped up from the front wall's top edge
+    n0 = len(PARTS)
+    pw2 = w2 - t
+    box("ec_panel", -pw2, pw2, 0, EC_PANEL_D, -2.5, 0, M["maroon"], bevel=0.6)
     def at(f):
-        return -w2 + t + f * (EC_W - 2 * t)
-    box("ec_bat_base", at(0.06) - 6, at(0.06) + 6, py - 6, py + 6, pz, pz + 2, M["chrome"], bevel=1)
-    bat = cyl("ec_bat", 1.6, 14, (at(0.06), py - 2, pz + 8), M["chrome"], segs=12)
+        return -pw2 + f * 2 * pw2
+    py = 30.0          # the row of controls, from the panel's front edge
+    box("ec_bat_base", at(0.05) - 6, at(0.05) + 6, py - 9, py + 9, 0, 2, M["chrome"], bevel=1)
+    bat = cyl("ec_bat", 1.7, 15, (at(0.05), py - 3, 8), M["chrome"], segs=12)
     bat.rotation_euler = (math.radians(-20), 0, 0)
-    for f in (0.2, 0.33):   # sustain and echo volume: black pointer knobs
-        cyl("ec_knob", 9, 12, (at(f), py, pz + 6), M["knob"], segs=32, bevel=1.2, r2=8)
-        box("ec_pointer", at(f) - 1.5, at(f) + 1.5, py - 12, py - 6, pz + 1, pz + 6, M["knob"], bevel=0.5)
-    cyl("ec_trim", 3.5, 2, (at(0.27), py, pz + 1), M["void"], segs=16)
-    for f in (0.47, 0.57, 0.67, 0.91):
-        jack("ec_jack", at(f), py + 6, pz)
-    cyl("ec_rec_lamp", 6.5, 5, (at(0.79), py + 6, pz + 2.5), M["led"], segs=24, bevel=1.5)
-    for k in range(36):   # the 0-35 delay scale along the panel's upper edge
-        x = at(0.45) + k * (at(0.8) - at(0.45)) / 35
-        box("ec_tick", x - 0.3, x + 0.3, 66, 66 + (5 if k % 5 == 0 else 2.5), pz + 7, pz + 7.2, M["print"])
-    # the cartridge cover: glossy black, concentric rings, the slider slot and its chrome post
-    cx0, cx1 = at(0.27), w2 - t - 4
-    box("ec_cover", cx0, cx1, 92, EC_D - t - 4, EC_H - 34, EC_H - 12, M["gloss_black"], bevel=2)
-    ccx, ccy = (cx0 + cx1) / 2, 160.0
-    for r in (28, 42, 56):
-        ring = _track(C.torus("ec_ring", r, 0.5, (ccx, ccy, EC_H - 11.8), M["print"], major=96, minor=6))
-        ring.scale = (1.4, 0.75, 0.25)
-    box("ec_slot", at(0.45), at(0.8), 100, 106, EC_H - 12, EC_H - 11.7, M["void"])
-    cyl("ec_slider", 3.2, 14, (at(0.62), 103, EC_H - 5), M["chrome"], segs=16, bevel=0.8)
-    for x, y in ((cx0 + 14, 104), (cx1 - 14, EC_D - 30)):
-        cyl("ec_post", 4.5, 9, (x, y, EC_H - 7.5), M["chrome"], segs=20, bevel=1)
-    # the cable well at the left: a coiled grey lead
+    for f in (0.19, 0.33):   # sustain and echo volume: black skirted pointer knobs
+        cyl("ec_knob_skirt", 12, 4, (at(f), py, 2), M["knob"], segs=32, bevel=1)
+        cyl("ec_knob", 8.5, 13, (at(f), py, 8.5), M["knob"], segs=32, bevel=1.2, r2=7.5)
+        box("ec_pointer", at(f) - 0.8, at(f) + 0.8, py - 12, py - 4, 4, 4.3, M["print"])
+    cyl("ec_trim", 3.5, 2, (at(0.26), py + 4, 1), M["void"], segs=16)
+    for f in (0.48, 0.59, 0.70, 0.93):
+        jack("ec_jack", at(f), py + 2, 0)
+    cyl("ec_rec_bezel", 9, 3, (at(0.815), py + 2, 1.5), M["chrome"], segs=32, bevel=1)
+    _track(C.sphere("ec_rec_lamp", 7, (at(0.815), py + 2, 3), M["led"]))
+    box("ec_scale_rule", at(0.42), at(0.9), 66, 66.6, 0, 0.2, M["print"])
+    for k in range(36):   # the 0-35 echo-delay scale along the panel's back edge
+        x = at(0.42) + k * (at(0.9) - at(0.42)) / 35
+        box("ec_tick", x - 0.35, x + 0.35, 66.6, 66.6 + (6 if k % 5 == 0 else 3), 0, 0.2, M["print"])
+    for f in (0.05, 0.19, 0.33):   # small white legends under the controls (unlettered bars)
+        box("ec_legend", at(f) - 9, at(f) + 9, py - 22, py - 19, 0, 0.2, M["print"])
+    box("ec_footsw_rule", at(0.62), at(0.97), 52, 52.5, 0, 0.2, M["print"])
+    for ob in PARTS[n0:]:   # built flat at z = 0; lift onto the front wall, then slope it
+        ob.location.z += EC_FRONT
+    _pivot("ec_panel_tilt", n0, (0, 0, EC_FRONT), (EC_SLOPE, 0, 0))
+    pz_back = EC_FRONT + EC_PANEL_D * math.sin(math.radians(EC_SLOPE))
+    py_back = EC_PANEL_D * math.cos(math.radians(EC_SLOPE))
+
+    # the cartridge housing behind the panel, its glossy cover standing proud of the walls
+    cx0, cx1 = -w2 + t + 0.26 * (EC_W - 2 * t), w2 - t - 4
+    cy0, cy1 = py_back + 4, EC_D - t - 6
+    ctop = EC_H + 24
+    box("ec_housing", cx0, cx1, cy0, cy1, 0, ctop - 4, M["void"], bevel=1)
+    box("ec_cover", cx0, cx1, cy0, cy1, ctop - 4, ctop, M["gloss_black"], bevel=1.5)
+    ccx, ccy = (cx0 + cx1) / 2, (cy0 + cy1) / 2 + 12
+    for r in (26, 40, 54):
+        ring = _track(C.torus("ec_ring", r, 0.5, (ccx, ccy, ctop + 0.1), M["print"], major=96, minor=6))
+        ring.scale = (1.5, 0.8, 0.25)
+    sx0, sx1 = cx0 + 40, cx1 - 30
+    box("ec_slot", sx0, sx1, cy0 + 12, cy0 + 18, ctop, ctop + 0.3, M["void"])
+    cyl("ec_slider", 3.2, 16, (sx0 + 0.55 * (sx1 - sx0), cy0 + 15, ctop + 8), M["chrome"], segs=16, bevel=0.8)
+    for x, y in ((cx0 + 14, cy0 + 12), (cx1 - 14, cy1 - 14)):
+        cyl("ec_post", 5, 10, (x, y, ctop + 5), M["chrome"], segs=20, bevel=1)
+    # the cable well at the left: a coiled grey lead on the dark floor
+    box("ec_well_floor", -w2 + t, cx0, cy0, EC_D - t, 90, 92, M["void"])
     for k in range(4):
-        _track(C.torus("ec_coil", 34 - k * 2, 2.3, (at(0.12) + k * 2, 160, 22 + k * 5), M["cable_grey"],
-                       major=40, minor=8))
-    # the lid is off (it lifts away whole on the real unit; standing open it read as a laptop)
+        _track(C.torus("ec_coil", 30 - k * 2, 2.3, ((-w2 + t + cx0) / 2 + k * 2, (cy0 + EC_D) / 2, 96 + k * 4.5),
+                       M["cable_grey"], major=40, minor=8))
+
+    # the lid, open behind: a shallow tolex tray hinged at the back top edge, tipped back past
+    # upright, the cream instruction sheet with its printed diagram inside
+    n1 = len(PARTS)
+    LD = 52.0   # the lid's depth
+    box("ec_lid_top", -w2, w2, 0, EC_D, LD - t, LD, M["tolex"], bevel=3)
+    box("ec_lid_rim_hinge", -w2, w2, EC_D - t, EC_D, 0, LD, M["tolex"], bevel=3)
+    box("ec_lid_rim_front", -w2, w2, 0, t, 0, LD, M["tolex"], bevel=3)
+    for sx in (-1, 1):
+        box("ec_lid_rim_s", sx * w2 - t / 2 - sx * t / 2, sx * w2 + t / 2 - sx * t / 2, 0, EC_D, 0, LD, M["tolex"],
+            bevel=3)
+    sz = LD - t - 0.4
+    box("ec_sheet", -w2 + t + 6, w2 - t - 6, t + 6, EC_D - t - 6, sz - 0.4, sz, M["sheet"])
+    # the printed diagram: a window for the delay scale, the controls' boxes, the leader lines
+    zl = sz - 0.6
+    def ink(x0, x1, y0, y1):
+        box("ec_sheet_ink", x0, x1, y0, y1, zl, zl + 0.2, M["ink"])
+    ink(-40, 110, EC_D - 52, EC_D - 50); ink(-40, 110, EC_D - 30, EC_D - 28)
+    ink(-40, -38, EC_D - 52, EC_D - 28); ink(108, 110, EC_D - 52, EC_D - 28)
+    ink(-150, 150, EC_D - 75, EC_D - 74)
+    for x in (-130, -95, -55, -15, 25, 65, 105, 140):
+        ink(x - 12, x + 12, EC_D - 112, EC_D - 111); ink(x - 12, x + 12, EC_D - 88, EC_D - 87)
+        ink(x - 12, x - 11, EC_D - 112, EC_D - 87); ink(x + 11, x + 12, EC_D - 112, EC_D - 87)
+        ink(x - 0.6, x + 0.6, EC_D - 150 + (x % 3) * 8, EC_D - 112)
+    for k in range(5):
+        ink(-150, -60, 40 + k * 9, 41.2 + k * 9)
+    for x in (-w2 + 40, w2 - 40):
+        box("ec_hinge", x - 14, x + 14, EC_D - 3, EC_D + 3, 0, 18, M["chrome"], bevel=1)
+    # built as if lying closed on the box (inside facing down), then swung open about the back edge
+    for ob in PARTS[n1:]:
+        ob.location.z += EC_H
+    _pivot("ec_lid_open", n1, (0, EC_D, EC_H), (-100, 0, 0))
     return group("tape_echo")
 
 
@@ -388,24 +466,30 @@ def tape_echo():
 # four gold bell knobs, the switch on the upper bass horn, a bound open-book headstock with the
 # split-diamond inlay (no lettering). Body about 440 x 330 x 55 mm, scale 628 mm.
 
-def _body_outline(n=144):
-    """Star-shaped about the origin: the lower bout, the smaller upper bout, the treble cutaway
-    (+x)."""
-    circles = ((Vector((0, -58)), 166.0), (Vector((0, 108)), 116.0))
+# The single-cut outline in mm (neck along +y, the bridge near y = 0, the cutaway at +x): 435 long,
+# 330 across the lower bout, a waist about 215 across, the rounded horn reaching up beside the neck
+# (round 4, redone 31 Oct 2026: the circle-built body read as a blob).
+_LP_OUTLINE = [
+    (0, -236), (-62, -231), (-112, -212), (-148, -178), (-164, -128), (-163, -78), (-148, -32),
+    (-122, 8), (-107, 42), (-108, 78), (-118, 118), (-119, 152), (-108, 182), (-84, 202),
+    (-50, 210), (-22, 204),                                  # the bass upper bout to the neck
+    (22, 196), (28, 178), (40, 165), (53, 166), (62, 180), (66, 198),   # the cutaway
+    (78, 206), (96, 196), (111, 170), (118, 132), (115, 92), (106, 54),   # the horn and treble bout
+    (122, 10), (148, -32), (163, -78), (164, -128), (148, -178), (112, -212), (62, -231),
+]
+
+
+def _body_outline(sub=6):
+    """_LP_OUTLINE smoothed (closed Catmull-Rom), sub points per span."""
+    P = [Vector(p) for p in _LP_OUTLINE]
+    n = len(P)
     pts = []
-    for k in range(n):
-        a = 2 * math.pi * k / n
-        d = Vector((math.cos(a), math.sin(a)))
-        best = 0.0
-        for c, r in circles:
-            b = d.dot(c)
-            disc = b * b - c.length_squared + r * r
-            if disc >= 0:
-                best = max(best, b + math.sqrt(disc))
-        p = d * best
-        if p.x > 28 and p.y > 120:   # the single cutaway: the treble horn pulled in
-            p = Vector((28 + (p.x - 28) * 0.42, min(p.y, 150 + (p.x - 28) * 0.55)))
-        pts.append(p)
+    for i in range(n):
+        p0, p1, p2, p3 = P[i - 1], P[i], P[(i + 1) % n], P[(i + 2) % n]
+        for k in range(sub):
+            t = k / sub
+            pts.append(0.5 * (2 * p1 + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t
+                              + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t))
     return pts
 
 
@@ -420,12 +504,15 @@ def _prism(name, pts, z0, z1, mat):
 
 
 def _ribbon(name, pts, z0, z1, mat, out=0.8):
-    """A thin band round an outline (binding)."""
+    """A thin band round an outline (binding), pushed out along each point's outward normal."""
     bm = bmesh.new()
-    c = Vector((0, 0))
+    n = len(pts)
+    area = sum(pts[i].x * pts[(i + 1) % n].y - pts[(i + 1) % n].x * pts[i].y for i in range(n))
+    sgn = 1.0 if area > 0 else -1.0   # counter-clockwise: the outward normal is (dy, -dx)
     ring = []
-    for p in pts:
-        q = p + (p - c).normalized() * out
+    for i, p in enumerate(pts):
+        d = (pts[(i + 1) % n] - pts[i - 1]).normalized()
+        q = p + Vector((d.y, -d.x)) * sgn * out
         ring.append((bm.verts.new((q.x, q.y, z0)), bm.verts.new((q.x, q.y, z1))))
     for i in range(len(ring)):
         a, b = ring[i], ring[(i + 1) % len(ring)]
@@ -437,12 +524,12 @@ def guitar():
     """Lying face up (+z), neck along +y, the bridge near y = 0."""
     out = _body_outline()
     body = _prism("gt_body", [(p.x, p.y) for p in out], 0, 52, M["black_lacquer"])
-    C.add_bevel(body, 7, 4)
-    _ribbon("gt_binding_top", out, 44, 51, M["binding"], out=0.5)
+    C.add_bevel(body, 3, 3)
+    _ribbon("gt_binding_top", out, 45, 52.4, M["binding"], out=1.2)
     _ribbon("gt_binding_back", out, 2, 6, M["binding"], out=0.5)
     # the elevated pickguard on the treble side
     # (beside the pickup rings, under the strings, narrowing toward the cutaway; white ply edge)
-    pg = [(50, 14), (78, 6), (98, 26), (100, 70), (84, 110), (62, 140), (50, 134)]
+    pg = [(50, 8), (80, 0), (100, 28), (105, 80), (96, 128), (76, 156), (56, 158), (49, 120)]
     _prism("gt_guard", pg, 57, 58.6, M["guard"])
     _ribbon("gt_guard_edge", [Vector(p) for p in pg], 57.1, 58.4, M["binding"], out=0.4)
     # neck: mahogany under an ebony board with cream binding and pearl blocks; gold frets
@@ -512,6 +599,103 @@ def guitar():
         _track(C.curve_obj("gt_string", [(x0, -46, 61), (x0, 0, 63.5), (x1, 633, 60.5), order[k]], r,
                            M["string"]))
     return group("guitar")
+
+
+# ------------------------------------------------------------------ the SH-2000
+
+# 865 x 266 x 133 mm (soundprogramming.net; the Met gives the same), from Perfect Circuit's photos
+# on vintagesynth.com (owner, 31 Oct 2026: "the synthesizer that's in the reference photo of the
+# tape echo"; the Met shows Steve Miller's SH-2000 beside his EP-3). Wood end cheeks, a tall black
+# rear rail with a chrome seam, the silver panel in the left third, 37 keys (F to F), and the 34
+# coloured organ tabs hanging off the front edge. x fractions run from the left cheek's outer face.
+SH_W, SH_D, SH_H = 865.0, 266.0, 133.0
+
+
+def _shx(f):
+    return -SH_W / 2 + f * SH_W
+
+
+def _prism_yz(name, pts, x0, x1, mat):
+    """An outline in the y-z plane extruded across x."""
+    bm = bmesh.new()
+    f = bm.faces.new([bm.verts.new((x0, y, z)) for y, z in pts])
+    ext = bmesh.ops.extrude_face_region(bm, geom=[f])
+    bmesh.ops.translate(bm, vec=Vector((x1 - x0, 0, 0)),
+                        verts=[e for e in ext["geom"] if isinstance(e, bmesh.types.BMVert)])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return _track(C.mesh_obj(name, bm, mat))
+
+
+def sh2000():
+    w2 = SH_W / 2
+    ck = 22.0
+    cheek = [(0, 0), (0, 92), (12, 98), (SH_D, SH_H), (SH_D, 0)]
+    for sx in (-1, 1):
+        ob = _prism_yz("sh_cheek", cheek, sx * w2 - (ck if sx > 0 else 0), sx * w2 + (ck if sx < 0 else 0),
+                       M["rosewood"])
+        C.add_bevel(ob, 2.5, 2)
+    xi0, xi1 = -w2 + ck, w2 - ck
+    box("sh_base", xi0, xi1, 4, SH_D - 4, 12, 50, M["void"])
+    # the front lip and its tabs
+    box("sh_lip", xi0, xi1, 2, 26, 14, 62, M["lidblack"], bevel=1.5)
+    groups = [(0.066, 0.134, "GYA"), (0.153, 0.177, "R"), (0.197, 0.396, "AAAAACCCC"),
+              (0.418, 0.574, "GGGRRCC"), (0.596, 0.709, "RRRCC"), (0.730, 0.932, "YCCGGGAAC")]
+    cols = dict(G=M["tab_green"], Y=M["tab_grey"], A=M["tab_amber"], R=M["tab_red"], C=M["tab_cream"])
+    for f0, f1, cs in groups:
+        n = len(cs)
+        pitch = (_shx(f1) - _shx(f0)) / n
+        for k, c in enumerate(cs):
+            x = _shx(f0) + (k + 0.5) * pitch
+            tb = box("sh_tab", x - 8.5, x + 8.5, -14, 6, 20, 44, cols[c], bevel=2.5)
+            tb.rotation_euler = (math.radians(14), 0, 0)
+        box("sh_tab_rule", _shx(f0), _shx(f1), 1.8, 2, 52, 53, M["print"])
+    # the keyboard: 22 cream naturals F..F, 15 black sharps
+    kx0, kx1 = _shx(0.352), _shx(0.935)
+    box("sh_keybed", kx0 - 4, kx1 + 4, 26, 180, 40, 58, M["void"])
+    kw = (kx1 - kx0) / 22
+    for k in range(22):
+        x = kx0 + k * kw
+        box("sh_white", x + 0.6, x + kw - 0.6, 28, 168, 58, 76, M["sh_key_white"], bevel=1.2)
+    names = "FGABCDE"
+    for k in range(21):
+        if names[k % 7] in "FGACD":
+            x = kx0 + (k + 1) * kw
+            box("sh_black", x - 6.5, x + 6.5, 82, 168, 76, 89, M["gloss_black"], bevel=1.2)
+    box("sh_key_end", kx1 + 4, xi1, 26, 180, 40, 74, M["lidblack"], bevel=1.5)
+    # the panel: a black surround, the brushed silver plate, two rows of controls
+    px0, px1 = _shx(0.066), _shx(0.35)
+    box("sh_surround", px0, px1, 26, 182, 40, 72, M["lidblack"], bevel=1.5)
+    box("sh_plate", _shx(0.075), _shx(0.314), 34, 150, 72, 72.6, M["panel"], bevel=0.4)
+    box("sh_header", _shx(0.075), _shx(0.314), 152, 176, 72, 72.6, M["lidblack"])
+    _track(C.sphere("sh_pilot", 4, (_shx(0.09), 164, 73), M["led"]))
+    zt, yu, yl = 72.6, 122.0, 70.0
+    box("sh_touch_frame", _shx(0.093), _shx(0.268), yu - 20, yu + 20, zt, zt + 0.3, M["ink"])
+    box("sh_touch_inner", _shx(0.095), _shx(0.266), yu - 18, yu + 18, zt, zt + 0.35, M["panel"])
+    box("sh_power", _shx(0.081) - 5, _shx(0.081) + 5, yu - 12, yu + 12, zt, zt + 7, M["void"], bevel=1.5)
+    for f in (0.119, 0.288):
+        cyl("sh_knob_skirt", 11, 4, (_shx(f), yu, zt + 2), M["chrome"], segs=32, bevel=1)
+        cyl("sh_knob", 8, 12, (_shx(f), yu, zt + 9), M["knob"], segs=32, bevel=1.2, r2=7)
+    for f in (0.154, 0.178, 0.202, 0.225, 0.252):
+        box("sh_window", _shx(f) - 8, _shx(f) + 8, yu - 9, yu + 9, zt, zt + 0.4, M["void"])
+        bat = cyl("sh_bat", 1.6, 12, (_shx(f), yu, zt + 6), M["chrome"], segs=12)
+        bat.rotation_euler = (math.radians(-15), 0, 0)
+    for i, f in enumerate((0.085, 0.099, 0.128, 0.150, 0.183, 0.243)):
+        box("sh_slot", _shx(f) - 1.5, _shx(f) + 1.5, yl - 26, yl + 26, zt, zt + 0.4, M["void"])
+        for k in range(6):
+            box("sh_tick", _shx(f) - 9, _shx(f) - 4, yl - 25 + k * 10, yl - 24 + k * 10, zt, zt + 0.3, M["ink"])
+        cyl("sh_cap", 6, 12, (_shx(f), yl + (12, -4, 8, 0, -10, 6)[i], zt + 6), M["knob"], segs=24, bevel=1)
+    for f, y in ((0.208, yl), (0.284, yl + 18)):
+        cyl("sh_toggle", 1.5, 10, (_shx(f), y, zt + 5), M["chrome"], segs=12)
+    box("sh_transpose_slot", _shx(0.268), _shx(0.296), yl - 22, yl - 18, zt, zt + 0.4, M["void"])
+    lv = cyl("sh_transpose", 2, 16, (_shx(0.281), yl - 20, zt + 6), M["chrome"], segs=12)
+    lv.rotation_euler = (0, math.radians(25), 0)
+    # the rear rail: textured black, higher at the back, a chrome seam along its front edge
+    _prism_yz("sh_rail", [(178, 14), (178, 98), (SH_D - 2, 128), (SH_D - 2, 14)], xi0, xi1, M["tolex"])
+    seam = cyl("sh_seam", 1.6, xi1 - xi0, (0, 179, 98), M["chrome"], segs=12)
+    seam.rotation_euler = (0, math.pi / 2, 0)
+    for f in (0.32, 0.67):
+        jack("sh_jack", _shx(f), 225, 112)
+    return group("sh2000")
 
 
 # ------------------------------------------------------------------ placement
