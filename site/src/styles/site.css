@@ -1,0 +1,759 @@
+/* Sublustris Versio minisite (copied from Resilio Versio's, revision 2; the full refactor is stop 4): layout and components on top of the design tokens.
+   tokens.css is imported unchanged from docs/minisite/design/ (one source of truth);
+   this file only adds layout and components. Decisions: docs/minisite/design/DESIGN-v2.md. */
+
+:root {
+  --header-h: 3.75rem;
+  --doc-toc: 15rem;
+}
+
+html { scroll-padding-top: calc(var(--header-h) + 1rem); }
+body { min-height: 100vh; display: flex; flex-direction: column; overflow-x: clip; }
+main { flex: 1 0 auto; }
+code { font-family: var(--font-mono); font-size: 0.88em; overflow-wrap: anywhere; }
+
+/* Never set Light below 15 px (DESIGN blind spot 3): small UI text is Regular. */
+.micro { font: var(--wt-reg) var(--fs-micro) / 1.35 var(--font-mono); letter-spacing: 0; }
+
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.skip-link {
+  position: absolute; left: var(--margin); top: -10rem; z-index: 100;
+  background: var(--ink); color: var(--paper); padding: 0.75rem 1rem; border-radius: var(--radius-ui);
+  font: var(--wt-medium) var(--fs-ui) / 1 var(--font-sans); text-decoration: none;
+}
+.skip-link:focus { top: 0.5rem; }
+
+/* ---- Flowing copy -------------------------------------------------------- */
+.flow > * + * { margin-top: var(--stack-3); }
+.flow a, .prose a { text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); }
+.flow a:hover, .prose a:hover { text-decoration-color: currentColor; }
+.lede strong, .lede b { font-weight: var(--wt-display); }
+
+/* ---- Header: a flat three-column bar on a hairline (V4) ------------------- */
+.site-header {
+  position: sticky; top: 0; z-index: 20;
+  height: var(--header-h); margin-bottom: calc(-1 * var(--header-h));   /* the hero starts under the bar */
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; column-gap: var(--gutter);
+  padding-inline: var(--margin);
+  background: var(--paper); color: var(--ink);
+  border-bottom: var(--hair) solid var(--line);
+  transition: background-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out);
+}
+/* Over a dark band: light text; transparent at the top of the hero, solid dark once content passes under. */
+.site-header.is-over-dark {
+  --ink: var(--on-dark); --paper: var(--dark); --ink-2: var(--on-dark-2); --line: rgb(255 255 255 / 0.14); --focus: var(--signal);
+  background: transparent;
+}
+.site-header.is-over-dark.is-scrolled { background: var(--dark); }
+
+.wordmark { grid-column: 1; justify-self: start; display: inline-flex; align-items: center; min-height: 2.75rem; text-decoration: none; }
+.wordmark .logo { display: block; flex: none; width: auto; max-width: none; }
+.wordmark .logo-full { height: 0.9375rem; aspect-ratio: 720 / 40; }
+.wordmark .logo-short { display: none; height: 0.875rem; aspect-ratio: 444 / 40; }
+
+.site-header .nav { position: relative; grid-column: 2 / 4; grid-row: 1; justify-self: start; }
+.site-header .nav ul { display: flex; gap: clamp(0.25rem, 0.1rem + 0.5vw, 0.75rem); list-style: none; margin: 0 0 0 calc(-0.75rem - 4px); padding: 0; }   /* the text stays where it was; the pill's padding hangs left */
+.site-header .nav a, .menu li a {
+  font: var(--wt-medium) var(--fs-ui) / 1 var(--font-sans); letter-spacing: var(--track-ui);
+  text-decoration: none; text-underline-offset: 0.35em;
+}
+.site-header .nav a { position: relative; z-index: 1; display: inline-flex; align-items: center; min-height: 2.25rem; padding: 0 calc(0.75rem + 4px); }
+/* Hover: a soft rounded pill that slides and resizes from link to link (owner, 7 Oct); it rests on
+   the current page. Placed by the script in Base.astro; without JS, the current page gets it. */
+.site-header .nav .nav-pill {
+  position: absolute; z-index: 0; top: 50%; left: 0; height: 2.25rem; width: 0; translate: 0 -50%;
+  border-radius: 999px; background: color-mix(in srgb, currentColor 9%, transparent);
+  opacity: 0; pointer-events: none;
+  transition: left var(--dur-2) var(--ease-out), width var(--dur-2) var(--ease-out), opacity var(--dur-1) var(--ease-out);
+}
+.site-header .nav .nav-pill.is-on { opacity: 1; }
+.site-header .nav:not(.has-pill) a[aria-current="page"] { background: color-mix(in srgb, currentColor 9%, transparent); border-radius: 999px; }
+@media (prefers-reduced-motion: reduce) { .site-header .nav .nav-pill { transition: opacity var(--dur-1) linear; } }
+.header-cta { grid-column: 3; grid-row: 1; justify-self: end; }
+
+.menu { display: none; position: relative; grid-row: 1; grid-column: 3; justify-self: end; }
+.menu summary {
+  list-style: none; cursor: pointer; min-height: 2.25rem; display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0 calc(0.9rem + 4px); border-radius: 999px;   /* the same size and shape as the Download button beside it */
+  box-shadow: inset 0 0 0 var(--hair) color-mix(in srgb, currentColor 35%, transparent);
+  font: 600 var(--fs-ui) / 1 var(--font-sans);
+}
+.menu summary svg { width: 1rem; height: 1rem; }
+.menu summary::-webkit-details-marker { display: none; }
+.menu ul {
+  position: absolute; right: 0; top: calc(100% + 0.5rem); min-width: 13rem; margin: 0; padding: 0.4rem; list-style: none;
+  display: grid; gap: 4px;   /* hover and selected never abut (owner, 7 Oct) */
+  border-radius: var(--radius-tile); background: var(--paper); color: var(--ink);
+  box-shadow: 0 0 0 var(--hair) var(--line), 0 1.5rem 3rem -1.5rem rgb(0 0 0 / 0.3);
+}
+.menu li a { display: flex; align-items: center; min-height: 2.75rem; padding: 0 0.9rem; border-radius: var(--radius-ui); }
+.menu li a:hover, .menu li a[aria-current="page"] { background: var(--tile); }
+.is-over-dark .menu li a:hover, .is-over-dark .menu li a[aria-current="page"] { background: var(--tile-dark); }
+
+@media (max-width: 63.99rem) {
+  .site-header { grid-template-columns: minmax(0, 1fr) auto auto; column-gap: 0.5rem; }   /* Download and Menu sit close as a pair (owner, 7 Oct) */
+  .site-header .nav { display: none; }
+  .header-cta { grid-column: 2; }
+  .menu { display: block; }
+}
+@media (max-width: 47.99rem) {
+  .wordmark .logo-full { display: none; }
+  .wordmark .logo-short { display: block; }
+}
+/* "Sublustris" is wider than "Resilio": on the narrowest phones the logo and Menu share the
+   bar and Download waits on the page (stop 3; the owner may prefer another answer). */
+@media (max-width: 25.99rem) {
+  .site-header .header-cta { display: none; }
+}
+
+/* ---- Section headings (V5): big MD UI Bold, no numbers -------------------- */
+.section > .column + .wide, .section > .column + figure.wide { margin-top: var(--stack-5); }
+.section > .wide + .column { margin-top: var(--stack-5); }
+.section > .wide + .wide { margin-top: var(--gutter); }
+/* Two white sections in a row share one gap. */
+/* Two white sections in a row: a full-width hairline between them (owner, 7 Oct). Where the
+   bands flip dark / light, the colour change is the boundary. */
+.section:not(.band-dark, .band-tile) + .section:not(.band-dark, .band-tile) { border-top: var(--hair) solid var(--line); }
+
+/* ---- Hero (dark) ----------------------------------------------------------- */
+/* The contour lines behind the hero (components/Contours.astro; owner, 30 Oct 2026: only the
+   hero has a moving background now): content sits above them. */
+.has-contours { position: relative; isolation: isolate; }
+.has-contours > :not(.contours) { position: relative; z-index: 1; }
+.hero {
+  padding-top: calc(var(--header-h) + var(--stack-2)); padding-bottom: clamp(3.5rem, 2rem + 5vw, 7rem);
+  --fs-hero: clamp(2.75rem, 1.4rem + 4.2vw, 5.5rem);   /* below the display size, to sit with the tagline (owner, 30 Oct 2026) */
+}
+/* The film is transparent and stands among the contour lines, with no card (owner, 30 Oct 2026). Its box
+   is 16:9 at most and never taller than the screen leaves room for, so on short screens the
+   module shrinks and the title stays above the fold; the film is contained, never cropped. */
+.hero { overflow-x: clip; }   /* the film shifted right runs past the edge (only transparent edges there) */
+.hero-frame {
+  position: relative; width: 100%; aspect-ratio: 16 / 9;
+  max-height: max(18rem, calc(100svh - var(--header-h) - 24rem));   /* the title, tagline and buttons */
+}
+.hero-still, .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: 50% 50%; }
+.hero-video { opacity: 0; transition: opacity var(--dur-3) var(--ease-out); }
+.hero-frame.is-playing .hero-video:not(.hero-hold) { opacity: 1; }
+/* The hold sits on top and appears in one step, on the reveal's matching last frame. */
+.hero-hold { transition: none; }
+.hero-hold.is-on { opacity: 1; }
+/* The film will play (set before first paint): start on the dark band, never on the lit still. */
+html.hero-film .hero-still { visibility: hidden; }
+/* Once the film is in, hide the still under it, or the two would double up through the
+   transparent edges. */
+.hero-frame.is-playing .hero-still { visibility: hidden; transition: visibility 0s linear var(--dur-3); }
+/* The film's edges fade out (owner, 31 Oct 2026), so wherever the module runs past the frame it
+   melts into the band instead of stopping on a hard line through the contour lines. */
+.hero-still, .hero-video {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent), linear-gradient(to bottom, transparent, #000 7%, #000 95%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent), linear-gradient(to bottom, transparent, #000 7%, #000 95%, transparent);
+  mask-composite: intersect;
+}
+/* The hero lights up with the film (owner, 31 Oct 2026): the contour lines start in darkness and
+   come up with the module's key light (HeroMedia sets --hero-lit from the film's time), so the
+   module appears out of the dark. The title comes in quickly, so nobody waits to read or click;
+   scrolling, a key or a tap lights everything at once. */
+html.hero-film .has-contours > .contours { opacity: var(--hero-lit, 0); }
+html.hero-film.hero-lit .has-contours > .contours { opacity: 1; transition: opacity 1s var(--ease-out); }
+html.hero-film .hero-title { animation: hero-title-in 1.2s var(--ease-out) 0.5s both; }
+@keyframes hero-title-in { from { opacity: 0; } }
+.hero-pause {
+  position: absolute; right: 0.75rem; bottom: 0.75rem; width: 2.75rem; height: 2.75rem; display: grid; place-items: center;
+  border: 0; border-radius: 50%; background: rgb(12 11 10 / 0.7); color: var(--on-dark); cursor: pointer;
+}
+/* Shown only once the film plays (never under reduced motion): display: grid above would
+   otherwise override the hidden attribute (a friend saw a dead button, 7 Oct). */
+.hero-pause[hidden] { display: none; }
+.hero-pause svg { width: 0.9rem; height: 0.9rem; }
+.hero-pause .i-play, .hero-pause.is-paused .i-pause { display: none; }
+.hero-pause.is-paused .i-play { display: block; }
+.hero-title {
+  display: flex; flex-direction: column; align-items: start; gap: 0.5rem;
+  padding-top: clamp(1.5rem, 1rem + 2vw, 3rem);
+  --tagline-fs: clamp(1.375rem, 1rem + 1.5vw, 2.25rem);
+}
+.hero-platform { color: var(--on-dark-2); font-size: var(--fs-body); padding-top: 0.5rem; }   /* under the buttons: what it runs on (owner, 31 Oct 2026) */
+.hero-tagline {
+  max-width: 26em; color: var(--ink-2);
+  font-weight: var(--wt-light); font-size: var(--tagline-fs); line-height: 1.2; letter-spacing: -0.005em;
+}
+.hero-title h1 { font-size: var(--fs-hero); }
+/* The buttons sit under the tagline, a clear step below it, and a size up from the header's
+   (owner, 30 Oct 2026). */
+.hero-title .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; padding-top: clamp(2.5rem, 1.5rem + 3vw, 5rem); }
+.hero-title .btn { min-height: 3rem; padding: 0.75rem 1.5rem; font-size: 1.0625rem; }
+/* Wide landscape screens (owner, 30 Oct 2026): the module moves right and the title comes up
+   beside it, over the film's empty left side; the film's box fills the screen's height. */
+@media (orientation: landscape) and (min-width: 64rem) {
+  .hero > .wide { display: grid; }
+  .hero-frame, .hero-title { grid-area: 1 / 1; }
+  .hero-frame { max-height: max(24rem, calc(100svh - var(--header-h) - var(--stack-2) - 3rem)); }
+  .hero-still, .hero-video { translate: 24% 0; }
+  .hero-title { align-self: center; padding-top: 0; max-width: 58%; }
+}
+/* Portrait phones and tablets (owner, 8 Oct: the module was small in a 16:9 frame; 30 Oct: bigger
+   still, so its details read, even past the fold): a tall frame that the film and still fill,
+   cropping in around the module (the sides are only transparent). The film's top sixth is
+   empty above the panel, so the frame rides up under the header's padding. */
+@media (orientation: portrait) and (max-width: 63.99rem) {
+  .hero-frame {
+    --hero-fh: min(190vw, 120svh);
+    aspect-ratio: auto; max-height: none; height: var(--hero-fh); margin-top: calc(var(--hero-fh) * -0.12);
+  }
+  .hero-still, .hero-video { object-fit: cover; }
+}
+
+/* ---- Intro ---------------------------------------------------------------- */
+.statement {
+  font-size: clamp(1.75rem, 1.05rem + 2.6vw, 3.5rem); font-weight: var(--wt-display);
+  line-height: 1.04; letter-spacing: var(--track-display);
+}
+/* The intro sits on the tank image under a dark scrim (owner, 7 Oct); the section keeps the
+   standard section spacing above and below. */
+/* Height from the content, at least the image's own shape on wide screens (no aspect-ratio:
+   with a min-height it would widen the card past the screen on phones). */
+.intro-card { position: relative; display: grid; align-items: end; justify-items: start; min-height: clamp(26rem, 42.8vw, 38rem); background: var(--dark); --intro-pad: clamp(1.25rem, 0.5rem + 3vw, 3.5rem); }
+.intro-card .intro-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.intro-scrim {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(90deg, rgb(12 11 10 / 0.78), rgb(12 11 10 / 0.55) 35%, rgb(12 11 10 / 0) 65%),
+    linear-gradient(0deg, rgb(12 11 10 / 0.55), rgb(12 11 10 / 0) 45%),
+    linear-gradient(180deg, rgb(12 11 10 / 0.4), rgb(12 11 10 / 0) 22%);
+}
+/* Left-aligned, anchored bottom-left so the springs stay visible; the etymology note sits
+   top-left at the same offset (owner, 7 Oct). */
+.intro-copy {
+  position: relative; z-index: 1; max-width: 46rem; padding: calc(var(--intro-pad) * 2.5) var(--intro-pad) var(--intro-pad);
+  color: var(--on-dark); --ink-2: var(--on-dark-2);
+}
+/* A soft dark glow behind the copy, for contrast where it crosses the bright springs (owner, 7 Oct). */
+.intro-copy::before {
+  content: ""; position: absolute; z-index: -1; inset: 10% -6% -4% -8%; pointer-events: none;
+  background: radial-gradient(closest-side, rgb(12 11 10 / 0.6), rgb(12 11 10 / 0.3) 60%, rgb(12 11 10 / 0));
+}
+.intro-copy .statement, .intro-copy .lede { text-shadow: 0 0 1.25em rgb(12 11 10 / 0.55); }
+.intro-copy .statement { text-wrap: balance; max-width: 18em; font-size: clamp(1.5rem, 1rem + 1.7vw, 2.5rem); line-height: 1.08; }
+.intro-copy .lede { max-width: 30em; }
+.intro-note { position: absolute; z-index: 1; top: var(--intro-pad); left: var(--intro-pad); right: var(--intro-pad); color: var(--on-dark-2); }
+
+/* ---- The sound (dark) ------------------------------------------------------ */
+.demos {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gutter);
+  list-style: none; padding: 0; margin: 0;
+}
+.demo.is-wide { grid-column: span 2; }
+@media (max-width: 79.99rem) { .demos { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 59.99rem) { .demos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 39.99rem) { .demos { grid-template-columns: minmax(0, 1fr); } .demo.is-wide { grid-column: auto; } }
+/* Each tile spans four shared rows (head, caption, player, settings): opening
+   Settings in one tile grows only those rows, so its neighbours' contents don't move. */
+.demo {
+  display: grid; grid-row: span 4; grid-template-rows: subgrid; row-gap: var(--stack-2); align-content: start;
+  padding: clamp(1.1rem, 0.8rem + 0.8vw, 1.5rem);
+  padding-bottom: 0.4rem;   /* the Settings row's own height is the bottom space (owner, 7 Oct) */
+}
+@supports not (grid-template-rows: subgrid) { .demo { grid-row: auto; grid-template-rows: none; align-self: start; } }
+.demo-head { display: grid; gap: var(--stack-2); align-content: start; }
+.demo-title { font-size: clamp(1.25rem, 1rem + 0.8vw, 1.625rem); line-height: 1.1; letter-spacing: -0.015em; }
+.demo-diagram { width: 100%; height: 3.25rem; color: var(--ink); }
+.demo.is-wide .demo-diagram { height: 4.5rem; }
+.demo-caption { font-size: var(--fs-small); line-height: 1.4; color: var(--ink-2); }   /* sans, not the mono image captions (owner, 7 Oct) */
+.demo .player { align-self: end; }
+.demo .spec { font-size: var(--fs-ui); }
+.demo .spec th, .demo .spec td { padding-block: 0.5rem; vertical-align: middle; }
+.demo .spec th { font: var(--wt-reg) var(--fs-micro) / 1.3 var(--font-mono); text-transform: uppercase; color: var(--ink-2); width: 34%; }
+.described { color: var(--ink-2); }
+.described strong, .described b { color: var(--ink); display: block; font-weight: var(--wt-display); margin-bottom: 0.25rem; }
+
+/* ---- Tiny diagrams (V10) --------------------------------------------------- */
+.diagram path { stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.diagram .d-ink { stroke: currentColor; }
+.diagram .d-hot { stroke: var(--signal); }
+.diagram .d-faint { stroke: currentColor; opacity: 0.3; }
+
+/* ---- Disclosure (settings, transcript) ------------------------------------- */
+.disclosure { border-top: var(--hair) solid var(--line); }
+.disclosure summary {
+  cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center;
+  min-height: 2.75rem; font: var(--wt-medium) var(--fs-ui) / 1 var(--font-sans); color: inherit;
+}
+.disclosure summary::-webkit-details-marker { display: none; }
+.disclosure summary::after { content: "+"; font-size: 1.1rem; line-height: 1; }
+.disclosure[open] summary::after { content: "−"; }
+.disclosure summary:hover { color: var(--ink-2); }
+.disclosure > :not(summary) { padding-bottom: var(--stack-2); }
+.disclosure .small { color: var(--ink-2); }
+
+/* ---- Player (compact) ------------------------------------------------------ */
+.player { grid-template-columns: auto minmax(0, 1fr) auto; }
+.player .play { display: grid; place-items: center; cursor: pointer; transition: transform var(--dur-1) var(--ease-out); }
+.player .play:active { transform: scale(0.96); }
+.player .play svg { width: 0.9rem; height: 0.9rem; }
+.player .play .i-play, .hero-pause .i-play { translate: 0.08em 0; }  /* the triangle's optical centre, now the button is round */
+.player .play .i-pause, .player.is-playing .play .i-play { display: none; }
+.player.is-playing .play .i-pause { display: block; }
+.player .play[aria-busy="true"] { opacity: 0.6; }
+.player .wave { position: relative; display: block; width: 100%; cursor: pointer; touch-action: none; border-radius: 2px; }
+.player .wave svg { width: 100%; height: 100%; overflow: visible; }
+.player .wave .trace { fill: none; stroke: currentColor; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.player .wave .trace.dim { opacity: 0.35; }
+.player .wave .head { stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.player .meta { display: flex; gap: 0.75rem; align-items: center; }
+.player .time { font: var(--wt-reg) var(--fs-micro) / 1 var(--font-mono); color: var(--ink-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.player .ab button { cursor: pointer; color: inherit; min-height: 2rem; }
+
+/* ---- The annotated panel (V7) ---------------------------------------------- */
+.ap { position: relative; margin: 0; }
+.ap-stage { position: relative; overflow: hidden; border-radius: var(--radius-tile); background: #d9d7d3; aspect-ratio: var(--full-ratio); }
+.ap-stage img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ap-crop { display: contents; }   /* wide screens: the whole render; narrower: the panel crop inside the grey well */
+.ap-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.ap-lines path { fill: none; stroke: var(--ink); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.ap-lines path { filter: drop-shadow(0 0 0.6px rgb(255 255 255 / 0.95)) drop-shadow(0 0 0.6px rgb(255 255 255 / 0.95)); }
+.ap-lines circle { fill: var(--signal); stroke: #ffffff; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.ap-list { list-style: none; margin: 0; padding: 0; }
+.ap-name {
+  display: block; text-decoration: none;
+  font: var(--wt-display) var(--fs-ui) / 1.2 var(--font-sans); letter-spacing: 0.02em;
+}
+.ap-name:hover { text-decoration: underline; text-decoration-thickness: var(--hair); }
+.ap-line { display: block; margin-top: 0.2rem; font: var(--wt-reg) 0.8125rem / 1.35 var(--font-sans); color: var(--ink-2); }
+.ap-num, .ap-marker {
+  display: grid; place-items: center; width: 1.375rem; height: 1.375rem; border-radius: 50%;
+  background: var(--signal-ink); color: var(--on-signal);
+  font: var(--wt-medium) 0.6875rem / 1 var(--font-mono); font-variant-numeric: tabular-nums;
+}
+.ap > figcaption { margin-top: var(--stack-2); }
+
+/* Wide screens: text-only callouts either side of the panel (owner, 7 Oct: no boxes), each
+   at the end of its leader line, set flush against it: right-aligned on the left side,
+   left-aligned on the right. Dark text on the light grey ground of the render. */
+@media (min-width: 80rem) {
+  .ap-list { position: absolute; inset: 0 0 auto 0; aspect-ratio: var(--full-ratio); pointer-events: none; }
+  /* The name sits on the leader line; its one line of text hangs below. */
+  .ap-callout { position: absolute; top: var(--by); width: min(16rem, 30%); transform: translateY(-0.55rem); pointer-events: auto; }
+  .ap-callout.side-l { right: calc(100% - var(--bx)); padding-right: 0.6rem; text-align: right; }
+  .ap-callout.side-r { left: var(--bx); padding-left: 0.6rem; }
+  .ap-name { color: var(--on-render); }   /* on the light render in either theme */
+  .ap-line { color: #302e2b; }
+  .ap-num, .ap-marker { display: none; }
+}
+/* Narrower: the render cropped to the panel, numbered markers, the callouts as a list beside it. */
+@media (max-width: 79.99rem) {
+  .ap { display: grid; grid-template-columns: minmax(0, 19rem) minmax(0, 1fr); gap: var(--stack-3) var(--stack-4); align-items: start; }
+  .ap-stage { aspect-ratio: auto; }
+  .ap-crop { display: block; position: relative; aspect-ratio: var(--crop-ratio); }   /* no clip: the render runs on to the well's edges, which clip it (no seam) */
+  .ap-stage img { inset: auto; left: var(--img-x); top: var(--img-y); width: var(--img-w); height: auto; max-width: none; }
+  .ap-lines { display: none; }
+  .ap-marker { position: absolute; left: var(--cx); top: var(--cy); transform: translate(-50%, -50%); box-shadow: 0 0 0 1.5px #ffffff; }
+  .ap-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: var(--stack-3) var(--gutter); align-content: start; }
+  .ap-callout { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.75rem; align-items: start; }
+  .ap-line { font-size: var(--fs-ui); }
+  .ap > figcaption { grid-column: 1 / -1; margin-top: 0; }
+}
+@media (max-width: 39.99rem) {
+  .ap { grid-template-columns: minmax(0, 1fr); }
+  /* The grey well fills the content column, aligned with the callouts' text; the panel keeps
+     its size and height, centred in it (owner, 8 Oct). */
+  .ap-stage { display: grid; justify-items: center; }
+  .ap-crop { width: min(100%, 17rem); }
+}
+
+/* ---- Features: bento tiles (V9) --------------------------------------------- */
+/* Owner, 7 Oct: denser. Three columns from 50rem (800 px) up, mixed sizes kept (the big
+   tile 2 × 2, wide tiles 2 × 1); two columns on small tablets; one only on phones.
+   Each tile: the diagram on top (shown first, though it follows the text in the source),
+   the statement, then its line pushed to the bottom. */
+.bento {
+  list-style: none; padding: 0; margin: 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row dense;
+  gap: clamp(0.625rem, 0.4rem + 0.6vw, 1rem);
+}
+.tile.feature { padding: clamp(1rem, 0.75rem + 0.6vw, 1.5rem); }
+.feature { display: flex; flex-direction: column; gap: 0.75rem; min-height: clamp(11rem, 9rem + 4vw, 14rem); }
+.feature.is-wide { grid-column: span 2; }
+.feature.is-big { grid-column: span 2; grid-row: span 2; }
+.feature-diagram { order: -1; width: 100%; max-width: 17rem; height: clamp(3.25rem, 2.6rem + 1.4vw, 4.5rem); margin-bottom: auto; color: var(--ink); }
+.feature.is-wide .feature-diagram { max-width: 18rem; }
+.feature.is-big .feature-diagram { max-width: 36rem; height: clamp(5rem, 1.5rem + 8vw, 13rem); }
+.feature-big { font-size: clamp(1.375rem, 1.1rem + 0.8vw, 2rem); line-height: 1; letter-spacing: var(--track-display); padding-top: 0.5rem; }
+.feature.is-big .feature-big { font-size: clamp(2.75rem, 1.6rem + 4vw, 5.5rem); line-height: var(--lh-display); }
+.feature-line { color: var(--ink-2); max-width: 32em; }
+@media (max-width: 49.99rem) {
+  .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .feature.is-big { grid-row: span 1; }
+}
+@media (max-width: 39.99rem) {
+  .bento { grid-template-columns: minmax(0, 1fr); }
+  .feature.is-wide, .feature.is-big { grid-column: auto; }
+  .feature { min-height: 0; }
+  .feature.is-big .feature-diagram { height: 4.5rem; }
+}
+
+/* ---- Two ways to play -------------------------------------------------------- */
+.two-ways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gutter); }
+.way { display: flex; flex-direction: column; gap: var(--stack-3); align-items: flex-start; }
+.way .flow { color: var(--ink-2); }
+.way h3 + p { margin-top: calc(0.5rem - var(--stack-3)); }   /* the subtitle sits close under its title (owner, 7 Oct) */
+.way > :last-child { margin-top: auto; }  /* the buttons line up whatever the text length */
+.way > :last-child { margin-top: auto; }  /* buttons line up whatever the text length */
+@media (max-width: 47.99rem) { .two-ways { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---- Download (tile band) ---------------------------------------------------- */
+/* The title on its own row, so Status and the release line start level (owner, 7 Oct) */
+.download-grid { display: grid; grid-template-columns: minmax(0, 0.75fr) minmax(0, 2fr); gap: var(--stack-4) clamp(2rem, 1rem + 4vw, 6rem); align-items: start; }
+.download-title { grid-column: 1 / -1; }
+@media (max-width: 63.99rem) { .download-grid { grid-template-columns: minmax(0, 1fr); } }
+.download { display: grid; gap: var(--stack-3); }
+/* One size, one family: only the version is in ink (owner: the line had too many styles) */
+.download .release-head { display: grid; gap: 0.4rem; }
+.download .release-title { font-size: var(--fs-h3); line-height: 1.05; color: var(--ink); }   /* primary text, also inside docs' orange subheads (owner, 7 Oct) */
+.download .release-line { display: flex; flex-wrap: wrap; gap: 0.25rem 0.5rem; align-items: baseline; font-size: var(--fs-small); }
+.download .release-line > * { white-space: nowrap; }   /* each detail wraps whole, never mid-phrase */
+.download .version { font-weight: var(--wt-medium); font-variant-numeric: tabular-nums; color: var(--signal-text); }   /* the accent (owner, 7 Oct); the AA-safe tone for text in either theme */
+.download .targets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gutter); }
+.download .target { display: grid; gap: var(--stack-2); align-content: start; background: var(--raised); border-radius: var(--radius-tile); padding: clamp(1.1rem, 0.8rem + 1vw, 1.75rem); }
+.download .target h3 { font-size: clamp(1.25rem, 1.1rem + 0.4vw, 1.5rem); line-height: 1.1; }   /* a step under "Latest release": Download > Latest release > the two targets (owner, 7 Oct) */
+.download .target .btn { justify-self: start; }
+.download .target ul { list-style: disc; padding-left: 1.15em; color: var(--ink); }
+.download .target li::marker { color: var(--ink-2); }
+.download .target li + li { margin-top: 0.3rem; }
+.download .soon { display: inline-flex; flex-direction: column; gap: 0.4rem; align-items: flex-start; }
+.download .btn[aria-disabled="true"] { background: var(--tile); color: var(--ink-2); cursor: not-allowed; }
+.download.compact .target { background: var(--tile); }
+.download.compact .btn[aria-disabled="true"] { background: var(--paper); }
+@media (max-width: 47.99rem) { .download .targets { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---- Footer on a hairline ------------------------------------------------------ */
+.site-footer { border-top: var(--hair) solid var(--line); padding-block: var(--stack-4) var(--stack-5); font-size: var(--fs-small); }
+/* After a coloured band (Home's download section) the colour change is the edge: no hairline (owner, 7 Oct) */
+main:has(> .band-tile:last-child, > .band-dark:last-child) + .site-footer { border-top: 0; }
+/* The same columns as the Download section above (owner, 7 Oct): the lists sit on quarters of the
+   right column, so Docs lines up with the left card and Licence with the right one. */
+.site-footer .wide { display: grid; grid-template-columns: minmax(0, 0.75fr) minmax(0, 2fr); gap: var(--stack-4) clamp(2rem, 1rem + 4vw, 6rem); }
+.site-footer .brand { font-weight: var(--wt-display); }
+.site-footer .lists { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--stack-3) var(--gutter); }
+.site-footer h2 { font: var(--wt-reg) var(--fs-micro) / 1.3 var(--font-mono); text-transform: uppercase; color: var(--ink-2); margin-bottom: var(--stack-1); }
+.site-footer ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.3rem; }
+.site-footer a { text-decoration: none; }
+.site-footer a:hover { text-decoration: underline; text-decoration-thickness: var(--hair); }
+/* The legal lines: full width under a hairline that stops at the gutters (owner, 7 Oct) */
+.site-footer .legal { grid-column: 1 / -1; border-top: var(--hair) solid var(--line); padding-top: var(--stack-3); color: var(--ink-2); display: grid; gap: 0.35rem; font-size: var(--fs-micro); line-height: 1.5; }
+.site-footer .credit { color: var(--ink); font-weight: 600; margin-top: var(--stack-2); }
+.site-footer .credit a { text-decoration: underline; text-decoration-thickness: var(--hair); text-underline-offset: 0.15em; }
+@media (max-width: 63.99rem) {
+  .site-footer .wide { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 39.99rem) { .site-footer .lists { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---- Figures ------------------------------------------------------------------- */
+figure.wide > .caption, .figure .caption { padding-block: var(--stack-1) 0; }
+.figure { display: grid; gap: var(--stack-1); align-content: start; }
+
+/* ---- Placeholders for renders -------------------------------------------------- */
+.placeholder {
+  position: relative; display: grid; place-items: center; overflow: hidden;
+  background: var(--tile); border-radius: var(--radius-tile); color: var(--ink-2);
+  font: var(--wt-reg) var(--fs-micro) / 1.4 var(--font-mono); text-transform: uppercase; text-align: center;
+  padding: var(--stack-2);
+}
+.placeholder .ph-label { display: block; max-width: 100%; }   /* the dot stays on the label's first line */
+.placeholder .ph-label .dot { display: inline-block; width: 0.5em; height: 0.5em; margin-right: 0.6em; vertical-align: 0.1em; border-radius: 50%; background: var(--signal); }
+/* The hero’s placeholder, on the dark band (until hero-still.png exists). */
+.hero-placeholder { background: var(--tile-dark); color: var(--on-dark-2); }
+
+/* ---- Doc pages ----------------------------------------------------------------- */
+.doc-hero { padding-top: calc(var(--header-h) + clamp(3rem, 2rem + 4vw, 6rem)); padding-bottom: var(--stack-4); width: min(100% - 2 * var(--margin), 42rem); }   /* lines up with the reading column */
+.doc-hero .kicker { margin-bottom: var(--stack-2); }
+.doc-media { margin-bottom: var(--stack-5); }
+.doc-body {
+  /* A narrower reading column (about 65 characters at body size, was about 80) and a wider gutter,
+     so long contents labels don't crowd the text (owner, 7 Oct). */
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 42rem) minmax(0, 1fr);
+  column-gap: clamp(1.5rem, 0.5rem + 3vw, 4rem); align-items: start; padding-bottom: var(--section-y);
+}
+.doc-body > .doc-toc { grid-column: 1; max-width: var(--doc-toc); position: sticky; top: calc(var(--header-h) + var(--stack-3)); max-height: calc(100vh - var(--header-h) - 3rem); overflow: auto; }
+.doc-body > .prose { grid-column: 2; min-width: 0; }
+.doc-body > .doc-toc:empty { display: none; }
+@media (max-width: 71.99rem) {
+  .doc-body { grid-template-columns: minmax(0, 1fr); width: min(100% - 2 * var(--margin), 42rem); }
+  .doc-body > .doc-toc { position: static; max-width: none; max-height: none; grid-column: 1; margin-bottom: var(--stack-4); background: var(--tile); border-radius: var(--radius-tile); padding: var(--stack-3); }
+  .doc-body > .prose { grid-column: 1; }
+}
+
+/* The table of contents: plain links, no numbers. */
+.toc .toc-title { margin-bottom: var(--stack-1); text-transform: uppercase; }
+.toc ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.1rem; font-size: var(--fs-small); }
+.toc .sub-item { font-size: var(--fs-ui); padding-left: 1em; }
+.toc .sub-item a { color: var(--ink-2); }
+@media (max-width: 47.99rem) { .toc .sub-item { display: none; } }
+
+.prose { font-size: var(--fs-body); overflow-wrap: break-word; }
+.prose a { overflow-wrap: anywhere; }
+.prose strong, .prose b { font-weight: 600; }   /* semibold in long-form text (owner, 7 Oct) */
+.prose > * + * { margin-top: var(--stack-3); }   /* roomier (owner, 7 Oct) */
+.prose h2 { font-size: var(--fs-h3); line-height: 1.05; letter-spacing: -0.015em; margin-top: 6rem; }
+.prose > h2:first-child { margin-top: 0; }
+/* Subheads in the accent, so they stand apart from bold body copy (owner, 7 Oct); the AA-safe tone. */
+.prose h3, .prose .subhead { font-size: var(--fs-lede); margin-top: var(--stack-5); color: var(--signal-text); font-weight: var(--wt-display); line-height: var(--lh-snug); letter-spacing: -0.01em; }
+.prose .subhead + * { margin-top: var(--stack-1); }
+.prose h2 + .release-version { margin-top: var(--stack-1); font: var(--wt-reg) var(--fs-ui) / 1.3 var(--font-mono); color: var(--ink-2); }   /* the version under its release date */
+.prose h3 + * { margin-top: var(--stack-1); }
+.prose h2 + * { margin-top: var(--stack-3); }
+/* Lists: numbers and bullets share one marker column inside the text edge, with the same
+   gap to the text, and the same space between items (owner, 7 Oct). */
+.prose ul, .prose ol { list-style: none; padding-left: 0; }
+.prose ol { counter-reset: step; }
+.prose ul > li, .prose ol > li { position: relative; padding-left: 2.5rem; }   /* marker column 1.25rem + a 1.25rem gap (owner, 7 Oct) */
+.prose li + li { margin-top: var(--stack-2); }
+.prose ol > li { counter-increment: step; }
+.prose ol > li::before {
+  content: counter(step); position: absolute; left: 0; width: 1.25rem; text-align: right;
+  top: 0; font-family: var(--font-mono); font-weight: var(--wt-reg); font-size: 0.85em;
+  line-height: calc(var(--lh-body) / 0.85 * 1em); color: var(--signal-text);   /* the same line box as the text; accent numbers (owner, 7 Oct) */
+}
+.prose ul > li::before {
+  content: ""; position: absolute; left: calc(1.25rem - 6px); top: 0.62em; width: 6px; height: 6px; border-radius: 50%; background: var(--signal);
+}
+/* Numbered steps: room above and below; never shrinks the space above a heading. */
+.prose > ol, .prose > ol + :not(h2):not(h3) { margin-top: var(--stack-4); }
+.prose blockquote {
+  margin: var(--stack-4) 0; padding: var(--stack-3); border-radius: var(--radius-tile); background: var(--tile);
+  font-size: var(--fs-lede); line-height: var(--lh-snug); display: flex; gap: 0.75em;
+}
+.prose blockquote::before { content: ""; flex: none; width: 0.5em; height: 0.5em; margin-top: 0.45em; border-radius: 50%; background: var(--signal); }
+.prose pre {
+  position: relative; overflow-x: auto; padding: 1rem 1.1rem 1rem 1.4rem; padding-right: 5.5rem; background: var(--tile);
+  border-radius: calc(1.125rem + 0.5rem);   /* concentric with the copy button: its radius plus its inset */
+  font-size: var(--fs-ui); line-height: 1.5;
+}
+.prose pre code { font-size: inherit; white-space: pre; }
+.prose :not(pre) > code { background: var(--tile); padding: 0.05em 0.3em; border-radius: 3px; }
+.code-wrap { position: relative; }
+.code-wrap .copy {
+  position: absolute; top: 0.5rem; right: 0.5rem; min-height: 2.25rem; padding: 0 0.85rem; border: 0; cursor: pointer;
+  border-radius: 999px; background: var(--ink); color: var(--paper);
+  font: var(--wt-reg) var(--fs-micro) / 1 var(--font-mono); text-transform: uppercase;
+}
+.table-scroll { overflow-x: auto; margin-block: var(--stack-3); }
+.table-scroll:focus-visible { outline-offset: 2px; }
+.prose .spec { font-size: var(--fs-small); }
+.prose .spec th { font-weight: var(--wt-reg); color: var(--ink-2); width: auto; font-size: var(--fs-micro); font-family: var(--font-mono); text-transform: uppercase; }
+.prose .spec td { padding-right: var(--gutter); }
+.table-scroll[aria-label="Table: Troubleshooting"] tbody td:first-child { font-weight: 600; }   /* the symptom (owner, 7 Oct) */
+.prose .spec.wide td, .prose .spec.wide th { white-space: nowrap; }
+
+/* Changelog: version in mono, date quiet */
+
+/* Install: Module / Plugin switch (rounded rectangle, segments inside) */
+
+/* Slot components inside prose */
+.prose .slot { margin-block: var(--stack-4); }
+/* The panel map: the drawing with the table beside it on wide screens, reaching into the
+   empty right-hand column; stacked below that (owner, 7 Oct). */
+.manual-panel { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--stack-4) 3.5rem; align-items: start; }
+.manual-panel .panel-table .table-scroll { margin: 0; }
+.manual-panel .panel-figure { margin: 0; max-width: 22rem; }
+.manual-panel .panel-note { color: var(--ink-2); margin-top: var(--stack-2); }
+.manual-panel .panel-table .spec th:first-child, .manual-panel .panel-table .spec td:first-child { white-space: nowrap; }
+@media (min-width: 90rem) {   /* from 1440 px, where the right-hand column and gutter have room for 20rem */
+  .manual-panel { width: calc(100% + 20rem); grid-template-columns: 17rem minmax(0, 1fr); }
+}
+.manual-screenshot { margin-block: var(--stack-4); }
+.manual-screenshot .figure { display: grid; grid-template-columns: minmax(0, 20rem) minmax(0, 1fr); column-gap: 3.5rem; align-items: start; }
+.manual-screenshot .card-media { grid-column: 1; grid-row: 1; }
+.manual-screenshot .caption { grid-column: 2; grid-row: 1; border-top: var(--hair) solid var(--line); padding: 8px 0 0; }
+@media (max-width: 39.99rem) {
+  .manual-screenshot .figure { grid-template-columns: minmax(0, 20rem); row-gap: var(--stack-2); }
+  .manual-screenshot .caption { grid-column: 1; grid-row: 2; }
+}
+
+/* The manual's panel figure: linework. .is-themed keeps the panel map's own --sv-* fills (the style tiles' annotated panel). */
+/* The panel map (line drawing) used in the manual */
+.panel-diagram { color: var(--ink); --rv-ink: currentColor; --rv-ink-soft: currentColor; --rv-font: var(--font-mono); }
+.panel-diagram:not(.is-themed) svg .panel, .panel-diagram:not(.is-themed) svg .knob, .panel-diagram:not(.is-themed) svg .led, .panel-diagram:not(.is-themed) svg .tog,
+.panel-diagram:not(.is-themed) svg .btn, .panel-diagram:not(.is-themed) svg .jack, .panel-diagram:not(.is-themed) svg .jackhole, .panel-diagram:not(.is-themed) svg .screw,
+.panel-diagram:not(.is-themed) svg .knobmark { fill: none; stroke: currentColor; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.panel-diagram:not(.is-themed) svg .jackhole, .panel-diagram:not(.is-themed) svg .screw { opacity: 0.55; }
+.panel-diagram:not(.is-themed) svg .btn, .panel-diagram:not(.is-themed) svg .led { stroke: var(--signal); }
+.panel-diagram:not(.is-themed) svg text { fill: currentColor; stroke: none; font-family: var(--font-mono); font-weight: 400; }
+.panel-diagram:not(.is-themed) svg .pos, .panel-diagram:not(.is-themed) svg .ledlbl, .panel-diagram:not(.is-themed) svg .note { opacity: 0.7; }
+.panel-diagram:not(.is-themed) svg .brand { font-family: var(--font-sans); font-weight: 700; letter-spacing: 0.6px; }
+
+/* Spec rows */
+.spec a { text-decoration: none; }
+.spec a:hover { text-decoration: underline; text-decoration-thickness: var(--hair); }
+.spec .go { color: var(--ink-2); font-family: var(--font-mono); font-size: var(--fs-micro); white-space: nowrap; text-align: right; width: 1%; padding-left: var(--gutter); }
+@media (max-width: 47.99rem) { .spec .go { display: none; } }
+
+/* ---- Style tile ---------------------------------------------------------------- */
+.st-section { padding-block: var(--stack-5); }
+.st-section > .column > .h2 { margin-bottom: var(--stack-2); }
+.st-section > .column + .wide { margin-top: var(--stack-4); }
+.st-row { display: grid; grid-template-columns: minmax(0, 12rem) minmax(0, 1fr); gap: var(--gutter); align-items: baseline; padding-block: var(--stack-3); }
+.st-row + .st-row { border-top: var(--hair) solid var(--line); }
+@media (max-width: 47.99rem) { .st-row { grid-template-columns: minmax(0, 1fr); gap: var(--stack-1); } }
+.type-specimen { overflow-wrap: anywhere; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: var(--gutter); }
+.swatch { display: grid; gap: var(--stack-1); min-width: 0; align-content: start; }
+.swatch .chipbox { aspect-ratio: 3 / 2; border-radius: var(--radius-tile); box-shadow: inset 0 0 0 var(--hair) rgb(0 0 0 / 0.1); display: flex; align-items: flex-end; padding: 0.75rem; }
+.swatch > * { min-width: 0; overflow-wrap: anywhere; }
+.swatch dl { display: grid; grid-template-columns: minmax(0, max-content) minmax(0, 1fr); gap: 0.15rem 0.75rem; margin: 0; }
+.swatch dt { color: var(--ink-2); }
+.swatch dd { margin: 0; }
+.demo-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+.diagram-grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); gap: var(--gutter); }
+.diagram-grid li { display: grid; gap: var(--stack-2); }
+.diagram-grid .diagram { width: 100%; height: auto; }
+.header-sample { position: relative; border-radius: var(--radius-tile); overflow: hidden; }
+.header-sample .site-header { position: relative; margin: 0; z-index: 0; }
+.header-sample .sample-body { padding: var(--stack-4) var(--margin); }
+.header-sample.dark { background: var(--dark); }
+.header-sample.dark .sample-body { color: var(--on-dark-2); }
+@media (max-width: 63.99rem) { .header-sample .site-header .menu { display: none; } }
+
+/* ---- Centred section intros (owner, 7 Oct) ---------------------------------------- */
+.centered { text-align: center; }
+.centered .lede { margin-inline: auto; }
+.panel-list ul { list-style: none; padding: 0; margin: 0; }
+.panel-list li { display: grid; grid-template-columns: 9rem minmax(0, 1fr); column-gap: var(--gutter); padding-block: 0.75rem; border-top: var(--hair) solid var(--line); }
+.panel-list + p { margin-top: var(--stack-4); }
+@media (max-width: 29.99rem) {
+  .panel-list li, .prose dl.terms { grid-template-columns: minmax(0, 1fr); row-gap: 0.15rem; }
+  .prose dl.terms dd { border-top: 0; padding-top: 0; }
+}
+.panel-list li:last-child { border-bottom: var(--hair) solid var(--line); }
+/* The manual's terminology: the same label | description form as the panel list (owner, 7 Oct). */
+.prose dl.terms { display: grid; grid-template-columns: 9rem minmax(0, 1fr); column-gap: 0; margin-block: var(--stack-2) 0; border-bottom: var(--hair) solid var(--line); }
+.prose dl.terms dt, .prose dl.terms dd { margin: 0; padding-block: 0.75rem; border-top: var(--hair) solid var(--line); }
+.prose dl.terms dt { font-weight: 600; padding-right: var(--gutter); }   /* no column gap, so the hairlines run unbroken (owner, 7 Oct) */
+
+/* ---- Download: "You'll need", a roomier middot ---------- */
+.download .needs { display: grid; gap: 0.4rem; margin-top: 0.75rem; }   /* more room under the button (owner, 7 Oct) */
+.download .needs-title { font: 700 var(--fs-micro) / 1.3 var(--font-mono); text-transform: uppercase; color: var(--ink-2); }   /* bold, secondary; the items are primary (owner, 8 Oct: swapped) */
+.download .sep { margin-inline: 0.6em; }
+
+/* ---- Bullets in the accent, site-wide (owner, 7 Oct) ------------------------- */
+ul > li::marker { color: var(--signal); }
+
+/* ---- Doc contents: the section being read is selected (owner, 7 Oct) ---------- */
+.toc a { display: inline-flex; align-items: center; padding-block: 0.2rem; text-decoration: none; transition: color var(--dur-1) var(--ease-out); }
+.toc a::before {
+  content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--signal);
+  margin-right: -6px; transform: scale(0); opacity: 0;   /* takes no room until selected */
+  transition: margin-right var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out), opacity var(--dur-1) var(--ease-out);
+}
+.toc a:hover { color: var(--ink); }
+.toc a[aria-current="location"] { color: var(--ink); font-weight: var(--wt-medium); }
+.toc a[aria-current="location"]::before { margin-right: 0.5rem; transform: scale(1); opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .toc a::before { transition: opacity var(--dur-1) linear; } }
+@media (max-width: 29.99rem) {
+  .prose dl.terms { grid-template-columns: minmax(0, 1fr); }
+  .prose dl.terms dd { border-top: 0; padding-top: 0; }
+}
+
+/* ---- King Tubby's Big Knob (history; owner, 7 Oct) --------------------------------
+   A bento: the image-and-scrim banner on the left, two renders stacked on the right, then
+   the story in the reading column. */
+.bigknob .bigknob-bento { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); grid-template-rows: auto auto; gap: var(--gutter); }
+.bigknob .bigknob-banner { grid-row: 1 / 3; margin: 0; display: grid; }
+.bigknob .bigknob-banner .intro-card { min-height: 100%; }
+.bigknob .bigknob-tile { margin: 0; }
+.bigknob .intro-copy .statement + * { margin-top: 0.75rem; }   /* the lede sits close under the title (owner, 7 Oct) */
+.bigknob .bigknob-story { margin-top: var(--stack-5); }
+@media (max-width: 63.99rem) {
+  .bigknob .bigknob-bento { grid-template-columns: minmax(0, 1fr); }
+  .bigknob .bigknob-banner { grid-row: auto; }
+  .bigknob .bigknob-banner .intro-card { min-height: clamp(26rem, 60vw, 34rem); }
+}
+
+/* ---- Shape it with us (feedback; owner, 8 Oct) -------------------------------------
+   The three steps on a rail (owner's pick, 8 Oct): a hairline with a red dot per step, in the
+   tiny diagrams' language. Across the column on wider screens, down the left edge on phones,
+   so the text keeps the full width. Then the two issue forms as buttons and the FAQ link. */
+.shape-steps { list-style: none; padding: 0; margin: var(--stack-4) auto 0; width: min(100% - 2 * var(--margin), 64rem); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gutter); --dot: 0.625rem; }
+.shape-steps li { position: relative; padding-top: calc(var(--dot) + var(--stack-2)); display: grid; gap: 0.4rem; align-content: start; }
+.shape-steps li::before { content: ""; position: absolute; left: 0; top: 0; width: var(--dot); height: var(--dot); border-radius: 50%; background: var(--signal); }
+.shape-steps li:not(:last-child)::after { content: ""; position: absolute; top: calc(var(--dot) / 2); left: calc(var(--dot) + 0.5rem); right: calc(0.5rem - var(--gutter)); border-top: var(--hair) solid var(--line); }
+.shape-num { font: var(--wt-reg) var(--fs-micro) / 1 var(--font-mono); color: var(--signal-text); }
+.shape-title { font-size: var(--fs-body); line-height: 1.2; }
+.shape-steps p { color: var(--ink-2); max-width: 22em; text-wrap: pretty; }   /* the three lines are written to similar lengths (owner, 8 Oct) */
+.shape-actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.75rem 1rem; margin-top: var(--stack-4); }
+@media (max-width: 47.99rem) {
+  .shape-steps { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .shape-steps li { padding: 0 0 var(--stack-3) calc(var(--dot) + 1rem); }
+  .shape-steps li:last-child { padding-bottom: 0; }
+  .shape-steps li::before { top: 0.1rem; }
+  .shape-steps li:not(:last-child)::after { top: calc(0.1rem + var(--dot) + 0.4rem); bottom: 0.4rem; left: calc(var(--dot) / 2); right: auto; border-top: 0; border-left: var(--hair) solid var(--line); }
+}
+
+/* ---- Theme switch (footer; owner, 8 Oct) --------------------------------------------
+   System · Light · Dark, a small segmented control like the player's A/B. */
+.theme-switch { display: inline-flex; gap: 0.2rem; padding: 0.2rem; margin-top: var(--stack-2); border-radius: 999px; box-shadow: inset 0 0 0 var(--hair) var(--line); }
+.theme-switch button { border: 0; background: none; color: var(--ink-2); padding: 0.4rem 0.8rem; border-radius: 999px; font: var(--wt-reg) var(--fs-micro) / 1 var(--font-mono); text-transform: uppercase; cursor: pointer; }
+.theme-switch button:hover { color: var(--ink); }
+.theme-switch button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+
+/* ---- The floating BLEND fader (owner, 8 Oct; after an Intellijel crossfader) -------
+   One control for the playing demo: Dry and Wet at the ends, a dark slot with tick marks
+   above and below (a longer centre mark), a squarish cap with a light centre line. It
+   floats centred above the bottom edge while the demos are on screen or a clip plays. */
+.fader {
+  position: fixed; z-index: 30; left: 50%; bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  width: min(26rem, calc(100vw - 2rem));
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.9rem;
+  padding: 0.45rem 1rem; border-radius: 1rem;
+  /* Dark tinted glass in both themes (owner, 8 Oct), so its own colours are the dark band's. */
+  --ink: var(--on-dark); --ink-2: var(--on-dark-2); --paper: var(--dark);
+  background: rgb(12 11 10 / 0.55); color: var(--ink);
+  -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: inset 0 0 0 var(--hair) rgb(255 255 255 / 0.12), 0 1.25rem 2.5rem -1rem rgb(0 0 0 / 0.4);
+  transform: translate(-50%, calc(100% + 2rem)); opacity: 0; pointer-events: none;
+  transition: transform var(--dur-2) var(--ease-out), opacity var(--dur-2) var(--ease-out);
+}
+.fader.is-on { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+.fader-end { font: 600 var(--fs-ui) / 1 var(--font-sans); letter-spacing: var(--track-ui); color: var(--ink); }
+.fader-body { position: relative; height: 2.85rem; --cap-w: 1.1rem; }
+.fader-ticks { position: absolute; inset: 0 calc(var(--cap-w) / 2); width: calc(100% - var(--cap-w)); height: 100%; overflow: visible; }
+.fader-ticks line { stroke: color-mix(in srgb, var(--ink-2) 55%, transparent); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.fader-ticks line.centre { stroke: var(--ink-2); stroke-width: 2.5; }
+.fader-slot { position: absolute; left: calc(var(--cap-w) / 2); right: calc(var(--cap-w) / 2); top: 50%; height: 0.3rem; translate: 0 -50%; border-radius: 999px; background: var(--ink); }
+.fader input[type="range"] { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; background: transparent; cursor: grab; -webkit-appearance: none; appearance: none; }
+.fader input[type="range"]:active { cursor: grabbing; }
+.fader input[type="range"]::-webkit-slider-runnable-track { height: 100%; background: transparent; }
+.fader input[type="range"]::-moz-range-track { height: 100%; background: transparent; }
+.fader input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: var(--cap-w); height: 2.45rem; margin-top: 0.2rem; border: 0; border-radius: 0.3rem;
+  background: linear-gradient(90deg, transparent calc(50% - 1px), var(--paper) calc(50% - 1px), var(--paper) calc(50% + 1px), transparent calc(50% + 1px)), var(--ink);
+  box-shadow: 0 0.2rem 0.5rem rgb(0 0 0 / 0.3);
+}
+.fader input[type="range"]::-moz-range-thumb {
+  width: var(--cap-w); height: 2.45rem; border: 0; border-radius: 0.3rem;
+  background: linear-gradient(90deg, transparent calc(50% - 1px), var(--paper) calc(50% - 1px), var(--paper) calc(50% + 1px), transparent calc(50% + 1px)), var(--ink);
+  box-shadow: 0 0.2rem 0.5rem rgb(0 0 0 / 0.3);
+}
+.fader input[type="range"]:focus-visible { outline: none; }
+.fader input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--focus); }
+.fader input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--focus); }
+@media (prefers-reduced-motion: reduce) { .fader { transition: opacity var(--dur-1) linear; } }
+
+/* The source note under a demo's Settings (owner, 8 Oct): a hairline above, small and quiet. */
+.demo .demo-note { margin-top: 0.75rem; padding-top: 0.75rem; border-top: var(--hair) solid var(--line); font: var(--wt-reg) var(--fs-micro) / 1.45 var(--font-sans); color: var(--ink-2); }
+
+/* Knob glyphs beside setting values (owner, 8 Oct): the position at a glance, 7 to 5 o'clock. */
+.knob-value { display: flex; align-items: center; gap: 0.45rem; }
+/* Overhangs the line box (negative margins) so rows with and without knobs are the same height. */
+.knob-glyph { flex: none; width: 1.4em; height: 1.4em; margin-block: -0.45em; overflow: visible; }
+.spec th, .spec td { vertical-align: middle; }
+.knob-glyph path, .knob-glyph line { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.knob-glyph .kg-track { stroke: var(--line); stroke-width: 2; }
+.knob-glyph .kg-travel { stroke: var(--signal); stroke-width: 2; }
+.knob-glyph .kg-body { fill: none; stroke: var(--ink-2); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.knob-glyph .kg-pointer { stroke: var(--ink); stroke-width: 1.5; }

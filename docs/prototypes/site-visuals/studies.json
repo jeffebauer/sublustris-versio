@@ -1,0 +1,55 @@
+{
+  "fps": 24,
+  "capture_size": [1280, 720],
+  "still_phase": 0.3,
+  "render_scale": 0.5,
+  "max_fps": 30,
+  "placements": [
+    {"id": "hero", "code": "P1", "name": "Behind the hero title", "amt": 0.8},
+    {"id": "band", "code": "P2", "name": "Behind “What it sounds like”", "amt": 0.6}
+  ],
+  "studies": [
+    {
+      "id": "diffusion", "title": "Diffusion",
+      "line": "One note scatters into thousands of echoes that blur into a cloud: what a reverb does in its first half-second.",
+      "options": [
+        {"key": "diffusion-b1", "code": "diffusion B · slow 1", "shader": "diffusion", "V": 0, "loop": 40, "gain": 1.0, "vsize": [960, 540], "vfps": 20, "crf264": 25, "crfvp9": 26,
+         "name": "Ink in water, slow",
+         "line": "Slowed right down, and the back-and-forth is gone: the ink only ever moves forward. One full turn of the loop takes 40 s."},
+        {"key": "diffusion-b2", "code": "diffusion B · slow 2", "shader": "diffusion", "V": 0, "loop": 60, "gain": 1.0, "vsize": [960, 540], "vfps": 20, "crf264": 25, "crfvp9": 26,
+         "name": "Ink in water, slower",
+         "line": "The same, a third slower again: a full turn takes 60 s. Live, both drift gently upward and never repeat."}
+      ]
+    },
+    {
+      "id": "waves", "title": "Waves",
+      "line": "Sound as rings of pressure moving out through the room, losing their edge as they go.",
+      "options": [
+        {"key": "waves-a", "code": "waves A", "shader": "waves", "V": 0, "loop": 10, "gain": 1.0,
+         "name": "Ripples, diffusing",
+         "line": "Crisp rings near the source; further out they widen, wobble, break into fragments and finally scatter into loose points of light."},
+        {"key": "waves-b", "code": "waves B", "shader": "waves", "V": 1, "loop": 30, "gain": 1.0,
+         "name": "Contour lines, dissolving",
+         "line": "Thin lines lifted by a slow swell: crisp at the left, and toward the right they widen, fray and fall apart."}
+      ]
+    },
+    {
+      "id": "haze", "title": "Haze",
+      "line": "The late tail, where the echoes are too dense to hear apart and turn into one soft wash.",
+      "options": [
+        {"key": "haze-a1", "code": "haze A · brighter 1", "shader": "haze", "V": 0, "loop": 30, "gain": 1.2, "vsize": [960, 540], "vfps": 20, "crf264": 22, "crfvp9": 22,
+         "name": "Moon behind cloud",
+         "line": "The cloud is now lit across the whole sky, with a brighter rim where it thins; the glow itself is held down so text stays readable."},
+        {"key": "haze-a2", "code": "haze A · brighter 2", "shader": "haze", "V": 0, "loop": 30, "gain": 1.5, "vsize": [960, 540], "vfps": 20, "crf264": 22, "crfvp9": 22,
+         "name": "Moon behind cloud, brighter",
+         "line": "One step brighter: the brightest version whose brightest pixel still keeps secondary text above 4.5:1 in the hero."},
+        {"key": "haze-b1", "code": "haze B · brighter 1", "shader": "haze", "V": 1, "loop": 30, "gain": 1.2, "vsize": [960, 540], "vfps": 20, "crf264": 22, "crfvp9": 22,
+         "name": "Ground mist",
+         "line": "Denser banks with clearer gaps between them, so the layers read as mist rather than a tint."},
+        {"key": "haze-b2", "code": "haze B · brighter 2", "shader": "haze", "V": 1, "loop": 30, "gain": 1.6, "vsize": [960, 540], "vfps": 20, "crf264": 22, "crfvp9": 22,
+         "name": "Ground mist, brighter",
+         "line": "One step brighter: the brightest version that still keeps secondary text above 4.5:1 in the hero."}
+      ]
+    }
+  ]
+}

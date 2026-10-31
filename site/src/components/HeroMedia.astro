@@ -1,0 +1,135 @@
+---
+// The hero frame (DESIGN-v2, Home 1), as Resilio's. Until the renders exist, a labelled
+// placeholder (docs/minisite/README.md, "Renders to come"). With hero-still.png, the still;
+// when the prebuild has also copied hero-reveal.(webm|mp4) and hero-hold-loop.(webm|mp4) into
+// public/renders/, the reveal plays once (muted, inline), then the hold loops, with a pause
+// button. The still is what shows without JavaScript, when autoplay is blocked (iOS Low Power
+// Mode), and all reduced-motion users see.
+// Two stacked videos (owner, 7 Oct: flicker on mobile at the switch): the hold preloads
+// while the reveal plays and takes over on the reveal's last frame, which it matches, so
+// nothing reloads. When the film will play, the lit still is hidden from the first paint
+// (the reveal opens in darkness), so it never flashes lit → dark → lit.
+// Everything is transparent (owner, 30 Oct 2026): the module stands among the hero's contour lines. The
+// still is a PNG with alpha (served as AVIF/WebP, which keep it). Each film comes twice: WebM
+// VP9 with alpha for Chrome, Firefox and Edge, and MP4 HEVC with alpha for Safari. Safari can
+// also play WebM but drops its alpha, so on WebKit the WebM is removed before the film loads.
+
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { Picture } from 'astro:assets';
+import { PUBLIC_DIR } from '../lib/paths';
+import Placeholder from './Placeholder.astro';
+import { render, widthsFor } from '../lib/renders';
+
+const has = (f: string) => existsSync(join(PUBLIC_DIR, 'renders', f));
+const stillImg = render('hero-still.png');
+const sizes = '(min-width: 92rem) 92rem, calc(100vw - 2rem)';
+const sources = (name: string) =>
+  (['webm', 'mp4'] as const)
+    .filter((ext) => has(`${name}.${ext}`))
+    .map((ext) => ({ src: `/renders/${name}.${ext}`, type: ext === 'mp4' ? 'video/mp4; codecs="hvc1"' : 'video/webm' }));
+const reveal = sources('hero-reveal');
+const hold = sources('hero-hold-loop');
+const film = Boolean(stillImg) && reveal.length > 0 && hold.length > 0;
+const alt = 'The Sublustris Versio module in half-light, seen from the floor against a dark background, its four LEDs glowing blue.';
+---
+{!stillImg && <Placeholder id="hero-still.png" name="Hero still (the film’s poster)" ratio="16:9" class="hero-placeholder" />}
+{film && (
+<script is:inline>
+  // Before first paint: the film will play, so start on black, not on the lit still.
+  // The hero starts dark and lights up with the film; if the film's script never runs, it lights
+  // up anyway.
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.documentElement.classList.add('hero-film');
+    setTimeout(() => document.documentElement.classList.add('hero-lit'), 10000);
+  }
+</script>
+)}
+{stillImg && (
+<div class="hero-frame" data-hero>
+  {film ? (
+    <>
+      <Picture class="hero-still" src={stillImg} widths={widthsFor(stillImg)} sizes={sizes} formats={['avif', 'webp']} fetchpriority="high" loading="eager" alt={alt} />
+      <video class="hero-video" muted playsinline preload="none" aria-hidden="true" data-hero-video>
+        {reveal.map((s) => <source src={s.src} type={s.type} />)}
+      </video>
+      <video class="hero-video hero-hold" muted playsinline loop preload="none" aria-hidden="true" data-hero-hold>
+        {hold.map((s) => <source src={s.src} type={s.type} />)}
+      </video>
+      <button class="hero-pause" type="button" data-hero-pause hidden>
+        <span class="visually-hidden">Pause the film</span>
+        <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z" fill="currentColor" /></svg>
+        <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9.5-5.5z" fill="currentColor" /></svg>
+      </button>
+    </>
+  ) : (
+    <Picture class="hero-still" src={stillImg} widths={widthsFor(stillImg)} sizes={sizes} formats={['avif', 'webp']} fetchpriority="high" loading="eager" alt={alt} />
+  )}
+</div>
+)}
+{film && (
+  <script>
+    // Reveal once, then the hold loops in a second video. Nothing plays under reduced motion.
+    const reveal = document.querySelector<HTMLVideoElement>('[data-hero-video]');
+    const hold = document.querySelector<HTMLVideoElement>('[data-hero-hold]');
+    const pause = document.querySelector<HTMLButtonElement>('[data-hero-pause]');
+    const frame = document.querySelector<HTMLElement>('[data-hero]');
+    const root = document.documentElement;
+    const lightUp = () => root.classList.add('hero-lit');
+    const showStill = () => { lightUp(); root.classList.remove('hero-film'); };
+    if (reveal && hold && pause && frame && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      // WebKit (Safari, and every browser on iOS): the HEVC film, the only one it shows with alpha
+      const ua = navigator.userAgent;
+      if (/AppleWebKit/.test(ua) && !/Chrome|Chromium|Edg|Android/.test(ua)) {
+        for (const v of [reveal, hold]) {
+          v.querySelectorAll('source[type="video/webm"]').forEach((s) => s.remove());
+          v.load();
+        }
+      }
+      let active = reveal;
+      let userPaused = false;
+      reveal.preload = 'auto';
+      // The contour lines come up with the module's key light: frames 110-225 of the reveal
+      // (LIGHTS_ON in site/renders/render_hero.py), eased the same way.
+      const band = frame.closest<HTMLElement>('.has-contours');
+      const LIT = [110 / 30, 225 / 30];
+      const track = () => {
+        if (root.classList.contains('hero-lit')) return;
+        const k = Math.min(1, Math.max(0, (reveal.currentTime - LIT[0]) / (LIT[1] - LIT[0])));
+        band?.style.setProperty('--hero-lit', (k * k * k * (k * (6 * k - 15) + 10)).toFixed(3));
+        if (k >= 1) lightUp(); else requestAnimationFrame(track);
+      };
+      for (const ev of ['wheel', 'touchmove', 'keydown', 'pointerdown']) addEventListener(ev, lightUp, { once: true, passive: true });
+      reveal.addEventListener('playing', () => {
+        requestAnimationFrame(track);
+        frame.classList.add('is-playing');
+        pause.hidden = false;
+        hold.preload = 'auto';
+        hold.load();
+      }, { once: true });
+      reveal.addEventListener('ended', () => {
+        lightUp();
+        hold.play().then(() => {
+          hold.classList.add('is-on');   // shown only once it's actually playing
+          active = hold;
+        }).catch(() => {});              // if the loop can't play, the reveal's last frame stays
+      }, { once: true });
+      reveal.play().catch(showStill);    // autoplay blocked: the still, not a black frame
+      // Chrome pauses muted autoplay when the film scrolls offscreen and doesn't resume a
+      // script-started one: carry on when the hero is back in view, unless the visitor paused.
+      new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting && !userPaused && active.paused && !active.ended) active.play().catch(() => {});
+      }, { threshold: 0.25 }).observe(frame);
+      pause.addEventListener('click', () => {
+        const paused = !active.paused;
+        userPaused = paused;
+        lightUp();
+        if (paused) active.pause(); else active.play().catch(() => {});
+        pause.classList.toggle('is-paused', paused);
+        pause.querySelector('.visually-hidden')!.textContent = paused ? 'Play the film' : 'Pause the film';
+      });
+    } else {
+      showStill();
+    }
+  </script>
+)}

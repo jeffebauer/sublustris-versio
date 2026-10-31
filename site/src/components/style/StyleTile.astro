@@ -1,0 +1,276 @@
+---
+// One style-tile direction (stop 3, BRIEF section 10), modelled on Resilio's /style: the palette
+// with every text/background pair and its contrast, the type scale, the header, buttons, bento
+// tiles, the tiny diagrams, the annotated panel, real audio tiles with the BLEND fader, the render
+// placeholders, and the light and dark behaviour. Built from the real components; the direction's
+// tokens come from its CSS file (imported by the page, scoped to body.dir-<id>).
+import Button from '../Button.astro';
+import Chip from '../Chip.astro';
+import Logo from '../Logo.astro';
+import AudioAB from '../AudioAB.astro';
+import BlendFader from '../BlendFader.astro';
+import Placeholder from '../Placeholder.astro';
+import AnnotatedPanel from '../AnnotatedPanel.astro';
+import Diagram from '../diagrams/Diagram.astro';
+import { shape, type DiagramKind } from '../diagrams/shapes';
+import { getDemos } from '../../lib/demos';
+import { fontPlan } from '../../lib/fonts';
+import { DIRECTIONS, contrastTable, textOn, tokensFor, type DirectionId } from '../../lib/directions';
+import { FEATURE_TILES as SV_TILES } from '../../data/controls';
+
+type Band = '' | 'band-dark' | 'band-slate' | 'band-tile';
+type Key = 'hero' | 'palette' | 'type' | 'header' | 'buttons' | 'tiles' | 'diagrams' | 'panel' | 'audio' | 'renders' | 'themes';
+interface Props { id: DirectionId; bands: Partial<Record<Key, Band>>; title: string; lede: string }
+const { id, bands, title, lede } = Astro.props;
+const dir = DIRECTIONS[id];
+const tokens = tokensFor(id);
+const light = contrastTable(dir, tokens.light, dir.hasDark ? 'light' : 'only');
+const dark = tokens.dark ? contrastTable(dir, tokens.dark, 'dark') : undefined;
+const band = (k: Key) => bands[k] ?? '';
+const fonts = fontPlan();
+const { clips } = await getDemos();
+const byId = (n: string) => clips.find((c) => c.file.startsWith(n)) ?? clips[0];
+
+const TYPE = [
+  { cls: 'display', token: '--fs-display', range: '48 → 120 px', meta: `MD UI ${dir.id === 'a' ? 'Semibold 600' : 'Bold 700'} · line 0.95`, sample: 'Sublustris Versio' },
+  { cls: 'h2', token: '--fs-h2', range: '36 → 88 px', meta: 'Section headings', sample: 'The endless hold' },
+  { cls: 'h3', token: '--fs-h3', range: '24 → 40 px', meta: 'Tile statements', sample: '120 s tails' },
+  { cls: 'lede', token: '--fs-lede', range: '18 → 24 px', meta: 'Light 300 · section intros', sample: 'Dimly lit, faintly glowing: the half-light of a clouded night.' },
+  { cls: '', token: '--fs-body', range: '17 → 22 px', meta: 'Light 300 · line 1.4', sample: 'Past about 3 o’clock DECAY makes the tail endless. It settles at a steady level and ducks a little under new playing, and in PLATE and HALL its notes hold still when you stop.' },
+  { cls: 'small', token: '--fs-small', range: '15 → 18 px', meta: 'Light 300 · captions, tile lines', sample: 'Tap to freeze. Hold while frozen to paint what you play into the pad.' },
+  { cls: 'micro', token: '--fs-micro', range: '12 px', meta: 'MD IO 400 · labels, values', sample: 'SPACE · PLATE · HALL · MASSIVE' },
+];
+
+const NAV = ['Home', 'Manual', 'Install', 'Presets', 'Changelog', 'FAQ'];
+
+const DIAGRAMS: [DiagramKind, string][] = [
+  ['endless-infinity', 'The endless hold'], ['longtail', 'A long tail'], ['freeze', 'Freeze'], ['swell-family', 'BLOOM: a swell'],
+  ['octave', 'SHIMMER: an octave up'], ['tape-head', 'MOTION: tape wobble'], ['spaces', 'PLATE · HALL · MASSIVE'], ['cv-scale', 'CV inputs'],
+];
+
+// docs/minisite/README.md, "Renders to come".
+const RENDERS = [
+  { file: 'hero-still.png', name: 'Hero still (and the film’s poster)', ratio: '16:9', size: '2400 × 1350', wide: true },
+  { file: 'front-on-wide.jpg', name: 'Front-on panel', ratio: '16:9', size: '2116 × 1190' },
+  { file: 'patched.jpg', name: 'Patched module', ratio: '16:9', size: '2400 × 1350' },
+  { file: 'panel-macro.jpg', name: 'Panel close-up', ratio: '21:9', size: '2400 × 1028', wide: true },
+  { file: 'og-hero.jpg', name: 'Open Graph image', ratio: '1200:630', size: '1200 × 630' },
+  { file: 'plugin-panel.png', name: 'Plugin screenshot', ratio: '253:643', size: '506 × 1286 (2x)' },
+];
+const others = (['a', 'b', 'c'] as DirectionId[]).filter((d) => d !== id);
+---
+<section class:list={['st-section', 'st-hero', band('hero')]} aria-labelledby="st-title">
+  <div class="column">
+    <p class="micro quiet st-kicker">Style tile · direction {id.toUpperCase()} · {dir.name}</p>
+    <h1 class="display" id="st-title">{title}</h1>
+  </div>
+  <div class="column flow st-intro">
+    <p class="lede">{lede}</p>
+    <p class="small quiet">{dir.summary}</p>
+    <p class="small quiet">
+      {dir.hasDark ? 'Light and dark themes: the footer’s switch (or your system) changes them; both are on this page, under “Light and dark”.' : 'Dark only: this direction has no light theme.'}
+      {' '}Fonts this build: {fonts.sans ? `MD UI${fonts.mono ? ' and MD IO' : ''}.` : 'Inter (the MD UI files weren’t supplied).'}
+    </p>
+    <p class="demo-row">
+      <Button href="/style/" variant="ghost">All three directions</Button>
+      {others.map((o) => <Button href={`/style/${o}/`} variant="ghost" arrow>{`${o.toUpperCase()}: ${DIRECTIONS[o].short}`}</Button>)}
+    </p>
+  </div>
+</section>
+
+<!-- Palette and contrast -->
+<section class:list={['st-section', band('palette')]} aria-labelledby="st-colour">
+  <div class="column"><h2 class="h2" id="st-colour">Palette</h2><p class="quiet">Every text and background pair this direction uses, with its WCAG 2 contrast ratio, computed at build from the direction’s CSS. Text needs 4.5:1, large text and marks 3:1; the build stops if a pair fails.</p></div>
+  {[['', light], ['Dark theme', dark]].filter(([, t]) => t).map(([label, table]) => (
+    <div class="wide st-palette">
+      {label && <h3 class="h3 st-subhead">{label}</h3>}
+      <div class="swatches">
+        {(table as typeof light).map((c) => (
+          <div class="swatch">
+            <div class="chipbox" style={`background: ${c.hex}; color: ${textOn(c.hex)}`}>
+              <span class="micro">{c.hex}</span>
+              <span class="st-pairs" aria-hidden="true">{c.pairs.map((p) => <span style={`background:${p.fg}`}></span>)}</span>
+            </div>
+            <p>{c.name} <span class="micro quiet">{c.token}</span></p>
+            <p class="small quiet">{c.use}</p>
+            <dl class="micro">
+              {c.pairs.map((p) => (
+                <><dt><span class="st-dot" style={`background:${p.fg}`} aria-hidden="true"></span>{p.label} <span class="quiet">{p.fg}</span></dt><dd>{p.ratio.toFixed(1)}:1 {p.grade}{p.need === 'mark' ? ' (mark)' : ''}</dd></>
+              ))}
+            </dl>
+          </div>
+        ))}
+      </div>
+    </div>
+  ))}
+  <div class="wide st-marks">
+    {dir.marks.map((m) => (
+      <p class="small"><span class="led-dot" style={`background: var(--${m.token})`} aria-hidden="true"></span><strong>{m.name}</strong> <span class="micro quiet">--{m.token} {tokens.light[m.token]}</span> <span class="quiet">{m.use}. Never small text.</span></p>
+    ))}
+  </div>
+</section>
+
+<!-- Type -->
+<section class:list={['st-section', band('type')]} aria-labelledby="st-type">
+  <div class="column"><h2 class="h2" id="st-type">Type</h2><p class="quiet">MD UI for headings and reading, MD IO for labels and values: the same scale as Resilio.</p></div>
+  <div class="wide">
+    {TYPE.map((t) => (
+      <div class="st-row">
+        <p class="micro quiet">{t.token}<br />{t.range}<br />{t.meta}</p>
+        <p class={`type-specimen ${t.cls}`}>{t.sample}</p>
+      </div>
+    ))}
+    <div class="st-row">
+      <p class="micro quiet">Weights<br />300 · 400 · 600 · 700</p>
+      <div class="lede">
+        <p style="font-weight: 300">Light 300 · reading text <i>and its oblique</i></p>
+        <p style="font-weight: 400">Regular 400 · UI, anything under 15 px</p>
+        <p style="font-weight: 600">Semibold 600 · buttons, bold in long text</p>
+        <p style="font-weight: 700">Bold 700 · headings and big numbers</p>
+        <p class="mono">MD IO · v1.0.59 · DECAY 2:30 · DEPTH 250 ms</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Header -->
+<section class:list={['st-section', band('header')]} aria-labelledby="st-header">
+  <div class="column"><h2 class="h2" id="st-header">Header</h2><p class="quiet">Resilio’s three-column bar and logo construction: the logo, the pages, Download. Over a dark band it turns light-on-dark.</p></div>
+  <div class="wide flow">
+    {[['', 'page', 'On the page.'], ['is-over-dark', 'band', 'Over the hero and the sound band.']].map(([cls, key, note]) => (
+      <div class={`header-sample ${key === 'band' ? 'dark' : 'page'}`}>
+        <div class={`site-header ${cls}`}>
+          <span class="wordmark"><Logo class="logo logo-full" /><Logo class="logo logo-short" short /></span>
+          <nav class="nav" aria-label={`Header sample, ${key}`}>
+            <ul>{NAV.map((l, i) => <li><a href="#st-header" aria-current={i === 0 ? 'page' : undefined}>{l}</a></li>)}</ul>
+          </nav>
+          <a class="btn btn-dark btn-small header-cta" href="#st-header">Download</a>
+        </div>
+        <p class="sample-body small">{note}</p>
+      </div>
+    ))}
+  </div>
+</section>
+
+<!-- Buttons -->
+<section class:list={['st-section', band('buttons')]} aria-labelledby="st-buttons">
+  <div class="column"><h2 class="h2" id="st-buttons">Buttons</h2><p class="quiet">One pill for every control. The accent fill appears once per screen: the download.</p></div>
+  <div class="wide">
+    <div class="st-row"><p class="micro quiet">Primary</p><p class="demo-row"><Button href="#st-buttons" variant="primary" arrow>Download</Button><Button href="#st-buttons" variant="primary">Firmware for Versio (.bin)<span class="mono">108 KB</span></Button></p></div>
+    <div class="st-row"><p class="micro quiet">Dark</p><p class="demo-row"><Button href="#st-buttons" variant="dark">Plugin for macOS (AU/VST3)</Button></p></div>
+    <div class="st-row"><p class="micro quiet">Ghost</p><p class="demo-row"><Button href="#st-buttons" variant="ghost">Listen</Button><Button href="#st-buttons" variant="ghost" arrow>Read the manual</Button></p></div>
+    <div class="st-row"><p class="micro quiet">Coming soon</p><p class="download"><span class="soon"><Button variant="primary" disabled>Firmware for Versio (.bin)</Button><span class="micro quiet">Coming soon: the link goes live with the first public release.</span></span></p></div>
+    <div class="st-row"><p class="micro quiet">Chips</p><p class="demo-row"><Chip dot>MASSIVE</Chip><Chip>BLOOM</Chip><span class="badge">Pre-release</span></p></div>
+  </div>
+</section>
+
+<!-- Tiles -->
+<section class:list={['st-section', band('tiles')]} aria-labelledby="st-tiles">
+  <div class="column"><h2 class="h2" id="st-tiles">Tiles</h2><p class="quiet">The features as bento tiles: one big statement each, a tiny diagram, one line. Facts from the manual.</p></div>
+  <div class="wide">
+    <ul class="bento" aria-label="Feature tiles">
+      {SV_TILES.map((t) => (
+        <li class:list={['tile', 'feature', t.size && `is-${t.size}`]}>
+          <h3 class="feature-big">{t.big}</h3>
+          <p class="feature-line small">{t.line}</p>
+          <Diagram kind={t.diagram} class="feature-diagram" />
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<!-- Diagrams -->
+<section class:list={['st-section', band('diagrams')]} aria-labelledby="st-diagrams">
+  <div class="column"><h2 class="h2" id="st-diagrams">Tiny diagrams</h2><p class="quiet">New for Sublustris, on Resilio’s 160 × 64 grid: 1.5 px lines in the text colour, the accent on the reverb, faint guides. Shared by all three directions. These are your picks (30 Oct); <a href="/style/diagrams/">the other options</a> stay on their own page.</p></div>
+  <div class="wide">
+    <ul class="diagram-grid">
+      {DIAGRAMS.map(([kind, label]) => <li class="tile"><Diagram kind={kind} /><span class="micro">{label}</span><span class="small quiet">{shape(kind).label}</span></li>)}
+    </ul>
+  </div>
+</section>
+
+<!-- Annotated panel -->
+<section class:list={['st-section', band('panel')]} aria-labelledby="st-panel">
+  <div class="column"><h2 class="h2" id="st-panel">Annotated panel</h2><p class="quiet">Callouts on leader lines on wide screens, numbered markers and a list when narrower. The panel map stands in for the front-on render, themed with the direction’s colours.</p></div>
+  <div class="wide"><AnnotatedPanel prefix={`pc-${id}`} /></div>
+</section>
+
+<!-- Audio -->
+<section class:list={['st-section', band('audio')]} aria-labelledby="st-audio">
+  <div class="column"><h2 class="h2" id="st-audio">Audio tiles</h2><p class="quiet">Real demos. Press play, then move the BLEND fader that floats up from the bottom: it mixes the dry and the 100 % wet render live. Tab to the waveform and use the arrow keys to seek.</p></div>
+  <div class="wide">
+    <ul class="demos">
+      <AudioAB clip={byId('01')} n={1} idPrefix={`st-${id}`} wide />
+      <AudioAB clip={byId('02')} n={2} idPrefix={`st-${id}`} />
+      <AudioAB clip={byId('05')} n={5} idPrefix={`st-${id}`} />
+    </ul>
+  </div>
+  <BlendFader />
+</section>
+
+<!-- Render placeholders -->
+<section class:list={['st-section', band('renders')]} aria-labelledby="st-renders">
+  <div class="column"><h2 class="h2" id="st-renders">Render placeholders</h2><p class="quiet">Every image slot waits for the panel art. Dropping a file with its name into <code>docs/minisite/assets/renders/</code> fills it.</p></div>
+  <div class="wide">
+    <ul class="st-renders">
+      {RENDERS.map((r) => (
+        <li class:list={[r.wide && 'is-wide']}>
+          <Placeholder id={r.file} name={r.name} ratio={r.ratio} />
+          <p class="caption">{r.file} · {r.size} px · {r.ratio}</p>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<!-- Light and dark -->
+<section class:list={['st-section', band('themes')]} aria-labelledby="st-themes">
+  <div class="column"><h2 class="h2" id="st-themes">Light and dark</h2>
+    <p class="quiet">{dir.hasDark
+      ? 'The page follows the system unless the footer switch picks one. Here are both, side by side: the same tile, chip, button and diagram in each theme.'
+      : 'Direction A is dark only: the page is already the dark theme, so there is no switch to offer. The bands are a step deeper than the page.'}</p>
+  </div>
+  <div class="wide st-themes">
+    {(dir.hasDark ? [['Light', 'force-light'], ['Dark', 'force-dark']] : [['The page', ''], ['A dark band', 'band-dark']]).map(([label, cls]) => (
+      <div class:list={['st-theme', cls]}>
+        <p class="micro quiet">{label}</p>
+        <div class="tile feature">
+          <h3 class="feature-big">Endless hold</h3>
+          <p class="feature-line small">The tail settles at a steady level and never fades.</p>
+          <Diagram kind="endless" class="feature-diagram" decorative />
+        </div>
+        <p class="demo-row"><Chip dot>FROZEN</Chip><Button href="#st-themes" variant="primary">Download</Button><Button href="#st-themes" variant="ghost">Listen</Button></p>
+        <p class="small"><span class="quiet">Secondary text,</span> primary text, and <span class="st-accent-text">accent text v1.0.59</span>.</p>
+      </div>
+    ))}
+  </div>
+</section>
+
+<script>
+  import '../../scripts/player';
+</script>
+
+<style is:global>
+  .st-hero { padding-top: calc(var(--header-h) + var(--stack-5)); }
+  .st-kicker { margin-bottom: var(--stack-2); }
+  .st-intro { margin-top: var(--stack-3); }
+  .st-subhead { margin-block: var(--stack-4) var(--stack-3); }
+  .st-palette + .st-palette { margin-top: var(--stack-4); }
+  .st-pairs { display: flex; gap: 4px; margin-left: auto; }
+  .st-pairs span { width: 0.75rem; height: 0.75rem; border-radius: 50%; box-shadow: 0 0 0 1px rgb(127 127 127 / 0.35); }
+  .swatch .chipbox { justify-content: space-between; gap: 0.5rem; box-shadow: inset 0 0 0 var(--hair) color-mix(in srgb, var(--ink) 14%, transparent); }
+  .st-dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; margin-right: 0.4rem; vertical-align: -0.05rem; box-shadow: 0 0 0 1px rgb(127 127 127 / 0.35); }
+  .st-marks { margin-top: var(--stack-4); display: grid; gap: var(--stack-1); }
+  .led-dot { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; margin-right: 0.5rem; vertical-align: 0.05rem; }
+  .st-renders { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gutter); align-items: start; }
+  .st-renders .is-wide { grid-column: span 2; }
+  .st-renders li:last-child .placeholder { width: min(100%, 11rem); }   /* the tall plugin window: a phone-sized slot, not a tower */
+  @media (max-width: 47.99rem) { .st-renders { grid-template-columns: minmax(0, 1fr); } .st-renders .is-wide { grid-column: auto; } }
+  .st-themes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gutter); }
+  .st-theme { display: grid; gap: var(--stack-2); align-content: start; padding: var(--stack-3); border-radius: var(--radius-tile); background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 var(--hair) var(--line); }
+  .st-accent-text { color: var(--signal-text); font-weight: var(--wt-medium); }
+  @media (max-width: 47.99rem) { .st-themes { grid-template-columns: minmax(0, 1fr); } }
+  .header-sample.page { box-shadow: inset 0 0 0 var(--hair) var(--line); }
+  .header-sample .site-header .nav a[aria-current="page"] { background: color-mix(in srgb, currentColor 9%, transparent); border-radius: 999px; }
+</style>

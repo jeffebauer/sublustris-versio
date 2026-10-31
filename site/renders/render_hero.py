@@ -1,0 +1,231 @@
+"""The animated hero: the monolith emerging from the half-light, then holding.
+
+    /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \\
+        --python site/renders/render_hero.py -- --frames DIR [--samples 160] [--res 2400x1350] [--only 1,120,240]
+
+then encode with make_hero_video.sh. Frames are transparent PNGs (owner, 30 Oct 2026): the
+floor is a shadow catcher, so the site's haze shows through and only the module's soft contact
+shadow is kept. Frame 240 at 192 samples is also the site's hero-still.png. Ported from Resilio Versio's
+render_hero.py (the owner's MIT code): same camera move and light build, the
+"night" look (render_clay hero_d / hero_e) instead of Resilio's monolith, and
+the LEDs tell a different story (see below).
+
+Timeline (30 fps):
+  frames   1-240  hero-reveal (8 s, plays once). The camera starts low and
+                  close in front of the module, looking steeply up so it looms;
+                  near-black, the LEDs the only light. One continuous jib-like
+                  move: it dollies back while rising and tilting down, ending
+                  on hero_f's composition (the owner's pick: centred, from a
+                  little below, 40 mm). Quintic ease-in-out, no overshoot.
+                  Light in stages: dark -> the cold top and rim lights trace the
+                  edges and knob caps (frames 50-150) -> the soft key and front
+                  fill come up to the hero_e look (110-225).
+  frames 241-360  hero-hold-loop (4 s, loops seamlessly; it starts where the
+                  reveal ends): camera and light at rest; only the LEDs move.
+
+LEDs (freeze blue throughout, the module frozen):
+  LED3/LED4 (OUT L/R) the held tail: bright, breathing slowly (one breath per
+                      loop, L and R a little out of phase, a faint shimmer on top).
+  LED1/LED2 (IN L/R)  dim, a soft swell or two per loop (something played over
+                      the hold), R trailing L.
+  Every level is periodic in the loop length, so frame 361 equals frame 241.
+  Each LED also drives its small spill light so the glow falls on the knobs.
+"""
+import math
+import os
+import sys
+import time
+
+import bpy
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import common as C  # noqa: E402
+import module  # noqa: E402
+import render_clay  # noqa: E402
+
+FPS = 30
+LOOP = 120                # 4 s hold loop
+REVEAL_END = 240
+HOLD_START, HOLD_END = 241, 360
+EDGES_ON = (50, 150)      # rim + top light: the edges and knob caps appear first
+LIGHTS_ON = (110, 225)    # then the soft key and the fill
+CAM_MOVE = (1, 236)
+EDGE_LIGHTS = ("rim", "top")
+# The opening camera: low, wide and close, looking up (mm; lens mm), so the module looms in a
+# wide-angle view and settles square. Wide enough that the whole module
+# stays in frame for the whole move (owner, 31 Oct 2026: over the site's contour lines a module
+# cut off by the film's edge broke the "appearing from the dark").
+START, START_T, LENS0 = (0, -105, 3), (0, 0, 57), 15.0
+BLUE = C.hex_to_linear(C.FREEZE_BLUE)
+
+
+def led_levels(f):
+    """Levels for LED1..LED4 at frame f (periodic in LOOP)."""
+    t = 2 * math.pi * f / LOOP
+    out_l = 0.78 + 0.14 * math.sin(t) + 0.04 * math.sin(3 * t + 1.1)
+    out_r = 0.76 + 0.14 * math.sin(t - 0.6) + 0.04 * math.sin(3 * t + 2.3)
+    in_l = 0.12 + 0.30 * max(0.0, math.sin(2 * t)) ** 2
+    in_r = 0.12 + 0.26 * max(0.0, math.sin(2 * t - 0.5)) ** 2
+    return [in_l, in_r, out_l, out_r]
+
+
+def _ease(f, f0, f1):
+    """Smootherstep: zero velocity and acceleration at both ends."""
+    k = min(1.0, max(0.0, (f - f0) / (f1 - f0)))
+    return k * k * k * (k * (6 * k - 15) + 10)
+
+
+def build():
+    ref = render_clay.build_module("night")
+    sc = bpy.context.scene
+    spills = {f"LED{i}": bpy.data.objects.get(f"LED{i}_spill") for i in range(1, 5)}
+    # every light the night mood made ramps from 0 to its full (hero_e) energy;
+    # the edge lights first, the key and fill later
+    for ob in [o for o in bpy.data.objects if o.type == "LIGHT" and o not in spills.values()]:
+        full = ob.data.energy
+        span = EDGES_ON if ob.name in EDGE_LIGHTS else LIGHTS_ON
+        for f in range(1, REVEAL_END + 1, 3):
+            ob.data.energy = full * _ease(f, *span)
+            ob.data.keyframe_insert("energy", frame=f)
+        ob.data.energy = full
+        ob.data.keyframe_insert("energy", frame=REVEAL_END)
+    bg = sc.world.node_tree.nodes["Background"].inputs["Strength"]
+    full = bg.default_value
+    for f in (1, LIGHTS_ON[0]):
+        bg.default_value = 0.0
+        bg.keyframe_insert("default_value", frame=f)
+    bg.default_value = full
+    bg.keyframe_insert("default_value", frame=LIGHTS_ON[1])
+
+    # LEDs: one material each (the module shares one), keyed every frame
+    leds = []
+    for i in range(1, 5):
+        lens = bpy.data.objects[f"LED{i}_lens"]
+        m = bpy.data.materials.new(f"led_anim_{i}")
+        m.use_nodes = True
+        p = m.node_tree.nodes["Principled BSDF"]
+        p.inputs["Base Color"].default_value = (0.05, 0.05, 0.06, 1)
+        p.inputs["Roughness"].default_value = 0.25
+        p.inputs["Emission Color"].default_value = (*BLUE, 1)
+        C.assign(lens, m)
+        leds.append((p, spills[f"LED{i}"].data))
+    for f in range(1, HOLD_END + 1):
+        for (p, ld), lvl in zip(leds, led_levels(f)):
+            p.inputs["Emission Strength"].default_value = 0.1 + 7.0 * lvl
+            ld.energy = C.watts(0.0035) * 2.2 * lvl
+            p.inputs["Emission Strength"].keyframe_insert("default_value", frame=f)
+            ld.keyframe_insert("energy", frame=f)
+
+    # camera: low and close looking steeply up -> hero_f, the owner's pick (30 Oct
+    # 2026): centred, from a little below, 40 mm, so the module towers a touch
+    hf = next(v for v in render_clay.module_variants(render_clay._dummy_module_ref()) if v["id"] == "hero_f")
+    start, start_t = C.Vector(START), C.Vector(START_T)
+    end, end_t = C.Vector(hf["loc"]), C.Vector(hf["target"])
+    lens0, lens1 = LENS0, float(hf["f"])
+    tgt = bpy.data.objects.new("cam_target", None)
+    C.link(tgt)
+    cd = bpy.data.cameras.new("hero")
+    cd.sensor_width = 36.0
+    cd.clip_start, cd.clip_end = 1.0, 100000.0
+    cam = bpy.data.objects.new("hero", cd)
+    C.link(cam)
+    con = cam.constraints.new("TRACK_TO")
+    con.target = tgt
+    con.track_axis = "TRACK_NEGATIVE_Z"
+    con.up_axis = "UP_Y"
+    cd.dof.use_dof = True
+    cd.dof.aperture_fstop = hf["fstop"] * bpy.context.scene.unit_settings.scale_length
+    for f in range(CAM_MOVE[0], CAM_MOVE[1] + 1):
+        k = _ease(f, *CAM_MOVE)
+        cam.location = start.lerp(end, k)
+        tgt.location = start_t.lerp(end_t, k)
+        # the lens tracks the dolly so the module's apparent size shrinks
+        # steadily (a pure pull-back feel, no zoom-out-then-in)
+        dist = (end_t - cam.location).length
+        excess0 = lens0 / (lens1 * (start_t - start).length / (end_t - end).length)
+        cd.lens = lens1 * dist / (end_t - end).length * excess0 ** (1 - k)
+        cd.dof.focus_distance = (C.Vector(hf["focus"]) - cam.location).length
+        cd.dof.keyframe_insert("focus_distance", frame=f)
+        cam.keyframe_insert("location", frame=f)
+        tgt.keyframe_insert("location", frame=f)
+        cd.keyframe_insert("lens", frame=f)
+    sc.camera = cam
+    sc.frame_start, sc.frame_end = 1, HOLD_END
+    sc.render.fps = FPS
+    return ref
+
+
+def _steady_edges():
+    """Edge highlights that hold still from frame to frame (owner, 31 Oct 2026: the speculars
+    along the module's edges looked aliased and jittery). A 0.25 mm bevel made a highlight
+    thinner than a pixel, which the tight 1 px filter stair-stepped, so it crawled as the camera
+    moved (with the camera still, frames already matched). So: a wider, rounder panel bevel, the
+    default 1.5 px filter, enough samples on every pixel to antialias, a stricter noise
+    threshold, and a little glossy blur against fireflies."""
+    bev = bpy.data.objects["panel"].modifiers["bevel"]
+    bev.width, bev.segments = 0.6, 4
+    sc = bpy.context.scene
+    sc.render.filter_size = 1.5
+    sc.cycles.adaptive_threshold = 0.01
+    sc.cycles.adaptive_min_samples = 48   # every edge pixel gets enough samples to antialias
+    sc.cycles.blur_glossy = 0.5
+
+
+def _contact_shadow_only():
+    """The floor becomes a shadow catcher that keeps only a soft pool under the module.
+    As a plain catcher it also kept the long shadows the key, rim and LED lights throw
+    across the whole floor, with hard edges. So (light linking) none of the scene's lights
+    reach the floor, and one large soft light overhead lights the floor alone: its shadow,
+    fading in with the key, is the only one caught."""
+    cyc = bpy.data.objects["cyclorama"]
+    cyc.is_shadow_catcher = True
+    excl = bpy.data.collections.new("floor_unlit")
+    excl.objects.link(cyc)
+    excl.collection_objects[0].light_linking.link_state = "EXCLUDE"
+    for ob in [o for o in bpy.data.objects if o.type == "LIGHT"]:
+        ob.light_linking.receiver_collection = excl
+    incl = bpy.data.collections.new("floor_only")
+    incl.objects.link(cyc)
+    incl.collection_objects[0].light_linking.link_state = "INCLUDE"
+    size, height = (float(v) for v in os.environ.get("IV_HERO_SHADOW", "420,520").split(","))   # mm; env for tests
+    top = C.area_light("contact_shadow", (0, -20, height), (0, -20, 0), size, C.watts(40))
+    top.light_linking.receiver_collection = incl
+    full = top.data.energy
+    for f in range(1, REVEAL_END + 1, 3):
+        top.data.energy = full * _ease(f, *LIGHTS_ON)
+        top.data.keyframe_insert("energy", frame=f)
+    top.data.energy = full
+    top.data.keyframe_insert("energy", frame=REVEAL_END)
+
+
+def main():
+    argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    out = argv[argv.index("--frames") + 1]
+    samples = int(argv[argv.index("--samples") + 1]) if "--samples" in argv else 160
+    only = [int(x) for x in argv[argv.index("--only") + 1].split(",")] if "--only" in argv else None
+    res = argv[argv.index("--res") + 1] if "--res" in argv else "2400x1350"
+    w, h = (int(n) for n in res.split("x"))
+    build()
+    C.setup_cycles(samples=samples, width=w, height=h, fmt="PNG")
+    sc = bpy.context.scene
+    sc.render.use_persistent_data = True
+    # Transparent (owner, 30 Oct 2026): the site's haze shows through.
+    sc.render.film_transparent = True
+    _contact_shadow_only()
+    _steady_edges()
+    sc.render.image_settings.file_format = "PNG"
+    sc.render.image_settings.color_mode = "RGBA"
+    sc.render.image_settings.compression = 15
+    os.makedirs(out, exist_ok=True)
+    frames = only or range(sc.frame_start, sc.frame_end + 1)
+    t0 = time.time()
+    for f in frames:
+        sc.frame_set(f)
+        sc.render.filepath = os.path.join(out, f"f_{f:04d}.png")
+        bpy.ops.render.render(write_still=True)
+        print(f"[hero] frame {f} done, {time.time() - t0:.0f} s elapsed", flush=True)
+
+
+if __name__ == "__main__":
+    main()

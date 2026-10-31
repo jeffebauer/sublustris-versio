@@ -1,0 +1,114 @@
+# Sublustris Versio minisite
+
+The public website for Sublustris Versio, built with [Astro](https://astro.build) as plain static pages. A sister site to Resilio Versio's (`https://resilio-versio.vercel.app`): its `site/` was copied here (MIT, same author; see `NOTICE`) and refactored. What it must say and do: `docs/minisite/BRIEF.md`. Its look is direction B, white with the freeze LED's blue (`src/styles/directions/b.css`, the owner's pick on the style tile, 29 Oct 2026), on Resilio's tokens (`docs/minisite/design/tokens.css`). Copy and assets: `docs/minisite/content/` and `docs/minisite/assets/`.
+
+## One source of truth
+
+The site has **no copy of its own text, audio or design tokens**. At build time it reads them from the package next door:
+
+| What | Read from | How |
+|---|---|---|
+| Page copy (Home, Manual, Install, Presets, Changelog, FAQ, Credits) | `docs/minisite/content/*.md` | Astro content collection (`src/content.config.ts`) |
+| Design tokens and base CSS | `docs/minisite/design/tokens.css` | imported unchanged by `src/layouts/Base.astro` |
+| Demo clips + captions, settings, transcripts | `docs/minisite/assets/audio/` | `scripts/prebuild.mjs` copies the MP3s to `public/audio/` (git-ignored); `src/lib/demos.ts` reads `demos.json` and computes waveform peaks |
+| Panel map (the annotated panel, the manual, the presets' set panels) | `docs/minisite/assets/panel/sublustris-versio-panel.svg` | inlined by `src/components/PanelDiagram.astro` |
+| Renders (stills) | `docs/minisite/assets/renders/*.jpg` | imported by `src/lib/renders.ts`; Astro serves AVIF/WebP at several widths. **None exist yet:** every slot shows a labelled placeholder until its file is dropped in (names and sizes: `docs/minisite/README.md`, "Renders to come") |
+| Hero film (optional) | `docs/minisite/assets/renders/hero-reveal.{mp4,webm}` + `hero-hold-loop.{mp4,webm}`, over `hero-still.png`, all transparent (MP4 = HEVC with alpha for Safari, WebM = VP9 with alpha for the rest), standing in the hero's haze | copied to `public/renders/` by the prebuild; `HeroMedia.astro` plays the reveal once, then loops the hold (as Resilio's), with a pause button. Without them the hero shows the still |
+| Plugin screenshot | `docs/minisite/assets/screenshots/plugin-panel.png` | copied to `public/screenshots/`; a placeholder until it exists |
+
+So: **edit the words in `docs/minisite/content/`, never in `site/`.** Markers in the Markdown (`<!-- PANEL -->`, `<!-- DOWNLOADS -->`, `<!-- LATEST -->`) become components; `<!-- OWNER: … -->` notes are stripped and never published.
+
+## Run it locally
+
+Needs Node 22 or newer.
+
+```bash
+cd site
+npm install
+npm run dev        # http://localhost:4321, reloads as you edit
+npm run build      # the real thing, into site/dist/
+npm run preview    # serve site/dist/ to check a build
+npm run check      # type and template check (astro check)
+```
+
+`/style` holds the three style tiles of stop 3 (A, B, C) and `/style/diagrams`, the diagram options with the owner's picks marked (not in the sitemap, `noindex`).
+
+If you change a Markdown plugin in `src/plugins/` and the output doesn't change, clear Astro's cache: `rm -rf node_modules/.astro`.
+
+## Fonts (MD UI and MD IO are licensed: never commit them)
+
+The repository is going public, so the font files must never be in git. `site/public/fonts/` is git-ignored. Before each build, `scripts/prebuild.mjs` fetches them:
+
+- `FONTS_DIR=/path/to/folder` copies the two files below from that folder (good for local work), or
+- `FONTS_URL=https://…/` + `FONTS_TOKEN=…` downloads them with `Authorization: Bearer <token>` (for Vercel, from a private Blob store: connect the store to the project and `FONTS_TOKEN` defaults to `BLOB_READ_WRITE_TOKEN` or, for newer stores, the `VERCEL_OIDC_TOKEN` every Vercel build gets, so only `FONTS_URL` is needed, e.g. `https://<store-id>.private.blob.vercel-storage.com/fonts/`), or
+- neither: skips. The site still builds and looks right on Inter (and doesn't request the missing files).
+
+The two files (`src/lib/fonts.ts`), both variable fonts from Mass-Driver: `MDUI-VF.woff2` (text: optical size 6–48, weight 200–900, slant for italics) and `MDIO-VF.woff2` (mono: weight 200–900, italic).
+
+How they're used: the site writes one `@font-face` per file that is present, covering every weight. The browser picks MD UI's optical size from the text size by itself. A missing file is simply not declared, so the browser never asks for it, and Inter (300/400/500/700 + italics, from `@fontsource/inter`) or the system mono takes over.
+
+Locally: `FONTS_DIR="~/Library/CloudStorage/Dropbox/Type/FontBase/Type/Mass-Driver/MD_IO-V2-FutureFonts/Fonts/Variable" npm run dev`.
+
+## Mesurer (design polish overlay, dev only)
+
+[Mesurer](https://mesurer.dev) adds a toolbar to every page in `npm run dev` for measuring, inspecting and annotating the live page. It's injected by a small integration in `astro.config.mjs` only when `astro dev` runs (`src/scripts/mesurer-dev.ts`), so built pages never include it or React. Press **M** to show or hide it; **I** inspect, **X** x-ray, **R** rulers, **G** guides, hold **Alt** for distances, **Cmd+K** copies your comments for Claude. Works best in Chrome.
+
+## Vercel settings
+
+| Setting | Value |
+|---|---|
+| Framework preset | Astro |
+| Root Directory | `site` |
+| Include files outside the Root Directory | **on** (the build reads `../docs/minisite`). It sits next to the Root Directory setting; check it's enabled |
+| Build command | `npm run build` (default) |
+| Output directory | `dist` (default) |
+| Install command | `npm install` (default) |
+| Node.js version | 22.x or newer |
+| Web Analytics | enable in the project's Analytics tab (cookie-free; the script is only added on Vercel builds) |
+
+Environment variables (all optional):
+
+| Name | What |
+|---|---|
+| `FONTS_URL` (+ `FONTS_TOKEN`, optional with a connected Blob store) | where to fetch the font files (above) |
+| `GITHUB_TOKEN` | read-only token, so the build-time release lookup isn't rate-limited |
+| `DOWNLOADS_LIVE=1` | turns the download buttons on. Set it only once the repo is public: GitHub's download links 404 while it's private |
+| `SITE_URL` | the public address, once there's a domain (otherwise Vercel's production URL is used) |
+
+## Releases and downloads
+
+`src/lib/release.ts` asks GitHub for the latest release at build time. If that fails (today: the repo is private) or the release lacks the stable asset names, it uses `src/data/release.json`; update that file by hand per release until the API works. Download buttons always link to the stable names:
+
+- `…/releases/latest/download/sublustris-versio-firmware.bin`
+- `…/releases/latest/download/sublustris-versio-plugin-macos.zip`
+
+While `DOWNLOADS_LIVE` is off (`src/data/site.ts`), the buttons show "coming soon", and the footer's GitHub links (source, licences) and Home's issue-form buttons are plain text: they'd 404 while the repository is private.
+
+## Where things are
+
+```
+astro.config.mjs        static output, sitemap, Markdown plugins
+scripts/prebuild.mjs    copies audio, panel art, renders (+ hero film), fetches fonts
+src/content.config.ts   the content collection over docs/minisite/content
+src/layouts/            Base (head, header bar, footer), Doc (contents + centred prose)
+src/pages/              index (Home), manual, install, presets, changelog, faq, credits, style/ (the tiles)
+src/components/         HeroMedia, AnnotatedPanel, FeatureTiles, AudioAB (audio tile), DemoList,
+                        DownloadBlock, Button, Chip, MediaCard, Placeholder, SpecTable,
+                        IndexNav (doc contents), PanelDiagram, DocContent, Footer, Logo
+src/components/diagrams/ the tiny diagrams (shapes.ts and metaphors.ts draw them, Diagram.astro renders)
+src/scripts/motion.ts   GSAP reveals and the hero push-in, Home only
+src/scripts/player.ts   the Web Audio A/B player
+src/lib/                content splitting, demos + peaks, release, contrast, fonts, renders
+src/plugins/            remark (slot markers, owner notes) and rehype (headings, tables)
+src/styles/site.css     layout and components on top of tokens.css
+src/data/               release.json (fallback), site.ts (links, go-public switch), controls.ts (callouts, feature tiles)
+src/styles/directions/  the style tiles' three looks; b.css is the site's
+public/                 favicon
+```
+
+## Motion and accessibility rules (from DESIGN.md)
+
+- Content is visible without JavaScript. Home's script adds `html.js-motion` first, and only then hides anything it's about to reveal.
+- `prefers-reduced-motion: reduce` turns the choreography off entirely, and the hero shows the still instead of the film.
+- Doc pages have no scroll animation.
+- The player: real buttons, a keyboard slider for the waveform (arrows, Page Up/Down, Home/End, Space), one clip at a time, never autoplays.

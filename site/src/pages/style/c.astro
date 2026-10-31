@@ -1,0 +1,10 @@
+---
+// Style tile, direction C: a night-blue band system (stop 3). Not in the sitemap, noindex.
+import Base from '../../layouts/Base.astro';
+import StyleTile from '../../components/style/StyleTile.astro';
+import '../../styles/directions/c.css';
+---
+<Base title="Style tile C: Sublustris Versio" description="Direction C for the Sublustris Versio site: night-blue bands, moonlit ones between, and a warm lamp-behind-cloud accent." noindex bodyClass="dir-c" darkTop>
+  <StyleTile id="c" title="A clouded night" lede="Night-blue bands with moonlit ones between, and a faint warm light, like a lamp behind cloud."
+    bands={{ hero: 'band-dark', type: 'band-slate', buttons: 'band-dark', diagrams: 'band-slate', audio: 'band-dark', themes: 'band-slate' }} />
+</Base>

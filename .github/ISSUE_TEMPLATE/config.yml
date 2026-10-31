@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Manual
+    url: https://sublustris-versio.vercel.app/manual/
+    about: How every control works. Installing or removing the firmware is on https://sublustris-versio.vercel.app/install/
+  - name: Latest release
+    url: https://github.com/jeffebauer/sublustris-versio/releases/latest
+    about: Firmware and plugin downloads, with install steps.

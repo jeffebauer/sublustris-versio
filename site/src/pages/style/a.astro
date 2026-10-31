@@ -1,0 +1,9 @@
+---
+// Style tile, direction A: dark-first, a faint glow (stop 3). Not in the sitemap, noindex.
+import Base from '../../layouts/Base.astro';
+import StyleTile from '../../components/style/StyleTile.astro';
+import '../../styles/directions/a.css';
+---
+<Base title="Style tile A: Sublustris Versio" description="Direction A for the Sublustris Versio site: dark-first, with a faint blue-violet glow." noindex bodyClass="dir-a">
+  <StyleTile id="a" title="Dimly lit, faintly glowing" lede="A dark page lit from within: soft text, deep bands, and one cool glow, like an LED behind frosted glass." bands={{ audio: 'band-dark', themes: 'band-dark' }} />
+</Base>

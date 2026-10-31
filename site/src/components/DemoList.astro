@@ -1,0 +1,30 @@
+---
+import AudioAB from './AudioAB.astro';
+import BlendFader from './BlendFader.astro';
+import { getDemos } from '../lib/demos';
+interface Props { limit?: number; headingLevel?: 'h3' | 'h4'; idPrefix?: string }
+const { limit, headingLevel, idPrefix } = Astro.props;
+const { clips } = await getDemos();
+// Bento: wide tiles placed so the cards fill whole rows at 4, 3 and 2 columns. Ten clips
+// (Resilio): the first and last. Eight (Sublustris): the 1st, 4th, 5th and 8th, twelve slots.
+const shown = clips.slice(0, limit);
+const wideAt = shown.length === 8 ? [0, 3, 4, 7] : [0, shown.length - 1];
+---
+<ul class="demos" data-demos>
+  {shown.map((clip, i) => <AudioAB clip={clip} n={i + 1} headingLevel={headingLevel} idPrefix={idPrefix} wide={wideAt.includes(i)} />)}
+</ul>
+{shown.some((c) => c.dry) && <BlendFader />}
+<script>
+  import '../scripts/player';
+  // Opening Settings on one card opens it on the cards beside it in the same row (owner,
+  // 7 Oct), so a row compares at a glance and stays aligned. Rows are read from the layout.
+  const all = [...document.querySelectorAll<HTMLDetailsElement>('[data-demos] details[data-settings]')];
+  let syncing = false;
+  all.forEach((d) => d.addEventListener('toggle', () => {
+    if (syncing) return;
+    const top = d.closest('li')!.offsetTop;
+    syncing = true;
+    all.forEach((o) => { if (o !== d && o.closest('li')!.offsetTop === top) o.open = d.open; });
+    syncing = false;
+  }));
+</script>

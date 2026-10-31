@@ -1,0 +1,79 @@
+/* Direction C: a night-blue band system (style tile, stop 3).
+   A clouded night sky: the page alternates deep night-blue bands with paler, moonlit ones
+   (blue-grey and slate, a soft pale light). The accent is a faint warm glow, a lamp behind
+   cloud: pale amber on the night bands, its deeper ochre on the moonlit ones, where pale
+   amber wouldn't read. Light and dark themes: in dark, the moonlit bands go moonless.
+   Scoped to .dir-c (on <body>). The style tile reads the hex values between the @tokens
+   markers to compute contrast. */
+
+/* @tokens light */
+.dir-c, .dir-c .force-light {
+  --paper:        #e8ecf2;  /* moonlit: a pale blue-grey */
+  --tile:         #dbe1ea;
+  --raised:       #f4f6f9;
+  --ink:          #0d1729;  /* night ink */
+  --ink-2:        #475369;
+  --line:         #c9d1dd;
+  --dark:         #0e1a30;  /* the night bands */
+  --tile-dark:    #172645;
+  --on-dark:      #e9eef6;
+  --on-dark-2:    #a0aec6;
+  --line-dark:    #253658;
+  --slate:        #33435e;  /* the slate band, between night and moonlight */
+  --on-slate:     #eef2f8;
+  --on-slate-2:   #c3cddd;
+  --tile-slate:   #3d4e6b;
+  --signal:       #96600f;  /* on moonlit bands: the lamp's ochre (marks only) */
+  --signal-ink:   #f2cf8a;  /* the one filled button: pale amber, night text, on any band */
+  --signal-hover: #f7dca6;
+  --on-signal:    #0d1729;
+  --signal-text:  #82540e;  /* the accent as text on moonlit bands */
+  --focus:        #82540e;
+  --signal-on-dark:      #f2cf8a;  /* on night and slate bands: the lamp itself */
+  --signal-text-on-dark: #f2cf8a;
+  --ap-ground:    #dbe1ea;
+  --sv-panel:     #0e1a30;  /* the panel map: a night panel on a moonlit well */
+  --sv-ink:       #e9eef6;
+  --sv-ink-soft:  #a0aec6;
+  --sv-knob:      #060c18;
+  --sv-metal:     #6f7d96;
+  --sv-led:       #f2cf8a;
+  --sv-accent:    #f2cf8a;
+}
+/* @end */
+
+/* @tokens dark */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .dir-c {
+    --paper: #0b1322; --tile: #142036; --raised: #1b2942; --ink: #e9eef6; --ink-2: #a0aec6; --line: #22324f;
+    --dark: #060c18; --tile-dark: #101b30; --slate: #1d2b45; --tile-slate: #26365a;
+    --signal: #f2cf8a; --signal-text: #f2cf8a; --focus: #f2cf8a; --ap-ground: #142036; --sv-panel: #060c18;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] .dir-c, .dir-c .force-dark {
+  --paper: #0b1322; --tile: #142036; --raised: #1b2942; --ink: #e9eef6; --ink-2: #a0aec6; --line: #22324f;
+  --dark: #060c18; --tile-dark: #101b30; --slate: #1d2b45; --tile-slate: #26365a;
+  --signal: #f2cf8a; --signal-text: #f2cf8a; --focus: #f2cf8a; --ap-ground: #142036; --sv-panel: #060c18;
+  color-scheme: dark;
+}
+/* @end */
+
+.dir-c { --glow: rgb(242 207 138 / 0.35); --sv-font: var(--font-mono); }
+.dir-c .band-dark, .dir-c .band-slate, .dir-c .site-header.is-over-dark {
+  --signal: var(--signal-on-dark); --signal-text: var(--signal-text-on-dark); --focus: var(--signal-text-on-dark);
+}
+/* The slate band: the dark band's token swap, one step lighter. */
+.dir-c .band-slate {
+  background: var(--slate); color: var(--on-slate);
+  --paper: var(--slate); --ink: var(--on-slate); --ink-2: var(--on-slate-2);
+  --tile: var(--tile-slate); --line: rgb(255 255 255 / 0.16);
+}
+/* The night bands are a sky, not a flat fill: the faintest lift towards the top. */
+.dir-c .band-dark { background: linear-gradient(180deg, color-mix(in srgb, var(--dark), #ffffff 4%), var(--dark) 60%); }
+.dir-c .band-dark .player .wave .head, .dir-c .band-dark .led-dot { filter: drop-shadow(0 0 3px var(--glow)); }
+.dir-c .panel-diagram .led { filter: drop-shadow(0 0 1.2px var(--glow)); }
+/* The amber button needs an edge on moonlit bands, where its fill is close to the page. */
+.dir-c .btn-primary { box-shadow: inset 0 0 0 var(--hair) rgb(13 23 41 / 0.28); }
+.dir-c .band-dark .btn-primary, .dir-c .band-slate .btn-primary { box-shadow: 0 0 1.25rem -0.25rem var(--glow); }
+.dir-c ::selection { background: var(--signal-ink); color: var(--on-signal); }
