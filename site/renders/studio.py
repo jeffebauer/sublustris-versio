@@ -1341,15 +1341,88 @@ def _pad(name, w, d, top, bottom, mat, n=4.0, rings=16, segs=96, subsurf=2):
     return ob
 
 
+def leather_mat(name):
+    """Aged black leather (owner, 31 Oct 2026: "more textured and distressed; it looks plasticy"):
+    a fine pebble grain, creases at two scales, worn patches that go duller and a little brown,
+    and a sheen that varies across them. Object space, in mm."""
+    m = bpy.data.materials.new(name)
+    m.use_nodes = True
+    nt = m.node_tree
+    N = nt.nodes
+    L = nt.links.new
+    p = N["Principled BSDF"]
+    tc = N.new("ShaderNodeTexCoord")
+    def noise(scale, detail, rough, distort=0.0):
+        n = N.new("ShaderNodeTexNoise")
+        n.inputs["Scale"].default_value = scale
+        n.inputs["Detail"].default_value = detail
+        n.inputs["Roughness"].default_value = rough
+        n.inputs["Distortion"].default_value = distort
+        L(tc.outputs["Object"], n.inputs["Vector"])
+        return n
+    def math_node(op, a, b=None, clamp=False):
+        n = N.new("ShaderNodeMath")
+        n.operation = op
+        n.use_clamp = clamp
+        for i, v in enumerate((a, b)):
+            if v is None:
+                continue
+            if isinstance(v, (int, float)):
+                n.inputs[i].default_value = v
+            else:
+                L(v, n.inputs[i])
+        return n.outputs[0]
+    # wear: big soft patches
+    wear_n = noise(0.012, 3, 0.55, 0.4)
+    wear = N.new("ShaderNodeMapRange")
+    wear.inputs["From Min"].default_value = 0.50
+    wear.inputs["From Max"].default_value = 0.76
+    L(wear_n.outputs["Fac"], wear.inputs["Value"])
+    # colour: deep black, worn toward a dusty brown-grey
+    mix = N.new("ShaderNodeMix")
+    mix.data_type = "RGBA"
+    mix.inputs["A"].default_value = (0.010, 0.009, 0.008, 1)
+    mix.inputs["B"].default_value = (0.034, 0.029, 0.024, 1)
+    L(wear.outputs["Result"], mix.inputs["Factor"])
+    L(mix.outputs["Result"], p.inputs["Base Color"])
+    # sheen: worn patches rubbed smoother and shinier, the rest satin, flecked by the grain
+    grain = N.new("ShaderNodeTexVoronoi")
+    grain.inputs["Scale"].default_value = 1.1
+    grain.inputs["Randomness"].default_value = 0.9
+    L(tc.outputs["Object"], grain.inputs["Vector"])
+    rough = math_node("SUBTRACT", 0.42, math_node("MULTIPLY", wear.outputs["Result"], 0.14))
+    rough = math_node("ADD", rough, math_node("MULTIPLY", grain.outputs["Distance"], 0.05), clamp=True)
+    L(rough, p.inputs["Roughness"])
+    # creases: ridged noise, a fine set and a coarse set
+    # (owner, 31 Oct: the crinkled first try read "rough", like bark): broad soft folds only,
+    # the grain barely there, so the satin sheen carries it
+    def folds(scale):
+        n = noise(scale, 1.5, 0.4, 0.6)
+        ridge = math_node("ABSOLUTE", math_node("SUBTRACT", n.outputs["Fac"], 0.5))
+        return math_node("POWER", math_node("SUBTRACT", 1.0, math_node("MULTIPLY", ridge, 2.0), clamp=True), 3.0)
+    soft = folds(0.012)
+    height = math_node("ADD", math_node("MULTIPLY", grain.outputs["Distance"], 0.06),
+                       math_node("MULTIPLY", soft, -1.0))
+    bump = N.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = 0.6
+    bump.inputs["Distance"].default_value = 1.5
+    L(height, bump.inputs["Height"])
+    L(bump.outputs["Normal"], p.inputs["Normal"])
+    p.inputs["Specular IOR Level"].default_value = 0.5
+    p.inputs["Coat Weight"].default_value = 0.15
+    p.inputs["Coat Roughness"].default_value = 0.35
+    return m
+
+
 def lounge_chair(m, x, y, rot_deg):
     """A mid-century lounge chair, unbranded (owner, 31 Oct 2026: peeking in from the right
     edge; then "too blocky and rigid; the antithesis of the natural curves"): three dished
     rosewood plywood shells (seat, back, headrest) curling up round soft, pleated black leather
     cushions that roll over their top edges, curved cast arms with leather pads, a five-star
     swivel base. About 840 wide and high. Built facing -y, then turned by rot_deg about z."""
-    ply = finish(C.clay("lounge_rosewood", rgb=(0.17, 0.06, 0.03), rough=0.32, coat=0.4), bump=0.08, scale=2.0)
-    leather = finish(C.clay("lounge_leather", rgb=(0.010, 0.009, 0.008), rough=0.5, coat=0.0), bump=0.3,
-                     scale=3.0)
+    ply = finish(wood("lounge_rosewood", (0.085, 0.026, 0.011), rough=0.3, scale=0.018, stretch=(1.0, 7.0, 1.0)),
+                 bump=0.05, scale=2.0, coat=0.55)
+    leather = leather_mat("lounge_leather")
     alu = C.clay("lounge_alu", 0.05, 0.35, metallic=0.7)
     alu_edge = C.clay("lounge_alu_edge", 0.85, 0.18, metallic=1.0)
     button = C.clay("lounge_button", 0.004, 0.45)
@@ -1370,56 +1443,66 @@ def lounge_chair(m, x, y, rot_deg):
         parts.append(e)
         return e
 
-    def section(name, w, d, h, curl, pleats, roll=0.0):
-        """A dished shell and its cushion, lying flat (cushion up +z, +y toward the shell's
-        top edge). The shell's rim curls up, most along the sides; the cushion swells, rolls
-        over the top edge by `roll`, and is tucked along each pleat (fractions of d)."""
+    def section(name, w, d, h, rim, buttons):
+        """A deep moulded rosewood tub and the plump tufted leather cushion that fills it, lying
+        flat (cushion up +z, +y toward the shell's top edge). rim = (front, sides, back): how far
+        the rim rises at each edge. The cushion's underside follows the tub; its top swells and
+        is dimpled at each button (fractions of the cushion), with soft creases between."""
+        rf, rs, rb = rim
         def shell_z(px, py, t):
-            side = abs(px) / (w / 2)
-            return curl * t ** 4 * (0.3 + 0.7 * side ** 2) + 18 * (2 * py / d) ** 2
-        objs = [add(_pad(f"{name}_shell", w, d, shell_z, None, ply, n=4.5))]
-        cw, cd = w - 34, d - 16
-        def tuck(py):
-            return sum(math.exp(-((py - (p - 0.5) * cd) / 14.0) ** 2) for p in pleats)
-        def cush_top(px, py, t):
-            swell = h * (1 - t ** 5) ** 0.45
-            over = roll * max(0.0, py / (cd / 2)) ** 3 * (1 - t ** 8) ** 0.3
-            return 14 + h * 0.32 + swell + over - 0.28 * h * tuck(py) * (1 - t ** 4)
+            u, v = px / (w / 2), py / (d / 2)
+            edge = rf + (rs - rf) * min(1.0, abs(u) ** 2 * 1.4) + max(0.0, v) ** 2 * (rb - rf)
+            return edge * t ** 3.2
+        objs = [add(_pad(f"{name}_shell", w, d, shell_z, None, ply, n=3.4, rings=18))]
+        cw, cd = w - 50, d - 44
+        bpts = [((bu - 0.5) * cw, (bv - 0.5) * cd) for bu, bv in buttons]
+        def dimples(px, py):
+            dz = 0.0
+            for bx, by in bpts:
+                r2 = (px - bx) ** 2 + (py - by) ** 2
+                dz += math.exp(-r2 / 900.0) + 0.25 * math.exp(-r2 / 9000.0)
+            return min(dz, 1.0)
         def cush_bot(px, py, t):
-            return 14 + h * 0.32 - h * 0.30 * (1 - t ** 6) ** 0.4
-        objs.append(add(_pad(f"{name}_cush", cw, cd, cush_top, cush_bot, leather, n=4.0)))
-        for p in pleats:   # the buttons along each tuck
-            py = (p - 0.5) * cd
-            for k in (-1, 0, 1):
-                px = k * cw * 0.3
-                objs.append(add(C.sphere(f"{name}_button", 5, (px, py, cush_top(px, py, 0.3) - 1), button)))
+            return 16 + shell_z(px * w / cw, py * d / cd, t * 0.97)
+        def cush_top(px, py, t):
+            return cush_bot(px, py, t) + 10 + h * (1 - t ** 4) ** 0.55 - 0.45 * h * dimples(px, py) * (1 - t ** 3)
+        objs.append(add(_pad(f"{name}_cush", cw, cd, cush_top, cush_bot, leather, n=3.4, rings=22, segs=112)))
+        for bx, by in bpts:
+            tb = max(abs(2 * bx / cw), abs(2 * by / cd))
+            objs.append(add(C.sphere(f"{name}_button", 6, (bx, by, cush_top(bx, by, tb) - 2), button)))
         return objs
 
-    # the five-star base: curved cast legs, dark with polished edges, on glides
+    # the five-star base: arched cast legs, dark with polished edges, on glides
     for k in range(5):
         a = 2 * math.pi * k / 5 - math.pi / 2
         ca, sa = math.cos(a), math.sin(a)
-        add(cable(f"lounge_leg{k}", [(ca * 30, sa * 30, 95), (ca * 160, sa * 160, 70), (ca * 300, sa * 300, 30),
-                                     (ca * 320, sa * 320, 18)], 15, alu))
-        add(cable(f"lounge_leg_edge{k}", [(ca * 40, sa * 40, 108), (ca * 160, sa * 160, 84), (ca * 300, sa * 300, 44)],
+        add(cable(f"lounge_leg{k}", [(ca * 30, sa * 30, 90), (ca * 170, sa * 170, 72), (ca * 310, sa * 310, 34),
+                                     (ca * 330, sa * 330, 22)], 14, alu))
+        add(cable(f"lounge_leg_edge{k}", [(ca * 40, sa * 40, 102), (ca * 170, sa * 170, 84), (ca * 305, sa * 305, 46)],
                   3, alu_edge))
-        add(C.cylinder("lounge_glide", 17, 12, (ca * 322, sa * 322, 7), alu, segs=20))
-    add(C.cylinder("lounge_column", 38, 190, (0, 0, 175), alu, segs=32, bevel=4))
-    # the seat (front a little higher), the back and the headrest stood up and reclined
-    group_at(section("lounge_seat", 680, 610, 125, 80, (0.62,)), (0, 0, 265), -10)
-    group_at(section("lounge_back", 700, 520, 100, 85, (0.33, 0.66), roll=26), (0, 285, 575), 90 - 28)
-    group_at(section("lounge_head", 620, 290, 90, 70, (0.5,), roll=30), (0, 470, 935), 90 - 22)
-    # the arms: a curved cast arm each side, from the back shell forward and down to the seat,
-    # with a soft leather pad on top
+        add(C.cylinder("lounge_glide", 17, 14, (ca * 332, sa * 332, 8), alu, segs=20))
+    add(C.cylinder("lounge_column", 34, 120, (0, 0, 150), alu, segs=32, bevel=4))
+    add(C.cylinder("lounge_hub", 70, 40, (0, 0, 96), alu, segs=32, bevel=8))
+    # the seat tub (its front higher), the back tub and the near-square headrest, reclined;
+    # proportions from the owner's reference photo (a 1950s rosewood example, 1stDibs)
+    group_at(section("lounge_seat", 720, 650, 120, (40, 175, 150),
+                     ((0.3, 0.38), (0.7, 0.38), (0.5, 0.62), (0.3, 0.75), (0.7, 0.75))), (0, -10, 225), -12)
+    group_at(section("lounge_back", 730, 380, 105, (60, 150, 90), ((0.3, 0.45), (0.7, 0.45), (0.5, 0.7))),
+             (0, 368, 430), 52)
+    group_at(section("lounge_head", 690, 320, 100, (50, 120, 70), ((0.32, 0.5), (0.68, 0.5))),
+             (0, 571, 744), 64)
+    # the spines joining the back tub to the headrest, behind
     for sx in (-1, 1):
-        ax = sx * 352
-        add(cable(f"lounge_arm{sx}", [(ax, 240, 500), (ax, 120, 540), (ax, -100, 538), (ax, -235, 500),
-                                      (ax * 0.98, -255, 430), (ax * 0.95, -215, 360)], 13, alu))
-        pad = add(_pad(f"lounge_arm_pad{sx}", 82, 400,
-                       lambda px, py, t: 30 * (1 - t ** 4) ** 0.5, lambda px, py, t: -6 * (1 - t ** 6) ** 0.5,
-                       leather, n=3.0, rings=8, segs=48))
-        pad.location = (ax, -15, 555)
-        pad.rotation_euler = (math.radians(-3), 0, 0)
+        add(cable(f"lounge_spine{sx}", [(sx * 120, 440, 470), (sx * 120, 530, 600), (sx * 120, 575, 690)], 9, alu))
+    # the arms: plump leather pads on cast brackets over the seat tub's raised sides
+    for sx in (-1, 1):
+        ax = sx * 340
+        pad = add(_pad(f"lounge_arm_pad{sx}", 112, 420,
+                       lambda px, py, t: 46 * (1 - t ** 4) ** 0.5, lambda px, py, t: -40 * (1 - t ** 5) ** 0.5,
+                       leather, n=3.0, rings=10, segs=64))
+        pad.location = (ax, -70, 470)
+        pad.rotation_euler = (math.radians(-6), 0, 0)
+        add(cable(f"lounge_arm{sx}", [(ax, -150, 430), (ax * 1.02, 40, 420), (ax * 1.02, 170, 445)], 12, alu))
     for o in parts:
         o.parent = root
     root.location = (x, y, 0)
@@ -1546,14 +1629,38 @@ def tape_cross4():
         d_in = Vector((xa + 90 + 20 * j, 130 + A77_D, rz + 60))
         cable(f"synth_out{j}", [o0, o0 + Vector((0, 10, 30)), Vector((o0.x - 10, o0.y + 60, DESK_Z + 120)),
                                 Vector((d_in.x, 340, DESK_Z + 5)), Vector((d_in.x, 390, rz - 40)), d_in], 2.6, mat)
-    e0 = bpy.data.objects["ec_jack"].matrix_world.translation.copy()   # INPUT, on the sloped panel
-    g0 = W(gtr, (150, -250, 25))   # the guitar's output jack, on the lower bout's rim
-    # round the desk's right end and behind the SH-2000, so it never crosses the keys
+    def centre(name):   # world centre of a part (its mesh, not its origin, which may sit elsewhere)
+        ob = bpy.data.objects[name]
+        return sum((ob.matrix_world @ Vector(c) for c in ob.bound_box), Vector()) / 8
+    def plug(name, tip, nrm, length=46):
+        """A jack plug standing out of a socket at tip along nrm; returns where its lead leaves."""
+        body = C.cylinder(name, 6.5, length, tip + nrm * (length / 2), m["cable"], segs=24, bevel=2)
+        body.rotation_euler = nrm.to_track_quat("Z", "Y").to_euler()
+        C.cylinder(name + "_sleeve", 4.2, 10, tip + nrm * 4, m["steel"], segs=20).rotation_euler = \
+            body.rotation_euler
+        return tip + nrm * length
+    # the echo's INPUT jack on the sloped panel, and the guitar's output jack on the lower bout's rim
+    er = echo.matrix_world.to_3x3()
+    e_n = (er @ Vector((0, -math.sin(math.radians(gear.EC_SLOPE)), math.cos(math.radians(gear.EC_SLOPE))))).normalized()
+    e_fwd = (er @ Vector((0, -1, 0))).normalized()
+    e0 = centre("ec_jack")
+    e1 = plug("echo_in_plug", e0, e_n)
+    gr = gtr.matrix_world.to_3x3()
+    g0 = gtr.matrix_world @ Vector((150, -175, 26))
+    g_n = (gr @ Vector((0.8, -0.6, 0))).normalized()
+    g1 = plug("guitar_plug", g0, g_n)
+    # down from the guitar to the floor, round and up the desk's right end, over the edge, along
+    # the top behind the SH-2000, then up over the echo's front wall into the plug
     x1 = DESK["x1"]
-    cable("guitar_lead", [g0, g0 + Vector((50, -40, -60)), Vector((x1 + 40, -600, 160)),
-                          Vector((x1 + 25, -300, DESK_Z - 120)), Vector((x1 - 10, -300, DESK_Z + 4)),
-                          Vector((x1 - 120, -310, DESK_Z + 3)), Vector((e0.x + 30, e0.y - 140, DESK_Z + 3)),
-                          e0 + Vector((0, -45, 25)), e0], 2.8, m["cable"])
+    top = DESK_Z + 3.5
+    cable("guitar_lead", [g1, g1 + g_n * 40 + Vector((0, 0, -30)), Vector((x1 + 60, -640, 120)),
+                          Vector((x1 + 40, -420, 60)), Vector((x1 + 22, -320, DESK_Z - 260)),
+                          Vector((x1 + 14, -300, DESK_Z - 60)), Vector((x1 + 9, -300, DESK_Z - 8)),
+                          Vector((x1 + 4, -300, top + 2)), Vector((x1 - 20, -300, top)),
+                          Vector((x1 - 140, -305, top)), Vector((e0.x + 40, -300, top)),
+                          e0 + e_fwd * 170 + Vector((0, 0, top - e0.z)), e0 + e_fwd * 95 + Vector((0, 0, top - e0.z)),
+                          e0 + e_fwd * 60 + Vector((0, 0, top - e0.z + 25)), e1 + e_fwd * 35 + e_n * 15,
+                          e1 + e_n * 12, e1], 2.8, m["cable"])
     eo = W(echo, (-120, gear.EC_D, 60))
     cable("echo_out", [eo, eo + Vector((0, 40, -40)), Vector((eo.x - 60, 360, DESK_Z + 4)),
                        Vector((xb + 120, 395, rz - 30)), Vector((xb + 110, 130 + A77_D, rz + 60))], 2.6,

@@ -591,7 +591,10 @@ def guitar():
     cyl("gt_switch", 2.6, 22, (-92, 170, 62), M["gold"], segs=16)
     _track(C.sphere("gt_switch_tip", 4, (-92, 170, 73), M["binding"]))
     # strings: tailpiece over the bridge to the nut, then each to its post
-    order = [posts[4], posts[2], posts[0], posts[1], posts[3], posts[5]]
+    # low E (left, thickest) to the bass-side post nearest the nut, A and D above it; G, B and
+    # high e back down the treble side, so D and G run to the top posts and nothing crosses
+    # (posts: [L near, R near, L mid, R mid, L far, R far])
+    order = [posts[0], posts[2], posts[4], posts[5], posts[3], posts[1]]
     for k in range(6):
         x0 = -22 + k * 8.8
         x1 = -18 + k * 7.2
