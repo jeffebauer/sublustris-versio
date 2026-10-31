@@ -1263,38 +1263,41 @@ def tape_cross4():
     front, a briefcase synth (the Synthi AKS of Discreet Music) with its keyboard lid beside it;
     a tape echo at the right; an electric guitar leaning on the desk. See gear.py."""
     import gear
+    global DESK
     m = mats3()
     gear.mats(m)
+    desk0 = DESK
+    DESK = dict(desk0, y0=-640.0)   # a studio-depth desk (1 m): the AKS opens flat to 802 mm
     # the owner, 31 Oct: no lamp (room for the echo); the plant forward, its leaves clear of the bookshelf
     bulb = room(m, lamp_x=-880.0, show_lamp=False, plant=(-1420.0, -140.0))
     # the shelf: a walnut top on two end blocks
-    rz = DESK_Z + 150.0
+    rz = DESK_Z + 165.0
     sx0 = -230.0   # the shelf's centre, left of the desk's so the echo has room at the right
-    B("riser_top", sx0 - 660, sx0 + 660, 100, 370, rz - 22, rz, m["walnut"], bevel=3)
+    B("riser_top", sx0 - 660, sx0 + 660, 130, 375, rz - 22, rz, m["walnut"], bevel=3)
     for sx in (-1, 1):
-        B("riser_end", sx0 + sx * 640 - 20, sx0 + sx * 640 + 20, 110, 360, DESK_Z, rz - 22, m["walnut"], bevel=3)
+        B("riser_end", sx0 + sx * 640 - 20, sx0 + sx * 640 + 20, 140, 365, DESK_Z, rz - 22, m["walnut"], bevel=3)
     gap = 170.0
     xa, xb = sx0 - (A77_W + gap) / 2, sx0 + (A77_W + gap) / 2
-    ref = deck_pair(m, (xa, xb), 130.0, z0=rz)
-    base, lid = gear.synthi()
-    gear.place(base, (-430, -365, DESK_Z), (0, 0, 7))
-    gear.place(lid, (110, -360, DESK_Z), (0, 0, -5))
+    ref = deck_pair(m, (xa, xb), 155.0, z0=rz)
+    # the AKS open flat, its panel half's far edge just under the shelf
+    syn = gear.place(gear.synthi(), (-330, -230, DESK_Z), (0, 0, 3))
     echo = gear.place(gear.tape_echo(), (720, 70, DESK_Z), (0, 0, -16))
-    gtr = gear.place(gear.guitar(), (640, -520, 262), (75, 0, -12), mirror=True)
+    gtr = gear.place(gear.guitar(), (650, -775, 262), (75, 0, -12), mirror=True)
     # leads (owner, 31 Oct: the synth and keyboard need cables): the keyboard lid's multi-way
     # lead into the synth's side, the synth's two outputs back to deck A, the guitar into the
     # echo's input, the echo's output to deck B, mains leads off the back of the desk
     W = lambda e, p: e.matrix_world @ Vector(p)
     bpy.context.view_layer.update()
-    k0, k1 = W(lid, (-200, 230, 20)), W(base, (gear.SY_W / 2, 200, 40))
-    cable("ks_lead", [k0, k0 + Vector((-10, 40, -14)), (k0 + k1) / 2 + Vector((0, 60, -18)),
-                      k1 + Vector((40, 10, -30)), k1 + Vector((6, 0, 0)), k1], 3.4, m["cable"])
+    # the keyboard's lead: from the lid's corner socket up into the panel's multipin connector
+    k0, k1 = W(syn, (gear._px(830), gear._ly(735), gear.LID_H)), W(syn, (gear._px(466), gear._py(74), gear.SY_H + 4))
+    cable("ks_lead", [k0, k0 + Vector((30, 20, 25)), Vector((k0.x + 60, k0.y + 200, DESK_Z + 70)),
+                      Vector((k0.x + 20, k1.y - 30, k1.z + 70)), k1 + Vector((0, 0, 30)), k1], 3.0, m["cable_grey"])
     for j, mat in enumerate((m["cable"], m["cable_grey"])):
-        o0 = W(base, (40 + 30 * j, gear.SY_D, 60))
+        o0 = W(syn, (gear._px(225 + 37 * j), gear._py(92), gear.SY_H))
         d_in = Vector((xa + 90 + 20 * j, 130 + A77_D, rz + 60))
-        cable(f"synth_out{j}", [o0, o0 + Vector((0, 40, -50)), Vector((o0.x + 30, 60 + 20 * j, DESK_Z + 3)),
+        cable(f"synth_out{j}", [o0, o0 + Vector((0, 10, 30)), Vector((o0.x - 10, o0.y + 60, DESK_Z + 120)),
                                 Vector((d_in.x, 340, DESK_Z + 5)), Vector((d_in.x, 390, rz - 40)), d_in], 2.6, mat)
-    e0 = W(echo, (120, -6, 40))
+    e0 = W(echo, (-gear.EC_W / 2 + 10 + 0.47 * (gear.EC_W - 20), 49, gear.EC_H - 34))
     g0 = W(gtr, (150, -250, 25))   # the guitar's output jack, on the lower bout's rim
     cable("guitar_lead", [g0, g0 + Vector((60, -40, -60)), Vector((g0.x + 120, -560, 220)),
                           Vector((e0.x + 40, -470, DESK_Z - 30)), Vector((e0.x + 60, -390, DESK_Z + 4)),
@@ -1304,7 +1307,7 @@ def tape_cross4():
     cable("echo_out", [eo, eo + Vector((0, 40, -40)), Vector((eo.x - 60, 360, DESK_Z + 4)),
                        Vector((xb + 120, 395, rz - 30)), Vector((xb + 110, 130 + A77_D, rz + 60))], 2.6,
           m["cable_grey"])
-    for p0 in (W(base, (-150, gear.SY_D, 30)), W(echo, (100, gear.EC_D, 30))):
+    for p0 in (W(syn, (gear._px(685), gear.SY_D, 40)), W(echo, (100, gear.EC_D, 30))):
         cable("mains", [p0, p0 + Vector((0, 50, -25)), Vector((p0.x, DESK["y1"] - 15, DESK_Z + 4)),
                         Vector((p0.x + 15, DESK["y1"] + 30, DESK_Z - 60)), Vector((p0.x + 30, DESK["y1"] + 45, 300))],
               2.8, m["cable"])
@@ -1315,5 +1318,6 @@ def tape_cross4():
     C.area_light("gear_key", Vector((-300, -1300, DESK_Z + 1200)), Vector((200, -300, DESK_Z - 80)), size=1000,
                  power=C.watts(C.KEY_W * 0.22) * (1.9) ** 2, rgb=(1.0, 0.84, 0.64))
     ref.update(center=ref["decks_center"] + Vector((0, 60, 0)), size=ref["decks_width"],
-               radius=ref["decks_width"] / 2 + 30, desk_front=Vector((0, -200, DESK_Z + 120)))
+               radius=ref["decks_width"] / 2 + 30, desk_front=Vector((0, -330, DESK_Z + 120)))
+    DESK = desk0
     return ref

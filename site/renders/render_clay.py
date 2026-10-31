@@ -159,7 +159,7 @@ def story_variants(refs):
                  note="tape3_b's room, decks on a walnut shelf; a briefcase synth (Synthi AKS layout) and its "
                       "keyboard lid at the front, a tape echo at the right, a guitar leaning on the desk; from a "
                       "little above, 40 mm.",
-                 target=t4["desk_front"] + C.Vector((60, 60, -110)), az=0, el=19, f=40, dist=2650,
+                 target=t4["desk_front"] + C.Vector((60, 60, -190)), az=0, el=17, f=40, dist=2950,
                  fstop=4.0, focus=t4["desk_front"] + C.Vector((0, 120, 80))),
         ]
     if r3:

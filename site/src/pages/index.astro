@@ -22,7 +22,7 @@ import { getPage, pageHtml, section, splitSections, splitSlots, stripTags, takeH
 const page = await getPage('overview');
 const macro = render('panel-macro.jpg');
 const patched = render('patched.jpg');
-const storyImg = render('story-tape.jpg'); // the owner's pick, 31 Oct 2026: story_tape3_b
+const storyImg = render('story-tape.jpg'); // the owner's pick, 31 Oct 2026: story_tape3_b's room, rebuilt as story_tape4_a with era gear
 const wideSizes = '(min-width: 92rem) 92rem, calc(100vw - 2rem)';
 const { h1, rest } = takeH1(pageHtml(page));
 const { lead, sections } = splitSections(rest);
@@ -141,7 +141,7 @@ const shapeSteps = items(shape.html);
       <figure class="wide story-figure story-photo" data-reveal>
         <div class="card-media" style="aspect-ratio: 2400 / 1350">
           <Picture src={storyImg} widths={widthsFor(storyImg)} sizes={wideSizes} formats={['avif', 'webp']} loading="lazy"
-            alt="Two 1970s reel-to-reel tape decks side by side on a desk in a lamp-lit room, seen front-on, with the leads that cross-patch them hanging in the gap between." />
+            alt="A dim 1970s studio desk: two reel-to-reel tape decks side by side on a walnut shelf, cross-patched with leads, a briefcase synthesiser with its keyboard lid open in front of them, a tape echo at the right and a black electric guitar leaning against the desk." />
         </div>
       </figure>
     ) : (
