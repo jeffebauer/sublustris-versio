@@ -2,6 +2,10 @@
 """Site demos: the owner's showcase listening page, from what ships.
 
 Usage (repo root): .venv/bin/python docs/minisite/tools/demos/make_page.py <work dir> <audio dir> <page dir>
+       [--only 01,02,...] [--old <old audio dir> <old work dir>]
+
+--only keeps those clips; --old adds each kept clip's earlier version (its own MP3 pair, demos.json
+and sidecars) as a row of its own beside the new one, named <id>-<slug>-was, with its own dry.
 
 Decodes each clip's MP3 pair (so the page plays exactly the site's files, with their shared
 gain), writes <page dir>/<id>-<slug>_wet.wav + the Renderer's sidecar next to it and
@@ -25,38 +29,54 @@ ROOT = Path(__file__).resolve().parents[4]
 
 
 def main():
-    work, audio, page = (Path(a) for a in sys.argv[1:4])
+    args = sys.argv[1:]
+    only = old = None
+    if "--only" in args:
+        i = args.index("--only")
+        only = args[i + 1].split(",")
+        del args[i:i + 2]
+    if "--old" in args:
+        i = args.index("--old")
+        old = (Path(args[i + 1]), Path(args[i + 2]))
+        del args[i:i + 3]
+    work, audio, page = (Path(a) for a in args[:3])
     if page.exists():
         shutil.rmtree(page)
     (page / "_dry").mkdir(parents=True)
     doc = json.loads((audio / "demos.json").read_text())
-    lines = ["The eight site demos, in the site's order (1, 2, 3 first), playing the MP3s that ship "
+    clips = [e for e in doc["clips"] if only is None or e["id"] in only]
+    n = "The eight site demos" if only is None else f"{len(clips)} of the site demos"
+    lines = [f"{n}, in the site's order (1, 2, 3 first), playing the MP3s that ship "
              "(ffmpeg libmp3lame, 160 kbps), each pair at one gain so the clip sits at -20.5 LUFS at its own "
              "default BLEND. The MIX fader is one for the whole page and starts at noon: set it to a clip's "
              "default (listed here) to hear it as the site starts it. Notes only, no picks. The chips use the "
              "page tool's older names (ATTACK = ONSET, DRIFT = MOTION, ERA = WEAR, TIME = DEPTH, MIX = BLEND) and "
-             "show a turned knob's end value (WEAR in 7, SIZE in 10)."]
-    for e in doc["clips"]:
-        stem = f"{e['id']}-{R.CLIPS[e['id']]['slug']}"
+             "show a turned knob's end value."
+             + (" Each clip's row is followed by its earlier version (\"was\"), for comparison." if old else "")]
+    sets = [(e, audio, work, "") for e in clips]
+    if old:
+        was = {e["id"]: e for e in json.loads((old[0] / "demos.json").read_text())["clips"]}
+        sets = [x for e in clips for x in ((e, audio, work, ""), (was[e["id"]], old[0], old[1], "-was"))]
+    for e, adir, wdir, tag in sets:
+        stem = f"{e['id']}-{R.CLIPS[e['id']]['slug']}{tag}"
         for side, name in (("wet", e["file"]), ("dry", e["dry"])):
-            x = R.decode(audio / name)
+            x = R.decode(adir / name)
             out = page / f"{stem}_wet.wav" if side == "wet" else page / "_dry" / f"{stem}.wav"
             sf.write(str(out), x.astype("float32"), R.SR, subtype="FLOAT")
-        side = json.loads((work / f"{e['id']}_wet.json").read_text())
+        side = json.loads((wdir / f"{e['id']}_wet.json").read_text())
         side["file"] = f"{stem}_wet.wav"
         (page / f"{stem}_wet.json").write_text(json.dumps(side))
         st = "; ".join(f"{k} {v}" for k, v in e["settings"].items())
-        lines.append(f"{e['id']}  {e['title']} ({e['duration_s']:g} s, default BLEND {e['blend_clock']} = "
-                     f"{round(e['blend'] * 100)} %): {e['caption']} {st}.")
+        lines.append(f"{e['id']}{tag}  {e['title']}{' (was)' if tag else ''} ({e['duration_s']:g} s, default BLEND "
+                     f"{e['blend_clock']} = {round(e['blend'] * 100)} %): {e['caption']} {st}.")
     lines += ["", "wet    the clip, 100 % wet; the MIX fader blends its dry back in"]
     # Everything before the first blank line is the page's intro.
     (page / "README.txt").write_text("\n".join(lines) + "\n")
     # The dry inputs must sit outside the page folder's own scan (folders starting with "_" are skipped).
     subprocess.run([sys.executable, str(ROOT / "tools" / "review" / "make_review.py"), str(page),
-                    "--title", "Sublustris site demos", "--no-level-match", "--showcase",
+                    "--title", "Sublustris site demos" + (", round 2" if old else ""), "--no-level-match", "--showcase",
                     "--dry", str(page / "_dry"), "--wet-only"], check=True)
     print(page / "index.html")
-
 
 if __name__ == "__main__":
     main()

@@ -79,10 +79,10 @@ def pitches(x: np.ndarray, a: float, b: float, k: int = 6) -> list[str]:
 def m01(src, work):
     w = rd(work / "01_wet.wav")
     e = env(w, 400)
-    print("  wet level per 2 s (dB):", [round(lvl(w, t, t + 2), 1) for t in range(0, 26, 2)])
-    print(f"  after the last chord (19-25 s): range {np.ptp(e[int(19 / 0.4):int(25 / 0.4)]):.1f} dB;",
-          "pitch classes 20-25 s:", pitches(w, 20, 25), "(chords: A C E G B / F A C E G / D F A C E / E G B D A)")
-    print(f"  wet peak first half {20 * np.log10(np.abs(w[:13 * SR]).max()):.1f}, last 8 s {20 * np.log10(np.abs(w[19 * SR:]).max()):.1f} dBFS")
+    print("  wet level per 2 s (dB):", [round(lvl(w, t, t + 2), 1) for t in range(0, 24, 2)])
+    print(f"  after the chord (12-22 s): range {np.ptp(e[int(12 / 0.4):int(22 / 0.4)]):.1f} dB;",
+          "pitch classes 14-22 s:", pitches(w, 14, 22, 5), "(the chord: A E B C G)")
+    print(f"  wet peak 0-10 s {20 * np.log10(np.abs(w[:10 * SR]).max()):.1f}, 14-22 s {20 * np.log10(np.abs(w[14 * SR:22 * SR]).max()):.1f} dBFS")
 
 
 def m02(src, work):
@@ -101,27 +101,26 @@ def m02(src, work):
 
 
 def m03(src, work):
-    """The duck against a render that can't duck: DECAY 0.70, where the duck's weight is 0
-    (map::governorWeight: 0 at 0.70, 1 from 0.85). Per stab: how far the endless wet falls
-    against that reference under the stab, and how far it comes back in the gap after."""
+    """The short send (31 Oct 2026): the tail's T60 from the last stab (the -5 to -25 dB slope
+    times 3), the wet against the dry in the mix at the clip's BLEND, and the old endless
+    setting (DECAY 4, SIZE 1, BLEND 11) on the same send as the control."""
     w = rd(work / "03_wet.wav")
-    ctl = control("03", src, work, "noduck", {"decay": 0.70})
-    s = rd(src / "03_send.wav")
-    es = env(s, 10)
-    on = [i * 0.01 for i in range(1, len(es)) if es[i] > es.max() - 20 and es[i] - es[i - 1] > 15]
-    on = [t for k, t in enumerate(on) if k == 0 or t - on[k - 1] > 0.2]
-    d = lambda a, b: lvl(w, a, b) - lvl(ctl, a, b)
-    dips, backs = [], []
-    for t in on:
-        if 4 < t < 17:
-            pre, gap = d(t - 0.15, t - 0.02), d(t + 0.6, t + 0.8)
-            under = min(d(t + a, t + a + 0.02) for a in np.arange(0.0, 0.2, 0.02))  # the deepest 20 ms
-            dips.append(under - pre)
-            backs.append(gap - under)
-    print(f"  {len(on)} stabs; from 4 s: the endless wet against a no-duck render dips {np.mean(dips):+.1f} dB under each stab "
-          f"(range {min(dips):+.1f} to {max(dips):+.1f}) and comes back {np.mean(backs):+.1f} dB in the gap after")
-    print("  wet per 1 s:", [round(lvl(w, t, t + 1), 1) for t in range(0, 24)])
-    print(f"  after the last hit (18.5-22.5 s): range of 0.5 s levels {np.ptp([lvl(w, t, t + 0.5) for t in np.arange(18.5, 22.5, 0.5)]):.1f} dB")
+    d = rd(work / "03_dry.wav")
+    old = control("03", src, work, "old_endless", {"decay": R.c2v("4"), "size": R.c2v("1")})
+    t_stab = 0.25 + (7 * 4 + 3.5) * 60 / 118  # the last stab (bar 8, beat 3.5)
+
+    def t60(x):
+        m = (x ** 2).mean(axis=1)
+        e = 10 * np.log10(np.convolve(m, np.ones(480) / 480, mode="same") + 1e-14)
+        seg = e[int((t_stab - 0.05) * SR):int((t_stab + 4.5) * SR)]
+        seg = seg[int(np.argmax(seg[: SR // 2])):] - seg[: SR // 2].max()
+        a, b = np.argmax(seg < -5), np.argmax(seg < -25)
+        return 3 * (b - a) / SR if b > a else float("inf")
+
+    for nm, x, bl in (("new", w, R.c2v(R.CLIPS["03"]["blend"])), ("old endless", old, R.c2v("11"))):
+        rel = lvl(x, 0.5, 16.5) - lvl(d, 0.5, 16.5) + 20 * np.log10(np.tan(bl * np.pi / 2))
+        print(f"  {nm}: T60 from the last stab {t60(x):.1f} s; wet vs dry in the mix (0.5-16.5 s) {rel:+.1f} dB; "
+              f"wet 1 s / 2 s / 3 s after the last stab {[round(lvl(x, t_stab + a, t_stab + a + 0.25) - lvl(x, t_stab, t_stab + 0.25), 1) for a in (1, 2, 3)]} dB")
 
 
 def onset_to_peak(w, times, span=2.8):
@@ -223,22 +222,34 @@ def m08(src, work):
 
 
 def m10(src, work):
+    """WEAR's whole range on the drone: per 2 s, the wet's spectral centroid, its bands against a
+    steady WEAR 0 render, and the 6 dB bandwidth around the spectrum's peak (the radio's band
+    narrows it)."""
     w = rd(work / "10_wet.wav")
-    k = control("10", src, work, "size9", {"size": R.c2v("9")}, {"breakpoints": []})
-    side = lambda x, a, b: lvl((x[:, :1] - x[:, 1:]) / 2, a, b) - lvl((x[:, :1] + x[:, 1:]) / 2, a, b)
-    for a in (2, 5.5, 9.5, 13.5, 17.5, 21.5, 24.5):
-        b = a + 2.5
-        print(f"  {a}-{b} s: wet {lvl(w, a, b):.1f} dB (SIZE fixed at 9: {lvl(k, a, b):.1f}), side-mid {side(w, a, b):+.1f} "
-              f"({side(k, a, b):+.1f}), lows<120 {band(w, 20, 120, a, b) - band(k, 20, 120, a, b):+.1f}, "
-              f"120-500 {band(w, 120, 500, a, b) - band(k, 120, 500, a, b):+.1f} vs fixed")
-    d = rd(work / "10_dry.wav")
-    for nm, x in (("stepped", w), ("fixed", k)):
-        fw = C.hp_frames(x)
-        print(f"    {nm}: max 1 ms highs jump 3-18 s {C.max_jump_in(fw, 3, 18):.1f} dB; level 50 ms around the moves:",
-              [round(lvl(x, t - 0.3, t) - lvl(x, t + 0.3, t + 0.6), 1) for t in (4.5, 8.5, 12.5, 16.5)])
-    print(f"  wet peak 0-14 s {20 * np.log10(np.abs(w[:14 * SR]).max()):.1f}, 14-28 s {20 * np.log10(np.abs(w[14 * SR:]).max()):.1f}")
-    e = env(w, 200)
-    print("  wet per 1 s:", [round(lvl(w, t, t + 1), 1) for t in range(28)])
+    k = control("10", src, work, "wear0", {"era": 0.0}, {"breakpoints": []})
+
+    def spec(x, a, b):
+        s = x[int(a * SR):int(b * SR)].mean(axis=1)
+        S = np.abs(np.fft.rfft(s * np.hanning(len(s)))) ** 2
+        return np.fft.rfftfreq(len(s), 1 / SR), S
+
+    def centroid(x, a, b):
+        f, S = spec(x, a, b)
+        return float((f * S).sum() / S.sum())
+
+    def bw_over(x, a, b, thr=-30):
+        f, S = spec(x, a, b)
+        sm = np.convolve(S, np.ones(64) / 64, mode="same")
+        on = f[10 * np.log10(sm / sm.max() + 1e-20) > thr]
+        return float(on.max()) if len(on) else 0.0
+
+    for a in range(0, 28, 2):
+        b = a + 2
+        f = lambda x: (band(x, 20, 150, a, b), band(x, 150, 600, a, b), band(x, 600, 3000, a, b), band(x, 3000, 12000, a, b))
+        lo, lm, mid, hi = (u - v for u, v in zip(f(w), f(k)))
+        print(f"  {a:2d}-{b:2d} s: centroid {centroid(w, a, b):5.0f} Hz (WEAR 0: {centroid(k, a, b):4.0f}); top within 30 dB of the peak "
+              f"{bw_over(w, a, b):5.0f} Hz ({bw_over(k, a, b):4.0f}); vs WEAR 0: <150 {lo:+.1f}, 150-600 {lm:+.1f}, "
+              f"600-3k {mid:+.1f}, >3k {hi:+.1f} dB; level {lvl(w, a, b) - lvl(k, a, b):+.1f}")
 
 
 def background(cid, work):
