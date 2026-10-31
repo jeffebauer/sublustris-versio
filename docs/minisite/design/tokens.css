@@ -52,10 +52,10 @@
   --fs-ui:      0.875rem;  /* 14: header links, buttons */
   --fs-micro:   0.75rem;   /* 12: labels, values (mono) */
 
-  --lh-display: 0.95;
-  --lh-tight:   1.0;
-  --lh-snug:    1.15;
-  --lh-body:    1.4;
+  --lh-display: 1.0; 
+  --lh-tight:   1.05;
+  --lh-snug:    1.22;
+  --lh-body:    1.55;
 
   --wt-light:   300;  /* reading text */
   --wt-reg:     400;  /* UI, anything under 15 px */
@@ -138,8 +138,8 @@ a { color: inherit; text-decoration-thickness: var(--hair); text-underline-offse
 /* ---- Type styles --------------------------------------------------------- */
 .display { font-size: var(--fs-display); font-weight: var(--wt-display); line-height: var(--lh-display); letter-spacing: var(--track-display); }
 .h2      { font-size: var(--fs-h2); font-weight: var(--wt-display); line-height: var(--lh-display); letter-spacing: var(--track-display); }
-.h3      { font-size: var(--fs-h3); font-weight: var(--wt-display); line-height: 1.05; letter-spacing: -0.015em; }
-.lede    { font-family: var(--font-mono); font-size: calc(var(--fs-lede) * 0.88); line-height: 1.45; text-wrap: balance; }   /* Paper Mono, to set it apart from body (owner, 1 Nov 2026) */
+.h3      { font-size: var(--fs-h3); font-weight: var(--wt-display); line-height: 1.1; letter-spacing: -0.015em; }
+.lede    { font-family: var(--font-mono); font-size: calc(var(--fs-lede) * 0.88); line-height: 1.6; text-wrap: balance; }   /* Paper Mono, to set it apart from body (owner, 1 Nov 2026) */
 .small   { font-size: var(--fs-small); }
 /* MD UI's italic axis tops out at 12°, which read far too slanted (owner, 7 Oct): a gentler oblique. */
 em, i, cite { font-style: oblique 7deg; }
