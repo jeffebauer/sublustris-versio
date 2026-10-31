@@ -20,17 +20,21 @@ const col = (name: string) => {
   return i;
 };
 // Each knob cell reads "0.8 (3)": the value, and its clock position.
-const settings = new Map<string, { s: PanelSettings; shown: Record<string, string> }>();
+const settings = new Map<string, { s: PanelSettings; shown: Record<string, string>; clock: Record<string, string> }>();
 for (const r of rows) {
   const s: Record<string, number | string> = {};
   const shown: Record<string, string> = {};
+  const clock: Record<string, string> = {};
   for (const w of SWITCHES) s[w.key] = shown[w.name] = r[col(w.name)];
   for (const k of KNOBS) {
     const cell = r[col(k.name)];
     s[k.key] = parseFloat(cell);
-    shown[k.name] = cell.replace(/\s*\((\d+)(:\d+)?\)/, (_m, h: string, m?: string) => ` · ${h}${m ?? ':00'}`);
+    // the value and the clock position get columns of their own, so they line up row to row (owner, 1 Nov 2026)
+    shown[k.name] = cell.replace(/\s*\(.*$/, '');
+    const m = cell.match(/\((\d+)(:\d+)?\)/);
+    clock[k.name] = m ? `${m[1]}${m[2] ?? ':00'}` : '';
   }
-  settings.set(r[0], { s: s as PanelSettings, shown });
+  settings.set(r[0], { s: s as PanelSettings, shown, clock });
 }
 
 const { lead, sections } = splitSections(rest.replace(table, ''));
@@ -51,7 +55,7 @@ const { lead, sections } = splitSections(rest.replace(table, ''));
             <Fragment set:html={sec.html} />
             <dl class="preset-values" aria-label={`${sec.title}: exact values`}>
               {SWITCHES.map((w) => <div><dt>{w.name}</dt><dd>{p.shown[w.name]}</dd></div>)}
-              {KNOBS.map((k) => <div><dt>{k.name}</dt><dd><span class="knob-value"><KnobGlyph value={p.s[k.key]} />{p.shown[k.name]}</span></dd></div>)}
+              {KNOBS.map((k) => <div><dt>{k.name}</dt><dd><span class="knob-value"><KnobGlyph value={p.s[k.key]} /><span class="kv-num">{p.shown[k.name]}</span><span class="kv-clock">{p.clock[k.name]}</span></span></dd></div>)}
               {(SWITCHES.length + KNOBS.length) % 2 === 1 && <div class="filler" aria-hidden="true" />}
             </dl>
           </div>
