@@ -181,8 +181,8 @@ html.hero-film .hero-title { animation: hero-title-in 1.2s var(--ease-out) 0.5s 
 .hero-platform { color: var(--on-dark-2); font-size: var(--fs-body); padding-top: 0.5rem; }   /* under the buttons: what it runs on (owner, 31 Oct 2026) */
 .hero-tagline {
   max-width: 26em; color: var(--ink-2);
-  font-weight: var(--wt-light); font-size: calc(var(--tagline-fs) * 0.8); line-height: 1.45; letter-spacing: 0;
-  font-family: var(--font-mono);   /* the hero's lede: Paper Mono, like every lede (owner, 1 Nov 2026); a size down, as mono sets wide */
+  font-weight: var(--wt-light); font-size: clamp(1.125rem, 0.95rem + 0.45vw, 1.375rem); line-height: 1.5; letter-spacing: 0;
+  font-family: var(--font-mono);   /* the hero's lede: Paper Mono, like every lede (owner, 1 Nov 2026); 18 px on phones, about 22 on desktop, where 29 was far too large (owner, 1 Nov 2026) */
 }
 .hero-title h1 { font-size: var(--fs-hero); }
 /* The buttons sit under the tagline, a clear step below it, and a size up from the header's
