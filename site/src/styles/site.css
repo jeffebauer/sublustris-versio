@@ -385,7 +385,6 @@ html.hero-film .hero-title { animation: hero-title-in 1.2s var(--ease-out) 0.5s 
 .feature.is-wide .feature-diagram { max-width: 18rem; }
 .feature.is-big .feature-diagram { max-width: 36rem; height: clamp(5rem, 1.5rem + 8vw, 13rem); }
 .feature-big { font-size: clamp(1.375rem, 1.1rem + 0.8vw, 2rem); line-height: 1; letter-spacing: var(--track-display); padding-top: 0.5rem; }
-.feature.is-big .feature-big { font-size: clamp(2.75rem, 1.6rem + 4vw, 5.5rem); line-height: var(--lh-display); }
 .feature-line { color: var(--ink-2); max-width: 32em; }
 @media (max-width: 49.99rem) {
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -396,6 +395,11 @@ html.hero-film .hero-title { animation: hero-title-in 1.2s var(--ease-out) 0.5s 
   .feature.is-wide, .feature.is-big { grid-column: auto; }
   .feature { min-height: 0; }
   .feature.is-big .feature-diagram { height: 4.5rem; }
+}
+/* Card titles a step larger on phones, one size in every section: the bento's, the demos', the two
+   ways' and the download targets' (owner, 1 Nov 2026). The big bento card's title matches the rest. */
+@media (max-width: 39.99rem) {
+  .feature-big, .demo-title, .way .h3, .download .target h3 { font-size: 1.75rem; line-height: 1.15; }
 }
 
 /* ---- Two ways to play -------------------------------------------------------- */
