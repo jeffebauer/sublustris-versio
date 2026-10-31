@@ -151,7 +151,17 @@ def story_variants(refs):
     t, r, p = refs.get("tape"), refs.get("rack"), refs.get("plate")
     t2, r2 = refs.get("tape2"), refs.get("rack2")
     t3, r3 = refs.get("tape3"), refs.get("rack3")
+    t4 = refs.get("tape4")
     v = []
+    if t4:
+        v += [
+            dict(id="story_tape4_a", slot="story", mood="tape4", res=W169, rnd=3,
+                 note="tape3_b's room, decks on a walnut shelf; a briefcase synth (Synthi AKS layout) and its "
+                      "keyboard lid at the front, a tape echo at the right, a guitar leaning on the desk; from a "
+                      "little above, 40 mm.",
+                 target=t4["desk_front"] + C.Vector((60, 60, -110)), az=0, el=19, f=40, dist=2650,
+                 fstop=4.0, focus=t4["desk_front"] + C.Vector((0, 120, 80))),
+        ]
     if r3:
         v += [
             dict(id="story_rack3_a", slot="story", mood="rack3", res=W169, rnd=3,
@@ -315,6 +325,8 @@ def build_story(mood):
         return {"tape2": studio.tape_cross, "rack2": studio.studio_rack}[mood]()
     if mood == "tape3":  # round 3: the new deck
         return studio.tape_cross3()
+    if mood == "tape4":  # round 4: with the period instruments on the desk
+        return studio.tape_cross4()
     if mood == "rack3":
         return studio.studio_rack(decks=True)
     ref = {"tape": story.tape_loop, "rack": story.rack_reverb, "plate": story.plate}[mood]()
@@ -592,7 +604,8 @@ def _dummy_story_refs():
     return dict(tape=dict(center=z, span=z, deck_l=z, deck_r=z, head_l=z),
                 rack=dict(center=z, unit=z, display=z), plate=dict(center=z, corner=z),
                 tape2=dict(center=z, patch=z), rack2=dict(center=z, rack=z, reverb=z, remote=z),
-                tape3=dict(center=z, decks_center=z, heads_a=z), rack3=dict(center=z))
+                tape3=dict(center=z, decks_center=z, heads_a=z), rack3=dict(center=z),
+                tape4=dict(center=z, decks_center=z, desk_front=z))
 
 
 def main():

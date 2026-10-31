@@ -284,7 +284,7 @@ def cable(name, pts, r, mat):
 
 # ------------------------------------------------------------------ the room
 
-def room(m, rack=False, lamp_x=-760.0):
+def room(m, rack=False, lamp_x=-760.0, show_lamp=True, plant=(-1300.0, 300.0)):
     """Floorboards, two walls, a rug, the desk, a desk lamp (the main light),
     a record shelf, a plant. Returns the lamp's bulb position."""
     C.box("floor", (6000, 5000, 20), (0, 0, -10), m["floor"])
@@ -304,13 +304,14 @@ def room(m, rack=False, lamp_x=-760.0):
             B("pull", x - 40, x + 40, d["y0"] + 12, d["y0"] + 24, z0 + 170, z0 + 182, m["steel"], bevel=2)
     # desk lamp, back left: weighted base, arm, a cone shade with a warm bulb
     lx, ly = lamp_x, 230.0
-    C.cylinder("lamp_base", 75, 22, (lx, ly, DESK_Z + 11), m["knob"], segs=48, bevel=4)
-    arm = [(lx, ly, DESK_Z + 20), (lx + 20, ly - 10, DESK_Z + 300), (lx + 140, ly - 60, DESK_Z + 430)]
-    cable("lamp_arm", arm, 5, m["steel"])
-    shade = C.cylinder("lamp_shade", 85, 140, (lx + 200, ly - 90, DESK_Z + 400), m["knob"], segs=48, r2=28)
-    shade.rotation_euler = (math.radians(-25), math.radians(35), 0)
     bulb = Vector((lx + 215, ly - 100, DESK_Z + 370))
-    C.sphere("bulb", 22, bulb, story.glow("bulb", "#FFC27A", 22.0))
+    if show_lamp:  # (without it the warm light stays, as from a lamp out of frame)
+        C.cylinder("lamp_base", 75, 22, (lx, ly, DESK_Z + 11), m["knob"], segs=48, bevel=4)
+        arm = [(lx, ly, DESK_Z + 20), (lx + 20, ly - 10, DESK_Z + 300), (lx + 140, ly - 60, DESK_Z + 430)]
+        cable("lamp_arm", arm, 5, m["steel"])
+        shade = C.cylinder("lamp_shade", 85, 140, (lx + 200, ly - 90, DESK_Z + 400), m["knob"], segs=48, r2=28)
+        shade.rotation_euler = (math.radians(-25), math.radians(35), 0)
+        C.sphere("bulb", 22, bulb, story.glow("bulb", "#FFC27A", 22.0))
     # record / tape shelf against the back wall, left: records upright, tape boxes stacked
     sx0, sx1 = -1850.0, -1150.0
     for k in range(5):
@@ -339,7 +340,7 @@ def room(m, rack=False, lamp_x=-760.0):
                       rng.choice(sleeves[:1] + [m["paper"]]), bevel=1.5)
                 x += 200
     # a plant on the floor between the shelf and the desk
-    px, py = -1300.0, 300.0
+    px, py = plant
     C.cylinder("pot", 140, 260, (px, py, 130), m["terracotta"], segs=48, r2=170, bevel=4)
     C.cylinder("soil", 160, 10, (px, py, 255), m["rubber"], segs=48)
     for k in range(14):
@@ -1173,15 +1174,15 @@ def deck77(o, m, name="deck", supply=72.0, takeup=44.0, side=1, spin=0.0, needle
                 meters=Vector((o.x + 86, o.y, o.z + 88)), center=Vector((o.x, o.y, o.z + H / 2)))
 
 
-def deck_pair(m, xs, y0):
+def deck_pair(m, xs, y0, z0=DESK_Z):
     """Two decks on the desk at x = xs (case centres), fronts at y0, each
     running its own tape; A's outputs into B's inputs, B's outputs back into
     A's. The phono leads leave the rear tops and hang down into the gap
     between the cases, so the cross-patch reads from the front."""
     xa, xb = xs
-    a = deck77((xa, y0, DESK_Z), m, "deck_A", supply=74.0, takeup=46.0, side=1, spin=0.2,
+    a = deck77((xa, y0, z0), m, "deck_A", supply=74.0, takeup=46.0, side=1, spin=0.2,
                needles=(-12.0, -18.0))
-    b = deck77((xb, y0, DESK_Z), m, "deck_B", supply=60.0, takeup=58.0, side=-1, spin=1.1,
+    b = deck77((xb, y0, z0), m, "deck_B", supply=60.0, takeup=58.0, side=-1, spin=1.1,
                needles=(-16.0, -10.0))
     sa, sb = a["sockets"], b["sockets"]
     gx = (xa + A77_W / 2 + xb - A77_W / 2) / 2   # middle of the gap
@@ -1191,7 +1192,7 @@ def deck_pair(m, xs, y0):
     for k, (src, dst, mat, tag) in enumerate(leads):
         p0 = rca(f"plug_{tag}_s", src, 1, m, mat)
         p1 = rca(f"plug_{tag}_d", dst, 1, m, mat)
-        sag_z = DESK_Z + 40 + 26 * k               # each lead hangs a little differently
+        sag_z = z0 + 40 + 26 * k               # each lead hangs a little differently
         sag_y = y0 + A77_D - 30 - 34 * k          # inside the gap, front to back
         dx = (k - 1.5) * gap * 0.12
         pts = [p0, p0 + Vector((0, 40, 10)), Vector((gx + dx - 0.35 * (gx - p0.x), p0.y + 30, p0.z - 40)),
@@ -1200,7 +1201,7 @@ def deck_pair(m, xs, y0):
         cable(f"xpatch_{tag}", pts, 2.6, mat)
     # power cords off the back of the desk
     for d, x in ((a, xa), (b, xb)):
-        c0 = Vector((x - 120 * (1 if x < gx else -1), y0 + A77_D + 2, DESK_Z + 40))
+        c0 = Vector((x - 120 * (1 if x < gx else -1), y0 + A77_D + 2, z0 + 40))
         cable("power_cord", [c0, c0 + Vector((0, 60, -20)), Vector((c0.x, DESK["y1"] - 10, DESK_Z + 4)),
                              Vector((c0.x + 20, DESK["y1"] + 30, DESK_Z - 60)),
                              Vector((c0.x + 40, DESK["y1"] + 50, 300))], 2.8, m["cable"])
@@ -1253,4 +1254,66 @@ def tape_cross3():
     deck_lights(ref, dim=dim)
     ref.update(center=ref["decks_center"] + Vector((0, 60, 0)), size=ref["decks_width"],
                radius=ref["decks_width"] / 2 + 30)
+    return ref
+
+
+def tape_cross4():
+    """Round 4 (owner, 31 Oct 2026: something on the desk that would be recorded onto the tape,
+    and of the era): the cross-patched decks on a low walnut shelf at the back of the desk; in
+    front, a briefcase synth (the Synthi AKS of Discreet Music) with its keyboard lid beside it;
+    a tape echo at the right; an electric guitar leaning on the desk. See gear.py."""
+    import gear
+    m = mats3()
+    gear.mats(m)
+    # the owner, 31 Oct: no lamp (room for the echo); the plant forward, its leaves clear of the bookshelf
+    bulb = room(m, lamp_x=-880.0, show_lamp=False, plant=(-1420.0, -140.0))
+    # the shelf: a walnut top on two end blocks
+    rz = DESK_Z + 150.0
+    sx0 = -230.0   # the shelf's centre, left of the desk's so the echo has room at the right
+    B("riser_top", sx0 - 660, sx0 + 660, 100, 370, rz - 22, rz, m["walnut"], bevel=3)
+    for sx in (-1, 1):
+        B("riser_end", sx0 + sx * 640 - 20, sx0 + sx * 640 + 20, 110, 360, DESK_Z, rz - 22, m["walnut"], bevel=3)
+    gap = 170.0
+    xa, xb = sx0 - (A77_W + gap) / 2, sx0 + (A77_W + gap) / 2
+    ref = deck_pair(m, (xa, xb), 130.0, z0=rz)
+    base, lid = gear.synthi()
+    gear.place(base, (-430, -365, DESK_Z), (0, 0, 7))
+    gear.place(lid, (110, -360, DESK_Z), (0, 0, -5))
+    echo = gear.place(gear.tape_echo(), (720, 70, DESK_Z), (0, 0, -16))
+    gtr = gear.place(gear.guitar(), (640, -520, 262), (75, 0, -12), mirror=True)
+    # leads (owner, 31 Oct: the synth and keyboard need cables): the keyboard lid's multi-way
+    # lead into the synth's side, the synth's two outputs back to deck A, the guitar into the
+    # echo's input, the echo's output to deck B, mains leads off the back of the desk
+    W = lambda e, p: e.matrix_world @ Vector(p)
+    bpy.context.view_layer.update()
+    k0, k1 = W(lid, (-200, 230, 20)), W(base, (gear.SY_W / 2, 200, 40))
+    cable("ks_lead", [k0, k0 + Vector((-10, 40, -14)), (k0 + k1) / 2 + Vector((0, 60, -18)),
+                      k1 + Vector((40, 10, -30)), k1 + Vector((6, 0, 0)), k1], 3.4, m["cable"])
+    for j, mat in enumerate((m["cable"], m["cable_grey"])):
+        o0 = W(base, (40 + 30 * j, gear.SY_D, 60))
+        d_in = Vector((xa + 90 + 20 * j, 130 + A77_D, rz + 60))
+        cable(f"synth_out{j}", [o0, o0 + Vector((0, 40, -50)), Vector((o0.x + 30, 60 + 20 * j, DESK_Z + 3)),
+                                Vector((d_in.x, 340, DESK_Z + 5)), Vector((d_in.x, 390, rz - 40)), d_in], 2.6, mat)
+    e0 = W(echo, (120, -6, 40))
+    g0 = W(gtr, (150, -250, 25))   # the guitar's output jack, on the lower bout's rim
+    cable("guitar_lead", [g0, g0 + Vector((60, -40, -60)), Vector((g0.x + 120, -560, 220)),
+                          Vector((e0.x + 40, -470, DESK_Z - 30)), Vector((e0.x + 60, -390, DESK_Z + 4)),
+                          Vector((e0.x + 20, e0.y - 120, DESK_Z + 3)), e0 + Vector((0, -30, -20)), e0], 2.8,
+          m["cable"])
+    eo = W(echo, (-120, gear.EC_D, 60))
+    cable("echo_out", [eo, eo + Vector((0, 40, -40)), Vector((eo.x - 60, 360, DESK_Z + 4)),
+                       Vector((xb + 120, 395, rz - 30)), Vector((xb + 110, 130 + A77_D, rz + 60))], 2.6,
+          m["cable_grey"])
+    for p0 in (W(base, (-150, gear.SY_D, 30)), W(echo, (100, gear.EC_D, 30))):
+        cable("mains", [p0, p0 + Vector((0, 50, -25)), Vector((p0.x, DESK["y1"] - 15, DESK_Z + 4)),
+                        Vector((p0.x + 15, DESK["y1"] + 30, DESK_Z - 60)), Vector((p0.x + 30, DESK["y1"] + 45, 300))],
+              2.8, m["cable"])
+    dim = float(os.environ.get("IV_STORY_DIM", STORY_DIM))
+    room_lights(bulb, A77_W, dim=dim)
+    deck_lights(ref, dim=dim)
+    # a soft warm key over the desk front, so the synth panel and the guitar read
+    C.area_light("gear_key", Vector((-300, -1300, DESK_Z + 1200)), Vector((200, -300, DESK_Z - 80)), size=1000,
+                 power=C.watts(C.KEY_W * 0.22) * (1.9) ** 2, rgb=(1.0, 0.84, 0.64))
+    ref.update(center=ref["decks_center"] + Vector((0, 60, 0)), size=ref["decks_width"],
+               radius=ref["decks_width"] / 2 + 30, desk_front=Vector((0, -200, DESK_Z + 120)))
     return ref
