@@ -1584,6 +1584,92 @@ def plants70(m, riser_end, rz):
     leafy(m, "hang", (hx, hy, hz + 62), rng, 12, h=(250, 650), spread=(110, 230), leaf=(52, 34, 4), trail=True)
 
 
+def _rig(name, objs, loc, rot_deg):
+    """Hang objs (built about the origin) on an empty at loc, turned rot_deg about z."""
+    e = bpy.data.objects.new(name, None)
+    C.link(e)
+    for o in objs:
+        o.parent = e
+    e.location = loc
+    e.rotation_euler = (0, 0, math.radians(rot_deg))
+    return e
+
+
+def combo_amp(m, loc, rot_deg=0.0):
+    """A 1970s valve combo amp, unbranded (owner, 31 Oct 2026: the space behind the desk felt
+    empty): black textured tolex, silver-sparkle grille cloth with a thin piping, the brushed
+    control strip along the top front with a row of black skirted knobs, two input jacks and a
+    red jewel; a strap handle, chrome corners, glides. About 620 x 260 x 470, facing -y."""
+    W, D, H = 620.0, 260.0, 470.0
+    tolex = finish(C.clay("amp_tolex", rgb=(0.02, 0.02, 0.02), rough=0.6), bump=0.8, scale=1.2)
+    cloth = finish(C.clay("amp_cloth", rgb=(0.16, 0.16, 0.15), rough=0.8, metallic=0.3), bump=1.0, scale=2.5)
+    alu = C.clay("amp_panel", 0.6, 0.3, metallic=1.0)
+    o = []
+    o.append(C.box("amp_case", (W, D, H), (0, 0, H / 2 + 12), tolex, bevel=10))
+    o.append(C.box("amp_grille", (W - 60, 4, H - 150), (0, -D / 2 - 1, (H - 150) / 2 + 40), cloth, bevel=1))
+    o.append(C.box("amp_piping", (W - 52, 3, 4), (0, -D / 2 - 2, H - 105), m["paper"], bevel=1))
+    o.append(C.box("amp_strip", (W - 60, 3, 62), (0, -D / 2 - 1, H - 50), alu, bevel=1))
+    for k in range(8):
+        x = -W / 2 + 120 + k * 52
+        kb = C.cylinder("amp_knob", 11, 18, (x, -D / 2 - 10, H - 50), m["knob"], axis="Y", segs=24, bevel=1.5)
+        o.append(kb)
+    for x in (-W / 2 + 50, -W / 2 + 82):
+        o.append(C.cylinder("amp_jack", 6, 4, (x, -D / 2 - 3, H - 50), m["steel"], axis="Y", segs=20))
+    o.append(C.sphere("amp_jewel", 7, (W / 2 - 50, -D / 2 - 3, H - 50), story.glow("amp_jewel", "#FF2A10", 3.0)))
+    o.append(cable("amp_handle", [(-90, 0, H + 12), (-60, 0, H + 40), (60, 0, H + 40), (90, 0, H + 12)], 9,
+                   m["rubber"]))
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            for sz in (0, 1):
+                o.append(C.box("amp_corner", (38, 38, 38), (sx * (W / 2 - 14), sy * (D / 2 - 14), 26 + sz * (H - 28)),
+                               m["steel"], bevel=8))
+            o.append(C.cylinder("amp_glide", 14, 12, (sx * (W / 2 - 50), sy * (D / 2 - 40), 6), m["rubber"], segs=16))
+    return _rig("combo_amp", o, loc, rot_deg)
+
+
+def lp_crate(m, loc, rot_deg=0.0, seed=5):
+    """A pine crate of records on the floor: slatted sides, the sleeves standing in it, a few
+    leaning, their tops and spines showing."""
+    import random
+    rng = random.Random(seed)
+    W, D, H = 360.0, 340.0, 300.0
+    pine = wood("crate_pine", (0.46, 0.30, 0.16), rough=0.7, scale=0.02, stretch=(8.0, 1.0, 1.0))
+    o = [C.box("crate_floor", (W, D, 14), (0, 0, 7), pine, bevel=2)]
+    for k in range(4):   # slats, with gaps
+        z = 30 + k * 72
+        for sy in (-1, 1):
+            o.append(C.box("crate_slat", (W, 14, 56), (0, sy * (D / 2 - 7), z), pine, bevel=2))
+        for sx in (-1, 1):
+            o.append(C.box("crate_slat", (14, D, 56), (sx * (W / 2 - 7), 0, z), pine, bevel=2))
+    palette = [(0.55, 0.50, 0.40), (0.12, 0.12, 0.13), (0.42, 0.12, 0.08), (0.62, 0.58, 0.50), (0.12, 0.20, 0.30),
+               (0.70, 0.62, 0.30), (0.30, 0.30, 0.28), (0.20, 0.32, 0.22)]
+    sleeves = [C.clay(f"crate_sleeve{i}", rgb=c, rough=0.6) for i, c in enumerate(palette)]
+    y = -D / 2 + 22
+    while y < D / 2 - 30:
+        t = rng.uniform(3.5, 6.0)
+        lean = rng.uniform(-0.12, 0.12)
+        sl = C.box("crate_lp", (314, t, 314), (0, y, 14 + 157), rng.choice(sleeves), bevel=0.6)
+        sl.rotation_euler = (lean, 0, rng.uniform(-0.02, 0.02))
+        o.append(sl)
+        y += t + rng.uniform(1.0, 4.0)
+    return _rig("lp_crate", o, loc, rot_deg)
+
+
+def tape_box_stack(m, loc, n, rot_deg=0.0, seed=9):
+    """Reel-tape boxes stacked on the floor (7-inch, 185 mm square), slightly askew."""
+    import random
+    rng = random.Random(seed)
+    cols = [m["paper"], C.clay("tapebox_red", rgb=(0.40, 0.08, 0.05), rough=0.6),
+            C.clay("tapebox_blue", rgb=(0.10, 0.16, 0.26), rough=0.6)]
+    o = []
+    for j in range(n):
+        b = C.box("floor_tapebox", (185, 185, 23), (rng.uniform(-6, 6), rng.uniform(-6, 6), 12 + j * 24),
+                  rng.choice(cols), bevel=1.5)
+        b.rotation_euler = (0, 0, rng.uniform(-0.12, 0.12))
+        o.append(b)
+    return _rig("tape_box_stack", o, loc, rot_deg)
+
+
 def tape_cross4():
     """Round 4 (owner, 31 Oct 2026: something on the desk that would be recorded onto the tape,
     and of the era): the cross-patched decks on a low walnut shelf at the back of the desk; in
@@ -1674,7 +1760,14 @@ def tape_cross4():
                         Vector((p0.x + 15, DESK["y1"] + 30, DESK_Z - 60)), Vector((p0.x + 30, DESK["y1"] + 45, 300))],
               2.8, m["cable"])
     dim = float(os.environ.get("IV_STORY_DIM", STORY_DIM))
+    # the removed desk lamp's light sat just left of deck A and glared on its left reel (owner,
+    # 31 Oct): it hangs high and out of frame to the left now, a ceiling light's soft spill
+    bulb = Vector((-1500.0, -500.0, 2200.0))
     room_lights(bulb, A77_W, dim=dim)
+    # behind the desk, seen through the knee hole (the lamp's light pooled on bare floor there)
+    combo_amp(m, (230.0, 580.0, 0.0), -18.0)
+    lp_crate(m, (-260.0, 560.0, 0.0), 8.0)
+    tape_box_stack(m, (-10.0, 640.0, 0.0), 7)
     deck_lights(ref, dim=dim)
     # (the gear's own key light is gone: owner, 31 Oct, it glared in deck A's left reel; the
     # 1970s floor lamp at the right lights the desk instead)
