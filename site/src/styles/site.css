@@ -124,10 +124,6 @@ code { font-family: var(--font-mono); font-size: 0.88em; overflow-wrap: anywhere
    hero has a moving background now): content sits above them. */
 .has-contours { position: relative; isolation: isolate; }
 .has-contours > :not(.contours) { position: relative; z-index: 1; }
-/* The stage under the hero and the sound (owner, 1 Nov 2026): the contour lines hold still, a
-   screen tall, while both sections scroll over them, then leave with the sound's end. */
-.hero-stage > .contours.contours-fixed { position: sticky; inset: auto; top: 0; height: 100lvh; margin-bottom: -100lvh; }
-.hero-stage > .band-dark { background: transparent; }
 .hero {
   padding-top: calc(var(--header-h) + var(--stack-2)); padding-bottom: clamp(3.5rem, 2rem + 5vw, 7rem);
   --fs-hero: clamp(2.75rem, 1.4rem + 4.2vw, 5.5rem);   /* below the display size, to sit with the tagline (owner, 30 Oct 2026) */
@@ -163,8 +159,8 @@ html.hero-film .hero-still { visibility: hidden; }
    come up with the module's key light (HeroMedia sets --hero-lit from the film's time), so the
    module appears out of the dark. The title comes in quickly, so nobody waits to read or click;
    scrolling, a key or a tap lights everything at once. */
-html.hero-film .hero-stage > .contours { opacity: var(--hero-lit, 0); }
-html.hero-film.hero-lit .hero-stage > .contours { opacity: 1; transition: opacity 1s var(--ease-out); }
+html.hero-film .hero.has-contours > .contours { opacity: var(--hero-lit, 0); }
+html.hero-film.hero-lit .hero.has-contours > .contours { opacity: 1; transition: opacity 1s var(--ease-out); }
 html.hero-film .hero-title { animation: hero-title-in 1.2s var(--ease-out) 0.5s both; }
 @keyframes hero-title-in { from { opacity: 0; } }
 .hero-pause {
