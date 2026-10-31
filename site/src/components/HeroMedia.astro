@@ -89,10 +89,11 @@ const alt = 'The Sublustris Versio module in half-light, seen from the floor aga
       let active = reveal;
       let userPaused = false;
       reveal.preload = 'auto';
-      // The contour lines come up with the module's key light: frames 110-225 of the reveal
-      // (LIGHTS_ON in site/renders/render_hero.py), eased the same way.
+      // The contour lines come up ahead of the module's key light (frames 110-225 of the reveal,
+      // LIGHTS_ON in site/renders/render_hero.py): over frames 15-110, so the lines are there by
+      // the time the module lights (owner, 1 Nov 2026: sooner), eased the same way.
       const band = frame.closest<HTMLElement>('.has-contours');
-      const LIT = [110 / 30, 225 / 30];
+      const LIT = [15 / 30, 110 / 30];
       const track = () => {
         if (root.classList.contains('hero-lit')) return;
         const k = Math.min(1, Math.max(0, (reveal.currentTime - LIT[0]) / (LIT[1] - LIT[0])));
