@@ -38,14 +38,14 @@ const TYPE = [
   { cls: 'lede', token: '--fs-lede', range: '18 → 24 px', meta: 'Light 300 · section intros', sample: 'Dimly lit, faintly glowing: the half-light of a clouded night.' },
   { cls: '', token: '--fs-body', range: '17 → 22 px', meta: 'Light 300 · line 1.4', sample: 'Past about 3 o’clock DECAY makes the tail endless. It settles at a steady level and ducks a little under new playing, and in PLATE and HALL its notes hold still when you stop.' },
   { cls: 'small', token: '--fs-small', range: '15 → 18 px', meta: 'Light 300 · captions, tile lines', sample: 'Tap to freeze. Hold while frozen to paint what you play into the pad.' },
-  { cls: 'micro', token: '--fs-micro', range: '12 px', meta: 'Paper Mono 400 · labels, values', sample: 'SPACE · PLATE · HALL · MASSIVE' },
+  { cls: 'micro', token: '--fs-micro', range: '12 px', meta: 'Paper Mono 400 · labels, values', sample: 'SPACE · PLATE · HALL · CANYON' },
 ];
 
 const NAV = ['Home', 'Manual', 'Install', 'Presets', 'Changelog', 'FAQ'];
 
 const DIAGRAMS: [DiagramKind, string][] = [
   ['endless-infinity', 'The endless hold'], ['longtail', 'A long tail'], ['freeze', 'Freeze'], ['swell-family', 'BLOOM: a swell'],
-  ['octave', 'SHIMMER: an octave up'], ['tape-head', 'MOTION: tape wobble'], ['spaces', 'PLATE · HALL · MASSIVE'], ['cv-scale', 'CV inputs'],
+  ['octave', 'SHIMMER: an octave up'], ['tape-head', 'MOTION: tape wobble'], ['spaces', 'PLATE · HALL · CANYON'], ['cv-scale', 'CV inputs'],
 ];
 
 // docs/minisite/README.md, "Renders to come".
@@ -160,7 +160,7 @@ const others = (['a', 'b', 'c'] as DirectionId[]).filter((d) => d !== id);
     <div class="st-row"><p class="micro quiet">Dark</p><p class="demo-row"><Button href="#st-buttons" variant="dark">Plugin for macOS (AU/VST3)</Button></p></div>
     <div class="st-row"><p class="micro quiet">Ghost</p><p class="demo-row"><Button href="#st-buttons" variant="ghost">Listen</Button><Button href="#st-buttons" variant="ghost" arrow>Read the manual</Button></p></div>
     <div class="st-row"><p class="micro quiet">Coming soon</p><p class="download"><span class="soon"><Button variant="primary" disabled>Firmware for Versio (.bin)</Button><span class="micro quiet">Coming soon: the link goes live with the first public release.</span></span></p></div>
-    <div class="st-row"><p class="micro quiet">Chips</p><p class="demo-row"><Chip dot>MASSIVE</Chip><Chip>BLOOM</Chip><span class="badge">Pre-release</span></p></div>
+    <div class="st-row"><p class="micro quiet">Chips</p><p class="demo-row"><Chip dot>CANYON</Chip><Chip>BLOOM</Chip><span class="badge">Pre-release</span></p></div>
   </div>
 </section>
 

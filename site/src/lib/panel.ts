@@ -19,6 +19,6 @@ export const KNOBS: Knob[] = [
 // Three-way toggles, the first option up (as printed on the map).
 export interface Switch { key: SwitchKey; name: string; options: string[] }
 export const SWITCHES: Switch[] = [
-  { key: 'space', name: 'SPACE', options: ['PLATE', 'HALL', 'MASSIVE'] },
+  { key: 'space', name: 'SPACE', options: ['PLATE', 'HALL', 'CANYON'] },
   { key: 'onset', name: 'ONSET', options: ['NATURAL', 'BLOOM', 'SHIMMER'] },
 ];

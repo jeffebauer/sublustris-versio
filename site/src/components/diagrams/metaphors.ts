@@ -112,7 +112,7 @@ export function metaphor(kind: MetaphorKind): Shape {
 
     // ---- A long tail ---------------------------------------------------------------
     case 'longtail-rulers': {
-      // Three rulers to one scale: about 30 s (PLATE), 60 s (HALL), 120 s (MASSIVE). Ticks every
+      // Three rulers to one scale: about 30 s (PLATE), 60 s (HALL), 120 s (CANYON). Ticks every
       // 10 s, a taller one every 30 s; faint lines mark 30 s and 60 s down all three.
       const k = 1.2, x0 = 8;
       const ruler = (y: number, secs: number) => {
@@ -121,7 +121,7 @@ export function metaphor(kind: MetaphorKind): Shape {
         return d;
       };
       return {
-        label: 'Long tails to one scale: about 30 seconds in PLATE, 60 in HALL and 120 in MASSIVE.',
+        label: 'Long tails to one scale: about 30 seconds in PLATE, 60 in HALL and 120 in CANYON.',
         faint: [`M${x0 + 30 * k} 4V60`, `M${x0 + 60 * k} 4V60`],
         ink: [ruler(20, 30), ruler(39, 60)],
         hot: [ruler(58, 120)],
@@ -325,23 +325,23 @@ export function metaphor(kind: MetaphorKind): Shape {
     // ---- Three spaces --------------------------------------------------------------------
     case 'spaces-paths': {
       // A sound's path in three spaces: bouncing fast between close walls (PLATE), slower
-      // between far ones (HALL), and in MASSIVE spreading out with nothing to stop it.
+      // between far ones (HALL), and in CANYON spreading out with nothing to stop it.
       const zig = (x0: number, x1: number, yA: number, yB: number, n: number) => {
         const pts: Pt[] = [];
         for (let i = 0; i <= n; i++) pts.push([x0 + ((x1 - x0) * i) / n, i % 2 ? yA : yB]);
         return line(pts);
       };
       return {
-        label: 'Three spaces as sound paths: dense bounces between close walls in PLATE, slower ones in HALL, and in MASSIVE no walls at all.',
+        label: 'Three spaces as sound paths: dense bounces between close walls in PLATE, slower ones in HALL, and in CANYON no walls at all.',
         ink: ['M6 25H38M6 43H38', 'M46 10H98M46 58H98', 'M104 58H156'],
         hot: [zig(6, 38, 25, 43, 8), zig(46, 98, 10, 58, 4), 'M106 58L156 6M106 58L156 26M106 58L156 44'],
       };
     }
     case 'spaces-nested': {
-      // Three rooms around one floor: a small one inside a bigger one, inside MASSIVE, whose
+      // Three rooms around one floor: a small one inside a bigger one, inside CANYON, whose
       // walls rise past the frame and fade out with no roof.
       return {
-        label: 'Three spaces nested: a small PLATE inside a bigger HALL, inside MASSIVE, whose walls rise and fade with no roof.',
+        label: 'Three spaces nested: a small PLATE inside a bigger HALL, inside CANYON, whose walls rise and fade with no roof.',
         faint: ['M10 26V2', 'M150 26V2'],
         ink: ['M68 58V44H92V58', 'M40 58V22H120V58'],
         hot: ['M2 58H158', 'M10 58V26', 'M150 58V26'],
@@ -404,9 +404,9 @@ export function metaphor(kind: MetaphorKind): Shape {
     // ---- Spaces, second round: real spaces at growing scale (owner, 29 Oct) ------------
     case 'spaces-plans': {
       // Floor plans to one scale: a small chamber, a long hall with a stage at its end, and
-      // MASSIVE, whose walls open out and run off the drawing.
+      // CANYON, whose walls open out and run off the drawing.
       return {
-        label: 'Three spaces as floor plans to one scale: a small chamber for PLATE, a long hall with a stage for HALL, and MASSIVE, whose walls open out and run off the page.',
+        label: 'Three spaces as floor plans to one scale: a small chamber for PLATE, a long hall with a stage for HALL, and CANYON, whose walls open out and run off the page.',
         faint: ['M4 61H24M4 59V63M24 59V63'],
         ink: [rect(6, 40, 22, 56), rect(30, 28, 104, 56), 'M92 34H101V50H92Z'],
         hot: ['M160 4L112 22V46L160 60'],
@@ -414,18 +414,18 @@ export function metaphor(kind: MetaphorKind): Shape {
     }
     case 'spaces-figure': {
       // Sections with the same small listener in each: a low chamber, a vaulted hall, and
-      // MASSIVE: a floor to the edge, one wall fading up into open air.
+      // CANYON: a floor to the edge, one wall fading up into open air.
       const person = (x: number, b = 58) =>
         [circle(x, b - 11.2, 1.8), `M${x} ${b - 9.2}V${b - 4}`, `M${x - 2.6} ${b}L${x} ${b - 4}L${x + 2.6} ${b}`, `M${x - 2.6} ${b - 5.2}L${x} ${b - 7.8}L${x + 2.6} ${b - 5.2}`].join('');
       return {
-        label: 'Three spaces in section, each with the same small listener: a low chamber, a tall vaulted hall, and MASSIVE, open to the sky with no far wall.',
+        label: 'Three spaces in section, each with the same small listener: a low chamber, a tall vaulted hall, and CANYON, open to the sky with no far wall.',
         faint: ['M108 30V2'],
         ink: ['M4 58V40H30V58H4', 'M38 58V30A40 40 0 0 1 98 30V58H38', person(17), person(68), person(132)],
         hot: ['M104 58H160', 'M108 58V30'],
       };
     }
     case 'spaces-depth': {
-      // Rooms in one-point perspective: a shallow one, a deep one, and MASSIVE with no walls:
+      // Rooms in one-point perspective: a shallow one, a deep one, and CANYON with no walls:
       // open ground running to a horizon (an open box would draw an X).
       const box = (x0: number, x1: number, y0: number, y1: number, d: number) => {
         const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
@@ -434,7 +434,7 @@ export function metaphor(kind: MetaphorKind): Shape {
         return [rect(bx0, by0, bx1, by1), line([[x0, y0], [bx0, by0]]), line([[x1, y0], [bx1, by0]]), line([[x0, y1], [bx0, by1]]), line([[x1, y1], [bx1, by1]])];
       };
       return {
-        label: 'Three spaces in perspective: a shallow room for PLATE, a deep one for HALL, and MASSIVE, no walls at all, open ground running to the horizon.',
+        label: 'Three spaces in perspective: a shallow room for PLATE, a deep one for HALL, and CANYON, no walls at all, open ground running to the horizon.',
         faint: [rect(4, 22, 38, 56), rect(46, 10, 100, 58), 'M106 62L129.8 33.8M120 62L131.4 33.8M146 62L134.6 33.8M160 62L136.2 33.8', 'M106.0 62.0H160.0M118.2 47.6H147.8M124.9 39.6H141.1'],
         ink: [...box(4, 38, 22, 56, 0.3), ...box(46, 100, 10, 58, 0.72)],
         hot: ['M106 30H160'],
@@ -442,7 +442,7 @@ export function metaphor(kind: MetaphorKind): Shape {
     }
     case 'spaces-rays': {
       // Plans with one sound ray each, from a source: many short bounces in the chamber,
-      // fewer, longer ones in the hall; in MASSIVE the ray leaves through walls that fade.
+      // fewer, longer ones in the hall; in CANYON the ray leaves through walls that fade.
       const bounce = (x0: number, y0: number, x1: number, y1: number, sx: number, sy: number, dx: number, dy: number, len: number) => {
         const pts: Pt[] = [[sx, sy]];
         let x = sx, y = sy, left = len;
@@ -458,7 +458,7 @@ export function metaphor(kind: MetaphorKind): Shape {
         return line(pts);
       };
       return {
-        label: 'Three spaces as a sound ray in each: many short bounces in a small PLATE, fewer, longer ones in HALL, and in MASSIVE it travels off through walls that fade.',
+        label: 'Three spaces as a sound ray in each: many short bounces in a small PLATE, fewer, longer ones in HALL, and in CANYON it travels off through walls that fade.',
         faint: ['M112 6H136', 'M112 58H136', 'M112 6V58'],
         ink: [rect(4, 36, 26, 58), rect(34, 18, 96, 58), dot(9, 52), dot(42, 50), dot(120, 46)],
         hot: [bounce(4, 36, 26, 58, 9, 52, 1, -1.7, 120), bounce(34, 18, 96, 58, 42, 50, 1, -0.42, 230), 'M120 46L160 22'],
@@ -547,14 +547,14 @@ export const CONCEPTS: Concept[] = [
     { kind: 'tape-head', caption: 'Tape over a head', risk: 'the head is an arched block, which can read as a door, a tombstone or a letterbox.' },
     { kind: 'tape-ticks', caption: 'Time marks stretching', risk: 'two rows of ticks can read as a barcode or a comb.' },
   ] },
-  { id: 'spaces', name: 'PLATE · HALL · MASSIVE', picked: 1, options: [
+  { id: 'spaces', name: 'PLATE · HALL · CANYON', picked: 1, options: [
     { kind: 'spaces', caption: 'Today: three rooms in a row' },
     { kind: 'spaces-paths', caption: 'Sound paths bouncing' },
     { kind: 'spaces-nested', caption: 'Rooms inside rooms' },
     { kind: 'spaces-forms', caption: 'Plate, hall, horizon', risk: 'the hung plate can read as a picture on a wall, the hall as a doorway.' },
-    { kind: 'spaces-plans', caption: 'Floor plans, one scale', risk: 'MASSIVE’s fan-shaped plan can read as a megaphone or a funnel.' },
+    { kind: 'spaces-plans', caption: 'Floor plans, one scale', risk: 'CANYON’s fan-shaped plan can read as a megaphone or a funnel.' },
     { kind: 'spaces-figure', caption: 'Sections with a listener' },
-    { kind: 'spaces-depth', caption: 'Rooms in perspective', risk: 'PLATE’s shallow box can read as a picture frame, and MASSIVE’s open ground as a road.' },
+    { kind: 'spaces-depth', caption: 'Rooms in perspective', risk: 'PLATE’s shallow box can read as a picture frame, and CANYON’s open ground as a road.' },
     { kind: 'spaces-rays', caption: 'A sound ray in each' },
   ] },
   { id: 'cv', name: 'CV inputs', picked: 3, options: [

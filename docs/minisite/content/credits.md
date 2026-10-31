@@ -11,7 +11,7 @@ order: 7
 
 I'm [Jesse Bauer](https://jessebauer.xyz), a designer, and I designed Sublustris Versio by ear. I set the musical goals and made every sound decision. Claude (Anthropic's AI) wrote the DSP, the firmware and the tools.
 
-The spaces follow published designs. PLATE follows Jon Dattorro's plate (1997). HALL and MASSIVE are feedback delay networks after Jean-Marc Jot: eight delay lines feeding back into each other through a mixing matrix. Every line moves a little, all the time, as David Griesinger did in the Lexicon 224, so long tails don't ring metallic. Each was refined against the literature and against recordings of reverbs I play. I used those recordings for listening and measurement only, and none of them is in Sublustris or on this site.
+The spaces follow published designs. PLATE follows Jon Dattorro's plate (1997). HALL and CANYON are feedback delay networks after Jean-Marc Jot: eight delay lines feeding back into each other through a mixing matrix. Every line moves a little, all the time, as David Griesinger did in the Lexicon 224, so long tails don't ring metallic. Each was refined against the literature and against recordings of reverbs I play. I used those recordings for listening and measurement only, and none of them is in Sublustris or on this site.
 
 I heard each change before it shipped. Every candidate sound became a listening page next to the version before it, usually level-matched, and I picked. More than thirty of those decisions are written up with their reasons in the source repository.
 

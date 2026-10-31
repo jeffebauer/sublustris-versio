@@ -41,9 +41,9 @@ Pedals brought it to the floor. The Electro-Harmonix Freeze (2010) holds any not
 
 ## Built for long tails
 
-- **The endless hold.** Turn DECAY past about 3 o'clock and the tail never fades. It settles at a steady level, steps back about 3 dB while you play and comes back when you stop. Stop playing and, in PLATE and HALL, its notes stay notes: they hold still instead of dissolving into haze. MASSIVE keeps its slow wash.
+- **The endless hold.** Turn DECAY past about 3 o'clock and the tail never fades. It settles at a steady level, steps back about 3 dB while you play and comes back when you stop. Stop playing and, in PLATE and HALL, its notes stay notes: they hold still instead of dissolving into haze. CANYON keeps its slow wash.
 - **Freeze and paint.** Tap the button and the tail freezes into a still pad. Play over it, and what you play rings in a quieter layer of its own on top. Hold the button while frozen and a little of that layer is painted into the pad, and stays.
-- **Swells.** Set ONSET to BLOOM and the reverb swells in behind each sound, over anything from a breath to four seconds. MASSIVE swells a little on its own.
+- **Swells.** Set ONSET to BLOOM and the reverb swells in behind each sound, over anything from a breath to four seconds. CANYON swells a little on its own.
 - **An octave of shimmer.** ONSET's SHIMMER sends what you play into the reverb an octave up. It's one steady octave, in tune, that doesn't climb.
 - **Tape on the left, wander on the right.** MOTION's left side bends the whole tail like a tape transport, with crinkle and dropouts near the end. Its right side is a quick, wide wander, every voice of the tail moving on its own.
 
@@ -57,7 +57,7 @@ Sublustris runs behind your Versio's printed panel, so the labels on your module
 
 - **4 LEDs** Meter the input and output; the output pair turns blue while frozen
 - **7 knobs** BLEND, DECAY, TONE, WEAR, SIZE, MOTION, DEPTH
-- **2 switches** SPACE (PLATE · HALL · MASSIVE) and ONSET (NATURAL · BLOOM · SHIMMER)
+- **2 switches** SPACE (PLATE · HALL · CANYON) and ONSET (NATURAL · BLOOM · SHIMMER)
 - **1 button** FREEZE / PAINT
 - **7 CV inputs** One per knob, 0–5 V, added to the knob's position
 - **1 gate input** FREEZE, the same gestures as the button

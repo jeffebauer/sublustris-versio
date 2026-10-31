@@ -17,7 +17,7 @@ No. Sublustris Versio is an independent project, not affiliated with or endorsed
 They're siblings, by the same maker, for the same module. [Resilio](https://resilio-versio.vercel.app) is a dub spring reverb with a tape echo, made for throwing single hits into springs and riding the filter. Sublustris is a big, deep space for long tails: three spaces, endless decay, freeze and paint, shimmer and wear. You can swap between them with the Firmware Swap app.
 
 ### How is it different from Plateau Versio?
-Plateau Versio is another reverb firmware for the same platform, built around a Dattorro plate. Sublustris's PLATE follows the same classic plate design (Dattorro's 1997 paper is public), but none of Plateau's code is in it, and most of Sublustris lives elsewhere: the HALL and MASSIVE spaces, the endless hold, freeze and paint, and WEAR.
+Plateau Versio is another reverb firmware for the same platform, built around a Dattorro plate. Sublustris's PLATE follows the same classic plate design (Dattorro's 1997 paper is public), but none of Plateau's code is in it, and most of Sublustris lives elsewhere: the HALL and CANYON spaces, the endless hold, freeze and paint, and WEAR.
 
 <!-- OWNER: check the line about Plateau Versio's character before publishing; describe it only as you know it. -->
 
@@ -28,7 +28,7 @@ The Noise Engineering Versio. All Versio modules share one hardware platform wit
 Yes. You install it with Noise Engineering's own Firmware Swap app, and the same app takes you back to any Noise Engineering firmware. Sublustris doesn't install a bootloader or change anything else on the module. There's one rule: **never connect USB and Eurorack power at the same time.** [Install guide](/install)
 
 ### How hard does it work the chip?
-Hard. A reverb this big is a lot of sums for a small processor, and its busiest moments (a big MASSIVE, frozen, with someone playing over it) take most of what the chip has. Its busiest moments are timed on the module itself, and the sound was fitted to the chip so it doesn't run out. If you ever hear crackle, tell me the settings: that's a bug.
+Hard. A reverb this big is a lot of sums for a small processor, and its busiest moments (a big CANYON, frozen, with someone playing over it) take most of what the chip has. Its busiest moments are timed on the module itself, and the sound was fitted to the chip so it doesn't run out. If you ever hear crackle, tell me the settings: that's a bug.
 
 <!-- OWNER: say more (a number) only once the release build's CPU is measured for the first public release. The late-block light exists only in a diagnostic build, not the release. -->
 

@@ -8,7 +8,7 @@
       "title": "The endless pad",
       "caption": "One pad chord held into an endless tail, then nothing more is played.",
       "settings": {
-        "SPACE": "MASSIVE",
+        "SPACE": "CANYON",
         "ONSET": "NATURAL",
         "BLEND": "3 o'clock (the fader's start)",
         "DECAY": "fully right",
@@ -87,7 +87,7 @@
       "title": "Bloom swell",
       "caption": "Single piano notes, each one swelling in slowly behind itself.",
       "settings": {
-        "SPACE": "MASSIVE",
+        "SPACE": "CANYON",
         "ONSET": "BLOOM",
         "BLEND": "1 o'clock (the fader's start)",
         "DECAY": "2 o'clock",
@@ -191,7 +191,7 @@
       "title": "Dark drone, WEAR's whole range",
       "caption": "A low drone into an endless tail while WEAR is turned all the way up and back down: the wash ages, then comes clean.",
       "settings": {
-        "SPACE": "MASSIVE",
+        "SPACE": "CANYON",
         "ONSET": "NATURAL",
         "BLEND": "4 o'clock (the fader's start)",
         "DECAY": "4:30 o'clock",
