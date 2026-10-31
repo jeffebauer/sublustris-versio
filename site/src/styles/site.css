@@ -757,3 +757,11 @@ ul > li::marker { color: var(--signal); }
 .knob-glyph .kg-travel { stroke: var(--signal); stroke-width: 2; }
 .knob-glyph .kg-body { fill: none; stroke: var(--ink-2); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .knob-glyph .kg-pointer { stroke: var(--ink); stroke-width: 1.5; }
+
+/* ---- Paper Mono trial (31 Oct 2026; Base.astro sets data-type from ?type=) ------------------------- */
+/* Paper Mono SV: Paper Mono (OFL, public/type/PaperMono-OFL.txt) with the owner's picks baked in:
+   slashed zero, duospace M W m w, narrow space. */
+html:root[data-type] { --font-mono: "Paper Mono SV", ui-monospace, "SF Mono", Menlo, monospace; }
+html:root[data-type="paper-ui"] :is(.btn, .site-header .nav a, .menu li a, .menu summary, .disclosure summary, .ap-name, .fader-end, .player .ab button) {
+  font-family: var(--font-mono); letter-spacing: 0;
+}
