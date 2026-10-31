@@ -1204,7 +1204,9 @@ def deck_pair(m, xs, y0, z0=DESK_Z):
         c0 = Vector((x - 120 * (1 if x < gx else -1), y0 + A77_D + 2, z0 + 40))
         cable("power_cord", [c0, c0 + Vector((0, 60, -20)), Vector((c0.x, DESK["y1"] - 10, DESK_Z + 4)),
                              Vector((c0.x + 20, DESK["y1"] + 30, DESK_Z - 60)),
-                             Vector((c0.x + 40, DESK["y1"] + 50, 300))], 2.8, m["cable"])
+                             # back along the desk's underside to the wall, behind the tape boxes
+                             Vector((c0.x + 35, WALL_Y - 40, DESK_Z - 90)), Vector((c0.x + 45, WALL_Y - 12, DESK_Z - 200)),
+                             Vector((c0.x + 50, WALL_Y - 10, 120))], 2.8, m["cable"])
     mid = Vector((gx, y0, DESK_Z + A77_H / 2))
     return dict(decks_center=mid, deck_a=a["center"], deck_b=b["center"], heads_a=a["heads"],
                 meters_a=a["meters"], decks_width=(xb - xa) + A77_W, gap_x=gx)
@@ -1757,7 +1759,9 @@ def tape_cross4():
                      Vector((xb - 60, 130 + A77_D, rz + 60))], 2.6, m["cable"])
     for p0 in (W(syn, (gear._px(685), gear.SY_D, 40)), W(echo, (100, gear.EC_D, 30)), W(sh, (300, gear.SH_D, 40))):
         cable("mains", [p0, p0 + Vector((0, 50, -25)), Vector((p0.x, DESK["y1"] - 15, DESK_Z + 4)),
-                        Vector((p0.x + 15, DESK["y1"] + 30, DESK_Z - 60)), Vector((p0.x + 30, DESK["y1"] + 45, 300))],
+                        Vector((p0.x + 15, DESK["y1"] + 30, DESK_Z - 60)), Vector((p0.x + 30, DESK["y1"] + 45, 300)),
+                        Vector((p0.x + 40, DESK["y1"] + 55, 40)), Vector((p0.x + 50, DESK["y1"] + 120, 6)),
+                        Vector((p0.x + 60, WALL_Y - 25, 6)), Vector((p0.x + 60, WALL_Y - 12, 120))],
               2.8, m["cable"])
     dim = float(os.environ.get("IV_STORY_DIM", STORY_DIM))
     # the removed desk lamp's light sat just left of deck A and glared on its left reel (owner,
@@ -1765,9 +1769,11 @@ def tape_cross4():
     bulb = Vector((-1500.0, -500.0, 2200.0))
     room_lights(bulb, A77_W, dim=dim)
     # behind the desk, seen through the knee hole (the lamp's light pooled on bare floor there)
-    combo_amp(m, (230.0, 580.0, 0.0), -18.0)
+    # (owner, 31 Oct: the amp barely read under the desk top; tape boxes in its place)
     lp_crate(m, (-260.0, 560.0, 0.0), 8.0)
     tape_box_stack(m, (-10.0, 640.0, 0.0), 7)
+    tape_box_stack(m, (200.0, 580.0, 0.0), 11, rot_deg=-8.0, seed=21)
+    tape_box_stack(m, (390.0, 620.0, 0.0), 8, rot_deg=6.0, seed=33)
     deck_lights(ref, dim=dim)
     # (the gear's own key light is gone: owner, 31 Oct, it glared in deck A's left reel; the
     # 1970s floor lamp at the right lights the desk instead)
