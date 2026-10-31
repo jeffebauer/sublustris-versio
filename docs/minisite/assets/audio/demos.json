@@ -6,7 +6,7 @@
     {
       "id": "01",
       "title": "The endless pad",
-      "caption": "Four slow pad chords into an endless tail, then nothing more is played.",
+      "caption": "One pad chord held into an endless tail, then nothing more is played.",
       "settings": {
         "SPACE": "MASSIVE",
         "ONSET": "NATURAL",
@@ -18,21 +18,21 @@
         "MOTION": "noon",
         "DEPTH": "9 o'clock"
       },
-      "transcript": "A soft synth pad plays four chords, A minor, F, D minor and E minor, four seconds each. The reverb swells in under the first chord and never lets go: each chord lands on top of the last one's tail, so they blend into one slow, warm wash. After the last chord is released nothing more is played, and the wash goes on at a steady level, still holding its notes, until the clip fades.",
-      "duration_s": 27.0,
+      "transcript": "A soft synth pad plays one A minor chord, with an added ninth, and holds it for about eight seconds. The reverb swells in under the chord and never lets go. When the chord is released nothing more is played, and the wash goes on at a steady level, still holding the chord's notes, until the clip fades.",
+      "duration_s": 24.0,
       "blend": 0.8,
       "blend_clock": "3",
       "dry": "01-endless-pad-dry.mp3",
       "file": "01-endless-pad-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -8.4,
+      "true_peak_db": -9.2,
       "note": "Pad synthesised in code.",
-      "gain_db": -0.5
+      "gain_db": -0.8
     },
     {
       "id": "02",
       "title": "Freeze, then paint",
-      "caption": "An electric piano chord is frozen into a still pad, a lead plays over it, and its last phrase is painted in.",
+      "caption": "A piano chord is frozen into a still pad, a piano melody plays over it, and its last phrase is painted in.",
       "settings": {
         "SPACE": "HALL",
         "ONSET": "NATURAL",
@@ -45,42 +45,42 @@
         "DEPTH": "9 o'clock",
         "FREEZE / PAINT": "tap at 1.6 s (freeze), held 15.4-20.6 s (paint), tap at 22.5 s (release)"
       },
-      "transcript": "An electric piano plays one D minor ninth chord. A moment later the button is tapped, and the hall freezes the chord into a still pad that holds its level instead of fading. A soft synth lead plays three phrases over the pad, and the pad doesn't take them in. During the last phrase the button is held, and the lead's high A is painted into the pad: from then on the pad carries that note too. A last tap lets the pad go, and it fades away.",
+      "transcript": "A grand piano plays one D minor ninth chord. A moment later the button is tapped, and the hall freezes the chord into a still pad that holds its level instead of fading. The piano plays a slow melody in three phrases over the pad, and the pad doesn't take them in. During the last phrase the button is held, and the melody's long high A is painted into the pad: from then on the pad carries that note too. A last tap lets the pad go, and it fades away.",
       "duration_s": 28.0,
       "blend": 0.6,
       "blend_clock": "1",
       "dry": "02-freeze-paint-dry.mp3",
       "file": "02-freeze-paint-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -8.9,
-      "note": "Electric piano and lead synthesised in code.",
-      "gain_db": 2.0
+      "true_peak_db": -7.3,
+      "note": "Piano: Steinway B from the Versilian Community Sample Library (CC0). Played in code.",
+      "gain_db": 1.4
     },
     {
       "id": "03",
       "title": "Dub techno stabs",
-      "caption": "Minor-ninth stabs on the send over a kick and rimshot; the endless tail ducks under them and fills the gaps.",
+      "caption": "Minor-ninth stabs on the send over a kick and rimshot, in a short, small hall that sits behind the groove.",
       "settings": {
         "SPACE": "HALL",
         "ONSET": "NATURAL",
-        "BLEND": "11 o'clock (the fader's start)",
-        "DECAY": "4 o'clock",
+        "BLEND": "10:30 o'clock (the fader's start)",
+        "DECAY": "10:30 o'clock",
         "TONE": "11:30 o'clock",
         "WEAR": "9 o'clock",
-        "SIZE": "1 o'clock",
+        "SIZE": "10 o'clock",
         "MOTION": "11 o'clock",
         "DEPTH": "10 o'clock"
       },
-      "transcript": "A dub techno groove at 118 bpm: a kick on every beat, a rimshot, a quiet hat, and short C minor ninth chord stabs on the offbeats. Only the stabs go into the reverb. Over the first bars the tail builds into an endless wash that dips a little under each stab and swells back in the gaps, so the stabs stay clear. After eight bars the groove stops, and the wash just holds at a steady level until the clip fades.",
-      "duration_s": 24.0,
-      "blend": 0.4,
-      "blend_clock": "11",
+      "transcript": "A dub techno groove at 118 bpm: a kick on every beat, a rimshot, a quiet hat, and short C minor ninth chord stabs on the offbeats. Only the stabs go into the reverb, a short, small hall: each stab leaves a soft, warm echo of itself that fades in about a bar, behind the drums, the way a reverb send sits in a mix. After eight bars the groove stops and the last tail dies away.",
+      "duration_s": 21.0,
+      "blend": 0.35,
+      "blend_clock": "10:30",
       "dry": "03-dub-stabs-dry.mp3",
       "file": "03-dub-stabs-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -6.1,
+      "true_peak_db": -4.8,
       "note": "Drums: Virtuosity Drums by Versilian Studios and Karoryfer (CC0). Stabs synthesised in code.",
-      "gain_db": 0.0
+      "gain_db": 2.6
     },
     {
       "id": "05",
@@ -97,16 +97,16 @@
         "MOTION": "1 o'clock",
         "DEPTH": "2 o'clock"
       },
-      "transcript": "A piano plays six single notes in A minor, about four seconds apart. Each note is dry and close; its reverb starts almost silent and swells in over the next two or three seconds, so every note blooms in behind itself and joins a long, soft wash.",
+      "transcript": "A grand piano plays six soft single notes in A minor, about four seconds apart. Each note is dry and close; its reverb starts almost silent and swells in over the next two or three seconds, so every note blooms in behind itself and joins a long, soft wash.",
       "duration_s": 27.0,
       "blend": 0.6,
       "blend_clock": "1",
       "dry": "05-bloom-dry.mp3",
       "file": "05-bloom-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -7.5,
-      "note": "Piano synthesised in code.",
-      "gain_db": 1.4
+      "true_peak_db": -7.0,
+      "note": "Piano: Steinway B from the Versilian Community Sample Library (CC0). Played in code.",
+      "gain_db": 2.3
     },
     {
       "id": "06",
@@ -163,7 +163,7 @@
     {
       "id": "08",
       "title": "The tape side of MOTION",
-      "caption": "Electric piano chords with MOTION fully left, the tape side: wow, flutter, crinkle and a few short dropouts.",
+      "caption": "Held poly synth chords with MOTION fully left, the tape side: wow, flutter, crinkle and a few short dropouts.",
       "settings": {
         "SPACE": "HALL",
         "ONSET": "NATURAL",
@@ -175,42 +175,42 @@
         "MOTION": "fully left",
         "DEPTH": "9 o'clock"
       },
-      "transcript": "An electric piano plays held chords, D minor nine, G, C and F, with a few notes between, twice through. With MOTION fully left the whole tail wavers in pitch together, with quick crinkles, and now and then a short dropout dulls it for a moment.",
-      "duration_s": 27.0,
+      "transcript": "A warm analogue-style poly synth, saw waves through a resonant low-pass filter, plays held chords, D minor nine, G minor seven, C nine and F major seven, with a few single notes between, twice through; the last chord rings on. With MOTION fully left the whole tail wavers in pitch together, like a worn tape, with quick crinkles, and now and then a short dropout dulls it for a moment.",
+      "duration_s": 28.0,
       "blend": 0.6,
       "blend_clock": "1",
       "dry": "08-tape-side-dry.mp3",
       "file": "08-tape-side-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -6.8,
-      "note": "Electric piano synthesised in code.",
-      "gain_db": 0.9
+      "true_peak_db": -9.2,
+      "note": "Synth synthesised in code.",
+      "gain_db": -2.3
     },
     {
       "id": "10",
-      "title": "Dark drone, SIZE growing",
-      "caption": "A low drone into an endless tail while SIZE is turned up from 9 o'clock to fully right in four moves.",
+      "title": "Dark drone, WEAR's whole range",
+      "caption": "A low drone into an endless tail while WEAR is turned all the way up and back down: the wash ages, then comes clean.",
       "settings": {
         "SPACE": "MASSIVE",
         "ONSET": "NATURAL",
         "BLEND": "4 o'clock (the fader's start)",
         "DECAY": "4:30 o'clock",
-        "TONE": "9 o'clock",
-        "WEAR": "11 o'clock",
-        "SIZE": "9 → 5 o'clock, in four moves (to 11, 1, 3 and 5 at 4, 8, 12 and 16 s)",
+        "TONE": "10 o'clock",
+        "WEAR": "fully left → fully right (2-14 s), held to 18 s, then back to fully left by 25 s",
+        "SIZE": "noon",
         "MOTION": "10 o'clock",
         "DEPTH": "11 o'clock"
       },
-      "transcript": "A low drone on D, with its fifth and octave, swells in and holds, then fades out at about 21 seconds. The reverb is endless, so the wash goes on after the drone stops. SIZE is turned up in four moves, at 4, 8, 12 and 16 seconds, and each time the space settles bigger: the low mids thin out and the deepest lows grow, while the level stays the same.",
+      "transcript": "A low, dark drone in D minor swells in and holds, then fades out at about 24 seconds; the reverb is endless, so the wash goes on. WEAR starts fully left, and the tail is clean and smooth. Over twelve seconds it is turned all the way up, and the wash ages as it goes: a warm tape thickness and a soft breath first, then grit and grain over the top, and near fully right the hazy edge of an old radio. The lows stay where they are. It holds there for a few seconds, then WEAR is turned back down and the wash comes clean again.",
       "duration_s": 28.0,
       "blend": 0.9,
       "blend_clock": "4",
       "dry": "10-dark-drone-dry.mp3",
       "file": "10-dark-drone-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -8.3,
+      "true_peak_db": -9.9,
       "note": "Drone synthesised in code.",
-      "gain_db": 0.8
+      "gain_db": 0.5
     }
   ]
 }

@@ -31,10 +31,11 @@ These are the reverbs whose character shaped Sublustris, named only to say where
 
 ## The demos
 
-Every clip on this site is Sublustris itself, rendered offline by its own renderer, with a dry and a wet version so you can blend between them. Most parts are synthesised in code: the pad, the electric piano, the leads, the piano, the chord stabs and the drone. Two use free, CC0 samples:
+Every clip on this site is Sublustris itself, rendered offline by its own renderer, with a dry and a wet version so you can blend between them. Most parts are synthesised in code: the pad, the leads, the poly synth, the chord stabs and the drone. The rest use free, CC0 samples:
 
 - Drums from [Virtuosity Drums](https://github.com/sfzinstruments/virtuosity_drums) by Versilian Studios and Karoryfer.
 - [Emilyguitar](https://github.com/sfzinstruments/karoryfer.emilyguitar) by Karoryfer.
+- The Steinway B grand piano from the [Versilian Community Sample Library](https://github.com/sgossner/VCSL) by Versilian Studios.
 
 There are no recordings of other reverbs.
 

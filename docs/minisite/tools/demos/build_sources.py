@@ -8,10 +8,16 @@ send <id>_send.wav (only the stabs, at their level in the mix: the reverb hears 
 the listener's dry is the whole groove).
 
 Material, all publishable (CLAUDE.md, the brief):
-  synthesised here    the pad, the electric piano, the leads, the piano, the drone, the stabs
+  synthesised here    the pad, the lead (06), the poly synth (08), the drone, the stabs
   CC0 samples         Virtuosity Drums (kick, rimshot, closed hat) and Karoryfer's
                       Emilyguitar, from Resilio Versio's test_audio/demo_sources/cc0
-                      (never in either repo; Resilio's fetch_samples.py fetches them)
+                      (never in either repo; Resilio's fetch_samples.py fetches them);
+                      the Versilian Community Sample Library's Steinway B grand (VCSL,
+                      CC0; https://github.com/sgossner/VCSL, "Chordophones/Zithers/Grand
+                      Piano, Steinway B/Sus", close mic, layers vl2 and vl3) for 02 and 05,
+                      in test_audio/demo_sources/vcsl_steinway (gitignored; $IV_PIANO_DIR
+                      overrides). Fetch: the JHPiano_Sus_Close_<note>_vl{2,3}_rr1.wav files
+                      for D3 G#3 A#3 C4 E4 F#4 G#4 A#4 C5 D5 E5 F#5 G#5 A#5 from the repo.
 The sampler and synth helpers (Bank, Kit, Mix, saw, svf_lp, adsr, detuned, piano_note)
 are tools/make_material.py's.
 """
@@ -28,6 +34,7 @@ import make_material as mm  # noqa: E402
 
 SR = mm.SR
 CC0 = Path.home() / "Documents" / "Sites" / "resilio-versio" / "test_audio" / "demo_sources" / "cc0"
+PIANO = Path(__import__("os").environ.get("IV_PIANO_DIR", ROOT / "test_audio" / "demo_sources" / "vcsl_steinway"))
 LEAD = 0.25  # every source starts after this much silence
 midi, hz, db, hum, vary = mm.midi, mm.hz, mm.db, mm.hum, mm.vary
 
@@ -65,24 +72,38 @@ def stereo(y: np.ndarray, width_ms: float = 9.0) -> np.ndarray:
     return np.stack([y, np.roll(y, int(width_ms / 1000 * SR))], axis=1)
 
 
+class Piano:
+    """VCSL's Steinway B (sustain-pedal samples, close mic, sampled every whole tone): the
+    nearest sampled note, resampled 44.1 -> 48 kHz and repitched in one step, stereo, at the
+    library's own gain (its layers are normalised to line up), a damper fade at the release."""
+
+    def __init__(self, folder: Path = PIANO):
+        self.by: dict[tuple[int, int], Path] = {}
+        for p in folder.glob("JHPiano_Sus_Close_*_rr1.wav"):
+            g = re.match(r"JHPiano_Sus_Close_([A-G])(#?)(-?\d)_vl(\d)_", p.name)
+            if g:
+                m = 12 * (int(g.group(3)) + 1) + mm.PC[g.group(1).lower()] + (g.group(2) == "#")
+                self.by[(m, int(g.group(4)))] = p
+        if not self.by:
+            raise SystemExit(f"no piano samples in {folder}")
+
+    def note(self, m: int, layer: int, hold: float, damper: float = 0.35) -> np.ndarray:
+        have = [k for k, l in self.by if l == layer]
+        m0 = min(have, key=lambda k: (abs(k - m), k < m))
+        x, sr = sf.read(str(self.by[(m0, layer)]), always_2d=True)
+        a = np.abs(x).max(axis=1)
+        x = x[max(0, int(np.argmax(a > 0.02 * a.max())) - int(0.002 * sr)):]
+        r = 2 ** ((m - m0) / 12) * sr / SR  # source samples per output sample
+        n = min(int((len(x) - 1) / r), int((hold + damper) * SR))
+        pos = np.arange(n) * r
+        y = np.stack([np.interp(pos, np.arange(len(x)), x[:, c]) for c in range(2)], axis=1)
+        h = int(hold * SR)
+        if h < n:  # the damper: a quick, smooth fall rather than a cut
+            y[h:] *= np.exp(-np.linspace(0, 6.91, n - h))[:, None]
+        return y
+
+
 # ---- Synth voices -----------------------------------------------------------------
-
-def ep_note(m: float, vel: float, hold: float) -> np.ndarray:
-    """A two-operator FM electric piano: a bell-ish attack (the index falls fast), a soft
-    tine click, a long sine-like body; the damper at release."""
-    f0 = hz(m)
-    t60 = 6.0 * 2 ** (-(m - 48) / 24)
-    n = int((hold + 0.25) * SR)
-    t = np.arange(n) / SR
-    index = (0.4 + 2.2 * vel) * np.exp(-t / 0.18) + 0.25
-    body = np.sin(2 * np.pi * f0 * t + index * np.sin(2 * np.pi * f0 * t))
-    tine = 0.08 * vel * np.sin(2 * np.pi * f0 * 13.9 * t) * np.exp(-t / 0.02)
-    x = (body + tine) * np.exp(-6.91 * t / t60)
-    x[: int(0.002 * SR)] *= np.linspace(0, 1, int(0.002 * SR))
-    rel = int(0.25 * SR)
-    x[-rel:] *= np.exp(-np.linspace(0, 6.91, rel))
-    return x * vel
-
 
 def mono_lead(notes: list[tuple[float, float, str]], spb: float, cutoff: float = 1500.0,
               glide: float = 0.08, vib_after: float = 0.4, saw_share: float = 0.45) -> np.ndarray:
@@ -133,34 +154,36 @@ def mono_lead(notes: list[tuple[float, float, str]], spb: float, cutoff: float =
 # ---- The clips --------------------------------------------------------------------
 
 def clip01(out: Path):
-    """Endless pad: four slow chords (the make_material pad's voicing), then nothing:
-    the tail holds."""
-    chords = [("A2", "E3", "B3", "C4", "G4"), ("F2", "C3", "A3", "E4", "G4"),
-              ("D2", "A2", "F3", "C4", "E4"), ("E2", "B2", "D3", "A3", "E4")]
-    hold = 4.0
-    m = mm.Mix(27.0)
-    for k, ch in enumerate(chords):
-        n = int((hold + 2.5) * SR)
-        x = sum(mm.detuned(midi(c), n, 5, 14) for c in ch) / len(ch)
-        lfo = 1 + 0.25 * np.sin(2 * np.pi * 0.15 * np.arange(n) / SR + k)
-        y = mm.svf_lp(x, 1300 * lfo, 0.8) * mm.adsr(n, 1.5, 1.0, 1.0, 1.0, hold + 0.3)
-        m.add(stereo(y, 11), LEAD + k * hold)
+    """Endless pad: one chord (A minor add 9, the make_material pad's voicing), held for
+    eight seconds, then nothing: the tail holds. (The owner, 31 Oct 2026: "just play a
+    single chord instead of 4".)"""
+    ch = ("A2", "E3", "B3", "C4", "G4")
+    hold = 8.0
+    m = mm.Mix(24.0)
+    n = int((hold + 2.5) * SR)
+    x = sum(mm.detuned(midi(c), n, 5, 14) for c in ch) / len(ch)
+    lfo = 1 + 0.25 * np.sin(2 * np.pi * 0.12 * np.arange(n) / SR)
+    y = mm.svf_lp(x, 1300 * lfo, 0.8) * mm.adsr(n, 1.5, 1.0, 1.0, 1.0, hold + 0.3)
+    m.add(stereo(y, 11), LEAD)
     write(m.buf, out / "01.wav")
 
 
 def clip02(out: Path):
-    """Freeze, then paint: an electric piano chord (D minor 9), then a lead over it in D minor."""
+    """Freeze, then paint, all on the sampled grand (the owner, 31 Oct 2026: a real piano
+    instead of the synth lead): a pedalled D minor 9 chord, softly rolled, then a melody over
+    it in D minor (the old lead's notes)."""
+    pno = Piano()
     m = mm.Mix(28.0)
     for k, nm in enumerate(("D3", "A3", "C4", "E4", "F4")):
-        m.add(ep_note(midi(nm), vary(0.75, 0.05), 3.2), LEAD + k * 0.02, 1.0, -0.3 + 0.15 * k)
+        m.add(pno.note(midi(nm), 2, 3.2, 0.6), LEAD + k * 0.03 + abs(hum(2)), 0.55 * vary(1.0, 0.05))
     spb = 60 / 80
-    t0 = 4.0 / spb  # the lead starts at 4 s
+    t0 = 4.0 / spb  # the melody starts at 4 s
     notes = [(0, 1.5, "A4"), (1.5, 0.5, "C5"), (2, 2, "D5"),
              (6, 1, "F5"), (7, 1, "E5"), (8, 1, "D5"), (9, 3, "C5"),
              (15, 0.5, "A4"), (15.5, 0.5, "C5"), (16, 1, "D5"), (17, 1, "E5"), (18, 4, "A5")]
-    y = mono_lead([(b + t0, l, nm) for b, l, nm in notes], spb, cutoff=1400)
-    m.add(stereo(y, 0.0) * 0.55, 0.0, 1.0)
-    write(m.buf, out / "02.wav")
+    for b, l, nm in notes:  # legato: each note held to the next, the damper falling as it lands
+        m.add(pno.note(midi(nm), 3, l * spb + 0.05), (b + t0) * spb + hum(3), vary(0.9, 0.06))
+    write(limit(m.buf, 3.0), out / "02.wav")
 
 
 def stab_chord(n: int, open_: float) -> np.ndarray:
@@ -170,15 +193,18 @@ def stab_chord(n: int, open_: float) -> np.ndarray:
     return mm.svf_lp(x, cut, 1.1) * mm.adsr(n, 0.003, 0.09, 0.0, 0.05, 0.25)
 
 
+SEND_DB = 9.0
+
+
 def clip03(out: Path):
     """Dub techno at 118 bpm in C minor: kick on every beat, a rimshot and a quiet hat,
     minor-ninth stabs on the offbeats. Only the stabs go to the send. Eight bars, then
-    everything stops and the tail is left."""
+    everything stops and the short tail dies away."""
     vd = CC0 / "virtuosity"
     kit = mm.Kit({"kick": sorted((vd / "kick").glob("*.flac")), "rim": sorted((vd / "snare_rim").glob("*.flac")),
                   "hh": sorted((vd / "hh").glob("*.flac"))})
     spb, bars = 60 / 118, 8
-    dur = 24.0
+    dur = 21.0
     full, send = mm.Mix(dur), mm.Mix(dur)
     T = lambda bar, b: LEAD + (bar * 4 + b) * spb + hum(2)
     n_stab = int(0.45 * SR)
@@ -197,22 +223,23 @@ def clip03(out: Path):
             send.add(y, t, v, 0.1)
     full.add(kit.hit("kick", 0.8), T(bars, 0), db(-3))  # the downbeat that ends it
     g = write(full.buf, out / "03.wav")
-    # The send pushed 9 dB over the stabs' level in the mix, as a dub engineer rides it: at the
-    # mix's level the stabs reached only about 4 dB over the duck's threshold (-24 dBFS), so the
-    # endless tail hardly ducked. Peaks about -1.7 dBFS into the reverb.
-    write(send.buf, out / "03_send.wav", gain=g * db(9.0))
+    # The send at the stabs' own level in the mix (31 Oct 2026). The first cut pushed it 9 dB
+    # hotter so an endless tail would duck; the owner heard a wall of sound, so the tail is now
+    # short and finite (no duck, render.py) and the send sits where a mix send would.
+    write(send.buf, out / "03_send.wav", gain=g * db(SEND_DB))
 
 
 def clip05(out: Path):
-    """Bloom swell: single piano notes, spaced, in A minor."""
+    """Bloom swell: single notes on the sampled grand (the owner, 31 Oct 2026: a real piano
+    instead of the synthesised one), spaced, in A minor, softly (the vl2 layer)."""
     # 4.2 s apart: BLOOM at DEPTH 2 o'clock takes about 2.5 s to swell, so at 3 s apart (the first
     # draft) each swell peaked just as the next note came and they ran together.
+    pno = Piano()
     m = mm.Mix(27.0)
-    for k, (nm, v) in enumerate((("A3", 0.7), ("E4", 0.65), ("C5", 0.6), ("B4", 0.6),
-                                 ("G4", 0.65), ("A4", 0.6))):
-        x = mm.piano_note(midi(nm), vary(v, 0.04), 2.4)
-        m.add(x, LEAD + k * 4.2 + hum(3), 1.0, 0.5 * (midi(nm) - 64) / 30)
-    write(m.buf, out / "05.wav")
+    for k, (nm, v) in enumerate((("A3", 0.95), ("E4", 0.9), ("C5", 0.85), ("B4", 0.85),
+                                 ("G4", 0.9), ("A4", 0.85))):
+        m.add(pno.note(midi(nm), 2, 2.4, 0.6), LEAD + k * 4.2 + hum(3), vary(v, 0.03))
+    write(limit(m.buf, 2.0), out / "05.wav")
 
 
 def clip06(out: Path):
@@ -252,35 +279,64 @@ def clip07(out: Path):
     write(limit(m.buf, 5.0), out / "07.wav")
 
 
+def poly_note(m: float, n: int, sub: bool) -> np.ndarray:
+    """One voice of a classic subtractive poly: two saws a few cents apart, a square an
+    octave down under the bass note."""
+    f = hz(m)
+    x = 0.5 * (mm.saw(np.full(n, f * 2 ** (6 / 1200)), mm.rng.random())
+               + mm.saw(np.full(n, f * 2 ** (-6 / 1200)), mm.rng.random()))
+    if sub:
+        x += 0.4 * (mm.saw(np.full(n, f / 2)) - mm.saw(np.full(n, f / 2), 0.5))
+    return x
+
+
+def poly_chord(notes: tuple[str, ...], hold: float, open_: float = 1.0) -> np.ndarray:
+    """A chord on the poly synth: the voices through one resonant low-pass (two 2-pole
+    stages, the first resonant: a 24 dB slope), the filter opened by its own envelope
+    (quick attack, a slow fall to a warm sustain), a soft amp envelope."""
+    n = int((hold + 0.9) * SR)
+    ms = sorted(midi(c) for c in notes)
+    x = sum(poly_note(mv, n, k == 0 and len(ms) > 1) for k, mv in enumerate(ms)) / np.sqrt(len(ms))
+    fenv = mm.adsr(n, 0.015, 0.9, 0.35, 0.5, hold)
+    cut = 420 + (1600 + 900 * open_) * fenv
+    y = mm.svf_lp(mm.svf_lp(x, cut, 1.8), cut, 0.7)
+    return y * mm.adsr(n, 0.03, 0.6, 0.8, 0.5, hold)
+
+
 def clip08(out: Path):
-    """Tape side: electric piano chords, held and lightly rolled, with a few notes between
-    (the make_material keys part, played on the FM piano), twice through."""
-    spb = 60 / 84
-    chords = [(0, 3, ("D3", "F3", "A3", "C4", "E4")), (4, 3, ("G2", "F3", "Bb3", "D4")),
-              (8, 3, ("C3", "E3", "G3", "Bb3", "D4")), (12, 3, ("F2", "E3", "A3", "C4", "E4"))]
-    fills = [(3.0, 0.5, "A4"), (3.5, 0.5, "G4"), (7.0, 1, "F4"), (11.0, 0.5, "E4"), (11.5, 0.5, "D4")]
-    m = mm.Mix(27.0)
+    """Tape side: held chords on a classic subtractive poly synth (the owner, 31 Oct 2026:
+    "a more traditional subtractive synth sound" instead of the electric piano), D minor 9,
+    G minor 7, C 9, F major 7, twice through at 80 bpm, a few single notes between; the
+    last chord held long. Sustained, so MOTION's wow and flutter have notes to bend."""
+    spb = 60 / 80
+    chords = [(0, 3.5, ("D3", "F3", "A3", "C4", "E4")), (4, 3.5, ("G2", "F3", "Bb3", "D4")),
+              (8, 3.5, ("C3", "E3", "G3", "Bb3", "D4")), (12, 3.5, ("F2", "E3", "A3", "C4", "E4"))]
+    fills = [(3.0, 1.0, "A4"), (7.0, 1.0, "F4"), (11.0, 0.5, "E4"), (11.5, 0.5, "D4")]
+    m = mm.Mix(28.0)
     for rep in range(2):
         o = rep * 16
-        for b, l, ch in chords:
-            for k, nm in enumerate(ch):
-                m.add(ep_note(midi(nm), vary(0.7, 0.05), l * spb), LEAD + (o + b) * spb + k * 0.018 + hum(), 1.0,
-                      -0.3 + 0.15 * k)
-        for b, l, nm in fills if rep == 0 else fills[:3]:
-            m.add(ep_note(midi(nm), vary(0.6, 0.05), l * spb), LEAD + (o + b) * spb + hum(), 1.0, 0.2)
+        for k, (b, l, ch) in enumerate(chords):
+            last = rep == 1 and k == 3
+            y = poly_chord(ch, (6.0 if last else l) * spb, 0.6 + 0.4 * ((k + rep) % 2))
+            m.add(stereo(y, 7), LEAD + (o + b) * spb + hum(), vary(1.0, 0.04))
+        for b, l, nm in fills if rep == 0 else fills[:2]:
+            m.add(stereo(poly_chord((nm,), l * spb * 0.9, 0.5), 7) * 0.5, LEAD + (o + b) * spb + hum(), 1.0)
     write(m.buf, out / "08.wav")
 
 
 def clip10(out: Path):
-    """Dark drone: a low D, its fifth and octave, slowly swelling and slowly opening, then let go."""
+    """Dark drone: D minor in the low register (D1 under D2, A2, D3 and F3), slowly swelling and
+    slowly opening, held while WEAR is swept (render.py), then let go. Voiced higher and opened
+    further than the first cut (D1, A1, D2 under 440 Hz): WEAR's stages work in the mids and
+    highs, and a drone with nothing there hid them (31 Oct 2026, measure.py m10)."""
     dur = 28.0
     n = int(dur * SR)
     t = np.arange(n) / SR
-    x = (mm.detuned(midi("D1"), n, 3, 7) + 0.8 * mm.detuned(midi("A1"), n, 3, 9)
-         + 0.6 * mm.detuned(midi("D2"), n, 3, 11)) / 2.4
-    cut = 180 + 260 * (0.5 - 0.5 * np.cos(np.pi * np.clip(t / 18, 0, 1))) * (1 + 0.15 * np.sin(2 * np.pi * 0.07 * t))
+    x = (0.6 * mm.detuned(midi("D1"), n, 3, 7) + mm.detuned(midi("D2"), n, 3, 9) + 0.8 * mm.detuned(midi("A2"), n, 3, 11)
+         + 0.6 * mm.detuned(midi("D3"), n, 3, 12) + 0.4 * mm.detuned(midi("F3"), n, 3, 13)) / 2.4
+    cut = 400 + 1400 * (0.5 - 0.5 * np.cos(np.pi * np.clip(t / 18, 0, 1))) * (1 + 0.15 * np.sin(2 * np.pi * 0.07 * t))
     y = mm.svf_lp(x, cut, 0.9)
-    env = np.clip((t - LEAD) / 3.0, 0, 1) * np.clip((21.0 - t) / 3.0, 0, 1)
+    env = np.clip((t - LEAD) / 3.0, 0, 1) * np.clip((24.0 - t) / 3.0, 0, 1)
     write(stereo(y * env, 13), out / "10.wav")
 
 

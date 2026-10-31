@@ -59,38 +59,37 @@ ramp = lambda k, *pts: [{"t": t, "key": k, "value": v} for t, v in pts]
 
 CLIPS = {
     "01": dict(
-        slug="endless-pad", title="The endless pad", blend="3", dur=27.0,
+        slug="endless-pad", title="The endless pad", blend="3", dur=24.0,
         set=dict(space="MASSIVE", attack="NATURAL", decay="5", tone="11", era="7", size="2", drift="12", time="9"),
         auto=None,
-        caption="Four slow pad chords into an endless tail, then nothing more is played.",
-        transcript="A soft synth pad plays four chords, A minor, F, D minor and E minor, four seconds each. "
-                   "The reverb swells in under the first chord and never lets go: each chord lands on top of the "
-                   "last one's tail, so they blend into one slow, warm wash. After the last chord is released "
-                   "nothing more is played, and the wash goes on at a steady level, still holding its notes, "
-                   "until the clip fades.",
+        caption="One pad chord held into an endless tail, then nothing more is played.",
+        transcript="A soft synth pad plays one A minor chord, with an added ninth, and holds it for about eight "
+                   "seconds. The reverb swells in under the chord and never lets go. When the chord is released "
+                   "nothing more is played, and the wash goes on at a steady level, still holding the chord's "
+                   "notes, until the clip fades.",
         notes="Pad synthesised in code."),
     "02": dict(
         slug="freeze-paint", title="Freeze, then paint", blend="1", dur=28.0,
         set=dict(space="HALL", attack="NATURAL", decay="2:30", tone="12", era="8", size="12", drift="12", time="9"),
         auto={"buttons": [[1.6, 1.7], [15.4, 20.6], [22.5, 22.6]]},
         events={"freeze": 1.6, "paint": 15.4, "paint off": 20.6, "release": 22.5},
-        caption="An electric piano chord is frozen into a still pad, a lead plays over it, and its last phrase is painted in.",
-        transcript="An electric piano plays one D minor ninth chord. A moment later the button is tapped, and the hall freezes the chord into a still pad that holds its level instead of fading. A soft synth lead plays three phrases over the pad, and the pad doesn't take them in. During the last phrase the button is held, and the lead's high A is painted into the pad: from then on the pad carries that note too. A last tap lets the pad go, and it fades away.",
-        notes="Electric piano and lead synthesised in code."),
+        caption="A piano chord is frozen into a still pad, a piano melody plays over it, and its last phrase is painted in.",
+        transcript="A grand piano plays one D minor ninth chord. A moment later the button is tapped, and the hall freezes the chord into a still pad that holds its level instead of fading. The piano plays a slow melody in three phrases over the pad, and the pad doesn't take them in. During the last phrase the button is held, and the melody's long high A is painted into the pad: from then on the pad carries that note too. A last tap lets the pad go, and it fades away.",
+        notes="Piano: Steinway B from the Versilian Community Sample Library (CC0). Played in code."),
     "03": dict(
-        slug="dub-stabs", title="Dub techno stabs", blend="11", dur=24.0, send=True,
-        set=dict(space="HALL", attack="NATURAL", decay="4", tone="11:30", era="9", size="1", drift="11", time="10"),
+        slug="dub-stabs", title="Dub techno stabs", blend="10:30", dur=21.0, send=True,
+        set=dict(space="HALL", attack="NATURAL", decay="10:30", tone="11:30", era="9", size="10", drift="11", time="10"),
         auto=None,
-        caption="Minor-ninth stabs on the send over a kick and rimshot; the endless tail ducks under them and fills the gaps.",
-        transcript="A dub techno groove at 118 bpm: a kick on every beat, a rimshot, a quiet hat, and short C minor ninth chord stabs on the offbeats. Only the stabs go into the reverb. Over the first bars the tail builds into an endless wash that dips a little under each stab and swells back in the gaps, so the stabs stay clear. After eight bars the groove stops, and the wash just holds at a steady level until the clip fades.",
+        caption="Minor-ninth stabs on the send over a kick and rimshot, in a short, small hall that sits behind the groove.",
+        transcript="A dub techno groove at 118 bpm: a kick on every beat, a rimshot, a quiet hat, and short C minor ninth chord stabs on the offbeats. Only the stabs go into the reverb, a short, small hall: each stab leaves a soft, warm echo of itself that fades in about a bar, behind the drums, the way a reverb send sits in a mix. After eight bars the groove stops and the last tail dies away.",
         notes="Drums: Virtuosity Drums by Versilian Studios and Karoryfer (CC0). Stabs synthesised in code."),
     "05": dict(
         slug="bloom", title="Bloom swell", blend="1", dur=27.0,
         set=dict(space="MASSIVE", attack="BLOOM", decay="2", tone="11:30", era="7", size="12", drift="1", time="2"),
         auto=None,
         caption="Single piano notes, each one swelling in slowly behind itself.",
-        transcript="A piano plays six single notes in A minor, about four seconds apart. Each note is dry and close; its reverb starts almost silent and swells in over the next two or three seconds, so every note blooms in behind itself and joins a long, soft wash.",
-        notes="Piano synthesised in code."),
+        transcript="A grand piano plays six soft single notes in A minor, about four seconds apart. Each note is dry and close; its reverb starts almost silent and swells in over the next two or three seconds, so every note blooms in behind itself and joins a long, soft wash.",
+        notes="Piano: Steinway B from the Versilian Community Sample Library (CC0). Played in code."),
     "06": dict(
         slug="shimmer", title="Shimmer melody", blend="1", dur=27.0,
         set=dict(space="HALL", attack="SHIMMER", decay="3", tone="12", era="7", size="2", drift="1:30", time="12"),
@@ -108,26 +107,22 @@ CLIPS = {
         transcript="A clean electric guitar strums seven slow chords in E minor, one every few seconds, while WEAR is turned up steadily from fully left. At the start the reverb is clean. As WEAR comes up, a soft hiss and grain rise into the top of the tail, and its deepest lows thin a little.",
         notes="Guitar: Emilyguitar by Karoryfer (CC0). Played in code."),
     "08": dict(
-        slug="tape-side", title="The tape side of MOTION", blend="1", dur=27.0,
+        slug="tape-side", title="The tape side of MOTION", blend="1", dur=28.0,
         set=dict(space="HALL", attack="NATURAL", decay="2", tone="11", era="9", size="12", drift="7", time="9"),
         auto=None,
-        caption="Electric piano chords with MOTION fully left, the tape side: wow, flutter, crinkle and a few short dropouts.",
-        transcript="An electric piano plays held chords, D minor nine, G, C and F, with a few notes between, twice through. With MOTION fully left the whole tail wavers in pitch together, with quick crinkles, and now and then a short dropout dulls it for a moment.",
-        notes="Electric piano synthesised in code."),
+        caption="Held poly synth chords with MOTION fully left, the tape side: wow, flutter, crinkle and a few short dropouts.",
+        transcript="A warm analogue-style poly synth, saw waves through a resonant low-pass filter, plays held chords, D minor nine, G minor seven, C nine and F major seven, with a few single notes between, twice through; the last chord rings on. With MOTION fully left the whole tail wavers in pitch together, like a worn tape, with quick crinkles, and now and then a short dropout dulls it for a moment.",
+        notes="Synth synthesised in code."),
     "10": dict(
-        slug="dark-drone", title="Dark drone, SIZE growing", blend="4", dur=28.0,
-        set=dict(space="MASSIVE", attack="NATURAL", decay="4:30", tone="9", era="11", size="9", drift="10", time="11"),
-        # SIZE takes a new value once the knob rests (CONTEXT.md, SIZE; Fdn.cpp): a steady 18 s turn
-        # never rests, so nothing changed until it stopped. Turned the way a hand does: four
-        # half-second moves, 9 -> 11 -> 1 -> 3 -> 5, with a rest after each.
-        auto={"breakpoints": ramp("size", (0.0, c2v("9")), (4.0, c2v("9")), (4.5, c2v("11")), (8.0, c2v("11")),
-                                  (8.5, c2v("1")), (12.0, c2v("1")), (12.5, c2v("3")), (16.0, c2v("3")),
-                                  (16.5, c2v("5")))},
-        sweep=("size", 4.0, 17.0, "5"),
-        sweep_text="9 → 5 o'clock, in four moves (to 11, 1, 3 and 5 at 4, 8, 12 and 16 s)",
-        events={"size to 11": 4.5, "size to 1": 8.5, "size to 3": 12.5, "size to 5": 16.5},
-        caption="A low drone into an endless tail while SIZE is turned up from 9 o'clock to fully right in four moves.",
-        transcript="A low drone on D, with its fifth and octave, swells in and holds, then fades out at about 21 seconds. The reverb is endless, so the wash goes on after the drone stops. SIZE is turned up in four moves, at 4, 8, 12 and 16 seconds, and each time the space settles bigger: the low mids thin out and the deepest lows grow, while the level stays the same.",
+        slug="dark-drone", title="Dark drone, WEAR's whole range", blend="4", dur=28.0,
+        set=dict(space="MASSIVE", attack="NATURAL", decay="4:30", tone="10", era="7", size="12", drift="10", time="11"),
+        # WEAR acts on the wet straight away (the wear chain sits after the tank), so a steady turn works,
+        # unlike SIZE. The whole range and back: clean, aged to fully right, then clean again.
+        auto={"breakpoints": ramp("era", (0.0, 0.0), (2.0, 0.0), (14.0, 1.0), (18.0, 1.0), (25.0, 0.0))},
+        sweep=("era", 2.0, 25.0, "7"),
+        sweep_text="fully left → fully right (2-14 s), held to 18 s, then back to fully left by 25 s",
+        caption="A low drone into an endless tail while WEAR is turned all the way up and back down: the wash ages, then comes clean.",
+        transcript="A low, dark drone in D minor swells in and holds, then fades out at about 24 seconds; the reverb is endless, so the wash goes on. WEAR starts fully left, and the tail is clean and smooth. Over twelve seconds it is turned all the way up, and the wash ages as it goes: a warm tape thickness and a soft breath first, then grit and grain over the top, and near fully right the hazy edge of an old radio. The lows stay where they are. It holds there for a few seconds, then WEAR is turned back down and the wash comes clean again.",
         notes="Drone synthesised in code."),
 }
 ORDER = ["01", "02", "03", "05", "06", "07", "08", "10"]
