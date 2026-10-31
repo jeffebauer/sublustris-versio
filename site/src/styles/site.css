@@ -178,7 +178,7 @@ html.hero-film .hero-title { animation: hero-title-in 1.2s var(--ease-out) 0.5s 
   padding-top: clamp(1.5rem, 1rem + 2vw, 3rem);
   --tagline-fs: clamp(1.375rem, 1rem + 1.5vw, 2.25rem);
 }
-.hero-platform { color: var(--on-dark-2); font-size: var(--fs-body); }   /* under the lede: what it runs on */
+.hero-platform { color: var(--on-dark-2); font-size: var(--fs-body); padding-top: 0.5rem; }   /* under the buttons: what it runs on (owner, 31 Oct 2026) */
 .hero-tagline {
   max-width: 26em; color: var(--ink-2);
   font-weight: var(--wt-light); font-size: var(--tagline-fs); line-height: 1.2; letter-spacing: -0.005em;
