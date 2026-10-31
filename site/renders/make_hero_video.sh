@@ -11,7 +11,7 @@
 # Ported from Resilio Versio's make_hero_video.sh (the owner's MIT code).
 set -e
 F="$1"; O="$2"; MODE="$3"
-SH="unsharp=5:5:0.6:5:5:0"   # light luma unsharp mask: the panel print is small
+SH="unsharp=5:5:0.4:5:5:0"   # light luma unsharp mask: the panel print is small (0.6 sharpened the edge highlights into a shimmer)
 mkdir -p "$O"
 SUF=""; CRF=30
 [ "$MODE" = "preview" ] && SUF="-preview" && CRF=36
