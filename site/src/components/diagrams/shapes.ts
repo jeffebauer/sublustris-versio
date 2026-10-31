@@ -170,10 +170,10 @@ export function shape(kind: DiagramKind): Shape {
       };
     }
     case 'spaces': {
-      // Three rooms on one floor: a small PLATE, a bigger HALL, and MASSIVE, whose far walls
+      // Three rooms on one floor: a small PLATE, a bigger HALL, and CANYON, whose far walls
       // are faint, as it runs on past them.
       return {
-        label: 'Three spaces: a small PLATE, a bigger HALL, and MASSIVE, which runs on past its walls.',
+        label: 'Three spaces: a small PLATE, a bigger HALL, and CANYON, which runs on past its walls.',
         faint: ['M56 4H156', 'M156 4V58'],
         ink: ['M6 58V44H20V58', 'M26 58V28H50V58'],
         hot: ['M56 58V4', 'M4 58H156'],

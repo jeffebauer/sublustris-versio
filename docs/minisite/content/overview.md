@@ -25,11 +25,6 @@ I wanted a reverb I could live inside. Tails long enough for dub techno, ambient
 
 ## What it sounds like
 
-- **Warm and lush, never metallic.** Every part of the reverb moves a little, all the time, so a long tail doesn't ring like a can. In HALL and MASSIVE the bass sits still underneath while everything above it moves.
-- **From a room to minutes long, then endless.** DECAY runs from a short room to tails of half a minute in PLATE, a minute in HALL and two in MASSIVE. Past about 3 o'clock the tail is endless.
-- **Three spaces.** A dense PLATE, a big HALL, and MASSIVE, which swells in slowly and grows into a boundless wash.
-- **Tape-style wear.** One WEAR knob brings in tape saturation, a bucket-brigade delay's breathing, bit grit and a radio's narrow band, all at once. MOTION adds tape wow and flutter, or a quick, shimmering wander.
-
 ## The endless hold
 
 Infinite reverb began as a trick with two tape machines.
@@ -46,9 +41,9 @@ Pedals brought it to the floor. The Electro-Harmonix Freeze (2010) holds any not
 
 ## Built for long tails
 
-- **The endless hold.** Turn DECAY past about 3 o'clock and the tail never fades. It settles at a steady level, steps back about 3 dB while you play and comes back when you stop. Stop playing and, in PLATE and HALL, its notes stay notes: they hold still instead of dissolving into haze. MASSIVE keeps its slow wash.
+- **The endless hold.** Turn DECAY past about 3 o'clock and the tail never fades. It settles at a steady level, steps back about 3 dB while you play and comes back when you stop. Stop playing and, in PLATE and HALL, its notes stay notes: they hold still instead of dissolving into haze. CANYON keeps its slow wash.
 - **Freeze and paint.** Tap the button and the tail freezes into a still pad. Play over it, and what you play rings in a quieter layer of its own on top. Hold the button while frozen and a little of that layer is painted into the pad, and stays.
-- **Swells.** Set ONSET to BLOOM and the reverb swells in behind each sound, over anything from a breath to four seconds. MASSIVE swells a little on its own.
+- **Swells.** Set ONSET to BLOOM and the reverb swells in behind each sound, over anything from a breath to four seconds. CANYON swells a little on its own.
 - **An octave of shimmer.** ONSET's SHIMMER sends what you play into the reverb an octave up. It's one steady octave, in tune, that doesn't climb.
 - **Tape on the left, wander on the right.** MOTION's left side bends the whole tail like a tape transport, with crinkle and dropouts near the end. Its right side is a quick, wide wander, every voice of the tail moving on its own.
 
@@ -62,7 +57,7 @@ Sublustris runs behind your Versio's printed panel, so the labels on your module
 
 - **4 LEDs** Meter the input and output; the output pair turns blue while frozen
 - **7 knobs** BLEND, DECAY, TONE, WEAR, SIZE, MOTION, DEPTH
-- **2 switches** SPACE (PLATE · HALL · MASSIVE) and ONSET (NATURAL · BLOOM · SHIMMER)
+- **2 switches** SPACE (PLATE · HALL · CANYON) and ONSET (NATURAL · BLOOM · SHIMMER)
 - **1 button** FREEZE / PAINT
 - **7 CV inputs** One per knob, 0–5 V, added to the knob's position
 - **1 gate input** FREEZE, the same gestures as the button
@@ -87,7 +82,7 @@ If something sounds wrong, or you want a sound it can't make yet, tell me. Ideas
 - **Tell me.** Open a GitHub issue with an idea for the sound, or a bug.
 - **Hear it change.** I try ideas by ear, and credit the ones that ship.
 
-## Its sibling
+## Meet Resilio Versio
 
 Sublustris has a sibling, [Resilio Versio](https://resilio-versio.vercel.app): a dub spring reverb and tape echo for the same module. Resilio is for throwing hits into springs. Sublustris is for long, deep spaces.
 

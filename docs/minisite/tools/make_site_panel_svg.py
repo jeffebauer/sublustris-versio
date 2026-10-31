@@ -25,7 +25,7 @@ PANEL_H = 128.5  # mm (3U)
 # SPEC §3: P1-P7 in reading order; SW1 (top) is SPACE, SW2 (bottom) ONSET.
 KNOBS = {"P1": "BLEND", "P2": "DECAY", "P3": "TONE", "P4": "WEAR",
          "P5": "SIZE", "P6": "MOTION", "P7": "DEPTH"}
-TOGGLES = {"SW1": ("SPACE", "PLATE · HALL · MASSIVE"), "SW2": ("ONSET", "NATURAL · BLOOM · SHIMMER")}
+TOGGLES = {"SW1": ("SPACE", "PLATE · HALL · CANYON"), "SW2": ("ONSET", "NATURAL · BLOOM · SHIMMER")}
 LEDS = {"LED1": "IN L", "LED2": "IN R", "LED3": "OUT L", "LED4": "OUT R"}
 SCALE = 8  # px per mm for the default rendered size
 
@@ -52,7 +52,7 @@ def build():
       'Top row: BLEND (left knob) and DECAY (right knob), with four LEDs between them: input left, '
       'input right, output left, output right. Below, in the centre: TONE. Next row: WEAR (left) '
       'and SIZE (right). Centre: MOTION. Right, lower: DEPTH. Left: two three-way switches, '
-      'SPACE (PLATE, HALL, MASSIVE) above ONSET (NATURAL, BLOOM, SHIMMER). Centre, lower: the '
+      'SPACE (PLATE, HALL, CANYON) above ONSET (NATURAL, BLOOM, SHIMMER). Centre, lower: the '
       'FREEZE / PAINT button. Bottom: twelve jacks, labelled as printed on the module (seven CV '
       'inputs, one per knob, the gate input, audio in L and R, audio out L and R).</desc>')
     a('  <style>'

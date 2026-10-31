@@ -1,0 +1,80 @@
+---
+// The owner's panel art (the one the renders use), for the manual's panel and the presets'
+// set panels (owner, 1 Nov 2026). The art without its knob pointers and toggle levers is a still
+// (docs/minisite/assets/panel/sublustris-versio-panel-face.webp, made by
+// docs/minisite/tools/make_panel_face.py); this draws them back on top in the art's own units
+// (191 x 486 = the Versio's 50.5 x 128.5 mm), so a patch can turn the knobs and flip the switches.
+// With `settings`, each knob points at its value (0 = 7 o'clock, 1 = 5 o'clock) and each toggle
+// sits in its position (up, middle, down); without, they sit as on the art: knobs at noon,
+// toggles up. `controls` crops off the jacks.
+import { KNOBS, SWITCHES, type PanelSettings, type KnobKey, type SwitchKey } from '../lib/panel';
+
+interface Props { settings?: PanelSettings; controls?: boolean; label?: string; prefix?: string; class?: string }
+const { settings, controls = false, label, prefix = 'pa', class: cls = '' } = Astro.props;
+
+const H = controls ? 298.7 : 486;   // controls: down to the PAINT label; the jacks' top edges are masked below
+// Knob centres and toggle bushings, from the art (its tick fans and lever images)
+const KNOB_AT: Record<KnobKey, [number, number]> = {
+  blend: [29.01, 70.03], decay: [163.77, 70.03], tone: [95.13, 108.43], wear: [29.01, 149.23],
+  size: [163.77, 149.23], motion: [95.13, 186.44], depth: [163.77, 228.43],
+};
+const SWITCH_AT: Record<SwitchKey, [number, number]> = { space: [31.79, 218.98], onset: [31.79, 254.99] };
+
+const knobs = KNOBS.map((k) => {
+  const [cx, cy] = KNOB_AT[k.key];
+  const deg = -150 + 300 * (settings?.[k.key] ?? 0.5);
+  return { cx, cy, deg: +deg.toFixed(1) };
+});
+// position 0 = up (the first option, as printed), 1 = middle, 2 = down
+const switches = SWITCHES.map((s) => {
+  const [cx, cy] = SWITCH_AT[s.key];
+  const i = settings ? s.options.indexOf(settings[s.key]) : 0;
+  return { cx, cy, pos: i < 0 ? 1 : i };
+});
+
+const title = label ?? (settings ? 'Sublustris panel settings' : 'Sublustris Versio panel');
+const desc = settings
+  ? [...SWITCHES.map((s) => `${s.name} ${settings[s.key]}`), ...KNOBS.map((k) => `${k.name} ${settings[k.key]}`)].join(', ')
+  : 'Seven knobs (BLEND, DECAY, TONE, WEAR, SIZE, MOTION, DEPTH), four LEDs, the SPACE and ONSET switches, the FREEZE / PAINT button and twelve jacks.';
+const id = (s: string) => `${prefix}-${s}`;
+---
+<div class:list={['panel-art', cls]}>
+  <svg viewBox={`0 0 191 ${H}`} role="img" aria-labelledby={`${id('t')} ${id('d')}`}>
+    <title id={id('t')}>{title}</title>
+    <desc id={id('d')}>{desc}</desc>
+    <defs>
+      <linearGradient id={id('ring')} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#f2f2f2" /><stop offset="0.55" stop-color="#bdbdbd" /><stop offset="1" stop-color="#8a8a8a" />
+      </linearGradient>
+      <linearGradient id={id('lever')} x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#3a3a3a" /><stop offset="0.45" stop-color="#b8b8b8" /><stop offset="0.7" stop-color="#8c8c8c" /><stop offset="1" stop-color="#2e2e2e" />
+      </linearGradient>
+      <radialGradient id={id('tip')} cx="0.42" cy="0.38" r="0.65">
+        <stop offset="0" stop-color="#e6e6e6" /><stop offset="0.6" stop-color="#8a8a8a" /><stop offset="1" stop-color="#3a3a3a" />
+      </radialGradient>
+    </defs>
+    <image href="/panel/sublustris-versio-panel-face.webp" width="191" height="486" preserveAspectRatio="none" />
+    {controls && (
+      <g fill="#000" aria-hidden="true"><rect x="0" y="296.2" width="87.4" height="4" /><rect x="111.6" y="296.2" width="79.4" height="4" /></g>
+    )}
+    {knobs.map((k) => (
+      <line class="pa-pointer" x1={k.cx} y1={k.cy - 16.5} x2={k.cx} y2={k.cy - 4} transform={`rotate(${k.deg} ${k.cx} ${k.cy})`} />
+    ))}
+    {switches.map((s) => (
+      <g class="pa-toggle">
+        <circle cx={s.cx} cy={s.cy} r="8.1" fill="none" stroke={`url(#${id('ring')})`} stroke-width="3" />
+        <circle cx={s.cx} cy={s.cy} r="6.5" fill="#050505" />
+        {s.pos === 1 ? (
+          <circle cx={s.cx} cy={s.cy} r="3.6" fill={`url(#${id('tip')})`} />
+        ) : (
+          <rect x={s.cx - 3.45} y={s.pos === 0 ? s.cy - 14.6 : s.cy - 1.6} width="6.9" height="16.2" rx="3.45" fill={`url(#${id('lever')})`} />
+        )}
+      </g>
+    ))}
+  </svg>
+</div>
+
+<style is:global>
+  .panel-art svg { display: block; width: 100%; height: auto; border-radius: 3px; }
+  .panel-art .pa-pointer { stroke: #fff; stroke-width: 1.5; }
+</style>

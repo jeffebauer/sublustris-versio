@@ -14,10 +14,10 @@ export const CONTROLS: Control[] = [
   { name: 'DECAY', anchor: 'decay', line: 'A short room to minutes-long tails. Endless from about 3 o’clock.', at: [43.33, 18.53], side: 'r' },
   { name: 'TONE', anchor: 'tone', line: 'Darker or brighter, flat at noon. Never harsh at the ends.', at: [25.169, 28.69], side: 'l' },
   { name: 'WEAR', anchor: 'wear', line: 'One knob of tape, bucket-brigade, bit and radio wear over a warm desk colour.', at: [7.77, 39.485], side: 'l' },
-  { name: 'SIZE', anchor: 'size', line: 'The size of the space. In MASSIVE, a long wash to a boundless one.', at: [43.33, 39.485], side: 'r' },
+  { name: 'SIZE', anchor: 'size', line: 'The size of the space. In CANYON, a long wash to a boundless one.', at: [43.33, 39.485], side: 'r' },
   { name: 'MOTION', anchor: 'motion', line: 'Left: tape wow, flutter and dropouts. Right: a quick, wide wander.', at: [25.169, 49.328], side: 'l' },
   { name: 'DEPTH', anchor: 'depth', line: 'What ONSET does: NATURAL’s predelay, BLOOM’s swell time, SHIMMER’s amount.', at: [43.33, 60.44], side: 'r' },
-  { name: 'SPACE', anchor: 'space-top-switch', line: 'PLATE · HALL · MASSIVE.', at: [8.405, 57.9], side: 'l' },
+  { name: 'SPACE', anchor: 'space-top-switch', line: 'PLATE · HALL · CANYON.', at: [8.405, 57.9], side: 'l' },
   { name: 'ONSET', anchor: 'onset-bottom-switch', line: 'NATURAL · BLOOM · SHIMMER: how each sound enters the reverb.', at: [8.405, 67.425], side: 'l' },
   { name: 'FREEZE / PAINT', anchor: 'freeze--paint-button', line: 'Tap to freeze. Hold while frozen to paint what you play into the pad.', at: [26.185, 69.33], side: 'r' },
   { name: 'Gate', anchor: 'gate-input-freeze', line: 'FREEZE, with the same gestures as the button.', at: [44.6, 97.27], side: 'r' },
@@ -26,13 +26,13 @@ export const CONTROLS: Control[] = [
 // Features as bento tiles (DESIGN-v2 V9): one big statement each, a tiny diagram (V10) and
 // one line, condensed from overview.md and manual.md. The diagrams are the owner's picks
 // (30 Oct 2026). Checked against the manual: DECAY's top tails are about 30 s (PLATE),
-// 60 s (HALL) and 120 s (MASSIVE) before endless; SHIMMER is one octave; 7 CV inputs, 0–5 V.
+// 60 s (HALL) and 120 s (CANYON) before endless; SHIMMER is one octave; 7 CV inputs, 0–5 V.
 export interface FeatureTile { big: string; line: string; diagram: DiagramKind; size?: 'big' | 'wide' }
 
 export const FEATURE_TILES: FeatureTile[] = [
   { big: 'Endless hold', size: 'big', diagram: 'endless-infinity', line: 'Past about 3 o’clock DECAY never lets go. The tail settles at a steady level, steps back about 3 dB while you play, and its notes stay notes when you stop.' },
-  { big: '3 spaces', diagram: 'spaces', line: 'A dense PLATE, a big HALL, and MASSIVE, which swells in and grows into a boundless wash.' },
-  { big: '120 s tails', diagram: 'longtail', line: 'About 30 s in PLATE, 60 s in HALL and 120 s in MASSIVE. Then endless.' },
+  { big: '3 spaces', diagram: 'spaces', line: 'A dense PLATE, a big HALL, and CANYON, which swells in and grows into a boundless wash.' },
+  { big: '120 s tails', diagram: 'longtail', line: 'About 30 s in PLATE, 60 s in HALL and 120 s in CANYON. Then endless.' },
   { big: 'Freeze / paint', size: 'wide', diagram: 'freeze', line: 'Tap to freeze the tail into a still pad and play over it. Hold while frozen to paint a little of what you play into the pad.' },
   { big: 'Swells', diagram: 'swell-family', line: 'ONSET on BLOOM: the reverb swells in behind each sound, from a breath to four seconds.' },
   { big: '1 octave', diagram: 'octave', line: 'SHIMMER: one steady octave up, in tune, that doesn’t climb.' },

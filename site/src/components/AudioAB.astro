@@ -23,12 +23,16 @@ const d = peaks
   .join('');
 const dur = clock(clip.duration_s);
 const diagram = diagramFor(clip.file);
-// "0.45 (11:30), the slider's start" -> a knob at 0.45, then "0.45, the slider's start" (the
-// knob drawing replaces the clock time; owner, 8 Oct).
+// "3 o'clock (the fader's start)", "fully left", "noon" -> a knob, its clock time and value, and
+// the note, laid out as on the presets page (owner, 1 Nov 2026). Moves ("fully left → 2 o'clock …")
+// and the switches stay as written.
 const rows = Object.entries(clip.settings).map(([name, value]) => {
-  const m = value.match(/^(\d*\.?\d+) \([^)]*\)(.*)$/);
-  const v = m ? Number(m[1]) : NaN;
-  return m && v >= 0 && v <= 1 ? { name, value: m[1] + m[2], knob: v } : { name, value };
+  const m = value.match(/^(fully left|fully right|noon|(\d{1,2})(?::(\d\d))? o'clock)(?: \((.*)\))?$/);
+  if (!m) return { name, value, mono: /^[A-Z]+$/.test(value) };   // a switch's position (HALL) reads as a value
+  const hours = m[1] === 'fully left' ? 7 : m[1] === 'fully right' ? 5 : m[1] === 'noon' ? 12 : Number(m[2]) + Number(m[3] ?? 0) / 60;
+  const knob = ((hours - 7 + 12) % 12) / 10;
+  const h = Math.floor(hours), min = Math.round((hours - h) * 60);
+  return { name, value: m[4] ?? '', knob, clock: `${h}:${String(min).padStart(2, '0')}` };
 });
 const blend = clip.blend ?? 0.5;
 ---

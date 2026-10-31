@@ -1,6 +1,6 @@
 ---
 title: "Starting points: ambient, dub techno and dark ambient settings for Sublustris Versio"
-description: "Settings to dial in on Sublustris Versio, from an endless MASSIVE pad and a dub techno hall to a drum plate, a bloom swell, a shimmer bed, worn tape and a dark drone, with exact knob positions and what to move next."
+description: "Settings to dial in on Sublustris Versio, from an endless CANYON pad and a dub techno hall to a drum plate, a bloom swell, a shimmer bed, worn tape and a dark drone, with exact knob positions and what to move next."
 slug: "presets"
 order: 4
 ---
@@ -19,14 +19,14 @@ MOTION is bipolar. At noon it only has a faint movement, to the left it's tape, 
 
 | Starting point | SPACE | ONSET | BLEND | DECAY | TONE | WEAR | SIZE | MOTION | DEPTH |
 |---|---|---|---|---|---|---|---|---|---|
-| Endless pad | MASSIVE | NATURAL | 0.8 (3) | 1 (5) | 0.4 (11) | 0 (7) | 0.7 (2) | 0.5 (12) | 0.2 (9) |
+| Endless pad | CANYON | NATURAL | 0.8 (3) | 1 (5) | 0.4 (11) | 0 (7) | 0.7 (2) | 0.5 (12) | 0.2 (9) |
 | Dub techno hall | HALL | NATURAL | 0.4 (11) | 0.9 (4) | 0.45 (11:30) | 0.2 (9) | 0.6 (1) | 0.4 (11) | 0.3 (10) |
 | Drum plate | PLATE | NATURAL | 0.3 (10) | 0.3 (10) | 0.55 (12:30) | 0 (7) | 0.4 (11) | 0.5 (12) | 0.1 (8) |
 | Freeze bed | HALL | NATURAL | 0.6 (1) | 0.75 (2:30) | 0.5 (12) | 0.1 (8) | 0.5 (12) | 0.5 (12) | 0.2 (9) |
-| Bloom swell | MASSIVE | BLOOM | 0.6 (1) | 0.7 (2) | 0.45 (11:30) | 0 (7) | 0.5 (12) | 0.6 (1) | 0.7 (2) |
+| Bloom swell | CANYON | BLOOM | 0.6 (1) | 0.7 (2) | 0.45 (11:30) | 0 (7) | 0.5 (12) | 0.6 (1) | 0.7 (2) |
 | Shimmer bed | HALL | SHIMMER | 0.6 (1) | 0.75 (2:30) | 0.5 (12) | 0 (7) | 0.7 (2) | 0.65 (1:30) | 0.5 (12) |
 | Worn tape room | HALL | NATURAL | 0.5 (12) | 0.6 (1) | 0.3 (10) | 0.7 (2) | 0.4 (11) | 0.15 (8:30) | 0.2 (9) |
-| Dark drone | MASSIVE | NATURAL | 0.9 (4) | 0.95 (4:30) | 0.2 (9) | 0.4 (11) | 1 (5) | 0.3 (10) | 0.4 (11) |
+| Dark drone | CANYON | NATURAL | 0.9 (4) | 0.95 (4:30) | 0.2 (9) | 0.4 (11) | 1 (5) | 0.3 (10) | 0.4 (11) |
 
 ## Endless pad
 
