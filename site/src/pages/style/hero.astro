@@ -5,7 +5,7 @@
 // the name says, breathing with the LEDs; D combines B and C (the owner's pick, round 1).
 // Round 2: E is D with the name in glass (round 3: a shader bends the contour lines behind it,
 // like Apple's Liquid Glass, brightest at the centre); the name's meaning
-// sits at the top of D and E; six candidate ledes replace the spec tags, switchable in place.
+// sits at the top of D and E; candidate ledes replace the spec tags, switchable in place.
 // The film here is the hold loop only (no reveal). Not in the sitemap, noindex.
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -24,16 +24,18 @@ const now = 'A half-lit space that never quite ends. Hold a chord forever, play 
 const ledes = [
   // 2: your shortlist (round 2)
   'A half-lit space that never quite ends. Hold a chord forever, play over it, and let it wear like old tape.',
-  // round 3, in 2's voice: short, plain, about what it does to your playing, no feature lists
-  'A dim room that keeps what you play. Let a chord hang for as long as you like, then play over it.',
-  'The sound after the sound. Hold it while you play on top, then let it go when you’re ready.',
-  'Reverb for staying a while. Chords hang in the air until you let them go, and wear a little as they do.',
-  'Play a chord and it stays, faintly glowing, for as long as you leave it there.',
-  'Long tails for late nights. Freeze a chord and it waits for you, warm and a little worn.',
-  'Big, slow and warm. Turn it up and the tail never stops. Press freeze and play over what’s left.',
-  'A reverb that holds on. Let a note ring for minutes, or forever, and keep playing over it.',
+  // round 4 (owner, 31 Oct: 2 still not right): about the sound itself, plain words, no lists
+  // of three, no colon set-ups
+  'A big, dark reverb for ambient and dub techno. Tails run for minutes, or for good, and stay warm all the way down.',
+  'Turn the decay all the way up and it holds forever. Then play over it.',
+  'Reverb that’s half the track. Freeze one chord and let it carry a whole section while you play on top.',
+  'Even at its longest the tail stays soft and dark, with none of the metallic ring big reverbs tend to get. Freeze it and it holds.',
+  'Made for late, slow music. It goes from a small room to a tail that doesn’t stop, and the long ones waver a little, like old tape.',
+  'Dark, warm reverb that can ring for minutes. Hold a chord and it wavers in pitch and wears at the edges, the way a loop does on a tired cassette.',
+  'A huge reverb that stays warm. Tap freeze and the room keeps sounding, so you can build on it.',
+  'Long reverb for dub and ambient, from a plate to a space with no far wall. Freeze holds whatever’s in it.',
 ];
-const ledeNames = ['2', 'A', 'B', 'C', 'D', 'E', 'F', 'G'];
+const ledeNames = ['2', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O'];
 
 const platform = 'For the Noise Engineering Versio, and as an AU/VST3 plugin for macOS.';
 const versions = [
@@ -46,7 +48,7 @@ const versions = [
 const behind = (id: string) => id === 'b' || id === 'd' || id === 'e';
 const top = (id: string) => id === 'd' || id === 'e';
 ---
-<Base title="Hero study: Sublustris Versio" description="Versions of the home hero to compare, with six candidate ledes." noindex bodyClass="home" darkTop>
+<Base title="Hero study: Sublustris Versio" description="Versions of the home hero to compare, with candidate ledes." noindex bodyClass="home" darkTop>
   {versions.map((v) => (
     <section class={`hero band-dark has-contours hs hs-${v.id}`} style={`--mark: ${mark}`} aria-label={v.name}>
       <Contours strength={1} />
@@ -334,7 +336,7 @@ const top = (id: string) => id === 'd' || id === 'e';
   .hs-b .hero-title .actions, .hs-d .hero-title .actions, .hs-e .hero-title .actions { padding-top: 0; grid-column: 2; grid-row: 1 / span 2; align-self: end; justify-self: end; }
   .hs-lede { grid-column: 1; }
 
-  /* The six ledes, listed, and the switcher */
+  /* The ledes, listed, and the switcher */
   .hs-lede-list { display: grid; gap: 1.25rem; padding-left: 0; list-style: none; font-size: 1.25rem; line-height: 1.35; }
   .hs-switch {
     position: fixed; z-index: 20; right: var(--margin); top: calc(var(--header-h) + 0.75rem);
@@ -351,28 +353,11 @@ const top = (id: string) => id === 'd' || id === 'e';
 
   @media (orientation: portrait) and (max-width: 63.99rem) {
     .hs-b .hero-frame, .hs-d .hero-frame, .hs-e .hero-frame { max-height: none; }
-    /* The module fills the width, so the name stands beside it, turned to read upward, as long
-       as the panel is tall (owner, 30 Oct 2026), and the pair is centred. In the film's frame
-       (1350 tall) the panel runs 225-1246 down and 414 wide, centred. */
+    /* The module fills the width; the name behind it is hidden, since the bigger module and
+       the logo on its panel do the same job (owner, 31 Oct 2026). */
     .hs.hs-b, .hs.hs-d, .hs.hs-e { padding-top: calc(var(--header-h) + 3.25rem); }
     .hs-kicker-top { top: calc(var(--header-h) + 1rem); }
-    .hs-b > .wide, .hs-d > .wide, .hs-e > .wide {
-      --hero-fh: min(190vw, 120svh);
-      --pan-h: calc(var(--hero-fh) * 1021 / 1350);
-      --pan-w: calc(var(--hero-fh) * 414 / 1350);
-      --mark-t: calc(var(--pan-h) * 40 / 444);
-      --gap: 0.75rem;
-      --shift: calc((var(--mark-t) + var(--gap)) / 2);
-      --top: calc(var(--hero-fh) * -0.12);
-    }
-    .hs-b .hero-video, .hs-d .hero-video, .hs-e .hero-video { translate: var(--shift) 0; }
-    .hs-mark {
-      grid-area: 1 / 1; z-index: 2; align-self: start; justify-self: start;
-      width: var(--pan-h); margin-left: calc(50% - var(--pan-h) / 2);
-      translate: calc(var(--shift) - var(--pan-w) / 2 - var(--gap) - var(--mark-t) / 2)
-                 calc(var(--top) + var(--hero-fh) * 735.5 / 1350 - var(--mark-t) / 2);
-      rotate: -90deg;
-    }
+    .hs-mark { display: none; }
   }
   @media (max-width: 47.99rem) {
     .hs-b .hero-title, .hs-d .hero-title, .hs-e .hero-title { grid-template-columns: minmax(0, 1fr); }
