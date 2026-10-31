@@ -54,7 +54,7 @@ const { lead, sections } = splitSections(rest.replace(table, ''));
           <div class="preset-text">
             <Fragment set:html={sec.html} />
             <dl class="preset-values" aria-label={`${sec.title}: exact values`}>
-              {SWITCHES.map((w) => <div><dt>{w.name}</dt><dd>{p.shown[w.name]}</dd></div>)}
+              {SWITCHES.map((w) => <div><dt>{w.name}</dt><dd><span class="pv-option">{p.shown[w.name]}</span></dd></div>)}
               {KNOBS.map((k) => <div><dt>{k.name}</dt><dd><KnobValue value={p.s[k.key]} clock={p.clock[k.name]} /></dd></div>)}
               {(SWITCHES.length + KNOBS.length) % 2 === 1 && <div class="filler" aria-hidden="true" />}
             </dl>

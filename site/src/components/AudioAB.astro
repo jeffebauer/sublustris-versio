@@ -28,7 +28,7 @@ const diagram = diagramFor(clip.file);
 // and the switches stay as written.
 const rows = Object.entries(clip.settings).map(([name, value]) => {
   const m = value.match(/^(fully left|fully right|noon|(\d{1,2})(?::(\d\d))? o'clock)(?: \((.*)\))?$/);
-  if (!m) return { name, value };
+  if (!m) return { name, value, mono: /^[A-Z]+$/.test(value) };   // a switch's position (HALL) reads as a value
   const hours = m[1] === 'fully left' ? 7 : m[1] === 'fully right' ? 5 : m[1] === 'noon' ? 12 : Number(m[2]) + Number(m[3] ?? 0) / 60;
   const knob = ((hours - 7 + 12) % 12) / 10;
   const h = Math.floor(hours), min = Math.round((hours - h) * 60);
