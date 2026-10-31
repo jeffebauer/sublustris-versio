@@ -7,9 +7,9 @@ order: 1
 
 # Sublustris Versio
 
-**A half-lit space that never quite ends. Hold a chord forever, play over it, and let it wear like old tape.**
+**A big, dark reverb for ambient and dub techno. Turn the decay up and a chord holds forever while you play over it. Then let it age, from warm tape saturation to a thin, crackly radio, wavering like a cassette on a tired deck.**
 
-<!-- The lede (owner's pick, 30 Oct 2026, hero study lede 2). The hero adds "For the Noise Engineering Versio, and as an AU/VST3 plugin for macOS." under it. -->
+<!-- The lede (owner's pick, 31 Oct 2026, hero study lede Q; replaced lede 2). The hero adds "For the Noise Engineering Versio, and as an AU/VST3 plugin for macOS." under it. -->
 
 I wanted a reverb I could live inside. Tails long enough for dub techno, ambient and dark ambient, a freeze I can play over, and an endless setting that holds a chord for as long as I want without running away or turning metallic. There's tape-style wear too, and an octave of shimmer. It's firmware for the Versio, and the same sound runs as a plugin on a Mac.
 
