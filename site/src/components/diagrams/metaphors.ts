@@ -12,7 +12,7 @@ export const METAPHOR_KINDS = [
   'swell-hairpin', 'swell-bud', 'swell-light',
   'swell-measure', 'swell-family', 'swell-apart', 'swell-natural',
   'octave-string', 'octave-keys', 'octave-staff',
-  'tape-drift', 'tape-head', 'tape-ticks',
+  'tape-drift', 'tape-head', 'tape-ticks', 'radio-band',
   'spaces-paths', 'spaces-nested', 'spaces-forms',
   'spaces-plans', 'spaces-figure', 'spaces-depth', 'spaces-rays',
   'cv-sum', 'cv-scale', 'cv-plug',
@@ -318,6 +318,22 @@ export function metaphor(kind: MetaphorKind): Shape {
         faint: ['M58 56H102'],
         ink: [`M${hx - 13} 56V42Q${hx - 13} 31.5 ${hx} 31.5Q${hx + 13} 31.5 ${hx + 13} 42V56`],
         hot: [plot(4, 156, tape)],
+      };
+    }
+    case 'radio-band': {
+      // MOTION to the right as a spectrum: the full, flat range (faint) narrowed to an old
+      // radio's band, its lows and top rolled away, with a notch in the middle (hot) and where
+      // the notch wanders to (faint dips either side).
+      const band = (x: number) => {
+        const lo = 1 / (1 + Math.exp(-(x - 40) / 6)), hi = 1 / (1 + Math.exp((x - 122) / 7));
+        return 52 - 30 * lo * hi;
+      };
+      const notch = (c: number, d: number) => (x: number) => band(x) + d * Math.exp(-(((x - c) / 6) ** 2));
+      return {
+        label: 'MOTION to the right as a spectrum: the full range narrowed to an old radio\'s band, with a notch wandering through its middle.',
+        faint: ['M6 22H156', plot(56, 80, notch(68, 9), 0.5), plot(98, 122, notch(110, 9), 0.5)],
+        ink: [],
+        hot: [plot(6, 156, notch(89, 14), 0.5)],
       };
     }
     case 'tape-ticks': {

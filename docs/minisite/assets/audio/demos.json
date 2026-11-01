@@ -8,7 +8,7 @@
       "title": "The endless pad",
       "caption": "One pad chord held into an endless tail, then nothing more is played.",
       "settings": {
-        "SPACE": "CANYON",
+        "SPACE": "MASSIVE",
         "ONSET": "NATURAL",
         "BLEND": "3 o'clock (the fader's start)",
         "DECAY": "fully right",
@@ -52,7 +52,7 @@
       "dry": "02-freeze-paint-dry.mp3",
       "file": "02-freeze-paint-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -7.3,
+      "true_peak_db": -7.2,
       "note": "Piano: Steinway B from the Versilian Community Sample Library (CC0). Played in code.",
       "gain_db": 1.4
     },
@@ -87,14 +87,14 @@
       "title": "Bloom swell",
       "caption": "Single piano notes, each one swelling in slowly behind itself.",
       "settings": {
-        "SPACE": "CANYON",
+        "SPACE": "MASSIVE",
         "ONSET": "BLOOM",
         "BLEND": "1 o'clock (the fader's start)",
         "DECAY": "2 o'clock",
         "TONE": "11:30 o'clock",
         "WEAR": "fully left",
         "SIZE": "noon",
-        "MOTION": "1 o'clock",
+        "MOTION": "noon",
         "DEPTH": "2 o'clock"
       },
       "transcript": "A grand piano plays six soft single notes in A minor, about four seconds apart. Each note is dry and close; its reverb starts almost silent and swells in over the next two or three seconds, so every note blooms in behind itself and joins a long, soft wash.",
@@ -106,7 +106,7 @@
       "lufs": -20.5,
       "true_peak_db": -7.0,
       "note": "Piano: Steinway B from the Versilian Community Sample Library (CC0). Played in code.",
-      "gain_db": 2.3
+      "gain_db": 2.5
     },
     {
       "id": "06",
@@ -120,7 +120,7 @@
         "TONE": "noon",
         "WEAR": "fully left",
         "SIZE": "2 o'clock",
-        "MOTION": "1:30 o'clock",
+        "MOTION": "noon",
         "DEPTH": "noon"
       },
       "transcript": "A soft, round synth lead plays a slow melody in D minor, with long notes and space between the phrases. The reverb adds one steady octave above each note: a quiet, higher voice that follows the melody and rings on in the tail. The lead has no octave of its own; the octave is only in the reverb.",
@@ -156,9 +156,9 @@
       "dry": "07-worn-guitar-dry.mp3",
       "file": "07-worn-guitar-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -4.3,
+      "true_peak_db": -4.5,
       "note": "Guitar: Emilyguitar by Karoryfer (CC0). Played in code.",
-      "gain_db": 4.0
+      "gain_db": 3.9
     },
     {
       "id": "08",
@@ -182,16 +182,42 @@
       "dry": "08-tape-side-dry.mp3",
       "file": "08-tape-side-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -9.2,
+      "true_peak_db": -9.7,
       "note": "Synth synthesised in code.",
-      "gain_db": -2.3
+      "gain_db": -1.6
+    },
+    {
+      "id": "09",
+      "title": "The radio side of MOTION",
+      "caption": "Picked guitar chords while MOTION is turned from noon to fully right: the tail narrows into an old radio and starts to phase.",
+      "settings": {
+        "SPACE": "HALL",
+        "ONSET": "NATURAL",
+        "BLEND": "1 o'clock (the fader's start)",
+        "DECAY": "2:30 o'clock",
+        "TONE": "noon",
+        "WEAR": "fully left",
+        "SIZE": "1 o'clock",
+        "MOTION": "noon → fully right, turned steadily from 2 to 16 s, then held",
+        "DEPTH": "9 o'clock"
+      },
+      "transcript": "A clean electric guitar picks seven chords in D major, one every few seconds, each left to ring into a long hall. MOTION starts at noon, and the tail is full and open. As it turns right, the tail narrows, losing its deepest lows and its top, like the reverb is playing through an old AM radio, and a slow notch drifts through its middle so it swirls like a phaser. From about 16 seconds MOTION is fully right and the swirl is deepest.",
+      "duration_s": 28.0,
+      "blend": 0.6,
+      "blend_clock": "1",
+      "dry": "09-radio-side-dry.mp3",
+      "file": "09-radio-side-wet.mp3",
+      "lufs": -20.5,
+      "true_peak_db": -7.6,
+      "note": "Guitar: Emilyguitar by Karoryfer (CC0). Played in code.",
+      "gain_db": 0.5
     },
     {
       "id": "10",
       "title": "Dark drone, WEAR's whole range",
       "caption": "A low drone into an endless tail while WEAR is turned all the way up and back down: the wash ages, then comes clean.",
       "settings": {
-        "SPACE": "CANYON",
+        "SPACE": "MASSIVE",
         "ONSET": "NATURAL",
         "BLEND": "4 o'clock (the fader's start)",
         "DECAY": "4:30 o'clock",
@@ -201,16 +227,16 @@
         "MOTION": "10 o'clock",
         "DEPTH": "11 o'clock"
       },
-      "transcript": "A low, dark drone in D minor swells in and holds, then fades out at about 24 seconds; the reverb is endless, so the wash goes on. WEAR starts fully left, and the tail is clean and smooth. Over twelve seconds it is turned all the way up, and the wash ages as it goes: a warm tape thickness and a soft breath first, then grit and grain over the top, and near fully right the hazy edge of an old radio. The lows stay where they are. It holds there for a few seconds, then WEAR is turned back down and the wash comes clean again.",
+      "transcript": "A low, dark drone in D minor swells in and holds, then fades out at about 24 seconds; the reverb is endless, so the wash goes on. WEAR starts fully left, and the tail is clean and smooth. Over twelve seconds it is turned all the way up, and the wash ages as it goes: a warm tape thickness and a soft breath first, then grit and grain over the top as it nears fully right. The lows stay where they are. It holds there for a few seconds, then WEAR is turned back down and the wash comes clean again.",
       "duration_s": 28.0,
       "blend": 0.9,
       "blend_clock": "4",
       "dry": "10-dark-drone-dry.mp3",
       "file": "10-dark-drone-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -9.9,
+      "true_peak_db": -10.2,
       "note": "Drone synthesised in code.",
-      "gain_db": 0.5
+      "gain_db": 0.4
     }
   ]
 }

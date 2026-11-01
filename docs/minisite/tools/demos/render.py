@@ -114,8 +114,8 @@ CLIPS = {
         transcript="A warm analogue-style poly synth, saw waves through a resonant low-pass filter, plays held chords, D minor nine, G minor seven, C nine and F major seven, with a few single notes between, twice through; the last chord rings on. With MOTION fully left the whole tail wavers in pitch together, like a worn tape, with quick crinkles, and now and then a short dropout dulls it for a moment.",
         notes="Synth synthesised in code."),
     "09": dict(
-        # TO CHECK on the F build's render (measure.py): the caption and transcript describe the
-        # intended sound; rewrite them from the render before the clip is published.
+        # Checked on v1.0.60's render (1 Nov 2026): from noon to the end the tail's top end falls ~11 dB
+        # and its lows ~7 dB against the mids, and the notch moves between ~700 Hz and 2.9 kHz.
         slug="radio-side", title="The radio side of MOTION", blend="1", dur=28.0,
         set=dict(space="HALL", attack="NATURAL", decay="2:30", tone="12", era="7", size="1", drift="12", time="9"),
         auto={"breakpoints": ramp("drift", (0.0, 0.5), (2.0, 0.5), (16.0, 1.0))},
