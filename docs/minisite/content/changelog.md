@@ -19,6 +19,11 @@ When a player suggests a change, I credit them in its entry. If you have an idea
 
 Almost every sound change below was made by ear: each option went onto a listening page next to the version before it, and I picked.
 
+### 1 November: an old radio on MOTION's right
+
+- **MOTION's right side is an old AM radio:** the tail narrows to the radio's band and a slow notch wanders through it, so it phases. It replaces the wander, which stayed too subtle.
+- **WEAR is tape, bucket-brigade and bit wear** over the warm desk colour; the radio's band moved to MOTION, so the two can be set apart.
+
 ### 28–29 October: longer tails, and an endless hold that keeps its notes
 
 - **Longer tails.** DECAY reaches about 30 seconds in PLATE, a minute in HALL and two in CANYON before it turns endless, and the knob spends more of its travel on long, lush tails.

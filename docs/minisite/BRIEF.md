@@ -51,7 +51,7 @@ The same seven as Resilio, in the same order of importance: **Overview, Manual, 
    - "freeze and paint";
    - "an octave of shimmer";
    - "one WEAR knob";
-   - "tape on the left, wander on the right";
+   - "tape on the left, radio on the right";
    - "7 CV inputs".
 9. **Two ways to play:** on the module and in your DAW.
 10. **Download band, then the footer:** the not-affiliated line, the licence, and links to the source and to Resilio Versio.
@@ -65,9 +65,9 @@ The same seven as Resilio, in the same order of importance: **Overview, Manual, 
 | BLEND | dry ↔ wet, equal-power; fully right is 100 % wet |
 | DECAY | a short room to minutes-long tails; endless from about 3 o'clock |
 | TONE | darker or brighter, noon flat |
-| WEAR | one amount of tape, BBD, bit and radio wear over a warm Neve colour |
+| WEAR | one amount of tape, BBD and bit wear over a warm Neve colour |
 | SIZE | the space's size; in MASSIVE, long echoes to a boundless wash |
-| MOTION | left: tape (wow, flutter, crinkle, dropouts near fully left); right: a slow wander; noon: a faint, still movement |
+| MOTION | left: tape (wow, flutter, crinkle, dropouts near fully left); right: an old AM radio's narrow band with a wandering notch (since 1 Nov 2026; was a wander); noon: a faint, still movement |
 | DEPTH | what the ONSET does: NATURAL's predelay, BLOOM's swell time, SHIMMER's amount |
 | SPACE switch | PLATE · HALL · MASSIVE |
 | ONSET switch | NATURAL · BLOOM · SHIMMER |
@@ -103,7 +103,7 @@ Eight to ten clips, 15-30 s each, as on Resilio: a title, a caption, the setting
   - a BLOOM swell;
   - SHIMMER on a slow melody;
   - WEAR up on a guitar;
-  - MOTION's tape side and its wander;
+  - MOTION's tape side and its radio side;
   - a dark-ambient drone with SIZE moving.
 - **The owner listens and approves each clip before it ships,** on a showcase page (CLAUDE.md: `tools/review/make_review.py --showcase`).
 

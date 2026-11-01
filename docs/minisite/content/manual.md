@@ -17,7 +17,7 @@ Sublustris Versio is a huge, warm reverb for the Noise Engineering Versio. It ha
 <dt>Freeze</dt><dd>The tail held still as a pad, with the input closed, so you can play over it.</dd>
 <dt>Paint</dt><dd>Holding the button while frozen, to blend a little of what you're playing into the pad.</dd>
 <dt>Onset</dt><dd>How a sound enters the reverb: at once, swelling in, or with an octave on top.</dd>
-<dt>Wear</dt><dd>The marks of old equipment on the reverb: tape, a bucket-brigade delay, bit grit, a radio's band.</dd>
+<dt>Wear</dt><dd>The marks of old equipment on the reverb: tape, a bucket-brigade delay, bit grit.</dd>
 </dl>
 
 ## Panel map
@@ -88,7 +88,6 @@ How worn the reverb sounds. Fully left (the default) is clean, with only a warm,
 - a bucket-brigade delay's breathing: its noise and level rise and fall with your playing;
 - the delay chip's clock, which folds the top end back on itself;
 - bit grit, which stays the same share of a fading tail, so the tail stays grainy right to the end;
-- an AM radio's narrow band, with a slow, wandering notch;
 - a soft hiss and the odd crackle, which follow your playing, so silence stays silent.
 
 WEAR doesn't darken the tail (that's TONE's job) or move its pitch (that's MOTION's). The level stays about the same across the knob. Your dry signal is never worn.
@@ -107,13 +106,13 @@ While frozen, SIZE sets the size of the layer you play over the pad (see FREEZE 
 
 ### MOTION
 
-Pitch movement, both ways from noon.
+Movement, both ways from noon: tape to the left, an old radio to the right.
 
 - **Noon:** only a faint, steady movement, the one that keeps every tail from ringing metallic.
 - **Left: tape.** The whole tail bends together, as one tape speed would, with a slow wow and a quicker flutter. It gets more uneven further left. From about 9 o'clock tape crinkle comes in, short bursts of jittery pitch, and from about 7:30 some of those bursts are dropouts, where the level dips and the highs dull for a moment. When you first turn into the left side, the tape comes up to speed over a few seconds.
-- **Right: wander.** Every voice of the tail wanders on its own, quickly and a little, never together, so the tail shimmers and widens rather than sways. It gets deeper and a little quicker past about 2:30.
+- **Right: radio.** The tail plays through an old AM radio's narrow band: its lows and its top roll away, its loudest moments flatten a little, and a slow notch wanders through the middle, so the tail phases. Just right of noon it's a faint colour; further right, more of the tail goes through the radio, and the notch cuts deeper and moves quicker. The pitch doesn't move on this side.
 
-In HALL and CANYON the bass stays still at every MOTION setting; only what's above it moves.
+In HALL and CANYON the bass never bends in pitch; only what's above it moves.
 
 ### DEPTH
 

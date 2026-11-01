@@ -85,14 +85,14 @@ CLIPS = {
         notes="Drums: Virtuosity Drums by Versilian Studios and Karoryfer (CC0). Stabs synthesised in code."),
     "05": dict(
         slug="bloom", title="Bloom swell", blend="1", dur=27.0,
-        set=dict(space="MASSIVE", attack="BLOOM", decay="2", tone="11:30", era="7", size="12", drift="1", time="2"),
+        set=dict(space="MASSIVE", attack="BLOOM", decay="2", tone="11:30", era="7", size="12", drift="12", time="2"),
         auto=None,
         caption="Single piano notes, each one swelling in slowly behind itself.",
         transcript="A grand piano plays six soft single notes in A minor, about four seconds apart. Each note is dry and close; its reverb starts almost silent and swells in over the next two or three seconds, so every note blooms in behind itself and joins a long, soft wash.",
         notes="Piano: Steinway B from the Versilian Community Sample Library (CC0). Played in code."),
     "06": dict(
         slug="shimmer", title="Shimmer melody", blend="1", dur=27.0,
-        set=dict(space="HALL", attack="SHIMMER", decay="3", tone="12", era="7", size="2", drift="1:30", time="12"),
+        set=dict(space="HALL", attack="SHIMMER", decay="3", tone="12", era="7", size="2", drift="12", time="12"),
         auto=None,
         caption="A slow lead with one steady octave above it in the reverb.",
         transcript="A soft, round synth lead plays a slow melody in D minor, with long notes and space between the phrases. The reverb adds one steady octave above each note: a quiet, higher voice that follows the melody and rings on in the tail. The lead has no octave of its own; the octave is only in the reverb.",
@@ -122,7 +122,7 @@ CLIPS = {
         sweep=("era", 2.0, 25.0, "7"),
         sweep_text="fully left → fully right (2-14 s), held to 18 s, then back to fully left by 25 s",
         caption="A low drone into an endless tail while WEAR is turned all the way up and back down: the wash ages, then comes clean.",
-        transcript="A low, dark drone in D minor swells in and holds, then fades out at about 24 seconds; the reverb is endless, so the wash goes on. WEAR starts fully left, and the tail is clean and smooth. Over twelve seconds it is turned all the way up, and the wash ages as it goes: a warm tape thickness and a soft breath first, then grit and grain over the top, and near fully right the hazy edge of an old radio. The lows stay where they are. It holds there for a few seconds, then WEAR is turned back down and the wash comes clean again.",
+        transcript="A low, dark drone in D minor swells in and holds, then fades out at about 24 seconds; the reverb is endless, so the wash goes on. WEAR starts fully left, and the tail is clean and smooth. Over twelve seconds it is turned all the way up, and the wash ages as it goes: a warm tape thickness and a soft breath first, then grit and grain over the top as it nears fully right. The lows stay where they are. It holds there for a few seconds, then WEAR is turned back down and the wash comes clean again.",
         notes="Drone synthesised in code."),
 }
 ORDER = ["01", "02", "03", "05", "06", "07", "08", "10"]

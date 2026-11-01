@@ -591,18 +591,16 @@ export function metaphor(kind: MetaphorKind): Shape {
       };
     }
     case 'wear-stages': {
-      // Along the tail, what WEAR adds as it goes: clean, tape's slow wobble, grit, an old
-      // radio's narrow band, then clean again on the way back.
+      // Along the tail, what WEAR adds as it goes: clean, tape's slow wobble, grit, then clean
+      // again on the way back (the radio's band moved to MOTION's right side, 1 Nov 2026).
       const y = 34;
       return {
-        label: 'WEAR\'s stages along the tail: clean, tape wobble, grit, an old radio\'s narrow band, then clean again.',
-        faint: ['M100 29H128', 'M100 39H128'],
+        label: 'WEAR\'s stages along the tail: clean, tape wobble, grit, then clean again.',
         ink: [],
         hot: [
           `M6 ${y}H26`,
-          plot(26, 62, (x) => y + 5 * Math.sin((x - 26) * 0.35), 0.5),
-          rough(62, 100, () => y, () => 7, 1.2, 17),
-          plot(100, 128, (x) => y + 3.5 * Math.sin((x - 100) * 1.3), 0.25),
+          plot(26, 74, (x) => y + 5 * Math.sin((x - 26) * 0.35), 0.5),
+          rough(74, 128, () => y, () => 7, 1.2, 17),
           `M128 ${y}H156`,
         ],
       };
@@ -694,7 +692,7 @@ export const CONCEPTS: Concept[] = [
   { id: 'wear-drone', name: 'WEAR up and back (Dark drone)', picked: 3, options: [
     { kind: 'wear-sweep', caption: 'The knob’s path, the tail roughening with it' },
     { kind: 'wear-layers', caption: 'Lows steady, wear thickening and thinning' },
-    { kind: 'wear-stages', caption: 'Clean, tape, grit, radio, clean' },
+    { kind: 'wear-stages', caption: 'Clean, tape, grit, clean' },
     { kind: 'wear-roundtrip', caption: 'The whole range and back', risk: 'the double arc with arrows can read as a refresh or sync icon.' },
   ] },
 ];
