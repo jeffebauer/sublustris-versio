@@ -130,6 +130,9 @@ public:
     // (v1.0.61); ~0 = as v1.0.60 (the knob's 80 ms glide alone).
 #ifndef IV_FIXED_VOICINGS
     void  setDecayCrossSecondsPrototype(float s) { decayCross_ = s; }
+    // Prototype hook (renders/decay_endless_match): 0 = endless at the floor (v1.0.60); 1 = endless follows the playing,
+    // no duck; 2 = follows the playing, the duck kept.
+    void  setEndlessMatchPrototype(int m) { endlessMatch_ = m; }
 #endif
     // Test hook: false = one tank, the lows moving too (before v1.0.18), for demos.
     void  setStillLows(bool on)
@@ -414,11 +417,16 @@ private:
     float pdOld_ IV_ZI, pdLastTarget_ IV_ZI, pdRest_ IV_ZI, pdOldG_ IV_ZI, pdNewG_ = 1.0f, pdRotC_ = 1.0f, pdRotS_ IV_ZI;
     int   pdXfLeft_ IV_ZI;
     float decayMakeup_ = 1.0f, decayGain_ = 1.0f, decayGainNow_ = 1.0f; // DECAY's level make-up (v1.0.28)
+    float holdMix_ IV_ZI; // endless following the playing: how far its loss has glided out after the input went quiet
+    float holdFloor_ IV_ZI; // and how far the finite top's floor has let go
 #ifndef IV_FIXED_VOICINGS
+    int   endlessMatch_ = voicing::kEndlessMatch;
+    int   endlessMatch() const { return endlessMatch_; }
     float decayCross_ = voicing::kDecayCrossSeconds;
     float decayCrossSeconds() const { return decayCross_; }
 #else
     static constexpr float decayCrossSeconds() { return voicing::kDecayCrossSeconds; }
+    static constexpr int   endlessMatch() { return voicing::kEndlessMatch; }
 #endif
     dsp::EraTexture texture_; // ERA's wear on the wet (v1.0.42)
     bool texOn_ IV_ZI;
@@ -446,6 +454,7 @@ private:
     float    inputSlow_ IV_ZI, duckSustained_ IV_ZI; // the duck's: the input's 0.5 s power; how held the playing is (0..1, v1.0.51)
     float    tankInPower_ IV_ZI; // the big tank's input (after the swell), for the quiet detector
     uint64_t quietSince_ IV_ZI;
+    uint64_t endlessPlayedAt_ IV_ZI; // endless following the playing: last block its input sustained the tail
     bool     tailCaptured_ IV_ZI;
     float    tailCeilingDb_ = -24.0f;
     float tankInTarget_ = 1.0f;

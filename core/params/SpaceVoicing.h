@@ -95,6 +95,16 @@ constexpr float kDecayRiseShare = 0.3f;
 // DECAY's pace across the crossover to endless (0.80-0.85, v1.0.61): seconds to cross its width, either way
 // (Engine::control's smoothing). The knob's own 80 ms glide crossed it in a few blocks.
 constexpr float kDecayCrossSeconds = 3.0f;
+// Endless follows the playing (prototype, renders/decay_endless_match): 0 = off (the floor, v1.0.60), 1 = on without
+// the duck, 2 = on with it. Past the finite top, played, the tail keeps the top's loss, level and governor; held (the
+// input kEndlessQuietBelowDb under the tail for kEndlessQuietSeconds) its loss glides out over kEndlessHoldSeconds,
+// and the governor's floor (let go within kEndlessFloorSeconds of the input going quiet) is only a safety ceiling.
+constexpr int   kEndlessMatch       = 0;
+constexpr float kEndlessHoldSeconds = 0.5f;
+constexpr float kEndlessQuietBelowDb = 30.0f;
+constexpr float kEndlessQuietSeconds = 0.25f;
+constexpr float kEndlessFloorSeconds = 0.05f;
+constexpr float kEndlessSafetyDbfs  = -6.0f;
 // The longer tails' trim (v1.0.53, ADR 0034): PLATE / HALL ring longer than they did at every DECAY and
 // sound louder while you play (the chord on renders/decay_range: up to +2.1 dB at 0.80), so the wet is taken down
 // by up to this many dB, eased in across DECAY (a smoothstep from .. to) and back out across the crossover to
