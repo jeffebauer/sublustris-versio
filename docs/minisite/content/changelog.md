@@ -15,7 +15,7 @@ When a player suggests a change, I credit them in its entry. If you have an idea
 
 ## In development
 
-<p class="release-version">v1.0.59, 29 October 2026</p>
+<p class="release-version">v1.0.60, 1 November 2026</p>
 
 Almost every sound change below was made by ear: each option went onto a listening page next to the version before it, and I picked.
 
@@ -51,4 +51,4 @@ Almost every sound change below was made by ear: each option went onto a listeni
 - **Still lows:** in HALL and CANYON the bass stays still while everything above it moves.
 - HALL starts right behind the note, and DECAY keeps the loudness at any setting.
 
-<!-- OWNER: the history above is grouped from SPEC's changelog (v1.0 on 21 Oct to v1.0.59 on 29 Oct 2026). -->
+<!-- OWNER: the history above is grouped from SPEC's changelog (v1.0 on 21 Oct to v1.0.60 on 1 Nov 2026). -->
