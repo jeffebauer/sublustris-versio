@@ -100,7 +100,7 @@ inline float plateScale(float v) { return expLerp(voicing::kPlateMinScale, voici
 
 // DRIFT (P6, MOTION on the panel), bipolar (ADR 0012). (ERA's cassette added its own wow and flutter until v1.0.42.)
 // v1.0.46: on the left side the tape transport on the wet carries most of the wow (transportAmounts), so the
-// tank's lines keep kTransportLineShare of theirs; on the right Wander grows over the side's last half.
+// tank's lines keep kTransportLineShare of theirs. The right side moves no pitch since v1.0.60 (radioBand).
 inline dsp::DriftAmounts driftAmounts(float drift)
 {
     using namespace voicing;
@@ -113,17 +113,26 @@ inline dsp::DriftAmounts driftAmounts(float drift)
         a.flutterHz = kFlutterHzMin + (kFlutterHzMax - kFlutterHzMin) * t;
         a.wowCents *= kTransportLineShare;
         a.flutterCents *= kTransportLineShare;
-    } else if (drift > kDriftDeadHi) {
-        const float t = (drift - kDriftDeadHi) / (1.0f - kDriftDeadHi);
-        a.wowCents = kWanderCents * t; // Wander: the same random generator, quicker, lines fanned out
-        a.wowHz = kWanderHzMin + (kWanderHzMax - kWanderHzMin) * t;
-        a.rateSpread = kWanderRateSpread;
-        const float x = t > 0.5f ? 2.0f * t - 1.0f : 0.0f; // 0 over the side's first half, 1 at its end
-        const float g = 1.0f + kWanderGrow * x * x, r = 1.0f + kWanderRateGrow * x * x;
-        a.wowCents *= g;
-        a.wowHz *= r;
     }
     return a;
+}
+
+// MOTION's right side (v1.0.60, ADR 0036; the owner's pick F on renders/dip_motion): the AM radio's band on the wet
+// (dsp/EraTexture.h: the band-pass, its over-modulation and its wandering dip), moved from WEAR. side is 0 at the
+// dead zone, 1 fully right; it comes in as it did on WEAR: a smoothstep over the side's first twentieth, its blend
+// growing as side^1.5, its intensity side.
+struct RadioBand {
+    float bandW = 0, bandT = 0;
+};
+IV_CTL_OPT inline RadioBand radioBand(float drift)
+{
+    using namespace voicing;
+    RadioBand b;
+    const float side = drift > kDriftDeadHi ? (drift - kDriftDeadHi) / (1.0f - kDriftDeadHi) : 0.0f;
+    const float a = std::fmin(1.0f, side / 0.05f);
+    b.bandW = a * a * (3.0f - 2.0f * a) * side * std::sqrt(side);
+    b.bandT = side;
+    return b;
 }
 
 // 0 below from, a smoothstep to 1 at to.
@@ -157,14 +166,13 @@ IV_SIZE_OPT inline dsp::TransportAmounts transportAmounts(float drift)
 // ERA (P4; v1.0.42, the owner's pick C on renders/era_rethink, "one wear amount"; it replaces ADR 0021's
 // five eras): the Neve stays in the loop as the base at every setting (its warmth and its ×0.7 highs,
 // voicing::kNeveHighRatio, never darker with ERA; no wow or flutter, DRIFT's), and the wear on the wet
-// (dsp/EraTexture.h) comes in over the first twentieth of the knob, then deepens with it: tape saturation,
-// the BBD's compander breathing, the radio's band and wandering dip; the grit (the BBD's clock and the grain,
-// the Midiverb's floating step) from 0.65 on (v1.0.49); and with them the tape's in-loop compression, its
-// hiss and the crackle into the tank. ERA 0 is the Neve alone.
+// (dsp/EraTexture.h) comes in over the first twentieth of the knob, then deepens with it: tape saturation and
+// the BBD's compander breathing; the grit (the BBD's clock and the grain, the Midiverb's floating step) from 0.65
+// on (v1.0.49); and with them the tape's in-loop compression, its hiss and the crackle into the tank. ERA 0 is
+// the Neve alone. (The radio's band left for MOTION's right side in v1.0.60: radioBand.)
 struct EraWear {
     dsp::TexMix tex;                           // the wet's chain (dsp/EraTexture.h)
     float compress = 0, hiss = 0, crackle = 0; // the tape's in-loop compression, hiss and crackle, 0..1
-    float makeup = 1.0f;                       // wet gain keeping ERA's loudness level
 };
 IV_CTL_OPT inline EraWear eraMix(float v)
 {
@@ -187,12 +195,6 @@ IV_CTL_OPT inline EraWear eraMix(float v)
     x.clockT = u;
     x.grainW = g;
     x.grainT = u;
-    x.bandW = s * v * std::sqrt(v);
-    x.bandT = v;
-    // The chain's level: its own slow hold (EraTexture), and what it leaves on music (LUFS against the
-    // Neve base, HALL and MASSIVE: the skank, keys, the full mix's send): the band ~0.7 dB.
-    const float bandDb = 0.7f * x.bandW; // its own statement: no fused multiply-add (renders as picked)
-    e.makeup = std::pow(10.0f, (kMakeupNeveDb + bandDb) / 20.0f);
     return e;
 }
 

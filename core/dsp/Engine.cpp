@@ -601,10 +601,13 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
 
     // ERA in the loop and DRIFT (SPEC §4.6, §4.7). Freezing glides the
     // in-loop colour out (the pad holds still, ADR 0009); DRIFT stays.
-    // ERA's wear on the wet (dsp/EraTexture.h), run only while it's in. At infinite DECAY the band keeps
-    // a share of its blend (tex::kBandAtInfinite).
+    // ERA's wear on the wet (dsp/EraTexture.h), run only while it's in, with MOTION's radio band (v1.0.60, ADR
+    // 0036). At infinite DECAY the band keeps a share of its blend (tex::kBandAtInfinite).
+    const map::RadioBand radio = map::radioBand(smoothed(ParamId::Drift));
     {
         dsp::TexMix t = wear.tex;
+        t.bandW = radio.bandW;
+        t.bandT = radio.bandT;
         t.bandW *= 1.0f - map::governorWeight(decay) * (1.0f - dsp::tex::kBandAtInfinite);
         texOn_ = t.tapeW > 0.0f || t.breathW > 0.0f || t.clockW > 0.0f || t.grainW > 0.0f || t.bandW > 0.0f
               || !texture_.settled(); // every stage out: runs on (the hold alone) until its gain is back at 1
@@ -640,10 +643,12 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         }
         fdn_.setDrift(drift);
         fdn_.setExtraRate(compress);
-        lowFdn_.setDrift(dsp::DriftAmounts{}); // still: no wow, flutter or Wander
+        lowFdn_.setDrift(dsp::DriftAmounts{}); // still: no wow or flutter
         lowFdn_.setExtraRate(compress);
     }
-    eraMakeup_ = wear.makeup;
+    // The wet's level after the chain's own hold: the Neve base's, and the band's ~0.7 dB on music (LUFS against the
+    // Neve base, HALL and MASSIVE: the skank, keys, the full mix's send; v1.0.42), now following it on MOTION.
+    eraMakeup_ = std::pow(10.0f, (voicing::kMakeupNeveDb + 0.7f * radio.bandW) / 20.0f);
 
     tilt_.set(smoothed(ParamId::Tone));
 #ifndef IV_FIXED_VOICINGS

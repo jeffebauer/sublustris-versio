@@ -1,9 +1,10 @@
 // v1.0.46: MOTION (key "drift"), the owner's picks on renders/drift_rethink. Left side: the tape transport on the wet
 // (dsp/Transport.h: wow and flutter with more variance at the far end, Magneto crinkle, a third of round 2's crinkle
-// dips), the tank's own per-line wobble cut to a third; right side: Wander stronger over its last half (B).
+// dips), the tank's own per-line wobble cut to a third; right side: the radio band on the wet since v1.0.60 (ADR 0036;
+// Wander until then).
 // Pins: noon and the dead zone untouched (bit for bit, the transport resting); the left side's depth (p95 cents of a
 // held 1.3 kHz, the page's own measure) and its crinkle and dip counts at 9 o'clock, 3/4 left and full left to the
-// confirm page's B (left_tape_final/_verify.txt) within 10 %; the right side's depth; the transport's latency and its
+// confirm page's B (left_tape_final/_verify.txt) within 10 %; the right side's stillness and its band; the transport's latency and its
 // glide out back to rest; no clicks on MOTION sweeps and flicks, nor from the dips (1 ms frames of the highs against
 // their neighbours); no energy growth, and 10-minute infinite holds at DECAY 1 at both ends in every SPACE (the
 // per-line change is in the loop); music's loudness within ±1 dB of noon across the knob.
@@ -198,34 +199,34 @@ void leftSide()
           "MOTION's tape dips: none from ~7:30 (MOTION 0.026) up, half the share half way, the full share fully left");
 }
 
-// The right side: Wander, stronger over its last half (B). 3/4 right is unchanged by B, so it is pinned to the round-2
-// right page's measure of today's (docs/research/drift-rethink.md: 14.0 / 11.9 / 8.1); full right to v1.0.46's own
-// figures (the picked B, bit for bit against the prototype), and deeper than today's full right (17.9 / 20.3 / 13.1).
-// HALL's are v1.0.57's (ADR 0035, its floor twice as deep in this long tail; were 11.9 and 22.4).
+// The right side (v1.0.60, ADR 0036; the owner's pick F on renders/dip_motion): the radio band on the wet, no pitch
+// movement. A held tone's p95 at 3/4 and full right is noon's (the floor alone) within 2.5 cents (the moving dip's
+// phase bends a partial a little: MASSIVE 5.4 -> 7.3 at full), where Wander made it 14-24 cents (v1.0.59: 3/4 14.0 /
+// 14.7 / 8.1, full 23.6 / 23.6 / 17.3). The mapping: the tank's lines still on the
+// right, the band 0 in the dead zone, in over the side's first twentieth, its blend side^1.5 and intensity side.
 void rightSide()
 {
     const std::vector<float> tones = heldTones();
-    const double pinned[2][3] = {{14.0, 14.7, 8.1}, {23.6, 23.6, 17.3}}; // 3/4 right, full right: PLATE, HALL, MASSIVE
-    const double before[3] = {17.9, 20.3, 13.1};                         // full right before v1.0.46
-    const float drifts[2] = {0.75f, 1.0f}; // the right page's positions
-    for (int k = 0; k < 2; ++k)
-        for (int space : {0, 1, 2}) {
-            const double c = p95Of(render(tones, pageSetting(space, drifts[k])));
-            char msg[220];
-            if (k == 0)
-                std::snprintf(msg, sizeof msg, "MOTION 3/4 right (0.75), %s: p95 %.1f c (as before v1.0.46: %.1f, within 10 %%)",
-                              kSpaceName[space], c, pinned[k][space]);
-            else
-                std::snprintf(msg, sizeof msg, "MOTION full right, %s: p95 %.1f c (v1.0.46: %.1f, within 10 %%; before: %.1f)",
-                              kSpaceName[space], c, pinned[k][space], before[space]);
-            check(std::fabs(c / pinned[k][space] - 1.0) <= 0.10 && (k == 0 || c > before[space]), msg);
+    for (int space : {0, 1, 2}) {
+        const double still = p95Of(render(tones, pageSetting(space, 0.5f)));
+        for (float d : {0.75f, 1.0f}) {
+            const double c = p95Of(render(tones, pageSetting(space, d)));
+            char msg[200];
+            std::snprintf(msg, sizeof msg, "MOTION %s right, %s: p95 %.1f c, noon's %.1f (within 2.5 c: no Wander)",
+                          d < 1.0f ? "3/4" : "full", kSpaceName[space], c, still);
+            check(std::fabs(c - still) <= 2.5, msg);
         }
-    // The mapping itself: x 1.4 deeper and x 1.2 quicker at the end, the side's first half as before.
-    const auto end = iv::map::driftAmounts(1.0f), mid = iv::map::driftAmounts(0.53f + 0.5f * 0.47f);
-    check(std::fabs(end.wowCents / iv::voicing::kWanderCents - 1.4f) < 1e-4f
-              && std::fabs(end.wowHz / iv::voicing::kWanderHzMax - 1.2f) < 1e-4f
-              && std::fabs(mid.wowCents / (0.5f * iv::voicing::kWanderCents) - 1.0f) < 1e-4f,
-          "MOTION's right side: Wander x1.4 deeper and x1.2 quicker at full, as before at the side's middle");
+    }
+    bool still = true;
+    for (float d = 0.53f; d <= 1.0f; d += 0.01f) still = still && iv::map::driftAmounts(d).wowCents == 0.0f && iv::map::driftAmounts(d).flutterCents == 0.0f;
+    check(still, "MOTION's right side: the tank's lines move no more than at noon");
+    const auto off = iv::map::radioBand(iv::voicing::kDriftDeadHi), full = iv::map::radioBand(1.0f);
+    const auto in = iv::map::radioBand(iv::voicing::kDriftDeadHi + 0.05f * (1.0f - iv::voicing::kDriftDeadHi));
+    const auto half = iv::map::radioBand(iv::voicing::kDriftDeadHi + 0.5f * (1.0f - iv::voicing::kDriftDeadHi));
+    check(off.bandW == 0.0f && iv::map::radioBand(0.0f).bandW == 0.0f && iv::map::radioBand(0.5f).bandW == 0.0f && full.bandW == 1.0f
+              && full.bandT == 1.0f && std::fabs(in.bandW - 0.05f * std::sqrt(0.05f)) < 1e-6f
+              && std::fabs(half.bandW - 0.5f * std::sqrt(0.5f)) < 1e-6f && std::fabs(half.bandT - 0.5f) < 1e-6f,
+          "MOTION's right side: the radio band out to noon and on the left, side^1.5 from the side's first twentieth, whole at full");
     const auto left = iv::map::driftAmounts(0.0f);
     check(std::fabs(left.wowCents - iv::voicing::kWowCents * iv::voicing::kTransportLineShare) < 1e-4f,
           "MOTION's left side: the tank's lines keep a third of their wobble (the transport carries the rest)");
@@ -337,6 +338,9 @@ double rmsDb(const std::vector<float>& l, const std::vector<float>& r, double fr
 }
 
 // No energy growth: a noise burst's tail at DECAY 0.75, SIZE 1, MOTION at its ends against noon, window by window.
+// The left side (the transport) within +0.5 dB of noon in every window. The right side (v1.0.60) carries the radio
+// band, whose level hold catches up over the first seconds after the burst (+1.2-1.7 dB in the 2-4 s window, as on
+// WEAR before v1.0.60: 1.3-1.7): the first window within +2 dB, and no later one more than 0.5 dB over the first.
 void energy()
 {
     std::vector<float> in(size_t(30.0f * kSr), 0.0f);
@@ -351,22 +355,26 @@ void energy()
         s.decay = 0.75f;
         s.size = 1.0f;
         const Stereo noon = render(in, s);
-        double worst = -99.0;
-        std::string detail;
+        double worst = -99.0, first = -99.0, growth = -99.0;
         for (float d : {0.0f, 0.1175f, 0.75f, 1.0f}) {
             s.drift = d;
             const Stereo m = render(in, s);
+            double at2 = -99.0;
             for (double w0 : {2.0, 5.0, 10.0, 20.0}) {
                 const double w1 = w0 < 10.0 ? w0 * 2.0 : w0 + 10.0;
                 const double ref = rmsDb(noon.l, noon.r, w0, w1);
                 if (ref < -100.0) continue; // the floor's numerical noise
-                worst = std::fmax(worst, rmsDb(m.l, m.r, w0, w1) - ref);
+                const double dd = rmsDb(m.l, m.r, w0, w1) - ref;
+                if (d < 0.5f) worst = std::fmax(worst, dd);
+                else if (w0 == 2.0) first = std::fmax(first, at2 = dd);
+                else growth = std::fmax(growth, dd - at2);
             }
         }
-        char msg[200];
-        std::snprintf(msg, sizeof msg, "%s, DECAY 0.75, SIZE 1: MOTION's ends add no energy to the tail (worst window %+.2f dB "
-                      "against noon, at most +0.5)", kSpaceName[space], worst);
-        check(worst <= 0.5, msg);
+        char msg[260];
+        std::snprintf(msg, sizeof msg, "%s, DECAY 0.75, SIZE 1: MOTION's ends add no energy to the tail (left: worst window %+.2f dB "
+                      "against noon, at most +0.5; right: %+.2f at 2-4 s, at most +2, later windows %+.2f over it, at most +0.5)",
+                      kSpaceName[space], worst, first, growth);
+        check(worst <= 0.5 && first <= 2.0 && growth <= 0.5, msg);
     }
 }
 
