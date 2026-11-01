@@ -1,5 +1,5 @@
 ---
-// Home (BRIEF §4, in Resilio's DESIGN-v2 order): hero (dark) → intro → the sound (dark) →
+// Home (BRIEF §4, in Resilio's DESIGN-v2 order): hero (dark, with the name) → the sound (dark) →
 // get it → the endless hold (the story) → the panel → features → two ways to play →
 // help shape it → its sibling → download (tile band) → footer.
 // Copy comes from docs/minisite/content/overview.md, split at its headings. Image slots are
@@ -20,7 +20,6 @@ import { render, widthsFor } from '../lib/renders';
 import { getPage, pageHtml, section, splitSections, splitSlots, stripTags, takeH1 } from '../lib/content';
 
 const page = await getPage('overview');
-const macro = render('panel-macro.jpg');
 const patched = render('patched.jpg');
 const storyImg = render('story-tape.jpg'); // the owner's pick, 31 Oct 2026: story_tape3_b's room, rebuilt as story_tape4_a with era gear
 const wideSizes = '(min-width: 92rem) 92rem, calc(100vw - 2rem)';
@@ -33,14 +32,10 @@ const inner = (p = '') => p.replace(/^<p>|<\/p>$/g, '');
 const items = (html: string) => [...html.matchAll(/<li>\s*<strong>([\s\S]*?)<\/strong>\s*([\s\S]*?)<\/li>/g)]
   .map((m) => ({ title: stripTags(m[1]).replace(/\.$/, ''), line: m[2].trim() }));
 
-// Lead: the tagline (bold line), the lede, and the name's meaning.
+// Lead: the tagline (bold line) and the name's meaning. The lede paragraph between them went
+// with the intro section, which the hero's lede now covers (owner, 1 Nov 2026).
 const leadParas = paras(noSlots(lead));
 const tagline = stripTags(leadParas[0] ?? '');
-const lede = inner(leadParas[1]);
-// The intro's bold statement is the lede's first sentence; the rest follows as the paragraph.
-const cut = lede.indexOf('. ') + 1;
-const statement = cut > 0 ? lede.slice(0, cut) : lede;
-const ledeRest = cut > 0 ? lede.slice(cut + 1) : '';
 const etymology = inner(leadParas[2]);
 
 const sound = section(sections, 'what-it-sounds-like');
@@ -79,6 +74,7 @@ const shapeSteps = items(shape.html);
       <HeroMedia />
       <div class="hero-title">
         <h1 class="display" id="title">{h1}</h1>
+        {etymology && <p class="hero-name" set:html={etymology} />}
         <p class="hero-tagline">{tagline}</p>
         <div class="actions">
           <Button href="#sound" variant="ghost">Listen</Button>
@@ -86,16 +82,6 @@ const shapeSteps = items(shape.html);
         </div>
         <p class="hero-platform">For the Noise Engineering Versio, and as an AU/VST3 plugin for macOS.</p>
       </div>
-    </div>
-  </section>
-
-  <!-- 2 Intro (white): why it exists, and the name -->
-  <section class="section intro-plain" aria-labelledby="intro-h">
-    <h2 id="intro-h" class="visually-hidden">Introduction</h2>
-    <div class="column flow">
-      <p class="statement" data-rise set:html={statement} />
-      {ledeRest && <p class="lede quiet" set:html={ledeRest} />}
-      {etymology && <p class="name-note small"><span class="micro quiet">The name</span><span set:html={etymology} /></p>}
     </div>
   </section>
 
@@ -171,16 +157,6 @@ const shapeSteps = items(shape.html);
     <div class="wide">
       <FeatureTiles />
     </div>
-    <figure class="wide macro" data-reveal>
-      {macro ? (
-        <div class="card-media" style="aspect-ratio: 2400 / 1028">
-          <Picture src={macro} widths={widthsFor(macro)} sizes={wideSizes} formats={['avif', 'webp']} loading="lazy"
-            alt="Close-up of the Sublustris panel: the SPACE and ONSET switches beside the FREEZE / PAINT button, with MOTION and DEPTH above." />
-        </div>
-      ) : (
-        <Placeholder id="panel-macro.jpg" name="Panel close-up" ratio="21:9" />
-      )}
-    </figure>
   </section>
 
   <!-- 8 Two ways to play (white) -->
@@ -272,14 +248,11 @@ const shapeSteps = items(shape.html);
 <style>
   /* The sibling band takes Resilio's warm black, so its contour lines sit on their own ground. */
   .sibling.band-dark { --dark: #0c0b0a; }
-  .intro-plain .statement { text-wrap: balance; }
-  .name-note { display: grid; gap: 0.25rem; padding-top: var(--stack-3); border-top: var(--hair) solid var(--line); color: var(--ink-2); }
   .story-figure { margin-block: var(--stack-4); color: var(--ink); }
   .story-diagram { display: block; width: min(100%, 26rem); height: auto; margin-inline: auto; }
   .story-ours { padding: clamp(1.25rem, 0.75rem + 1.5vw, 2rem); }
   .get-actions { justify-content: center; }
   .way-sub { font-size: var(--fs-body); color: var(--ink); }
-  .macro { margin-top: var(--section-gap, var(--stack-5)); }
 </style>
 
 <script>

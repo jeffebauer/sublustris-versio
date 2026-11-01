@@ -178,25 +178,38 @@ html.hero-film .hero-title { animation: hero-title-in 1.2s var(--ease-out) 0.5s 
   padding-top: clamp(1.5rem, 1rem + 2vw, 3rem);
   --tagline-fs: clamp(1.375rem, 1rem + 1.5vw, 2.25rem);
 }
-.hero-platform { color: var(--on-dark-2); font-size: var(--fs-body); padding-top: 0.5rem; }   /* under the buttons: what it runs on (owner, 31 Oct 2026) */
+.hero-platform { color: var(--on-dark-2); font-size: var(--fs-small); padding-top: 0.5rem; }   /* under the buttons: what it runs on (owner, 31 Oct 2026), a size down (owner, 1 Nov 2026) */
 .hero-tagline {
   max-width: 26em; color: var(--ink-2);
-  font-weight: var(--wt-light); font-size: calc(var(--tagline-fs) * 0.8); line-height: 1.45; letter-spacing: 0;
-  font-family: var(--font-mono);   /* the hero's lede: Paper Mono, like every lede (owner, 1 Nov 2026); a size down, as mono sets wide */
+  font-weight: var(--wt-light); font-size: clamp(1.125rem, 0.95rem + 0.45vw, 1.375rem); line-height: 1.5; letter-spacing: 0;
+  font-family: var(--font-mono);   /* the hero's lede: Paper Mono, like every lede (owner, 1 Nov 2026); 18 px on phones, about 22 on desktop, where 29 was far too large (owner, 1 Nov 2026) */
 }
 .hero-title h1 { font-size: var(--fs-hero); }
+/* The name's meaning, close under the title, then a wider gap to the lede (owner, 1 Nov 2026). */
+.hero-name { max-width: 34em; color: var(--on-dark-2); font-size: var(--fs-small); line-height: var(--lh-body); margin-top: -0.25rem; margin-bottom: clamp(1rem, 0.5rem + 1.5vw, 2rem); }
+.hero-name em { color: var(--ink-2); }
 /* The buttons sit under the tagline, a clear step below it, and a size up from the header's
    (owner, 30 Oct 2026). */
 .hero-title .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; padding-top: clamp(2.5rem, 1.5rem + 3vw, 5rem); }
 .hero-title .btn { min-height: 3rem; padding: 0.75rem 1.5rem; font-size: 1.0625rem; }
-/* Wide landscape screens (owner, 30 Oct 2026): the module moves right and the title comes up
-   beside it, over the film's empty left side; the film's box fills the screen's height. */
+/* Wide landscape screens (owner, 30 Oct 2026): the title sits beside the module; the film's box
+   fills the screen's height. Title and module are one group, centred in the screen both ways
+   (owner, 1 Nov 2026): the frame is only as wide as the module, and the film, wider, overflows
+   it on its transparent sides. */
 @media (orientation: landscape) and (min-width: 64rem) {
-  .hero > .wide { display: grid; }
-  .hero-frame, .hero-title { grid-area: 1 / 1; }
-  .hero-frame { max-height: max(24rem, calc(100svh - var(--header-h) - var(--stack-2) - 3rem)); }
-  .hero-still, .hero-video { translate: 24% 0; }
-  .hero-title { align-self: center; padding-top: 0; max-width: 58%; }
+  .hero { min-height: 100svh; display: grid; align-content: center; padding-bottom: var(--stack-2); }
+  .hero > .wide {
+    display: flex; align-items: center; justify-content: center; gap: clamp(3rem, 1rem + 6vw, 9rem);
+    container-type: inline-size;
+    --hero-fh: min(100cqw * 9 / 16, max(24rem, calc(100svh - var(--header-h) - var(--stack-2) - 3rem)));
+  }
+  /* The module sits a little low in the film (its middle at 54.4 % of the height), so the frame
+     rides up by that much and the module, not the frame, is what's centred; the title, centred
+     beside it, lines up with the module's middle. */
+  .hero-frame { flex: none; aspect-ratio: auto; max-height: none; height: var(--hero-fh); width: calc(var(--hero-fh) * 0.34); margin-top: calc(var(--hero-fh) * -0.088); }
+  .hero-still, .hero-video { left: 50%; right: auto; width: calc(var(--hero-fh) * 16 / 9); max-width: none; translate: -50% 0; }
+  .hero-pause { right: -3.5rem; }
+  .hero-title { order: -1; flex: 0 1 auto; min-width: 0; padding-top: 0; }
 }
 /* Portrait phones and tablets (owner, 8 Oct: the module was small in a 16:9 frame; 30 Oct: bigger
    still, so its details read, even past the fold): a tall frame that the film and still fill,
