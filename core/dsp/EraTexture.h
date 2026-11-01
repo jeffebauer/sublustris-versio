@@ -1,10 +1,11 @@
 #pragma once
 // ERA's wear (P4, SPEC §4.7; v1.0.42, the owner's pick C on renders/era_rethink, "one wear amount"): on the
 // wet after the loop, one stereo chain whose stages all come in near the start of the knob and deepen
-// together (Mappings.h eraMix). It keeps the grit the owner likes, the Midiverb's and the BBD's, tape
-// saturation, the radio's band-pass and its wandering dip; no stage low-passes the signal (TONE owns the
-// highs) and none moves its pitch (DRIFT owns movement). The Neve's warmth stays in the loop as the base
-// (dsp/Era.h). docs/research/era-rethink.md.
+// together (Mappings.h eraMix). It keeps the grit the owner likes, the Midiverb's and the BBD's, and tape
+// saturation; none moves its pitch (DRIFT owns movement). The Neve's warmth stays in the loop as the base
+// (dsp/Era.h). docs/research/era-rethink.md. Its last stage, the radio's band, is MOTION's right side since
+// v1.0.60 (Mappings.h radioBand; ADR 0036, the owner's pick F on renders/dip_motion), the one stage that
+// narrows the tone.
 //
 //   tape:    record pre-emphasis around a soft clip, then the exact de-emphasis (Strymon's and
 //            Chowdhury's tape models); a little bias for even harmonics. The clip is a clamped cubic at
@@ -21,8 +22,9 @@
 //            μ-law's 8 bits): the grain stays the same share of the tail all the way down instead of
 //            buzzing and gating as a fixed step does on a fade; a floor keeps silence silent.
 //   band:    the AM radio's band (one two-pole band-pass, ~300 Hz-3 kHz, gentle at the top so it doesn't
-//            do TONE's job), its over-modulation (flattened troughs) and its wandering dip (selective
-//            fading: a slow random notch, like a phaser's), without the station's fades, detune or static.
+//            do TONE's job), its over-modulation (flattened troughs, a soft knee since v1.0.60) and its
+//            wandering dip (selective fading: a slow random notch, like a phaser's), without the station's
+//            fades, detune or static. On MOTION's right side since v1.0.60 (Mappings.h radioBand, ADR 0036).
 // Each stage: a weight w (its blend, 0 = bypassed and not run) and an intensity t (its own setting).
 // A level hold keeps the chain's loudness at its input's, within -6 / +12 dB: the tape's squash and the
 // band's loss depend on how hot the wet is (a pushed send lost 4 dB more than the skank). It compares the
@@ -58,6 +60,12 @@ constexpr float kHoldMax = 5.62341309f;
 // At infinite DECAY the band keeps this share of its blend: a held tail darkens to its warm floor (ADR 0008),
 // mostly under 100 Hz, where the band is ~20 dB down; whole, it took 4-6 dB off a 10-minute hold.
 constexpr float kBandAtInfinite = 0.5f;
+// The over-modulation's soft knee (v1.0.60): linear down to -kOverModKnee of the carrier, then curving towards
+// -kOverModFloor (the hard clamp it replaces sat at -1). Measured on renders/dip_motion's material against the page's
+// F: a still PLATE's tick +13.9 -> +11.0 dB (A, WEAR's band, +10.1-10.4), keys in MASSIVE at full right +21.1 -> +15.7,
+// the sound at most 19.6 dB under F's (a knee from 0.75 left the tick at +12.8; one from 0 reached +13.5 on the keys
+// but sat 11-13.5 dB under F).
+constexpr float kOverModKnee = 0.5f, kOverModFloor = 1.25f;
 constexpr float kGrainBitsHi = 9.0f, kGrainBitsLo = 5.0f;     // the grain's bits under the level, across its intensity
 } // namespace tex
 
@@ -284,7 +292,15 @@ private:
     }
     float band(float v, int c)
     {
-        v = std::fmax(v * mEff_, -1.0f) * invMEff_;                    // over-modulation flattens the troughs
+        // Over-modulation flattens the troughs: a soft knee from -kOverModKnee towards -kOverModFloor (v1.0.60; slope 1
+        // at the knee, as the breath's in v1.0.52). The hard clamp at -1 it replaces put a corner in the wave, heard as a
+        // tick on a clean, still PLATE once the band moved to MOTION without WEAR's tape and grit (renders/dip_motion F).
+        float u = v * mEff_;
+        if (u < -tex::kOverModKnee) {
+            const float d = -tex::kOverModKnee - u;
+            u = -tex::kOverModKnee - d / (1.0f + d * (1.0f / (tex::kOverModFloor - tex::kOverModKnee)));
+        }
+        v = u * invMEff_;
         float b, h;
         dip_[c].tick(v, b, h);
         v += (dipGain_ - 1.0f) * dip_[c].k * b;
