@@ -58,9 +58,8 @@ const storyOurs = storyRest.at(-1) ?? '';
 const storyMiddle = storyRest.slice(0, -1);
 const panelParas = paras(noSlots(panel.html));
 const panelList = noSlots(panel.html).match(/<ul>[\s\S]*?<\/ul>/)?.[0] ?? '';
-// Two ways to play: "**On the module.** …" and "**In your DAW.** …".
+// Two ways to play: the "**In your DAW.** …" paragraph; the module's tile has only the safety notes (owner, 1 Nov 2026).
 const wayText = (title: RegExp) => inner(paras(ways.html).find((p) => title.test(p))).replace(/^<strong>[\s\S]*?<\/strong>\s*/, '');
-const onModule = wayText(/On the module/);
 const inDaw = wayText(/In your DAW/);
 const safeHtml = safe.html.replace(/<p><a href="\/install">How to install<\/a><\/p>/, '');
 const shapeIntro = paras(shape.html)[0] ?? '';
@@ -169,8 +168,6 @@ const shapeSteps = items(shape.html);
         <h3 class="h3">On the module</h3>
         <p class="small quiet">Firmware for the Noise Engineering Versio</p>
         <div class="flow">
-          <p set:html={onModule} />
-          <h4 class="way-sub">{safe.title}</h4>
           <Fragment set:html={safeHtml} />
         </div>
         <Button href="/install/#on-the-versio" variant="ghost" arrow>How to install</Button>
@@ -252,7 +249,6 @@ const shapeSteps = items(shape.html);
   .story-diagram { display: block; width: min(100%, 26rem); height: auto; margin-inline: auto; }
   .story-ours { padding: clamp(1.25rem, 0.75rem + 1.5vw, 2rem); }
   .get-actions { justify-content: center; }
-  .way-sub { font-size: var(--fs-body); color: var(--ink); }
 </style>
 
 <script>
