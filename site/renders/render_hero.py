@@ -15,8 +15,8 @@ Timeline (30 fps):
                   close in front of the module, looking steeply up so it looms;
                   near-black, the LEDs the only light. One continuous jib-like
                   move: it dollies back while rising and tilting down, ending
-                  on hero_f's composition (the owner's pick: centred, from a
-                  little below, 40 mm). Quintic ease-in-out, no overshoot.
+                  square-on to the panel at 100 mm, as Resilio's film does
+                  (owner, 1 Nov 2026). Quintic ease-in-out, no overshoot.
                   Light in stages: dark -> the cold top and rim lights trace the
                   edges and knob caps (frames 50-150) -> the soft key and front
                   fill come up to the hero_e look (110-225).
@@ -117,12 +117,16 @@ def build():
             p.inputs["Emission Strength"].keyframe_insert("default_value", frame=f)
             ld.keyframe_insert("energy", frame=f)
 
-    # camera: low and close looking steeply up -> hero_f, the owner's pick (30 Oct
-    # 2026): centred, from a little below, 40 mm, so the module towers a touch
-    hf = next(v for v in render_clay.module_variants(render_clay._dummy_module_ref()) if v["id"] == "hero_f")
+    # camera: low and close looking steeply up -> square-on, as Resilio's film ends (owner,
+    # 1 Nov 2026: both films end square-on; was hero_f, from a little below at 40 mm): level
+    # with the panel's centre, zero tilt and yaw (no keystoning), 100 mm lens, the panel ~72 %
+    # of the frame height. The target slides down to the panel centre so the tilt reaches 0.
+    mid = module.PH / 2
+    end_dist = (module.PH / 0.72) * 100.0 / (36.0 / (16 / 9))   # 100 mm lens, 72 % of frame height
     start, start_t = C.Vector(START), C.Vector(START_T)
-    end, end_t = C.Vector(hf["loc"]), C.Vector(hf["target"])
-    lens0, lens1 = LENS0, float(hf["f"])
+    end, end_t = C.Vector((0, -end_dist, mid)), C.Vector((0, 0, mid))
+    lens0, lens1 = LENS0, 100.0
+    focus, fstop = C.Vector((0, 0, mid)), 16
     tgt = bpy.data.objects.new("cam_target", None)
     C.link(tgt)
     cd = bpy.data.cameras.new("hero")
@@ -135,7 +139,7 @@ def build():
     con.track_axis = "TRACK_NEGATIVE_Z"
     con.up_axis = "UP_Y"
     cd.dof.use_dof = True
-    cd.dof.aperture_fstop = hf["fstop"] * bpy.context.scene.unit_settings.scale_length
+    cd.dof.aperture_fstop = fstop * bpy.context.scene.unit_settings.scale_length
     for f in range(CAM_MOVE[0], CAM_MOVE[1] + 1):
         k = _ease(f, *CAM_MOVE)
         cam.location = start.lerp(end, k)
@@ -145,7 +149,7 @@ def build():
         dist = (end_t - cam.location).length
         excess0 = lens0 / (lens1 * (start_t - start).length / (end_t - end).length)
         cd.lens = lens1 * dist / (end_t - end).length * excess0 ** (1 - k)
-        cd.dof.focus_distance = (C.Vector(hf["focus"]) - cam.location).length
+        cd.dof.focus_distance = (focus - cam.location).length
         cd.dof.keyframe_insert("focus_distance", frame=f)
         cam.keyframe_insert("location", frame=f)
         tgt.keyframe_insert("location", frame=f)

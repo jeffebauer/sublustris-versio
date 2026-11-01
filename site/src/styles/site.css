@@ -203,22 +203,22 @@ html.hero-film .hero-title { animation: hero-title-in 1.2s var(--ease-out) 0.5s 
     container-type: inline-size;
     --hero-fh: min(100cqw * 9 / 16, max(24rem, calc(100svh - var(--header-h) - var(--stack-2) - 3rem)));
   }
-  /* The module sits a little low in the film (its middle at 54.4 % of the height), so the frame
-     rides up by that much and the module, not the frame, is what's centred; the title, centred
-     beside it, lines up with the module's middle. */
-  .hero-frame { flex: none; aspect-ratio: auto; max-height: none; height: var(--hero-fh); width: calc(var(--hero-fh) * 0.34); margin-top: calc(var(--hero-fh) * -0.088); }
+  /* The frame is the module's width plus a little (the module is 0.28 of the film's height wide
+     since the film ends square-on, owner 1 Nov 2026); its middle sits at 50.1 % of the height,
+     so the frame needs no ride up: the module is centred and the title lines up with it. */
+  .hero-frame { flex: none; aspect-ratio: auto; max-height: none; height: var(--hero-fh); width: calc(var(--hero-fh) * 0.31); }
   .hero-still, .hero-video { left: 50%; right: auto; width: calc(var(--hero-fh) * 16 / 9); max-width: none; translate: -50% 0; }
   .hero-pause { right: -3.5rem; }
   .hero-title { order: -1; flex: 0 1 auto; min-width: 0; padding-top: 0; }
 }
 /* Portrait phones and tablets (owner, 8 Oct: the module was small in a 16:9 frame; 30 Oct: bigger
    still, so its details read, even past the fold): a tall frame that the film and still fill,
-   cropping in around the module (the sides are only transparent). The film's top sixth is
-   empty above the panel, so the frame rides up under the header's padding. */
+   cropping in around the module (the sides are only transparent). The film's top seventh is
+   empty above the panel (the module's top at 14 % of the height), so the frame rides up under the header's padding. */
 @media (orientation: portrait) and (max-width: 63.99rem) {
   .hero-frame {
     --hero-fh: min(190vw, 120svh);
-    aspect-ratio: auto; max-height: none; height: var(--hero-fh); margin-top: calc(var(--hero-fh) * -0.12);
+    aspect-ratio: auto; max-height: none; height: var(--hero-fh); margin-top: calc(var(--hero-fh) * -0.10);
   }
   .hero-still, .hero-video { object-fit: cover; }
 }
