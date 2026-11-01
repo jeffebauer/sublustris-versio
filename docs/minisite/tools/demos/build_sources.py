@@ -324,6 +324,22 @@ def clip08(out: Path):
     write(m.buf, out / "08.wav")
 
 
+def clip09(out: Path):
+    """Radio side: picked guitar chords in D, one every ~3.2 s, each let ring, so the tail is
+    bright and broad enough for the radio's band and its wandering notch to show (owner,
+    1 Nov 2026: a demo for MOTION's new right side)."""
+    gtr = guitar_bank()
+    shapes = [[50, 57, 62, 66, 69], [47, 54, 59, 62, 66], [43, 50, 55, 59, 62, 67], [45, 52, 57, 61, 64],
+              [50, 57, 62, 66, 69], [47, 54, 59, 62, 66], [43, 50, 55, 59, 62, 67]]
+    m = mm.Mix(28.0)
+    for k, ch in enumerate(shapes):
+        t = LEAD + k * 3.2
+        for j, n in enumerate(ch):
+            x = mm.fade(gtr.note(n), 3.0, 0.3)
+            m.add(x, t + j * 0.11 + abs(hum(3)), db(-6) * vary(0.8, 0.06), (n - 57) / 30)
+    write(limit(m.buf, 5.0), out / "09.wav")
+
+
 def clip10(out: Path):
     """Dark drone: D minor in the low register (D1 under D2, A2, D3 and F3), slowly swelling and
     slowly opening, held while WEAR is swept (render.py), then let go. Voiced higher and opened
@@ -341,7 +357,7 @@ def clip10(out: Path):
 
 
 CLIPS = {"01": clip01, "02": clip02, "03": clip03, "05": clip05, "06": clip06, "07": clip07,
-         "08": clip08, "10": clip10}
+         "08": clip08, "09": clip09, "10": clip10}
 
 if __name__ == "__main__":
     out = Path(sys.argv[1])

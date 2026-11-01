@@ -113,6 +113,17 @@ CLIPS = {
         caption="Held poly synth chords with MOTION fully left, the tape side: wow, flutter, crinkle and a few short dropouts.",
         transcript="A warm analogue-style poly synth, saw waves through a resonant low-pass filter, plays held chords, D minor nine, G minor seven, C nine and F major seven, with a few single notes between, twice through; the last chord rings on. With MOTION fully left the whole tail wavers in pitch together, like a worn tape, with quick crinkles, and now and then a short dropout dulls it for a moment.",
         notes="Synth synthesised in code."),
+    "09": dict(
+        # TO CHECK on the F build's render (measure.py): the caption and transcript describe the
+        # intended sound; rewrite them from the render before the clip is published.
+        slug="radio-side", title="The radio side of MOTION", blend="1", dur=28.0,
+        set=dict(space="HALL", attack="NATURAL", decay="2:30", tone="12", era="7", size="1", drift="12", time="9"),
+        auto={"breakpoints": ramp("drift", (0.0, 0.5), (2.0, 0.5), (16.0, 1.0))},
+        sweep=("drift", 2.0, 16.0, "5"),
+        sweep_text="noon → fully right, turned steadily from 2 to 16 s, then held",
+        caption="Picked guitar chords while MOTION is turned from noon to fully right: the tail narrows into an old radio and starts to phase.",
+        transcript="A clean electric guitar picks seven chords in D major, one every few seconds, each left to ring into a long hall. MOTION starts at noon, and the tail is full and open. As it turns right, the tail narrows, losing its deepest lows and its top, like the reverb is playing through an old AM radio, and a slow notch drifts through its middle so it swirls like a phaser. From about 16 seconds MOTION is fully right and the swirl is deepest.",
+        notes="Guitar: Emilyguitar by Karoryfer (CC0). Played in code."),
     "10": dict(
         slug="dark-drone", title="Dark drone, WEAR's whole range", blend="4", dur=28.0,
         set=dict(space="MASSIVE", attack="NATURAL", decay="4:30", tone="10", era="7", size="12", drift="10", time="11"),
@@ -125,7 +136,7 @@ CLIPS = {
         transcript="A low, dark drone in D minor swells in and holds, then fades out at about 24 seconds; the reverb is endless, so the wash goes on. WEAR starts fully left, and the tail is clean and smooth. Over twelve seconds it is turned all the way up, and the wash ages as it goes: a warm tape thickness and a soft breath first, then grit and grain over the top as it nears fully right. The lows stay where they are. It holds there for a few seconds, then WEAR is turned back down and the wash comes clean again.",
         notes="Drone synthesised in code."),
 }
-ORDER = ["01", "02", "03", "05", "06", "07", "08", "10"]
+ORDER = ["01", "02", "03", "05", "06", "07", "08", "09", "10"]
 
 
 def value(k: str, v: str):
