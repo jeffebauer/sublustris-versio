@@ -33,7 +33,7 @@ import common as C
 import story
 
 STORY_DIM = 1.0  # 0: the round-3 light; 1 (the final, owner 31 Oct 2026): the room falls away around the decks.
-# The site's story-tape.jpg: --round 3 --only story_tape3_b --exact --samples 256 --res-scale 1.25 with IV_VIGNETTE=0.75
+# The site's story-tape.jpg: --round 3 --only story_tape4_a --exact --samples 256 --res-scale 1.25 with IV_VIGNETTE=0.75
 
 DESK_Z = 740.0
 DESK = dict(x0=-950.0, x1=950.0, y0=-380.0, y1=380.0)
@@ -1034,10 +1034,14 @@ def vu_meter(name, cx, o, m, needle=-14.0):
     B(f"{name}_pivot", cx - 11, cx + 11, A77_F - 4.5, A77_F - 1.2, z0 + 3.5, z0 + 9, m["cap_black"], o, bevel=1.5)
 
 
-def deck77(o, m, name="deck", supply=72.0, takeup=44.0, side=1, spin=0.0, needles=(-14.0, -20.0)):
+def deck77(o, m, name="deck", supply=72.0, takeup=44.0, side=1, spin=0.0, needles=(-14.0, -20.0), tape="own"):
     """The round-3 deck (A77 Mk III/IV layout, unbranded). o = the case's
     bottom-front centre on the desk; front faces -Y. side: +1 puts the rear
     phono sockets on the right half (towards a partner deck on the right).
+    tape: "own" threads its own tape reel to reel; "out" runs it off the supply
+    reel past the heads and out of the deck to the right; "in" takes a tape in
+    from the left past the heads onto the take-up reel. For "out" and "in" the
+    deck draws no tape and returns its half of the path as "tape" (x, z).
     Returns the rear sockets (world) and reference points."""
     o = Vector(o)
     W, H, D, t, F = A77_W, A77_H, A77_D, A77_T, A77_F
@@ -1164,32 +1168,57 @@ def deck77(o, m, name="deck", supply=72.0, takeup=44.0, side=1, spin=0.0, needle
     tak_c = (o.x + A77_REEL_DX, o.z + A77_REEL_Z)
     rl, rr = rollers
     g = gr + 0.15
-    pts = [story._tangent(sup_c, supply, (rl.x - g, rl.z), cw=False)]
-    pts += story._wrap((rl.x, rl.z), g, math.pi, 1.5 * math.pi, 10)
+    pts = []
+    if tape in ("own", "out"):
+        pts += [story._tangent(sup_c, supply, (rl.x - g, rl.z), cw=False)]
+        pts += story._wrap((rl.x, rl.z), g, math.pi, 1.5 * math.pi, 10)
     pts += [(o.x - 60, o.z + TZ), (o.x + 60, o.z + TZ)]
-    pts += story._wrap((rr.x, rr.z), g, 1.5 * math.pi, 2 * math.pi, 10)
-    pts += [story._tangent(tak_c, takeup, (rr.x + g, rr.z), cw=True)]
-    story.tape_strip(f"{name}_tape", pts, o.y + YC)
+    if tape in ("own", "in"):
+        pts += story._wrap((rr.x, rr.z), g, 1.5 * math.pi, 2 * math.pi, 10)
+        pts += [story._tangent(tak_c, takeup, (rr.x + g, rr.z), cw=True)]
+    if tape == "own":
+        story.tape_strip(f"{name}_tape", pts, o.y + YC)
     return dict(sockets=sockets, heads=Vector((o.x, o.y + YC, o.z + TZ + 10)),
-                meters=Vector((o.x + 86, o.y, o.z + 88)), center=Vector((o.x, o.y, o.z + H / 2)))
+                meters=Vector((o.x + 86, o.y, o.z + 88)), center=Vector((o.x, o.y, o.z + H / 2)),
+                tape=None if tape == "own" else pts, tape_y=o.y + YC)
 
 
-def deck_pair(m, xs, y0, z0=DESK_Z):
-    """Two decks on the desk at x = xs (case centres), fronts at y0, each
-    running its own tape; A's outputs into B's inputs, B's outputs back into
-    A's. The phono leads leave the rear tops and hang down into the gap
-    between the cases, so the cross-patch reads from the front."""
+def deck_pair(m, xs, y0, z0=DESK_Z, glint_el=17.0, glint=float(os.environ.get("IV_TAPE_GLINT", "1.6"))):
+    """Two decks on the desk at x = xs (case centres), fronts at y0, set up as
+    Eno's Discreet Music diagram draws them (the liner notes, 1975; the owner,
+    1 Nov 2026): ONE tape runs off A's supply reel past A's record head, out
+    of A and across the gap (the gap is the delay line), past B's playback
+    head and onto B's take-up reel, the master. A's take-up and B's supply
+    reels sit empty. B's outputs return to A's inputs (the "delay return");
+    the phono leads leave the rear tops and hang down into the gap between the
+    cases, so the patch reads from the front."""
     xa, xb = xs
-    a = deck77((xa, y0, z0), m, "deck_A", supply=74.0, takeup=46.0, side=1, spin=0.2,
-               needles=(-12.0, -18.0))
-    b = deck77((xb, y0, z0), m, "deck_B", supply=60.0, takeup=58.0, side=-1, spin=1.1,
-               needles=(-16.0, -10.0))
+    # mid-piece: A's supply part spent, B's master tape filling
+    a = deck77((xa, y0, z0), m, "deck_A", supply=58.0, takeup=0.0, side=1, spin=0.2,
+               needles=(-12.0, -18.0), tape="out")
+    b = deck77((xb, y0, z0), m, "deck_B", supply=0.0, takeup=72.0, side=-1, spin=1.1,
+               needles=(-16.0, -10.0), tape="in")
+    tp = story.tape_strip("delay_tape", a["tape"] + b["tape"], a["tape_y"])
+    # The tape has to read across the gap, but seen almost edge-on it is under 2 px tall, and in
+    # the room's browns it measured 4 levels off the wall behind it (darker didn't help). Glossy
+    # oxide catches the light: a soft card where the camera's view of the tape's top face
+    # reflects (behind the decks, glint_el up), lighting the tape alone, makes it a fine bright line.
+    tz = a["heads"].z - 10
+    tc = Vector(((xa + xb) / 2, a["tape_y"], tz))
+    el = math.radians(glint_el)
+    gl = C.area_light("tape_glint", tc + Vector((0, math.cos(el), math.sin(el))) * 1400, tc, size=1100,
+                      power=C.watts(C.KEY_W * glint) * 1.4 ** 2, rgb=(1.0, 0.9, 0.78))
+    gl.data.use_shadow = False
+    gl.visible_camera = False
+    only = bpy.data.collections.new("tape_only")
+    only.objects.link(tp)
+    only.collection_objects[0].light_linking.link_state = "INCLUDE"
+    gl.light_linking.receiver_collection = only
     sa, sb = a["sockets"], b["sockets"]
     gx = (xa + A77_W / 2 + xb - A77_W / 2) / 2   # middle of the gap
     gap = (xb - A77_W / 2) - (xa + A77_W / 2)
-    leads = ((sa["out_l"], sb["in_l"], m["cable"], "AB_L"), (sa["out_r"], sb["in_r"], m["cable_grey"], "AB_R"),
-             (sb["out_l"], sa["in_l"], m["cable"], "BA_L"), (sb["out_r"], sa["in_r"], m["cable_grey"], "BA_R"))
-    for k, (src, dst, mat, tag) in enumerate(leads):
+    leads = ((sb["out_l"], sa["in_l"], m["cable"], "BA_L"), (sb["out_r"], sa["in_r"], m["cable_grey"], "BA_R"))
+    for k, (src, dst, mat, tag) in enumerate(leads, start=2):   # (k as when A -> B leads hung in front)
         p0 = rca(f"plug_{tag}_s", src, 1, m, mat)
         p1 = rca(f"plug_{tag}_d", dst, 1, m, mat)
         sag_z = z0 + 40 + 26 * k               # each lead hangs a little differently
