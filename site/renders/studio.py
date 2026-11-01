@@ -1734,7 +1734,8 @@ def tape_cross4():
     plants70(m, sx0 + 660.0, rz)
     # leads (owner, 31 Oct: the synth and keyboard need cables): the keyboard lid's multi-way
     # lead into the synth's side, the synth's two outputs back to deck A, the guitar into the
-    # echo's input, the echo's output to deck B, mains leads off the back of the desk
+    # echo's input; the echo's and the SH-2000's outputs to deck A too, as everything played goes
+    # into the first machine in Eno's diagram (owner, 2 Nov 2026); mains leads off the back of the desk
     W = lambda e, p: e.matrix_world @ Vector(p)
     bpy.context.view_layer.update()
     # the keyboard's lead: from the lid's corner socket up into the panel's multipin connector
@@ -1779,13 +1780,14 @@ def tape_cross4():
                           e0 + e_fwd * 60 + Vector((0, 0, top - e0.z + 25)), e1 + e_fwd * 35 + e_n * 15,
                           e1 + e_n * 12, e1], 2.8, m["cable"])
     eo = W(echo, (-120, gear.EC_D, 60))
+    # along the desk under the shelf to deck A, then up behind it beside the synth's leads
     cable("echo_out", [eo, eo + Vector((0, 40, -40)), Vector((eo.x - 60, 360, DESK_Z + 4)),
-                       Vector((xb + 120, 395, rz - 30)), Vector((xb + 110, 130 + A77_D, rz + 60))], 2.6,
-          m["cable_grey"])
+                       Vector((xa + 170, 362, DESK_Z + 4)), Vector((xa + 140, 395, rz - 30)),
+                       Vector((xa + 130, 130 + A77_D, rz + 60))], 2.6, m["cable_grey"])
     so = W(sh, (gear._shx(0.67), 225, 113))   # the SH-2000's output, on top of its rear rail
     cable("sh_out", [so, so + Vector((0, 20, 35)), Vector((so.x - 40, so.y + 120, DESK_Z + 40)),
-                     Vector((so.x - 120, 100, DESK_Z + 4)), Vector((xb - 40, 395, rz - 30)),
-                     Vector((xb - 60, 130 + A77_D, rz + 60))], 2.6, m["cable"])
+                     Vector((so.x - 120, 100, DESK_Z + 4)), Vector((xa + 190, 350, DESK_Z + 4)),
+                     Vector((xa + 160, 395, rz - 30)), Vector((xa + 150, 130 + A77_D, rz + 60))], 2.6, m["cable"])
     for p0 in (W(syn, (gear._px(685), gear.SY_D, 40)), W(echo, (100, gear.EC_D, 30)), W(sh, (300, gear.SH_D, 40))):
         cable("mains", [p0, p0 + Vector((0, 50, -25)), Vector((p0.x, DESK["y1"] - 15, DESK_Z + 4)),
                         Vector((p0.x + 15, DESK["y1"] + 30, DESK_Z - 60)), Vector((p0.x + 30, DESK["y1"] + 45, 300)),
