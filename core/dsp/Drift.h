@@ -1,11 +1,10 @@
 #pragma once
 // DRIFT (P6, bipolar, ADR 0012), one generator per tank line: how far that
 // line's read wanders, in samples, updated at control rate. Left of noon:
-// tape wow (smooth random) and flutter; right of noon: Wander, the same
-// smooth random movement but quicker, each line's rate fanned out ±50 %
-// (v1.0.20). ERA's
-// cassette stage adds its own wow and flutter on top (SPEC §4.7). Noon is
-// still (the tank's modulation floor still runs).
+// tape wow (smooth random) and flutter, each line's rate fanned out ±15 %.
+// Right of noon the lines are still (v1.0.60: the radio band on the wet,
+// ADR 0036; Wander until then). Noon is still too (the tank's modulation
+// floor still runs).
 //
 // Pitch deviation p from a delay swinging by A samples at f Hz is
 // 2π f A / fs, so for a depth in cents A = (2^(c/1200) − 1) fs / (2π f).
@@ -20,7 +19,6 @@ namespace iv::dsp {
 struct DriftAmounts {
     float wowCents = 0, wowHz = 0.5f;
     float flutterCents = 0, flutterHz = 7.0f;
-    float rateSpread = 0.3f; // how far the lines' rates fan out: 0.85-1.15 (tape), 0.5-1.5 (Wander)
 };
 
 class Drift {
@@ -44,7 +42,7 @@ public:
     // caps the swing (a share of the line's length, the room in memory).
     IV_SIZE_OPT float control(float dt, const DriftAmounts& a, float maxSamples) // once per block: built for size (flash)
     {
-        const float rateSkew = 1.0f - 0.5f * a.rateSpread + a.rateSpread * spread_;
+        const float rateSkew = 0.85f + 0.3f * spread_; // the lines' rates fanned out 0.85-1.15
         // Wow: a smooth random line (new target every ~1/rate, smoothed twice).
         wowCountdown_ -= dt;
         if (wowCountdown_ <= 0.0f) {

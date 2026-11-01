@@ -18,7 +18,7 @@ inline juce::String knobText(ParamId id, double value)
     auto pct = [](float x) { return juce::String(juce::roundToInt(100.0f * x)) + " %"; };
     if (id == ParamId::Drift) {
         if (v < voicing::kDriftDeadLo) return "Tape " + pct((voicing::kDriftDeadLo - v) / voicing::kDriftDeadLo);
-        if (v > voicing::kDriftDeadHi) return "Drift " + pct((v - voicing::kDriftDeadHi) / (1.0f - voicing::kDriftDeadHi));
+        if (v > voicing::kDriftDeadHi) return "Radio " + pct((v - voicing::kDriftDeadHi) / (1.0f - voicing::kDriftDeadHi));
         return "Still";
     }
     if (id == ParamId::Era) return "Wear " + pct(std::clamp(v, 0.0f, 1.0f));

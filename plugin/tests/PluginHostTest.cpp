@@ -316,7 +316,7 @@ int main()
                       "WEAR's text is its amount: " + (a + " / " + b + " / " + c + " / " + d).toStdString());
             }
             if (auto* drift = byId[size_t(iv::ParamId::Drift)])
-                check(drift->getText(0.5f, 64) == "Still" && drift->getText(1.0f, 64) == "Drift 100 %",
+                check(drift->getText(0.5f, 64) == "Still" && drift->getText(1.0f, 64) == "Radio 100 %",
                       "MOTION's (DRIFT's) text names its side (host view)");
         }
     }

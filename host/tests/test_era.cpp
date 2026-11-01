@@ -6,6 +6,8 @@
 // frames); DRIFT's dead zone is exact and both sides move the tail without clicks; the saturation doesn't
 // alias badly when hit hard. v1.0.49 (the owner's picks on renders/wear_grit, wear_fizz, wear_saturation): the
 // grit (the BBD's clock and the grain) is silent below 0.65 on the knob and the clock runs at 28 kHz at full.
+// v1.0.60 (ADR 0036, the owner's pick F on renders/dip_motion): the radio's band left WEAR for MOTION's right side,
+// so WEAR is tape, breath, clock and grain; it never narrows the tone.
 
 #include "Fft.h"
 #include "Metrics.h"
@@ -254,7 +256,7 @@ void hissFollowsInput()
 }
 
 // ADR 0008: an infinite tail holds across the knob in every SPACE (10 min, within 3 dB, no growth, not
-// silent). The band's wandering dip comes and goes on the wet by design, so the level is judged over 5 s.
+// silent). The level is judged over 5 s (until v1.0.60 the band's wandering dip came and went on WEAR's wet).
 void infiniteAcrossTheKnob()
 {
     std::vector<float> in(size_t(620.0f * kSr), 0.0f);
@@ -566,6 +568,31 @@ void gritFromItsStart()
           "WEAR 1: the grit whole (clock and grain blends 1); at 0.65 none");
 }
 
+// v1.0.60: WEAR carries none of the radio's band at any setting (it is MOTION's right side's, Mappings.h radioBand),
+// and with MOTION at noon its wet keeps the lows a band-pass would take: a 100 Hz tone through WEAR 1 within 1.5 dB
+// of WEAR 0 (v1.0.59, the band on WEAR: -4.9 dB, after its level hold).
+void noBandOnWear()
+{
+    bool none = true;
+    for (float v = 0.0f; v <= 1.0f; v += 0.01f) none = none && iv::map::eraMix(v).tex.bandW == 0.0f;
+    std::vector<float> in(size_t(4.0f * kSr), 0.0f);
+    for (size_t i = 0; i < size_t(2.0f * kSr); ++i) in[i] = 0.2f * std::sin(2.0f * 3.14159265f * 100.0f * float(i) / kSr);
+    double db[2];
+    for (int k = 0; k < 2; ++k) {
+        Setting s;
+        s.space = 1;
+        s.era = k == 0 ? 0.0f : 1.0f;
+        const Stereo out = render(in, s);
+        double sum = 0.0;
+        for (size_t i = size_t(1.0f * kSr); i < size_t(2.0f * kSr); ++i) sum += double(out.l[i]) * out.l[i];
+        db[k] = 10.0 * std::log10(sum / kSr + 1e-30);
+    }
+    char msg[160];
+    std::snprintf(msg, sizeof msg, "WEAR carries no radio band (blend 0 across the knob); a 100 Hz tone at WEAR 1 %+.1f dB against "
+                  "WEAR 0 (within 1.5)", db[1] - db[0]);
+    check(none && std::fabs(db[1] - db[0]) <= 1.5, msg);
+}
+
 // v1.0.49 (renders/wear_fizz F): the BBD's clock at full WEAR runs at 28 kHz (14 kHz before). Its sample and hold
 // images a 1 kHz tone at the clock +- 1 kHz: 27 and 29 kHz, heard folded about 48 kHz at 21 and 19 kHz, ~10 dB over
 // what lands at 13 and 15 kHz (its third images, 83 and 85 kHz, folded). A 14 kHz clock reads the other way round
@@ -617,6 +644,7 @@ int main()
     notAliasing();
     gritFromItsStart();
     clockAt28k();
+    noBandOnWear();
     std::printf("%d failure(s)\n", failures);
     return failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
