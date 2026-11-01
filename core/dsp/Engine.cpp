@@ -864,6 +864,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
         smoothNext_ ^= 1;
     }
     const float* smoothK = smoothK_[n == smoothN_[0] ? 0 : 1];
+    const float decayWas = smoothed(ParamId::Decay);
     for (const auto& p : kParams) {
         const size_t i = static_cast<size_t>(p.id);
         if (p.kind == ParamKind::Switch3 || p.smoothing == Smoothing::Slewed) smooth_[i] = values_[i];
@@ -871,6 +872,19 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
             smooth_[i] += smoothK[i] * (values_[i] - smooth_[i]);
             if (std::fabs(values_[i] - smooth_[i]) < 1e-5f) smooth_[i] = values_[i]; // land exactly (MIX 0 = bit-exact dry)
         }
+    }
+    // DECAY crosses to and from endless at its own pace (v1.0.61): across the 0.80-0.85 crossover it moves at most
+    // the crossover's width in kDecayCrossSeconds, so the governor, the duck, the long-tail trim and the air fade in
+    // or out with it instead of within the knob's 80 ms (a swollen HALL tail turned to endless fell 7 dB in 1 s;
+    // turned back, the trim stepped 2.1 dB in 40 ms: the owner's "very quick drop off"). Every move that doesn't
+    // reach into the crossover is untouched; outside it the knob jumps to the crossover's edge.
+    {
+        float& d = smooth_[static_cast<size_t>(ParamId::Decay)];
+        const float step = (map::kDecayInfiniteAt - map::kDecayFiniteTop) * float(n) / (sampleRate_ * decayCrossSeconds());
+        if (d > decayWas && d > map::kDecayFiniteTop && decayWas < map::kDecayInfiniteAt)
+            d = std::fmin(d, std::fmax(decayWas, map::kDecayFiniteTop) + step);
+        else if (d < decayWas && d < map::kDecayInfiniteAt && decayWas > map::kDecayFiniteTop)
+            d = std::fmax(d, std::fmin(decayWas, map::kDecayInfiniteAt) - step);
     }
 
     // Freeze glides (ADR 0009): colour out over 0.2 s, back over 1 s.

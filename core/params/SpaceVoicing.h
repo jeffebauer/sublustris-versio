@@ -92,6 +92,9 @@ constexpr float kDecayLevelTopSeconds[3] = {12.0f, 25.0f, 120.0f};
 // the owner's pick B on renders/decay_swell): a long tail turned down fades at 0.7 of its new rate while the
 // make-up catches up, never louder; played, the shorter tail grows in at the level it had.
 constexpr float kDecayRiseShare = 0.3f;
+// DECAY's pace across the crossover to endless (0.80-0.85, v1.0.61): seconds to cross its width, either way
+// (Engine::control's smoothing). The knob's own 80 ms glide crossed it in a few blocks.
+constexpr float kDecayCrossSeconds = 3.0f;
 // The longer tails' trim (v1.0.53, ADR 0034): PLATE / HALL ring longer than they did at every DECAY and
 // sound louder while you play (the chord on renders/decay_range: up to +2.1 dB at 0.80), so the wet is taken down
 // by up to this many dB, eased in across DECAY (a smoothstep from .. to) and back out across the crossover to

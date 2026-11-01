@@ -126,6 +126,11 @@ public:
     // Test hook: how much of DECAY's level make-up applies (1 = v1.0.28; 0 = none, shorter tails
     // quieter, as v1.0.27), for demos.
     void  setDecayMakeup(float k) { decayMakeup_ = k; }
+    // Prototype hook (renders/decay_cross): DECAY's pace across the endless crossover, seconds for its width
+    // (v1.0.61); ~0 = as v1.0.60 (the knob's 80 ms glide alone).
+#ifndef IV_FIXED_VOICINGS
+    void  setDecayCrossSecondsPrototype(float s) { decayCross_ = s; }
+#endif
     // Test hook: false = one tank, the lows moving too (before v1.0.18), for demos.
     void  setStillLows(bool on)
     {
@@ -409,6 +414,12 @@ private:
     float pdOld_ IV_ZI, pdLastTarget_ IV_ZI, pdRest_ IV_ZI, pdOldG_ IV_ZI, pdNewG_ = 1.0f, pdRotC_ = 1.0f, pdRotS_ IV_ZI;
     int   pdXfLeft_ IV_ZI;
     float decayMakeup_ = 1.0f, decayGain_ = 1.0f, decayGainNow_ = 1.0f; // DECAY's level make-up (v1.0.28)
+#ifndef IV_FIXED_VOICINGS
+    float decayCross_ = voicing::kDecayCrossSeconds;
+    float decayCrossSeconds() const { return decayCross_; }
+#else
+    static constexpr float decayCrossSeconds() { return voicing::kDecayCrossSeconds; }
+#endif
     dsp::EraTexture texture_; // ERA's wear on the wet (v1.0.42)
     bool texOn_ IV_ZI;
     float diffMotionNow_ IV_ZI, diffMotionPhase_ IV_ZI; // the PLATE's wandering input allpass, samples
