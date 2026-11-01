@@ -198,10 +198,13 @@ html.hero-film .hero-title { animation: hero-title-in 1.2s var(--ease-out) 0.5s 
    it on its transparent sides. */
 @media (orientation: landscape) and (min-width: 64rem) {
   .hero { min-height: 100svh; display: grid; align-content: center; padding-bottom: var(--stack-2); }
+  /* The group spans most of the page's width, between the full width it had (too wide) and its
+     own width, centred (too narrow; owner, 1 Nov 2026): the title at the left, the module at
+     the right of a container 78 % of the screen wide. */
   .hero > .wide {
-    display: flex; align-items: center; justify-content: center; gap: clamp(3rem, 1rem + 6vw, 9rem);
-    container-type: inline-size;
-    --hero-fh: min(100cqw * 9 / 16, max(24rem, calc(100svh - var(--header-h) - var(--stack-2) - 3rem)));
+    display: flex; align-items: center; justify-content: space-between; gap: clamp(3rem, 1rem + 6vw, 9rem);
+    width: min(100% - 2 * var(--margin), 78vw, var(--wide));
+    --hero-fh: min(100vw * 9 / 16, max(24rem, calc(100svh - var(--header-h) - var(--stack-2) - 3rem)));
   }
   /* The frame is the module's width plus a little (the module is 0.28 of the film's height wide
      since the film ends square-on, owner 1 Nov 2026); its middle sits at 50.1 % of the height,
