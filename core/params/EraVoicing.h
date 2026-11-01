@@ -9,14 +9,8 @@ constexpr float kDriftDeadLo = 0.47f, kDriftDeadHi = 0.53f; // noon: only the mo
 // Left: tape wow (random, 0.2 → 1 Hz) and flutter (5 → 9 Hz), cents at full.
 constexpr float kWowCents = 15.0f, kWowHzMin = 0.2f, kWowHzMax = 1.0f;
 constexpr float kFlutterCents = 3.0f, kFlutterHzMin = 5.0f, kFlutterHzMax = 9.0f;
-// Right: Wander (v1.0.20, owner's pick on renders/drift_cw; docs/research/drift-cathedra-side.md):
-// quick, small random movement, as Lexicon's Random Hall and Valhalla's Random Space do, the
-// lines' rates fanned out ±50 % so they never sway together; 1 → 2.25 Hz, cents at full.
-// (Until v1.0.20: a slow sine per line, 0.05 → 0.3 Hz, ±35 cents: "too seasick".)
-constexpr float kWanderCents = 20.0f, kWanderHzMin = 1.0f, kWanderHzMax = 2.25f, kWanderRateSpread = 1.0f;
-// v1.0.46 (owner's pick B "stronger", renders/drift_rethink): over the right side's last half Wander deepens to
-// ×1.4 and quickens to ×1.2 at the end (x² from the side's middle; the first half as before).
-constexpr float kWanderGrow = 0.4f, kWanderRateGrow = 0.2f;
+// Right (v1.0.60, ADR 0036, the owner's pick F on renders/dip_motion): the radio band on the wet (Mappings.h
+// radioBand, dsp/EraTexture.h), no pitch movement. Wander (v1.0.20-v1.0.59) is gone.
 // v1.0.46: the left side's tape transport on the wet (dsp/Transport.h; owner's picks round 3's E with the confirm
 // page's B, renders/drift_rethink), at full left before its variance: one shared wow and flutter, crinkle bursts
 // a second over the side's last 40 %, and the share of them bringing a dip (about a third of round 2's crinkle dips).
