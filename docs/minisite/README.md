@@ -26,7 +26,7 @@ The custom panel art isn't designed yet, so there are no Blender renders. Every 
 | Hero still | `hero-still.png` (transparent) | 2400 × 1350 | 16:9 | Home, hero (and the poster for the film); the film's frame 240 from `render_hero.py` |
 | Hero film | `hero-reveal.mp4/.webm` (plays once) + `hero-hold-loop.mp4/.webm` (starts on the reveal's last frame); transparent: MP4 is HEVC with alpha (Safari), WebM is VP9 with alpha | 2400 × 1350 | 16:9 | Home, hero (optional; the still stands in) |
 | Front-on panel | `front-on-wide.jpg` | 2116 × 1190 | 16:9 | Home and manual, the annotated panel |
-| Panel close-up | `panel-macro.jpg` | 2400 × 1028 | 21:9 | Home, a feature band |
+| Panel close-up | `panel-macro.jpg` | 2400 × 1028 | 21:9 | Manual, the header image (off the home page, owner 1 Nov 2026) |
 | Patched module | `patched.jpg` | 2400 × 1350 | 16:9 | Home, "Two ways to play" |
 | Open Graph image | `og-hero.jpg` | 1200 × 630 | 1.91:1 | Link previews |
 | Plugin screenshot | `plugin-panel.png` | 2x of the plugin at 1x | the plugin's | Manual, "In the plugin" |
