@@ -85,14 +85,14 @@ CLIPS = {
         notes="Drums: Virtuosity Drums by Versilian Studios and Karoryfer (CC0). Stabs synthesised in code."),
     "05": dict(
         slug="bloom", title="Bloom swell", blend="1", dur=27.0,
-        set=dict(space="MASSIVE", attack="BLOOM", decay="2", tone="11:30", era="7", size="12", drift="1", time="2"),
+        set=dict(space="MASSIVE", attack="BLOOM", decay="2", tone="11:30", era="7", size="12", drift="12", time="2"),
         auto=None,
         caption="Single piano notes, each one swelling in slowly behind itself.",
         transcript="A grand piano plays six soft single notes in A minor, about four seconds apart. Each note is dry and close; its reverb starts almost silent and swells in over the next two or three seconds, so every note blooms in behind itself and joins a long, soft wash.",
         notes="Piano: Steinway B from the Versilian Community Sample Library (CC0). Played in code."),
     "06": dict(
         slug="shimmer", title="Shimmer melody", blend="1", dur=27.0,
-        set=dict(space="HALL", attack="SHIMMER", decay="3", tone="12", era="7", size="2", drift="1:30", time="12"),
+        set=dict(space="HALL", attack="SHIMMER", decay="3", tone="12", era="7", size="2", drift="12", time="12"),
         auto=None,
         caption="A slow lead with one steady octave above it in the reverb.",
         transcript="A soft, round synth lead plays a slow melody in D minor, with long notes and space between the phrases. The reverb adds one steady octave above each note: a quiet, higher voice that follows the melody and rings on in the tail. The lead has no octave of its own; the octave is only in the reverb.",
@@ -113,6 +113,17 @@ CLIPS = {
         caption="Held poly synth chords with MOTION fully left, the tape side: wow, flutter, crinkle and a few short dropouts.",
         transcript="A warm analogue-style poly synth, saw waves through a resonant low-pass filter, plays held chords, D minor nine, G minor seven, C nine and F major seven, with a few single notes between, twice through; the last chord rings on. With MOTION fully left the whole tail wavers in pitch together, like a worn tape, with quick crinkles, and now and then a short dropout dulls it for a moment.",
         notes="Synth synthesised in code."),
+    "09": dict(
+        # Checked on v1.0.60's render (1 Nov 2026): from noon to the end the tail's top end falls ~11 dB
+        # and its lows ~7 dB against the mids, and the notch moves between ~700 Hz and 2.9 kHz.
+        slug="radio-side", title="The radio side of MOTION", blend="1", dur=28.0,
+        set=dict(space="HALL", attack="NATURAL", decay="2:30", tone="12", era="7", size="1", drift="12", time="9"),
+        auto={"breakpoints": ramp("drift", (0.0, 0.5), (2.0, 0.5), (16.0, 1.0))},
+        sweep=("drift", 2.0, 16.0, "5"),
+        sweep_text="noon → fully right, turned steadily from 2 to 16 s, then held",
+        caption="Picked guitar chords while MOTION is turned from noon to fully right: the tail narrows into an old radio and starts to phase.",
+        transcript="A clean electric guitar picks seven chords in D major, one every few seconds, each left to ring into a long hall. MOTION starts at noon, and the tail is full and open. As it turns right, the tail narrows, losing its deepest lows and its top, like the reverb is playing through an old AM radio, and a slow notch drifts through its middle so it swirls like a phaser. From about 16 seconds MOTION is fully right and the swirl is deepest.",
+        notes="Guitar: Emilyguitar by Karoryfer (CC0). Played in code."),
     "10": dict(
         slug="dark-drone", title="Dark drone, WEAR's whole range", blend="4", dur=28.0,
         set=dict(space="MASSIVE", attack="NATURAL", decay="4:30", tone="10", era="7", size="12", drift="10", time="11"),
@@ -122,10 +133,10 @@ CLIPS = {
         sweep=("era", 2.0, 25.0, "7"),
         sweep_text="fully left → fully right (2-14 s), held to 18 s, then back to fully left by 25 s",
         caption="A low drone into an endless tail while WEAR is turned all the way up and back down: the wash ages, then comes clean.",
-        transcript="A low, dark drone in D minor swells in and holds, then fades out at about 24 seconds; the reverb is endless, so the wash goes on. WEAR starts fully left, and the tail is clean and smooth. Over twelve seconds it is turned all the way up, and the wash ages as it goes: a warm tape thickness and a soft breath first, then grit and grain over the top, and near fully right the hazy edge of an old radio. The lows stay where they are. It holds there for a few seconds, then WEAR is turned back down and the wash comes clean again.",
+        transcript="A low, dark drone in D minor swells in and holds, then fades out at about 24 seconds; the reverb is endless, so the wash goes on. WEAR starts fully left, and the tail is clean and smooth. Over twelve seconds it is turned all the way up, and the wash ages as it goes: a warm tape thickness and a soft breath first, then grit and grain over the top as it nears fully right. The lows stay where they are. It holds there for a few seconds, then WEAR is turned back down and the wash comes clean again.",
         notes="Drone synthesised in code."),
 }
-ORDER = ["01", "02", "03", "05", "06", "07", "08", "10"]
+ORDER = ["01", "02", "03", "05", "06", "07", "08", "09", "10"]
 
 
 def value(k: str, v: str):

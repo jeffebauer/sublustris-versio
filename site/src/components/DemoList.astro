@@ -6,9 +6,10 @@ interface Props { limit?: number; headingLevel?: 'h3' | 'h4'; idPrefix?: string 
 const { limit, headingLevel, idPrefix } = Astro.props;
 const { clips } = await getDemos();
 // Bento: wide tiles placed so the cards fill whole rows at 4, 3 and 2 columns. Ten clips
-// (Resilio): the first and last. Eight (Sublustris): the 1st, 4th, 5th and 8th, twelve slots.
+// (Resilio): the first and last. Eight: the 1st, 4th, 5th and 8th, twelve slots. Nine (Sublustris
+// since the radio side, 1 Nov 2026): the 1st, 6th and 9th, twelve slots.
 const shown = clips.slice(0, limit);
-const wideAt = shown.length === 8 ? [0, 3, 4, 7] : [0, shown.length - 1];
+const wideAt = shown.length === 8 ? [0, 3, 4, 7] : shown.length === 9 ? [0, 5, 8] : [0, shown.length - 1];
 ---
 <ul class="demos" data-demos>
   {shown.map((clip, i) => <AudioAB clip={clip} n={i + 1} headingLevel={headingLevel} idPrefix={idPrefix} wide={wideAt.includes(i)} />)}

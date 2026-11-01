@@ -87,9 +87,10 @@ export function clock(seconds: number): string {
 // The tiny diagram on each demo tile (DESIGN-v2 V11), by clip file number.
 // Demos round 2 (docs/minisite/demos-plan.md): one per clip in the eight-clip set.
 // Sublustris's eight (stop 2, approved 29 Oct 2026): 01 endless pad, 02 freeze and paint,
-// 03 dub stabs, 05 bloom, 06 shimmer, 07 worn guitar, 08 MOTION's tape side, 10 dark drone.
+// 03 dub stabs, 05 bloom, 06 shimmer, 07 worn guitar, 08 MOTION's tape side, 10 dark drone;
+// 09 MOTION's radio side added 1 Nov 2026 (owner).
 const DIAGRAMS: Record<string, DiagramKind> = {
   '01': 'endless-infinity', '02': 'freeze', '03': 'longtail', '05': 'swell-family',
-  '06': 'octave', '07': 'wear-roughen', '08': 'tape-head', '10': 'wear-stages',
+  '06': 'octave', '07': 'wear-roughen', '08': 'tape-head', '09': 'radio-band', '10': 'wear-stages',
 };
 export const diagramFor = (file: string): DiagramKind | undefined => DIAGRAMS[file.slice(0, 2)];
