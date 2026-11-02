@@ -40,7 +40,7 @@ import props  # noqa: E402
 import story  # noqa: E402
 import studio  # noqa: E402
 
-MAIN_CHECKOUT = "/Users/jesse/Documents/Sites/immensio-versio"
+MAIN_CHECKOUT = "/Users/jesse/Documents/Sites/sublustris-versio"
 DEFAULT_OUT = os.path.join(MAIN_CHECKOUT, "renders", "site_clay")
 OUT_R2 = os.path.join(MAIN_CHECKOUT, "renders", "site_clay_r2")
 # round 2 (owner, 30 Oct 2026): the picks from round 1, shown on the r2 sheet for reference

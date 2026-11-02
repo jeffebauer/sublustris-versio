@@ -35,7 +35,7 @@ The next session knows nothing this one knew. Write down **what is true now, wha
    - `docs/TASKS.md`: the "Last updated" line, the "Plugin installed" line, ticked items moved to Done with the date, new owner tasks added, "Waiting on Claude" current.
    - Decisions made this session each have an ADR in `docs/adr/`, a SPEC changelog line, and CONTEXT.md terms if new vocabulary appeared.
    - the current milestone's backlog, if one exists: status of each item.
-   - Memory (`~/.claude/projects/-Users-jesse-Documents-Sites-immensio-versio/memory/`): one fact per file with frontmatter (name, description, metadata.type) and a one-line pointer in `MEMORY.md`. Add a feedback memory for any new "learned the hard way" rule or owner preference, update an existing one rather than duplicating, delete any that proved wrong; consider whether it also belongs in `CLAUDE.md`'s Hard rules.
+   - Memory (`~/.claude/projects/-Users-jesse-Documents-Sites-sublustris-versio/memory/`): one fact per file with frontmatter (name, description, metadata.type) and a one-line pointer in `MEMORY.md`. Add a feedback memory for any new "learned the hard way" rule or owner preference, update an existing one rather than duplicating, delete any that proved wrong; consider whether it also belongs in `CLAUDE.md`'s Hard rules.
 
 5. **Write `docs/handoff/HANDOFF.md`** (overwrite; the previous one is in git history). Sections:
    - **State:** milestone status table (M0–M9: built / owner check pending / not started), `main` HEAD, installed plugin commit, gate numbers from step 3.

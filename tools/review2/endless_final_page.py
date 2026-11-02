@@ -17,7 +17,7 @@ import argparse, os, shutil, subprocess
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np, soundfile as sf
 
-REPO = '/Users/jesse/Documents/Sites/immensio-versio'
+REPO = '/Users/jesse/Documents/Sites/sublustris-versio'
 ap = argparse.ArgumentParser()
 ap.add_argument('--main', required=True)
 ap.add_argument('--proto', required=True)

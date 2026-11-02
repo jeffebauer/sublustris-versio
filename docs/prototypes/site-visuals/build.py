@@ -16,7 +16,7 @@ import shutil
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-DEFAULT_OUT = Path("/Users/jesse/Documents/Sites/immensio-versio/renders/site_visuals")
+DEFAULT_OUT = Path("/Users/jesse/Documents/Sites/sublustris-versio/renders/site_visuals")
 
 
 def options(meta):

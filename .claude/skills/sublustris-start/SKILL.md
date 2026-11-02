@@ -9,7 +9,7 @@ The previous session left a handoff. Read it before touching anything; don't re-
 
 ## Steps
 
-1. **Read, in order:** `CLAUDE.md` (rules, commands), `docs/handoff/HANDOFF.md` (state, in flight, next steps, what will bite), `docs/TASKS.md` (the owner's list, installed plugin, waiting-on-Claude), then the "Where to look" files the handoff names. The memory index (`~/.claude/projects/-Users-jesse-Documents-Sites-immensio-versio/memory/MEMORY.md`) loads automatically; open any memory whose hook matches the next step. Skim `docs/adr/` titles for decisions newer than you'd expect.
+1. **Read, in order:** `CLAUDE.md` (rules, commands), `docs/handoff/HANDOFF.md` (state, in flight, next steps, what will bite), `docs/TASKS.md` (the owner's list, installed plugin, waiting-on-Claude), then the "Where to look" files the handoff names. The memory index (`~/.claude/projects/-Users-jesse-Documents-Sites-sublustris-versio/memory/MEMORY.md`) loads automatically; open any memory whose hook matches the next step. Skim `docs/adr/` titles for decisions newer than you'd expect.
 
 2. **Check reality against the handoff.**
    ```bash

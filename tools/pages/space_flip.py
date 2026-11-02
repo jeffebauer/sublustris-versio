@@ -29,7 +29,7 @@ import numpy as np
 import soundfile as sf
 
 ROOT = Path(__file__).resolve().parents[2]
-MAIN = Path("/Users/jesse/Documents/Sites/immensio-versio")  # pages live in the main checkout's renders/
+MAIN = Path("/Users/jesse/Documents/Sites/sublustris-versio")  # pages live in the main checkout's renders/
 SRC = MAIN / "renders" / "_material"
 MATERIALS = ["skank", "vibes", "stabs", "pad", "keys", "voice"]
 SPACE = {"PLATE": 0.0, "HALL": 0.5, "MASSIVE": 1.0}

@@ -24,23 +24,15 @@ Start with `/sublustris-start`.
 
 **Nothing running:** no agents and no worktrees. The nested sessions this session started are all idle and their branches merged or deleted; they can be archived. The LAN page server (`renders/` on :8765) may still be running. The laptop's LAN address is now 192.168.1.238.
 
-## Folder move (not done yet; owner's choice)
+## Folder move (done 2 Nov 2026, at the end of session 12)
 
-The GitHub repo is already `jeffebauer/sublustris-versio` (ADR 0032 amendment; `origin` points at it). The local folder moves `~/Documents/Sites/immensio-versio` → `~/Documents/Sites/sublustris-versio`, but **only at a wrap-up when the owner is at the computer and will open a new session in the new folder**. Never before a `/clear` or from the phone: a cleared session stays in the old folder (memory "Folder move needs a new session"). Checklist:
+The folder moved `~/Documents/Sites/immensio-versio` → `~/Documents/Sites/sublustris-versio`; the tracked paths (skills, CLAUDE.md, SPEC §6.2's tree, the page tools) and the memory folder (`~/.claude/projects/-Users-jesse-Documents-Sites-sublustris-versio/memory/`) were moved with it. **The first session in the new folder does these first:**
 
-1. **Prepare:** everything committed and pushed; no agents running; no worktrees; the page server stopped.
-2. **Paths:**
-   - Replace `/Users/jesse/Documents/Sites/immensio-versio` with `/Users/jesse/Documents/Sites/sublustris-versio` in tracked files that aren't history: CLAUDE.md, `.claude/skills/*`, `tools/**/*.py`, SPEC §6's tree. `git grep -l immensio-versio` finds them; leave `docs/research/` and past handoff prompts as history.
-   - Change the memory path in `.claude/skills/sublustris-wrap/SKILL.md` to `-Users-jesse-Documents-Sites-sublustris-versio`.
-   - Commit and push.
-3. **Memory:** `mkdir -p ~/.claude/projects/-Users-jesse-Documents-Sites-sublustris-versio && cp -R ~/.claude/projects/-Users-jesse-Documents-Sites-immensio-versio/memory ~/.claude/projects/-Users-jesse-Documents-Sites-sublustris-versio/`.
-4. **Last command:** `mv ~/Documents/Sites/immensio-versio ~/Documents/Sites/sublustris-versio`. Then tell the owner to open a new session in the new folder and run `/sublustris-start`.
-5. **The new session's first steps:**
-   - `git worktree prune`.
-   - Recreate the `.venv` (`python3 -m venv .venv && .venv/bin/pip install numpy soundfile`): a moved venv's scripts still point at the old path.
-   - `build/`'s CMake cache records the old path, so remove only `build/CMakeCache.txt` and `build/CMakeFiles`. Then `cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build` and ctest (expect 22).
-   - Run `make -C firmware all-variants` and `cmp` the release against `dist/sublustris_versio-v1.0.61-radio-endless-33a1be3.bin`.
-   - Update CLAUDE.md's first paragraph to say the folder has moved.
+1. `git worktree prune`.
+2. Recreate the `.venv` (`rm` it by its literal path, then `python3 -m venv .venv && .venv/bin/pip install numpy soundfile`): a moved venv's scripts still point at the old path.
+3. `build/`'s CMake cache records the old path, so remove only `build/CMakeCache.txt` and `build/CMakeFiles`. Then `cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build` and ctest (expect 22 of 22).
+4. `make -C firmware all-variants` (libDaisy's build may need `make -C libs/libDaisy -j8` again for the same reason) and `cmp` the release against `dist/sublustris_versio-v1.0.61-radio-endless-33a1be3.bin`.
+5. The old memory folder (`-Users-jesse-Documents-Sites-immensio-versio`) can go to the Trash once the new session has loaded its memory.
 
 ## State
 
@@ -49,12 +41,12 @@ The GitHub repo is already `jeffebauer/sublustris-versio` (ADR 0032 amendment; `
 | Spec | v1.0 frozen plus amendments to **v1.0.61**, on main |
 | M0 | Passed (25 Oct) |
 | M1/M4-M8 | Built and listened |
-| M2 | Plugin installed `4371335` (v1.0.59), 29 Oct; **main is v1.0.61, not installed** (owner runs `tools/install_plugin.sh`) |
+| M2 | Plugin installed `5a54f8e` (v1.0.61, main), 2 Nov 17:15; AU check passed |
 | M3 | **v1.0.61 played at the rack** (2 Nov: "MUCH better"); module CPU not profiled since v1.0.58 |
 | M9 | Not started |
 
 - **main HEAD:** `5a54f8e` plus the wrap-up commit; the v1.0.61 merge is `520b329`.
-- **Not pushed:** main is about 45 commits ahead of `origin/main` (`dcf211d`). The owner's standing rule is no push without their OK; asked at wrap-up.
+- **Pushed:** main is on `origin/main` (2 Nov 2026, the owner's OK).
 - **Gates on merged main (2 Nov):** ctest **"100% tests passed out of 22"**; the site builds (13 pages) with `astro check` at 0 errors and 0 warnings.
 - **Firmware:**
 
@@ -80,11 +72,10 @@ The GitHub repo is already `jeffebauer/sublustris-versio` (ADR 0032 amendment; `
 3. **The unfreeze-after-SIZE overload** in MASSIVE (SHIMMER, WEAR 0.5, MOTION tape): the audit lap's UNFRZ lines in `docs/research/m3-review2-audit-212b68b.log`. Options in the session 11 handoff (git history): glide SIZE after an unfreeze, or stop the twin sooner.
 4. **MASSIVE → CANYON in the firmware and plugin:** labels only (ParamSpec's shown label, the plugin, CONTEXT, the tools), keys and codes unchanged, plus an ADR and a SPEC line. The panel art and site already say CANYON.
 5. **A profile lap on the module** (`make MODE=profile SIZESPIKE=5`), covering v1.0.58-v1.0.61. Profile is at 98 % of flash.
-6. **Website:** the AI-tells copy review, the Safari and iPhone checks, a fresh Vercel preview once main is pushed.
+6. **Website:** the AI-tells copy review, the Safari and iPhone checks, a fresh Vercel preview from main (pushed 2 Nov).
 
 ## Waiting on the owner (`docs/TASKS.md`)
 
-- **The push to origin** (asked at wrap-up).
 - **Install v1.0.61 in Ableton** when wanted.
 - **Listen:** `input_stop2` (after its re-render).
 - **When convenient:** empty the Trash (`sublustris-wrap-2026-11-02` and the older folders); reference recordings; walk through the site.

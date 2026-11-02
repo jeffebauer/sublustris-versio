@@ -1,6 +1,6 @@
 # Sublustris Versio
 
-Called Immensio Versio until 27 Oct 2026 (ADR 0032): internal identifiers (`iv::`, `IV_*`, the plugin codes `ImVs` / `Ombr`, the bundle ID, the CMake names) keep the old name on purpose. The GitHub repo is `jeffebauer/sublustris-versio` since 29 Oct 2026 (ADR 0032 amendment). **The local folder is still `immensio-versio`**: it moves to `sublustris-versio` at the next wrap-up (the checklist is in `docs/handoff/HANDOFF.md`).
+Called Immensio Versio until 27 Oct 2026 (ADR 0032): internal identifiers (`iv::`, `IV_*`, the plugin codes `ImVs` / `Ombr`, the bundle ID, the CMake names) keep the old name on purpose. The GitHub repo is `jeffebauer/sublustris-versio` since 29 Oct 2026 (ADR 0032 amendment). The local folder moved from `immensio-versio` to `~/Documents/Sites/sublustris-versio` on 2 Nov 2026.
 
 A huge, warm, lush reverb firmware for the Noise Engineering Versio (Daisy Seed, STM32H750), sibling to Resilio Versio. One DSP Core, three Hosts: Renderer (offline CLI), JUCE Plugin (AU/VST3 test bench), Versio Firmware.
 

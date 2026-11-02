@@ -353,7 +353,7 @@ As Resilio §6: `core/` (params + dsp, no platform includes), `host/render` (CLI
 
 ### 6.2 Repo layout
 ```
-immensio-versio/
+sublustris-versio/
   CMakeLists.txt
   core/params/   ParamSpec.h, Mappings.h, EraVoicing.h, SpaceVoicing.h, GestureReader.h
   core/dsp/      Engine.h/.cpp, Plate.h/.cpp, Fdn.h/.cpp, Swell.h, Shimmer.h, Diffuser.h, Drift.h, Era.h,
