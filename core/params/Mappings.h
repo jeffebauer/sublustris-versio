@@ -207,7 +207,7 @@ IV_CTL_OPT inline float governorWeight(float decay)
 
 // The floor governor's own weight (v1.0.56, ADR 0008 amended): PLATE and MASSIVE ease it in from
 // voicing::kGovernorEaseFrom as t^3, so turning towards endless glides instead of dropping at 0.80;
-// HALL as governorWeight. 0 at and below 0.70 and 1 from 0.85 in every SPACE. The duck, the hold and
+// HALL as governorWeight. 0 at and below 0.70 and 1 from 0.85 in every SPACE. The hold and
 // everything else DECAY's crossover fades keep governorWeight.
 IV_CTL_OPT inline float floorWeight(float decay, int space)
 {

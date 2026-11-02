@@ -182,8 +182,8 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (const char* sl = std::getenv("IV_STILL_LOWS")) engine.setStillLows(std::atoi(sl) != 0);
     if (const char* ms = std::getenv("IV_MOD_SCALE")) engine.setModulationScale(float(std::atof(ms)));
     if (const char* dm = std::getenv("IV_DECAY_MAKEUP")) engine.setDecayMakeup(float(std::atof(dm)));
-    if (const char* em = std::getenv("IV_ENDLESS_MATCH")) engine.setEndlessMatchPrototype(std::atoi(em)); // renders/decay_endless_match
-    if (const char* dc = std::getenv("IV_DECAY_CROSS")) engine.setDecayCrossSecondsPrototype(float(std::atof(dc))); // renders/decay_cross
+    if (std::getenv("IV_ENDLESS_MATCH") || std::getenv("IV_DECAY_CROSS")) // renders/decay_endless_match: C is built in since v1.0.61
+        std::fprintf(stderr, "iv_render: IV_ENDLESS_MATCH / IV_DECAY_CROSS ignored: endless follows the playing, crossed at the knob's pace (C) since v1.0.61\n");
     if (std::getenv("IV_DECAY_RISE")) // renders/decay_swell: B is built in since v1.0.55
         std::fprintf(stderr, "iv_render: IV_DECAY_RISE ignored: DECAY's make-up rise is capped (B) since v1.0.55\n");
     if (const char* et = std::getenv("IV_FIT_EARLY_TAPS")) engine.setEarlyTapPrototype(std::atoi(et)); // fit_cpu's D (re-prepares)
@@ -210,34 +210,19 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         std::fprintf(stderr, "iv_render: IV_ROOM_WANDER ignored: the small room's wander scales with each line's length (B) since v1.0.47\n");
     if (std::getenv("IV_ROOM_LEVEL")) // renders/room_level: B is built in since v1.0.43
         std::fprintf(stderr, "iv_render: IV_ROOM_LEVEL ignored: the room's level follows the pad (B) since v1.0.43\n");
-    if (const char* fd = std::getenv("IV_FREEZE_DUCK")) { // renders/freeze_moment: mode[:seconds]
-        const char* colon = std::strchr(fd, ':');
-        engine.setFreezeDuckPrototype(std::atoi(fd), colon ? float(std::atof(colon + 1)) : 0.0f);
-        std::fprintf(stderr, "iv_render: IV_FREEZE_DUCK: %s (0 as built, 1 hold, 2 glide)\n", fd);
-    }
     if (const char* tg = std::getenv("IV_TWIN_GAIN_DB")) { // renders/twin_louder: dB, or "off"
         const bool off = std::strcmp(tg, "off") == 0;
         engine.setTwinGainPrototype(off ? 0.0f : float(std::atof(tg)), off);
         std::fprintf(stderr, "iv_render: IV_TWIN_GAIN_DB: %s\n", off ? "no twin" : tg);
     }
 #ifndef IV_FIXED_VOICINGS
-    // renders/level_duck and renders/level_glue's hooks; as built since v1.0.51 (ratio 2, floor -21, release 0.4,
-    // 0.08 after held playing, held playing keeps 40 % of the reduction).
-    if (const char* dr = std::getenv("IV_DUCK_RATIO")) {
-        engine.setDuckRatioPrototype(float(std::atof(dr)));
-        std::fprintf(stderr, "iv_render: IV_DUCK_RATIO: %s:1\n", dr);
-    }
+    // renders/level_duck's floor hook; as built since v1.0.51 (-21). The duck's hooks went with the duck (v1.0.61).
+    if (std::getenv("IV_DUCK_RATIO") || std::getenv("IV_DUCK_RELEASE") || std::getenv("IV_DUCK_ADAPTIVE")
+        || std::getenv("IV_DUCK_SUSTAIN_CUT") || std::getenv("IV_FREEZE_DUCK"))
+        std::fprintf(stderr, "iv_render: IV_DUCK_* / IV_FREEZE_DUCK ignored: endless has no duck since v1.0.61\n");
     if (const char* fl = std::getenv("IV_FLOOR_DB")) {
         engine.setFloorPrototype(float(std::atof(fl)));
         std::fprintf(stderr, "iv_render: IV_FLOOR_DB: %s dBFS\n", fl);
-    }
-    if (const char* rl = std::getenv("IV_DUCK_RELEASE")) {
-        engine.setDuckReleasePrototype(float(std::atof(rl)));
-        std::fprintf(stderr, "iv_render: IV_DUCK_RELEASE: %s s\n", rl);
-    }
-    if (const char* ad = std::getenv("IV_DUCK_ADAPTIVE")) { // 0: no faster release after held playing
-        engine.setDuckAdaptivePrototype(float(std::atof(ad)));
-        std::fprintf(stderr, "iv_render: IV_DUCK_ADAPTIVE: %s s after held playing\n", ad);
     }
     { // renders/hall_level: HALL's endless tail over the floor, dB (IV_HALL_TAIL_DB; as built 3, v1.0.52) and/or brighter (IV_HALL_TAIL_TILT "low,high" dB)
         const char* td = std::getenv("IV_HALL_TAIL_DB");
@@ -249,10 +234,6 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
             std::fprintf(stderr, "iv_render: IV_HALL_TAIL: HALL's endless tail %+.2f dB over the floor, tilt lows %+.2f / highs %+.2f dB\n",
                          td ? std::atof(td) : double(iv::voicing::kHallTailDb), double(lo), double(hi));
         }
-    }
-    if (const char* sc = std::getenv("IV_DUCK_SUSTAIN_CUT")) { // 0: held playing ducked in full
-        engine.setDuckSustainCutPrototype(float(std::atof(sc)));
-        std::fprintf(stderr, "iv_render: IV_DUCK_SUSTAIN_CUT: %s\n", sc);
     }
 #endif
     if (const char* st = std::getenv("IV_SWELL_TAPS")) {

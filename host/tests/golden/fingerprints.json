@@ -1,6 +1,6 @@
 {
-  "spec": "v1.0.60",
-  "why": "v1.0.60: the radio band moves from WEAR to MOTION's right side, Wander goes, the over-modulation's soft knee (ADR 0036)",
+  "spec": "v1.0.61",
+  "why": "v1.0.61: endless follows the playing (owner's pick C on renders/decay_endless_match), the duck gone; the corners are finite DECAY and pass as before, refreshed under the new version",
   "corners": {
     "plate_small": {
       "chord_loudness_db": -39.716000000000001,

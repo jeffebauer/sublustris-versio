@@ -21,7 +21,7 @@ tail, and never fades.
 None of them governs endless to a fixed dBFS floor, as v1.0.60 does (ADR 0008). That floor is why the step flips with
 the input: a hot tail sits above it and is pulled down; a quiet one sits under it and is pushed up.
 
-## What the prototype does (IV_ENDLESS_MATCH, voicing::kEndlessMatch)
+## What the prototype did (IV_ENDLESS_MATCH; built as v1.0.61, the owner's pick C, without the 3 s crossing)
 
 - **Played:** past the finite top, the tail is the finite top's tail. It keeps DECAY 0.80's loss, level make-up,
   long-tail trims, MASSIVE's high ratio and its governor (PLATE and MASSIVE ease that one in from 0.70, at today's

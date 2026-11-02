@@ -11,13 +11,13 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0005](0005-hiss-into-the-tank.md) | Cassette hiss goes into the tank, ducked by the input | 3 |
 | [0006](0006-two-engines-and-licence-rules.md) | Two engines: a Plate (also the companion) and one FDN; licence rules | 22 |
 | [0007](0007-massive-mass-and-echoes-to-wash.md) | MASSIVE: mass, and SIZE from echoes to wash | 6, 7, 9 (amended by 29) |
-| [0008](0008-infinite-evolves-to-a-floor.md) | Infinite tails evolve to a warm floor (its level: ADR 0033; amended v1.0.56: eases in from DECAY 0.70 in PLATE and MASSIVE; v1.0.58: a flat correction, a held tail keeps still notes, only a bright one settles a little) | 8 |
+| [0008](0008-infinite-evolves-to-a-floor.md) | Infinite tails evolve to a warm floor (its level: ADR 0033; amended v1.0.56: eases in from DECAY 0.70 in PLATE and MASSIVE; v1.0.58: a flat correction, a held tail keeps still notes, only a bright one settles a little; v1.0.61: endless follows the playing, held 0.75 s after you stop, a −6 dBFS safety ceiling, no duck) | 8 |
 | [0009](0009-freeze-tap-latches-pad-holds-still.md) | Freeze: a tap latches, the pad holds still, unfreeze glides (amended v1.0.58: its hold a flat gain) | 10, 25, 26 |
 | [0010](0010-hold-to-paint.md) | Hold to paint into the frozen pad | 11 |
 | [0011](0011-gate-mirrors-the-button.md) | The gate mirrors the button: one gesture reader | 12, 13 |
 | [0012](0012-mix-size-tone-drift.md) | MIX, SIZE, TONE and DRIFT (HALL's shelf and long-tail floor: ADR 0035) | 14, 15, 18, 20, 25 |
 | [0013](0013-space-crossfade-and-true-stereo-in.md) | SPACE flips crossfade; true stereo in | 17, 23 |
-| [0014](0014-ducking-is-always-darken.md) | Ducking is always DARKEN, growing with DECAY (amended v1.0.17: 4:1 compression of the wet; v1.0.51: 2:1, eased on held playing) | 16, 24, 27 |
+| [0014](0014-ducking-is-always-darken.md) | Ducking is always DARKEN, growing with DECAY (amended v1.0.17: 4:1 compression of the wet; v1.0.51: 2:1, eased on held playing; superseded v1.0.61 by 0008's amendment: no duck) | 16, 24, 27 |
 | [0015](0015-time-and-attack.md) | P7 is TIME, SW1 is ATTACK (NORMAL / BLOOM / REVERSE) | 27, 28, 29, 30 (supersedes 19) |
 | [0016](0016-leds-meters-and-freeze-state.md) | LEDs: level meters plus the freeze state | 21 |
 | [0017](0017-panel-layout.md) | Panel layout: P1–P7 mirror Resilio's positions | owner approval of v1.0 |

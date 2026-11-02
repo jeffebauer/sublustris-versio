@@ -9,12 +9,18 @@
 // test_era's loudness), twin minus pad, on the dub skank (test_audio/stimulus/04_skank.wav).
 //
 // Asserted: at the page's setting, HALL's and MASSIVE's room within 1.5 dB of where v1.0.41's twin sat (its figure
-// measured by this test against v1.0.41); PLATE's twin within 0.2 dB of v1.0.41's. Across SIZE 0 / 0.5 / 0.9 x
+// measured by this test against v1.0.41); PLATE's twin within 1.5 dB of v1.0.41's (0.2 before v1.0.61). Across SIZE 0 / 0.5 / 0.9 x
 // DECAY 0.5 / 0.9 the room follows the pad (v1.0.43, the owner's pick B on renders/room_level), so it keeps
 // v1.0.41's distance under the pad within 3 dB (the page's constant gain sat up to 8 dB closer); HALL at SIZE 0
 // within 4 dB since v1.0.47 (the owner chose the scaled wander at the room_motion page's level, 0.93 dB under the
 // unscaled room there). Every room figure is pinned within 0.3 dB of v1.0.47's; HALL's at DECAY 0.9 to v1.0.57's (ADR
 // 0035: HALL's frozen pad itself changed, 0.2-0.5 dB quieter there; the room as before; v1.0.47's -9.63 / -9.00 / -9.18).
+// Re-pinned at v1.0.61 (ADR 0008 amendment, endless follows the playing): at DECAY 0.9 the pad and the twin are both
+// played as DECAY 0.80 (its loss, trims and governor; no duck, no endless floor), so PLATE's and HALL's figures at
+// DECAY 0.9 moved: PLATE's twin sits 1.4 dB closer to its pad (-8.57, was -10.00: the pad is now 0.80's, without the
+// duck's reduction; the twin as before), so its v1.0.41 limit is 1.5 dB; HALL's room takes the long-tail trim (2.1 dB,
+// test_room_motion) and sits up to 1.7 dB further under (SIZE 0: -10.22, past v1.0.41's 4 dB, now 5.5).
+// v1.0.57's figures at DECAY 0.9: HALL -9.17 / -8.51 / -8.97 (SIZE 0.9 / 0 / 0.5), PLATE -10.00.
 
 #include "DecayV1052.h"
 #include "Wav.h"
@@ -116,17 +122,17 @@ int main()
     // The page's setting first (the anchor), then the grid of renders/room_level.
     const Case cases[] = {
         {"MASSIVE S0.9 D0.9 (the page's)", 2, 0.9f, 0.9f, -4.04, 1.5, -4.18},
-        {"HALL S0.9 D0.9 (the page's)", 1, 0.9f, 0.9f, -8.29, 1.5, -9.17},
-        {"PLATE S0.9 D0.9", 0, 0.9f, 0.9f, -10.00, 0.2, -10.00},
+        {"HALL S0.9 D0.9 (the page's)", 1, 0.9f, 0.9f, -8.29, 1.5, -8.82},
+        {"PLATE S0.9 D0.9", 0, 0.9f, 0.9f, -10.00, 1.5, -8.57},
         {"MASSIVE S0 D0.5", 2, 0.0f, 0.5f, -4.76, 3.0, -5.11},
         {"MASSIVE S0 D0.9", 2, 0.0f, 0.9f, -4.84, 3.0, -5.59},
         {"MASSIVE S0.5 D0.5", 2, 0.5f, 0.5f, -1.51, 3.0, -0.69},
         {"MASSIVE S0.5 D0.9", 2, 0.5f, 0.9f, -4.45, 3.0, -3.60},
         {"MASSIVE S0.9 D0.5", 2, 0.9f, 0.5f, -3.18, 3.0, -2.95},
         {"HALL S0 D0.5", 1, 0.0f, 0.5f, -5.51, 4.0, -8.71},
-        {"HALL S0 D0.9", 1, 0.0f, 0.9f, -5.11, 4.0, -8.51},
+        {"HALL S0 D0.9", 1, 0.0f, 0.9f, -5.11, 5.5, -10.22},
         {"HALL S0.5 D0.5", 1, 0.5f, 0.5f, -9.13, 3.0, -10.27},
-        {"HALL S0.5 D0.9", 1, 0.5f, 0.9f, -7.68, 3.0, -8.97},
+        {"HALL S0.5 D0.9", 1, 0.5f, 0.9f, -7.68, 3.0, -9.57},
         {"HALL S0.9 D0.5", 1, 0.9f, 0.5f, -10.13, 3.0, -11.32},
     };
     for (const auto& c : cases) {

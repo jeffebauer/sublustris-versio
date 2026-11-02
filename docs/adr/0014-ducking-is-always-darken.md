@@ -1,6 +1,6 @@
 # 0014 — Ducking is always DARKEN, growing with DECAY
 
-**Status:** Accepted, 21 Oct 2026 (owner, after listening). Spec-session decisions 16, 24, 27. Supersedes the draft's DUCK switch (Darken / Push back / Level, after the brief's Warble was swapped for Level).
+**Status:** Superseded, 2 Nov 2026 (v1.0.61, ADR 0008's amendment of that date: endless follows the playing, so there's no build-up to hold back, and the duck is gone). Accepted, 21 Oct 2026 (owner, after listening). Spec-session decisions 16, 24, 27. Supersedes the draft's DUCK switch (Darken / Push back / Level, after the brief's Warble was swapped for Level).
 
 **Context:** The brief borrows the concept of ducking past a feedback threshold from Desmodus (not its "scream"): past ~3 o'clock DECAY goes infinite and the tail should get out of the way while you play. The draft gave the ducking its own switch. The owner wasn't sure that was the best use of a switch and asked to hear each style. In the demos (`renders/p7_sw1_demos/`, sketch in `docs/prototypes/p7-sw1-demos/`) the owner picked **DARKEN on both materials** (dub skank and vibes).
 
