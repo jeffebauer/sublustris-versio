@@ -112,6 +112,13 @@ public:
     // n of the early taps per line (v1.0.36, ADR 0026: HALL 2, MASSIVE 4), the same early energy;
     // re-lays them out, so call it where the tank restarts (a SPACE flip, reset).
     void setEarlyTapCount(int n);
+#ifndef IV_FIXED_VOICINGS
+    // The onset-phase prototype (review 2 §1.1; renders/onset_phase, not picked): which line's output signs each
+    // line's early taps go out with (earlyOut). 0: line i + 3, as built. While one early tap is all that sounds, L
+    // and R carry it fully in or out of phase; with i + 3 a centred source's two earliest taps in HALL and CANYON
+    // (lines 0 and 2) both come out anti-phase. 1-3: other layouts (earlyOut).
+    void setOnsetPhasePrototype(int mode) { onsetPhase_ = mode; }
+#endif
     void setAir(float air) { air_ = air; } // 1/T60 in 1/s: see absorbent() (v1.0.25)
     // The least the highs lose, 1/T60 in 1/s: an endless tail's settling mellow (v1.0.58; Engine::applySpace,
     // absorbShared()'s top). 0 = none.
@@ -203,6 +210,21 @@ private:
     static constexpr int kEarlyTaps = voicing::kEarlyTaps;
     float     earlyFrac_[kN][kEarlyTaps] IV_ZI, earlyGain_[kN][kEarlyTaps] IV_ZI;
     int       earlyCount_ = kEarlyTaps; // taps per line in use (setEarlyTapCount, a prototype)
+#ifndef IV_FIXED_VOICINGS
+    int       onsetPhase_ = 0; // setOnsetPhasePrototype
+#endif
+    // The line whose output signs (kOutL / kOutR) line i's early taps take. As built: i + 3. The prototypes keep a
+    // permutation (each sign pair used once, so L and R stay balanced) and flip bit 0 with bit 1 (i ^ (i >> 1 & 1)),
+    // which puts lines 0 and 2 (a centred source's earliest taps) on opposite phases, and 5 and 7 likewise:
+    // 1: that, + 3 (line 0 anti-phase first); 2: that, + 2 (line 0 in phase first); 3: i + 2 (both in phase).
+    int earlyOut(int i) const
+    {
+#ifndef IV_FIXED_VOICINGS
+        if (onsetPhase_ == 3) return (i + 2) & (kN - 1);
+        if (onsetPhase_) return ((i ^ ((i >> 1) & 1)) + (onsetPhase_ == 1 ? 3 : 2)) & (kN - 1);
+#endif
+        return (i + 3) & (kN - 1);
+    }
     float     earlyTarget_ IV_ZI, earlyNow_ IV_ZI;
     float     inLoopOld_ IV_ZI; // the in-loop amount fading out during a SIZE crossfade
     float     inLoopTarget_ IV_ZI, inLoopNow_ IV_ZI, outputTrim_ = 1.0f, levelGain_ = 1.0f;

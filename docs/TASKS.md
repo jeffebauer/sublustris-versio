@@ -1,11 +1,12 @@
 # Owner tasks
 
-**Last updated:** 2 Nov 2026, session 13: the release script with firmware and the new read-me on `claude/release-script`; v1.0.62 merged (CANYON, the name only); the site live on Vercel production with analytics and connected to GitHub; a go-live audit (next steps below). Before that, end of session 12: v1.0.60 (the radio on MOTION's right) and v1.0.61 (endless follows your playing, the radio whole at endless) merged into main after your rack checks and pushed to GitHub; v1.0.61 installed in Ableton; the site's hero film, stills and story image merged, its copy at v1.0.61; judged pages, old builds, worktrees and old branches cleared (Trash: `sublustris-wrap-2026-11-02`); the folder moved to `~/Documents/Sites/sublustris-versio`.
+**Last updated:** 2 Nov 2026, session 13: v1.0.63 on `claude/small-fixes` (the gate's latch, a brushed SPACE switch, the SDRAM refresh; for the rack) and the `onset_phase` page; the release script with firmware and the new read-me on `claude/release-script`; v1.0.62 merged (CANYON, the name only); the site live on Vercel production with analytics and connected to GitHub; a go-live audit (next steps below). Before that, end of session 12: v1.0.60 (the radio on MOTION's right) and v1.0.61 (endless follows your playing, the radio whole at endless) merged into main after your rack checks and pushed to GitHub; v1.0.61 installed in Ableton; the site's hero film, stills and story image merged, its copy at v1.0.61; judged pages, old builds, worktrees and old branches cleared (Trash: `sublustris-wrap-2026-11-02`); the folder moved to `~/Documents/Sites/sublustris-versio`.
 **Plugin installed:** `5a54f8e` on `main` (v1.0.61, Sublustris Versio), 2 Nov 2026 17:15; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan). **main is now v1.0.62** (CANYON, the name only): to see the new label in Ableton, `tools/install_plugin.sh 753c34f` (Ableton closed).
 
 ## To do
 
 ### Decide
+- [ ] **`onset_phase`** (2 Nov 2026; blind, with a pick): *should the very start of HALL and CANYON sit evenly in the stereo field?* In the first moment of their sound, left and right lean out of phase on a centred sound (review 2): the start can sound a little hollow, and in mono it loses 2-5 dB until the tail fills in. A as today; B re-lays which way each early reflection faces, so the start sits evenly between in and out of phase (measured on five hits and chords at three sizes: the worst mono loss in the start 4.9 dB → 1.7 dB in CANYON, 2.8 → 1.3 dB in HALL; the tails untouched). 0 B, 0 CPU. Hits, drums, stabs and keys; HALL and CANYON at SIZE noon and 0.8. A tiny difference: listen to the start of each hit, on headphones and in mono if you can. Level-matched; 100 % wet, use the MIX fader for the dry. Built on branch `claude/small-fixes` behind a renderer switch; the module and plugin stay as A until you pick.
 
 ### Listen (after your notes)
 
@@ -17,6 +18,7 @@
 - [ ] **Check Ableton's sample rate** (Settings → Audio): at 96 kHz the plugin's HALL and MASSIVE come out much brighter above 12 kHz than the module (found by the review). At 48 kHz they match.
 
 ### At the rack
+- [ ] **v1.0.63, three sturdiness fixes** (2 Nov 2026, branch `claude/small-fixes`; the same sound): flash `dist/v1.0.63-small-fixes/sublustris_versio-v1.0.63-small-fixes.bin`. **Rack power only, USB unplugged** (the gate and switch need the rack's power and the LEDs, and never USB and rack power at once). (1) **Short gate pulses:** from a sequencer or clock, send the FREEZE gate the shortest trigger it has (1-5 ms, or under 1 ms if it goes that short): every pulse should toggle the freeze (the output LEDs' blue tint on, then off), none missed; a gate held high for more than about a third of a second while frozen should paint (the tint pulsing), and letting go leaves the pad frozen. A slow LFO into the gate behaves as before. (2) **Brush SPACE:** with a long or endless tail ringing, flick the SPACE switch to the next position and straight back: the tail should carry on (at most a tiny dip if it was away a moment); before, it restarted the tank and the tail was gone. A real move (left there) still changes the space. (3) **A warm session:** play it for an hour or more on rack power with long CANYON and endless tails; listen for any crackle, a burst or a tail that goes wrong (the SDRAM is now refreshed at the chip's datasheet rate, about 2.6 times as often; it should change nothing you can hear).
 - [x] **v1.0.59 at the rack, with the AUDIO_DIRECT boot test** (30 Oct 2026, `...-audiodirect.bin`: "sounding fine to me — no obvious issues"; next: AUDIO_DIRECT the default, handoff step 4) (rack power, USB unplugged): flash `dist/sublustris_versio-v1.0.59-4371335-audiodirect-latelight.bin` (or `...-audiodirect.bin`). It's today's main with the shorter audio path (5 KB smaller, the same sound). **First check the audio path:** both outputs at the usual level, left and right not swapped, no hiss, buzz or crackle, knobs and LEDs working. If anything sounds off, flash the plain `...-4371335-latelight.bin` and compare: if the problem goes, it's the audio path. **Then play it:** endless tails keep their notes for minutes (a bright, hissy tail settles a little darker); the tape dropouts come in only from about 7:30; DECAY glides into endless in MASSIVE and PLATE; HALL's long tails brighter and moving more; the usual checks (LEDs steady; SIZE moves with SHIMMER + WEAR + MOTION tape: MASSIVE may flash amber; SPACE switches; TIME in HALL BLOOM; turning DECAY down from long). Known: unfreezing after moving SIZE while frozen in MASSIVE with SHIMMER + WEAR + MOTION tape can crackle (the audit lap; a fix is next).
 
 ### When convenient
@@ -61,13 +63,13 @@
     - a desktop build of the shipped configuration;
     - a note for CV users that SIZE and DEPTH follow slow CV only.
 - **Found by review 2, for later** (each needs the module or your ears):
-  - libDaisy refreshes the SDRAM ~2.6× slower than the chip's datasheet (the lap's REFRESH line prices the fix, +16 B);
-  - the tight SDRAM timing has only been checked on USB power (needs a check on rack power, warm);
+  - ~~libDaisy refreshes the SDRAM ~2.6× slower than the chip's datasheet~~ release refreshes at the datasheet's rate (v1.0.63 on `claude/small-fixes`, +16 B; the rack check above);
+  - the tight SDRAM timing has only been checked on USB power (needs a check on rack power, warm: the same warm session as v1.0.63's);
   - absolute levels on the module (volts to dBFS) are unmeasured;
-  - the gate can miss triggers under ~1 ms (a latch, ~30-60 B);
-  - a brushed SPACE switch that returns still restarts the tank (~20-40 B);
+  - ~~the gate can miss triggers under ~1 ms~~ latched in hardware (v1.0.63, ~52 B);
+  - ~~a brushed SPACE switch that returns still restarts the tank~~ fixed (v1.0.63, ~52 B: a 20 ms settle in the firmware, and the Engine lets a flip that comes back before its fade bottoms out carry on);
   - in an endless SHIMMER hold the octave mellows away over 2-4 minutes (keep or hold?);
-  - HALL's and MASSIVE's first 50 ms lean out of phase (0 B fix);
+  - HALL's and CANYON's first 50 ms lean out of phase (0 B fix): on the page `onset_phase` (above);
   - MASSIVE moves 1.5 cents in pitch against Supermassive's 15-17.
 - **PLATE's SIZE by crossfade** (phase 2 of your pick C): it still slides; BLOOM's TIME is done (v1.0.54), HALL and MASSIVE's SIZE and TIME's pre-delay since v1.0.34.
 - **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): build it for real. For 3 s after a flip both spaces hear the music while one crossfades into the other; it needs a second reverb running for those 3 s (the freeze's spare) and ~0.5-1 KB of flash, which fits in today's 3,980 B left but crowds the rest. A plan before building.

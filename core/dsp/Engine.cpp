@@ -917,10 +917,13 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
     if (flipPhase_ == 0 && space != activeSpace_ && !gesture_.frozen() && freezeMix_ == 0.0f) flipPhase_ = 1;
     if (flipPhase_ == 1) {
         flipStep_ = -flipChunk / float(n);
-        if (gesture_.frozen()) {
+        if (gesture_.frozen() || space == activeSpace_) {
             // A freeze inside the fade-out keeps the old space: it fades back in as the pad, and the
             // flip waits for the unfreeze like any other (soak audit: the tank used to restart under
             // the freeze, so the pad came out silent).
+            // So does a switch that's back where it was before the fade bottoms out (v1.0.63, review 2
+            // A6): a brushed or bouncing SPACE switch only dips the wet; the tail, an endless pad too,
+            // carries on. It used to restart the tank in the same space, losing the whole tail.
             flipPhase_ = 2;
         } else if (flipGain_ <= 0.0f) {
             prof::mark(prof::kControl);
