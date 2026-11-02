@@ -612,13 +612,12 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // ERA in the loop and DRIFT (SPEC §4.6, §4.7). Freezing glides the
     // in-loop colour out (the pad holds still, ADR 0009); DRIFT stays.
     // ERA's wear on the wet (dsp/EraTexture.h), run only while it's in, with MOTION's radio band (v1.0.60, ADR
-    // 0036). At infinite DECAY the band keeps a share of its blend (tex::kBandAtInfinite).
+    // 0036). The band is whole at infinite DECAY too (v1.0.61: halved there, endless sounded unlike the finite tail).
     const map::RadioBand radio = map::radioBand(smoothed(ParamId::Drift));
     {
         dsp::TexMix t = wear.tex;
         t.bandW = radio.bandW;
         t.bandT = radio.bandT;
-        t.bandW *= 1.0f - map::governorWeight(decay) * (1.0f - dsp::tex::kBandAtInfinite);
         texOn_ = t.tapeW > 0.0f || t.breathW > 0.0f || t.clockW > 0.0f || t.grainW > 0.0f || t.bandW > 0.0f
               || !texture_.settled(); // every stage out: runs on (the hold alone) until its gain is back at 1
         texture_.set(t, sampleRate_, n);

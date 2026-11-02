@@ -1,6 +1,6 @@
 // M7: endless under the playing and the output stage (SPEC §4.9, §4.10, §7 M7; ADR 0008 amendment v1.0.61).
 // Endless follows the playing: played, it sits where DECAY 0.80 does, quiet or hot, in every SPACE, without
-// darkening; stopped, it holds (the duck, ADR 0014, is gone since v1.0.61);
+// darkening, the radio's band as at 0.80; stopped, it holds (the duck, ADR 0014, is gone since v1.0.61);
 // the soft limiter keeps the wet under −1 dBFS and reports its gain; MIX 0
 // stays a clean passthrough. Then the integration sweep: random settings of
 // every control with freezes, paints and SPACE / ATTACK flips: finite,
@@ -124,6 +124,50 @@ void playingDoesntDarken()
     check(hiPlaying > 0.5 * hiAfter, msg);
 }
 
+// The radio's band is the same either side of 3 o'clock (v1.0.61): MOTION full right, played, DECAY 1's lows
+// (< 150 Hz) and highs (> 4 kHz) take the share of the wet they take at 0.80, within 1 dB. The band was half
+// blended at endless before (tex::kBandAtInfinite, from WEAR): here 1.2-3.7 dB more (11-12 dB in the lowest octaves).
+double lowShare(const std::vector<float>& x, size_t a, size_t b)
+{
+    const float c = 1.0f - std::exp(-2.0f * 3.14159265f * 150.0f / kSr);
+    float y = 0.0f;
+    double lo = 0.0, all = 0.0;
+    for (size_t i = 0; i < b; ++i) {
+        y += c * (x[i] - y);
+        if (i < a) continue;
+        lo += double(y) * y;
+        all += double(x[i]) * x[i];
+    }
+    return lo / (all + 1e-30);
+}
+
+void radioBandAtEndless()
+{
+    const char* names[3] = {"PLATE", "HALL", "MASSIVE"};
+    for (int space = 0; space < 3; ++space) {
+        double lo[2], hi[2];
+        for (int k = 0; k < 2; ++k) {
+            iv::Engine* e = makeEngine(k ? 1.0f : 0.8f);
+            e->setParam(iv::ParamId::Space, iv::switchToNormalised(space));
+            e->setParam(iv::ParamId::Drift, 1.0f);
+            e->reset();
+            const size_t n = size_t(8.0f * kSr);
+            std::vector<float> in(n), l(n), r(n);
+            gSeed = 41;
+            for (size_t i = 0; i < n; ++i) in[i] = 0.3f * noise();
+            for (size_t pos = 0; pos < n; pos += 48)
+                e->process(in.data() + pos, in.data() + pos, l.data() + pos, r.data() + pos, 48);
+            delete e;
+            lo[k] = 10.0 * std::log10(lowShare(l, size_t(5.0f * kSr), n));
+            hi[k] = 10.0 * std::log10(highShare(l, size_t(5.0f * kSr), n));
+        }
+        char msg[240];
+        std::snprintf(msg, sizeof msg, "the radio band at endless, %s, MOTION full right: DECAY 1's lows %+.2f dB and highs %+.2f dB "
+                                       "of 0.80's share (within 1 dB)", names[space], lo[1] - lo[0], hi[1] - hi[0]);
+        check(std::fabs(lo[1] - lo[0]) <= 1.0 && std::fabs(hi[1] - hi[0]) <= 1.0, msg);
+    }
+}
+
 // Driven hot: a full-scale input into a long, bright PLATE. ERA 0, the Neve alone: the wear's tape
 // (v1.0.42) soft-limits the wet's peaks itself, so the limiter would have less to do. At infinite the floor
 // governor would hold the tank down, so this is a finite DECAY.
@@ -209,6 +253,7 @@ int main()
 {
     endlessFollowsThePlaying();
     playingDoesntDarken();
+    radioBandAtEndless();
     limiter();
     integrationSweep();
     std::printf("%d failure(s)\n", failures);
