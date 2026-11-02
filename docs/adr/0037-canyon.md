@@ -27,4 +27,4 @@
 - **Sound:** none. `tools/same_render.py` against v1.0.61: every render the same, sample for sample; the goldens pass unchanged.
 - **Saved sets:** a set saved with MASSIVE reopens on the same position, now labelled CANYON.
 - **Sidecars** written from v1.0.62 say `"space": "CANYON"`; older ones say MASSIVE, and both read back.
-- **The module:** nothing on it shows the name; release flash changes by a few bytes (the string).
+- **The module:** nothing on it shows the name; release flash is unchanged (CANYON is one byte shorter than MASSIVE and pads to the same size).
