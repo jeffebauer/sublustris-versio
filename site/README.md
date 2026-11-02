@@ -66,6 +66,8 @@ Locally: `FONTS_DIR="~/Library/CloudStorage/Dropbox/Type/FontBase/Type/Mass-Driv
 | Output directory | `dist` (default) |
 | Install command | `npm install` (default) |
 | Node.js version | 22.x or newer |
+| Git | `jeffebauer/sublustris-versio`, production branch `main` |
+| Ignored Build Step | `git diff --quiet HEAD^ HEAD -- . ../docs/minisite` (a push builds only when `site/` or `docs/minisite/` changed) |
 | Web Analytics | enable in the project's Analytics tab (cookie-free; the script is only added on Vercel builds) |
 
 Environment variables (all optional):
