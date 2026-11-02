@@ -14,14 +14,17 @@ constexpr float kFlutterCents = 3.0f, kFlutterHzMin = 5.0f, kFlutterHzMax = 9.0f
 // v1.0.46: the left side's tape transport on the wet (dsp/Transport.h; owner's picks round 3's E with the confirm
 // page's B, renders/drift_rethink), at full left before its variance: one shared wow and flutter, crinkle bursts
 // a second over the side's last 40 %, and the share of them bringing a dip (about a third of round 2's crinkle dips).
+// v1.0.65 (ADR 0040, the owner's pick D on renders/more_tape, "more saturation, crinkle, etc."): a more worn
+// cassette. Wow and flutter x1.25 (kTransportWear, applied last so the curve's shape is the same), the crinkle
+// from 45 % of the side (kTransportCrinkleFrom: MOTION 0.26, ~9:35; was 60 %, ~8:50) at up to 0.9 bursts a second
+// (was 0.6), and the dips from MOTION 0.25 (~9:30; were from 0.026, ~7:30, v1.0.59's "closer to fully CCW") with
+// their share rising straight to 0.5 at fully left (was 0.43). The pots' end stops map raw 0.025-0.975 to 0-1
+// (firmware/PotEndStops.h).
 constexpr float kTransportWowCents = 12.0f, kTransportWowHzMin = 0.5f, kTransportWowHzMax = 1.2f;
 constexpr float kTransportFlutterCents = 3.0f, kTransportFlutterHzMin = 6.0f, kTransportFlutterHzMax = 10.0f;
-constexpr float kTransportCrinklePerSecond = 0.6f, kTransportDipShare = 0.43f;
-// v1.0.59 (owner's pick C, "from 7:30", on renders/motion_dips; their note: "it'd be good if the dropouts start
-// entering closer to fully CCW instead of ~9 o'clock"): the dips no longer come in with the crinkle (MOTION 0.188,
-// ~9 o'clock) but from here, about 7:30 on the module (the pots' end stops map raw 0.025-0.975 to 0-1,
-// firmware/PotEndStops.h), their share rising straight to kTransportDipShare at fully left (the same there).
-constexpr float kTransportDipsFrom = 0.026f;
+constexpr float kTransportWear = 1.25f;
+constexpr float kTransportCrinklePerSecond = 0.9f, kTransportCrinkleFrom = 0.45f, kTransportDipShare = 0.5f;
+constexpr float kTransportDipsFrom = 0.25f;
 // The tank's own per-line wow and flutter keep this share on the left side: at full, its incoherent ~20 cents
 // buried the transport's coherent movement (docs/research/drift-rethink.md).
 constexpr float kTransportLineShare = 0.33f;

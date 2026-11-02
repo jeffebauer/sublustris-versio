@@ -48,8 +48,9 @@ struct TexMix {
 };
 
 namespace tex {
-// The tape's drive at full, 11.25 dB (v1.0.49: 15 x 0.75, the owner's pick E on renders/wear_saturation).
-constexpr float kTapeDriveDb = 11.25f, kTapeEmphDb = 6.0f, kTapeEmphHz = 2000.0f, kTapeBias = 0.12f;
+// The tape's drive at full, 16.25 dB (v1.0.65, ADR 0040: 5 dB over v1.0.49's 11.25, the owner's pick D on
+// renders/more_tape, "more saturation"; scaled across the knob the same way).
+constexpr float kTapeDriveDb = 16.25f, kTapeEmphDb = 6.0f, kTapeEmphHz = 2000.0f, kTapeBias = 0.12f;
 // The level hold's ceiling, +15 dB (10^(15/20); v1.0.49, renders/wear_fizz): at +12 the band took a low chord's or
 // pad's fundamentals down and WEAR 1 lost 1.1-1.8 dB on held chords and pads; now within +-1 dB of WEAR 0.
 constexpr float kHoldMax = 5.62341309f;

@@ -46,3 +46,5 @@ SPEC v1.0.42. Supersedes ADR 0021 (five eras, each on its own) and what was left
 **Amendment (1 Nov 2026, owner's pick F on every card of `renders/dip_motion`; SPEC v1.0.60; ADR 0036):** the radio's band (its band-pass, over-modulation and wandering dip) leaves WEAR for MOTION's right side. The owner: "leaving the wear knob more focused on saturation-like effects." WEAR is now tape, breath, clock and grain over the Neve; `map::eraMix` has no band blend and `EraWear` no makeup.
 
 **Amendment (2 Nov 2026, owner's pick C on every card of `renders/wear_no_bbd`; SPEC v1.0.64; ADR 0038):** the BBD's clock (its sample-and-hold with no filters, folding the top back) leaves WEAR. The owner: "the aliasing can feel a bit static". WEAR is tape, the BBD's breathing and the grain; nothing moves to MOTION.
+
+**Amendment (3 Nov 2026, owner's pick D on every card of `renders/more_tape`; SPEC v1.0.65; ADR 0040):** the tape is driven 5 dB harder at full WEAR (16.25 dB, was 11.25), scaled across the knob the same way. The owner: "more saturation, crinkle, etc." The other stages are unchanged.

@@ -506,10 +506,13 @@ void notAliasing()
     // render. Until v1.0.48 the grit's images (by design, at both rates) passed the second clause; with the grit
     // out, v1.0.48's tape read 9 dB over at 0.75 (5.7 at 0.64), the softer tape 4.1 at 0.64. Whole, the band below
     // 5 kHz fell from -9 dB re total (v1.0.48) to -18: the third clause holds that.
+    // v1.0.65 (ADR 0040, the owner's pick D on renders/more_tape, "more saturation"): the tape driven 5 dB harder folds
+    // more: -20.2 dB here, 6.3 over the 96 kHz render (v1.0.64: -23.3, 2.6 over). The owner picked it on the page's
+    // bright stabs, where it shows; the third clause allows 7 dB (was 6).
     char msg[240];
     std::snprintf(msg, sizeof msg, "hot 7 kHz tone at ERA 0.75: energy below 5 kHz %.1f dB re total at 48 kHz, %.1f at 96 kHz (< -32 with the "
-                                   "24 kHz tank, or aliasing adds < 2 dB, or the band under -15 with aliasing adding < 6 dB, v1.0.49)", at48, at96);
-    check(at48 < -32.0 || at48 - at96 < 2.0 || (at48 < -15.0 && at48 - at96 < 6.0), msg);
+                                   "24 kHz tank, or aliasing adds < 2 dB, or the band under -15 with aliasing adding < 7 dB, v1.0.65)", at48, at96);
+    check(at48 < -32.0 || at48 - at96 < 2.0 || (at48 < -15.0 && at48 - at96 < 7.0), msg);
 }
 
 // v1.0.49 (renders/wear_grit D): the grit (the grain; the BBD's clock too until v1.0.64) is silent below 0.65 on the
