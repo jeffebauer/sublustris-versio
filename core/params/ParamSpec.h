@@ -60,7 +60,7 @@ inline constexpr std::array<ParamSpec, static_cast<size_t>(ParamId::Count)> kPar
     {ParamId::Size,   "size",   "SIZE",   ParamKind::Knob,    0.5f, Smoothing::Slewed,  80.0f, {}},
     {ParamId::Drift,  "drift",  "MOTION", ParamKind::Knob,    0.5f, Smoothing::Gliding, 80.0f, {}},
     {ParamId::Time,   "time",   "DEPTH",  ParamKind::Knob,    0.2f, Smoothing::Gliding, 80.0f, {}},
-    {ParamId::Space,  "space",  "SPACE",  ParamKind::Switch3, 0.5f, Smoothing::Switch, 100.0f, {"PLATE", "HALL", "MASSIVE"}},
+    {ParamId::Space,  "space",  "SPACE",  ParamKind::Switch3, 0.5f, Smoothing::Switch, 100.0f, {"PLATE", "HALL", "CANYON"}}, // CANYON was MASSIVE until v1.0.62 (ADR 0037),
     {ParamId::Attack, "attack", "ONSET",  ParamKind::Switch3, 0.0f, Smoothing::Switch,  50.0f, {"NATURAL", "BLOOM", "SHIMMER"}},
 }};
 

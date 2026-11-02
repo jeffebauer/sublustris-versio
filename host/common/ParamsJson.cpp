@@ -22,6 +22,8 @@ bool switchPosition(ParamId id, const std::string& label, int& position)
     }
     // Earlier labels still read (presets, sweeps and scripts written before the owner's names, 27 Oct 2026).
     if (id == ParamId::Attack && label == "NORMAL") { position = 0; return true; }
+    // SPACE's right position was MASSIVE until v1.0.62 (ADR 0037): presets, sweeps and tools still say it.
+    if (id == ParamId::Space && label == "MASSIVE") { position = 2; return true; }
     return false;
 }
 
