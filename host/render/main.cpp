@@ -187,10 +187,6 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
     if (std::getenv("IV_DECAY_RISE")) // renders/decay_swell: B is built in since v1.0.55
         std::fprintf(stderr, "iv_render: IV_DECAY_RISE ignored: DECAY's make-up rise is capped (B) since v1.0.55\n");
     if (const char* et = std::getenv("IV_FIT_EARLY_TAPS")) engine.setEarlyTapPrototype(std::atoi(et)); // fit_cpu's D (re-prepares)
-    if (const char* op = std::getenv("IV_ONSET_PHASE")) { // renders/onset_phase (review 2 §1.1; 0 = as built)
-        engine.setOnsetPhasePrototype(std::atoi(op));
-        std::fprintf(stderr, "iv_render: IV_ONSET_PHASE=%d: the early taps' output signs re-laid (Fdn::earlyOut)\n", std::atoi(op));
-    }
     if (const char* ss = std::getenv("IV_SWELL_SEED")) engine.setSwellSeedPrototype(uint32_t(std::strtoul(ss, nullptr, 0))); // swell_seed
     if (const char* sh = std::getenv("IV_SIZE_HYST")) engine.setSizeHysteresis(float(std::atof(sh))); // overnight review, arch F1
     if (const char* hp = std::getenv("IV_HALFRATE_PRIME")) engine.setHalfRatePrime(std::atoi(hp) != 0); // overnight review, arch F2

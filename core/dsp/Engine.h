@@ -145,13 +145,6 @@ public:
     // PROTOTYPE (renders/swell_seed, owner: "the 12 points seemed to accentuate the mids"): the swell's
     // jitter and signs from another seed (0 = as built). Re-prepares the Engine.
     void  setSwellSeedPrototype(uint32_t seed);
-    // PROTOTYPE (renders/onset_phase; review 2 §1.1, "the first 50 ms lean anti-phase"): the big tanks' early
-    // taps out with other lines' signs (Fdn::earlyOut; 0 = as built). HALL and CANYON only (PLATE has none).
-    void  setOnsetPhasePrototype(int mode)
-    {
-        fdn_.setOnsetPhasePrototype(mode);
-        lowFdn_.setOnsetPhasePrototype(mode);
-    }
     // SIZE moves on only when the mean line length it means has moved by more than rel of the last one
     // (overnight review, 26 Oct 2026, arch F1; on since v1.0.37 at voicing::kSizeHysteresis; 0 = before:
     // every move). A noisy knob reading moved the lines' targets (and MASSIVE's in-loop diffusion) a

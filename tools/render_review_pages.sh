@@ -578,6 +578,8 @@ if on onset_phase; then
     # line's signs each line's taps go out with (IV_ONSET_PHASE=2, Fdn::earlyOut): lines 0 and 2 on opposite
     # phases, 5 and 7 likewise, the earliest in phase. 0 B, 0 CPU; the tails are untouched (the taps are output
     # only). Short excerpts: hits, drums, stabs and keys, near-mono like most of what goes into the module.
+    # Judged 3 Nov 2026: the owner's pick B on all 16 cards ("centred"), built in as v1.0.63 (ADR 0039). The renderer's
+    # IV_ONSET_PHASE is gone, so A and B now both render B; A is v1.0.62's renderer (IV_RENDER).
     O=$SRC/onset; mkdir -p $O
     [ -f test_audio/stimulus/02_hits.wav ] || python3 tools/make_stimulus.py
     [ -f $O/hits.wav ] || ffmpeg -v error -y -i test_audio/stimulus/02_hits.wav -af "atrim=0:8,apad=pad_dur=4" -ac 2 -ar 48000 -c:a pcm_s24le $O/hits.wav
