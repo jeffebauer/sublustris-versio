@@ -37,7 +37,10 @@ void labelsAndNumbers()
     engine.prepare(48000.0f, 48);
     check(set(engine, "space=PLATE") && engine.param(iv::ParamId::Space) == 0.0f, "space=PLATE sets the left position");
     check(set(engine, "space=HALL") && engine.param(iv::ParamId::Space) == 0.5f, "space=HALL sets the centre position");
-    check(set(engine, "space=MASSIVE") && engine.param(iv::ParamId::Space) == 1.0f, "space=MASSIVE sets the right position");
+    check(set(engine, "space=HALL") && set(engine, "space=CANYON") && engine.param(iv::ParamId::Space) == 1.0f,
+          "space=CANYON sets the right position");
+    check(set(engine, "space=HALL") && set(engine, "space=MASSIVE") && engine.param(iv::ParamId::Space) == 1.0f,
+          "space=MASSIVE (the name until v1.0.62, ADR 0037) still sets the right position");
     check(set(engine, "attack=NORMAL") && engine.param(iv::ParamId::Attack) == 0.0f, "attack=NORMAL sets the left position");
     check(set(engine, "attack=BLOOM") && engine.param(iv::ParamId::Attack) == 0.5f, "attack=BLOOM sets the centre position");
     check(set(engine, "attack=SHIMMER") && engine.param(iv::ParamId::Attack) == 1.0f, "attack=SHIMMER sets the right position");
@@ -47,6 +50,7 @@ void labelsAndNumbers()
     fresh.prepare(48000.0f, 48);
     std::string error;
     check(!iv::paramsjson::applySetArg(fresh, "space=massive", error), "label is case-sensitive: 'massive' rejected");
+    check(!set(fresh, "space=canyon"), "label is case-sensitive: 'canyon' rejected");
     check(!set(fresh, "space=CAVE"), "unknown label rejected");
     check(!set(fresh, "space=1"), "switch given a bare number rejected");
     check(!set(fresh, "attack=0.5"), "switch given a Normalised number rejected");
@@ -110,6 +114,14 @@ void cliMatchesPreset()
     const bool read = readWav(dir + "/set.wav", viaSet) && readWav(dir + "/preset.wav", viaPreset);
     check(read, "cli: renders read back");
     if (read) check(sameAudio(viaSet, viaPreset), "cli: --set space=MASSIVE renders identically to the --preset");
+
+    // CANYON is MASSIVE's name since v1.0.62 (ADR 0037): the new label renders the same as an old preset.
+    check(run(inPath + " " + dir + "/canyon.wav --set space=CANYON --set attack=BLOOM --set decay=0.9") == 0,
+          "cli: --set space=CANYON exits 0");
+    iv::wav::Audio viaCanyon;
+    const bool readCanyon = read && readWav(dir + "/canyon.wav", viaCanyon);
+    check(readCanyon, "cli: the CANYON render reads back");
+    if (readCanyon) check(sameAudio(viaCanyon, viaPreset), "cli: --set space=CANYON renders identically to a MASSIVE preset");
 
     // SPEC §7 M0: at MIX 0 the Renderer copies a WAV through unchanged, bit
     // for bit, to both outputs (a mono input feeds both, as the In L normal).
