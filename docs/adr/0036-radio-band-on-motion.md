@@ -23,7 +23,7 @@
   - `side` runs 0 at the dead zone's edge (0.53) to 1 fully right;
   - its blend is a smoothstep over the side's first twentieth × side^1.5;
   - its intensity is `side`.
-- **At infinite DECAY** it keeps half its blend (`tex::kBandAtInfinite`), as on WEAR.
+- **At infinite DECAY** it keeps half its blend (`tex::kBandAtInfinite`), as on WEAR. *(Amended v1.0.61, below: whole at endless too.)*
 - **Its loudness:** the wear chain's level hold, as before, plus its ~0.7 dB on music, now following its blend on MOTION.
 - **No Wander.** The tank's lines move no more on the right than at noon. The modulation floor, the small room's and PLATE's own wanders, the dead zone (0.47-0.53) and the left side (the tape transport) are unchanged.
 - **WEAR is tape, breath, clock and grain** over the Neve, with its in-loop compression, hiss and crackle. It no longer narrows the tone.
@@ -57,3 +57,5 @@
 - D (Wander with the band over the side's last half).
 - E (C with three moving cuts, a phaser's notches).
 - G (F with the three cuts on top).
+
+**Amendment (2 Nov 2026, the owner at the rack on v1.0.61; SPEC v1.0.61; ADR 0008 amended):** **the band is whole at infinite DECAY too.** With MOTION's right side near full the owner heard "an audible difference between endless and non-endless tails, as if the tone shaping of the radio is only applying to one or the other": the band kept half its blend at endless (`tex::kBandAtInfinite`, carried over from WEAR), so endless had 11-12 dB more lows and highs than DECAY 0.80 at MOTION full, and the level stepped up to 12.3 dB across 3 o'clock. `kBandAtInfinite` is gone. Its reason (a held tail darkening to the floor, the band taking 4-6 dB off a 10-minute hold) no longer holds since endless follows the playing: 10-minute holds at MOTION 0.9 and full stay within 0.3 dB on noise in every SPACE.

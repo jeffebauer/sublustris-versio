@@ -174,16 +174,6 @@ public:
     // PROTOTYPE (renders/twin_alternatives, "the layer alone"): the tank (the frozen pad) is left out of the wet,
     // so only the twin is heard; the tank still runs and freezes as in use.
     void  setLayerSoloPrototype(bool on) { layerSolo_ = on; }
-    // PROTOTYPE (renders/freeze_moment; owner: "the frozen sound seems to jump in amplitude once frozen
-    // compared to the swelling reverb"): the ducking (ADR 0014) at a freeze. 0 as built: let go in 50 ms
-    // (at DECAY 0.9 a pad jumps up by the 2-4 dB the playing was ducking it); 1 the pad keeps the tap's
-    // reduction while frozen, let go over `seconds` after the unfreeze; 2 let go in a straight line (dB)
-    // over `seconds` after the tap.
-    void  setFreezeDuckPrototype(int mode, float seconds)
-    {
-        freezeDuck_ = mode < 0 || mode > 2 ? 0 : mode;
-        freezeDuckSeconds_ = seconds > 0.01f ? seconds : voicing::kDuckReleaseSeconds;
-    }
     // PROTOTYPE (renders/twin_louder; owner: "even with the AS BUILT option, with wet at 100% i can hardly
     // hear the secondary reverb"): the twin's level in HALL and MASSIVE, db above today's (its output
     // only: Paint sends what it did), or no twin at all while frozen (off).
@@ -192,16 +182,8 @@ public:
         twinGain_ = std::pow(10.0f, db / 20.0f);
         twinOff_ = off;
     }
-    // PROTOTYPES (renders/level_duck, renders/level_glue; built since v1.0.51 as voicing::kFloorDbfs -21,
-    // kDuckRatio 2, kDuckSustainReleaseSeconds 0.08, kDuckSustainCut 0.6): the floor governor's floor (dBFS),
-    // the duck's ratio (<= 1: no ducking), its release (s), its release after held playing (s; 0: always the
-    // release), and the share of the reduction taken off held playing (0: none). Defaults are as built.
+    // PROTOTYPE (renders/level_duck; built since v1.0.51 as voicing::kFloorDbfs -21): the floor governor's floor (dBFS).
     void  setFloorPrototype(float dbfs) { floorDbfs_ = dbfs; }
-    void  setDuckRatioPrototype(float ratio) { duckSlope_ = ratio > 1.0f ? 1.0f - 1.0f / ratio : 0.0f; }
-    void  setDuckReleasePrototype(float seconds) { duckRelease_ = seconds > 0.005f ? seconds : voicing::kDuckReleaseSeconds; }
-    void  setDuckAdaptivePrototype(float fastReleaseSeconds) { duckFastRelease_ = fastReleaseSeconds; }
-    void  setDuckSustainCutPrototype(float cut) { duckSustainCut_ = cut < 0.0f ? 0.0f : (cut > 1.0f ? 1.0f : cut); }
-    float duckSustained() const { return duckSustained_; }
     // PROTOTYPE (renders/hall_level; owner: "Hall infinite examples feel slightly less level matched than massive ...
     // reverb feels a bit too quiet so when the set stops, there's a less seamless transition"): HALL's endless tail
     // settles `tailDb` above the floor (HALL only; as built voicing::kHallTailDb, 3 since v1.0.52, the owner's pick C),
@@ -235,7 +217,6 @@ public:
     bool  gateHigh() const { return gateHigh_; }
     // Gain the output limiter is applying now (1 = not limiting), for the LEDs.
     float limiterGain() const { return limiter_.gain(); }
-    float duckAmount() const { return duck_; }
     // Bytes of delay memory the Engine uses (firmware serial report).
     size_t memoryBytes() const { return (large_.used + fast_.used + axi_.used + d2_.used) * sizeof(float); }
     // False when the attached memory was too small: the Engine then passes
@@ -334,30 +315,16 @@ private:
     bool              twinStopFast_ = true; // setTwinStopFast; false = before v1.0.37
     int               fitSwellTaps_ IV_ZI; // setSwellTapsPrototype; 0 = as built
     bool              layerSolo_ = false; // setLayerSoloPrototype
-    int               freezeDuck_ = 0;   // setFreezeDuckPrototype; 0 = as built
-    float             freezeDuckSeconds_ = 0.4f, duckAtFreeze_ = 0.0f;
     float             twinGain_ = 1.0f;  // setTwinGainPrototype; 1 = as built
     bool              twinOff_ = false;
     bool              shimmerLazy_ IV_ZI, shimmerArmed_ = true, shimmerResting_ IV_ZI; // setShimmerLazyPrototype
     float             floorDbfs_ = voicing::kFloorDbfs;                     // setFloorPrototype
-    float             duckSlope_ = 1.0f - 1.0f / voicing::kDuckRatio;       // setDuckRatioPrototype
-    float             duckRelease_ = voicing::kDuckReleaseSeconds;         // setDuckReleasePrototype
-    float             duckFastRelease_ = voicing::kDuckSustainReleaseSeconds; // setDuckAdaptivePrototype
-    float             duckSustainCut_ = voicing::kDuckSustainCut;          // setDuckSustainCutPrototype
     float             hallTailDb_ = voicing::kHallTailDb;                  // setHallTailPrototype
     float             hallTiltLowDb_ IV_ZI, hallTiltHighDb_ IV_ZI;          // setHallTailPrototype (not built)
     float floorDbfs() const { return floorDbfs_; }
-    float duckSlope() const { return duckSlope_; }
-    float duckRelease() const { return duckRelease_; }
-    float duckFastRelease() const { return duckFastRelease_; }
-    float duckSustainCut() const { return duckSustainCut_; }
     float hallTailDb() const { return hallTailDb_; }
 #else
     static constexpr float floorDbfs() { return voicing::kFloorDbfs; }
-    static constexpr float duckSlope() { return 1.0f - 1.0f / voicing::kDuckRatio; }
-    static constexpr float duckRelease() { return voicing::kDuckReleaseSeconds; }
-    static constexpr float duckFastRelease() { return voicing::kDuckSustainReleaseSeconds; }
-    static constexpr float duckSustainCut() { return voicing::kDuckSustainCut; }
     static constexpr float hallTailDb() { return voicing::kHallTailDb; }
 #endif
     dsp::Plate        twinPlate_; // PLATE's twin
@@ -374,7 +341,7 @@ private:
     bool              twinActive_ IV_ZI;
     dsp::Shimmer      shimmer_; // ATTACK's third position (ADR 0024)
     float             eraMakeup_ = 1.0f;
-    // Ducking (ADR 0014) and the limiter (SPEC §4.10).
+    // The limiter (SPEC §4.10).
     dsp::Tilt         tilt_;
     dsp::ToneBell     toneBell_; // TONE's resonant tilt, after tilt_ (v1.0.44)
     // MOTION's left side: the tape transport on the wet (v1.0.46, dsp/Transport.h), and what it was last told.
@@ -385,7 +352,6 @@ private:
     bool              toneBellOff_ IV_ZI; // setToneBellForTests
 #endif
     dsp::Limiter      limiter_;
-    float             duck_ IV_ZI, duckGrDb_ IV_ZI, duckGain_ = 1.0f, duckGainStep_ IV_ZI; // ducking: LEDs 0..1, reduction dB, wet gain
     // ERA's sources into the tank's input (SPEC §4.7): the tape's hiss, the Midiverb's crackle.
     uint32_t          noiseSeed_ = 0xA11CEu;
     float             hissLp_[2] IV_ZI, hissGain_ IV_ZI, crackleChance_ IV_ZI, crackleGain_ IV_ZI;
@@ -409,6 +375,8 @@ private:
     float pdOld_ IV_ZI, pdLastTarget_ IV_ZI, pdRest_ IV_ZI, pdOldG_ IV_ZI, pdNewG_ = 1.0f, pdRotC_ = 1.0f, pdRotS_ IV_ZI;
     int   pdXfLeft_ IV_ZI;
     float decayMakeup_ = 1.0f, decayGain_ = 1.0f, decayGainNow_ = 1.0f; // DECAY's level make-up (v1.0.28)
+    float holdMix_ IV_ZI; // endless (v1.0.61): how far its loss has glided out after the input went quiet
+    float holdFloor_ IV_ZI; // and how far the finite top's floor has let go
     dsp::EraTexture texture_; // ERA's wear on the wet (v1.0.42)
     bool texOn_ IV_ZI;
     float diffMotionNow_ IV_ZI, diffMotionPhase_ IV_ZI; // the PLATE's wandering input allpass, samples
@@ -432,9 +400,9 @@ private:
     uint64_t frozeAt_ IV_ZI;
     // Input quiet detector for holding an infinite tail where it settled.
     float    inputPower_ IV_ZI;
-    float    inputSlow_ IV_ZI, duckSustained_ IV_ZI; // the duck's: the input's 0.5 s power; how held the playing is (0..1, v1.0.51)
     float    tankInPower_ IV_ZI; // the big tank's input (after the swell), for the quiet detector
     uint64_t quietSince_ IV_ZI;
+    uint64_t endlessPlayedAt_ IV_ZI; // endless (v1.0.61): last block its input sustained the tail
     bool     tailCaptured_ IV_ZI;
     float    tailCeilingDb_ = -24.0f;
     float tankInTarget_ = 1.0f;

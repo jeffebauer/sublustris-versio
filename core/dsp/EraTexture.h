@@ -57,9 +57,6 @@ constexpr float kClockHzHi = 32000.0f, kClockHzLo = 28000.0f;
 // The level hold's ceiling, +15 dB (10^(15/20); v1.0.49, renders/wear_fizz): at +12 the band took a low chord's or
 // pad's fundamentals down and WEAR 1 lost 1.1-1.8 dB on held chords and pads; now within +-1 dB of WEAR 0.
 constexpr float kHoldMax = 5.62341309f;
-// At infinite DECAY the band keeps this share of its blend: a held tail darkens to its warm floor (ADR 0008),
-// mostly under 100 Hz, where the band is ~20 dB down; whole, it took 4-6 dB off a 10-minute hold.
-constexpr float kBandAtInfinite = 0.5f;
 // The over-modulation's soft knee (v1.0.60): linear down to -kOverModKnee of the carrier, then curving towards
 // -kOverModFloor (the hard clamp it replaces sat at -1). Measured on renders/dip_motion's material against the page's
 // F: a still PLATE's tick +13.9 -> +11.0 dB (A, WEAR's band, +10.1-10.4), keys in MASSIVE at full right +21.1 -> +15.7,

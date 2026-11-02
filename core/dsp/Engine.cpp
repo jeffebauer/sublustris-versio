@@ -255,9 +255,11 @@ IV_SIZE_OPT void Engine::reset()
     twinPlate_.reset();
     twinSwell_.reset();
     for (auto& d : twinDiffuser_) d.clear();
-    inputPower_ = inputSlow_ = duckSustained_ = 0.0f;
+    inputPower_ = 0.0f;
     tankInPower_ = 0.0f;
     quietSince_ = 0;
+    endlessPlayedAt_ = 0;
+    holdMix_ = holdFloor_ = 0.0f;
     tailCaptured_ = false;
     endlessCalm_ = brightSlope_ = brightPower_ = 0.0f;
     inDcX_[0] = inDcX_[1] = inDcY_[0] = inDcY_[1] = 0.0f;
@@ -290,8 +292,6 @@ IV_SIZE_OPT void Engine::reset()
     transport_.reset(transportOn_); // (applySpace(true) above set it)
     limiter_.reset();
     texture_.reset();
-    duck_ = duckGrDb_ = duckGainStep_ = 0.0f;
-    duckGain_ = 1.0f;
     hissLp_[0] = hissLp_[1] = 0.0f;
     noiseSeed_ = 0xA11CEu;
     shimmerMix_ = shimmerTarget_;
@@ -358,9 +358,6 @@ IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: 
         padFloorDb_ = 0.0f; // no cap until the pad has settled (controlTick)
         padCaptured_ = false;
         frozeAt_ = clock_;
-#ifndef IV_FIXED_VOICINGS
-        duckAtFreeze_ = duckGrDb_; // setFreezeDuckPrototype 2: the glide's start
-#endif
         fdn_.resyncHoldLevel();
         lowFdn_.resyncHoldLevel();
         plate_.resyncHoldLevel();
@@ -454,23 +451,34 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     const map::EraWear wear = map::eraMix(smoothed(ParamId::Era)); // once a chunk
     const float toneRatio = map::toneHighT60Ratio(tone) * voicing::kNeveHighRatio;
     const float sizeT60 = activeSpace_ == 1 ? map::hallT60Scale(hallSize_) : 1.0f;
-    const float rate = decayRate(decay, size) / sizeT60 * (1.0f - freezeMix_);
-    const float spaceRatio = massive ? map::massiveHighRatio(toneRatio, decay) : toneRatio;
+    // Endless follows the playing (v1.0.61, ADR 0008 amendment; the owner's pick C on renders/decay_endless_match):
+    // past the finite top the tail keeps the top's loss, trims and tone while you play, so turning into endless can't
+    // step its level, and a hot or a quiet input settles where the longest finite tail would; once the input has gone
+    // quiet (kEndlessQuiet*) the loss glides out (holdMix_) and the tail holds. decayFin: the DECAY its loss and level follow.
+    const float decayFin = std::fmin(decay, map::kDecayFiniteTop);
+    float rate = decayRate(decayFin, size) / sizeT60 * (1.0f - freezeMix_);
+    const float endlessHold = map::governorWeight(decay) * holdMix_; // how far the hold is in
+    rate *= 1.0f - endlessHold;
+    const float spaceRatio = massive ? map::massiveHighRatio(toneRatio, decayFin) : toneRatio;
     const float highRatio = spaceRatio + freezeMix_ * (1.0f - spaceRatio);
     // Frozen: full weight (only the pad's own hold acts, there's no floor). Not frozen: DECAY's own
     // weight at once, not glided with freezeMix_: gliding it pulled a fed pad (above the floor) down
     // hard on unfreeze, "a pronounced immediate drop" and a too-steep decay (owner, freeze options).
     // Freezing glides the weight up with freezeMix_ (a jump to full changed a finite tail's loss in
     // one sample: a click). PLATE and MASSIVE ease the weight in from DECAY 0.70 (v1.0.56, map::floorWeight).
-    const float floorW = map::floorWeight(decay, activeSpace_);
+    // Endless following the playing keeps the finite top's governor while played (PLATE and MASSIVE ease it in from
+    // 0.70, today's floor), and goes to full weight with the hold, its floor then only a safety ceiling (endlessHold).
+    const float floorFin = map::floorWeight(decayFin, activeSpace_);
+    const float floorHold = map::governorWeight(decay) * std::fmax(holdMix_, holdFloor_);
+    const float floorW = floorFin + (1.0f - floorFin) * floorHold;
     const float governor = frozen ? std::fmax(floorW, freezeMix_) : floorW;
     // DECAY keeps the loudness (v1.0.28): a shorter tail is made up to the finite top's level, on the
     // wet and the twin alike. A frozen pad keeps heldDecay_, so freezing doesn't move it.
     const float gainWas = decayGain_;
 #ifndef IV_FIXED_VOICINGS
-    decayGain_ = std::pow(map::decayLevelMakeup(decay, activeSpace_), decayMakeup_); // setDecayMakeup: 1 = as built
+    decayGain_ = std::pow(map::decayLevelMakeup(decayFin, activeSpace_), decayMakeup_); // setDecayMakeup: 1 = as built
 #else
-    decayGain_ = map::decayLevelMakeup(decay, activeSpace_); // the module never sets setDecayMakeup (1): no pow
+    decayGain_ = map::decayLevelMakeup(decayFin, activeSpace_); // the module never sets setDecayMakeup (1): no pow
 #endif
     // The make-up rises no faster than voicing::kDecayRiseShare of the tank's own decay (v1.0.55, ADR 0020
     // amendment, renders/decay_swell): it's a gain after the loop, so jumping up with a DECAY turned down it
@@ -491,7 +499,9 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // Switched in one sample, a fed infinite tail's governor loss vanished at once and the wet
     // stepped (up to 20x a sample's normal change, PLATE; heard once the dark tilt took the highs out).
     // HALL's endless tail settles voicing::kHallTailDb higher (v1.0.52, ADR 0033: the owner's pick C on renders/hall_level).
-    const float floorDb = (activeSpace_ == 1 ? floorDbfs() + hallTailDb() : floorDbfs()) * (1.0f - freezeMix_);
+    // Endless held has no floor to settle at: the floor glides to a safety ceiling (kEndlessSafetyDbfs) with the hold.
+    const float todayFloorDb = activeSpace_ == 1 ? floorDbfs() + hallTailDb() : floorDbfs();
+    const float floorDb = (todayFloorDb + (voicing::kEndlessSafetyDbfs - todayFloorDb) * floorHold) * (1.0f - freezeMix_);
     float holdDb = 0.0f;
     if (frozen) holdDb = padFloorDb_;
     else if (tailCaptured_) holdDb = tailCeilingDb_;
@@ -520,7 +530,7 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     float modStill = freezeMix_;
     if (!massive) {
         if (!frozen)
-            endlessCalm_ = tailCaptured_ ? approach(endlessCalm_, 1.0f, float(n) / (sampleRate_ * voicing::kEndlessCalmSeconds))
+            endlessCalm_ = tailCaptured_ || (holdMix_ >= 1.0f && map::governorWeight(decay) >= 1.0f) ? approach(endlessCalm_, 1.0f, float(n) / (sampleRate_ * voicing::kEndlessCalmSeconds))
                                          : approach(endlessCalm_, 0.0f, float(n) / (sampleRate_ * voicing::kUnfreezeSeconds));
         if (endlessCalm_ > modStill) modStill = endlessCalm_;
     }
@@ -564,8 +574,8 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         // HALL's allpasses scale with its mean line, so a small
         // room stays small (MASSIVE's lengths at a 0.2 s mean and up).
         fdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(hallSize_) / 0.2f));
-        fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decay, size)
-                                   : voicing::kHallOutputTrim * map::hallSizeLevelTrim(hallSize_, decay));
+        fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decayFin, size)
+                                   : voicing::kHallOutputTrim * map::hallSizeLevelTrim(hallSize_, decayFin));
         fdn_.setEarlyTaps(1.0f); // HALL too (v1.0.25: no gap after the note, its "slap-back")
         fdn_.setAir(massive ? 0.0f : voicing::kAirHallDbPerSecond / 60.0f); // v1.0.25
         fdn_.setEndlessTop(massive ? 0.0f : endlessTop);
@@ -593,8 +603,8 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         lowFdn_.setHoldDb(holdDb);
         lowFdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallDiff);
         lowFdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(hallSize_) / 0.2f));
-        lowFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decay, size)
-                                      : voicing::kHallOutputTrim * map::hallSizeLevelTrim(hallSize_, decay));
+        lowFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decayFin, size)
+                                      : voicing::kHallOutputTrim * map::hallSizeLevelTrim(hallSize_, decayFin));
         lowFdn_.setEarlyTaps(1.0f);
         lowFdn_.setModDepth(0.0f);
     }
@@ -602,13 +612,12 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // ERA in the loop and DRIFT (SPEC §4.6, §4.7). Freezing glides the
     // in-loop colour out (the pad holds still, ADR 0009); DRIFT stays.
     // ERA's wear on the wet (dsp/EraTexture.h), run only while it's in, with MOTION's radio band (v1.0.60, ADR
-    // 0036). At infinite DECAY the band keeps a share of its blend (tex::kBandAtInfinite).
+    // 0036). The band is whole at infinite DECAY too (v1.0.61: halved there, endless sounded unlike the finite tail).
     const map::RadioBand radio = map::radioBand(smoothed(ParamId::Drift));
     {
         dsp::TexMix t = wear.tex;
         t.bandW = radio.bandW;
         t.bandT = radio.bandT;
-        t.bandW *= 1.0f - map::governorWeight(decay) * (1.0f - dsp::tex::kBandAtInfinite);
         texOn_ = t.tapeW > 0.0f || t.breathW > 0.0f || t.clockW > 0.0f || t.grainW > 0.0f || t.bandW > 0.0f
               || !texture_.settled(); // every stage out: runs on (the hold alone) until its gain is back at 1
         texture_.set(t, sampleRate_, n);
@@ -798,48 +807,6 @@ IV_NOINLINE IV_SIZE_OPT void Engine::predelayCrossfade(float l, float r, float& 
 
 IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (flash)
 {
-    // Ducking (ADR 0014, amended v1.0.17 and v1.0.51): 2:1 compression of the wet, keyed by the input's
-    // ~10 ms power, × how far into infinite DECAY is; not while frozen (playing over a pad
-    // mustn't duck it; fades with the freeze glide). The reduction moves with its own attack
-    // and release once per control block; the wet gain ramps across the block.
-    {
-        const float levelDb = 10.0f * std::log10(inputPower_ + 1e-12f);
-        const float over = levelDb - voicing::kDuckThresholdDbfs;
-        float target = (over > 0.0f ? duckSlope() * over : 0.0f)
-                     * map::governorWeight(smoothed(ParamId::Decay)) * (1.0f - freezeMix_);
-        // v1.0.51 (renders/level_glue E): held playing is ducked less and let go faster when it stops, so the
-        // tail arrives under the dry without a dip; short sounds keep the full reduction and the slow release.
-        // "Held": the 10 ms power within 3 dB of its 0.5 s power, judged only while over the threshold.
-        float release = duckRelease();
-        if (duckFastRelease() > 0.0f || duckSustainCut() > 0.0f) {
-            inputSlow_ += blockK(voicing::kDuckSlowSeconds, n) * (inputPower_ - inputSlow_);
-            if (over > 0.0f) {
-                const float held = inputPower_ < voicing::kDuckSustainCrest * inputSlow_ ? 1.0f : 0.0f;
-                duckSustained_ += blockK(voicing::kDuckSustainSeconds, n) * (held - duckSustained_);
-            }
-            if (duckFastRelease() > 0.0f) release += duckSustained_ * (duckFastRelease() - release);
-            target *= 1.0f - duckSustainCut() * duckSustained_;
-        }
-#ifndef IV_FIXED_VOICINGS
-        if (freezeDuck_ == 1 && gesture_.frozen()) {
-            // setFreezeDuckPrototype 1: the pad keeps the reduction it had at the tap
-        } else if (freezeDuck_ == 2 && gesture_.frozen()) { // 2: let go in a straight line (dB) over the glide
-            duckGrDb_ = std::fmax(0.0f, duckGrDb_ - duckAtFreeze_ * float(n) / (freezeDuckSeconds_ * sampleRate_));
-        } else {
-            const float secs = target > duckGrDb_ ? voicing::kDuckAttackSeconds
-                             : (freezeMix_ > 0.0f ? (freezeDuck_ == 1 ? freezeDuckSeconds_ : 0.05f) : release);
-            duckGrDb_ += blockK(secs, n) * (target - duckGrDb_);
-        }
-#else
-        // A freeze lets go quickly (50 ms), so a fresh pad doesn't swell up over the release.
-        const float secs = target > duckGrDb_ ? voicing::kDuckAttackSeconds
-                         : (freezeMix_ > 0.0f ? 0.05f : release);
-        duckGrDb_ += blockK(secs, n) * (target - duckGrDb_);
-#endif
-        if (target == 0.0f && duckGrDb_ < 0.05f) duckGrDb_ = 0.0f; // fully let go (and exact unity)
-        duckGainStep_ = (std::pow(10.0f, -duckGrDb_ / 20.0f) - duckGain_) / float(n);
-        duck_ = map::clamp01(duckGrDb_ / voicing::kDuckFullDb);
-    }
     // The PLATE's first input allpass wanders (Mutable Instruments' Clouds and Beads; owner's pick
     // on renders/diffuser_motion, v1.0.16), so repeated hits don't enter the tank identically.
     // Its depth glides in and out with SPACE, so a flip never jumps the read.
@@ -908,6 +875,13 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
                && clock_ - quietSince_ > uint64_t(uint32_t(voicing::kQuietSeconds * sampleRate_))) {
         // Ratchets down with the tail while it settles, then stays put (the
         // hold makeup brings a sagging tail back up to it).
+        // Endless has already held (holdMix_) by kQuietSeconds: judged on the 8 s level, which still remembers the
+        // playing, the make-up pulled it back up 5-9 dB (soak). Hold it where it is, as a freeze.
+        if (!tailCaptured_) {
+            fdn_.resyncHoldLevelToFast();
+            lowFdn_.resyncHoldLevelToFast();
+            plate_.resyncHoldLevelToFast();
+        }
         const float c = tankSlowLevelDb() + voicing::kPadCeilingDb;
         // (Each time through 32 bits: a float to uint64_t pulled in libgcc's __aeabi_f2ulz, 72 B of flash.)
         const bool settling = clock_ - quietSince_ < uint64_t(uint32_t((voicing::kQuietSeconds + voicing::kTailSettleSeconds) * sampleRate_));
@@ -915,6 +889,17 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
         tailCaptured_ = true;
     }
     if (map::governorWeight(smoothed(ParamId::Decay)) < 1.0f) tailCaptured_ = false;
+    // Endless holds once the input has gone quiet (at any DECAY: the crossover's weight scales it in applySpace);
+    // new playing lets go at once.
+    // Quiet here is relative: the tank's input kEndlessQuietBelowDb under the tail, for kEndlessQuietSeconds, so a long
+    // BLOOM still feeding the tank faintly (seconds over -70 dBFS) doesn't leave the tail fading 20 dB first (soak).
+    const float inDb = 10.0f * std::log10(tankInPower_ + 1e-20f);
+    if (!tankQuiet && inDb > tankLevelDb() - voicing::kEndlessQuietBelowDb) endlessPlayedAt_ = clock_;
+    holdMix_ = clock_ - endlessPlayedAt_ > uint64_t(uint32_t(voicing::kEndlessQuietSeconds * sampleRate_))
+             ? approach(holdMix_, 1.0f, dt / voicing::kEndlessHoldSeconds) : 0.0f;
+    // The finite top's floor lets go as soon as the input is quiet (kEndlessFloorSeconds): held on until the hold, it
+    // pulled a fed PLATE tail down 8 dB in the second after the playing stopped.
+    holdFloor_ = endlessPlayedAt_ != clock_ ? approach(holdFloor_, 1.0f, dt / voicing::kEndlessFloorSeconds) : 0.0f;
 
     // Paint (ADR 0010): builds over ~3 s while held, lets go over 0.2 s.
     paint_ = gesture_.painting() ? paint_ + (1.0f - paint_) * (1.0f - std::exp(-dt / (voicing::kPaintSeconds / 3.0f)))
@@ -1212,9 +1197,6 @@ IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* 
             if (!toneBellOff_)
 #endif
                 toneBell_.process(wl, wr); // TONE's resonant tilt (v1.0.44)
-            duckGain_ += duckGainStep_; // ducking (ADR 0014)
-            wl *= duckGain_;
-            wr *= duckGain_;
             limiter_.process(wl, wr);
             dryNow_ += dryStep_;
             wetNow_ += wetStep_;

@@ -142,7 +142,11 @@ void movementAndRinging()
     // The room alone's level on noise, dBFS (HALL, MASSIVE x SIZE 0 / 0.5 / 0.9), with the page's trims (voicing::kTwinRoomTrimDb:
     // B level-matched to A on the page's chord and vibes, A-weighted). On this white noise the wander as before read
     // -34.7 / -34.7 / -34.8 (HALL) and -33.8 / -33.7 / -33.8 (MASSIVE): music, not noise, set the page's match.
-    const double levelB[2][3] = {{-35.52, -35.49, -35.28}, {-34.54, -34.51, -34.30}};
+    // HALL re-pinned at v1.0.61 (ADR 0008 amendment, endless follows the playing): at this DECAY (0.9, past the finite
+    // top) everything follows DECAY 0.80 while you play, the room's level with it, so HALL's long-tail trim (ADR 0034,
+    // eased back out across the crossover before) now applies: 2.1 dB under v1.0.47's -35.52 / -35.49 / -35.28.
+    // MASSIVE's trim is the same at 0.80 and 0.9: unchanged.
+    const double levelB[2][3] = {{-37.62, -37.59, -37.38}, {-34.54, -34.51, -34.30}};
     const double ringB[2][3] = {{13.7, 7.2, 7.1}, {13.7, 7.2, 7.1}};
     for (int space : {1, 2})
         for (int k = 0; k < 3; ++k) {

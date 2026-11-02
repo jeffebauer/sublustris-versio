@@ -1,6 +1,6 @@
 #pragma once
 // The wet's last stages before MIX (SPEC §4.9, §4.10): TONE's tilt and the
-// soft limiter (the ducking is a gain in Engine, ADR 0014). Both act on the wet only, so MIX fully
+// soft limiter (endless has no duck since v1.0.61, ADR 0008 amendment). Both act on the wet only, so MIX fully
 // CCW stays a clean passthrough.
 #include "dsp/SizeOpt.h"
 #include "params/SpaceVoicing.h"

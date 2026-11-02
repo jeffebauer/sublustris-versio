@@ -1,7 +1,6 @@
-// M7: ducking and the output stage (SPEC §4.9, §4.10, §7 M7; ADR 0014).
-// Ducking (4:1 compression of the wet since v1.0.17) only from DECAY 0.85 up,
-// deepening to full at 1; the wet steps back while you play, without
-// darkening, and comes back after; no duck while frozen;
+// M7: endless under the playing and the output stage (SPEC §4.9, §4.10, §7 M7; ADR 0008 amendment v1.0.61).
+// Endless follows the playing: played, it sits where DECAY 0.80 does, quiet or hot, in every SPACE, without
+// darkening, the radio's band as at 0.80; stopped, it holds (the duck, ADR 0014, is gone since v1.0.61);
 // the soft limiter keeps the wet under −1 dBFS and reports its gain; MIX 0
 // stays a clean passthrough. Then the integration sweep: random settings of
 // every control with freezes, paints and SPACE / ATTACK flips: finite,
@@ -48,39 +47,52 @@ iv::Engine* makeEngine(float decay, float mix = 1.0f)
     return e;
 }
 
-// Max duck amount while a loud input plays.
-float duckWhilePlaying(float decay, bool frozen)
+// Endless follows the playing (v1.0.61, ADR 0008 amendment; the owner's pick C on renders/decay_endless_match).
+// Re-pinned from the duck's checks: endless had a duck (2:1 above -24 dBFS of input, ADR 0014) that held the tail
+// down while you played into a fixed floor. Now, played, endless is the longest finite tail (DECAY 0.80) exactly, so
+// there's no build-up to hold back, and on its own the duck stepped the level 1.2-1.9 dB played hot: it's gone.
+// So: played quiet or hot, DECAY 1 sits where 0.80 does (within 1 dB) in every SPACE; stopped, 0.80 fades and 1 holds.
+struct Played { double play, after; };
+Played playThenStop(float decay, int space, float amp)
 {
     iv::Engine* e = makeEngine(decay);
-    std::vector<float> in(48), l(48), r(48);
-    float mx = 0.0f;
-    for (int b = 0; b < 3000; ++b) {
-        for (auto& x : in) x = 0.3f * noise();
-        if (frozen && b == 10) e->button(true, 0);
-        if (frozen && b == 12) e->button(false, 0);
-        e->process(in.data(), in.data(), l.data(), r.data(), 48);
-        if (b > 400) mx = std::fmax(mx, e->duckAmount()); // after the freeze's 0.2 s glide (a freeze lets the duck go in 50 ms)
-    }
+    e->setParam(iv::ParamId::Space, iv::switchToNormalised(space));
+    e->reset();
+    const size_t n = size_t(16.0f * kSr);
+    std::vector<float> in(n, 0.0f), l(n), r(n);
+    gSeed = 41;
+    for (size_t i = 0; i < size_t(8.0f * kSr); ++i) in[i] = amp * noise();
+    for (size_t pos = 0; pos < n; pos += 48)
+        e->process(in.data() + pos, in.data() + pos, l.data() + pos, r.data() + pos, 48);
     delete e;
-    return mx;
+    auto db = [&](float a, float b) {
+        double s = 0.0;
+        for (size_t i = size_t(a * kSr); i < size_t(b * kSr); ++i) s += 0.5 * (double(l[i]) * l[i] + double(r[i]) * r[i]);
+        return 10.0 * std::log10(s / ((b - a) * kSr) + 1e-30);
+    };
+    return {db(6.0f, 8.0f), db(14.0f, 16.0f)};
 }
 
-void duckDepth()
+void endlessFollowsThePlaying()
 {
-    const float d80 = duckWhilePlaying(0.8f, false), d90 = duckWhilePlaying(0.9f, false), d100 = duckWhilePlaying(1.0f, false);
-    char msg[200];
-    std::snprintf(msg, sizeof msg, "ducking depth: %.2f at DECAY 0.80, %.2f at 0.90, %.2f at 1.0 (0 below 0.85, rising)",
-                  d80, d90, d100);
-    // Steady noise is held playing: since v1.0.51 it gets 40 % of the 2:1 reduction (~0.3 of the LEDs' full);
-    // the maximum is the onset, before the playing counts as held.
-    check(d80 == 0.0f && d90 > 0.0f && d100 >= d90 - 0.01f && d100 > 0.5f, msg);
-    std::snprintf(msg, sizeof msg, "no duck while frozen (playing over a pad mustn't duck it): %.2f", duckWhilePlaying(1.0f, true));
-    check(duckWhilePlaying(1.0f, true) == 0.0f, msg);
+    const char* names[3] = {"PLATE", "HALL", "MASSIVE"};
+    for (int space = 0; space < 3; ++space) {
+        for (float amp : {0.03f, 0.3f}) {
+            const Played fin = playThenStop(0.8f, space, amp), inf = playThenStop(1.0f, space, amp);
+            char msg[240];
+            std::snprintf(msg, sizeof msg, "endless follows the playing, %s %s: played, DECAY 1 at %+.2f dB of 0.80 (within 1 dB); "
+                                           "6 s after stopping, 0.80 has faded %.1f dB, 1 sits %+.1f dB of its playing level",
+                          names[space], amp > 0.1f ? "hot" : "quiet", inf.play - fin.play, fin.play - fin.after, inf.after - inf.play);
+            // Held, the tail keeps what it had when the playing stopped, less the early sound leaving (PLATE: about
+            // 7 dB in the first second, the same at 0.80); 0.80 goes on fading. MASSIVE's late swell still lifts it about
+            // 1 dB after the playing stops (its bloom; then flat), so it may rise up to 1.5 dB, never more.
+            check(std::fabs(inf.play - fin.play) < 1.0 && inf.after - inf.play > -9.0 && inf.after > fin.after + 3.0
+                      && inf.after < inf.play + 1.5, msg);
+        }
+    }
 }
 
-// While playing at infinite the wet steps back (2:1 since v1.0.51, 4:1 before), with no darkening, and it
-// lets go when the playing stops. Held playing (steady noise here) gets 40 % of the reduction and is let go in
-// 0.08 s; short sounds (bursts) get all of it and the 0.4 s release (v1.0.51, ADR 0014; renders/level_glue E).
+// Endless has no duck: the wet doesn't darken while you play into it.
 double highShare(const std::vector<float>& x, size_t a, size_t b)
 {
     const float c = std::exp(-2.0f * 3.14159265f * 4000.0f / kSr);
@@ -95,54 +107,65 @@ double highShare(const std::vector<float>& x, size_t a, size_t b)
     return hi / (all + 1e-30);
 }
 
-// Short sounds (60 ms noise bursts, two a second) aren't held playing: the full 2:1 reduction, and the slow
-// 0.4 s release, so they don't pump; a held sound is let go fast (0.08 s) when it stops (v1.0.51).
-void shortSoundsDuckInFull()
-{
-    iv::Engine* e = makeEngine(1.0f);
-    const size_t n = size_t(10.0f * kSr);
-    std::vector<float> in(n, 0.0f), l(n), r(n);
-    for (size_t i = 0; i < size_t(6.0f * kSr); ++i) in[i] = (i % size_t(0.5f * kSr)) < size_t(0.06f * kSr) ? 0.3f * noise() : 0.0f;
-    for (size_t i = size_t(6.0f * kSr); i < size_t(8.0f * kSr); ++i) in[i] = 0.3f * noise();
-    float bursts = 0.0f, between = 1.0f, heldGone = 1.0f;
-    for (size_t pos = 0; pos < n; pos += 48) {
-        e->process(in.data() + pos, in.data() + pos, l.data() + pos, r.data() + pos, 48);
-        const size_t ph = pos % size_t(0.5f * kSr);
-        if (pos > size_t(2.0f * kSr) && pos < size_t(6.0f * kSr)) {
-            bursts = std::fmax(bursts, e->duckAmount());
-            if (ph > size_t(0.3f * kSr) && ph < size_t(0.35f * kSr)) between = std::fmin(between, e->duckAmount());
-        }
-        if (pos > size_t(8.3f * kSr) && pos < size_t(8.4f * kSr)) heldGone = std::fmin(heldGone, e->duckAmount());
-    }
-    delete e;
-    char msg[240];
-    std::snprintf(msg, sizeof msg, "ducking short sounds: %.2f on the bursts (full 2:1: > 0.45), %.2f 0.25 s after one (the slow "
-                                   "release: > 0.1); held noise let go 0.3 s after it stops: %.2f (< 0.05)", bursts, between, heldGone);
-    check(bursts > 0.45f && between > 0.1f && heldGone < 0.05f, msg);
-}
-
-void ducksAndComesBack()
+void playingDoesntDarken()
 {
     iv::Engine* e = makeEngine(1.0f);
     const size_t n = size_t(12.0f * kSr);
     std::vector<float> in(n, 0.0f), l(n), r(n);
     for (size_t i = 0; i < size_t(8.0f * kSr); ++i) in[i] = 0.3f * noise();
-    float during = 0.0f, after = 1.0f;
-    for (size_t pos = 0; pos < n; pos += 48) {
+    for (size_t pos = 0; pos < n; pos += 48)
         e->process(in.data() + pos, in.data() + pos, l.data() + pos, r.data() + pos, 48);
-        if (pos > size_t(6.0f * kSr) && pos < size_t(8.0f * kSr)) during = std::fmax(during, e->duckAmount());
-        if (pos > size_t(9.5f * kSr)) after = std::fmin(after, e->duckAmount());
-    }
     delete e;
     const double hiPlaying = highShare(l, size_t(6.0f * kSr), size_t(8.0f * kSr));
     const double hiAfter = highShare(l, size_t(9.5f * kSr), size_t(11.5f * kSr));
     char msg[220];
-    std::snprintf(msg, sizeof msg, "ducking: %.2f while playing held noise (40 %% of 2:1: 0.2-0.45), %.2f 1.5 s after stopping (lets go)",
-                  during, after);
-    check(during > 0.2f && during < 0.45f && after < 0.05f, msg);
-    std::snprintf(msg, sizeof msg, "ducking doesn't darken: the wet's highs (> 4 kHz) %.1f%% while playing, %.1f%% after",
+    std::snprintf(msg, sizeof msg, "playing into endless doesn't darken it: the wet's highs (> 4 kHz) %.1f%% while playing, %.1f%% after",
                   100.0 * hiPlaying, 100.0 * hiAfter);
     check(hiPlaying > 0.5 * hiAfter, msg);
+}
+
+// The radio's band is the same either side of 3 o'clock (v1.0.61): MOTION full right, played, DECAY 1's lows
+// (< 150 Hz) and highs (> 4 kHz) take the share of the wet they take at 0.80, within 1 dB. The band was half
+// blended at endless before (tex::kBandAtInfinite, from WEAR): here 1.2-3.7 dB more (11-12 dB in the lowest octaves).
+double lowShare(const std::vector<float>& x, size_t a, size_t b)
+{
+    const float c = 1.0f - std::exp(-2.0f * 3.14159265f * 150.0f / kSr);
+    float y = 0.0f;
+    double lo = 0.0, all = 0.0;
+    for (size_t i = 0; i < b; ++i) {
+        y += c * (x[i] - y);
+        if (i < a) continue;
+        lo += double(y) * y;
+        all += double(x[i]) * x[i];
+    }
+    return lo / (all + 1e-30);
+}
+
+void radioBandAtEndless()
+{
+    const char* names[3] = {"PLATE", "HALL", "MASSIVE"};
+    for (int space = 0; space < 3; ++space) {
+        double lo[2], hi[2];
+        for (int k = 0; k < 2; ++k) {
+            iv::Engine* e = makeEngine(k ? 1.0f : 0.8f);
+            e->setParam(iv::ParamId::Space, iv::switchToNormalised(space));
+            e->setParam(iv::ParamId::Drift, 1.0f);
+            e->reset();
+            const size_t n = size_t(8.0f * kSr);
+            std::vector<float> in(n), l(n), r(n);
+            gSeed = 41;
+            for (size_t i = 0; i < n; ++i) in[i] = 0.3f * noise();
+            for (size_t pos = 0; pos < n; pos += 48)
+                e->process(in.data() + pos, in.data() + pos, l.data() + pos, r.data() + pos, 48);
+            delete e;
+            lo[k] = 10.0 * std::log10(lowShare(l, size_t(5.0f * kSr), n));
+            hi[k] = 10.0 * std::log10(highShare(l, size_t(5.0f * kSr), n));
+        }
+        char msg[240];
+        std::snprintf(msg, sizeof msg, "the radio band at endless, %s, MOTION full right: DECAY 1's lows %+.2f dB and highs %+.2f dB "
+                                       "of 0.80's share (within 1 dB)", names[space], lo[1] - lo[0], hi[1] - hi[0]);
+        check(std::fabs(lo[1] - lo[0]) <= 1.0 && std::fabs(hi[1] - hi[0]) <= 1.0, msg);
+    }
 }
 
 // Driven hot: a full-scale input into a long, bright PLATE. ERA 0, the Neve alone: the wear's tape
@@ -228,9 +251,9 @@ void integrationSweep()
 
 int main()
 {
-    duckDepth();
-    ducksAndComesBack();
-    shortSoundsDuckInFull();
+    endlessFollowsThePlaying();
+    playingDoesntDarken();
+    radioBandAtEndless();
     limiter();
     integrationSweep();
     std::printf("%d failure(s)\n", failures);
