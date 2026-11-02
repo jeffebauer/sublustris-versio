@@ -86,7 +86,6 @@ How worn the reverb sounds. Fully left (the default) is clean, with only a warm,
 
 - tape saturation and a little tape compression;
 - a bucket-brigade delay's breathing: its noise and level rise and fall with your playing;
-- the delay chip's clock, which folds the top end back on itself;
 - bit grit, which stays the same share of a fading tail, so the tail stays grainy right to the end;
 - a soft hiss and the odd crackle, which follow your playing, so silence stays silent.
 

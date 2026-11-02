@@ -5,9 +5,10 @@
 // follows the input; infinite tails hold across the knob in every SPACE; turning ERA doesn't click (1 ms
 // frames); DRIFT's dead zone is exact and both sides move the tail without clicks; the saturation doesn't
 // alias badly when hit hard. v1.0.49 (the owner's picks on renders/wear_grit, wear_fizz, wear_saturation): the
-// grit (the BBD's clock and the grain) is silent below 0.65 on the knob and the clock runs at 28 kHz at full.
-// v1.0.60 (ADR 0036, the owner's pick F on renders/dip_motion): the radio's band left WEAR for MOTION's right side,
-// so WEAR is tape, breath, clock and grain; it never narrows the tone.
+// grit (the grain; the BBD's clock too until v1.0.64) is silent below 0.65 on the knob.
+// v1.0.60 (ADR 0036, the owner's pick F on renders/dip_motion): the radio's band left WEAR for MOTION's right side.
+// v1.0.64 (ADR 0038, the owner's pick C on renders/wear_no_bbd): the BBD's clock left WEAR, so WEAR is tape,
+// breath and grain; it never narrows the tone, and it no longer folds the top back.
 
 #include "Fft.h"
 #include "Metrics.h"
@@ -499,7 +500,8 @@ void notAliasing()
     // v1.0.35 (ADR 0026): the HALL tank runs at 24 kHz, so in its loop the 3rd harmonic (~21 kHz) folds to
     // ~3 kHz: about -34 dB here (was under -40). Accepted for the CPU (classic digital reverbs fold the
     // same way); the limit for it is -32.
-    // v1.0.49: the grit now starts at 0.65, so at 0.75 it is light (the clock at ~31 kHz, a third in) and no longer
+    // v1.0.49: the grit now starts at 0.65, so at 0.75 it is light (then with the clock at ~31 kHz, a third in; the
+    // clock left in v1.0.64) and no longer
     // covers the tape's own folding (its 7th harmonic, 49 kHz, lands at 1 kHz), which reads 4-5 dB over the 96 kHz
     // render. Until v1.0.48 the grit's images (by design, at both rates) passed the second clause; with the grit
     // out, v1.0.48's tape read 9 dB over at 0.75 (5.7 at 0.64), the softer tape 4.1 at 0.64. Whole, the band below
@@ -510,15 +512,15 @@ void notAliasing()
     check(at48 < -32.0 || at48 - at96 < 2.0 || (at48 < -15.0 && at48 - at96 < 6.0), msg);
 }
 
-// v1.0.49 (renders/wear_grit D): the grit (the BBD's clock and the grain) is silent below 0.65 on the knob, then
-// comes in. The wear's chain run twice on the same wet (a chord and a little noise), once as the knob has it and
-// once with the clock and grain out: the difference is the grit, its level against the wet's. Below 0.65 the two
+// v1.0.49 (renders/wear_grit D): the grit (the grain; the BBD's clock too until v1.0.64) is silent below 0.65 on the
+// knob, then comes in. The wear's chain run twice on the same wet (a chord and a little noise), once as the knob has
+// it and once with the grain out: the difference is the grit, its level against the wet's. Below 0.65 the two
 // are the same to the bit; past it the grit is there and grows to full.
 double gritDb(float v)
 {
     const iv::map::EraWear w = iv::map::eraMix(v);
     iv::dsp::TexMix noGrit = w.tex;
-    noGrit.clockW = noGrit.grainW = 0.0f;
+    noGrit.grainW = 0.0f;
     iv::dsp::EraTexture a, b;
     a.reset();
     b.reset();
@@ -556,16 +558,15 @@ void gritFromItsStart()
         detail += buf;
         if (v <= 0.65f) silentBelow &= db < -900.0;
         else {
-            thereAbove &= db > -60.0;
+            thereAbove &= db > -70.0; // v1.0.64: the grain alone at 0.70 reads -62 (over -60 with the clock)
             grows &= db >= last - 1.0;
             last = db;
         }
     }
     check(silentBelow && thereAbove && grows,
-          "WEAR's grit (clock and grain) silent to 0.65, then in and growing (dB re the wet:" + detail + ")");
+          "WEAR's grit (the grain) silent to 0.65, then in and growing (dB re the wet:" + detail + ")");
     const iv::map::EraWear full = iv::map::eraMix(1.0f), start = iv::map::eraMix(iv::voicing::kWearGritStart);
-    check(full.tex.clockW == 1.0f && full.tex.grainW == 1.0f && start.tex.clockW == 0.0f && start.tex.grainW == 0.0f,
-          "WEAR 1: the grit whole (clock and grain blends 1); at 0.65 none");
+    check(full.tex.grainW == 1.0f && start.tex.grainW == 0.0f, "WEAR 1: the grit whole (the grain's blend 1); at 0.65 none");
 }
 
 // v1.0.60: WEAR carries none of the radio's band at any setting (it is MOTION's right side's, Mappings.h radioBand),
@@ -593,15 +594,13 @@ void noBandOnWear()
     check(none && std::fabs(db[1] - db[0]) <= 1.5, msg);
 }
 
-// v1.0.49 (renders/wear_fizz F): the BBD's clock at full WEAR runs at 28 kHz (14 kHz before). Its sample and hold
-// images a 1 kHz tone at the clock +- 1 kHz: 27 and 29 kHz, heard folded about 48 kHz at 21 and 19 kHz, ~10 dB over
-// what lands at 13 and 15 kHz (its third images, 83 and 85 kHz, folded). A 14 kHz clock reads the other way round
-// (its first images at 13 and 15 kHz, ~5 dB over its second at 27 and 29).
-void clockAt28k()
+// v1.0.64 (ADR 0038, the owner's pick C on renders/wear_no_bbd): no BBD clock on WEAR. Until v1.0.63 its sample and
+// hold at 28 kHz imaged a 1 kHz tone at 27 and 29 kHz, heard folded about 48 kHz at 21 and 19 kHz. Now WEAR 1's whole
+// chain (tape, breath, grain) on that tone leaves those bands at the grain's and the breath's noise floor: measured
+// -54.9 dB re the tone (with the clock, v1.0.63: -27.6).
+void noClockImages()
 {
-    iv::dsp::TexMix m;
-    m.clockW = 1.0f;
-    m.clockT = iv::map::eraMix(1.0f).tex.clockT;
+    const iv::dsp::TexMix m = iv::map::eraMix(1.0f).tex;
     iv::dsp::EraTexture t;
     t.reset();
     const size_t len = size_t(2.0f * kSr), n = 32768;
@@ -621,11 +620,10 @@ void clockAt28k()
             if (std::fabs(float(k) * kSr / float(n) - hz) < 150.0f) p += double(spec[k]) * spec[k];
         return 10.0 * std::log10(p + 1e-30);
     };
-    const double at28 = std::fmax(band(19000.0f), band(21000.0f)), at14 = std::fmax(band(13000.0f), band(15000.0f));
+    const double images = std::fmax(band(19000.0f), band(21000.0f)) - band(1000.0f);
     char msg[200];
-    std::snprintf(msg, sizeof msg, "WEAR 1: the BBD's clock at 28 kHz (tex::kClockHzLo %.0f; a 1 kHz tone's images at 19/21 kHz %.1f dB, "
-                                   "at 13/15 kHz %.1f dB)", iv::dsp::tex::kClockHzLo, at28, at14);
-    check(iv::dsp::tex::kClockHzLo == 28000.0f && at28 > at14 + 6.0, msg);
+    std::snprintf(msg, sizeof msg, "WEAR 1: no BBD clock images (a 1 kHz tone's 19/21 kHz bands %.1f dB re the tone; under -45; -27.6 with the clock)", images);
+    check(images < -45.0, msg);
 }
 
 } // namespace
@@ -643,7 +641,7 @@ int main()
     eraSweepClickFree();
     notAliasing();
     gritFromItsStart();
-    clockAt28k();
+    noClockImages();
     noBandOnWear();
     std::printf("%d failure(s)\n", failures);
     return failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
