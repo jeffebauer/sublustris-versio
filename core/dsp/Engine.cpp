@@ -618,7 +618,7 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         dsp::TexMix t = wear.tex;
         t.bandW = radio.bandW;
         t.bandT = radio.bandT;
-        texOn_ = t.tapeW > 0.0f || t.breathW > 0.0f || t.clockW > 0.0f || t.grainW > 0.0f || t.bandW > 0.0f
+        texOn_ = t.tapeW > 0.0f || t.breathW > 0.0f || t.grainW > 0.0f || t.bandW > 0.0f
               || !texture_.settled(); // every stage out: runs on (the hold alone) until its gain is back at 1
         texture_.set(t, sampleRate_, n);
     }

@@ -125,6 +125,8 @@ void deadZone()
 }
 
 // The wet's first sound at full left lands kBase samples after noon's (the transport's centre: the left side's latency).
+// Within 8: the wow moves the read point a few samples off its centre at the impulse (v1.0.64: 1004; v1.0.65's
+// wow, x1.25, 1005).
 void latency()
 {
     std::vector<float> in(size_t(0.5f * kSr), 0.0f);
@@ -137,8 +139,8 @@ void latency()
     const long a = onset(render(in, pageSetting(1, 0.5f))), b = onset(render(in, pageSetting(1, 0.0f)));
     char msg[200];
     std::snprintf(msg, sizeof msg, "MOTION full left: the wet arrives %ld samples (%.1f ms) after noon's (the transport's "
-                  "centre, %d; within 4)", b - a, double(b - a) / 48.0, int(iv::dsp::Transport::kBase));
-    check(a > 0 && std::labs(b - a - long(iv::dsp::Transport::kBase)) <= 4, msg);
+                  "centre, %d; within 8)", b - a, double(b - a) / 48.0, int(iv::dsp::Transport::kBase));
+    check(a > 0 && std::labs(b - a - long(iv::dsp::Transport::kBase)) <= 8, msg);
 }
 
 // Turned back to noon, the transport glides out and rests (the wet as without it again).
@@ -161,25 +163,25 @@ void glideOut()
     check(centreMid == iv::dsp::Transport::kBase && restedAt6 && restedAt10, msg);
 }
 
-// The left side against the confirm page's B (left_tape_final/_verify.txt): p95 cents and the transport's counts.
-// HALL's p95s are v1.0.57's own (ADR 0035: in this long tail HALL's floor is twice as deep, so a held note moves more
-// with MOTION too; the page's B: 9.2 / 12.6 / 18.5). v1.0.59 (motion_dips C): the dips come in from ~7:30
-// (kTransportDipsFrom), so 3/4 left has none (the page's B: 6); its crinkle and warbles are unchanged.
-// MASSIVE's 9 o'clock and 3/4 left are v1.0.63's own (ADR 0039: the early taps re-laid move this one tone's p95; the
-// page's B: 5.7 / 9.6).
+// The left side's p95 cents and the transport's counts, v1.0.65's own (ADR 0040, the owner's pick D on
+// renders/more_tape: wow and flutter x1.25, the crinkle from ~9:35 at up to 0.9 a second, the dips from ~9:30 on
+// half the bursts at full left). Until v1.0.64 (the confirm page's B, HALL's v1.0.57): 9 o'clock 13.8 / 15.4 / 5.6 c,
+// no crinkle; 3/4 left 16.0 / 15.2 / 9.6, 13 bursts, no dips; full left 19.9 / 19.8 / 15.1, 34 bursts and 15 dips.
+// HALL's and MASSIVE's p95s are with v1.0.63's onset centred (ADR 0039) in the same build: the re-laid early taps move
+// this one tone's reading (v1.0.65 alone: HALL 15.2 / 16.8 / 23.0, MASSIVE 7.0 / 11.7 / 19.7).
 void leftSide()
 {
     const std::vector<float> tones = heldTones();
     struct Pos { float drift; const char* name; double p95[3]; int crinkles, dips; }; // p95: PLATE, HALL, MASSIVE
-    const Pos pos[] = {{0.2f, "9 o'clock (0.2)", {13.8, 15.3, 4.5}, 0, 0},
-                       {0.1175f, "3/4 left (0.1175)", {16.0, 15.2, 11.0}, 13, 0},
-                       {0.0f, "full left", {19.9, 19.8, 15.1}, 34, 15}};
+    const Pos pos[] = {{0.2f, "9 o'clock (0.2)", {14.7, 14.6, 5.9}, 12, 1},
+                       {0.1175f, "3/4 left (0.1175)", {16.5, 19.2, 11.8}, 30, 8},
+                       {0.0f, "full left", {21.5, 25.0, 19.0}, 54, 27}};
     for (const Pos& p : pos) {
         for (int space : {0, 1, 2}) {
             const double c = p95Of(render(tones, pageSetting(space, p.drift)));
             char msg[200];
-            std::snprintf(msg, sizeof msg, "MOTION %s, %s: p95 %.1f c on a held 1.3 kHz (%s: %.1f, within 10 %%)",
-                          p.name, kSpaceName[space], c, space == 1 ? "v1.0.57" : (space == 2 && p.drift > 0.0f ? "v1.0.63" : "the page's B"), p.p95[space]);
+            std::snprintf(msg, sizeof msg, "MOTION %s, %s: p95 %.1f c on a held 1.3 kHz (v1.0.63 + v1.0.65: %.1f, within 10 %%)",
+                          p.name, kSpaceName[space], c, p.p95[space]);
             check(std::fabs(c / p.p95[space] - 1.0) <= 0.10, msg);
         }
         std::vector<float> minute(size_t(60.0f * kSr), 0.0f);
@@ -187,18 +189,22 @@ void leftSide()
         render(minute, pageSetting(1, p.drift), &e);
         const int cr = e.transport().crinkles(), di = e.transport().dips();
         char msg[200];
-        std::snprintf(msg, sizeof msg, "MOTION %s: %d crinkle bursts and %d dips a minute (the page's B: %d and %d, within 10 %%)",
+        std::snprintf(msg, sizeof msg, "MOTION %s: %d crinkle bursts and %d dips a minute (v1.0.65: %d and %d, within 10 %%)",
                       p.name, cr, di, p.crinkles, p.dips);
         check(std::abs(cr - p.crinkles) <= std::max(0, int(std::floor(0.1 * p.crinkles)))
                   && std::abs(di - p.dips) <= std::max(0, int(std::floor(0.1 * p.dips))), msg);
     }
-    // The dips' share (v1.0.59): none from kTransportDipsFrom up, rising straight to kTransportDipShare at full left.
+    // The dips' share (v1.0.59; from ~9:30 since v1.0.65): none from kTransportDipsFrom up, rising straight to
+    // kTransportDipShare at full left. The crinkle: none from ~9:35 (MOTION 0.2585) up, 0.9 a second at full left.
     using namespace iv::voicing;
     const float from = kTransportDipsFrom;
-    check(iv::map::transportAmounts(from).crinkleDip == 0.0f && iv::map::transportAmounts(0.188f).crinkleDip == 0.0f
+    check(iv::map::transportAmounts(0.26f).crinkleRate == 0.0f && iv::map::transportAmounts(0.25f).crinkleRate > 0.0f
+              && iv::map::transportAmounts(0.0f).crinkleRate == kTransportCrinklePerSecond,
+          "MOTION's crinkle: none from ~9:35 (MOTION 0.26) up, 0.9 bursts a second fully left");
+    check(iv::map::transportAmounts(from).crinkleDip == 0.0f && iv::map::transportAmounts(0.3f).crinkleDip == 0.0f
               && iv::map::transportAmounts(0.0f).crinkleDip == kTransportDipShare
               && std::fabs(iv::map::transportAmounts(0.5f * from).crinkleDip - 0.5f * kTransportDipShare) < 1e-6f,
-          "MOTION's tape dips: none from ~7:30 (MOTION 0.026) up, half the share half way, the full share fully left");
+          "MOTION's tape dips: none from ~9:30 (MOTION 0.25) up, half the share half way, the full share fully left");
 }
 
 // The right side (v1.0.60, ADR 0036; the owner's pick F on renders/dip_motion): the radio band on the wet, no pitch

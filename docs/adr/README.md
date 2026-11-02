@@ -41,4 +41,6 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0035](0035-hall-long-tails.md) | HALL's long tails keep their upper mids and move a little more (its shelf at 6 kHz; its floor ×2 from 15 s) | owner, 29 Oct 2026 |
 | [0036](0036-radio-band-on-motion.md) | The radio band moves from WEAR to MOTION's right side; Wander goes (amended v1.0.61: whole at endless DECAY too) | owner, 1 Nov 2026 |
 | [0037](0037-canyon.md) | SPACE's third position is CANYON (was MASSIVE); the name only | owner, 1 Nov 2026 |
+| [0038](0038-wear-without-the-clock.md) | WEAR without the BBD's clock: tape, breath and grain | owner, 2 Nov 2026 |
 | [0039](0039-onset-centred.md) | The onset centred: HALL's and CANYON's early taps re-laid so the first moment sits evenly in the stereo field | owner, 3 Nov 2026 |
+| [0040](0040-more-tape.md) | More tape: WEAR's tape driven 5 dB harder, a more worn cassette on MOTION's left (crinkle and dropouts from about 9:30) | owner, 3 Nov 2026 |

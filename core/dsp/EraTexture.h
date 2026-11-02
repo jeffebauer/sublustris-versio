@@ -1,8 +1,8 @@
 #pragma once
 // ERA's wear (P4, SPEC §4.7; v1.0.42, the owner's pick C on renders/era_rethink, "one wear amount"): on the
 // wet after the loop, one stereo chain whose stages all come in near the start of the knob and deepen
-// together (Mappings.h eraMix). It keeps the grit the owner likes, the Midiverb's and the BBD's, and tape
-// saturation; none moves its pitch (DRIFT owns movement). The Neve's warmth stays in the loop as the base
+// together (Mappings.h eraMix). It keeps the grit the owner likes, the Midiverb's, the BBD's compander
+// breathing and tape saturation; none moves its pitch (DRIFT owns movement). The Neve's warmth stays in the loop as the base
 // (dsp/Era.h). docs/research/era-rethink.md. Its last stage, the radio's band, is MOTION's right side since
 // v1.0.60 (Mappings.h radioBand; ADR 0036, the owner's pick F on renders/dip_motion), the one stage that
 // narrows the tone.
@@ -16,8 +16,8 @@
 //            soft 2nd harmonic (Raffel & Smith, DAFx-10), without the line's filters: the noise and the
 //            level breathe with the playing. Its gains follow its envelopes a block late (1 ms against
 //            the chip's 10-30 ms), so no divide per sample.
-//   clock:   the BBD's sample-and-hold at its clock, with no anti-alias or reconstruction filter: the
-//            reverb's top folds back (aliasing) and the steps add a fizzy image.
+//            (The BBD's clock, a sample-and-hold with no filters that folded the top back, left in v1.0.64: ADR
+//            0038, the owner's pick C on renders/wear_no_bbd, "the aliasing can feel a bit static".)
 //   grain:   magnitude truncation to a step that follows the level (a floating-point converter, like
 //            μ-law's 8 bits): the grain stays the same share of the tail all the way down instead of
 //            buzzing and gating as a fixed step does on a fade; a floor keeps silence silent.
@@ -43,17 +43,14 @@ namespace iv::dsp {
 struct TexMix {
     float tapeW = 0, tapeT = 0;
     float breathW = 0, breathT = 0;
-    float clockW = 0, clockT = 0;
     float grainW = 0, grainT = 0;
     float bandW = 0, bandT = 0;
 };
 
 namespace tex {
-// The tape's drive at full, 11.25 dB (v1.0.49: 15 x 0.75, the owner's pick E on renders/wear_saturation).
-constexpr float kTapeDriveDb = 11.25f, kTapeEmphDb = 6.0f, kTapeEmphHz = 2000.0f, kTapeBias = 0.12f;
-// The BBD's clock across its intensity: 28 kHz at full (v1.0.49, the owner's pick F on renders/wear_fizz; 14 kHz
-// before: unfiltered, lower turns metallic, and 14 kHz fizzed).
-constexpr float kClockHzHi = 32000.0f, kClockHzLo = 28000.0f;
+// The tape's drive at full, 16.25 dB (v1.0.65, ADR 0040: 5 dB over v1.0.49's 11.25, the owner's pick D on
+// renders/more_tape, "more saturation"; scaled across the knob the same way).
+constexpr float kTapeDriveDb = 16.25f, kTapeEmphDb = 6.0f, kTapeEmphHz = 2000.0f, kTapeBias = 0.12f;
 // The level hold's ceiling, +15 dB (10^(15/20); v1.0.49, renders/wear_fizz): at +12 the band took a low chord's or
 // pad's fundamentals down and WEAR 1 lost 1.1-1.8 dB on held chords and pads; now within +-1 dB of WEAR 0.
 constexpr float kHoldMax = 5.62341309f;
@@ -72,14 +69,14 @@ public:
     {
         for (int c = 0; c < 2; ++c) {
             pre_[c] = de_[c] = dc_[c] = 0.0f;
-            envY_[c] = envZ_[c] = held_[c] = gEnv_[c] = gSum_[c] = 0.0f;
+            envY_[c] = envZ_[c] = gEnv_[c] = gSum_[c] = 0.0f;
             gCompStep_[c] = gExpStep_[c] = 0.0f;
             gComp_[c] = 0.126f / 1e-4f; // the gains of empty envelopes: the first block starts where it did
             gExp_[c] = 1e-4f * (1.0f / 0.126f);
             bp_[c].reset();
             dip_[c].reset();
         }
-        clock_ = hpIn_ = hpOut_ = inPow_ = outPow_ = holdStep_ = 0.0f;
+        hpIn_ = hpOut_ = inPow_ = outPow_ = holdStep_ = 0.0f;
         hold_ = holdAim_ = 1.0f;
         for (float& w : wander_) w = 0.0f;
     }
@@ -129,10 +126,6 @@ public:
             memoGrain_[slot] = 1.0f - std::exp(-float(n) / (0.005f * sr));
             memoBandHz_[slot] = -1.0f;
             if (srMoved) memoN_[slot ^ 1] = 0;
-        }
-        if (m.clockW > 0.0f && (!sameBits(m.clockT, clockT_) || srMoved)) {
-            clockT_ = m.clockT;
-            clockInc_ = tex::kClockHzHi * std::pow(tex::kClockHzLo / tex::kClockHzHi, m.clockT) / sr;
         }
         if (m.grainW > 0.0f) { // the step follows the level a block late (~5 ms), worked out once a block
             if (!sameBits(m.grainT, grainT_)) {
@@ -205,11 +198,6 @@ public:
         hpIn_ += wHp_ * (0.5f * (l + r) - hpIn_);
         const float in = 0.5f * (l + r) - hpIn_;
         inPow_ += wHold_ * (in * in - inPow_);
-        if (m_.clockW > 0.0f) { // one clock for both sides
-            clock_ += clockInc_;
-            tick_ = clock_ >= 1.0f;
-            if (tick_) clock_ -= 1.0f;
-        }
         // Stage by stage, both sides in each (CPU save 2, 28 Oct 2026): side by side, the M7 overlaps the two
         // sides' dependent chains; a side's whole chain at a time, each stage waited on the last's result. The
         // same operations for each side, the breath's noise drawn left then right as before: the same bits.
@@ -222,14 +210,6 @@ public:
             const float b0 = breath(x[0], 0), b1 = breath(x[1], 1);
             x[0] += m_.breathW * (b0 - x[0]);
             x[1] += m_.breathW * (b1 - x[1]);
-        }
-        if (m_.clockW > 0.0f) {
-            if (tick_) {
-                held_[0] = x[0];
-                held_[1] = x[1];
-            }
-            x[0] += m_.clockW * (held_[0] - x[0]);
-            x[1] += m_.clockW * (held_[1] - x[1]);
         }
         if (m_.grainW > 0.0f)
             for (int c = 0; c < 2; ++c) {
@@ -311,8 +291,6 @@ private:
     float  pre_[2] IV_ZI, de_[2] IV_ZI, dc_[2] IV_ZI;
     float  a2_ IV_ZI, a3_ IV_ZI, noise_ IV_ZI, wc_ IV_ZI, we_ IV_ZI, envY_[2] IV_ZI, envZ_[2] IV_ZI, gComp_[2] = {1, 1}, gExp_[2] = {1, 1};
     float  gCompStep_[2] IV_ZI, gExpStep_[2] IV_ZI;
-    float  clock_ IV_ZI, clockInc_ = 1, held_[2] IV_ZI;
-    bool   tick_ IV_ZI;
     float  gSum_[2] IV_ZI, gEnv_[2] IV_ZI, q_[2] = {1.0f, 1.0f}, invQ_[2] = {1.0f, 1.0f};
     float  invDrive_ = 1, deGain_ IV_ZI, invMEff_ = 1;
     EraSvf bp_[2], dip_[2];
@@ -320,10 +298,10 @@ private:
     float  wHold_ IV_ZI, wHp_ IV_ZI, hpIn_ IV_ZI, hpOut_ IV_ZI, inPow_ IV_ZI, outPow_ IV_ZI, hold_ = 1, holdAim_ = 1, holdStep_ IV_ZI;
     EraRng rng_;
     // set()'s kept maths (CPU save 2): per chunk length (memoN_, 0 none): the hold's and the grain's one-pole
-    // coefficients, the band's wander's for memoBandHz_; and the clock's and the grain's step for their settings.
+    // coefficients, the band's wander's for memoBandHz_; and the grain's step for its setting.
     int    memoN_[2] IV_ZI, memoNext_ IV_ZI;
     float  memoHold_[2] IV_ZI, memoGrain_[2] IV_ZI, memoBand_[2] IV_ZI, memoBandHz_[2] IV_ZI;
-    float  clockT_ = -1.0f, grainT_ = -1.0f, grainStep_ IV_ZI;
+    float  grainT_ = -1.0f, grainStep_ IV_ZI;
 };
 
 } // namespace iv::dsp
