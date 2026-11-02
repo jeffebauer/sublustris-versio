@@ -38,7 +38,7 @@ MOTION is bipolar. At noon it only has a faint movement, to the left it's tape, 
 
 ## Dub techno hall
 
-**Sounds like:** a big room behind offbeat chord stabs. The tail fills the gaps, steps back while the stabs play and blooms between them.
+**Sounds like:** a big room behind offbeat chord stabs. The tail fills the gaps between the stabs and holds when they stop.
 
 **Play into it:** chord stabs, as an insert. On a send, turn BLEND fully right on the return.
 

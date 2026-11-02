@@ -32,7 +32,7 @@ export interface FeatureTile { big: string; line: string; diagram: DiagramKind; 
 // MOTION gets two tiles, tape and radio (owner, 1 Nov 2026); Freeze / paint is no longer wide,
 // so the big tile plus eight singles fill every row at three columns and at two.
 export const FEATURE_TILES: FeatureTile[] = [
-  { big: 'Endless hold', size: 'big', diagram: 'endless-infinity', line: 'Past about 3 o’clock DECAY never lets go. The tail settles at a steady level, steps back about 3 dB while you play, and its notes stay notes when you stop.' },
+  { big: 'Endless hold', size: 'big', diagram: 'endless-infinity', line: 'Past about 3 o’clock DECAY never lets go. While you play it sits at the level of the longest tail before it, and when you stop it holds where it is, its notes staying notes.' },
   { big: '3 spaces', diagram: 'spaces', line: 'A dense PLATE, a big HALL, and CANYON, which swells in and grows into a boundless wash.' },
   { big: '120 s tails', diagram: 'longtail', line: 'About 30 s in PLATE, 60 s in HALL and 120 s in CANYON. Then endless.' },
   { big: 'Freeze / paint', diagram: 'freeze', line: 'Tap to freeze the tail into a still pad and play over it. Hold while frozen to paint a little of what you play into the pad.' },

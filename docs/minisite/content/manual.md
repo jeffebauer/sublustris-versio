@@ -13,7 +13,7 @@ Sublustris Versio is a huge, warm reverb for the Noise Engineering Versio. It ha
 
 <dl class="terms">
 <dt>Tail</dt><dd>The sound ringing on after you stop.</dd>
-<dt>Endless</dt><dd>DECAY past about 3 o'clock: the tail never fades. It settles at a steady level and holds there.</dd>
+<dt>Endless</dt><dd>DECAY past about 3 o'clock: the tail never fades. It follows your playing, and holds when you stop.</dd>
 <dt>Freeze</dt><dd>The tail held still as a pad, with the input closed, so you can play over it.</dd>
 <dt>Paint</dt><dd>Holding the button while frozen, to blend a little of what you're playing into the pad.</dd>
 <dt>Onset</dt><dd>How a sound enters the reverb: at once, swelling in, or with an octave on top.</dd>
@@ -62,7 +62,7 @@ How long the tail rings. Each space has its own range:
 
 The tail keeps the same loudness wherever you set it, so a short room isn't quieter than a long hall.
 
-**Past about 3 o'clock the tail turns endless** (fully from about 3:30). It never fades. It settles at a steady, warm level and holds there, and never runs away. While you play into it, the tail steps back about 3 dB to make room, and comes back over about a second when you stop. Short sounds like stabs don't make it pump; held chords move it less.
+**Past about 3 o'clock the tail turns endless** (fully from about 3:30). It never fades. While you play into it, it sounds like the longest tail just before 3 o'clock, at the same level, so turning DECAY across the line, quiet or hot, doesn't jump. When you stop, the tail stops fading within about a second and holds where it is, and it never runs away. Play again and it picks straight back up.
 
 When you stop playing for a couple of seconds, PLATE and HALL hold what you left them: over about ten seconds the tail's movement settles, so held notes stay notes instead of smearing into haze. If what you played was bright, like a cymbal wash or noise, the top end also mellows slowly over a minute or two. Play again and the movement comes back. CANYON keeps its slow, moving wash.
 
@@ -183,7 +183,7 @@ The same gestures as the button. A short pulse toggles the freeze; a gate held h
 
 - **The endless pad.** CANYON, DECAY fully up, BLEND at 3 o'clock. Play slow chords and let each one join the last.
 - **Freeze and play over it.** HALL, DECAY at 2 o'clock. Tap a freeze on a chord, then play a melody over the pad. Hold the button through the best phrase to paint it in.
-- **Dub techno chords.** HALL, DECAY just into endless, BLEND fully right on a return, or at 11 o'clock as an insert. The tail ducks under the stabs and fills the gaps between them.
+- **Dub techno chords.** HALL, DECAY just into endless, BLEND fully right on a return, or at 11 o'clock as an insert. The tail fills the gaps between the stabs and holds when they stop.
 - **Swell.** BLOOM, DEPTH at 2 o'clock, on single piano notes or plucks. Each note swells in and hangs.
 - **Shimmer bed.** SHIMMER, DEPTH at noon, DECAY at 3 o'clock, on a slow lead.
 - **Worn tape.** WEAR at 2 o'clock, MOTION at 8 o'clock, TONE at 10 o'clock. An old tape of a big room.

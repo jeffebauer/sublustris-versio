@@ -15,9 +15,14 @@ When a player suggests a change, I credit them in its entry. If you have an idea
 
 ## In development
 
-<p class="release-version">v1.0.60, 1 November 2026</p>
+<p class="release-version">v1.0.61, 2 November 2026</p>
 
 Almost every sound change below was made by ear: each option went onto a listening page next to the version before it, and I picked.
+
+### 2 November: endless follows your playing
+
+- **Smooth into and out of endless.** While you play, an endless tail sits at the level of the longest tail before it, so turning DECAY across 3 o'clock no longer jumps, quiet or hot. When you stop, it holds where it is. It no longer steps back while you play.
+- **The radio stays the radio.** MOTION's right side keeps its full narrow band in endless too.
 
 ### 1 November: an old radio on MOTION's right
 
@@ -51,4 +56,4 @@ Almost every sound change below was made by ear: each option went onto a listeni
 - **Still lows:** in HALL and CANYON the bass stays still while everything above it moves.
 - HALL starts right behind the note, and DECAY keeps the loudness at any setting.
 
-<!-- OWNER: the history above is grouped from SPEC's changelog (v1.0 on 21 Oct to v1.0.60 on 1 Nov 2026). -->
+<!-- OWNER: the history above is grouped from SPEC's changelog (v1.0 on 21 Oct to v1.0.61 on 2 Nov 2026). -->

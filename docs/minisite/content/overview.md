@@ -35,13 +35,13 @@ A reverb works the same way inside. Each trip round its loop loses a little leve
 
 Pedals brought it to the floor. The Electro-Harmonix Freeze (2010) holds any note or chord while you press its footswitch. Reverbs now often offer two versions: infinite keeps taking in what you play, and freeze holds what's there and lets nothing new in.
 
-**Sublustris has both.** Past about 3 o'clock, DECAY makes the tail endless. It settles at a steady level and ducks a little under new playing, and in PLATE and HALL its notes hold still when you stop. FREEZE holds the tail as a still pad you play over. Hold the button while frozen and it paints a little of what you play into the pad.
+**Sublustris has both.** Past about 3 o'clock, DECAY makes the tail endless. It follows your playing at the level of the longest tail, and when you stop it holds, its notes still in PLATE and HALL. FREEZE holds the tail as a still pad you play over. Hold the button while frozen and it paints a little of what you play into the pad.
 
 [Sources](/credits#the-endless-hold)
 
 ## Built for long tails
 
-- **The endless hold.** Turn DECAY past about 3 o'clock and the tail never fades. It settles at a steady level, steps back about 3 dB while you play and comes back when you stop. Stop playing and, in PLATE and HALL, its notes stay notes: they hold still instead of dissolving into haze. CANYON keeps its slow wash.
+- **The endless hold.** Turn DECAY past about 3 o'clock and the tail never fades. While you play, it sits at the level of the longest tail before it, so crossing 3 o'clock doesn't jump. Stop playing and it holds where it is; in PLATE and HALL its notes stay notes: they hold still instead of dissolving into haze. CANYON keeps its slow wash.
 - **Freeze and paint.** Tap the button and the tail freezes into a still pad. Play over it, and what you play rings in a quieter layer of its own on top. Hold the button while frozen and a little of that layer is painted into the pad, and stays.
 - **Swells.** Set ONSET to BLOOM and the reverb swells in behind each sound, over anything from a breath to four seconds. CANYON swells a little on its own.
 - **An octave of shimmer.** ONSET's SHIMMER sends what you play into the reverb an octave up. It's one steady octave, in tune, that doesn't climb.
