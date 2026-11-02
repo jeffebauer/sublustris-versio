@@ -64,13 +64,14 @@ RELEASE_LATE_LIGHT ?= 0
 #                 not through libDaisy's AudioHandle (main.cpp IV_AUDIO_DIRECT; review 2 audit: -3,240 B, the same
 #                 samples; the owner's rack check of v1.0.59 with it was clean, 30 Oct 2026).
 #                 AUDIO_DIRECT=0 builds release through libDaisy's AudioHandle (-libaudio).
-#   SDRAM_REFRESH=1 the SDRAM refreshed at the datasheet's rate (8192 rows in 64 ms: FMC_SDRTR COUNT 761), not
-#                 libDaisy's (COUNT 2054, 168 ms a pass); main.cpp IV_SDRAM_REFRESH (review2/neutral, 29 Oct 2026;
-#                 the same samples; -refresh). The SIZESPIKE=5 lap's REFRESH line times it.
+#   SDRAM_REFRESH=1 (the default since v1.0.63, 2 Nov 2026; release only) the SDRAM refreshed at the datasheet's rate
+#                 (8192 rows in 64 ms: FMC_SDRTR COUNT 761), not libDaisy's (COUNT 2054, 168 ms a pass); main.cpp
+#                 IV_SDRAM_REFRESH (review2/neutral, 29 Oct 2026; the same samples, +16 B). The SIZESPIKE=5 lap's
+#                 REFRESH line times it. SDRAM_REFRESH=0 builds release at libDaisy's rate (-norefresh).
 SIZE_GROUPS ?=
 LEAN ?= 1
 AUDIO_DIRECT ?= 1
-SDRAM_REFRESH ?=
+SDRAM_REFRESH ?= 1
 CTL_O3 ?=
 #   SHIMMER_POLY=1 the shimmer heads' window as a polynomial, no divide (core/dsp/Shimmer.h shimmerWindowPoly,
 #                 IV_SHIMMER_POLY; not the same bits: review2/cpu 28 Oct 2026), release or profile (-shpoly)
@@ -78,11 +79,12 @@ ABSORB_EXP ?=
 SHIMMER_POLY ?=
 CANDIDATE ?=
 SIZESPIKE ?=
-TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)$(if $(filter 1,$(LEAN)),,-nolean)$(if $(filter 1,$(ABSORB_EXP)),-absexp)$(if $(filter 1,$(SHIMMER_POLY)),-shpoly)$(if $(filter 1,$(SDRAM_REFRESH)),-refresh)
-TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(filter 1,$(LEAN)), -DIV_LEAN_LOOPS)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))$(if $(filter 1,$(ABSORB_EXP)), -DIV_ABSORB_EXP)$(if $(filter 1,$(SHIMMER_POLY)), -DIV_SHIMMER_POLY)$(if $(filter 1,$(SDRAM_REFRESH)), -DIV_SDRAM_REFRESH=1)$(if $(filter 5,$(SIZESPIKE)),$(if $(filter 1,$(SHIMMER_POLY)),, -DIV_PROFILE_SHPOLY_AB))
-# AUDIO_DIRECT is release only, so its tag and define live with release's (not TRIAL_*: all-variants names the
-# profile .bin from the release-mode make, and m0test / profile keep libDaisy's AudioHandle).
-RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)$(if $(filter 1,$(RELEASE_LATE_LIGHT)),-latelight)$(if $(filter 1,$(AUDIO_DIRECT)),,-libaudio)$(TRIAL_TAG)
+TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)$(if $(filter 1,$(LEAN)),,-nolean)$(if $(filter 1,$(ABSORB_EXP)),-absexp)$(if $(filter 1,$(SHIMMER_POLY)),-shpoly)
+TRIAL_DEFS = $(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(filter 1,$(LEAN)), -DIV_LEAN_LOOPS)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))$(if $(filter 1,$(ABSORB_EXP)), -DIV_ABSORB_EXP)$(if $(filter 1,$(SHIMMER_POLY)), -DIV_SHIMMER_POLY)$(if $(filter 5,$(SIZESPIKE)),$(if $(filter 1,$(SHIMMER_POLY)),, -DIV_PROFILE_SHPOLY_AB))
+# AUDIO_DIRECT and SDRAM_REFRESH are release only, so their tags and defines live with release's (not TRIAL_*:
+# all-variants names the profile .bin from the release-mode make, and m0test / profile keep libDaisy's AudioHandle
+# and refresh; the audit lap times both refresh rates itself).
+RELEASE_TAG = $(if $(filter 0,$(RELEASE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 1,$(RELEASE_DIAG)),-diag)$(if $(filter 1,$(RELEASE_LATE_LIGHT)),-latelight)$(if $(filter 1,$(AUDIO_DIRECT)),,-libaudio)$(if $(filter 1,$(SDRAM_REFRESH)),,-norefresh)$(TRIAL_TAG)
 PROFILE_TAG = $(if $(filter 0,$(PROFILE_FZ)),-nofz)$(if $(filter 0,$(PROFILE_SDRAM_TIGHT)),-sdlibdaisy)$(if $(filter 0,$(PROFILE_ITCM)),-noitcm)$(TRIAL_TAG)$(if $(CANDIDATE),-candidate)$(if $(SIZESPIKE),$(if $(filter 5,$(SIZESPIKE)),-audit,$(if $(filter 4,$(SIZESPIKE)),-cpusave,$(if $(filter 3,$(SIZESPIKE)),-cpuhunt,-sizespike$(if $(filter 2,$(SIZESPIKE)),ab)))))
 
 ifeq ($(MODE),m0test)
@@ -99,7 +101,8 @@ else ifeq ($(MODE),release)
   TARGET    = sublustris_versio$(RELEASE_TAG)
   MODE_DEFS = -DIV_MODE_RELEASE -DIV_ITCM=1 -DIV_RELEASE_SDRAM_TIGHT=$(RELEASE_SDRAM_TIGHT) \
               -DIV_RELEASE_DIAG=$(RELEASE_DIAG) $(if $(filter 1,$(RELEASE_DIAG)),-DIV_PROFILE_HOOKS) \
-              -DIV_LATE_LIGHT=$(RELEASE_LATE_LIGHT) $(if $(filter 1,$(AUDIO_DIRECT)),-DIV_AUDIO_DIRECT=1)
+              -DIV_LATE_LIGHT=$(RELEASE_LATE_LIGHT) $(if $(filter 1,$(AUDIO_DIRECT)),-DIV_AUDIO_DIRECT=1) \
+              $(if $(filter 1,$(SDRAM_REFRESH)),-DIV_SDRAM_REFRESH=1)
   LDSCRIPT  = STM32H750IB_flash_itcm.lds
 else
   $(error Unknown MODE '$(MODE)': use m0test, profile, or release)

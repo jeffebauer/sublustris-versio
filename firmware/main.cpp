@@ -133,7 +133,8 @@ uint32_t SdtrWith(uint32_t base, uint32_t trp, uint32_t trcd)
 }
 
 #if IV_SDRAM_REFRESH || IV_PROFILE_SIZESPIKE >= 5
-// SDRAM refresh (review2/neutral, 29 Oct 2026; SDRAM_REFRESH=1 trial, and the audit lap's REFRESH line).
+// SDRAM refresh (review2/neutral, 29 Oct 2026; release's default since v1.0.63, SDRAM_REFRESH=0 without it; and the
+// audit lap's REFRESH line).
 // libDaisy (src/dev/sdram.cpp) programs FMC_SDRTR COUNT 0x81A - 20 = 2054: one auto-refresh every 2055 SDCLK
 // = 20.6 us at this board's 100 MHz, all 8192 rows every 168 ms. The chip (AS4C16M32MSA: 13 row bits, the FMC's
 // own RowBitsNumber 13) asks 8192 refreshes in 64 ms, 7.8 us apart: COUNT = 7.8125 us x 100 MHz - 20 = 761
@@ -2530,6 +2531,7 @@ int main()
 // frozen the output pair shows cool blue under its meter, pulsing slowly
 // while painting (LedMeter.h withFreezeTint).
 
+#include "ControlLatch.h"
 #include "LedMeter.h"
 #include "PotEndStops.h"
 #if IV_RELEASE_DIAG
@@ -2554,6 +2556,17 @@ constexpr bool kAttackSwitchInverted = false;
 // §7 M0). Both sides of MIX go through it, so the dry/wet balance is
 // unchanged. Immensio's M0 check re-measures it on this module.
 constexpr float kOutputTrim = -0.874f; // -(10^(-1.17/20))
+
+// The gate's latch (v1.0.63, ControlLatch.h). The jack is PA1 (libDaisy's PIN_TRIG_IN, seed::D24), read
+// inverted, so a rising gate is a falling pin: EXTI line 1 set to latch falling edges, which SYSCFG's
+// EXTICR1 points at port A from reset (nothing here or in libDaisy moves it). Unmasked so the pending bit
+// latches, but its interrupt (EXTI1_IRQn) is never enabled in the NVIC: the callback reads and clears it.
+constexpr uint32_t kGateExtiBit = 1u << 1;
+void StartGateLatch()
+{
+    EXTI->FTSR1 = kGateExtiBit; // nothing else uses EXTI's configurable lines (reset 0)
+    EXTI->IMR1 |= kGateExtiBit; // |=: the direct lines' bits (22-31) are unmasked from reset
+}
 
 // P1..P7 -> ParamSpec: the panel layout (SPEC §3).
 constexpr iv::ParamId kPotParams[DaisyVersio::KNOB_LAST] = {
@@ -2879,11 +2892,15 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
 
     // Button and gate: every debounced edge to the Engine at the block's
     // start; the Engine reads the gestures (unpatched, the gate reads low and
-    // never moves).
-    static bool lastGate = false;
-    const bool  gate     = hw.Gate();
-    if (gate != lastGate) engine.gate(gate, 0);
-    lastGate = gate;
+    // never moves). The gate's rises are latched in hardware between reads
+    // (StartGateLatch), so a trigger shorter than a block still lands (v1.0.63,
+    // ControlLatch.h). The latch is read and cleared before the level, so a rise
+    // in between is seen by the level, or by the next block's latch; only a latch
+    // that was read is cleared (writing 1 clears, 0 leaves it).
+    static ivctl::GateLatch gateLatch;
+    const uint32_t latched = EXTI->PR1 & kGateExtiBit;
+    EXTI->PR1              = latched;
+    gateLatch.block(latched != 0, hw.Gate(), [](bool high) { engine.gate(high, 0); });
     static bool lastButton = false;
     const bool  button     = hw.tap.Pressed();
     if (button != lastButton) engine.button(button, 0);
@@ -2928,8 +2945,10 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
     const float* srcL = dl;
     const float* srcR = dr;
 #else
+    // SPACE through its settle (v1.0.63, ControlLatch.h): a brushed switch that's back within 20 ms sends nothing.
+    static ivctl::SwitchSettle spaceSettle;
     engine.setParam(iv::ParamId::Space,
-                    iv::switchToNormalised(SwitchPosition(DaisyVersio::SW_0, kSpaceSwitchInverted)));
+                    iv::switchToNormalised(spaceSettle.read(SwitchPosition(DaisyVersio::SW_0, kSpaceSwitchInverted))));
     engine.setParam(iv::ParamId::Attack,
                     iv::switchToNormalised(SwitchPosition(DaisyVersio::SW_1, kAttackSwitchInverted)));
     const float* srcL = in[0];
@@ -3032,8 +3051,9 @@ int main()
     SdramSetTiming(SdtrWith(FMC_Bank5_6_R->SDTR[0], kTightTrp, kTightTrcd), false); // M3 round 11: SDRAMCHK clean
 #endif
 #if IV_SDRAM_REFRESH
-    SdramSetRefresh(kRefreshDatasheet); // SDRAM_REFRESH=1: the datasheet's rate, not libDaisy's (a trial)
+    SdramSetRefresh(kRefreshDatasheet); // the datasheet's rate, not libDaisy's (the default since v1.0.63; SDRAM_REFRESH=0 without)
 #endif
+    StartGateLatch();
     hw.SetAudioBlockSize(kBlockSize);
     EnableD2Sram();
     engine.attachMemory(gLarge, kLargeFloats, gFast, kFastFloats, gAxi, kAxiFloats, gD2, kD2Floats);

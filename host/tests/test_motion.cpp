@@ -165,19 +165,21 @@ void glideOut()
 // HALL's p95s are v1.0.57's own (ADR 0035: in this long tail HALL's floor is twice as deep, so a held note moves more
 // with MOTION too; the page's B: 9.2 / 12.6 / 18.5). v1.0.59 (motion_dips C): the dips come in from ~7:30
 // (kTransportDipsFrom), so 3/4 left has none (the page's B: 6); its crinkle and warbles are unchanged.
+// MASSIVE's 9 o'clock and 3/4 left are v1.0.63's own (ADR 0039: the early taps re-laid move this one tone's p95; the
+// page's B: 5.7 / 9.6).
 void leftSide()
 {
     const std::vector<float> tones = heldTones();
     struct Pos { float drift; const char* name; double p95[3]; int crinkles, dips; }; // p95: PLATE, HALL, MASSIVE
-    const Pos pos[] = {{0.2f, "9 o'clock (0.2)", {13.8, 15.3, 5.7}, 0, 0},
-                       {0.1175f, "3/4 left (0.1175)", {16.0, 15.2, 9.6}, 13, 0},
+    const Pos pos[] = {{0.2f, "9 o'clock (0.2)", {13.8, 15.3, 4.5}, 0, 0},
+                       {0.1175f, "3/4 left (0.1175)", {16.0, 15.2, 11.0}, 13, 0},
                        {0.0f, "full left", {19.9, 19.8, 15.1}, 34, 15}};
     for (const Pos& p : pos) {
         for (int space : {0, 1, 2}) {
             const double c = p95Of(render(tones, pageSetting(space, p.drift)));
             char msg[200];
             std::snprintf(msg, sizeof msg, "MOTION %s, %s: p95 %.1f c on a held 1.3 kHz (%s: %.1f, within 10 %%)",
-                          p.name, kSpaceName[space], c, space == 1 ? "v1.0.57" : "the page's B", p.p95[space]);
+                          p.name, kSpaceName[space], c, space == 1 ? "v1.0.57" : (space == 2 && p.drift > 0.0f ? "v1.0.63" : "the page's B"), p.p95[space]);
             check(std::fabs(c / p.p95[space] - 1.0) <= 0.10, msg);
         }
         std::vector<float> minute(size_t(60.0f * kSr), 0.0f);
@@ -204,13 +206,37 @@ void leftSide()
 // phase bends a partial a little: MASSIVE 5.4 -> 7.3 at full), where Wander made it 14-24 cents (v1.0.59: 3/4 14.0 /
 // 14.7 / 8.1, full 23.6 / 23.6 / 17.3). The mapping: the tank's lines still on the
 // right, the band 0 in the dead zone, in over the side's first twentieth, its blend side^1.5 and intensity side.
+// Since v1.0.63 (ADR 0039) the p95 is the median of four held tones' (0.9, 1.3, 1.7, 2.1 kHz): Wander moved every line,
+// so every tone, while a partial that a fixed early tap nearly cancels in one channel reads tens of cents on its own
+// (the re-laid taps put such a near-null on MASSIVE's 1.3 kHz at full right: 64 c, where over 31 tones 0.5-3 kHz
+// MASSIVE's p95s are as before, median 1.7 against 1.4 c, none over 10 c).
+std::vector<float> fourTones()
+{
+    std::vector<float> x(size_t(9.0f * kSr));
+    for (size_t i = 0; i < x.size(); ++i) {
+        const double t = double(i) / kSr;
+        double v = 0.0;
+        for (double f : {900.0, 1300.0, 1700.0, 2100.0}) v += 0.08 * std::sin(2.0 * M_PI * f * t);
+        if (i >= x.size() - 2400) v *= 1.0 - double(i - (x.size() - 2400)) / 2399.0;
+        x[i] = float(v);
+    }
+    return x;
+}
+double p95OfFour(const Stereo& s)
+{
+    double p[4];
+    int k = 0;
+    for (double f : {900.0, 1300.0, 1700.0, 2100.0}) p[k++] = iv::test::p95Cents(s.l, s.r, f, kSr);
+    std::sort(p, p + 4);
+    return 0.5 * (p[1] + p[2]);
+}
 void rightSide()
 {
-    const std::vector<float> tones = heldTones();
+    const std::vector<float> tones = fourTones();
     for (int space : {0, 1, 2}) {
-        const double still = p95Of(render(tones, pageSetting(space, 0.5f)));
+        const double still = p95OfFour(render(tones, pageSetting(space, 0.5f)));
         for (float d : {0.75f, 1.0f}) {
-            const double c = p95Of(render(tones, pageSetting(space, d)));
+            const double c = p95OfFour(render(tones, pageSetting(space, d)));
             char msg[200];
             std::snprintf(msg, sizeof msg, "MOTION %s right, %s: p95 %.1f c, noon's %.1f (within 2.5 c: no Wander)",
                           d < 1.0f ? "3/4" : "full", kSpaceName[space], c, still);

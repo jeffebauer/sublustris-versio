@@ -13,7 +13,9 @@
 #
 # Usage: tools/render_review_pages.sh [page ...]   (default: all)
 set -e
-cd "$(dirname "$0")/.."
+# IV_PAGES_ROOT: the checkout whose renders/ the pages land in (default: this one). From a worktree, point it
+# at the main checkout and IV_RENDER at the worktree's renderer, so a prototype's page lands in main's renders/.
+cd "${IV_PAGES_ROOT:-$(dirname "$0")/..}"
 R=${IV_RENDER:-build/iv_render}
 [ -x $R ] || { echo "build/iv_render missing: cmake --build build"; exit 1; }
 SRC=renders/_material
@@ -567,4 +569,42 @@ B_middle_4    Four per line (MASSIVE's middle ground)
 C_one         One per line (fit_cpu's D)" > renders/early_hits/README.txt
     python3 tools/review/make_review.py renders/early_hits --title "Early reflections on hits" --level-match --dry $SRC --wet-only > /dev/null
     echo "renders/early_hits/index.html"
+fi
+
+if on onset_phase; then
+    # Review 2 §1.1 (v1.0.63's onset item): HALL's and CANYON's first 50 ms lean anti-phase on a centred source:
+    # while one early tap is all that sounds, L and R carry it with the product of two signs, and with the taps
+    # out on line i + 3 a centred source's two earliest (lines 0 and 2) are both out of phase. B re-lays which
+    # line's signs each line's taps go out with (IV_ONSET_PHASE=2, Fdn::earlyOut): lines 0 and 2 on opposite
+    # phases, 5 and 7 likewise, the earliest in phase. 0 B, 0 CPU; the tails are untouched (the taps are output
+    # only). Short excerpts: hits, drums, stabs and keys, near-mono like most of what goes into the module.
+    # Judged 3 Nov 2026: the owner's pick B on all 16 cards ("centred"), built in as v1.0.63 (ADR 0039). The renderer's
+    # IV_ONSET_PHASE is gone, so A and B now both render B; A is v1.0.62's renderer (IV_RENDER).
+    O=$SRC/onset; mkdir -p $O
+    [ -f test_audio/stimulus/02_hits.wav ] || python3 tools/make_stimulus.py
+    [ -f $O/hits.wav ] || ffmpeg -v error -y -i test_audio/stimulus/02_hits.wav -af "atrim=0:8,apad=pad_dur=4" -ac 2 -ar 48000 -c:a pcm_s24le $O/hits.wav
+    for m in drums stabs keys; do
+        [ -f $O/$m.wav ] || ffmpeg -v error -y -i $SRC/$m.wav -af "atrim=0:7,afade=t=out:st=6.5:d=0.5,apad=pad_dur=4" -c:a pcm_s24le $O/$m.wav
+    done
+    [ -f $O/_click.wav ] || cp $SRC/_click.wav $O/_click.wav # r measures each column on the click
+    saved=("${MATERIALS[@]}"); savedSrc=$SRC; SRC=$O; MATERIALS=(hits drums stabs keys)
+    page onset_phase
+    for t in "1_hall_noon:HALL:0.5" "2_hall_big:HALL:0.8" "3_canyon_noon:CANYON:0.5" "4_canyon_big:CANYON:0.8"; do
+        IFS=: read col sp sz <<< "$t"
+        set=(--set space=$sp --set attack=NATURAL --set decay=0.5 --set size=$sz)
+        r onset_phase $col A_today "" $set
+        ( export IV_ONSET_PHASE=2; r onset_phase $col B_centred "" $set )
+    done
+    print -r -- "The first moment of HALL and CANYON. Review 2 found that in the first 50 ms of their sound (in CANYON, the first 50 ms once it arrives), left and right lean out of phase on a centred sound: the start can sound a little hollow or wide-but-thin, and in mono it loses 2-5 dB until the tail fills in. B re-lays which way each early reflection faces in the stereo field so the start sits evenly between in and out of phase, as the reference units do. The tails after that are untouched, and it costs nothing on the module. A tiny difference: listen to the start of each hit, on headphones and in mono if you can. Level-matched; 100 % wet, so use the MIX fader for the dry.
+
+1_hall_noon     HALL, SIZE noon
+2_hall_big      HALL, SIZE 0.8
+3_canyon_noon   CANYON, SIZE noon
+4_canyon_big    CANYON, SIZE 0.8
+
+A_today         As today
+B_centred       The start re-balanced (in and out of phase evenly)" > renders/onset_phase/README.txt
+    python3 tools/review/make_review.py renders/onset_phase --title "HALL and CANYON: the first moment" --level-match --dry $SRC --wet-only > /dev/null
+    SRC=$savedSrc; MATERIALS=("${saved[@]}")
+    echo "renders/onset_phase/index.html"
 fi
