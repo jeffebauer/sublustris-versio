@@ -38,7 +38,7 @@ export const FEATURE_TILES: FeatureTile[] = [
   { big: 'Freeze / paint', diagram: 'freeze', line: 'Tap to freeze the tail into a still pad and play over it. Hold while frozen to paint a little of what you play into the pad.' },
   { big: 'Swells', diagram: 'swell-family', line: 'ONSET on BLOOM: the reverb swells in behind each sound, from a breath to four seconds.' },
   { big: '1 octave', diagram: 'octave', line: 'SHIMMER: one steady octave up, in tune, that doesn’t climb.' },
-  { big: 'Tape wobble', diagram: 'tape-head', line: 'MOTION to the left: tape wow and flutter, with dropouts at the very end.' },
+  { big: 'Tape wobble', diagram: 'tape-head', line: 'MOTION to the left: tape wow and flutter, then crinkle and dropouts further left.' },
   { big: 'Old radio', diagram: 'radio-band', line: 'MOTION to the right: the tail through an old AM radio’s narrow band, with a slow notch wandering through it, so it phases.' },
   { big: '7 CV inputs', diagram: 'cv-scale', line: 'One per knob, 0–5 V, added to the knob’s position. Plus a gate for FREEZE.' },
 ];

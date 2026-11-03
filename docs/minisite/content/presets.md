@@ -78,11 +78,11 @@ MOTION is bipolar. At noon it only has a faint movement, to the left it's tape, 
 
 ## Worn tape room
 
-**Sounds like:** an old tape of a big room: warm, grainy, with wow and a little crinkle.
+**Sounds like:** an old tape of a big room: warm, grainy, with wow, crinkle and the odd dropout.
 
 **Play into it:** electric piano, guitar or a vocal.
 
-**Move next:** WEAR toward 5 o'clock for more grit. MOTION fully left for dropouts, or past noon to the right to trade the tape for an old radio's narrow, phasing band.
+**Move next:** WEAR toward 5 o'clock for more grit. MOTION fully left for more, deeper dropouts, or past noon to the right to trade the tape for an old radio's narrow, phasing band.
 
 ## Dark drone
 

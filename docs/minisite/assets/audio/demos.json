@@ -8,7 +8,7 @@
       "title": "The endless pad",
       "caption": "One pad chord held into an endless tail, then nothing more is played.",
       "settings": {
-        "SPACE": "MASSIVE",
+        "SPACE": "CANYON",
         "ONSET": "NATURAL",
         "BLEND": "3 o'clock (the fader's start)",
         "DECAY": "fully right",
@@ -25,9 +25,9 @@
       "dry": "01-endless-pad-dry.mp3",
       "file": "01-endless-pad-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -9.2,
+      "true_peak_db": -9.1,
       "note": "Pad synthesised in code.",
-      "gain_db": -0.8
+      "gain_db": -1.7
     },
     {
       "id": "02",
@@ -52,9 +52,9 @@
       "dry": "02-freeze-paint-dry.mp3",
       "file": "02-freeze-paint-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -7.2,
+      "true_peak_db": -6.4,
       "note": "Piano: Steinway B from the Versilian Community Sample Library (CC0). Played in code.",
-      "gain_db": 1.4
+      "gain_db": 2.1
     },
     {
       "id": "03",
@@ -78,16 +78,16 @@
       "dry": "03-dub-stabs-dry.mp3",
       "file": "03-dub-stabs-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -4.8,
+      "true_peak_db": -5.6,
       "note": "Drums: Virtuosity Drums by Versilian Studios and Karoryfer (CC0). Stabs synthesised in code.",
-      "gain_db": 2.6
+      "gain_db": 2.2
     },
     {
       "id": "05",
       "title": "Bloom swell",
       "caption": "Single piano notes, each one swelling in slowly behind itself.",
       "settings": {
-        "SPACE": "MASSIVE",
+        "SPACE": "CANYON",
         "ONSET": "BLOOM",
         "BLEND": "1 o'clock (the fader's start)",
         "DECAY": "2 o'clock",
@@ -104,9 +104,9 @@
       "dry": "05-bloom-dry.mp3",
       "file": "05-bloom-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -7.0,
+      "true_peak_db": -7.1,
       "note": "Piano: Steinway B from the Versilian Community Sample Library (CC0). Played in code.",
-      "gain_db": 2.5
+      "gain_db": 2.2
     },
     {
       "id": "06",
@@ -130,9 +130,9 @@
       "dry": "06-shimmer-dry.mp3",
       "file": "06-shimmer-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -10.7,
+      "true_peak_db": -10.4,
       "note": "Lead synthesised in code.",
-      "gain_db": -10.2
+      "gain_db": -10.0
     },
     {
       "id": "07",
@@ -156,14 +156,14 @@
       "dry": "07-worn-guitar-dry.mp3",
       "file": "07-worn-guitar-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -4.5,
+      "true_peak_db": -4.6,
       "note": "Guitar: Emilyguitar by Karoryfer (CC0). Played in code.",
-      "gain_db": 3.9
+      "gain_db": 3.7
     },
     {
       "id": "08",
       "title": "The tape side of MOTION",
-      "caption": "Held poly synth chords with MOTION fully left, the tape side: wow, flutter, crinkle and a few short dropouts.",
+      "caption": "Held poly synth chords with MOTION fully left, the tape side: wow, flutter, crinkle and short dropouts every few seconds.",
       "settings": {
         "SPACE": "HALL",
         "ONSET": "NATURAL",
@@ -175,16 +175,16 @@
         "MOTION": "fully left",
         "DEPTH": "9 o'clock"
       },
-      "transcript": "A warm analogue-style poly synth, saw waves through a resonant low-pass filter, plays held chords, D minor nine, G minor seven, C nine and F major seven, with a few single notes between, twice through; the last chord rings on. With MOTION fully left the whole tail wavers in pitch together, like a worn tape, with quick crinkles, and now and then a short dropout dulls it for a moment.",
+      "transcript": "A warm analogue-style poly synth, saw waves through a resonant low-pass filter, plays held chords, D minor nine, G minor seven, C nine and F major seven, with a few single notes between, twice through; the last chord rings on. With MOTION fully left the whole tail wavers in pitch together, like a worn tape, with quick crinkles, and every few seconds a short dropout dips it and dulls it for a moment.",
       "duration_s": 28.0,
       "blend": 0.6,
       "blend_clock": "1",
       "dry": "08-tape-side-dry.mp3",
       "file": "08-tape-side-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -9.7,
+      "true_peak_db": -8.9,
       "note": "Synth synthesised in code.",
-      "gain_db": -1.6
+      "gain_db": -3.1
     },
     {
       "id": "09",
@@ -208,16 +208,16 @@
       "dry": "09-radio-side-dry.mp3",
       "file": "09-radio-side-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -7.6,
+      "true_peak_db": -7.4,
       "note": "Guitar: Emilyguitar by Karoryfer (CC0). Played in code.",
-      "gain_db": 0.5
+      "gain_db": 0.7
     },
     {
       "id": "10",
       "title": "Dark drone, WEAR's whole range",
       "caption": "A low drone into an endless tail while WEAR is turned all the way up and back down: the wash ages, then comes clean.",
       "settings": {
-        "SPACE": "MASSIVE",
+        "SPACE": "CANYON",
         "ONSET": "NATURAL",
         "BLEND": "4 o'clock (the fader's start)",
         "DECAY": "4:30 o'clock",
@@ -234,9 +234,9 @@
       "dry": "10-dark-drone-dry.mp3",
       "file": "10-dark-drone-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -10.2,
+      "true_peak_db": -9.6,
       "note": "Drone synthesised in code.",
-      "gain_db": 0.4
+      "gain_db": -2.1
     }
   ]
 }
