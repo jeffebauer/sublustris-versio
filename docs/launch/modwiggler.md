@@ -36,7 +36,7 @@ Seven knobs, each with a CV input, two switches, a button and a gate, stereo in 
 
 It works the chip hard. A big CANYON, frozen, with someone playing over it takes most of what the Daisy has, and those moments were timed on the module itself. If you ever hear crackle, please tell me your settings, because that's a bug.
 
-If you know Plateau Versio: Sublustris's PLATE follows the same public Dattorro paper, but none of Plateau's code is in it, and most of what Sublustris does lives in the other spaces, the endless hold, freeze and WEAR.
+If you know Plateau Versio, Sublustris's PLATE follows the same public Dattorro paper, but none of Plateau's code is in it, and most of what Sublustris does lives in the other spaces, the endless hold, freeze and WEAR.
 
 [b]A bit of background[/b]
 
