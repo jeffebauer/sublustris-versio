@@ -45,7 +45,7 @@ Pedals brought it to the floor. The Electro-Harmonix Freeze (2010) holds any not
 - **Freeze and paint.** Tap the button and the tail freezes into a still pad. Play over it, and what you play rings in a quieter layer of its own on top. Hold the button while frozen and a little of that layer is painted into the pad, and stays.
 - **Swells.** Set ONSET to BLOOM and the reverb swells in behind each sound, over anything from a breath to four seconds. CANYON swells a little on its own.
 - **An octave of shimmer.** ONSET's SHIMMER sends what you play into the reverb an octave up. It's one steady octave, in tune, that doesn't climb.
-- **Tape on the left, radio on the right.** MOTION's left side bends the whole tail like a tape transport, with crinkle and dropouts near the end. Its right side plays the tail through an old AM radio's narrow band, with a slow notch wandering through it, so the tail phases.
+- **Tape on the left, radio on the right.** MOTION's left side bends the whole tail like a tape transport, with crinkle and dropouts that deepen further left. Its right side plays the tail through an old AM radio's narrow band, with a slow notch wandering through it, so the tail phases.
 
 [Read the manual](/manual)
 

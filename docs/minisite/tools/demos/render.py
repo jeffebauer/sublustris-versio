@@ -60,7 +60,7 @@ ramp = lambda k, *pts: [{"t": t, "key": k, "value": v} for t, v in pts]
 CLIPS = {
     "01": dict(
         slug="endless-pad", title="The endless pad", blend="3", dur=24.0,
-        set=dict(space="MASSIVE", attack="NATURAL", decay="5", tone="11", era="7", size="2", drift="12", time="9"),
+        set=dict(space="CANYON", attack="NATURAL", decay="5", tone="11", era="7", size="2", drift="12", time="9"),
         auto=None,
         caption="One pad chord held into an endless tail, then nothing more is played.",
         transcript="A soft synth pad plays one A minor chord, with an added ninth, and holds it for about eight "
@@ -85,7 +85,7 @@ CLIPS = {
         notes="Drums: Virtuosity Drums by Versilian Studios and Karoryfer (CC0). Stabs synthesised in code."),
     "05": dict(
         slug="bloom", title="Bloom swell", blend="1", dur=27.0,
-        set=dict(space="MASSIVE", attack="BLOOM", decay="2", tone="11:30", era="7", size="12", drift="12", time="2"),
+        set=dict(space="CANYON", attack="BLOOM", decay="2", tone="11:30", era="7", size="12", drift="12", time="2"),
         auto=None,
         caption="Single piano notes, each one swelling in slowly behind itself.",
         transcript="A grand piano plays six soft single notes in A minor, about four seconds apart. Each note is dry and close; its reverb starts almost silent and swells in over the next two or three seconds, so every note blooms in behind itself and joins a long, soft wash.",
@@ -110,8 +110,8 @@ CLIPS = {
         slug="tape-side", title="The tape side of MOTION", blend="1", dur=28.0,
         set=dict(space="HALL", attack="NATURAL", decay="2", tone="11", era="9", size="12", drift="7", time="9"),
         auto=None,
-        caption="Held poly synth chords with MOTION fully left, the tape side: wow, flutter, crinkle and a few short dropouts.",
-        transcript="A warm analogue-style poly synth, saw waves through a resonant low-pass filter, plays held chords, D minor nine, G minor seven, C nine and F major seven, with a few single notes between, twice through; the last chord rings on. With MOTION fully left the whole tail wavers in pitch together, like a worn tape, with quick crinkles, and now and then a short dropout dulls it for a moment.",
+        caption="Held poly synth chords with MOTION fully left, the tape side: wow, flutter, crinkle and short dropouts every few seconds.",
+        transcript="A warm analogue-style poly synth, saw waves through a resonant low-pass filter, plays held chords, D minor nine, G minor seven, C nine and F major seven, with a few single notes between, twice through; the last chord rings on. With MOTION fully left the whole tail wavers in pitch together, like a worn tape, with quick crinkles, and every few seconds a short dropout dips it and dulls it for a moment.",
         notes="Synth synthesised in code."),
     "09": dict(
         # Checked on v1.0.60's render (1 Nov 2026): from noon to the end the tail's top end falls ~11 dB
@@ -126,7 +126,7 @@ CLIPS = {
         notes="Guitar: Emilyguitar by Karoryfer (CC0). Played in code."),
     "10": dict(
         slug="dark-drone", title="Dark drone, WEAR's whole range", blend="4", dur=28.0,
-        set=dict(space="MASSIVE", attack="NATURAL", decay="4:30", tone="10", era="7", size="12", drift="10", time="11"),
+        set=dict(space="CANYON", attack="NATURAL", decay="4:30", tone="10", era="7", size="12", drift="10", time="11"),
         # WEAR acts on the wet straight away (the wear chain sits after the tank), so a steady turn works,
         # unlike SIZE. The whole range and back: clean, aged to fully right, then clean again.
         auto={"breakpoints": ramp("era", (0.0, 0.0), (2.0, 0.0), (14.0, 1.0), (18.0, 1.0), (25.0, 0.0))},
