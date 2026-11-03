@@ -1,6 +1,6 @@
 {
-  "spec": "v1.0.66",
-  "why": "v1.0.66: tape drive back to 11.25 dB (ADR 0041, owner's pick B on renders/tape_fold)",
+  "spec": "v1.0.67",
+  "why": "v1.0.67: the radio's over-modulation 8 dB lighter (ADR 0042, owner's pick C on renders/radio_lighter)",
   "corners": {
     "plate_small": {
       "chord_loudness_db": -39.716000000000001,
