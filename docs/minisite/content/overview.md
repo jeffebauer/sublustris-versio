@@ -88,7 +88,7 @@ Sublustris has a sibling, [Resilio Versio](https://resilio-versio.vercel.app): a
 
 ## Status
 
-Sublustris isn't released yet. The firmware runs on real hardware and I play it at the rack, but the sound still changes from version to version. Once it's public, I'd like to hear what you think on [GitHub Issues](https://github.com/jeffebauer/sublustris-versio/issues).
+Sublustris is out. I play it at the rack, and the sound may still change from version to version. I'd like to hear what you think on [GitHub Issues](https://github.com/jeffebauer/sublustris-versio/issues).
 
 I'm a designer, not a DSP engineer. I made every sound decision by ear, and Claude (Anthropic's AI) wrote the DSP, the firmware and the tools. [Credits](/credits)
 

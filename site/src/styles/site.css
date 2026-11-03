@@ -469,6 +469,7 @@ html.hero-film.hero-lit .hero-title { opacity: 1; translate: 0 0; transition: op
 .download .target { display: grid; gap: var(--stack-2); align-content: start; background: var(--raised); border-radius: var(--radius-tile); padding: clamp(1.1rem, 0.8rem + 1vw, 1.75rem); }
 .download .target h3 { font-size: clamp(1.25rem, 1.1rem + 0.4vw, 1.5rem); line-height: 1.2; }   /* a step under "Latest release": Download > Latest release > the two targets (owner, 7 Oct) */
 .download .target .btn { justify-self: start; }
+.download .target-head { display: grid; gap: 0.25rem; }
 .download .target ul { list-style: disc; padding-left: 1.15em; color: var(--ink); }
 .download .target li::marker { color: var(--ink-2); }
 .download .target li + li { margin-top: 0.3rem; }
