@@ -1,7 +1,7 @@
 """Final stills for the site, from the owner's clay picks, at full quality.
 
     /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \\
-        --python site/renders/render_final.py -- [--samples 192] [--only ID,ID]
+        --python site/renders/render_final.py -- [--samples 192] [--only ID,ID] [--width PX]
 
 Same scenes and cameras as render_clay.py (one source of truth); this file
 only picks the shots, the final size and the quality. Each pick is rendered
@@ -42,13 +42,15 @@ def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     samples = argv[argv.index("--samples") + 1] if "--samples" in argv else "192"
     ids = argv[argv.index("--only") + 1].split(",") if "--only" in argv else list(PICKS)
+    # --width overrides the slot's final width (og at 2400 for the README and posts, owner 3 Nov 2026)
+    width = int(argv[argv.index("--width") + 1]) if "--width" in argv else None
     if not ids:
         sys.exit("render_final: no picks yet (fill PICKS from the clay contact sheet)")
     probe = {v["id"]: v for v in render_clay.module_variants(render_clay._dummy_module_ref())
              + render_clay.story_variants(render_clay._dummy_story_refs())}
     for vid in ids:
         v = probe[vid]
-        scale = FINAL_WIDTH[v["slot"]] / v["res"][0]
+        scale = (width or FINAL_WIDTH[v["slot"]]) / v["res"][0]
         sys.argv = [sys.argv[0], "--", "--exact", "--only", vid, "--samples", samples, "--fmt", "PNG",
                     "--res-scale", f"{scale:.6f}", "--out", FINAL_OUT,
                     "--title", "Sublustris Versio site renders — final stills"]

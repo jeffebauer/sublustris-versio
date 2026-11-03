@@ -1,6 +1,6 @@
 # Sublustris Versio
 
-![Sublustris Versio: a render of the Versio module with Sublustris's panel art, its LEDs lit blue, on a grey stage.](docs/minisite/assets/renders/front-on-wide.jpg)
+![Sublustris Versio: a render of the Versio module with Sublustris's panel art, its LEDs lit blue, under a spotlight on a dark stage.](docs/minisite/assets/renders/og-hero-large.jpg)
 
 **A huge, warm, lush reverb for the Noise Engineering Versio.** I wanted a reverb I could live inside: tails long enough for dub techno, ambient and dark ambient, a freeze I can play over, and an endless setting that holds a chord for as long as I want without running away or turning metallic. It's free firmware for the Versio Eurorack module, and the same sound runs as an AU/VST3 plugin on macOS.
 
