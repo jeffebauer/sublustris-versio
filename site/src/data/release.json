@@ -1,10 +1,16 @@
 {
-  "_source": "Fallback for src/lib/release.ts when GitHub's API can't be reached at build time (rate limit, network). Update per release: version, date and the stable-named asset sizes. Placeholder until the first public release (BRIEF section 8).",
-  "version": "unreleased",
-  "date": "2026-10-29",
-  "html_url": "https://github.com/jeffebauer/sublustris-versio/releases",
+  "_source": "Fallback for src/lib/release.ts when GitHub's API can't be reached at build time (rate limit, network). Update per release: version, date and the stable-named asset sizes.",
+  "version": "v1.0.68",
+  "date": "2026-11-03",
+  "html_url": "https://github.com/jeffebauer/sublustris-versio/releases/tag/v1.0.68",
   "assets": {
-    "firmware": { "name": "sublustris-versio-firmware.bin", "bytes": 0 },
-    "plugin": { "name": "sublustris-versio-plugin-macos.zip", "bytes": 0 }
+    "firmware": {
+      "name": "sublustris-versio-firmware.bin",
+      "bytes": 111828
+    },
+    "plugin": {
+      "name": "sublustris-versio-plugin-macos.zip",
+      "bytes": 7806856
+    }
   }
 }

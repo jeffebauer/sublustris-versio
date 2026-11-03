@@ -21,7 +21,7 @@ It's built for long, deep tails, and for playing over them:
 
 There are seven knobs, each with a CV input, plus two switches, a button and a gate. The [manual](docs/minisite/content/manual.md) covers every control, and [`SPEC.md` §3](SPEC.md) has the details.
 
-> **Status:** in development, not yet released. The firmware runs on real hardware and I play it at the rack, but the sound still changes from version to version. There are no public downloads yet. CANYON was called MASSIVE until 1 November 2026; sets and presets saved with MASSIVE still open on it.
+> **Status:** first released on 3 November 2026 (v1.0.68). The firmware and the plugin are on the [Releases](https://github.com/jeffebauer/sublustris-versio/releases) page. The sound may still change from version to version, and every change is in the changelog at the top of [`SPEC.md`](SPEC.md). CANYON was called MASSIVE until 1 November 2026; sets and presets saved with MASSIVE still open on it.
 
 ## How it was made
 
