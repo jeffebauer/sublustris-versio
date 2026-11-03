@@ -1,7 +1,7 @@
 # Owner tasks
 
 **Last updated:** 3 Nov 2026: v1.0.63 to v1.0.68 merged into main after your rack check. Earlier: v1.0.68 on the rack build (PLATE's SIZE by crossfade); v1.0.67 (the radio lighter, your pick C); v1.0.66 (WEAR's tape drive back, your pick B on `tape_fold`). Earlier: "Waiting on Claude" tidied (16 entries to 7; owner items moved to your sections). Before that, 2 Nov 2026, session 13: the release script with firmware and the new read-me on `claude/release-script`; v1.0.62 merged (CANYON, the name only); the site live on Vercel production with analytics and connected to GitHub; a go-live audit (next steps below). Before that, end of session 12: v1.0.60 (the radio on MOTION's right) and v1.0.61 (endless follows your playing, the radio whole at endless) merged into main after your rack checks and pushed to GitHub; v1.0.61 installed in Ableton; the site's hero film, stills and story image merged, its copy at v1.0.61; judged pages, old builds, worktrees and old branches cleared (Trash: `sublustris-wrap-2026-11-02`); the folder moved to `~/Documents/Sites/sublustris-versio`.
-**Plugin installed:** `5a54f8e` on `main` (v1.0.61, Sublustris Versio), 2 Nov 2026 17:15; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan). **main is now v1.0.62** (CANYON, the name only): to see the new label in Ableton, `tools/install_plugin.sh 753c34f` (Ableton closed).
+**Plugin installed:** `4140997` on `main` (v1.0.68, Sublustris Versio), 3 Nov 2026; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan). It now matches the rack build: the lighter tape, the lighter radio and PLATE's SIZE crossfade.
 
 ## To do
 
