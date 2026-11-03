@@ -18,8 +18,8 @@ Five cards on a pad and on stabs, PLATE at DECAY 0.7 unless said: a slow turn sm
 LFO on SIZE's CV, SIZE moved while frozen (playing on into the layer, then Paint), SIZE moved at endless DECAY. Hand
 turns go through release's knob path (a 10 ms one-pole, the 0.003 deadband, firmware/main.cpp); the LFO is CV (every
 millisecond). Renders are 100 % wet (--wet-only --dry), level-matched, a pick page. Written to the main checkout's
-renders/plate_size_xfade; _hooks.txt keeps every render's hook line; _verify.txt shows A is v1.0.66 to the bit (with
---ref, a v1.0.66 renderer) and measures B against A on every card (null, level, clicks in 1 ms frames).
+renders/plate_size_xfade; _hooks.txt keeps every render's hook line; _verify.txt shows A is v1.0.67 to the bit (with
+--ref, a v1.0.67 renderer) and measures B against A on every card (null, level, clicks in 1 ms frames).
 """
 import argparse
 import json
@@ -164,7 +164,7 @@ def click_score(e, t0, t1):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--render", type=Path, default=ROOT / "build-proto" / "iv_render")
-    ap.add_argument("--ref", type=Path, help="a v1.0.66 iv_render: A must equal it to the bit")
+    ap.add_argument("--ref", type=Path, help="a v1.0.67 iv_render: A must equal it to the bit")
     ap.add_argument("--out", default="plate_size_xfade2", help="the page's folder under renders/")
     a = ap.parse_args()
     main_root = main_checkout()
@@ -184,7 +184,7 @@ def main():
             for tag, env in VERSIONS:
                 for m in MATERIALS:
                     render(binary, dry / (m + ".wav"), out / col / "{}_{}.wav".format(m, tag), sets, env, ap_, hooks)
-            if a.ref:  # v1.0.66 itself, for _verify.txt (then removed)
+            if a.ref:  # v1.0.67 itself, for _verify.txt (then removed)
                 for m in MATERIALS:
                     args = [str(a.ref.resolve()), str(dry / (m + ".wav")), str(main_root / "renders" / "_ref_plate_size_xfade" / "{}_{}.wav".format(col, m)),
                             "--set", "mix=1", "--set", "space=PLATE", "--auto", str(ap_)] + sum([["--set", s] for s in sets], [])
@@ -192,7 +192,7 @@ def main():
                     subprocess.run(args, env={k: v for k, v in os.environ.items() if not k.startswith("IV_")},
                                    capture_output=True, check=True)
     with open(out / "_verify.txt", "w") as v:
-        v.write("plate_size_xfade: A (IV_PLATE_XFADE=A, the glide) against v1.0.66's renderer, and B (the crossfade) against A\n")
+        v.write("plate_size_xfade: A (IV_PLATE_XFADE=A, the glide) against v1.0.67's renderer, and B (the crossfade) against A\n")
         v.write("click: the loudest 1 ms frame above 5 kHz over the median of the second around it, dB, at each move\n\n")
         for col, _, _, moments in COLS:
             for m in MATERIALS:
@@ -202,7 +202,7 @@ def main():
                 xb, _ = sf.read(pb, always_2d=True, dtype="float32")
                 if a.ref:
                     xr, _ = sf.read(main_root / "renders" / "_ref_plate_size_xfade" / "{}_{}.wav".format(col, m), always_2d=True, dtype="float32")
-                    same = "A == v1.0.66 (bit-identical)" if xr.shape == xa.shape and np.array_equal(xr, xa) else "A DIFFERS from v1.0.66!"
+                    same = "A == v1.0.67 (bit-identical)" if xr.shape == xa.shape and np.array_equal(xr, xa) else "A DIFFERS from v1.0.67!"
                 else:
                     same = "(no --ref)"
                 n = min(len(xa), len(xb))

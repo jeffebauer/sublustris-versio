@@ -79,6 +79,24 @@ constexpr TapOffsets tapOffsets()
     return o;
 }
 constexpr TapOffsets kTapOffsets = tapOffsets();
+#ifdef IV_PLATE_XF_CODE
+// The taps' branch, element and sign in a byte each (processXf's loop indexes them; kLeft / kRight as data cost
+// 224 B of flash): bit 0 the branch, bits 1-2 the element, bit 3 a negative sign.
+struct TapCodes {
+    unsigned char v[2][kTapsPerSide];
+};
+constexpr TapCodes tapCodes()
+{
+    TapCodes o{};
+    for (int j = 0; j < kTapsPerSide; ++j)
+        for (int c = 0; c < 2; ++c) {
+            const Tap& t = (c ? kRight : kLeft)[j];
+            o.v[c][j] = (unsigned char)(t.branch | (t.element << 1) | (t.sign < 0.0f ? 8 : 0));
+        }
+    return o;
+}
+constexpr TapCodes kTapCodes = tapCodes();
+#endif
 
 // The output taps' delays for a block (k, the scale, only moves in control()): whole samples and the
 // fraction, as the per-sample read worked them out (the same bits; overnight review, 26 Oct 2026).
@@ -513,13 +531,15 @@ IV_SIZE_OPT void Plate::processXf(const float* inL, const float* inR, float* out
         float sum[2][2] = {}; // [new, old][left, right]
         for (int c = 0; c < 2; ++c)
             for (int j = 0; j < kTapsPerSide; ++j) {
-                const Tap& tp = (c == 0 ? kLeft : kRight)[j];
-                const Branch& br = b_[tp.branch];
-                const ExactLine& line = tp.element == 0 ? br.d1 : (tp.element == 1 ? br.ap2 : br.d2);
+                const unsigned   code = kTapCodes.v[c][j];
+                const Branch&    br = b_[code & 1u];
+                const unsigned   el = (code >> 1) & 3u;
+                const ExactLine& line = el == 0 ? br.d1 : (el == 1 ? br.ap2 : br.d2);
+                const float      sign = code & 8u ? -1.0f : 1.0f;
                 for (int v = 0; v < (fading ? 2 : 1); ++v) {
                     const int32_t di = v ? oldDi[c][j] : tapDi[c][j];
                     const float   ta = agoSc(line, di, t + 1, r);
-                    sum[v][c] += tp.sign * (ta + (v ? oldT[c][j] : tapT[c][j]) * (agoSc(line, di + 1, t + 1, r) - ta));
+                    sum[v][c] += sign * (ta + (v ? oldT[c][j] : tapT[c][j]) * (agoSc(line, di + 1, t + 1, r) - ta));
                 }
             }
         const float nl = sum[0][0], nr = sum[0][1], ol = sum[1][0], orr = sum[1][1];
