@@ -12,14 +12,14 @@ Sublustris is alternative firmware for the [Versio](https://noiseengineering.us/
 
 It's built for long, deep tails, and for playing over them:
 
-- Turn DECAY past about 3 o'clock and the tail never ends. While you play it follows you at the level of the tail just below, so crossing into endless doesn't jump; when you stop, it holds the chord, its notes staying notes instead of dissolving into haze.
+- Turn DECAY past about 3 o'clock and the tail never ends. While you play it follows you at the level of the tail just below, so crossing into endless doesn't jump; when you stop, it holds the chord, and in PLATE and HALL its notes stay notes instead of dissolving into haze.
 - Tap the button (or send a gate) to freeze the tail into a still pad, then play over it. Hold the button while frozen to paint a little of what you're playing into the pad.
-- SPACE picks the room: PLATE, a dense plate with a quick attack; HALL, a big room tuned against the Valhalla rooms and plates I play; or CANYON, long lines and mass like a space with no roof, which swells in with each sound and grows into a boundless wash.
+- SPACE picks the room: PLATE, a dense plate with a quick attack; HALL, a big room that starts right behind the note; or CANYON, long lines and mass like a space with no roof, which swells in with each sound and grows into a boundless wash.
 - Let it age with WEAR: tape saturation, a bucket-brigade delay's breathing, bit grit and a soft hiss deepen together over a warm, desk-like colour. It only colours the reverb; your dry signal isn't touched.
 - MOTION moves the tail both ways from noon: left is a cassette on a tired deck (wow, flutter, crinkle and dropouts, deeper the further you go), right is an old AM radio, its narrow band and a slow notch wandering through the tail.
 - ONSET picks how each sound enters: at once (NATURAL), swelling in (BLOOM), or with an octave on top (SHIMMER).
 
-There are seven knobs, each with a CV input, plus two switches, a button and a gate. The [manual](docs/minisite/content/manual.md) covers every control, and [`SPEC.md` §3](SPEC.md) has the details.
+There are seven knobs, each with a CV input, plus two switches, a button and a gate. The [website](https://sublustris-versio.vercel.app) has demos to listen to and the [install guide](https://sublustris-versio.vercel.app/install/). The [manual](docs/minisite/content/manual.md) covers every control, and [`SPEC.md` §3](SPEC.md) has the details.
 
 > **Status:** first released on 3 November 2026 (v1.0.68). The firmware and the plugin are on the [Releases](https://github.com/jeffebauer/sublustris-versio/releases) page. The sound may still change from version to version, and every change is in the changelog at the top of [`SPEC.md`](SPEC.md). CANYON was called MASSIVE until 1 November 2026; sets and presets saved with MASSIVE still open on it.
 
@@ -27,7 +27,7 @@ There are seven knobs, each with a CV input, plus two switches, a button and a g
 
 I designed Sublustris by ear. I'm a designer, and I set the musical goals and made every sound decision. Claude (Anthropic's AI) wrote the DSP, the firmware and the tools. The plate follows Dattorro's design and the hall and canyon spaces are feedback delay networks after Jot. Each was refined against the literature and against recordings of the reverbs I use.
 
-Nothing changed in the sound until I'd heard it: every option went onto a listening page next to the version before it, usually level-matched, and I picked. More than thirty decisions are written up with their reasons in [`docs/adr/`](docs/adr/), and every version's change is in the changelog at the top of [`SPEC.md`](SPEC.md).
+Nothing changed in the sound until I'd heard it: every option went onto a listening page next to the version before it, usually level-matched, and I picked. More than forty decisions are written up with their reasons in [`docs/adr/`](docs/adr/), and every version's change is in the changelog at the top of [`SPEC.md`](SPEC.md).
 
 ## For builders
 
