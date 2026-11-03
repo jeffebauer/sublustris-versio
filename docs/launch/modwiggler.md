@@ -6,7 +6,7 @@ Draft for the owner, 3 Nov 2026. Modelled on the Resilio Versio post. Not posted
 
 - **Forum:** Noise Engineering subforum (Eurorack Modules → Noise Engineering), new thread.
 - **Format:** Modwiggler runs phpBB, so the body below is BBCode (`[b]`, `[list]`, `[url=]`). Markdown links like `[text](url)` show up as plain text there. Paste it into the full editor, then use Preview before you submit.
-- **Image:** attach `docs/minisite/assets/renders/front-on-wide.jpg` through the Attachments tab, then click "Place inline" to put it just under the first paragraph. `docs/minisite/assets/renders/patched.jpg` works as a second image.
+- **Image:** the post opens with the render `front-on-wide.jpg`, embedded from the repo and linked to the website. `[img]` needs the raw file address (`raw.githubusercontent.com`), not GitHub's `blob/` page. Check it shows in Preview; if the forum won't embed outside images, attach the file instead and click "Place inline" at the top.
 
 ## Title
 
@@ -15,6 +15,8 @@ Sublustris Versio, a free deep reverb firmware for the Versio (and a macOS plugi
 ## Body
 
 ```
+[url=https://sublustris-versio.vercel.app][img]https://raw.githubusercontent.com/jeffebauer/sublustris-versio/main/docs/minisite/assets/renders/front-on-wide.jpg[/img][/url]
+
 Hi all,
 
 Some of you may have tried Resilio Versio, my dub spring reverb for the Versio. Its sibling is out today. Sublustris Versio is a big, dark reverb for ambient, dub techno and dark ambient, the reverb I wanted to sit inside for a whole track. Like Resilio, it's free alternative firmware for any Versio module, and the same sound runs as an AU/VST3 plugin on macOS, so you can try it without reflashing anything.

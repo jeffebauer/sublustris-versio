@@ -6,7 +6,7 @@ Draft for the owner, 3 Nov 2026. Modelled on the Resilio Versio r/modular post, 
 
 - **Sub:** r/modular. Image post with the render, or a text post with the image inside it.
 - **Format:** Reddit Markdown. Switch the editor to Markdown mode before pasting, or the links show up as plain `[text](url)`.
-- **Image:** `docs/minisite/assets/renders/front-on-wide.jpg`.
+- **Image:** `docs/minisite/assets/renders/front-on-wide.jpg`, the same render as on Modwiggler. Reddit's Markdown can't embed an image from a link. To add it to the published text post, edit the post, switch to the rich-text editor, put the cursor before "Hi all," and use the image button to upload the file (r/modular has to allow images in text posts). If the button isn't there, use the link line at the top of the body instead.
 - **Flair:** whichever the sub uses for releases or firmware.
 - **Self-promotion:** the first paragraph says what it is and that it's free, and the links go to the site and the source. Answering comments for the first hour or two helps it more than anything in the post.
 
@@ -17,6 +17,8 @@ Sublustris Versio: free deep reverb firmware for the Noise Engineering Versio, w
 ## Body
 
 ```
+[Sublustris Versio on the module (picture)](https://raw.githubusercontent.com/jeffebauer/sublustris-versio/main/docs/minisite/assets/renders/front-on-wide.jpg)
+
 Hi all,
 
 Some of you may have seen Resilio Versio, my dub spring reverb for the Versio. Its sibling is out today. Sublustris Versio is a big, dark reverb for ambient, dub techno and dark ambient, the reverb I wanted to sit inside for a whole track. Like Resilio, it's free, open source alternative firmware for any Versio module, and the same sound runs as an AU/VST3 plugin on macOS, so you can try it without reflashing anything.
