@@ -84,7 +84,7 @@ It's never harsh and never rings on its own, even at the ends.
 
 How worn the reverb sounds. Fully left (the default) is clean, with only a warm, desk-like colour. As you turn it up, everything comes in at once and deepens together:
 
-- tape saturation, driven hard near the top of the knob, and a little tape compression;
+- tape saturation and a little tape compression;
 - a bucket-brigade delay's breathing: its noise and level rise and fall with your playing;
 - bit grit, which stays the same share of a fading tail, so the tail stays grainy right to the end;
 - a soft hiss and the odd crackle, which follow your playing, so silence stays silent.

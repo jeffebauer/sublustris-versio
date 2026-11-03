@@ -1,6 +1,6 @@
 # 0040 — More tape: WEAR driven harder, a more worn cassette on MOTION's left
 
-**Status:** Accepted, 3 Nov 2026 (owner, pick D, "both", on all 20 cards of `renders/more_tape`). SPEC v1.0.65. Amends ADR 0027 (WEAR's tape) and ADR 0030 (MOTION's tape transport), and moves v1.0.59's dips from about 7:30 to about 9:30.
+**Status:** Accepted, 3 Nov 2026 (owner, pick D, "both", on all 20 cards of `renders/more_tape`). SPEC v1.0.65. Amends ADR 0027 (WEAR's tape) and ADR 0030 (MOTION's tape transport), and moves v1.0.59's dips from about 7:30 to about 9:30. **The drive (B) is reversed by ADR 0041** (v1.0.66, too extreme on the module by 3 o'clock); the cassette (C) stands.
 
 **Context:**
 - **The owner, 2 Nov 2026:** "I'd like to hear what it sounds like with more saturation, crinkle, etc."

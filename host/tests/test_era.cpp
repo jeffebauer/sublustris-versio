@@ -511,11 +511,13 @@ void notAliasing()
     // bright stabs, where it shows; the third clause allows 7 dB (was 6).
     // With v1.0.63 (ADR 0039, the onset centred) in the same build: -19.4 dB here, much as v1.0.65 alone, but the
     // 96 kHz render reads 2 dB cleaner (-28.5), so the gap is 9.1 dB. The 48 kHz fold is what moved least; the
-    // third clause allows 10 dB.
+    // third clause allowed 10 dB.
+    // v1.0.66 (ADR 0041, the owner's pick B on renders/tape_fold): the drive back to 11.25 dB: -21.9 dB here, -27.8 at
+    // 96 kHz, a 5.9 dB gap; the third clause allows 7 dB again.
     char msg[240];
     std::snprintf(msg, sizeof msg, "hot 7 kHz tone at ERA 0.75: energy below 5 kHz %.1f dB re total at 48 kHz, %.1f at 96 kHz (< -32 with the "
-                                   "24 kHz tank, or aliasing adds < 2 dB, or the band under -15 with aliasing adding < 10 dB, v1.0.63 + v1.0.65)", at48, at96);
-    check(at48 < -32.0 || at48 - at96 < 2.0 || (at48 < -15.0 && at48 - at96 < 10.0), msg);
+                                   "24 kHz tank, or aliasing adds < 2 dB, or the band under -15 with aliasing adding < 7 dB, v1.0.66)", at48, at96);
+    check(at48 < -32.0 || at48 - at96 < 2.0 || (at48 < -15.0 && at48 - at96 < 7.0), msg);
 }
 
 // v1.0.49 (renders/wear_grit D): the grit (the grain; the BBD's clock too until v1.0.64) is silent below 0.65 on the

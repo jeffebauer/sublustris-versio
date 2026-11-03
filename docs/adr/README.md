@@ -44,3 +44,4 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0038](0038-wear-without-the-clock.md) | WEAR without the BBD's clock: tape, breath and grain | owner, 2 Nov 2026 |
 | [0039](0039-onset-centred.md) | The onset centred: HALL's and CANYON's early taps re-laid so the first moment sits evenly in the stereo field | owner, 3 Nov 2026 |
 | [0040](0040-more-tape.md) | More tape: WEAR's tape driven 5 dB harder, a more worn cassette on MOTION's left (crinkle and dropouts from about 9:30) | owner, 3 Nov 2026 |
+| [0041](0041-tape-drive-back.md) | The tape's drive back to 11.25 dB (reverses ADR 0040's drive); the worn cassette stays | owner, 3 Nov 2026 |
