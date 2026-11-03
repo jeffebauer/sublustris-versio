@@ -296,8 +296,9 @@ IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash;
             for (PlateXf::Agree& g : X.agree_) {
                 const float on = std::fmax(0.0f, g.on);
                 const float want = a * g.oo + w * g.nn, mix = a * a * g.oo + w * w * g.nn + 2.0f * a * w * on;
-                g.K = mix > 1e-24f ? std::fmin(1.42f, std::sqrt(want / mix)) : 1.0f;
-            }
+                const float K = mix > 1e-24f ? std::fmin(1.42f, std::sqrt(want / mix)) : 1.0f;
+                g.dK = (K - g.K) * (1.0f / float(kControlBlock)); // reached over the block, sample by sample (stepped once a
+            }                                                     // block, it ticked in the HF on music, 3 Nov 2026)
     }
 #endif
 }
@@ -340,6 +341,7 @@ template <class G> inline float xfMix(G& g, float nw, float od, float a, float w
     g.oo += kXfAgree * (od * od - g.oo);
     g.nn += kXfAgree * (nw * nw - g.nn);
     g.on += kXfAgree * (od * nw - g.on);
+    g.K += g.dK;
     return g.K * (w * nw + a * od);
 }
 // Where a fade stands this sample: writes since the jump, the content scale, the old and new gains.
@@ -390,7 +392,7 @@ IV_SIZE_OPT void Plate::startCrossfade(float rate, float k)
     X.xfSin_ = 0.0f;
     X.xfOld_ = 1.0f;
     X.xfNew_ = 0.0f;
-    for (PlateXf::Agree& g : X.agree_) g = {0.0f, 0.0f, 0.0f, 1.0f};
+    for (PlateXf::Agree& g : X.agree_) g = {0.0f, 0.0f, 0.0f, 1.0f, 0.0f};
     const float r = X.xfR_;
     int32_t end = 0;
     for (int b = 0; b < 2; ++b) {
@@ -505,6 +507,7 @@ IV_SIZE_OPT void Plate::processXf(const float* inL, const float* inR, float* out
             go.oo += kXfAgree * (ol * ol + orr * orr - go.oo);
             go.nn += kXfAgree * (nl * nl + nr * nr - go.nn);
             go.on += kXfAgree * (ol * nl + orr * nr - go.on);
+            go.K += go.dK;
             l = go.K * (w * nl + a * ol);
             rr = go.K * (w * nr + a * orr);
         }

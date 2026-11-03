@@ -51,7 +51,7 @@ struct PlateXf {
         Absorb loss[2];
     };
     struct Agree { // how well a pair of reads agrees, and its gain (Bristow-Johnson's crossfade, as Fdn::xfMix)
-        float oo, nn, on, K;
+        float oo, nn, on, K, dK; // dK: K's step a sample, toward control()'s value
     };
     Branch  xf_[2];
     Agree   agree_[9]; // [4 b + e]: branch b's read e (ap1, d1, ap2, d2); [8]: the output taps
