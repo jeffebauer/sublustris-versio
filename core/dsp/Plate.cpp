@@ -452,8 +452,7 @@ IV_SIZE_OPT void Plate::startCrossfade(float rate, float k)
             // Old minus new: Fdn's xfLnGain_. A shrink takes 0.6 of it (measured, 3 Nov 2026: in full, a full shrink
             // at DECAY 0.2-0.4 swelled 1.4-1.6 dB past both rooms; 0.6: within 0.8 dB at every DECAY).
             o.lnGain[j] = (seg > 0.0f ? 0.6f : 1.0f) * 6.9077553f * seg / sampleRate_ * rate;
-            o.hold[j] = lenNew[2 * j + 1];
-            o.corr[j] = std::exp(o.lnGain[j]);
+            o.hold[j] = lenNew[2 * j + 1]; // (corr: control() works it out after this, before the first sample)
         }
         const ExactLine* lines[4] = {&br.ap1, &br.d1, &br.ap2, &br.d2};
         for (const ExactLine* ln : lines) // every sample from before the jump read; the corrections eased out

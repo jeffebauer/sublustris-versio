@@ -24,7 +24,7 @@ enum Section { kControl, kInput, kShimmer, kSwell, kTwin, kTank, kTankCtl, kTank
 #if defined(IV_PROFILE_HOOKS)
 // Set by the host (profile firmware) before audio starts; null = no timing.
 inline void (*markHook)(int section) = nullptr;
-inline void mark(Section s)
+__attribute__((noinline)) inline void mark(Section s) // one copy, a call at each of its ~25 sites (flash, v1.0.68)
 {
     if (markHook) markHook(int(s));
 }
@@ -44,10 +44,17 @@ inline void countXfLines(const void* tank)
 // The SIZE-spike lap's A / B (27 Oct 2026): false runs SIZE's crossfade on v1.0.48's paths (Fdn::lineSlow and
 // Fdn::tapsOld for every crossfading line), true on the faster ones (Fdn::lineXf, the carried old taps), which give
 // the same output to the bit. Builds without the hooks always take the faster ones.
-inline bool xfFast = true;
 // The CPU-save-2 lap's A / B (28 Oct 2026): true works the tanks' loss filters out on std::exp instead of std::pow
 // (Governor.h absorbLine; the build option IV_ABSORB_EXP in any build): not the same bits, a trial.
+// Only the SIZE-spike laps (IV_PROFILE_SIZESPIKE) switch them; every other build with the hooks (the corner lap, the
+// release's DIAG) runs them as shipped, so they're constants there and the other paths compile out (flash, v1.0.68).
+#if IV_PROFILE_SIZESPIKE
+inline bool xfFast = true;
 inline bool absExp = false;
+#else
+constexpr bool xfFast = true;
+constexpr bool absExp = false;
+#endif
 #if defined(IV_PROFILE_SHPOLY_AB)
 // The audit lap's A / B (SIZESPIKE=5, review2/neutral, 29 Oct 2026): true runs the shimmer heads' window as the
 // polynomial (Shimmer.h headsAB; the firmware's SHIMMER_POLY=1 at compile time): not the same bits, a trial.

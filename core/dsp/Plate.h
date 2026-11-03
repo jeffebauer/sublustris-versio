@@ -150,17 +150,18 @@ private:
     // One branch of the figure 8.
     struct Branch {
         ExactLine ap1, d1, ap2, d2; // modulated allpass, delay, allpass, delay
-        float     ap1Len = 0, d1Len = 0, ap2Len = 0, d2Len = 0; // samples, at the current scale
-        float     y1 = 0, y2 = 0, x1 = 0, x2 = 0;               // absorbent filter states
-        float     i1 = 0, i2 = 0, i3 = 0, i4 = 0;               // allpass-interpolation states
+        // IV_ZI (SizeOpt.h): zero, from the value-initialised Engine in the firmware (flash, v1.0.68).
+        float     ap1Len IV_ZI, d1Len IV_ZI, ap2Len IV_ZI, d2Len IV_ZI; // samples, at the current scale
+        float     y1 IV_ZI, y2 IV_ZI, x1 IV_ZI, x2 IV_ZI;               // absorbent filter states
+        float     i1 IV_ZI, i2 IV_ZI, i3 IV_ZI, i4 IV_ZI;               // allpass-interpolation states
         Absorb    loss1{1, 0}, loss2{1, 0};
         AbsorbMemo memo1, memo2; // loss1 / loss2, worked out again only when their inputs change
-        float     lfoPhase = 0, lfoRate = 0, floorA = 0, floorB = 0, floorTarget = 0, floorCountdown = 0;
-        float     modNow = 0, modStep = 0; // ap1's extra delay, samples
+        float     lfoPhase IV_ZI, lfoRate IV_ZI, floorA IV_ZI, floorB IV_ZI, floorTarget IV_ZI, floorCountdown IV_ZI;
+        float     modNow IV_ZI, modStep IV_ZI; // ap1's extra delay, samples
         // d1 and d2's own slow wander (setLongDelayMod), samples.
-        float     longPhase[2] = {0, 0}, longFloorA[2] = {}, longFloorB[2] = {}, longTarget[2] = {}, longCountdown[2] = {};
-        float     longNow[2] = {0, 0}, longStep[2] = {0, 0};
-        float     out = 0;                 // this branch's output (feeds the other)
+        float     longPhase[2] IV_ZI, longFloorA[2] IV_ZI, longFloorB[2] IV_ZI, longTarget[2] IV_ZI, longCountdown[2] IV_ZI;
+        float     longNow[2] IV_ZI, longStep[2] IV_ZI;
+        float     out IV_ZI;                 // this branch's output (feeds the other)
         LoopEra   era;
         Drift     drift;
     };
@@ -168,16 +169,16 @@ private:
     float    sampleRate_ = 48000.0f, maxScale_ = 1.0f, scaleNow_ = 1.0f, scaleTarget_ = 1.0f;
     Branch   b_[2];
     uint32_t rng_ = 1;
-    float    decayRate_ = 0.2f, highRatio_ = 0.45f, levelGain_ = 1.0f, extraRate_ = 0.0f;
+    float    decayRate_ = 0.2f, highRatio_ = 0.45f, levelGain_ = 1.0f, extraRate_ IV_ZI;
     bool     colour_ = true;
     float    modDepth_ = 1.0f;
-    float    shelfK_ = 0.0f, modScale_ = 1.0f; // lossShelfK(sampleRate_)
-    float    air_ = 0.0f;
+    float    shelfK_ IV_ZI, modScale_ = 1.0f; // lossShelfK(sampleRate_)
+    float    air_ IV_ZI;
     float    endlessTop_ IV_ZI; // setEndlessTop (v1.0.58)
     float    longMod_ = 1.0f; // d1 and d2 wander; 0 while frozen
     DriftAmounts drift_;
     FloorGovernor governor_;
-    bool     ready_ = false;
+    bool     ready_ IV_ZI;
 #ifdef IV_PLATE_XF_CODE
     void startCrossfade(float rate, float k);
     void cancelCrossfade(float target);
@@ -188,8 +189,8 @@ private:
     bool     xfOn_ = false;
 #endif
     int32_t  xfSince_ = -1; // samples since the jump; -1: no crossfade
-    bool     xfGlideNow_ = false; // setSizeGlideNow
-    PlateXf* xs_ = nullptr;  // setCrossfadeState: the crossfade's state, kept by the Engine (its last members)
+    bool     xfGlideNow_ IV_ZI; // setSizeGlideNow
+    PlateXf* xs_ IV_ZI;  // setCrossfadeState: the crossfade's state, kept by the Engine (its last members)
 #endif
 };
 

@@ -142,8 +142,10 @@ inline Absorb absorbent(float seconds, float lowRate, float highRatio, float dar
 // calls (~210 cycles each on the M7, M3 round 6) ran for every line every block, where most blocks
 // ask the same. The same inputs give the same coefficients, to the bit.
 struct AbsorbMemo {
-    float  in[8] = {-1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-    Absorb out{};
+    // Zeros at first (IV_ZI: the value-initialised Engine's, v1.0.68): a line is never 0 s long, so the first get()
+    // works it out, as the -1 it started from did.
+    float  in[8] IV_ZI;
+    Absorb out IV_ZI;
     IV_NOINLINE IV_SIZE_OPT const Absorb& get(float seconds, float lowRate, float highRatio, float darken, float shelfK, float air,
                                               float flat, float top)
     {
