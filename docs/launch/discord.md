@@ -5,7 +5,7 @@ Draft for the owner, 3 Nov 2026. Modelled on the Resilio Versio Discord message.
 ## Where and how
 
 - **Channel:** the same channel you shared Resilio in.
-- **Format:** Discord Markdown. Discord turns `* ` lines into bullets. Bare links unfurl into previews; the site's card shows the render, so no attachment is needed. If you'd rather attach one, use `docs/minisite/assets/renders/og-hero.jpg`. To stop the other links unfurling, wrap them in `< >`.
+- **Format:** Discord Markdown. Discord turns `* ` lines into bullets. Bare links unfurl into previews; the site's card shows the render, so no attachment is needed. If you'd rather attach one, use `docs/minisite/assets/renders/og-hero-large.jpg`. To stop the other links unfurling, wrap them in `< >`.
 - **Tone:** it's NE's own server, so the not-affiliated line stays in.
 
 ## Message

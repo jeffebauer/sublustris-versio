@@ -29,6 +29,7 @@ The custom panel art isn't designed yet, so there are no Blender renders. Every 
 | Panel close-up | `panel-macro.jpg` | 2400 × 1028 | 21:9 | Manual, the header image (off the home page, owner 1 Nov 2026) |
 | Patched module | `patched.jpg` | 2400 × 1350 | 16:9 | Home, "Two ways to play" |
 | Open Graph image | `og-hero.jpg` | 1200 × 630 | 1.91:1 | Link previews |
+| Open Graph image, large | `og-hero-large.jpg` | 2400 × 1260 | 1.91:1 | The README and the launch posts (`render_final.py --only og_a --width 2400`) |
 | Plugin screenshot | `plugin-panel.png` | 2x of the plugin at 1x | the plugin's | Manual, "In the plugin" |
 
 The plugin screenshot can be made now from the plugin; the rest wait for the panel art.
