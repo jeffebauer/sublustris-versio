@@ -135,6 +135,9 @@ public:
     bool sizeCrossfade() const { return xfOn_ && xs_; }
     bool crossfadeStateSet() const { return xs_ != nullptr; }
     bool crossfading() const { return xfSince_ >= 0; }
+    // While true SIZE glides as built even with the crossfade on: the Engine sets it while FREEZE is on or its
+    // unfreeze still glides back (the owner's pick A on renders/plate_size_xfade's frozen card).
+    void setSizeGlideNow(bool on) { xfGlideNow_ = on; }
 #endif
 
     void setAir(float air) { air_ = air; } // 1/T60 in 1/s: see absorbent() (v1.0.25)
@@ -185,6 +188,7 @@ private:
     bool     xfOn_ = false;
 #endif
     int32_t  xfSince_ = -1; // samples since the jump; -1: no crossfade
+    bool     xfGlideNow_ = false; // setSizeGlideNow
     PlateXf* xs_ = nullptr;  // setCrossfadeState: the crossfade's state, kept by the Engine (its last members)
 #endif
 };

@@ -6,6 +6,7 @@
 //   (at most 2 per cycle, plus one);
 // - an endless PLATE tail holds its level through a minute of random SIZE moves
 //   against the same minute with SIZE held (within 1 dB; the glide's printed);
+// - a small move (SIZE 0.30 -> 0.31, under 4 % of the scale) glides at 0.0193 a second and never crossfades;
 // - with the crossfade off, SIZE still glides (as built).
 #include "dsp/Engine.h"
 #include "params/Mappings.h"
@@ -125,6 +126,25 @@ int main()
             check(std::fabs(end - start - still) < 1.0, "endless PLATE, a minute of SIZE moves (crossfade): " + std::to_string(end - start) +
                                                            " dB, held " + std::to_string(still) + " dB");
         else std::printf("       endless PLATE, a minute of SIZE moves (glide, as built): %+.2f dB\n", end - start);
+    }
+    // Round 2: a small move (within 4 % of the scale) glides slowly, never crossfades; frozen, SIZE glides as built.
+    {
+        auto e = plate(true, 0.3f, 0.7f);
+        for (int b = 0; b < 500; ++b) e->process(in.data(), in.data(), l.data(), r.data(), 48);
+        const float from = e->plate().scale();
+        e->setParam(iv::ParamId::Size, 0.31f);
+        bool xf = false;
+        float maxStep = 0.0f, last = from;
+        for (int b = 0; b < 3000; ++b) {
+            e->process(in.data(), in.data(), l.data(), r.data(), 48);
+            xf |= e->plate().crossfading();
+            maxStep = std::fmax(maxStep, std::fabs(e->plate().scale() - last));
+            last = e->plate().scale();
+        }
+        const float to = iv::map::plateScale(0.31f);
+        check(!xf && std::fabs(last - to) < 1e-4f && maxStep < 0.0193f * 0.001f * 1.01f,
+              "SIZE 0.30 -> 0.31 glides (no crossfade), scale " + std::to_string(from) + " -> " + std::to_string(last) +
+                  ", at most " + std::to_string(maxStep * 1000.0f) + " a second");
     }
     // Off: the glide, as built.
     {

@@ -50,6 +50,14 @@ constexpr float kLevelRefScale = 1.0f;  // level compensation reference (√(sca
 // SIZE glides: the longest element (4453) changes by at most a semitone of
 // bend, 0.0595 s of delay per second (as the FDN, ADR 0012).
 constexpr float kScaleSlewPerSecond = 0.0595f / (4453.0f / kPaperRate);
+#ifdef IV_PLATE_XF_CODE
+// SIZE by crossfade's small moves (control()): up to 4 % of the scale they glide at 0.0193 a second, the longest
+// line (d1, 0.15 s a unit of scale) slewing 0.29 % of real time: about 5 cents while it moves, under the plate's own
+// chorus (a full 4 % takes about 2 s at the largest scale). Beyond 4 % the crossfade's reads are far enough apart
+// to sum as a dense comb (0.3 -> 0.4: within 0.4 dB of the held room per band).
+constexpr float kXfSmallStep          = 0.04f;
+constexpr float kXfSmallSlewPerSecond = 0.0193f;
+#endif
 
 float uniform(uint32_t& s)
 {
@@ -181,17 +189,26 @@ IV_SIZE_OPT void Plate::setScale(float scale, bool snap)
 IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash; it shares Fdn::control's helpers)
 {
     const float dt = float(n) / sampleRate_;
+    float slewPerSecond = kScaleSlewPerSecond;
 #ifdef IV_PLATE_XF_CODE
     bool starting = false;
-    if (xfOn_ && xs_) {
+    if (xfOn_ && xs_ && !xfGlideNow_) {
         PlateXf& X = *xs_;
         // SIZE by crossfade: rests kSizeRestSeconds (the longest element's target still within half a sample a
         // block, as Fdn::control), then everything jumps at once (startCrossfade, after the lengths below).
         const float perScale = kD1[0] * sampleRate_ / kPaperRate;
         X.xfRest_ = std::fabs(scaleTarget_ - X.xfLastTarget_) * perScale > 0.5f ? 0.0f : X.xfRest_ + dt;
         X.xfLastTarget_ = scaleTarget_;
-        const bool pending = std::fabs(scaleTarget_ - scaleNow_) * perScale > 0.5f;
-        if (pending && xfSince_ < 0 && X.xfRest_ >= voicing::kSizeRestSeconds) {
+        const float diff = std::fabs(scaleTarget_ - scaleNow_);
+        const bool pending = diff * perScale > 0.5f;
+        // A small move (within kXfSmallStep of the scale) glides, slowly enough not to bend (kXfSmallSlewPerSecond):
+        // crossfaded, the old and new reads a few samples apart summed as a comb in the loop, and the tail kept it
+        // (0.3 -> 0.303 lost 5 dB at 1.2-4 kHz for seconds; the owner's "drop" at 5.5 s on renders/plate_size_xfade's
+        // slow turn, and at the unfreeze, 3 Nov 2026). Further, it waits for the rest and crossfades.
+        const bool small = diff <= kXfSmallStep * scaleNow_;
+        if (xfSince_ >= 0 || !small) slewPerSecond = 0.0f;
+        else slewPerSecond = kXfSmallSlewPerSecond;
+        if (pending && !small && xfSince_ < 0 && X.xfRest_ >= voicing::kSizeRestSeconds) {
             starting = true;
             X.xfKOld_ = scaleNow_ * sampleRate_ / kPaperRate;
             // The level that follows SIZE (levelGain_, on the output) steps with the jump; what is in the tank
@@ -200,10 +217,10 @@ IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash;
             X.xfR_ = std::sqrt(scaleNow_ / scaleTarget_);
             scaleNow_ = scaleTarget_;
         }
-    } else
+    }
 #endif
     {
-    const float slew = kScaleSlewPerSecond * dt;
+    const float slew = slewPerSecond * dt;
     const float diff = scaleTarget_ - scaleNow_;
     scaleNow_ += diff > slew ? slew : (diff < -slew ? -slew : diff);
     }
@@ -414,7 +431,9 @@ IV_SIZE_OPT void Plate::startCrossfade(float rate, float k)
         o.loss[1] = br.loss2;
         for (int j = 0; j < 2; ++j) {
             const float seg = (o.len[2 * j] + o.len[2 * j + 1]) - (lenNew[2 * j] + lenNew[2 * j + 1]);
-            o.lnGain[j] = 6.9077553f * seg / sampleRate_ * rate; // old minus new: Fdn's xfLnGain_
+            // Old minus new: Fdn's xfLnGain_. A shrink takes 0.6 of it (measured, 3 Nov 2026: in full, a full shrink
+            // at DECAY 0.2-0.4 swelled 1.4-1.6 dB past both rooms; 0.6: within 0.8 dB at every DECAY).
+            o.lnGain[j] = (seg > 0.0f ? 0.6f : 1.0f) * 6.9077553f * seg / sampleRate_ * rate;
             o.hold[j] = lenNew[2 * j + 1];
             o.corr[j] = std::exp(o.lnGain[j]);
         }
@@ -455,7 +474,10 @@ IV_SIZE_OPT void Plate::processXf(const float* inL, const float* inR, float* out
             }
         }
         const float a = f.a, w = f.w;
-        const float in[2] = {inL[s], inR[s]};
+        // What's playing in comes up (or down) to the new size's level over the fade, from the old: stepped with the
+        // output's level, it clicked, and ap1 rang the click on every old length (a full grow under a pad, 3 Nov 2026).
+        const float inGain = r + (1.0f - r) * w;
+        const float in[2] = {inL[s] * inGain, inR[s] * inGain};
         float next[2];
         for (int b = 0; b < 2; ++b) {
             Branch& br = b_[b];

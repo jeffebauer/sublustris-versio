@@ -192,10 +192,7 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     lowFdn_.setEarlyLayouts(&earlyLayouts_);
     ready_ &= fdn_.prepare(large_, 0.5f * sampleRate, 0x1D5A7u, voicing::kFdnMaxLineSeconds, &axi_);
 #ifdef IV_PLATE_XF_CODE
-    if (!plate_.crossfadeStateSet()) { // once: setPlateCrossfadePrototype's time stays across a re-prepare
-        plate_.setCrossfadeState(&plateXf_[0]);
-        twinPlate_.setCrossfadeState(&plateXf_[1]);
-    }
+    if (!plate_.crossfadeStateSet()) plate_.setCrossfadeState(&plateXf_); // once: its time stays across a re-prepare
 #endif
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
     ready_ &= lowFdn_.prepare(large_, sampleRate / float(lowDecimate_), 0x10F7u, voicing::kFdnMaxLineSeconds, &axi_);
@@ -421,8 +418,9 @@ float Engine::hysteresisSize(float size, float& held, bool snap) const
     if (sizeHyst_ <= 0.0f) return size;
 #ifdef IV_PLATE_XF_CODE
     // PROTOTYPE (renders/plate_size_xfade): a crossfading PLATE has a rest timer too, so it takes the same
-    // hysteresis (map::plateScale is exponential: log(max / min) per unit of SIZE).
-    const bool plateGlides = !plate_.sizeCrossfade();
+    // hysteresis (map::plateScale is exponential: log(max / min) per unit of SIZE); not while it glides (frozen and
+    // the unfreeze, setSizeGlideNow), nor the twin (it always glides).
+    const bool plateGlides = !plate_.sizeCrossfade() || freezeMix_ > 0.0f || &held == &twinSizeHeld_;
 #else
     const bool plateGlides = true;
 #endif
@@ -551,6 +549,11 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
 
     if (plate) {
         plate_.setScale(map::plateScale(size), snap);
+#ifdef IV_PLATE_XF_CODE
+        // PROTOTYPE (renders/plate_size_xfade): frozen, and while the unfreeze glides back to SIZE, SIZE glides as
+        // built (the owner's pick A on the frozen card; a crossfade there lost the tail's upper mids).
+        plate_.setSizeGlideNow(freezeMix_ > 0.0f);
+#endif
         plate_.setDecayRate(rate);
         plate_.setHighT60Ratio(highRatio);
         plate_.setGovernor(governor);
@@ -751,15 +754,7 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         tEra.even = voicing::kNeveEven;
         tEra.even *= 1.0f - map::governorWeight(tDecay);
         if (plate) {
-#ifdef IV_PLATE_XF_CODE
-            // PROTOTYPE (renders/plate_size_xfade): a crossfading twin starts at the SIZE it was started with (the
-            // pad's), not crossfading from wherever it last stood (the glide slides from there, as built).
-            const bool xfTwin = twinPlate_.sizeCrossfade();
-            twinPlate_.setScale(map::plateScale(tSize), snap || (xfTwin && !twinSized_));
-            if (xfTwin) twinSized_ = true;
-#else
             twinPlate_.setScale(map::plateScale(tSize), snap);
-#endif
             twinPlate_.setDecayRate(tRate);
             twinPlate_.setHighT60Ratio(toneRatio);
             twinPlate_.setGovernor(0.0f);

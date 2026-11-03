@@ -211,8 +211,7 @@ public:
     // false: the glide, as built.
     void  setPlateCrossfadePrototype(bool on, float seconds)
     {
-        plate_.setSizeCrossfade(on, seconds);
-        twinPlate_.setSizeCrossfade(on, seconds);
+        plate_.setSizeCrossfade(on, seconds); // the twin plays only while frozen: it glides (setSizeGlideNow)
     }
     // Tests only: false leaves TONE's resonant tilt out of the wet (the wet as it was before v1.0.44), to show the
     // bell is the only difference and the loop is untouched.
@@ -476,9 +475,9 @@ private:
         return y;
     }
 #ifdef IV_PLATE_XF_CODE
-    // PROTOTYPE (renders/plate_size_xfade): the PLATE's and its twin's SIZE crossfade state (dsp::PlateXf). Last: no
+    // PROTOTYPE (renders/plate_size_xfade): the PLATE's SIZE crossfade state (dsp::PlateXf; the twin glides). Last: no
     // other member's offset moves.
-    dsp::PlateXf plateXf_[2];
+    dsp::PlateXf plateXf_;
 #endif
 };
 

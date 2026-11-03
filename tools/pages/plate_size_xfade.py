@@ -5,7 +5,14 @@ bend): PLATE's SIZE as built (A: the Dattorro plate's delays glide, so the tail 
 IV_PLATE_XFADE=B). C, the same crossfade over 1.2 s (IV_PLATE_XFADE=C), is left off the page: at endless DECAY it dipped
 1-2.6 dB through the fade (B: within 0.5 dB), so it isn't a fair second choice yet.
 
-Usage: <main checkout>/.venv/bin/python tools/pages/plate_size_xfade.py [--render build-proto/iv_render]
+Usage: <main checkout>/.venv/bin/python tools/pages/plate_size_xfade.py [--render build-proto/iv_render] [--out NAME]
+
+Round 2 (renders/plate_size_xfade2, the default --out): the owner picked B on the slow turn, flicks, LFO and endless
+moves, A on the frozen card, and heard a drop in B at 5.5 s (slow turn, stabs) and at the unfreeze (20 s, frozen
+card). Both were small SIZE moves crossfaded (the knob's last step, 0.2 %): two reads a few samples apart summed as a
+comb in the loop and the tail kept it (1.2-4 kHz down 2.8 dB after the unfreeze). Now a move within 4 % of the scale
+glides slowly (about 5 cents), a larger one crossfades, and frozen (and its unfreeze) SIZE glides as built. A sixth
+card: a full shrink at DECAY 0.3 (the +1.4-1.6 dB case). _verify.txt adds the two drops, as band levels against A.
 
 Five cards on a pad and on stabs, PLATE at DECAY 0.7 unless said: a slow turn small -> large, quick flicks, a slow
 LFO on SIZE's CV, SIZE moved while frozen (playing on into the layer, then Paint), SIZE moved at endless DECAY. Hand
@@ -82,7 +89,12 @@ COLS = [
     ("5_endless_moves", ["decay=1.0"],
      {"breakpoints": knob_steps(hand([(0, 0.3), (8.0, 0.3), (8.12, 0.85), (12.0, 0.85), (12.12, 0.2), (16.0, 0.2),
                                        (16.12, 0.6)]))}, [(8.0, 10.0), (12.0, 14.0), (16.0, 18.0)]),
+    ("6_full_shrink", ["decay=0.3"],
+     {"breakpoints": knob_steps(hand([(0, 1.0), (6.0, 1.0), (6.15, 0.0), (12.0, 0.0), (12.15, 1.0)]))},
+     [(6.0, 8.0), (12.0, 14.0)]),
 ]
+# The owner's two drops (round 1): (column, moment, seconds after it measured) for _verify.txt's band levels.
+DROPS = [("1_slow_turn_up", 5.2, 1.5), ("4_frozen_moves", 20.0, 3.0)]
 README = """PLATE's SIZE: should it glide or crossfade? Today, turning SIZE in PLATE slides the plate's delay lengths, so the tail bends in pitch a little, like tape (A). In HALL and CANYON SIZE doesn't bend: once the knob comes to rest, the space crossfades to its new size. B does the same for PLATE: once SIZE rests for 50 ms the plate jumps to its new size and the old one fades out over 0.3 s, with no pitch bend, no dip or swell in level and no restart of the tail.
 
 Each card is PLATE at DECAY 0.7 (card 5: endless), on a pad and on stabs:
@@ -90,7 +102,12 @@ Each card is PLATE at DECAY 0.7 (card 5: endless), on a pad and on stabs:
 2 quick flicks (5 s up, 9 s down, 12 s a quick there-and-back);
 3 a slow LFO on SIZE's CV from 3 s (0.15 Hz): B moves only near the LFO's turning points, where it rests, as HALL does;
 4 frozen at 5 s, the playing goes on into the layer, SIZE moved at 8 and 11 s (it sizes the layer), Paint held 13-15 s, unfrozen at 20 s;
-5 endless DECAY, SIZE moved at 8, 12 and 16 s.
+5 endless DECAY, SIZE moved at 8, 12 and 16 s;
+6 DECAY 0.3, SIZE flicked fully down at 6 s and back up at 12 s (round 1's loudest bump in B: +1.4-1.6 dB).
+
+Round 2: B now glides small moves (within 4 % of the size, slowly enough not to bend: about 5 cents) and crossfades
+larger ones; frozen, and while the unfreeze glides back, SIZE glides as in A. That's the fix for the drops heard at
+5.5 s (card 1) and 20 s (card 4): a tiny move crossfaded dulled the tail's upper mids.
 
 Listen for the pitch of the tail just after each move (A bends, B shouldn't), and whether B's fade sounds smooth. Level-matched; renders are 100 % wet, so use the MIX fader for the dry.
 
@@ -99,9 +116,10 @@ Listen for the pitch of the tail just after each move (A bends, B shouldn't), an
 3_slow_lfo_cv       a slow LFO on SIZE
 4_frozen_moves      SIZE moved while frozen (the layer), then Paint
 5_endless_moves     SIZE moved at endless DECAY
+6_full_shrink       a full shrink and back at DECAY 0.3
 
 A_glide_as_built    today: SIZE glides (the tail bends)
-B_crossfade         SIZE crossfades over 0.3 s once it rests (no bend)"""
+B_crossfade         SIZE crossfades over 0.3 s once it rests (no bend); small moves glide slowly; frozen, it glides"""
 
 
 def render(binary, src, out, sets, env_extra, auto, hooks):
@@ -129,6 +147,12 @@ def hf_frames(x, sr, lo=5000.0):
     return (h[:m * n].reshape(m, n) ** 2).mean(axis=1)
 
 
+def band_levels(x, sr):
+    X = np.abs(np.fft.rfft(x.mean(axis=1))) ** 2
+    f = np.fft.rfftfreq(x.shape[0], 1.0 / sr)
+    return np.array([db(X[(f >= lo) & (f < hi)].sum()) for lo, hi in ((0, 200), (200, 1000), (1000, 4000), (4000, 24000))])
+
+
 def click_score(e, t0, t1):
     """The loudest 1 ms frame above 5 kHz against the median of the second around it, dB (compare versions)."""
     worst = -1e9
@@ -141,10 +165,11 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--render", type=Path, default=ROOT / "build-proto" / "iv_render")
     ap.add_argument("--ref", type=Path, help="a v1.0.66 iv_render: A must equal it to the bit")
+    ap.add_argument("--out", default="plate_size_xfade2", help="the page's folder under renders/")
     a = ap.parse_args()
     main_root = main_checkout()
     material = main_root / "renders" / "_material"
-    out = main_root / "renders" / "plate_size_xfade"
+    out = main_root / "renders" / a.out
     if out.exists():
         shutil.rmtree(out)
     out.mkdir(parents=True)
@@ -189,11 +214,19 @@ def main():
                                    for t0, t1 in moments)
                 v.write("{:17s} {:6s} {}; B {} A (null {:.1f} dB, level {:+.2f} dB); click {}\n".format(
                     col, m, same, "differs from" if differs else "IDENTICAL to (mislabelled!)", null, level, clicks))
+        v.write("\nThe owner's drops (round 1), band levels B - A (dB) after the moment, <200 / 200-1k / 1-4k / >4k Hz:\n")
+        for col, t, span in DROPS:
+            for m in MATERIALS:
+                xa, sr = sf.read(out / col / "{}_{}.wav".format(m, VERSIONS[0][0]), always_2d=True)
+                xb, _ = sf.read(out / col / "{}_{}.wav".format(m, VERSIONS[1][0]), always_2d=True)
+                i, j = int(t * sr), int((t + span) * sr)
+                d = band_levels(xb[i:j], sr) - band_levels(xa[i:j], sr)
+                v.write("  {:17s} {:6s} {:.1f}-{:.1f}s: {}\n".format(col, m, t, t + span, " ".join("{:+.1f}".format(x) for x in d)))
     if (main_root / "renders" / "_ref_plate_size_xfade").exists():
         shutil.rmtree(main_root / "renders" / "_ref_plate_size_xfade")
     (out / "README.txt").write_text(README + "\n")
     subprocess.run([sys.executable, str(ROOT / "tools/review/make_review.py"), str(out), "--title",
-                    "PLATE's SIZE: glide or crossfade?", "--level-match", "--dry", str(dry), "--wet-only"],
+                    "PLATE's SIZE: glide or crossfade? (round 2)", "--level-match", "--dry", str(dry), "--wet-only"],
                    check=True, stdout=subprocess.DEVNULL)
     print(out / "index.html")
 
