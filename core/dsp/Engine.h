@@ -207,6 +207,13 @@ public:
     }
 #endif
 #ifndef IV_FIXED_VOICINGS
+    // PROTOTYPE (renders/plate_size_xfade): PLATE's SIZE by crossfade (the tank and its twin), fading over seconds;
+    // false: the glide, as built.
+    void  setPlateCrossfadePrototype(bool on, float seconds)
+    {
+        plate_.setSizeCrossfade(on, seconds);
+        twinPlate_.setSizeCrossfade(on, seconds);
+    }
     // Tests only: false leaves TONE's resonant tilt out of the wet (the wet as it was before v1.0.44), to show the
     // bell is the only difference and the loop is untouched.
     void  setToneBellForTests(bool on) { toneBellOff_ = !on; }
@@ -468,6 +475,11 @@ private:
         inDcY_[c] = y;
         return y;
     }
+#ifdef IV_PLATE_XF_CODE
+    // PROTOTYPE (renders/plate_size_xfade): the PLATE's and its twin's SIZE crossfade state (dsp::PlateXf). Last: no
+    // other member's offset moves.
+    dsp::PlateXf plateXf_[2];
+#endif
 };
 
 } // namespace iv

@@ -191,6 +191,12 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     fdn_.setEarlyLayouts(&earlyLayouts_);
     lowFdn_.setEarlyLayouts(&earlyLayouts_);
     ready_ &= fdn_.prepare(large_, 0.5f * sampleRate, 0x1D5A7u, voicing::kFdnMaxLineSeconds, &axi_);
+#ifdef IV_PLATE_XF_CODE
+    if (!plate_.crossfadeStateSet()) { // once: setPlateCrossfadePrototype's time stays across a re-prepare
+        plate_.setCrossfadeState(&plateXf_[0]);
+        twinPlate_.setCrossfadeState(&plateXf_[1]);
+    }
+#endif
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
     ready_ &= lowFdn_.prepare(large_, sampleRate / float(lowDecimate_), 0x10F7u, voicing::kFdnMaxLineSeconds, &axi_);
     ready_ &= shimmer_.prepare(d2_, axi_, sampleRate); // on chip (CPU hunt, 28 Oct 2026): after the allpasses
@@ -413,9 +419,17 @@ IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: 
 float Engine::hysteresisSize(float size, float& held, bool snap) const
 {
     if (sizeHyst_ <= 0.0f) return size;
+#ifdef IV_PLATE_XF_CODE
+    // PROTOTYPE (renders/plate_size_xfade): a crossfading PLATE has a rest timer too, so it takes the same
+    // hysteresis (map::plateScale is exponential: log(max / min) per unit of SIZE).
+    const bool plateGlides = !plate_.sizeCrossfade();
+#else
+    const bool plateGlides = true;
+#endif
     const float perUnit = activeSpace_ == 2 ? std::log(2.0f / 0.35f) // map::massiveMeanSeconds
+                        : activeSpace_ == 0 ? std::log(voicing::kPlateMaxScale / voicing::kPlateMinScale) // map::plateScale
                                             : std::log(voicing::kHallMeanMaxMs / voicing::kHallMeanMinMs); // map::hallMeanSeconds
-    if (snap || held < 0.0f || activeSpace_ == 0 || std::fabs(size - held) * perUnit > sizeHyst_) held = size;
+    if (snap || held < 0.0f || (activeSpace_ == 0 && plateGlides) || std::fabs(size - held) * perUnit > sizeHyst_) held = size;
     return held;
 }
 
@@ -737,7 +751,15 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         tEra.even = voicing::kNeveEven;
         tEra.even *= 1.0f - map::governorWeight(tDecay);
         if (plate) {
+#ifdef IV_PLATE_XF_CODE
+            // PROTOTYPE (renders/plate_size_xfade): a crossfading twin starts at the SIZE it was started with (the
+            // pad's), not crossfading from wherever it last stood (the glide slides from there, as built).
+            const bool xfTwin = twinPlate_.sizeCrossfade();
+            twinPlate_.setScale(map::plateScale(tSize), snap || (xfTwin && !twinSized_));
+            if (xfTwin) twinSized_ = true;
+#else
             twinPlate_.setScale(map::plateScale(tSize), snap);
+#endif
             twinPlate_.setDecayRate(tRate);
             twinPlate_.setHighT60Ratio(toneRatio);
             twinPlate_.setGovernor(0.0f);
