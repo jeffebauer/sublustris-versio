@@ -6,7 +6,7 @@ Draft for the owner, 3 Nov 2026. Modelled on the Resilio Versio post. Not posted
 
 - **Forum:** Noise Engineering subforum (Eurorack Modules → Noise Engineering), new thread.
 - **Format:** Modwiggler runs phpBB, so the body below is BBCode (`[b]`, `[list]`, `[url=]`). Markdown links like `[text](url)` show up as plain text there. Paste it into the full editor, then use Preview before you submit.
-- **Image:** the post opens with the render `front-on-wide.jpg`, embedded from the repo and linked to the website. `[img]` needs the raw file address (`raw.githubusercontent.com`), not GitHub's `blob/` page. Check it shows in Preview; if the forum won't embed outside images, attach the file instead and click "Place inline" at the top.
+- **Image:** the post opens with the dark render `og-hero.jpg` (the site's preview image), embedded from the repo and linked to the website. `[img]` needs the raw file address (`raw.githubusercontent.com`), not GitHub's `blob/` page. Check it shows in Preview; if the forum won't embed outside images, attach the file instead and click "Place inline" at the top.
 
 ## Title
 
@@ -15,7 +15,7 @@ Sublustris Versio, a free deep reverb firmware for the Versio (and a macOS plugi
 ## Body
 
 ```
-[url=https://sublustris-versio.vercel.app][img]https://raw.githubusercontent.com/jeffebauer/sublustris-versio/main/docs/minisite/assets/renders/front-on-wide.jpg[/img][/url]
+[url=https://sublustris-versio.vercel.app][img]https://raw.githubusercontent.com/jeffebauer/sublustris-versio/main/docs/minisite/assets/renders/og-hero.jpg[/img][/url]
 
 Hi all,
 
