@@ -240,14 +240,6 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         engine.setSwellTapsPrototype(std::atoi(st));
         std::fprintf(stderr, "iv_render: IV_SWELL_TAPS: %d swell points a side\n", engine.swellTaps());
     }
-    if (const char* px = std::getenv("IV_PLATE_XFADE")) { // renders/plate_size_xfade: A the glide (as built), B 0.3 s, C 1.2 s
-        const char v = px[0];
-        const float secs = v == 'C' || v == 'c' ? 1.2f : 0.3f;
-        const bool on = v == 'B' || v == 'b' || v == 'C' || v == 'c';
-        engine.setPlateCrossfadePrototype(on, secs);
-        if (on) std::fprintf(stderr, "iv_render: IV_PLATE_XFADE: PLATE's SIZE crossfades over %.1f s\n", double(secs));
-        else std::fprintf(stderr, "iv_render: IV_PLATE_XFADE: PLATE's SIZE glides (as built)\n");
-    }
     if (const char* st = std::getenv("IV_SIZE_STAGGER")) { // renders/size_stagger
         engine.setSizeStagger(std::atoi(st));
         std::fprintf(stderr, "iv_render: IV_SIZE_STAGGER: SIZE crossfades in %d group(s)\n", std::atoi(st) == 1 || std::atoi(st) == 2 || std::atoi(st) == 8 ? std::atoi(st) : 4);

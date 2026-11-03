@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""PROTOTYPE pick page (3 Nov 2026; the owner: PLATE's SIZE should crossfade like HALL's and CANYON's, with no pitch
+"""History (v1.0.68, ADR 0043: the owner picked B, now the Core's behaviour; the IV_PLATE_XFADE hook is gone, so this
+script only re-runs against facbf40's renderer). PROTOTYPE pick page (3 Nov 2026; the owner: PLATE's SIZE should crossfade like HALL's and CANYON's, with no pitch
 bend): PLATE's SIZE as built (A: the Dattorro plate's delays glide, so the tail bends like tape) against the crossfade
 (B: once SIZE rests 50 ms the plate jumps to its new size and the old one fades out over 0.3 s; renderer hook
 IV_PLATE_XFADE=B). C, the same crossfade over 1.2 s (IV_PLATE_XFADE=C), is left off the page: at endless DECAY it dipped

@@ -19,12 +19,6 @@
 #include <cstddef>
 #include <cstdint>
 
-// PROTOTYPE (renders/plate_size_xfade; the owner: PLATE's SIZE should crossfade like HALL's and CANYON's, no pitch
-// bend): the crossfade's code is in every desktop build (Plate::setSizeCrossfade, off by default: the glide, as
-// built) and in a firmware built with IV_PLATE_XFADE (firmware/Makefile PLATE_XFADE=1), where it is always on.
-#if !defined(IV_FIXED_VOICINGS) || defined(IV_PLATE_XFADE)
-#define IV_PLATE_XF_CODE 1
-#endif
 
 namespace iv::dsp {
 
@@ -39,8 +33,7 @@ constexpr float kD2[2]  = {3720.0f, 3163.0f};
 constexpr float kExcursion = 16.0f; // his maximum modulation excursion
 } // namespace plate
 
-#ifdef IV_PLATE_XF_CODE
-// A Plate's SIZE crossfade state (Plate.cpp, "SIZE by crossfade"), outside the Plate so the Engine can keep it as its
+// A Plate's SIZE crossfade state (v1.0.68, ADR 0043) (Plate.cpp, "SIZE by crossfade"), outside the Plate so the Engine can keep it as its
 // last members: the Plate grows by 12 bytes only, so the Engine's members after it barely move (flash: ~200 B).
 struct PlateXf {
     // Per branch: the old reads (ap1, d1, ap2, d2), their allpass-interpolation states, the old loss filters, the new
@@ -59,7 +52,6 @@ struct PlateXf {
     float   xfNew_, xfOld_, xfCos_, xfSin_, xfRotC_, xfRotS_;
     int32_t xfLen_, xfLeft_, xfEnd_; // samples
 };
-#endif
 
 class Plate {
 public:
@@ -119,26 +111,16 @@ public:
 
     float scale() const { return scaleNow_; }
 
-#ifdef IV_PLATE_XF_CODE
-    // SIZE by crossfade instead of the glide (ADR 0025's phase 2 for the PLATE): once SIZE has rested
-    // kSizeRestSeconds every length jumps and the old reads fade out over `seconds` (Plate.cpp, "SIZE by crossfade").
-    void setSizeCrossfade(bool on, float seconds)
-    {
-#ifndef IV_PLATE_XFADE
-        xfOn_ = on;
-#endif
-        (void)on;
-        if (xs_) xs_->xfSeconds_ = seconds;
-    }
-    // Where the crossfade keeps its state (before prepare(); none: SIZE glides).
+    // SIZE by crossfade (v1.0.68, ADR 0043; ADR 0025's phase 2 for the PLATE): once SIZE has rested kSizeRestSeconds
+    // every length jumps and the old reads fade out over kSizeCrossfadeSeconds; a small move (within 4 % of the
+    // scale) glides, too slowly to bend (Plate.cpp, "SIZE by crossfade"). Where the crossfade keeps its state
+    // (before prepare(); none: SIZE glides, as it did before v1.0.68).
     void setCrossfadeState(PlateXf* s); // reset() sets the rest before any use
-    bool sizeCrossfade() const { return xfOn_ && xs_; }
-    bool crossfadeStateSet() const { return xs_ != nullptr; }
+    bool sizeCrossfade() const { return xs_ != nullptr; }
     bool crossfading() const { return xfSince_ >= 0; }
-    // While true SIZE glides as built even with the crossfade on: the Engine sets it while FREEZE is on or its
-    // unfreeze still glides back (the owner's pick A on renders/plate_size_xfade's frozen card).
-    void setSizeGlideNow(bool on) { xfGlideNow_ = on; }
-#endif
+    // While true SIZE glides (as before v1.0.68): the Engine sets it while FREEZE is on or its unfreeze still glides
+    // back (the owner's pick A on renders/plate_size_xfade's frozen card, ADR 0043); a glide under way finishes.
+    void setSizeGlideNow(bool on) { xfGlideAsk_ = on; }
 
     void setAir(float air) { air_ = air; } // 1/T60 in 1/s: see absorbent() (v1.0.25)
     // The least the highs lose, 1/T60 in 1/s: an endless tail's settling mellow (v1.0.58; Engine::applySpace). 0 = none.
@@ -179,19 +161,12 @@ private:
     DriftAmounts drift_;
     FloorGovernor governor_;
     bool     ready_ IV_ZI;
-#ifdef IV_PLATE_XF_CODE
     void startCrossfade(float rate, float k);
     void cancelCrossfade(float target);
     void processXf(const float* inL, const float* inR, float* outL, float* outR, int start, int m);
-#ifdef IV_PLATE_XFADE
-    static constexpr bool xfOn_ = true; // the firmware's prototype build: always (the glide compiled out)
-#else
-    bool     xfOn_ = false;
-#endif
     int32_t  xfSince_ = -1; // samples since the jump; -1: no crossfade
-    bool     xfGlideNow_ IV_ZI; // setSizeGlideNow
+    bool     xfGlideAsk_ IV_ZI, xfGlideNow_ IV_ZI; // setSizeGlideNow; gliding (until the scale arrives)
     PlateXf* xs_ IV_ZI;  // setCrossfadeState: the crossfade's state, kept by the Engine (its last members)
-#endif
 };
 
 } // namespace iv::dsp

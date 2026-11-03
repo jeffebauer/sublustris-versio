@@ -191,9 +191,7 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     fdn_.setEarlyLayouts(&earlyLayouts_);
     lowFdn_.setEarlyLayouts(&earlyLayouts_);
     ready_ &= fdn_.prepare(large_, 0.5f * sampleRate, 0x1D5A7u, voicing::kFdnMaxLineSeconds, &axi_);
-#ifdef IV_PLATE_XF_CODE
-    if (!plate_.crossfadeStateSet()) plate_.setCrossfadeState(&plateXf_); // once: its time stays across a re-prepare
-#endif
+    plate_.setCrossfadeState(&plateXf_); // PLATE's SIZE by crossfade (v1.0.68, ADR 0043); its twin glides
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
     ready_ &= lowFdn_.prepare(large_, sampleRate / float(lowDecimate_), 0x10F7u, voicing::kFdnMaxLineSeconds, &axi_);
     ready_ &= shimmer_.prepare(d2_, axi_, sampleRate); // on chip (CPU hunt, 28 Oct 2026): after the allpasses
@@ -416,14 +414,10 @@ IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: 
 float Engine::hysteresisSize(float size, float& held, bool snap) const
 {
     if (sizeHyst_ <= 0.0f) return size;
-#ifdef IV_PLATE_XF_CODE
-    // PROTOTYPE (renders/plate_size_xfade): a crossfading PLATE has a rest timer too, so it takes the same
-    // hysteresis (map::plateScale is exponential: log(max / min) per unit of SIZE); not while it glides (frozen and
-    // the unfreeze, setSizeGlideNow), nor the twin (it always glides).
+    // The PLATE crossfades its SIZE (v1.0.68, ADR 0043) with a rest timer too, so it takes the same hysteresis
+    // (map::plateScale is exponential: log(max / min) per unit of SIZE); not while it glides (frozen and the
+    // unfreeze, setSizeGlideNow), nor the twin (it always glides).
     const bool plateGlides = !plate_.sizeCrossfade() || freezeMix_ > 0.0f || &held == &twinSizeHeld_;
-#else
-    const bool plateGlides = true;
-#endif
     const float perUnit = activeSpace_ == 2 ? std::log(2.0f / 0.35f) // map::massiveMeanSeconds
                         : activeSpace_ == 0 ? std::log(voicing::kPlateMaxScale / voicing::kPlateMinScale) // map::plateScale
                                             : std::log(voicing::kHallMeanMaxMs / voicing::kHallMeanMinMs); // map::hallMeanSeconds
@@ -549,11 +543,9 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
 
     if (plate) {
         plate_.setScale(map::plateScale(size), snap);
-#ifdef IV_PLATE_XF_CODE
-        // PROTOTYPE (renders/plate_size_xfade): frozen, and while the unfreeze glides back to SIZE, SIZE glides as
-        // built (the owner's pick A on the frozen card; a crossfade there lost the tail's upper mids).
+        // Frozen, and while the unfreeze glides back to SIZE, SIZE glides (ADR 0043: the owner's pick A on the
+        // frozen card; a crossfade there lost the tail's upper mids).
         plate_.setSizeGlideNow(freezeMix_ > 0.0f);
-#endif
         plate_.setDecayRate(rate);
         plate_.setHighT60Ratio(highRatio);
         plate_.setGovernor(governor);

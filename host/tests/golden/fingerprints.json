@@ -1,6 +1,6 @@
 {
-  "spec": "v1.0.67",
-  "why": "v1.0.67: the radio's over-modulation 8 dB lighter (ADR 0042, owner's pick C on renders/radio_lighter)",
+  "spec": "v1.0.68",
+  "why": "v1.0.68: PLATE's SIZE by crossfade (ADR 0043, owner's pick B on renders/plate_size_xfade2)",
   "corners": {
     "plate_small": {
       "chord_loudness_db": -39.716000000000001,

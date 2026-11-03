@@ -1,13 +1,12 @@
-// PROTOTYPE (renders/plate_size_xfade): PLATE's SIZE by crossfade (Plate::setSizeCrossfade, behind the renderer's
-// IV_PLATE_XFADE). Asserted, with the crossfade on (0.3 s):
+// PLATE's SIZE by crossfade (v1.0.68, ADR 0043; the owner's picks on renders/plate_size_xfade and _xfade2). Asserted:
 // - a SIZE move takes effect once SIZE rests, in one jump (no glide), under the module's knob noise too
 //   (±2e-4 a block, the hysteresis as built);
 // - a slow LFO on SIZE (0.2 Hz, 0.3..0.7) starts a crossfade only near its turning points, not over and over
 //   (at most 2 per cycle, plus one);
 // - an endless PLATE tail holds its level through a minute of random SIZE moves
-//   against the same minute with SIZE held (within 1 dB; the glide's printed);
+//   against the same minute with SIZE held (within 1 dB);
 // - a small move (SIZE 0.30 -> 0.31, under 4 % of the scale) glides at 0.0193 a second and never crossfades;
-// - with the crossfade off, SIZE still glides (as built).
+// - frozen, a SIZE move and the unfreeze that follows glide (no crossfade).
 #include "dsp/Engine.h"
 #include "params/Mappings.h"
 
@@ -33,11 +32,10 @@ float uniform(uint32_t& s) // -1..1
     return float(int32_t(s)) * (1.0f / 2147483648.0f);
 }
 
-std::unique_ptr<iv::Engine> plate(bool xf, float size, float decay)
+std::unique_ptr<iv::Engine> plate(float size, float decay)
 {
     auto e = std::make_unique<iv::Engine>();
     e->prepare(48000.0f, 48);
-    e->setPlateCrossfadePrototype(xf, 0.3f);
     e->setParam(iv::ParamId::Space, iv::switchToNormalised(0));
     e->setParam(iv::ParamId::Size, size);
     e->setParam(iv::ParamId::Decay, decay);
@@ -53,7 +51,7 @@ int main()
     std::vector<float> in(48, 0.0f), l(48), r(48);
     // A move under knob noise: the scale jumps once, within a second.
     for (float noise : {0.0f, 2e-4f}) {
-        auto e = plate(true, 0.62f, 0.5f);
+        auto e = plate(0.62f, 0.5f);
         uint32_t seed = 9;
         for (int b = 0; b < 500; ++b) {
             e->setParam(iv::ParamId::Size, 0.62f + noise * uniform(seed));
@@ -78,7 +76,7 @@ int main()
     }
     // A slow LFO on SIZE: crossfades only at its turning points.
     {
-        auto e = plate(true, 0.3f, 0.7f);
+        auto e = plate(0.3f, 0.7f);
         int starts = 0;
         bool was = false;
         const int blocks = 20000; // 20 s, four cycles
@@ -94,9 +92,8 @@ int main()
     }
     // An endless tail through a minute of SIZE moves.
     double still = 0.0;
-    for (int mode : {2, 1, 0}) { // 2: SIZE held (the tail's own drift), 1: crossfade, 0: glide
-        const bool xf = mode >= 1;
-        auto e = plate(xf, 0.3f, 1.0f);
+    for (int mode : {2, 1}) { // 2: SIZE held (the tail's own drift), 1: SIZE moved
+        auto e = plate(0.3f, 1.0f);
         uint32_t seed = 3;
         std::vector<float> noise(48);
         auto level = [&](int blocks, bool feed, float size) {
@@ -122,14 +119,13 @@ int main()
         if (mode == 2) {
             still = end - start;
             std::printf("       endless PLATE, the same minute with SIZE held: %+.2f dB\n", still);
-        } else if (xf)
-            check(std::fabs(end - start - still) < 1.0, "endless PLATE, a minute of SIZE moves (crossfade): " + std::to_string(end - start) +
+        } else
+            check(std::fabs(end - start - still) < 1.0, "endless PLATE, a minute of SIZE moves: " + std::to_string(end - start) +
                                                            " dB, held " + std::to_string(still) + " dB");
-        else std::printf("       endless PLATE, a minute of SIZE moves (glide, as built): %+.2f dB\n", end - start);
     }
     // Round 2: a small move (within 4 % of the scale) glides slowly, never crossfades; frozen, SIZE glides as built.
     {
-        auto e = plate(true, 0.3f, 0.7f);
+        auto e = plate(0.3f, 0.7f);
         for (int b = 0; b < 500; ++b) e->process(in.data(), in.data(), l.data(), r.data(), 48);
         const float from = e->plate().scale();
         e->setParam(iv::ParamId::Size, 0.31f);
@@ -146,13 +142,23 @@ int main()
               "SIZE 0.30 -> 0.31 glides (no crossfade), scale " + std::to_string(from) + " -> " + std::to_string(last) +
                   ", at most " + std::to_string(maxStep * 1000.0f) + " a second");
     }
-    // Off: the glide, as built.
+    // Frozen: SIZE moved, then the unfreeze: the PLATE glides throughout (the owner's pick A on the frozen card).
     {
-        auto e = plate(false, 0.3f, 0.5f);
-        e->setParam(iv::ParamId::Size, 0.9f);
-        for (int b = 0; b < 100; ++b) e->process(in.data(), in.data(), l.data(), r.data(), 48);
-        const float s = e->plate().scale();
-        check(s > iv::map::plateScale(0.3f) + 1e-3f && s < iv::map::plateScale(0.9f) - 1e-3f, "off: SIZE glides (scale " + std::to_string(s) + " after 0.1 s)");
+        auto e = plate(0.3f, 0.7f);
+        uint32_t seed = 5;
+        std::vector<float> noise(48);
+        bool xf = false;
+        for (int b = 0; b < 6000; ++b) {
+            if (b == 1000) e->button(true, 0);
+            if (b == 1100) e->button(false, 0);
+            if (b == 2000) e->setParam(iv::ParamId::Size, 0.85f);
+            if (b == 3000) e->button(true, 0); // a tap while frozen unfreezes on its release
+            if (b == 3050) e->button(false, 0);
+            for (auto& v : noise) v = b < 1000 ? 0.1f * uniform(seed) : 0.0f;
+            e->process(noise.data(), noise.data(), l.data(), r.data(), 48);
+            if (b >= 1000) xf |= e->plate().crossfading();
+        }
+        check(!xf, "frozen, SIZE 0.30 -> 0.85, then the unfreeze: no crossfade (it glides), scale " + std::to_string(e->plate().scale()));
     }
     std::printf("%s\n", failures ? "FAILED" : "ALL PASSED");
     return failures ? 1 : 0;

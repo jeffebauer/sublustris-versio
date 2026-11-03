@@ -50,14 +50,12 @@ constexpr float kLevelRefScale = 1.0f;  // level compensation reference (√(sca
 // SIZE glides: the longest element (4453) changes by at most a semitone of
 // bend, 0.0595 s of delay per second (as the FDN, ADR 0012).
 constexpr float kScaleSlewPerSecond = 0.0595f / (4453.0f / kPaperRate);
-#ifdef IV_PLATE_XF_CODE
 // SIZE by crossfade's small moves (control()): up to 4 % of the scale they glide at 0.0193 a second, the longest
 // line (d1, 0.15 s a unit of scale) slewing 0.29 % of real time: about 5 cents while it moves, under the plate's own
 // chorus (a full 4 % takes about 2 s at the largest scale). Beyond 4 % the crossfade's reads are far enough apart
 // to sum as a dense comb (0.3 -> 0.4: within 0.4 dB of the held room per band).
 constexpr float kXfSmallStep          = 0.04f;
 constexpr float kXfSmallSlewPerSecond = 0.0193f;
-#endif
 
 float uniform(uint32_t& s)
 {
@@ -79,7 +77,6 @@ constexpr TapOffsets tapOffsets()
     return o;
 }
 constexpr TapOffsets kTapOffsets = tapOffsets();
-#ifdef IV_PLATE_XF_CODE
 // The taps' branch, element and sign in a byte each (processXf's loop indexes them; kLeft / kRight as data cost
 // 224 B of flash): bit 0 the branch, bits 1-2 the element, bit 3 a negative sign.
 struct TapCodes {
@@ -96,7 +93,6 @@ constexpr TapCodes tapCodes()
     return o;
 }
 constexpr TapCodes kTapCodes = tapCodes();
-#endif
 
 // The output taps' delays for a block (k, the scale, only moves in control()): whole samples and the
 // fraction, as the per-sample read worked them out (the same bits; overnight review, 26 Oct 2026).
@@ -188,9 +184,7 @@ IV_SIZE_OPT void Plate::reset()
     }
     scaleNow_ = scaleTarget_;
     governor_.reset();
-#ifdef IV_PLATE_XF_CODE
     cancelCrossfade(scaleTarget_);
-#endif
 }
 
 IV_SIZE_OPT void Plate::setScale(float scale, bool snap)
@@ -199,18 +193,19 @@ IV_SIZE_OPT void Plate::setScale(float scale, bool snap)
     if (scale < 0.05f) scale = 0.05f;
     scaleTarget_ = scale;
     if (snap) scaleNow_ = scale;
-#ifdef IV_PLATE_XF_CODE
     if (snap) cancelCrossfade(scale); // a restart (prepare, a SPACE flip): no crossfade
-#endif
 }
 
 IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash; it shares Fdn::control's helpers)
 {
     const float dt = float(n) / sampleRate_;
     float slewPerSecond = kScaleSlewPerSecond;
-#ifdef IV_PLATE_XF_CODE
     bool starting = false;
-    if (xfOn_ && xs_ && !xfGlideNow_) {
+    // Asked to glide (frozen, the unfreeze), it glides until the scale arrives: a long glide back from a frozen move
+    // isn't cut off into a crossfade.
+    if (xfGlideAsk_) xfGlideNow_ = true;
+    else if (xfGlideNow_ && scaleNow_ == scaleTarget_) xfGlideNow_ = false;
+    if (xs_ && !xfGlideNow_) {
         PlateXf& X = *xs_;
         // SIZE by crossfade: rests kSizeRestSeconds (the longest element's target still within half a sample a
         // block, as Fdn::control), then everything jumps at once (startCrossfade, after the lengths below).
@@ -236,7 +231,6 @@ IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash;
             scaleNow_ = scaleTarget_;
         }
     }
-#endif
     {
     const float slew = slewPerSecond * dt;
     const float diff = scaleTarget_ - scaleNow_;
@@ -251,9 +245,7 @@ IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash;
 
     const float excursion = kExcursion * sampleRate_ / kPaperRate; // not scaled: the chorus depth stays put
     const float floorCoeff = 1.0f - std::exp(-2.0f * 3.14159265f * 0.3f * dt);
-#ifdef IV_PLATE_XF_CODE
     if (starting) startCrossfade(lowRate + governor_.extraRate, k); // the lengths and losses below are still the old ones
-#endif
     for (int b = 0; b < 2; ++b) {
         Branch& br = b_[b];
         br.ap1Len = kAp1[b] * k;
@@ -304,7 +296,6 @@ IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash;
             br.longStep[j] = (t - br.longNow[j]) / float(n);
         }
     }
-#ifdef IV_PLATE_XF_CODE
     if (xfSince_ >= 0) {
         PlateXf& X = *xs_;
         const float a = X.xfLeft_ > 0 ? X.xfOld_ : 0.0f, w = 1.0f - a;
@@ -335,11 +326,9 @@ IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash;
                 g.dK = (K - g.K) * (1.0f / float(kControlBlock)); // reached over the block, sample by sample (stepped once a
             }                                                     // block, it ticked in the HF on music, 3 Nov 2026)
     }
-#endif
 }
 
-#ifdef IV_PLATE_XF_CODE
-// ---- SIZE by crossfade (PROTOTYPE, renders/plate_size_xfade) ----------------------------------------------------
+// ---- SIZE by crossfade (v1.0.68, ADR 0043; the owner's picks on renders/plate_size_xfade and _xfade2) ----------
 // ADR 0025's crossfade, the PLATE's phase 2. A glide in a loop retunes everything circulating by the length ratio
 // for the rest of its tail (PASP, "Delay-line interpolation": crossfade between the two delay settings rather than
 // glide). Lexicon's units mute the reverb while Size changes (PCM 80 manual, Size; the MPX 550 reloads the program);
@@ -562,7 +551,6 @@ IV_SIZE_OPT void Plate::processXf(const float* inL, const float* inR, float* out
         for (auto& o : X.xf_) o.corr[0] = o.corr[1] = 1.0f;
     }
 }
-#endif
 
 void Plate::process(const float* inL, const float* inR, float* outL, float* outR, int n)
 {
@@ -572,12 +560,10 @@ void Plate::process(const float* inL, const float* inR, float* outL, float* outR
         prof::mark(prof::kTank);
         control(m);
         prof::mark(prof::kTankCtl);
-#ifdef IV_PLATE_XF_CODE
         if (xfSince_ >= 0) {
             processXf(inL, inR, outL, outR, start, m);
             continue;
         }
-#endif
         const float k = scaleNow_ * sampleRate_ / kPaperRate;
         const float outGain = kOutputGain * levelGain_;
         // What stays put through the block is worked out once, with the same float operations as per

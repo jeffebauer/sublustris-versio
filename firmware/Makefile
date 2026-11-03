@@ -68,10 +68,7 @@ RELEASE_LATE_LIGHT ?= 0
 #                 (8192 rows in 64 ms: FMC_SDRTR COUNT 761), not libDaisy's (COUNT 2054, 168 ms a pass); main.cpp
 #                 IV_SDRAM_REFRESH (review2/neutral, 29 Oct 2026; the same samples, +16 B). The SIZESPIKE=5 lap's
 #                 REFRESH line times it. SDRAM_REFRESH=0 builds release at libDaisy's rate (-norefresh).
-#   PLATE_XFADE=1 PROTOTYPE (renders/plate_size_xfade): PLATE's SIZE by crossfade instead of the glide (core/dsp/Plate.h
-#                 IV_PLATE_XFADE; -pxf)
 SIZE_GROUPS ?=
-PLATE_XFADE ?=
 LEAN ?= 1
 AUDIO_DIRECT ?= 1
 SDRAM_REFRESH ?= 1
@@ -82,8 +79,8 @@ ABSORB_EXP ?=
 SHIMMER_POLY ?=
 CANDIDATE ?=
 SIZESPIKE ?=
-TRIAL_TAG = $(if $(filter 1,$(PLATE_XFADE)),-pxf)$(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)$(if $(filter 1,$(LEAN)),,-nolean)$(if $(filter 1,$(ABSORB_EXP)),-absexp)$(if $(filter 1,$(SHIMMER_POLY)),-shpoly)
-TRIAL_DEFS = $(if $(filter 1,$(PLATE_XFADE)), -DIV_PLATE_XFADE)$(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(filter 1,$(LEAN)), -DIV_LEAN_LOOPS)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))$(if $(filter 1,$(ABSORB_EXP)), -DIV_ABSORB_EXP)$(if $(filter 1,$(SHIMMER_POLY)), -DIV_SHIMMER_POLY)$(if $(filter 5,$(SIZESPIKE)),$(if $(filter 1,$(SHIMMER_POLY)),, -DIV_PROFILE_SHPOLY_AB))
+TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)$(if $(filter 1,$(LEAN)),,-nolean)$(if $(filter 1,$(ABSORB_EXP)),-absexp)$(if $(filter 1,$(SHIMMER_POLY)),-shpoly)
+TRIAL_DEFS =$(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(filter 1,$(LEAN)), -DIV_LEAN_LOOPS)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))$(if $(filter 1,$(ABSORB_EXP)), -DIV_ABSORB_EXP)$(if $(filter 1,$(SHIMMER_POLY)), -DIV_SHIMMER_POLY)$(if $(filter 5,$(SIZESPIKE)),$(if $(filter 1,$(SHIMMER_POLY)),, -DIV_PROFILE_SHPOLY_AB))
 # AUDIO_DIRECT and SDRAM_REFRESH are release only, so their tags and defines live with release's (not TRIAL_*:
 # all-variants names the profile .bin from the release-mode make, and m0test / profile keep libDaisy's AudioHandle
 # and refresh; the audit lap times both refresh rates itself).

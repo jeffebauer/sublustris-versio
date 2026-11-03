@@ -99,7 +99,7 @@ The size of the space.
 - **HALL:** a small room to a huge hall. Small HALLs also have shorter tails.
 - **CANYON:** a long wash to a boundless one, with a little more predelay as it grows.
 
-In HALL and CANYON, a SIZE move doesn't bend the pitch: once the knob comes to rest, the space crossfades to its new size over about a second. In PLATE, SIZE bends the tail's pitch a little as you turn it, like tape.
+A SIZE move doesn't bend the pitch: once the knob comes to rest, the space crossfades to its new size over about a second. In PLATE, the smallest nudges glide instead (too slight to hear as a bend), and while frozen PLATE's SIZE glides too.
 
 While frozen, SIZE sets the size of the layer you play over the pad (see FREEZE / PAINT).
 
