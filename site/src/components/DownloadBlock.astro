@@ -70,11 +70,11 @@ const targets = [
         </div>
         {live ? (
           <Button href={t.href} variant={t.variant} data-download={t.key} download aria-label={`${t.button}${t.size ? `, ${t.size}` : ''}`}>
-            Download{t.size && <span class="mono">{t.size}</span>}
+            <svg class="down" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.5v8.5M2.5 6.5 6 10l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.2" /></svg>Download{t.size && <span class="mono">{t.size}</span>}
           </Button>
         ) : (
           <span class="soon">
-            <Button variant={t.variant} disabled aria-label={t.button}>Download{t.size && <span class="mono">{t.size}</span>}</Button>
+            <Button variant={t.variant} disabled aria-label={t.button}><svg class="down" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.5v8.5M2.5 6.5 6 10l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.2" /></svg>Download{t.size && <span class="mono">{t.size}</span>}</Button>
             <span class="micro quiet">Coming soon: the link goes live when the repository is public.</span>
           </span>
         )}
