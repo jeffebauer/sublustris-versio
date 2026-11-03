@@ -69,7 +69,7 @@ The sources for the story on the home page:
 
 ## Licence
 
-My code, tools and docs are MIT licensed. The plugin is AGPLv3, because it's built on JUCE. The source will be on [GitHub](https://github.com/jeffebauer/sublustris-versio) once the repository is public.
+My code, tools and docs are MIT licensed. The plugin is AGPLv3, because it's built on JUCE. The source is on [GitHub](https://github.com/jeffebauer/sublustris-versio).
 
 ## Trademarks
 

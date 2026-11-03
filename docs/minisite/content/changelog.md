@@ -7,11 +7,11 @@ order: 5
 
 # Changelog
 
-Newest first. There's no public release yet, so below is the story so far, in a few steps. From the first release on, each version gets its own entry, with the firmware for the Versio and the plugin for macOS.
+Newest first. From the first release on, each version gets its own entry, with the firmware for the Versio and the plugin for macOS. The first release gathers the story so far, in a few steps.
 
 When a player suggests a change, I credit them in its entry. If you have an idea, [suggest a sound](https://github.com/jeffebauer/sublustris-versio/issues/new?template=sound_idea.yml).
 
-## In development
+## The first release
 
 <p class="release-version">v1.0.68, 3 November 2026</p>
 
