@@ -52,9 +52,9 @@
       "dry": "02-freeze-paint-dry.mp3",
       "file": "02-freeze-paint-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -7.2,
+      "true_peak_db": -6.4,
       "note": "Piano: Steinway B from the Versilian Community Sample Library (CC0). Played in code.",
-      "gain_db": 1.4
+      "gain_db": 2.1
     },
     {
       "id": "03",
@@ -104,9 +104,9 @@
       "dry": "05-bloom-dry.mp3",
       "file": "05-bloom-wet.mp3",
       "lufs": -20.5,
-      "true_peak_db": -7.0,
+      "true_peak_db": -7.1,
       "note": "Piano: Steinway B from the Versilian Community Sample Library (CC0). Played in code.",
-      "gain_db": 2.5
+      "gain_db": 2.2
     },
     {
       "id": "06",
