@@ -391,7 +391,10 @@ html.hero-film.hero-lit .hero-title { opacity: 1; translate: 0 0; transition: op
   .ap-stage img { inset: auto; left: var(--img-x); top: var(--img-y); width: var(--img-w); height: auto; max-width: none; }
   .ap-lines { display: none; }
   .ap-marker { position: absolute; left: var(--cx); top: var(--cy); transform: translate(-50%, -50%); box-shadow: 0 0 0 1.5px #ffffff; }
-  .ap-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(max(min(100%, 15rem), calc((100% - 2 * var(--gutter)) / 2)), 1fr)); gap: var(--stack-3) calc(2 * var(--gutter)); align-content: start; }   /* two columns at most, further apart (owner, 3 Nov 2026) */
+  /* Two columns at most, further apart, read down each column (owner, 3 Nov 2026); one when narrow. */
+  .ap-list { columns: 2 15rem; column-gap: calc(2 * var(--gutter)); }
+  .ap-callout { break-inside: avoid; }
+  .ap-callout + .ap-callout { margin-top: var(--stack-3); }
   .ap-callout { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.75rem; align-items: start; }
   .ap-line { font-size: var(--fs-ui); }
 }
