@@ -128,7 +128,6 @@ const shapeSteps = items(shape.html);
     <div class="column flow story-body">
       <Fragment set:html={storyMiddle.join('')} />
       <div class="tile story-ours flow" set:html={storyOurs} />
-      <p class="small"><a href="/credits/#the-endless-hold">Sources</a></p>
     </div>
   </section>
 
@@ -188,7 +187,6 @@ const shapeSteps = items(shape.html);
       ) : (
         <Placeholder id="patched.jpg" name="Patched module" ratio="16:9" />
       )}
-      {patched && <figcaption class="caption">Patched into both inputs and both outputs.</figcaption>}
     </figure>
   </section>
 
@@ -246,6 +244,7 @@ const shapeSteps = items(shape.html);
   /* The sibling band takes Resilio's warm black, so its contour lines sit on their own ground. */
   .sibling.band-dark { --dark: #0c0b0a; }
   .story-figure { margin-block: var(--stack-4); color: var(--ink); }
+  .story .micro + .statement { margin-top: var(--stack-1); }   /* the eyebrow sits close to its title (owner, 3 Nov 2026) */
   .story-diagram { display: block; width: min(100%, 26rem); height: auto; margin-inline: auto; }
   .story-ours { padding: clamp(1.25rem, 0.75rem + 1.5vw, 2rem); }
   .get-actions { justify-content: center; }

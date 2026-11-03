@@ -199,4 +199,3 @@ The plugin (AU and VST3, macOS) has the same panel, sound and LEDs. A few things
 - **ZOOM** (1x, 1.5x, 2x) scales the panel.
 - Use it on a return track with BLEND fully right, or as an insert with BLEND to taste.
 
-<!-- SCREENSHOT: assets/screenshots/plugin-panel.png -->

@@ -49,7 +49,7 @@ const { lead, sections } = splitSections(rest.replace(table, ''));
         <h2 id={sec.id}>{sec.title}</h2>
         <div class="preset">
           <figure class="preset-panel">
-            <PanelArt settings={p.s} controls prefix={`pre-${sec.id}`} label={`${sec.title}: panel settings`} />
+            <PanelArt settings={p.s} prefix={`pre-${sec.id}`} label={`${sec.title}: panel settings`} />
           </figure>
           <div class="preset-text">
             <Fragment set:html={sec.html} />

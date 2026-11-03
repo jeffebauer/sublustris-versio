@@ -45,6 +45,23 @@
       "env": {
         "FONTS_DIR": "/Users/jesse/Downloads/Fonts/MD_IO-V2-FutureFonts/Fonts/Variable"
       }
+    },
+    {
+      "name": "site-review",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        ".claude/worktrees/site-review/site",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "4323"
+      ],
+      "port": 4323,
+      "env": {
+        "FONTS_DIR": "/Users/jesse/Downloads/Fonts/MD_IO-V2-FutureFonts/Fonts/Variable"
+      }
     }
   ]
 }

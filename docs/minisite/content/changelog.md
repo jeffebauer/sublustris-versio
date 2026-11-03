@@ -9,8 +9,6 @@ order: 5
 
 Newest first. There's no public release yet, so below is the story so far, in a few steps. From the first release on, each version gets its own entry, with the firmware for the Versio and the plugin for macOS.
 
-<!-- LATEST: show the current version, date and download buttons here, from the release data. -->
-
 When a player suggests a change, I credit them in its entry. If you have an idea, [suggest a sound](https://github.com/jeffebauer/sublustris-versio/issues/new?template=sound_idea.yml).
 
 ## In development

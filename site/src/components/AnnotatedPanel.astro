@@ -17,7 +17,7 @@ const front = render('front-on-wide.jpg');
 const IMG = { w: 2116, h: 1190 };
 const PANEL = { x: 872, y: 121, w: 372, h: 950 };
 const MM = { w: 50.5, h: 128.5 };
-const CROP = { x: 800, y: 80, w: 516, h: 1032 };
+const CROP = { x: 688, y: 80, w: 740, h: 1032 };   // wider, more of the render round the module (owner, 3 Nov 2026)
 
 const px = (mm: number) => PANEL.x + (mm / MM.w) * PANEL.w;
 const py = (mm: number) => PANEL.y + (mm / MM.h) * PANEL.h;
@@ -80,7 +80,6 @@ const panelBox = `left:${pct(PANEL.x, IMG.w)}%;top:${pct(PANEL.y, IMG.h)}%;width
       </li>
     ))}
   </ol>
-  <figcaption class="micro quiet">{front ? 'The Noise Engineering Versio with Sublustris’s panel.' : 'The Noise Engineering Versio with Sublustris’s controls, drawn to scale.'}</figcaption>
 </figure>
 
 <style is:global>
