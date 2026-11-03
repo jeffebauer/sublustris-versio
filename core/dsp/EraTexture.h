@@ -60,6 +60,10 @@ constexpr float kHoldMax = 5.62341309f;
 // the sound at most 19.6 dB under F's (a knee from 0.75 left the tick at +12.8; one from 0 reached +13.5 on the keys
 // but sat 11-13.5 dB under F).
 constexpr float kOverModKnee = 0.5f, kOverModFloor = 1.25f;
+// The over-modulation's drive, trimmed 8 dB (v1.0.67, ADR 0042, the owner's pick C on renders/radio_lighter, "a faint
+// edge"; their note: "I also hear a saturation-like sound even when the WEAR knob is fully CCW"): only the biggest
+// peaks reach the knee now (at most 0.1 % of the tail, 0.7 % in CANYON; was 2.4-11.7 %).
+constexpr float kOverModTrimDb = -8.0f;
 constexpr float kGrainBitsHi = 9.0f, kGrainBitsLo = 5.0f;     // the grain's bits under the level, across its intensity
 } // namespace tex
 
@@ -148,7 +152,7 @@ public:
                 // The old radio's 200-400 Hz to 4.5-2.4 kHz: centred ~1.1 kHz, narrowing with t.
                 bp_[0].set(1000.0f + 200.0f * t, 0.45f + 0.35f * t, sr);
                 bp_[1].copyCoefficients(bp_[0]);
-                mEff_ = (0.9f + 0.5f * t) * 3.0f; // over a -12 dBFS carrier (x4 before v1.0.49: x0.75, renders/wear_saturation E)
+                mEff_ = (0.9f + 0.5f * t) * 3.0f * std::pow(10.0f, tex::kOverModTrimDb / 20.0f); // over a -12 dBFS carrier (x4 before v1.0.49: x0.75, renders/wear_saturation E)
                 invMEff_ = 1.0f / mEff_;
                 dipDb_ = -4.0f - 14.0f * t;
                 dipHz_ = 0.1f + 0.4f * t;

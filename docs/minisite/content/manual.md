@@ -109,7 +109,7 @@ Movement, both ways from noon: tape to the left, an old radio to the right.
 
 - **Noon:** only a faint, steady movement, the one that keeps every tail from ringing metallic.
 - **Left: tape.** The whole tail bends together, as one tape speed would, with a slow wow and a quicker flutter. It gets more uneven further left. From about 9:30 tape crinkle comes in, short bursts of jittery pitch over a scraping bed, and some of those bursts are dropouts, where the level dips and the highs dull for a moment. Further left the crinkle comes more often and the dropouts dip deeper: at fully left, half the bursts drop out. When you first turn into the left side, the tape comes up to speed over a few seconds.
-- **Right: radio.** The tail plays through an old AM radio's narrow band: its lows and its top roll away, its loudest moments flatten a little, and a slow notch wanders through the middle, so the tail phases. Just right of noon it's a faint colour; further right, more of the tail goes through the radio, and the notch cuts deeper and moves quicker. The pitch doesn't move on this side.
+- **Right: radio.** The tail plays through an old AM radio's narrow band: its lows and its top roll away, its loudest peaks flatten a touch, and a slow notch wanders through the middle, so the tail phases. Just right of noon it's a faint colour; further right, more of the tail goes through the radio, and the notch cuts deeper and moves quicker. The pitch doesn't move on this side.
 
 In HALL and CANYON the bass never bends in pitch; only what's above it moves.
 
