@@ -59,3 +59,5 @@
 - G (F with the three cuts on top).
 
 **Amendment (2 Nov 2026, the owner at the rack on v1.0.61; SPEC v1.0.61; ADR 0008 amended):** **the band is whole at infinite DECAY too.** With MOTION's right side near full the owner heard "an audible difference between endless and non-endless tails, as if the tone shaping of the radio is only applying to one or the other": the band kept half its blend at endless (`tex::kBandAtInfinite`, carried over from WEAR), so endless had 11-12 dB more lows and highs than DECAY 0.80 at MOTION full, and the level stepped up to 12.3 dB across 3 o'clock. `kBandAtInfinite` is gone. Its reason (a held tail darkening to the floor, the band taking 4-6 dB off a 10-minute hold) no longer holds since endless follows the playing: 10-minute holds at MOTION 0.9 and full stay within 0.3 dB on noise in every SPACE.
+
+**Amendment (3 Nov 2026, owner's pick C on every card of `renders/radio_lighter`; SPEC v1.0.67; ADR 0042):** the over-modulation's drive is 8 dB lower across MOTION's right side, so only the biggest peaks touch its knee: "a faint edge". The band and its wandering dip are unchanged.

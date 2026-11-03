@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <cstdint>
 
+
 namespace iv::dsp {
 
 // Dattorro's Table 1 lengths (samples at 29.761 kHz). Branch 0 is his left
@@ -31,6 +32,26 @@ constexpr float kAp2[2] = {1800.0f, 2656.0f};
 constexpr float kD2[2]  = {3720.0f, 3163.0f};
 constexpr float kExcursion = 16.0f; // his maximum modulation excursion
 } // namespace plate
+
+// A Plate's SIZE crossfade state (v1.0.68, ADR 0043) (Plate.cpp, "SIZE by crossfade"), outside the Plate so the Engine can keep it as its
+// last members: the Plate grows by 12 bytes only, so the Engine's members after it barely move (flash: ~200 B).
+struct PlateXf {
+    // Per branch: the old reads (ap1, d1, ap2, d2), their allpass-interpolation states, the old loss filters, the new
+    // d1 / d2 reads' one-trip decay correction.
+    struct Branch {
+        float  len[4], st[4];
+        float  lnGain[2], hold[2], corr[2];
+        Absorb loss[2];
+    };
+    struct Agree { // how well a pair of reads agrees, and its gain (Bristow-Johnson's crossfade, as Fdn::xfMix)
+        float oo, nn, on, K, dK; // dK: K's step a sample, toward control()'s value
+    };
+    Branch  xf_[2];
+    Agree   agree_[9]; // [4 b + e]: branch b's read e (ap1, d1, ap2, d2); [8]: the output taps
+    float   xfSeconds_, xfRest_, xfLastTarget_, xfR_, xfKOld_;
+    float   xfNew_, xfOld_, xfCos_, xfSin_, xfRotC_, xfRotS_;
+    int32_t xfLen_, xfLeft_, xfEnd_; // samples
+};
 
 class Plate {
 public:
@@ -90,6 +111,17 @@ public:
 
     float scale() const { return scaleNow_; }
 
+    // SIZE by crossfade (v1.0.68, ADR 0043; ADR 0025's phase 2 for the PLATE): once SIZE has rested kSizeRestSeconds
+    // every length jumps and the old reads fade out over kSizeCrossfadeSeconds; a small move (within 4 % of the
+    // scale) glides, too slowly to bend (Plate.cpp, "SIZE by crossfade"). Where the crossfade keeps its state
+    // (before prepare(); none: SIZE glides, as it did before v1.0.68).
+    void setCrossfadeState(PlateXf* s); // reset() sets the rest before any use
+    bool sizeCrossfade() const { return xs_ != nullptr; }
+    bool crossfading() const { return xfSince_ >= 0; }
+    // While true SIZE glides (as before v1.0.68): the Engine sets it while FREEZE is on or its unfreeze still glides
+    // back (the owner's pick A on renders/plate_size_xfade's frozen card, ADR 0043); a glide under way finishes.
+    void setSizeGlideNow(bool on) { xfGlideAsk_ = on; }
+
     void setAir(float air) { air_ = air; } // 1/T60 in 1/s: see absorbent() (v1.0.25)
     // The least the highs lose, 1/T60 in 1/s: an endless tail's settling mellow (v1.0.58; Engine::applySpace). 0 = none.
     void setEndlessTop(float top) { endlessTop_ = top; }
@@ -100,17 +132,18 @@ private:
     // One branch of the figure 8.
     struct Branch {
         ExactLine ap1, d1, ap2, d2; // modulated allpass, delay, allpass, delay
-        float     ap1Len = 0, d1Len = 0, ap2Len = 0, d2Len = 0; // samples, at the current scale
-        float     y1 = 0, y2 = 0, x1 = 0, x2 = 0;               // absorbent filter states
-        float     i1 = 0, i2 = 0, i3 = 0, i4 = 0;               // allpass-interpolation states
+        // IV_ZI (SizeOpt.h): zero, from the value-initialised Engine in the firmware (flash, v1.0.68).
+        float     ap1Len IV_ZI, d1Len IV_ZI, ap2Len IV_ZI, d2Len IV_ZI; // samples, at the current scale
+        float     y1 IV_ZI, y2 IV_ZI, x1 IV_ZI, x2 IV_ZI;               // absorbent filter states
+        float     i1 IV_ZI, i2 IV_ZI, i3 IV_ZI, i4 IV_ZI;               // allpass-interpolation states
         Absorb    loss1{1, 0}, loss2{1, 0};
         AbsorbMemo memo1, memo2; // loss1 / loss2, worked out again only when their inputs change
-        float     lfoPhase = 0, lfoRate = 0, floorA = 0, floorB = 0, floorTarget = 0, floorCountdown = 0;
-        float     modNow = 0, modStep = 0; // ap1's extra delay, samples
+        float     lfoPhase IV_ZI, lfoRate IV_ZI, floorA IV_ZI, floorB IV_ZI, floorTarget IV_ZI, floorCountdown IV_ZI;
+        float     modNow IV_ZI, modStep IV_ZI; // ap1's extra delay, samples
         // d1 and d2's own slow wander (setLongDelayMod), samples.
-        float     longPhase[2] = {0, 0}, longFloorA[2] = {}, longFloorB[2] = {}, longTarget[2] = {}, longCountdown[2] = {};
-        float     longNow[2] = {0, 0}, longStep[2] = {0, 0};
-        float     out = 0;                 // this branch's output (feeds the other)
+        float     longPhase[2] IV_ZI, longFloorA[2] IV_ZI, longFloorB[2] IV_ZI, longTarget[2] IV_ZI, longCountdown[2] IV_ZI;
+        float     longNow[2] IV_ZI, longStep[2] IV_ZI;
+        float     out IV_ZI;                 // this branch's output (feeds the other)
         LoopEra   era;
         Drift     drift;
     };
@@ -118,16 +151,22 @@ private:
     float    sampleRate_ = 48000.0f, maxScale_ = 1.0f, scaleNow_ = 1.0f, scaleTarget_ = 1.0f;
     Branch   b_[2];
     uint32_t rng_ = 1;
-    float    decayRate_ = 0.2f, highRatio_ = 0.45f, levelGain_ = 1.0f, extraRate_ = 0.0f;
+    float    decayRate_ = 0.2f, highRatio_ = 0.45f, levelGain_ = 1.0f, extraRate_ IV_ZI;
     bool     colour_ = true;
     float    modDepth_ = 1.0f;
-    float    shelfK_ = 0.0f, modScale_ = 1.0f; // lossShelfK(sampleRate_)
-    float    air_ = 0.0f;
+    float    shelfK_ IV_ZI, modScale_ = 1.0f; // lossShelfK(sampleRate_)
+    float    air_ IV_ZI;
     float    endlessTop_ IV_ZI; // setEndlessTop (v1.0.58)
     float    longMod_ = 1.0f; // d1 and d2 wander; 0 while frozen
     DriftAmounts drift_;
     FloorGovernor governor_;
-    bool     ready_ = false;
+    bool     ready_ IV_ZI;
+    void startCrossfade(float rate, float k);
+    void cancelCrossfade(float target);
+    void processXf(const float* inL, const float* inR, float* outL, float* outR, int start, int m);
+    int32_t  xfSince_ = -1; // samples since the jump; -1: no crossfade
+    bool     xfGlideAsk_ IV_ZI, xfGlideNow_ IV_ZI; // setSizeGlideNow; gliding (until the scale arrives)
+    PlateXf* xs_ IV_ZI;  // setCrossfadeState: the crossfade's state, kept by the Engine (its last members)
 };
 
 } // namespace iv::dsp

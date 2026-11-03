@@ -203,6 +203,15 @@ private:
     static constexpr int kEarlyTaps = voicing::kEarlyTaps;
     float     earlyFrac_[kN][kEarlyTaps] IV_ZI, earlyGain_[kN][kEarlyTaps] IV_ZI;
     int       earlyCount_ = kEarlyTaps; // taps per line in use (setEarlyTapCount, a prototype)
+    // The line whose output signs (kOutL / kOutR) line i's early taps go out with (v1.0.63, ADR 0039: the owner's
+    // pick B on renders/onset_phase, "centred"). While one early tap is all that sounds, L and R carry it fully in
+    // or out of phase. Before, i + 3 sent a centred source's two earliest taps in HALL and CANYON (lines 0 and 2)
+    // both out anti-phase: the first 50 ms leaned out of phase (review 2 §1.1). Now bit 0 is flipped with bit 1
+    // (i ^ (i >> 1 & 1)), still a permutation (each sign pair used once, so L and R stay balanced), and moved two
+    // lines on: lines 0 and 2 go out on opposite phases, the earliest in phase, and 5 and 7 likewise. The page's
+    // layout was that + 2 (mod 8); lines j and j ^ 4 carry the same signs, so ^ 2 gives the same output to the bit
+    // in fewer instructions (bit 2 is left alone).
+    static constexpr int earlyOut(int i) { return i ^ (((i >> 1) & 1) | 2); }
     float     earlyTarget_ IV_ZI, earlyNow_ IV_ZI;
     float     inLoopOld_ IV_ZI; // the in-loop amount fading out during a SIZE crossfade
     float     inLoopTarget_ IV_ZI, inLoopNow_ IV_ZI, outputTrim_ = 1.0f, levelGain_ = 1.0f;

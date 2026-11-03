@@ -229,7 +229,7 @@ same output to the bit on the desktop (`tools/same_render.py` SAME 60/60 against
 
 ### The audit lap (SIZESPIKE=5; review 2, 28-29 Oct 2026)
 
-`make -C firmware MODE=profile SIZESPIKE=5` → `sublustris_versio_profile-audit.bin` (LEAN is the default since 29 Oct 2026; `LEAN=0` → `-nolean-audit`). Release builds take the SAI's DMA straight to the callback (AUDIO_DIRECT, the default since 30 Oct 2026: −3,240 B, the same samples, the owner's rack check clean); `AUDIO_DIRECT=0` → `sublustris_versio-libaudio.bin` through libDaisy's AudioHandle. Profile and m0test always use the AudioHandle.
+`make -C firmware MODE=profile SIZESPIKE=5` → `sublustris_versio_profile-audit.bin` (LEAN is the default since 29 Oct 2026; `LEAN=0` → `-nolean-audit`). Release builds take the SAI's DMA straight to the callback (AUDIO_DIRECT, the default since 30 Oct 2026: −3,240 B, the same samples, the owner's rack check clean); `AUDIO_DIRECT=0` → `sublustris_versio-libaudio.bin` through libDaisy's AudioHandle. Profile and m0test always use the AudioHandle. Release also refreshes the SDRAM at the datasheet's rate (SDRAM_REFRESH, the default since v1.0.63: +16 B, the same samples); `SDRAM_REFRESH=0` → `sublustris_versio-norefresh.bin`.
 At boot, before `AUDIT START`: `HASH xxxxxxxx (3000 blocks, ...) | refresh COUNT n`: a CRC-32 of a fixed 3,000-block
 render (MASSIVE, SHIMMER, WEAR 0.5, MOTION left, DECAY 0.9, a SIZE jump), so two builds that print the same HASH give
 the same output to the bit on the module; `refresh COUNT` is the SDRAM refresh libDaisy left (2054). Then 16
@@ -247,7 +247,7 @@ Release map, v1.0.55 with review2/neutral's B1-B4 (29 Oct 2026; `arm-none-eabi-s
 | AXI SRAM 0x24000000 (512 KB, cached) | 502,752 B (`.data` 232 + `.bss` 502,520) | `gAxi` 493,584 B: the tank's and the low tank's in-loop allpass lines, SHIMMER's right ring, staggered across the cache's sets; libDaisy's handles. |
 | D2 SRAM 0x30000000 (288 KB) | 26,944 B uncached (`.sram1_bss`: DMA buffers, LED PWM tables) + 213,256 B `.d2_bss` | `gD2` 204,340 B: SHIMMER's left ring, the twin room. |
 | ITCM 0x400 (63 KB) | 56,464 B | the Core's hot code (Engine.o, Fdn.o, Plate.o), copied from flash at boot. |
-| SDRAM 0xC0000000 (64 MB, 100 MHz, 3 / 3 in release) | 19,952,232 B `gLarge` | FDN lines, plates, swells, predelay. Refreshed at libDaisy's rate (FMC_SDRTR COUNT 2054: a row every 20.6 us, the whole chip every 168 ms, against the 64 ms the 8192-row part asks); `SDRAM_REFRESH=1` is the trial at the datasheet's rate (review2/neutral notes). |
+| SDRAM 0xC0000000 (64 MB, 100 MHz, 3 / 3 in release) | 19,952,232 B `gLarge` | FDN lines, plates, swells, predelay. Release refreshes it at the datasheet's rate since v1.0.63 (FMC_SDRTR COUNT 761: all 8192 rows every 64 ms), not libDaisy's (COUNT 2054: a row every 20.6 us, the whole chip every 168 ms); `SDRAM_REFRESH=0` builds release at libDaisy's rate (`-norefresh`); profile and m0test keep libDaisy's. |
 | Heap | 0 | `IV_NO_HEAP`: no malloc linked. |
 
 ## Carried over from Resilio's M0 check (re-checked in Immensio's)

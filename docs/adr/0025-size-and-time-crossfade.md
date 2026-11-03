@@ -44,7 +44,7 @@
   - Settings held still sound exactly as before: every golden passes unchanged.
 - **Flash:** release 112,060 → 110,764 B. The crossfade code costs about 1.4 KB, and `Fdn::control`, `Plate::control` and `Engine::applySpace` are built for size (control rate). That leaves 1,876 B under the budget.
 - **CPU:** the extra reads run only during a fade (0.3 s). `applySpace` at -Os runs once a block; measure at M3 with the profile build.
-- **Phase 2:** BLOOM's swell taps under TIME, and PLATE's SIZE, still glide.
+- **Phase 2:** BLOOM's swell taps under TIME, and PLATE's SIZE, still glide. *(Both done: the swell in v1.0.54, below; PLATE's SIZE in v1.0.68, ADR 0043.)*
 - **Tests:** `test_fdn` `sizeAndTimeCrossfade` (pitch, flicks, infinite hold, jumps between fades); soak regressions (small-HALL jumps, unfreeze after SIZE moved).
 
 ## Amendment, 26 Oct 2026 (v1.0.37): SIZE's hysteresis
@@ -71,3 +71,7 @@ On the module (the candidate lap, `docs/research/m3-candidate-lap1.log`, MASSIVE
 ## Amendment, 28 Oct 2026 (v1.0.54): phase 2 for BLOOM's swell
 
 The owner on v1.0.52 at the rack, in BLOOM: "Hall, high decay, when moving the time knob, noise is introduced into the reverb which carries into the tail". In BLOOM, TIME sets the swell's attack, and `Swell::setAttackSeconds` glided it over 150 ms, so its 12 taps slid across seconds of their line at up to ~9x speed and the smear's allpass lengths stepped once a chunk: the same wash this ADR removed from the pre-delay, fed into the tank (+11-14 dB above 3 kHz while TIME moved, +15-24 dB under 100 Hz left in an endless tail). Not a regression: v1.0.49 measured the same. Now (`core/dsp/Swell.h`) once the attack has rested 50 ms the taps jump one after another, each crossfading from its old place to its new one over 25 ms (equal power), 0.3 s in all, and the smear's allpasses read from their old to their new lengths across the same 0.3 s. One tap reads twice at a time, so the cost is one extra read a side for 0.3 s (all 12 at once would double the swell's reads, ~12 % of the module). Measured on the desktop (HALL, BLOOM, DECAY 0.9-1): above 3 kHz +11.5 → +1.0 dB on a sweep, +13.9 → +0.7 on twists; the tail's lows after a twist match TIME held. Held settings are bit-identical; MASSIVE's built-in swell follows SIZE and DECAY, so it crossfades on SIZE moves too (the same or slightly cleaner). Branch `claude/time-noise` (5e38080).
+
+## Amendment, 3 Nov 2026 (v1.0.68): phase 2 done for PLATE's SIZE
+
+PLATE's SIZE now crossfades too (ADR 0043; the owner's pick B on all 12 cards of `renders/plate_size_xfade2`): once the knob rests 50 ms the plate jumps and reads old and new lengths across 0.3 s, with this ADR's agreement gain, loss-filter blend and one-trip decay correction. Unlike HALL and CANYON, moves of 4 % of the scale or less glide (about 5 cents; crossfaded, reads that close summed to a comb in the loop, the owner's round-1 drops), and so do moves while frozen and the glide after an unfreeze. Phase 2 is complete: no SIZE or TIME move bends the pitch.

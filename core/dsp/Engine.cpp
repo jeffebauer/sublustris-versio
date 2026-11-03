@@ -191,6 +191,7 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     fdn_.setEarlyLayouts(&earlyLayouts_);
     lowFdn_.setEarlyLayouts(&earlyLayouts_);
     ready_ &= fdn_.prepare(large_, 0.5f * sampleRate, 0x1D5A7u, voicing::kFdnMaxLineSeconds, &axi_);
+    plate_.setCrossfadeState(&plateXf_); // PLATE's SIZE by crossfade (v1.0.68, ADR 0043); its twin glides
     ready_ &= plate_.prepare(large_, sampleRate, voicing::kPlateMaxScale, true, 0x9A7Eu);
     ready_ &= lowFdn_.prepare(large_, sampleRate / float(lowDecimate_), 0x10F7u, voicing::kFdnMaxLineSeconds, &axi_);
     ready_ &= shimmer_.prepare(d2_, axi_, sampleRate); // on chip (CPU hunt, 28 Oct 2026): after the allpasses
@@ -413,9 +414,14 @@ IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: 
 float Engine::hysteresisSize(float size, float& held, bool snap) const
 {
     if (sizeHyst_ <= 0.0f) return size;
+    // The PLATE crossfades its SIZE (v1.0.68, ADR 0043) with a rest timer too, so it takes the same hysteresis
+    // (map::plateScale is exponential: log(max / min) per unit of SIZE); not while it glides (frozen and the
+    // unfreeze, setSizeGlideNow), nor the twin (it always glides).
+    const bool plateGlides = !plate_.sizeCrossfade() || freezeMix_ > 0.0f || &held == &twinSizeHeld_;
     const float perUnit = activeSpace_ == 2 ? std::log(2.0f / 0.35f) // map::massiveMeanSeconds
+                        : activeSpace_ == 0 ? std::log(voicing::kPlateMaxScale / voicing::kPlateMinScale) // map::plateScale
                                             : std::log(voicing::kHallMeanMaxMs / voicing::kHallMeanMinMs); // map::hallMeanSeconds
-    if (snap || held < 0.0f || activeSpace_ == 0 || std::fabs(size - held) * perUnit > sizeHyst_) held = size;
+    if (snap || held < 0.0f || (activeSpace_ == 0 && plateGlides) || std::fabs(size - held) * perUnit > sizeHyst_) held = size;
     return held;
 }
 
@@ -537,6 +543,9 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
 
     if (plate) {
         plate_.setScale(map::plateScale(size), snap);
+        // Frozen, and while the unfreeze glides back to SIZE, SIZE glides (ADR 0043: the owner's pick A on the
+        // frozen card; a crossfade there lost the tail's upper mids).
+        plate_.setSizeGlideNow(freezeMix_ > 0.0f);
         plate_.setDecayRate(rate);
         plate_.setHighT60Ratio(highRatio);
         plate_.setGovernor(governor);
@@ -618,7 +627,7 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         dsp::TexMix t = wear.tex;
         t.bandW = radio.bandW;
         t.bandT = radio.bandT;
-        texOn_ = t.tapeW > 0.0f || t.breathW > 0.0f || t.clockW > 0.0f || t.grainW > 0.0f || t.bandW > 0.0f
+        texOn_ = t.tapeW > 0.0f || t.breathW > 0.0f || t.grainW > 0.0f || t.bandW > 0.0f
               || !texture_.settled(); // every stage out: runs on (the hold alone) until its gain is back at 1
         texture_.set(t, sampleRate_, n);
     }
@@ -917,10 +926,13 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
     if (flipPhase_ == 0 && space != activeSpace_ && !gesture_.frozen() && freezeMix_ == 0.0f) flipPhase_ = 1;
     if (flipPhase_ == 1) {
         flipStep_ = -flipChunk / float(n);
-        if (gesture_.frozen()) {
+        if (gesture_.frozen() || space == activeSpace_) {
             // A freeze inside the fade-out keeps the old space: it fades back in as the pad, and the
             // flip waits for the unfreeze like any other (soak audit: the tank used to restart under
             // the freeze, so the pad came out silent).
+            // So does a switch that's back where it was before the fade bottoms out (v1.0.63, review 2
+            // A6): a brushed or bouncing SPACE switch only dips the wet; the tail, an endless pad too,
+            // carries on. It used to restart the tank in the same space, losing the whole tail.
             flipPhase_ = 2;
         } else if (flipGain_ <= 0.0f) {
             prof::mark(prof::kControl);

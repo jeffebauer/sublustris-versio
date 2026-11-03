@@ -50,6 +50,12 @@ constexpr float kLevelRefScale = 1.0f;  // level compensation reference (√(sca
 // SIZE glides: the longest element (4453) changes by at most a semitone of
 // bend, 0.0595 s of delay per second (as the FDN, ADR 0012).
 constexpr float kScaleSlewPerSecond = 0.0595f / (4453.0f / kPaperRate);
+// SIZE by crossfade's small moves (control()): up to 4 % of the scale they glide at 0.0193 a second, the longest
+// line (d1, 0.15 s a unit of scale) slewing 0.29 % of real time: about 5 cents while it moves, under the plate's own
+// chorus (a full 4 % takes about 2 s at the largest scale). Beyond 4 % the crossfade's reads are far enough apart
+// to sum as a dense comb (0.3 -> 0.4: within 0.4 dB of the held room per band).
+constexpr float kXfSmallStep          = 0.04f;
+constexpr float kXfSmallSlewPerSecond = 0.0193f;
 
 float uniform(uint32_t& s)
 {
@@ -71,6 +77,22 @@ constexpr TapOffsets tapOffsets()
     return o;
 }
 constexpr TapOffsets kTapOffsets = tapOffsets();
+// The taps' branch, element and sign in a byte each (processXf's loop indexes them; kLeft / kRight as data cost
+// 224 B of flash): bit 0 the branch, bits 1-2 the element, bit 3 a negative sign.
+struct TapCodes {
+    unsigned char v[2][kTapsPerSide];
+};
+constexpr TapCodes tapCodes()
+{
+    TapCodes o{};
+    for (int j = 0; j < kTapsPerSide; ++j)
+        for (int c = 0; c < 2; ++c) {
+            const Tap& t = (c ? kRight : kLeft)[j];
+            o.v[c][j] = (unsigned char)(t.branch | (t.element << 1) | (t.sign < 0.0f ? 8 : 0));
+        }
+    return o;
+}
+constexpr TapCodes kTapCodes = tapCodes();
 
 // The output taps' delays for a block (k, the scale, only moves in control()): whole samples and the
 // fraction, as the per-sample read worked them out (the same bits; overnight review, 26 Oct 2026).
@@ -162,6 +184,7 @@ IV_SIZE_OPT void Plate::reset()
     }
     scaleNow_ = scaleTarget_;
     governor_.reset();
+    cancelCrossfade(scaleTarget_);
 }
 
 IV_SIZE_OPT void Plate::setScale(float scale, bool snap)
@@ -170,14 +193,49 @@ IV_SIZE_OPT void Plate::setScale(float scale, bool snap)
     if (scale < 0.05f) scale = 0.05f;
     scaleTarget_ = scale;
     if (snap) scaleNow_ = scale;
+    if (snap) cancelCrossfade(scale); // a restart (prepare, a SPACE flip): no crossfade
 }
 
 IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash; it shares Fdn::control's helpers)
 {
     const float dt = float(n) / sampleRate_;
-    const float slew = kScaleSlewPerSecond * dt;
+    float slewPerSecond = kScaleSlewPerSecond;
+    bool starting = false;
+    // Asked to glide (frozen, the unfreeze), it glides until the scale arrives: a long glide back from a frozen move
+    // isn't cut off into a crossfade.
+    if (xfGlideAsk_) xfGlideNow_ = true;
+    else if (xfGlideNow_ && scaleNow_ == scaleTarget_) xfGlideNow_ = false;
+    if (xs_ && !xfGlideNow_) {
+        PlateXf& X = *xs_;
+        // SIZE by crossfade: rests kSizeRestSeconds (the longest element's target still within half a sample a
+        // block, as Fdn::control), then everything jumps at once (startCrossfade, after the lengths below).
+        const float perScale = kD1[0] * sampleRate_ / kPaperRate;
+        X.xfRest_ = std::fabs(scaleTarget_ - X.xfLastTarget_) * perScale > 0.5f ? 0.0f : X.xfRest_ + dt;
+        X.xfLastTarget_ = scaleTarget_;
+        const float diff = std::fabs(scaleTarget_ - scaleNow_);
+        const bool pending = diff * perScale > 0.5f;
+        // A small move (within kXfSmallStep of the scale) glides, slowly enough not to bend (kXfSmallSlewPerSecond):
+        // crossfaded, the old and new reads a few samples apart summed as a comb in the loop, and the tail kept it
+        // (0.3 -> 0.303 lost 5 dB at 1.2-4 kHz for seconds; the owner's "drop" at 5.5 s on renders/plate_size_xfade's
+        // slow turn, and at the unfreeze, 3 Nov 2026). Further, it waits for the rest and crossfades.
+        const bool small = diff <= kXfSmallStep * scaleNow_;
+        if (xfSince_ >= 0 || !small) slewPerSecond = 0.0f;
+        else slewPerSecond = kXfSmallSlewPerSecond;
+        if (pending && !small && xfSince_ < 0 && X.xfRest_ >= voicing::kSizeRestSeconds) {
+            starting = true;
+            X.xfKOld_ = scaleNow_ * sampleRate_ / kPaperRate;
+            // The level that follows SIZE (levelGain_, on the output) steps with the jump; what is in the tank
+            // is scaled by the old gain over the new as it is read (xfR_), so the tail carries on at its level
+            // and only new sound comes in at the new one (ADR 0025's "level that follows SIZE", here on the output).
+            X.xfR_ = std::sqrt(scaleNow_ / scaleTarget_);
+            scaleNow_ = scaleTarget_;
+        }
+    }
+    {
+    const float slew = slewPerSecond * dt;
     const float diff = scaleTarget_ - scaleNow_;
     scaleNow_ += diff > slew ? slew : (diff < -slew ? -slew : diff);
+    }
     const float k = scaleNow_ * sampleRate_ / kPaperRate;
 
     governor_.control(n, sampleRate_);
@@ -187,6 +245,7 @@ IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash;
 
     const float excursion = kExcursion * sampleRate_ / kPaperRate; // not scaled: the chorus depth stays put
     const float floorCoeff = 1.0f - std::exp(-2.0f * 3.14159265f * 0.3f * dt);
+    if (starting) startCrossfade(lowRate + governor_.extraRate, k); // the lengths and losses below are still the old ones
     for (int b = 0; b < 2; ++b) {
         Branch& br = b_[b];
         br.ap1Len = kAp1[b] * k;
@@ -237,6 +296,260 @@ IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash;
             br.longStep[j] = (t - br.longNow[j]) / float(n);
         }
     }
+    if (xfSince_ >= 0) {
+        PlateXf& X = *xs_;
+        const float a = X.xfLeft_ > 0 ? X.xfOld_ : 0.0f, w = 1.0f - a;
+        const float t = float(xfSince_);
+        for (int b = 0; b < 2; ++b) {
+            Branch& br = b_[b];
+            PlateXf::Branch& o = X.xf_[b];
+            for (int j = 0; j < 2; ++j) {
+                // The loss filters fade from the old lengths' to the new (ADR 0025: switched at once, the old read
+                // stepped to the new trip's loss, a click).
+                if (a > 0.0f) {
+                    Absorb& l = j ? br.loss2 : br.loss1;
+                    l.gain = a * o.loss[j].gain + w * l.gain;
+                    l.pole = a * o.loss[j].pole + w * l.pole;
+                    l.b1 = a * o.loss[j].b1 + w * l.b1;
+                }
+                // The new d1 / d2 reads' trip correction (Fdn::control's corr): held for one trip, eased out over the fade.
+                const float since = t - o.hold[j];
+                o.corr[j] = std::exp(o.lnGain[j] * (since < 0.0f ? 1.0f : since < float(X.xfLen_) ? 1.0f - since / float(X.xfLen_) : 0.0f));
+            }
+        }
+        // Each read pair's gain for its agreement (Fdn::control): the powers' own fade over the mix's, capped at 1.42.
+        if (a > 0.0f)
+            for (PlateXf::Agree& g : X.agree_) {
+                const float on = std::fmax(0.0f, g.on);
+                const float want = a * g.oo + w * g.nn, mix = a * a * g.oo + w * w * g.nn + 2.0f * a * w * on;
+                const float K = mix > 1e-24f ? std::fmin(1.42f, std::sqrt(want / mix)) : 1.0f;
+                g.dK = (K - g.K) * (1.0f / float(kControlBlock)); // reached over the block, sample by sample (stepped once a
+            }                                                     // block, it ticked in the HF on music, 3 Nov 2026)
+    }
+}
+
+// ---- SIZE by crossfade (v1.0.68, ADR 0043; the owner's picks on renders/plate_size_xfade and _xfade2) ----------
+// ADR 0025's crossfade, the PLATE's phase 2. A glide in a loop retunes everything circulating by the length ratio
+// for the rest of its tail (PASP, "Delay-line interpolation": crossfade between the two delay settings rather than
+// glide). Lexicon's units mute the reverb while Size changes (PCM 80 manual, Size; the MPX 550 reloads the program);
+// Valhalla smooths every control for live tweaking (ValhallaShimmer's notes), and a moving Size there bends the pitch
+// like an analogue delay (a user's review): what the PLATE's glide did. Here, as HALL's and
+// CANYON's lines: once SIZE has rested every one of the eight lengths (each branch's ap1, d1, ap2, d2) and the output
+// taps jump to the new scale inside the same lines (they are sized for the largest), and the old reads fade out
+// sin^2 / cos^2 with each pair's agreement gain (Bristow-Johnson). Inside the two allpasses the delayed read is
+// crossfaded the same way (as HALL's in-loop allpasses present on both sides). The loss filters fade from old to new;
+// the new d1 / d2 reads carry the one-trip decay correction. No extra memory: about twice the reads for the fade.
+// The PLATE's level that follows SIZE is on its output (levelGain_), so the tank's content is rescaled by the
+// old gain over the new (xfR_) sample by sample as it is read: each sample written before the jump, wherever it is
+// read (the loop, the old or new read, an output tap), counts once, so the tail neither swells nor dips.
+namespace {
+// The sample written a ticks ago (ExactLine::at), scaled by r if that was before the jump (more than w writes ago).
+IV_NOINLINE float agoSc(const ExactLine& l, int32_t a, int32_t w, float r)
+{
+    const float x = l.at(int32_t(l.pos) - a);
+    return a > w ? r * x : x;
+}
+// Allpass-interpolated read (ExactLine::readAllpassFull's sums), any ring, the samples from before the jump scaled.
+IV_NOINLINE float readSc(const ExactLine& l, float d, float& state, int32_t w, float r)
+{
+    const int32_t di  = int32_t(d - 0.5f);
+    const float   f   = d - float(di);
+    const float   eta = (1.0f - f) / (1.0f + f);
+    const float   ai  = agoSc(l, di, w, r);
+    state = agoSc(l, di + 1, w, r) + eta * (ai - state);
+    return state;
+}
+constexpr float kXfAgree = 0.004f; // the reads' agreement followers, ~5 ms (Fdn's kXfAgreeA)
+template <class G> inline float xfMix(G& g, float nw, float od, float a, float w)
+{
+    g.oo += kXfAgree * (od * od - g.oo);
+    g.nn += kXfAgree * (nw * nw - g.nn);
+    g.on += kXfAgree * (od * nw - g.on);
+    g.K += g.dK;
+    return g.K * (w * nw + a * od);
+}
+// Where a fade stands this sample: writes since the jump, the content scale, the old and new gains.
+struct XfNow {
+    int32_t t;
+    float   r, a, w;
+    bool    fading;
+};
+// One of the loop's reads while SIZE crossfades: the new length (its correction applied), and while fading the old
+// beside it, mixed (out of line: eight calls a sample, one copy, flash).
+template <class G>
+IV_NOINLINE float xfRead(const ExactLine& l, float dNew, float dOld, float& sNew, float& sOld, int32_t w, float corr, G& g,
+                         const XfNow& f)
+{
+    const float n = readSc(l, dNew, sNew, w, f.r) * corr;
+    return f.fading ? xfMix(g, n, readSc(l, dOld, sOld, w, f.r), f.a, f.w) : n;
+}
+} // namespace
+
+IV_NOINLINE IV_SIZE_OPT void Plate::setCrossfadeState(PlateXf* s)
+{
+    xs_ = s;
+    s->xfSeconds_ = voicing::kSizeCrossfadeSeconds;
+}
+
+// No crossfade (a reset, a snap): the old reads are dropped.
+IV_NOINLINE IV_SIZE_OPT void Plate::cancelCrossfade(float target)
+{
+    xfSince_ = -1;
+    if (PlateXf* x = xs_) {
+        x->xfLeft_ = 0;
+        x->xfRest_ = 0.0f;
+        x->xfLastTarget_ = target;
+        for (auto& o : x->xf_) o.corr[0] = o.corr[1] = 1.0f;
+    }
+}
+
+IV_SIZE_OPT void Plate::startCrossfade(float rate, float k)
+{
+    PlateXf& X = *xs_;
+    X.xfLen_ = X.xfLeft_ = int32_t(X.xfSeconds_ * sampleRate_);
+    if (X.xfLen_ < 1) X.xfLen_ = X.xfLeft_ = 1;
+    xfSince_ = 0;
+    const float step = 3.1415927f / float(X.xfLen_);
+    X.xfRotC_ = std::cos(step);
+    X.xfRotS_ = std::sin(step);
+    X.xfCos_ = 1.0f;
+    X.xfSin_ = 0.0f;
+    X.xfOld_ = 1.0f;
+    X.xfNew_ = 0.0f;
+    for (PlateXf::Agree& g : X.agree_) g = {0.0f, 0.0f, 0.0f, 1.0f, 0.0f};
+    const float r = X.xfR_;
+    int32_t end = 0;
+    for (int b = 0; b < 2; ++b) {
+        Branch& br = b_[b];
+        PlateXf::Branch& o = X.xf_[b];
+        // Everything the tank remembers from before the jump is scaled by r: the filters', the branch's own, the reads'
+        // allpass-interpolation states. The old reads carry on with theirs (as Fdn's); the new ones start from the same
+        // (Fdn starts them on a cubic read: here they come in under a fade still at zero for their first milliseconds).
+        float* mem[9] = {&br.i1, &br.i2, &br.i3, &br.i4, &br.y1, &br.x1, &br.y2, &br.x2, &br.out};
+        for (int q = 0; q < 9; ++q) {
+            *mem[q] *= r;
+            if (q < 4) o.st[q] = *mem[q];
+        }
+        // The old lengths and losses (control() works out the new ones after this), and the new lengths as it will.
+        const float lenNew[4] = {kAp1[b] * k, kD1[b] * k, kAp2[b] * k, kD2[b] * k};
+        const float lenOld[4] = {br.ap1Len, br.d1Len, br.ap2Len, br.d2Len};
+        for (int e = 0; e < 4; ++e) o.len[e] = lenOld[e];
+        o.loss[0] = br.loss1;
+        o.loss[1] = br.loss2;
+        for (int j = 0; j < 2; ++j) {
+            const float seg = (o.len[2 * j] + o.len[2 * j + 1]) - (lenNew[2 * j] + lenNew[2 * j + 1]);
+            // Old minus new: Fdn's xfLnGain_. A shrink takes 0.6 of it (measured, 3 Nov 2026: in full, a full shrink
+            // at DECAY 0.2-0.4 swelled 1.4-1.6 dB past both rooms; 0.6: within 0.8 dB at every DECAY).
+            o.lnGain[j] = (seg > 0.0f ? 0.6f : 1.0f) * 6.9077553f * seg / sampleRate_ * rate;
+            o.hold[j] = lenNew[2 * j + 1]; // (corr: control() works it out after this, before the first sample)
+        }
+        const ExactLine* lines[4] = {&br.ap1, &br.d1, &br.ap2, &br.d2};
+        for (const ExactLine* ln : lines) // every sample from before the jump read; the corrections eased out
+            if (int32_t(ln->size) + X.xfLen_ > end) end = int32_t(ln->size) + X.xfLen_;
+    }
+    X.xfEnd_ = (end > X.xfLen_ ? end : X.xfLen_) + kControlBlock;
+}
+
+// One control block while SIZE crossfades (and until every sample written before the jump has been read): the
+// sample loop of process() with the old reads beside the new. Rare (about 0.3 s after a move), so out of line.
+IV_SIZE_OPT void Plate::processXf(const float* inL, const float* inR, float* outL, float* outR, int start, int m)
+{
+    PlateXf& X = *xs_;
+    const float k = scaleNow_ * sampleRate_ / kPaperRate;
+    const float outGain = kOutputGain * levelGain_;
+    const float r = X.xfR_;
+    int32_t tapDi[2][kTapsPerSide], oldDi[2][kTapsPerSide];
+    float   tapT[2][kTapsPerSide], oldT[2][kTapsPerSide];
+    tapDelays(k, tapDi, tapT);
+    tapDelays(X.xfKOld_, oldDi, oldT);
+    for (int s = start; s < start + m; ++s) {
+        XfNow f{xfSince_, r, 0.0f, 1.0f, X.xfLeft_ > 0}; // t: writes since the jump, before this sample's
+        const int32_t t = f.t;
+        const bool fading = f.fading;
+        if (fading) {
+            f.a = X.xfOld_;
+            f.w = X.xfNew_;
+            const float c = X.xfCos_;
+            X.xfCos_ = c * X.xfRotC_ - X.xfSin_ * X.xfRotS_;
+            X.xfSin_ = X.xfSin_ * X.xfRotC_ + c * X.xfRotS_;
+            X.xfNew_ = 0.5f - 0.5f * X.xfCos_;
+            X.xfOld_ = 1.0f - X.xfNew_;
+            if (--X.xfLeft_ == 0) {
+                X.xfOld_ = 0.0f;
+                X.xfNew_ = 1.0f;
+            }
+        }
+        const float a = f.a, w = f.w;
+        // What's playing in comes up (or down) to the new size's level over the fade, from the old: stepped with the
+        // output's level, it clicked, and ap1 rang the click on every old length (a full grow under a pad, 3 Nov 2026).
+        const float inGain = r + (1.0f - r) * w;
+        const float in[2] = {inL[s] * inGain, inR[s] * inGain};
+        float next[2];
+        for (int b = 0; b < 2; ++b) {
+            Branch& br = b_[b];
+            PlateXf::Branch& o = X.xf_[b];
+            PlateXf::Agree* g = X.agree_ + 4 * b;
+            float x = in[b] + b_[1 - b].out;
+            br.modNow += br.modStep;
+            float d = xfRead(br.ap1, br.ap1Len + br.modNow, o.len[0] + br.modNow, br.i1, o.st[0], t, 1.0f, g[0], f);
+            const float v1 = x - kDecayDiffusion1 * d;
+            br.ap1.write(v1);
+            x = d + kDecayDiffusion1 * v1;
+            br.d1.write(x);
+            br.longNow[0] += br.longStep[0];
+            x = xfRead(br.d1, br.d1Len + br.longNow[0], o.len[1] + br.longNow[0], br.i2, o.st[1], t + 1, o.corr[0], g[1], f);
+            br.y1 = br.loss1.gain * x + br.loss1.b1 * br.x1 + br.loss1.pole * br.y1;
+            br.x1 = x;
+            x = br.y1;
+            d = xfRead(br.ap2, br.ap2Len, o.len[2], br.i3, o.st[2], t, 1.0f, g[2], f);
+            const float v2 = x + kDecayDiffusion2 * d;
+            br.ap2.write(v2);
+            x = d - kDecayDiffusion2 * v2;
+            br.d2.write(x);
+            br.longNow[1] += br.longStep[1];
+            x = xfRead(br.d2, br.d2Len + br.longNow[1], o.len[3] + br.longNow[1], br.i4, o.st[3], t + 1, o.corr[1], g[3], f);
+            br.y2 = br.loss2.gain * x + br.loss2.b1 * br.x2 + br.loss2.pole * br.y2;
+            br.x2 = x;
+            next[b] = colour_ ? br.era.process(br.y2) : br.y2;
+        }
+        b_[0].out = next[0];
+        b_[1].out = next[1];
+
+        // The output taps (lerpFull's sums), new and, while fading, old, the samples from before the jump scaled.
+        float sum[2][2] = {}; // [new, old][left, right]
+        for (int c = 0; c < 2; ++c)
+            for (int j = 0; j < kTapsPerSide; ++j) {
+                const unsigned   code = kTapCodes.v[c][j];
+                const Branch&    br = b_[code & 1u];
+                const unsigned   el = (code >> 1) & 3u;
+                const ExactLine& line = el == 0 ? br.d1 : (el == 1 ? br.ap2 : br.d2);
+                const float      sign = code & 8u ? -1.0f : 1.0f;
+                for (int v = 0; v < (fading ? 2 : 1); ++v) {
+                    const int32_t di = v ? oldDi[c][j] : tapDi[c][j];
+                    const float   ta = agoSc(line, di, t + 1, r);
+                    sum[v][c] += sign * (ta + (v ? oldT[c][j] : tapT[c][j]) * (agoSc(line, di + 1, t + 1, r) - ta));
+                }
+            }
+        const float nl = sum[0][0], nr = sum[0][1], ol = sum[1][0], orr = sum[1][1];
+        float l = nl, rr = nr;
+        if (fading) {
+            PlateXf::Agree& go = X.agree_[8];
+            go.oo += kXfAgree * (ol * ol + orr * orr - go.oo);
+            go.nn += kXfAgree * (nl * nl + nr * nr - go.nn);
+            go.on += kXfAgree * (ol * nl + orr * nr - go.on);
+            go.K += go.dK;
+            l = go.K * (w * nl + a * ol);
+            rr = go.K * (w * nr + a * orr);
+        }
+        outL[s] += outGain * l;
+        outR[s] += outGain * rr;
+        governor_.add(0.5f * outGain * outGain * (l * l + rr * rr));
+        ++xfSince_;
+    }
+    if (X.xfLeft_ <= 0 && xfSince_ >= X.xfEnd_) { // every sample from before the jump read, the corrections done
+        xfSince_ = -1;
+        for (auto& o : X.xf_) o.corr[0] = o.corr[1] = 1.0f;
+    }
 }
 
 void Plate::process(const float* inL, const float* inR, float* outL, float* outR, int n)
@@ -247,6 +560,10 @@ void Plate::process(const float* inL, const float* inR, float* outL, float* outR
         prof::mark(prof::kTank);
         control(m);
         prof::mark(prof::kTankCtl);
+        if (xfSince_ >= 0) {
+            processXf(inL, inR, outL, outR, start, m);
+            continue;
+        }
         const float k = scaleNow_ * sampleRate_ / kPaperRate;
         const float outGain = kOutputGain * levelGain_;
         // What stays put through the block is worked out once, with the same float operations as per

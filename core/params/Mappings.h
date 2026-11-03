@@ -143,9 +143,9 @@ inline float layer(float v, float from, float to)
 }
 
 // MOTION's left side (v1.0.46, dsp/Transport.h), t 0 at the dead zone, 1 fully left: the transport's wow and
-// flutter, more variance over the side's last half (eased in), crinkle over its last 40 % (rising straight), and
-// a counted share of the crinkle bursts with a dip: none above kTransportDipsFrom (~7:30, v1.0.59), rising
-// straight to kTransportDipShare at fully left.
+// flutter, more variance over the side's last half (eased in), crinkle over its last 55 % (rising straight; v1.0.65,
+// was 40 %), and a counted share of the crinkle bursts with a dip: none above kTransportDipsFrom (~9:30, v1.0.65),
+// rising straight to kTransportDipShare at fully left. v1.0.65's wear (x1.25) comes last.
 IV_SIZE_OPT inline dsp::TransportAmounts transportAmounts(float drift)
 {
     using namespace voicing;
@@ -155,10 +155,12 @@ IV_SIZE_OPT inline dsp::TransportAmounts transportAmounts(float drift)
     a.wowHz = kTransportWowHzMin + (kTransportWowHzMax - kTransportWowHzMin) * t;
     a.flutterCents = kTransportFlutterCents * t;
     a.flutterHz = kTransportFlutterHzMin + (kTransportFlutterHzMax - kTransportFlutterHzMin) * t;
-    a.crinkleRate = kTransportCrinklePerSecond * clamp01((t - 0.6f) / 0.4f);
+    a.crinkleRate = kTransportCrinklePerSecond * clamp01((t - kTransportCrinkleFrom) / (1.0f - kTransportCrinkleFrom));
     a.variance = layer(t, 0.5f, 1.0f);
     a.wowCents *= 1.0f + 0.7f * a.variance;    // 12 -> ~20 c at full
     a.flutterCents *= 1.0f + 0.5f * a.variance; // 3 -> 4.5 c
+    a.wowCents *= kTransportWear;              // ~25 c at full
+    a.flutterCents *= kTransportWear;          // ~5.6 c
     a.crinkleDip = kTransportDipShare * clamp01((kTransportDipsFrom - drift) / kTransportDipsFrom);
     return a;
 }
@@ -167,9 +169,9 @@ IV_SIZE_OPT inline dsp::TransportAmounts transportAmounts(float drift)
 // five eras): the Neve stays in the loop as the base at every setting (its warmth and its ×0.7 highs,
 // voicing::kNeveHighRatio, never darker with ERA; no wow or flutter, DRIFT's), and the wear on the wet
 // (dsp/EraTexture.h) comes in over the first twentieth of the knob, then deepens with it: tape saturation and
-// the BBD's compander breathing; the grit (the BBD's clock and the grain, the Midiverb's floating step) from 0.65
-// on (v1.0.49); and with them the tape's in-loop compression, its hiss and the crackle into the tank. ERA 0 is
-// the Neve alone. (The radio's band left for MOTION's right side in v1.0.60: radioBand.)
+// the BBD's compander breathing; the grit (the grain, the Midiverb's floating step) from 0.65 on (v1.0.49; the
+// BBD's clock with it until v1.0.64, ADR 0038); and with them the tape's in-loop compression, its hiss and the
+// crackle into the tank. ERA 0 is the Neve alone. (The radio's band left for MOTION's right side in v1.0.60: radioBand.)
 struct EraWear {
     dsp::TexMix tex;                           // the wet's chain (dsp/EraTexture.h)
     float compress = 0, hiss = 0, crackle = 0; // the tape's in-loop compression, hiss and crackle, 0..1
@@ -184,15 +186,13 @@ IV_CTL_OPT inline EraWear eraMix(float v)
     x.tapeW = x.breathW = s;
     x.tapeT = x.breathT = v;
     e.compress = e.hiss = e.crackle = s * v;
-    // The grit (the BBD's clock and the grain) from 0.65 on the knob (v1.0.49, the owner's pick D on
-    // renders/wear_grit: "it feels like the bit reduction is coming in too early"). Past 0.65 the rest of the
-    // knob is u (0..1): the grit's blend comes in over its first fifth (a smoothstep) and its intensity goes
-    // from its finest (the clock at 32 kHz, the grain at 9 bits) to its full at WEAR 1.
+    // The grit (the grain; the BBD's clock with it until v1.0.64, ADR 0038) from 0.65 on the knob (v1.0.49, the
+    // owner's pick D on renders/wear_grit: "it feels like the bit reduction is coming in too early"). Past 0.65 the
+    // rest of the knob is u (0..1): the grit's blend comes in over its first fifth (a smoothstep) and its intensity
+    // goes from its finest (9 bits) to its full at WEAR 1.
     const float u = clamp01((v - kWearGritStart) / (1.0f - kWearGritStart));
     const float a = clamp01(u / 0.2f);
     const float g = a * a * (3.0f - 2.0f * a);
-    x.clockW = g * u;
-    x.clockT = u;
     x.grainW = g;
     x.grainT = u;
     return e;

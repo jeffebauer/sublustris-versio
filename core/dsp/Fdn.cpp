@@ -767,7 +767,7 @@ IV_LEAN_RUNBLOCK void Fdn::runBlock(const float* inL, const float* inR, float* o
             tapsMoving(i, m, tl, w, e[i]);
         }
         if (q > 0 && staggered() && !xfLine_[i]) { // waiting for its fade: its taps on both sides of the mix
-            const int j = (i + 3) & (kN - 1);         // (the fade's gains sum to one, so they pass as they are)
+            const int j = earlyOut(i);                // (the fade's gains sum to one, so they pass as they are)
             for (int s = 0; s < q; ++s) {
                 ol[s] += kOutL[j] * e[i][s];
                 orr[s] += kOutR[j] * e[i][s];
@@ -794,7 +794,7 @@ IV_LEAN_RUNBLOCK void Fdn::runBlock(const float* inL, const float* inR, float* o
                     b1 = b0;
                 }
             }
-            const int j = (i + 3) & (kN - 1);
+            const int j = earlyOut(i);
             for (int s = 0; s < q; ++s) {
                 ol[s] += kOutL[j] * eo[s];
                 orr[s] += kOutR[j] * eo[s];
@@ -809,7 +809,7 @@ IV_LEAN_RUNBLOCK void Fdn::runBlock(const float* inL, const float* inR, float* o
             float tapL = 0.0f, tapR = 0.0f;
             for (int i = 0; i < kN; ++i) {
                 // Each line's taps go out with another line's signs, so they decorrelate from the ends.
-                const int j = (i + 3) & (kN - 1);
+                const int j = earlyOut(i);
                 tapL += kOutL[j] * e[i][s];
                 tapR += kOutR[j] * e[i][s];
             }
@@ -1074,7 +1074,7 @@ IV_NOINLINE IV_SIZE_OPT IV_FLATTEN void Fdn::tapsMoving(int i, int m, const floa
 // (no correction), summed into the old taps' output with the line's signs.
 IV_NOINLINE IV_SIZE_OPT IV_FLATTEN void Fdn::tapsOld(int i, int q, const float* tl, const DelayLine& was, float* ol, float* orr) const
 {
-    const int j = (i + 3) & (kN - 1);
+    const int j = earlyOut(i);
     for (int s = 0; s < q; ++s) {
         const DelayLine v = was.ahead(uint32_t(s));
         float e = 0.0f;

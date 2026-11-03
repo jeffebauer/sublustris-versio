@@ -3,16 +3,19 @@
 // docs/research/drift-rethink.md): a tape transport on the wet, after the tank and outside the loop. One short delay
 // per channel, both read at the same moving point, so the whole tail bends together as one tape speed would (the
 // tank's per-line wow averages out in a diffuse tail, so the tank keeps only a third of it on this side).
-//   wow:      mostly random (two smoothed one-poles) over a sine whose rate drifts, 0.5 -> 1.2 Hz, ±12 c, and over
-//             the side's last half ~±20 c with "variance" (ChowTape's Drift, Kinotone Ribbons' wow ceiling): the
+//   wow:      mostly random (two smoothed one-poles) over a sine whose rate drifts, 0.5 -> 1.2 Hz, ±15 c, and over
+//             the side's last half ~±25 c with "variance" (ChowTape's Drift, Kinotone Ribbons' wow ceiling): the
 //             speed re-picked every 0.5-2 s from 40 % slower to 2x quicker, a slow drift under it, now and then a
 //             swing half as big again;
-//   flutter:  two sines at 6 -> 10 Hz, ±3 -> 4.5 c, moving the level ±0.3 dB too;
+//   flutter:  two sines at 6 -> 10 Hz, ±3.75 -> 5.6 c, moving the level ±0.3 dB too;
 //   crinkle:  as Strymon Magneto's (friction and creases): a bed of scrape roughness (fast random pitch around
-//             100-200 Hz) building over the last 40 % of the side, and bursts of 0.1-0.6 s of jittery pitch (~45 Hz,
-//             up to ±12 c); a counted share of the bursts (0.43: about a third of round 2's crinkle dips, 15 a minute
-//             at full left) also bring round 2's dip: the level rough by 1-3.5 dB (median -1.6), the highs toward
-//             ~5 kHz, 50-300 ms, on random numbers of their own.
+//             100-200 Hz) building over the last 55 % of the side, and bursts of 0.1-0.6 s of jittery pitch (~45 Hz,
+//             up to ±18 c); a counted share of the bursts (0.5 at full left, 27 a minute) also bring a dip: the
+//             level rough by about 2-8 dB, the highs toward ~3.5 kHz, 50-300 ms, on random numbers of their own.
+// v1.0.65 (ADR 0040, the owner's pick D on renders/more_tape, "more saturation, crinkle, etc."): a more worn
+// cassette. Wow and flutter x1.25, the crinkle from ~9:35 (was ~8:50) at up to 0.9 bursts a second (was 0.6),
+// ±18 c (was ±12) over a heavier scrape bed, the dips from ~9:30 (were from 7:30) and deeper (were 1-3.5 dB
+// towards ~5 kHz). The amounts are map::transportAmounts'.
 // Everything moves once per control chunk, ramped across it and smoothed at 150 Hz per sample.
 // The read point's centre is kBase (1000 samples, 20.8 ms at 48 kHz): the wet arrives that much later on the left
 // side. Off the left side the transport is out (the wet bit for bit as without it); crossing in or out, the centre
@@ -181,14 +184,14 @@ public:
             crinkleLen_ = crinkleLeft_ = 0.1f + 0.5f * uniform01(); // a crease's friction
             ++crinkles_;
         }
-        // In a burst, jittery pitch (noise smoothed to ~45 Hz, up to ±12 c); no level loss of its own.
+        // In a burst, jittery pitch (noise smoothed to ~45 Hz, up to ±18 c); no level loss of its own.
         const float e = crinkleLeft_ > 0.0f ? raised(1.0f - crinkleLeft_ / crinkleLen_) : 0.0f;
         if (crinkleLeft_ > 0.0f) {
             crinkleLeft_ -= dt;
             const float kj = 1.0f - std::exp(-6.2831853f * 45.0f * dt);
             jitA_ += kj * (uniform() - jitA_);
             jitB_ += kj * (jitA_ - jitB_);
-            d += e * samples(12.0f, 45.0f) * 2.5f * jitB_;
+            d += e * samples(18.0f, 45.0f) * 2.5f * jitB_;
             if (d < kMin) d = kMin;
         }
         if (dipThis_ && dipLeft_ > 0.0f) { // the dip, its own length from the burst's start, its own random numbers
@@ -197,10 +200,10 @@ public:
             const float kr = 1.0f - std::exp(-6.2831853f * 40.0f * dt);
             dipRng_ = dipRng_ * 1664525u + 1013904223u;
             roughA_ += kr * (float(int32_t(dipRng_)) * (1.0f / 2147483648.0f) - roughA_);
-            gain *= 1.0f - ed * (0.1f + 0.5f * std::fabs(roughA_)); // -1 to -3.5 dB, rough
-            lp = 1.0f - 0.52f * ed;                                   // the highs toward ~5 kHz
+            gain *= 1.0f - ed * (0.2f + 0.6f * std::fabs(roughA_)); // about -2 to -8 dB, rough
+            lp = 1.0f - 0.65f * ed;                                   // the highs toward ~3.5 kHz
         }
-        scrapeAmt_ = (a.crinkleRate / 0.6f) * (0.4f + 0.6f * e); // the scrape bed, heavier in a burst
+        scrapeAmt_ = (a.crinkleRate / 0.6f) * (0.4f + 0.6f * e); // the scrape bed, heavier in a burst (1.5 at full left)
         dStep_ = (d - delayNow_) / float(n);
         gStep_ = (gain - gainNow_) / float(n);
         lStep_ = (lp - lpNow_) / float(n);

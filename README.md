@@ -15,8 +15,8 @@ It's built for long, deep tails, and for playing over them:
 - Turn DECAY past about 3 o'clock and the tail never ends. While you play it follows you at the level of the tail just below, so crossing into endless doesn't jump; when you stop, it holds the chord, its notes staying notes instead of dissolving into haze.
 - Tap the button (or send a gate) to freeze the tail into a still pad, then play over it. Hold the button while frozen to paint a little of what you're playing into the pad.
 - SPACE picks the room: PLATE, a dense plate with a quick attack; HALL, a big room tuned against the Valhalla rooms and plates I play; or CANYON, long lines and mass like a space with no roof, which swells in with each sound and grows into a boundless wash.
-- Let it age with WEAR: tape saturation, a bucket-brigade delay's breathing, the delay chip's clock, bit grit and a soft hiss deepen together over a warm, desk-like colour. It only colours the reverb; your dry signal isn't touched.
-- MOTION moves the tail both ways from noon: left is a cassette on a tired deck (wow, flutter, crinkle, and dropouts near the end), right is an old AM radio, its narrow band and a slow notch wandering through the tail.
+- Let it age with WEAR: tape saturation, a bucket-brigade delay's breathing, bit grit and a soft hiss deepen together over a warm, desk-like colour. It only colours the reverb; your dry signal isn't touched.
+- MOTION moves the tail both ways from noon: left is a cassette on a tired deck (wow, flutter, crinkle and dropouts, deeper the further you go), right is an old AM radio, its narrow band and a slow notch wandering through the tail.
 - ONSET picks how each sound enters: at once (NATURAL), swelling in (BLOOM), or with an octave on top (SHIMMER).
 
 There are seven knobs, each with a CV input, plus two switches, a button and a gate. The [manual](docs/minisite/content/manual.md) covers every control, and [`SPEC.md` §3](SPEC.md) has the details.

@@ -468,6 +468,8 @@ private:
         inDcY_[c] = y;
         return y;
     }
+    // The PLATE's SIZE crossfade state (dsp::PlateXf, v1.0.68; the twin glides). Last: no other member's offset moves.
+    dsp::PlateXf plateXf_;
 };
 
 } // namespace iv

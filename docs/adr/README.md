@@ -28,7 +28,7 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0022](0022-massive-highs-ring-with-the-body.md) | MASSIVE's highs ring as long as its body | owner, 25 Oct 2026 |
 | [0023](0023-massive-shortest-tail-six-trips.md) | MASSIVE's shortest tail lasts six trips round its lines | owner, 25 Oct 2026 |
 | [0024](0024-shimmer-replaces-reverse.md) | SHIMMER replaces REVERSE on ATTACK's third position | owner, 25 Oct 2026 |
-| [0025](0025-size-and-time-crossfade.md) | HALL's and MASSIVE's SIZE, and TIME's predelay, move by crossfade (amended: four groups) | owner, 25 Oct 2026 |
+| [0025](0025-size-and-time-crossfade.md) | HALL's and MASSIVE's SIZE, and TIME's predelay, move by crossfade (amended: four groups; phase 2 done, PLATE in ADR 0043) | owner, 25 Oct 2026 |
 | [0026](0026-fitting-the-cpu.md) | Fitting the CPU: the HALL / MASSIVE tank at 24 kHz, a 12-point swell (amended: the candidate lap) | owner, 25 Oct 2026 |
 | [0027](0027-wear-replaces-era.md) | WEAR replaces ERA: one wear amount over the Neve (amended v1.0.60: the band moves to MOTION) | owner, 26-27 Oct 2026 |
 | [0028](0028-small-room-replaces-the-twin.md) | HALL's and MASSIVE's freeze twin is a small room | owner, 26-27 Oct 2026 |
@@ -41,3 +41,9 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0035](0035-hall-long-tails.md) | HALL's long tails keep their upper mids and move a little more (its shelf at 6 kHz; its floor ×2 from 15 s) | owner, 29 Oct 2026 |
 | [0036](0036-radio-band-on-motion.md) | The radio band moves from WEAR to MOTION's right side; Wander goes (amended v1.0.61: whole at endless DECAY too) | owner, 1 Nov 2026 |
 | [0037](0037-canyon.md) | SPACE's third position is CANYON (was MASSIVE); the name only | owner, 1 Nov 2026 |
+| [0038](0038-wear-without-the-clock.md) | WEAR without the BBD's clock: tape, breath and grain | owner, 2 Nov 2026 |
+| [0039](0039-onset-centred.md) | The onset centred: HALL's and CANYON's early taps re-laid so the first moment sits evenly in the stereo field | owner, 3 Nov 2026 |
+| [0040](0040-more-tape.md) | More tape: WEAR's tape driven 5 dB harder, a more worn cassette on MOTION's left (crinkle and dropouts from about 9:30) | owner, 3 Nov 2026 |
+| [0041](0041-tape-drive-back.md) | The tape's drive back to 11.25 dB (reverses ADR 0040's drive); the worn cassette stays | owner, 3 Nov 2026 |
+| [0042](0042-radio-lighter.md) | The radio's over-modulation 8 dB lighter on MOTION's right side: a faint edge | owner, 3 Nov 2026 |
+| [0043](0043-plate-size-crossfade.md) | PLATE's SIZE by crossfade, like HALL and CANYON; small and frozen moves glide (ADR 0025 phase 2 done) | owner, 3 Nov 2026 |
