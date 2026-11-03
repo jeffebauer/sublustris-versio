@@ -614,6 +614,11 @@ figure.wide > .caption, .figure .caption { padding-block: var(--stack-1) 0; }
 @media (min-width: 90rem) {   /* from 1440 px, where the right-hand column and gutter have room for 20rem */
   .manual-panel { width: calc(100% + 20rem); grid-template-columns: 17rem minmax(0, 1fr); }
 }
+/* Phones: the whole panel fits the screen's height under the header, centred (owner, 3 Nov 2026).
+   The panel is 50.5 × 128.5 mm, so its width is 0.393 of its height. */
+@media (max-width: 39.99rem) {
+  .manual-panel .panel-figure { width: min(100%, 22rem, (100svh - var(--header-h) - 2rem) * 0.393); margin-inline: auto; }
+}
 .manual-screenshot { margin-block: var(--stack-4); }
 .manual-screenshot .figure { display: grid; grid-template-columns: minmax(0, 20rem) minmax(0, 1fr); column-gap: 3.5rem; align-items: start; }
 .manual-screenshot .card-media { grid-column: 1; grid-row: 1; }
