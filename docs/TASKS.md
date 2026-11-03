@@ -28,7 +28,7 @@
 
 ## Waiting on Claude
 
-- **Next (3 Nov 2026):** released and announced. Merge the last two launch-post commits on `claude/launch-posts-e089b9` on your OK (docs only). Then the sound, below, starting with the unfreeze-after-SIZE overload.
+- **Next (3 Nov 2026):** released and announced. The sound, below, starting with the unfreeze-after-SIZE overload.
 - **The unfreeze-after-SIZE overload in CANYON** (your audit lap, 29 Oct 2026, `docs/research/m3-review2-audit-212b68b.log`): unfreezing after SIZE moved while frozen runs up to 107.5 %, two-thirds of the blocks late while it settles: a crackle (it's in the zip's troubleshooting). The whole SIZE move lands as one crossfade while the twin room is still running. Next: a prototype that glides SIZE or waits for the twin after an unfreeze, then a page. The most important sound fix left.
 - **The HALL/CANYON level match** (your pick C on `rack_levels`, 29 Oct: at endless HALL down 2 dB and CANYON up 2 dB; MIX at noon as built): branch `claude/rack-levels`, prototype only; re-measure on the current endless (v1.0.61 on) before building.
 - **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): for 3 s after a flip both spaces hear the music while one crossfades into the other; it needs a second reverb running for those 3 s (the freeze's spare) and ~0.5-1 KB of flash, which crowds what's left. A plan before building.

@@ -26,7 +26,7 @@ This session:
 
 Start with `/sublustris-start`.
 
-**Nothing running:** no agents and no preview servers; the nine finished worktrees were removed. One worktree is left: `.claude/worktrees/launch-posts-e089b9`, see In flight.
+**Nothing running:** no agents and no preview servers; the nine finished worktrees were removed. No worktrees left; the launch-posts branch merged at the wrap.
 
 ## State
 
@@ -54,7 +54,6 @@ Start with `/sublustris-start`.
 
 ## In flight (kept on purpose)
 
-- **`claude/launch-posts-e089b9`** (worktree `.claude/worktrees/launch-posts-e089b9`). Its drafts are merged, but two owner-directed commits came after the merge: the render at the top of the Modwiggler and Reddit posts, and the image notes. **Merge them on the owner's OK, then remove the worktree.** The owner was asked at the wrap.
 - **`claude/rack-levels`** (`6eab077`): the HALL/CANYON level match, pick C (`0,-2,2`: HALL −2 dB, CANYON +2 dB at endless). It was measured before v1.0.61, so re-measure first.
 - **`claude/input-stop`** (`1ef34bc`, built on v1.0.58): the `input_stop2` page is stale. Merge main, re-measure the dip on v1.0.68, rebuild E and F, and re-render.
 - **`proto/more-tape`, `proto/radio-lighter`, `proto/tape-fold`, `proto/wear-no-bbd`:**
@@ -79,7 +78,6 @@ Start with `/sublustris-start`.
 
 ## Waiting on the owner (`docs/TASKS.md`)
 
-- **The launch-posts merge**: two commits, docs only.
 - **Listen:** `input_stop2`, after its re-render.
 - **When convenient:**
   - check Ableton's sample rate: at 96 kHz HALL and CANYON are brighter;
