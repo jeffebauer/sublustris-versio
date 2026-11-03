@@ -1,100 +1,114 @@
 # Handoff
 
-**Written:** 2 Nov 2026, end of session 12 (30 Oct to 2 Nov).
+**Written:** 3 Nov 2026, end of session 13 (2 to 3 Nov).
 
 This session:
-- **Two versions merged after the owner's rack checks:**
-  - v1.0.60, the AM radio band moved from WEAR to MOTION's right (pick F on `dip_motion`, ADR 0036);
-  - v1.0.61, endless follows the playing (pick C on `decay_endless_match`, ADR 0008 amendment). Below that: the duck is removed, and the radio's band stays whole at endless (it was halved there, which the owner heard at the rack).
-- **AUDIO_DIRECT made the default** (30 Oct, after a clean rack boot).
-- **The website** (`site/`, Astro), merged on main:
-  - the Paper Mono layout and copy;
-  - the motion-radio copy, presets, demos and the "Old radio" tile;
-  - "Two ways to play";
-  - the hero film and panel stills with the revised panel art (CAN, the new type);
-  - the story image with one tape across both decks (Eno's Discreet Music diagram);
-  - issue forms in `.github/ISSUE_TEMPLATE/`;
-  - a Vercel project (`sublustris-versio`, behind Vercel Authentication, not linked to GitHub).
-- **Research:** `docs/research/wet-dry-balance.md` (BLEND is equal-power, as Valhalla and Clouds are; noon is where level steps show most) and `docs/research/endless-match.md`.
-- **Clean-up:**
-  - every judged page, old build and finished worktree is in the Trash, `sublustris-wrap-2026-11-02`;
-  - 22 superseded branches deleted, with a backup bundle in the same folder.
+- **v1.0.62 to v1.0.68 merged** after the owner's rack check ("sounding excellent"):
+  - CANYON as the name of SPACE's third position (ADR 0037);
+  - WEAR's tape drive back (pick B on `tape_fold`);
+  - the radio lighter (pick C);
+  - PLATE's SIZE by crossfade;
+  - the small fixes and WEAR without the BBD clock.
+- **v1.0.68 released, the first public release.**
+  - The repository is public. The owner's ruleset on `main` blocks deletions and force pushes, and private vulnerability reporting is on.
+  - GitHub Release `v1.0.68` was built from `133e0e0`:
+    - firmware 111,828 B, the same bytes as the rack build;
+    - the universal AU/VST3 zip, 7.8 MB, not notarised;
+    - checksums.
+  - The site is public at https://sublustris-versio.vercel.app with the downloads live:
+    - `DOWNLOADS_LIVE=1` is set for production;
+    - Vercel Authentication covers previews only.
+- **Release audit:** all nine site demos were re-rendered on v1.0.68, and the docs, presets and README were brought current.
+- **The owner's site review and iPhone pass** were merged. The download buttons now read "Download", with the format under each title and the size at the right.
+- **Resilio's site links to Sublustris.** A Resilio session did it in Resilio's repo; its main is `39347d3`.
+- **Launch posts** for Modwiggler, r/modular and the NE Discord were drafted in `docs/launch/`. The owner has posted all three.
+- **Plugin v1.0.68 is in Ableton** (`4140997`); the AU check passed.
 
 Start with `/sublustris-start`.
 
-**Nothing running:** no agents and no worktrees. The nested sessions this session started are all idle and their branches merged or deleted; they can be archived. The LAN page server (`renders/` on :8765) may still be running. The laptop's LAN address is now 192.168.1.238.
-
-## Folder move (done 2 Nov 2026, at the end of session 12)
-
-The folder moved `~/Documents/Sites/immensio-versio` → `~/Documents/Sites/sublustris-versio`; the tracked paths (skills, CLAUDE.md, SPEC §6.2's tree, the page tools) and the memory folder (`~/.claude/projects/-Users-jesse-Documents-Sites-sublustris-versio/memory/`) were moved with it. **The first session in the new folder does these first:**
-
-1. `git worktree prune`.
-2. Recreate the `.venv` (`rm` it by its literal path, then `python3 -m venv .venv && .venv/bin/pip install numpy soundfile`): a moved venv's scripts still point at the old path.
-3. `build/`'s CMake cache records the old path, so remove only `build/CMakeCache.txt` and `build/CMakeFiles`. Then `cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build` and ctest (expect 22 of 22).
-4. `make -C firmware all-variants` (libDaisy's build may need `make -C libs/libDaisy -j8` again for the same reason) and `cmp` the release against `dist/sublustris_versio-v1.0.61-radio-endless-33a1be3.bin`.
-5. The old memory folder (`-Users-jesse-Documents-Sites-immensio-versio`) can go to the Trash once the new session has loaded its memory.
+**Nothing running:** no agents and no preview servers; the nine finished worktrees were removed. One worktree is left: `.claude/worktrees/launch-posts-e089b9`, see In flight.
 
 ## State
 
 | Milestone | State |
 |---|---|
-| Spec | v1.0 frozen plus amendments to **v1.0.61**, on main |
+| Spec | v1.0 frozen plus amendments to **v1.0.68**, on main |
 | M0 | Passed (25 Oct) |
 | M1/M4-M8 | Built and listened |
-| M2 | Plugin installed `5a54f8e` (v1.0.61, main), 2 Nov 17:15; AU check passed |
-| M3 | **v1.0.61 played at the rack** (2 Nov: "MUCH better"); module CPU not profiled since v1.0.58 |
-| M9 | Not started |
+| M2 | Plugin installed `4140997` (v1.0.68), 3 Nov; AU check passed |
+| M3 | **v1.0.68 on the module**, the rack build (`dist/v1.0.68-rack-63-68`); module CPU not profiled since v1.0.58 |
+| M9 | **Released** v1.0.68, 3 Nov 2026 |
 
-- **main HEAD:** `5a54f8e` plus the wrap-up commit; the v1.0.61 merge is `520b329`.
-- **Pushed:** main is on `origin/main` (2 Nov 2026, the owner's OK).
-- **Gates on merged main (2 Nov):** ctest **"100% tests passed out of 22"**; the site builds (13 pages) with `astro check` at 0 errors and 0 warnings.
-- **Firmware:**
+- **main HEAD:** `12ec45b` plus the wrap-up commit; pushed to `origin/main`.
+- **Gates on main (3 Nov, wrap-up):** ctest **"100% tests passed out of 24"**.
 
   | Variant | Bytes | |
   |---|---|---|
-  | release | **108,660** | 83 %; **3,980 B under the 112,640 budget** |
-  | m0test | 83,556 | |
-  | profile | 128,720 | 98 %; warning as usual |
+  | release | **111,828** | 85 %; **812 B under the 112,640 budget** |
+  | m0test | 83,556 | 63 % |
+  | profile | 130,956 | 99 %: **116 B under the 131,072 limit** |
+- **Rack builds and releases in `dist/`:**
+  - `dist/release/v1.0.68-133e0e0`: what's on GitHub;
+  - `dist/v1.0.68-rack-63-68`: what's on the module;
+  - the older v1.0.60-v1.0.67 builds, which can go to the Trash.
 
-- **Rack builds in `dist/`:**
-  - `sublustris_versio-v1.0.61-radio-endless-33a1be3{,-latelight}.bin`, what's on the module. It equals main's code; `33a1be3` is its branch commit.
-  - `sublustris_versio-v1.0.60-motion-radio-7e08cb1{,-latelight}.bin`, the fallback.
+## In flight (kept on purpose)
 
-## In flight (branches kept on purpose, no worktrees)
-
-- **`claude/rack-levels`** (`6eab077`): `IV_SPACE_TRIM="plate,hall,massive"` dB at endless. The owner's pick is C, `0,-2,2` (HALL −2 dB, MASSIVE +2 dB at endless). It was measured before v1.0.61, and endless now plays at DECAY 0.80's level, so **re-measure HALL against MASSIVE on v1.0.61 before porting**: the gap may have changed. Notes are in `docs/research/rack-levels.md` on the branch.
-- **`claude/input-stop`** (`1ef34bc`, built on v1.0.58): `IV_INPUT_STOP` modes 1-5 (D = 3 is the owner's earlier pick; E = 4 and F = 5 are on the `input_stop2` page). The page `renders/input_stop2` is still waiting for the owner. It was rendered on v1.0.58, so re-render it on v1.0.61 before asking (the duck it partly works around is gone). Merge main in first.
+- **`claude/launch-posts-e089b9`** (worktree `.claude/worktrees/launch-posts-e089b9`). Its drafts are merged, but two owner-directed commits came after the merge: the render at the top of the Modwiggler and Reddit posts, and the image notes. **Merge them on the owner's OK, then remove the worktree.** The owner was asked at the wrap.
+- **`claude/rack-levels`** (`6eab077`): the HALL/CANYON level match, pick C (`0,-2,2`: HALL −2 dB, CANYON +2 dB at endless). It was measured before v1.0.61, so re-measure first.
+- **`claude/input-stop`** (`1ef34bc`, built on v1.0.58): the `input_stop2` page is stale. Merge main, re-measure the dip on v1.0.68, rebuild E and F, and re-render.
+- **`proto/more-tape`, `proto/radio-lighter`, `proto/tape-fold`, `proto/wear-no-bbd`:**
+  - prototype branches whose picks were ported into v1.0.64-v1.0.67;
+  - kept for their pages' notes only;
+  - delete them with the owner's OK.
 
 ## Next steps
 
-1. **v1.0.62, the HALL/MASSIVE level match:** measure endless HALL against MASSIVE on v1.0.61 first. If they still differ by about 4 dB, port the trim as a voicing constant (not `IV_MIX_TAPER`), then the goldens, a SPEC line and an ADR 0033 amendment. If the gap has changed, show the owner a short page.
-2. **`input_stop2`:** re-render it on v1.0.61, then ask for the owner's pick and build it. Flash fits any mode.
-3. **The unfreeze-after-SIZE overload** in MASSIVE (SHIMMER, WEAR 0.5, MOTION tape): the audit lap's UNFRZ lines in `docs/research/m3-review2-audit-212b68b.log`. Options in the session 11 handoff (git history): glide SIZE after an unfreeze, or stop the twin sooner.
-4. **MASSIVE → CANYON in the firmware and plugin:** labels only (ParamSpec's shown label, the plugin, CONTEXT, the tools), keys and codes unchanged, plus an ADR and a SPEC line. The panel art and site already say CANYON.
-5. **A profile lap on the module** (`make MODE=profile SIZESPIKE=5`), covering v1.0.58-v1.0.61. Profile is at 98 % of flash.
-6. **Website:** the AI-tells copy review, the Safari and iPhone checks, a fresh Vercel preview from main (pushed 2 Nov).
+1. **The unfreeze-after-SIZE overload in CANYON**, the most important sound fix left.
+   - The evidence is the audit lap's UNFRZ lines in `docs/research/m3-review2-audit-212b68b.log`.
+   - Prototype a SIZE glide after an unfreeze, or wait for the twin room, then make a page.
+2. **The HALL/CANYON level match:** re-measure on v1.0.68, then port the trim (branch `claude/rack-levels`).
+3. **`input_stop2`:** re-render as described above, then ask for the owner's pick.
+4. **SPACE flips morph** (the owner's pick: "Morph 3s"). It needs a plan first: flash is tight (see below).
+5. **Housekeeping from the reviews**, now that the repo is public:
+   - the Plugin's NaN input guard;
+   - SPEC §3-§7 brought in line with the code;
+   - the test gaps (`docs/TASKS.md`, "Waiting on Claude").
+6. **A profile lap on the module**, covering v1.0.58-v1.0.68.
+7. **Answering the launch threads:** relay issues the owner brings in. Bug reports and sound suggestions arrive as GitHub Issues (`.github/ISSUE_TEMPLATE/`).
 
 ## Waiting on the owner (`docs/TASKS.md`)
 
-- **Install v1.0.61 in Ableton** when wanted.
-- **Listen:** `input_stop2` (after its re-render).
-- **When convenient:** empty the Trash (`sublustris-wrap-2026-11-02` and the older folders); reference recordings; walk through the site.
+- **The launch-posts merge**: two commits, docs only.
+- **Listen:** `input_stop2`, after its re-render.
+- **When convenient:**
+  - check Ableton's sample rate: at 96 kHz HALL and CANYON are brighter;
+  - empty the Trash;
+  - the reference recordings;
+  - Resilio's move to Ombra Audio, in Resilio's own repo.
 
 ## Will bite
 
-- **Flash is 3,980 B under the budget, but profile is at 98 %**: every profile line counts.
-- **v1.0.61 changed the endless level:** endless now carries the long-tail trim, about 2.1 dB lower in HALL, so its twin room is lower too. Older measurements taken at endless (`rack_levels`, `input_stop2`, `hall_level`) predate this.
-- **PLATE right after you stop at endless:** about 7 dB of early sound leaves in the first second, then it holds. With the radio near full it's slightly brighter than at 0.80, from the louder held tail driving the over-modulation. Neither has been flagged by the owner.
-- **Old renderer hooks** `IV_ENDLESS_MATCH`, `IV_DECAY_CROSS`, `IV_DUCK_*` and `IV_FREEZE_DUCK` are now ignored with a warning, so old sweeps using them render v1.0.61's sound.
-- **Nested sessions:**
-  - `start_session` works from the computer, but not over Remote Control from the phone. Use background Agent subagents there (memory).
-  - Follow-ups go by SendMessage to the session's `local_…` id.
-- **Main's `site/` has no `node_modules`.** Build the site in a scratch worktree with `cp -cR` of a node_modules folder (a symlink breaks Astro), plus `FONTS_DIR=/Users/jesse/Downloads/Fonts/MD_IO-V2-FutureFonts/Fonts/Variable`. The papermono worktree that held one is gone, so run `npm ci` in `site/` once.
-- **Desktop vs module, goldens and `screenlog.0`:** as before. `IV_GOLDEN_UPDATE` allows one update per SPEC version, and `screenlog.0` appends across flashes.
+- **The repo and the site are public.** Every push to `main` deploys production on Vercel (connected to GitHub), so main must always be releasable.
+  - Branch work stays in worktrees.
+  - The download buttons use `releases/latest/download/...`, so a new GitHub Release changes what people download at once.
+  - Update `site/src/data/release.json` with each release.
+- **Flash:** the release is 111,828 B against the 112,640 budget (ADR 0002), about 800 B left. Anything new (morph, input stop) needs a flash plan or a trim first. **Profile has only 116 B left**: a profile lap may need a trimmed profile build first.
+- **Releases:**
+  - the release script is `tools/make_release.sh`;
+  - the plugin isn't notarised, so the install guide's Terminal step stays;
+  - Vercel's `create_deployment` needed the owner's explicit OK this session ("Allow you to redeploy").
+- **The site's dependencies:** `site/node_modules` must be installed with `npm ci` in a fresh worktree; don't symlink it, because Astro breaks. The fonts come from `FONTS_DIR` (MD IO, never committed). An orphan dev server once held port 4321.
+- **Two worktrees showed `libs/JUCE` "not to be a symbolic link"** errors in `git status`. They were harmless and those worktrees are gone, but a new worktree may print it.
+- **Desktop vs module, goldens and `screenlog.0`:** as before.
+  - `IV_GOLDEN_UPDATE` allows one update per SPEC version.
+  - `screenlog.0` appends across flashes.
+- **Nested sessions:** `start_session` works from the computer, not over Remote Control. Follow-ups go by SendMessage to the session's `local_…` id.
 
 ## Where to look
 
-- `docs/TASKS.md`: "Waiting on Claude", "Next, in order".
-- `SPEC.md` changelog v1.0.60-v1.0.61; `docs/adr/0008-*` (its v1.0.61 amendment), `docs/adr/0036-radio-band-on-motion.md`.
-- `docs/research/endless-match.md` and `docs/research/wet-dry-balance.md`.
-- The branches `claude/rack-levels` and `claude/input-stop`, with their notes.
+- `docs/TASKS.md`: "Waiting on Claude".
+- `docs/research/m3-review2-audit-212b68b.log` (UNFRZ) for step 1.
+- `SPEC.md`'s changelog v1.0.62-v1.0.68; `docs/adr/0037-*`.
+- `site/src/data/release.json` and `tools/make_release.sh` for the next release.
+- `docs/launch/` for what was posted.
