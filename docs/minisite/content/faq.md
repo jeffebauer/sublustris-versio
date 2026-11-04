@@ -24,6 +24,9 @@ Plateau Versio is another reverb firmware for the same platform, built around a 
 ### Which modules does it run on?
 The Noise Engineering Versio. All Versio modules share one hardware platform with different panels and firmware, so your printed labels will be those of whichever Versio you have. The [panel map](/manual#panel-map) shows which control is which.
 
+### Will it run on other Daisy Seed hardware?
+Not as a download: the release is built for the Versio's knobs, switches and LEDs. The source is open, though, and the reverb itself has no platform code, so a Terrarium pedal or another Daisy Seed build with the 64 MB SDRAM can run it with a new host file. The [README](https://github.com/jeffebauer/sublustris-versio#other-daisy-seed-hardware) says where to start.
+
 ### Is flashing safe? Can I go back?
 Yes. You install it with Noise Engineering's own Firmware Swap app, and the same app takes you back to any Noise Engineering firmware. Sublustris doesn't install a bootloader or change anything else on the module. There's one rule: **never connect USB and Eurorack power at the same time.** [Install guide](/install)
 
