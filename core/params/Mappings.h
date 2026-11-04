@@ -176,6 +176,16 @@ struct EraWear {
     dsp::TexMix tex;                           // the wet's chain (dsp/EraTexture.h)
     float compress = 0, hiss = 0, crackle = 0; // the tape's in-loop compression, hiss and crackle, 0..1
 };
+#ifndef IV_FIXED_VOICINGS
+// PROTOTYPE (renders/wear_taper; lfad on Modwiggler, 4 Nov 2026: WEAR is "very subtle until you get past noon"):
+// 0 (A) as built; 1 (B) the intensities on 1-(1-v)^1.6; 2 (C) on 1-(1-v)^2.2; 3 (D) C with the grit from 0.5
+// (not the owner's v1.0.49 0.65). Every version is today's at WEAR 0 and 1. The Renderer's IV_WEAR_TAPER sets it.
+inline int& wearTaperPrototype()
+{
+    static int v = 0;
+    return v;
+}
+#endif
 IV_CTL_OPT inline EraWear eraMix(float v)
 {
     using namespace voicing;
@@ -183,14 +193,22 @@ IV_CTL_OPT inline EraWear eraMix(float v)
     dsp::TexMix& x = e.tex;
     const float t = clamp01(v / 0.05f);
     const float s = t * t * (3.0f - 2.0f * t); // a smoothstep over the first twentieth
+#ifndef IV_FIXED_VOICINGS
+    const int proto = wearTaperPrototype();
+    const float w = proto ? 1.0f - std::pow(1.0f - clamp01(v), proto == 1 ? 1.6f : 2.2f) : v;
+    const float gritStart = proto == 3 ? 0.5f : kWearGritStart;
+#else
+    const float w = v;
+    constexpr float gritStart = kWearGritStart;
+#endif
     x.tapeW = x.breathW = s;
-    x.tapeT = x.breathT = v;
-    e.compress = e.hiss = e.crackle = s * v;
+    x.tapeT = x.breathT = w;
+    e.compress = e.hiss = e.crackle = s * w;
     // The grit (the grain; the BBD's clock with it until v1.0.64, ADR 0038) from 0.65 on the knob (v1.0.49, the
     // owner's pick D on renders/wear_grit: "it feels like the bit reduction is coming in too early"). Past 0.65 the
     // rest of the knob is u (0..1): the grit's blend comes in over its first fifth (a smoothstep) and its intensity
     // goes from its finest (9 bits) to its full at WEAR 1.
-    const float u = clamp01((v - kWearGritStart) / (1.0f - kWearGritStart));
+    const float u = clamp01((v - gritStart) / (1.0f - gritStart));
     const float a = clamp01(u / 0.2f);
     const float g = a * a * (3.0f - 2.0f * a);
     x.grainW = g;
