@@ -11,7 +11,7 @@
 ### Listen (after your notes)
 
 ### Listen (first time)
-- [ ] **`wear_taper`** (coming, 5 Nov 2026; being built in its own session): *should more of WEAR arrive before noon?* lfad on Modwiggler: "very subtle until you get past noon". Full WEAR stays exactly as you set it in v1.0.66; only the path there changes. A as now, plus front-loaded versions, at 9, 12, 3 o'clock and full.
+- [ ] **`wear_taper`** (ready, 5 Nov 2026: http://localhost:8765/wear_taper/index.html, start `review-pages`): *should more of WEAR arrive before noon?* lfad on Modwiggler: "very subtle until you get past noon". Full WEAR stays exactly as you set it in v1.0.66; only the path there changes. A as now; B gentle (about +1.5 dB of wear at noon); C stronger (about +2.6 dB at noon, 3 o'clock already close to today's full); D is C with the grit from noon instead of 0.65 (your v1.0.49 pick), so it only differs on the 3 o'clock cards. 10 cards: HALL and PLATE at 9, 12, 3 o'clock and full, plus both at endless; pad, piano, drums. Not level-matched (every version within 0.2 dB). Branch `claude/proto-wear-taper-78e1da`, desktop only.
 - [ ] **`input_stop2`** (stale, don't listen yet; 3 Nov 2026: rendered on v1.0.58, before v1.0.61's endless-follows-your-playing changed what happens when you stop and v1.0.63 centred HALL's and CANYON's onset. After the rack check I re-measure the dip on the combined build, rebuild E and F on it and re-render the page): *does the reverb carry on without a dip now?* What the dip at ~60 % on the PLATE pad was: the dry leaving (PLATE's reverb sits ~2 dB under the dry pad, so the mix drops ~3.4 dB at the stop; HALL only ~1 dB), plus the PLATE tail's own slow ebb and flow (it wanders 2-3 dB while you play too; the dry hides it until it stops). A as now; D your pick (quick limiter + cushion); E: D with the cushion following the tail closely and holding for 0.8 s, so the reverb carries on at the playing level for about a second; F: E plus a small lift (+1.5 dB) as the dry leaves after held playing, scaled by how much dry is in the mix (none at fully wet). Stabs and drums are identical in every version. Cards include the PLATE pad at MIX 30 % and 80 %. Full mixes, not level-matched. Flash: D +352 B, E +392, F +440, all of which fit (3,980 B left on main at v1.0.61). Built on v1.0.58, so the build merges main in first; still worth hearing again on today's build.
 
 ### Try in Ableton
@@ -32,7 +32,7 @@
 
 - **Next (5 Nov 2026):** the launch feedback, then the unfreeze-after-SIZE overload.
 - **Launch feedback** (Modwiggler and r/modular, 4-5 Nov 2026; no GitHub issues yet):
-  - WEAR's taper (lfad): the `wear_taper` page, in progress;
+  - WEAR's taper (lfad): the `wear_taper` page, ready for you;
   - the output level (lfad: "quieter on the output than my other reverbs", at full wet): measure the wet against the dry and your Valhalla takes before any makeup gain;
   - the spaces' contrast and body (lfad: PLATE and HALL and the ONSET choices "pretty similar"; "thin/reedy" next to Desmodus and Pleroma): a page of PLATE, HALL and CANYON side by side below endless, for your ears;
   - the plugin's own UI (danishchairs' DM, and your backlog for Resilio and Sublustris): labels under every knob, grouped controls with faint dividers, FREEZE visibly on, PAINT on its own button, no empty space above ZOOM, MOTION's two sides in two colours; a compact DAW layout, designed in Figma first; parameter keys unchanged so saved sets still open;
