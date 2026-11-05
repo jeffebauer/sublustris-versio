@@ -194,4 +194,10 @@ if [ "$PUBLISH" = 1 ]; then
     CMD=(gh release create "$TAG" "${ASSETS[@]}" -R "$GH_REPO" --target "$FULL_SHA" "${KIND[@]}"
         --title "$TITLE" --notes-file "${RELNOTES:-$README}")
     if [ "$DRY" = 1 ]; then printf 'Dry run, would run:'; printf ' %q' "${CMD[@]}"; echo; else "${CMD[@]}"; fi
+    if [ -n "$BETA" ]; then
+        BR="$(git branch -r --contains "$FULL_SHA" | sed -n 's#^ *origin/##p' | grep '^beta/' | head -1)"
+        echo "Next (ADR 0046): the beta's pull request into main. Beta 1 opens it, a later beta comments on it:"
+        echo "   gh pr create -R $GH_REPO --base main --head ${BR:-<beta/topic>} --title \"<what changes in the sound>\" --body-file <notes.md>"
+        echo "   gh pr comment <n> -R $GH_REPO --body \"$TAG: https://github.com/$GH_REPO/releases/tag/$TAG\""
+    fi
 fi
