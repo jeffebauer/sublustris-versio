@@ -194,8 +194,6 @@ public:
         hallTiltLowDb_ = tiltLowDb;
         hallTiltHighDb_ = tiltHighDb;
     }
-    // PROTOTYPE (renders/wear_drive): the tape's drive on v1.0.69's taper (dsp::EraTexture::setWearDrivePrototype; 0 = as built).
-    void  setWearDrivePrototype(int v) { texture_.setWearDrivePrototype(v); }
     int   lowDecimate() const { return lowDecimate_; }
     int   swellTaps() const { return swell_.tapCount(); }
 #endif

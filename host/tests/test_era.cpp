@@ -517,10 +517,13 @@ void notAliasing()
     // v1.0.69 (ADR 0044, the owner's pick D on renders/wear_taper): WEAR's intensities on 1 - (1 - v)^2.2, so 0.75 drives
     // the tape 10.7 dB (was 8.4), near full, and the grit is half in (from noon): -18.8 dB here, -26.2 at 96 kHz, a 7.4 dB
     // gap, as on the 3 o'clock cards the owner picked; the third clause allows 8 dB.
+    // v1.0.70 (ADR 0045, the owner's pick C on renders/wear_drive): the drive back to v1.0.65's 16.25 dB on that taper, so
+    // 0.75 drives the tape 15.5 dB (v1.0.65 there: 12.2): -16.7 dB here, -25.1 at 96 kHz, an 8.4 dB gap, under v1.0.65's
+    // own with v1.0.63 (9.1); the third clause allows 10 dB again, as it did then. The band below 5 kHz is still under -15.
     char msg[240];
     std::snprintf(msg, sizeof msg, "hot 7 kHz tone at ERA 0.75: energy below 5 kHz %.1f dB re total at 48 kHz, %.1f at 96 kHz (< -32 with the "
-                                   "24 kHz tank, or aliasing adds < 2 dB, or the band under -15 with aliasing adding < 8 dB, v1.0.69)", at48, at96);
-    check(at48 < -32.0 || at48 - at96 < 2.0 || (at48 < -15.0 && at48 - at96 < 8.0), msg);
+                                   "24 kHz tank, or aliasing adds < 2 dB, or the band under -15 with aliasing adding < 10 dB, v1.0.70)", at48, at96);
+    check(at48 < -32.0 || at48 - at96 < 2.0 || (at48 < -15.0 && at48 - at96 < 10.0), msg);
 }
 
 // v1.0.49 (renders/wear_grit D): the grit (the grain; the BBD's clock too until v1.0.64) is silent below kWearGritStart

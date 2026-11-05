@@ -16,6 +16,7 @@ Per card: the four versions level-matched to A where one differs by more than 0.
 the clip's products re the tape's output (wear_drive_lib.products, ADR 0041's measure: the tape alone in numpy on the
 card's WEAR-0 wet, 8x oversampled) and the tail's crest. Usage: <venv>/bin/python tools/pages/wear_drive.py
 (IV_RENDER: the prototype's iv_render, default build/) -> renders/wear_drive in the main checkout.
+The IV_WEAR_DRIVE hook is gone since v1.0.70 (C is built, ADR 0045); rerun this from commit 88a5148.
 """
 import hashlib
 import os

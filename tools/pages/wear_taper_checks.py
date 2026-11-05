@@ -2,8 +2,9 @@
 """WEAR taper's checks (v1.0.69, ADR 0044), the built renderer against a reference one (main before the change):
 1. clicks (1 ms frames above 3 kHz, motion_radio_checks.py's measure) on a held pad, HALL, PLATE and CANYON, MOTION noon:
    WEAR 0 -> 1 over 10 s and back over 10 s, and a flick (WEAR 0.25 -> 0.75 in 20 ms and back);
-2. an infinite hold: each SPACE at DECAY endless (0.9), WEAR noon and 3 o'clock (0.8), the pad 8 s then 72 s of silence:
-   six 10 s windows from 10 s after it stops never above the first + 1 dB.
+2. an infinite hold: each SPACE at DECAY endless (0.9), WEAR noon, 3 o'clock (0.8) and full at MOTION noon, and full at
+   MOTION full left (v1.0.70's drive, ADR 0045), the pad 8 s then 72 s of silence: six 10 s windows from 10 s after it
+   stops never above the first + 1 dB.
 Usage: <venv>/bin/python tools/pages/wear_taper_checks.py <out.txt>
   (IV_RENDER: the built iv_render, default build/; WT_REF: the reference iv_render, optional, for its click numbers)
 """
@@ -37,11 +38,11 @@ if __name__ == "__main__":
             lines.append(f"  {space:6s} {name:40s} " + "  ".join(f"{n} {c:5.1f}" for (n, _), c in zip(bins, r)))
     hold = tmp / "hold.wav"; sf.write(str(hold), mc.pad(8.0, 72.0), SR, subtype="FLOAT")
     for space in SPACES:
-        for era, clock in (("0.5", "noon"), ("0.8", "3 o'clock")):
-            y = mc.render(R, hold, tmp / "h.wav", [f"space={space}", "size=0.6", "decay=0.9", f"era={era}", "drift=0.5"])
+        for era, clock, drift in (("0.5", "noon", "0.5"), ("0.8", "3 o'clock", "0.5"), ("1", "full", "0.5"), ("1", "full, MOTION left", "0")):
+            y = mc.render(R, hold, tmp / "h.wav", [f"space={space}", "size=0.6", "decay=0.9", f"era={era}", f"drift={drift}"])
             w = [10 * np.log10(np.mean(y[int(t * SR):int((t + 10) * SR)] ** 2) + 1e-30) for t in range(18, 78, 10)]
             ok = max(w) <= w[0] + 1.0 and np.isfinite(y).all()
-            lines.append(f"hold: {space:6s} endless WEAR {clock:9s}, 10 s windows from 10 s after the pad (dB) "
+            lines.append(f"hold: {space:6s} endless WEAR {clock:17s}, 10 s windows from 10 s after the pad (dB) "
                          + " ".join(f"{x:6.1f}" for x in w) + f"  -> {'holds, no growth' if ok else 'GROWS'}")
     for p in tmp.glob("*"): p.unlink()
     tmp.rmdir()

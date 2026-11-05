@@ -5,6 +5,7 @@
 2. an infinite hold for C and D (and A for reference): CANYON, DECAY endless (0.9), WEAR full, MOTION noon and full left,
    the pad 8 s then 72 s of silence: six 10 s windows from 10 s after it stops never above the first + 1 dB.
 Usage: <venv>/bin/python tools/pages/wear_drive_checks.py <out.txt>   (IV_RENDER default build/iv_render)
+The IV_WEAR_DRIVE hook is gone since v1.0.70 (C is built, ADR 0045); rerun this from commit 88a5148.
 """
 import os
 import sys
