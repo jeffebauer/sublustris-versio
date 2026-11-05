@@ -5,7 +5,7 @@
 // follows the input; infinite tails hold across the knob in every SPACE; turning ERA doesn't click (1 ms
 // frames); DRIFT's dead zone is exact and both sides move the tail without clicks; the saturation doesn't
 // alias badly when hit hard. v1.0.49 (the owner's picks on renders/wear_grit, wear_fizz, wear_saturation): the
-// grit (the grain; the BBD's clock too until v1.0.64) is silent below 0.65 on the knob.
+// grit (the grain; the BBD's clock too until v1.0.64) is silent below 0.65 on the knob (below noon since v1.0.69, ADR 0044).
 // v1.0.60 (ADR 0036, the owner's pick F on renders/dip_motion): the radio's band left WEAR for MOTION's right side.
 // v1.0.64 (ADR 0038, the owner's pick C on renders/wear_no_bbd): the BBD's clock left WEAR, so WEAR is tape,
 // breath and grain; it never narrows the tone, and it no longer folds the top back.
@@ -405,12 +405,12 @@ void eraSweepClickFree()
     for (int space : {1, 0}) {
         double still = -99.0, hf80 = 0.0;
         for (int mode : {-1, -2, -3, -4, 0, 1, 2, 3}) { // still at 0, 0.5, 1, 0.8; up 0 -> 1 over 5 s; down 1 -> 0; 0 -> 0.15 -> 0 in a quarter
-                                                // second each way; 3: 0.55 -> 0.8 -> 0.55 likewise (through the grit's start, v1.0.49)
+                                                // second each way; 3: 0.4 -> 0.65 -> 0.4 likewise (through the grit's start at noon, v1.0.69; 0.55 -> 0.8 for 0.65)
             iv::Engine e;
             e.prepare(kSr, 48);
             e.setParam(iv::ParamId::Space, iv::switchToNormalised(space));
             e.setParam(iv::ParamId::Mix, 1.0f);
-            const float rest = mode == -2 ? 0.5f : (mode == -3 || mode == 1) ? 1.0f : mode == -4 ? 0.8f : mode == 3 ? 0.55f : 0.0f;
+            const float rest = mode == -2 ? 0.5f : (mode == -3 || mode == 1) ? 1.0f : mode == -4 ? 0.8f : mode == 3 ? 0.4f : 0.0f;
             e.setParam(iv::ParamId::Era, rest);
             e.reset();
             Stereo out{std::vector<float>(in.size()), std::vector<float>(in.size())};
@@ -424,7 +424,7 @@ void eraSweepClickFree()
                 }
                 if (mode == 3) {
                     const float u = sec - 2.0f;
-                    era = u < 0.0f ? 0.55f : u < 0.25f ? 0.55f + u : u < 0.5f ? 0.8f - (u - 0.25f) : 0.55f;
+                    era = u < 0.0f ? 0.4f : u < 0.25f ? 0.4f + u : u < 0.5f ? 0.65f - (u - 0.25f) : 0.4f;
                 }
                 e.setParam(iv::ParamId::Era, era);
                 const int n = int(std::min<size_t>(48, in.size() - pos));
@@ -440,16 +440,16 @@ void eraSweepClickFree()
             }
             // Quickly through the grit's start (mode 3): the grit comes in and goes within the half second the scan
             // judges against, so its frames stand over their median by the grit's own rise over the wear without it
-            // (the steady fizz above 5 kHz at a still 0.8 over the sweep's still 0.55), not by a click.
+            // (the steady fizz above 5 kHz at a still 0.8 over the sweep's still 0.4), not by a click.
             if (mode == 3) {
-                const double rise = hf80 - hf; // hf: this sweep's own median, at rest at 0.55 for all but half a second
-                std::printf("       the grit's rise above 5 kHz, 0.55 -> 0.8 still: %+.1f dB\n", rise);
+                const double rise = hf80 - hf; // hf: this sweep's own median, at rest at 0.4 for all but half a second
+                std::printf("       the grit's rise above 5 kHz, 0.4 -> 0.8 still: %+.1f dB\n", rise);
                 still = std::fmax(still, rise);
             }
             char msg[200];
             std::snprintf(msg, sizeof msg, "SPACE %d: ERA turned %s, no clicks (%ld; loudest 1 ms frame above 5 kHz %+.1f dB, still ERA %+.1f)",
                           space, mode == 0 ? "up" : mode == 1 ? "down" : mode == 2 ? "quickly through its start and back"
-                                                                          : "quickly through the grit's start (0.65) and back",
+                                                                          : "quickly through the grit's start (noon) and back",
                           m.clickCount, scan, still);
             check(finite(out) && m.clickCount == 0 && scan < still + 3.0, msg);
         }
@@ -514,15 +514,19 @@ void notAliasing()
     // third clause allowed 10 dB.
     // v1.0.66 (ADR 0041, the owner's pick B on renders/tape_fold): the drive back to 11.25 dB: -21.9 dB here, -27.8 at
     // 96 kHz, a 5.9 dB gap; the third clause allows 7 dB again.
+    // v1.0.69 (ADR 0044, the owner's pick D on renders/wear_taper): WEAR's intensities on 1 - (1 - v)^2.2, so 0.75 drives
+    // the tape 10.7 dB (was 8.4), near full, and the grit is half in (from noon): -18.8 dB here, -26.2 at 96 kHz, a 7.4 dB
+    // gap, as on the 3 o'clock cards the owner picked; the third clause allows 8 dB.
     char msg[240];
     std::snprintf(msg, sizeof msg, "hot 7 kHz tone at ERA 0.75: energy below 5 kHz %.1f dB re total at 48 kHz, %.1f at 96 kHz (< -32 with the "
-                                   "24 kHz tank, or aliasing adds < 2 dB, or the band under -15 with aliasing adding < 7 dB, v1.0.66)", at48, at96);
-    check(at48 < -32.0 || at48 - at96 < 2.0 || (at48 < -15.0 && at48 - at96 < 7.0), msg);
+                                   "24 kHz tank, or aliasing adds < 2 dB, or the band under -15 with aliasing adding < 8 dB, v1.0.69)", at48, at96);
+    check(at48 < -32.0 || at48 - at96 < 2.0 || (at48 < -15.0 && at48 - at96 < 8.0), msg);
 }
 
-// v1.0.49 (renders/wear_grit D): the grit (the grain; the BBD's clock too until v1.0.64) is silent below 0.65 on the
+// v1.0.49 (renders/wear_grit D): the grit (the grain; the BBD's clock too until v1.0.64) is silent below kWearGritStart
+// (noon since v1.0.69, ADR 0044; 0.65 before) on the
 // knob, then comes in. The wear's chain run twice on the same wet (a chord and a little noise), once as the knob has
-// it and once with the grain out: the difference is the grit, its level against the wet's. Below 0.65 the two
+// it and once with the grain out: the difference is the grit, its level against the wet's. Below its start the two
 // are the same to the bit; past it the grit is there and grows to full.
 double gritDb(float v)
 {
@@ -559,12 +563,12 @@ void gritFromItsStart()
     bool silentBelow = true, thereAbove = true;
     double last = -999.0;
     bool grows = true;
-    for (float v : {0.05f, 0.3f, 0.5f, 0.6f, 0.64f, 0.65f, 0.7f, 0.8f, 0.9f, 1.0f}) {
+    for (float v : {0.05f, 0.3f, 0.45f, 0.49f, 0.5f, 0.55f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f}) {
         const double db = gritDb(v);
         char buf[40];
         std::snprintf(buf, sizeof buf, " %.2f: %.0f", v, db < -900.0 ? -999.0 : db);
         detail += buf;
-        if (v <= 0.65f) silentBelow &= db < -900.0;
+        if (v <= iv::voicing::kWearGritStart) silentBelow &= db < -900.0;
         else {
             thereAbove &= db > -70.0; // v1.0.64: the grain alone at 0.70 reads -62 (over -60 with the clock)
             grows &= db >= last - 1.0;
@@ -572,9 +576,9 @@ void gritFromItsStart()
         }
     }
     check(silentBelow && thereAbove && grows,
-          "WEAR's grit (the grain) silent to 0.65, then in and growing (dB re the wet:" + detail + ")");
+          "WEAR's grit (the grain) silent to noon, then in and growing (dB re the wet:" + detail + ")");
     const iv::map::EraWear full = iv::map::eraMix(1.0f), start = iv::map::eraMix(iv::voicing::kWearGritStart);
-    check(full.tex.grainW == 1.0f && start.tex.grainW == 0.0f, "WEAR 1: the grit whole (the grain's blend 1); at 0.65 none");
+    check(full.tex.grainW == 1.0f && start.tex.grainW == 0.0f, "WEAR 1: the grit whole (the grain's blend 1); at its start (noon) none");
 }
 
 // v1.0.60: WEAR carries none of the radio's band at any setting (it is MOTION's right side's, Mappings.h radioBand),

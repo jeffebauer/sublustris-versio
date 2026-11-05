@@ -82,11 +82,11 @@ It's never harsh and never rings on its own, even at the ends.
 
 ### WEAR
 
-How worn the reverb sounds. Fully left (the default) is clean, with only a warm, desk-like colour. As you turn it up, everything comes in at once and deepens together:
+How worn the reverb sounds. Fully left (the default) is clean, with only a warm, desk-like colour. As you turn it up, the wear comes in early, most of it by noon, and keeps deepening to the end of the knob:
 
 - tape saturation and a little tape compression;
 - a bucket-brigade delay's breathing: its noise and level rise and fall with your playing;
-- bit grit, which stays the same share of a fading tail, so the tail stays grainy right to the end;
+- bit grit from noon up, which stays the same share of a fading tail, so the tail stays grainy right to the end;
 - a soft hiss and the odd crackle, which follow your playing, so silence stays silent.
 
 WEAR doesn't darken the tail (that's TONE's job) or move its pitch (that's MOTION's). The level stays about the same across the knob. Your dry signal is never worn.

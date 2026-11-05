@@ -47,3 +47,4 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0041](0041-tape-drive-back.md) | The tape's drive back to 11.25 dB (reverses ADR 0040's drive); the worn cassette stays | owner, 3 Nov 2026 |
 | [0042](0042-radio-lighter.md) | The radio's over-modulation 8 dB lighter on MOTION's right side: a faint edge | owner, 3 Nov 2026 |
 | [0043](0043-plate-size-crossfade.md) | PLATE's SIZE by crossfade, like HALL and CANYON; small and frozen moves glide (ADR 0025 phase 2 done) | owner, 3 Nov 2026 |
+| [0044](0044-wear-taper.md) | WEAR's taper: the wear arrives earlier on the knob (1 − (1 − v)^2.2), the grit from noon; full WEAR unchanged | owner, 5 Nov 2026 |

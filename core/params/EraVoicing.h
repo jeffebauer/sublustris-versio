@@ -62,7 +62,11 @@ constexpr float kCracklePerSecond = 4.0f;
 // materials, HALL and MASSIVE; v1.0.19). The wear's own is in Mappings.h eraMix.
 constexpr float kMakeupNeveDb = 0.2f;
 
-// Where WEAR's grit (the grain; the BBD's clock too until v1.0.64) starts on the knob (v1.0.49, renders/wear_grit D).
-constexpr float kWearGritStart = 0.65f;
+// Where WEAR's grit (the grain; the BBD's clock too until v1.0.64) starts on the knob: noon (v1.0.69, ADR 0044, the
+// owner's pick D on renders/wear_taper; 0.65 from v1.0.49, renders/wear_grit D).
+constexpr float kWearGritStart = 0.5f;
+// WEAR's taper (v1.0.69, ADR 0044): the wear's intensities follow 1 - (1 - v)^this, so they arrive early on the knob
+// (noon wears like the old 0.78) and full WEAR is unchanged (Mappings.h eraMix).
+constexpr float kWearTaperPower = 2.2f;
 
 } // namespace iv::voicing

@@ -19,7 +19,6 @@
 #include "Sweep.h"
 #include "Wav.h"
 #include "dsp/Engine.h"
-#include "params/Mappings.h"
 #if defined(IV_PROFILE_HOOKS)
 #include "dsp/ProfileHook.h"
 #include <chrono>
@@ -237,14 +236,6 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         }
     }
 #endif
-    if (const char* wt = std::getenv("IV_WEAR_TAPER")) { // renders/wear_taper: A as built, B ^1.6, C ^2.2, D C + grit from 0.5
-        const int v = (wt[0] >= 'A' && wt[0] <= 'D') ? wt[0] - 'A' : std::atoi(wt);
-        const int p = v >= 0 && v <= 3 ? v : 0;
-        iv::map::wearTaperPrototype() = p;
-        static const char* const what[] = {"as built", "intensities on 1-(1-v)^1.6", "intensities on 1-(1-v)^2.2",
-                                           "intensities on 1-(1-v)^2.2, grit from 0.5"};
-        std::fprintf(stderr, "iv_render: IV_WEAR_TAPER=%c: WEAR %s\n", 'A' + p, what[p]);
-    }
     if (const char* st = std::getenv("IV_SWELL_TAPS")) {
         engine.setSwellTapsPrototype(std::atoi(st));
         std::fprintf(stderr, "iv_render: IV_SWELL_TAPS: %d swell points a side\n", engine.swellTaps());

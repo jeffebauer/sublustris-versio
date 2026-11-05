@@ -17,6 +17,7 @@ Per card: the four versions level-matched to A (K-weighted loudness, a gain wher
 wear measured as the difference against the same setting at WEAR 0 (dB re that clean render), so "how much wear" reads as
 a number. Usage: <venv>/bin/python tools/pages/wear_taper.py   (IV_RENDER: the prototype's iv_render, default build/;
 WT_REF: main's iv_render, to prove A is main to the bit) -> renders/wear_taper in the main checkout.
+The IV_WEAR_TAPER hook is gone since v1.0.69 (D is built, ADR 0044); rerun this page from commit 1cdc109.
 """
 import hashlib
 import os
