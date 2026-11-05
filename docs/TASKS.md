@@ -6,6 +6,7 @@
 ## To do
 
 ### Decide
+- [ ] **Merge `claude/beta-releases`** (5 Nov 2026, your call on betas): ADR 0046, a `--beta` mode in the release script, and the rule in CLAUDE.md. A picked sound change goes out first as a beta (a GitHub pre-release tagged like `v1.0.70-beta.1`, firmware and the normal plugin) from its own `beta/<topic>` branch; the site's downloads stay on the release until the beta merges into main for a full release. A dropped beta's branch is deleted, never its tag. Branches: `beta/` (pushed, publishes betas), `proto/` (prototypes), `claude/` (docs, tools, site). No sound change.
 - [ ] **Merge `claude/install-check`** (5 Nov 2026): a "Will it run on other Daisy Seed hardware?" answer in the FAQ and a short porting section in the README, for dubsackdude's Terrarium question on Reddit. Docs only, no sound change; the site rebuilds on merge. (lfad's "did it load?" is already covered: install step 7 and the troubleshooting row describe the colour sweep at power-up.)
 
 ### Listen (after your notes)
@@ -18,7 +19,7 @@
 - [ ] **Check Ableton's sample rate** (Settings → Audio): at 96 kHz the plugin's HALL and MASSIVE come out much brighter above 12 kHz than the module (found by the review). At 48 kHz they match.
 
 ### At the rack
-- [ ] **Try v1.0.70 on the module** (5 Nov 2026): `dist/v1.0.70-wear/sublustris_versio-v1.0.70-wear.bin` (111,844 B). Your two WEAR picks together: D on `wear_taper` (most of the wear by noon, the grit from noon) and C on `wear_drive` (the tape back to 16.25 dB at full). WEAR off is unchanged; everything else is v1.0.68. Sweep WEAR on HALL and CANYON with drums and a pad, and check that 3 o'clock and full feel right on the module, not "folding back too much". Fallback: `dist/v1.0.69-wear-taper/` (the curve only) or `dist/v1.0.68-rack-63-68`. Your OK merges it into main (branch `claude/proto-wear-taper-78e1da`).
+- [ ] **Try v1.0.70 on the module** (5 Nov 2026): `dist/v1.0.70-wear/sublustris_versio-v1.0.70-wear.bin` (111,844 B). Your two WEAR picks together: D on `wear_taper` (most of the wear by noon, the grit from noon) and C on `wear_drive` (the tape back to 16.25 dB at full). WEAR off is unchanged; everything else is v1.0.68. Sweep WEAR on HALL and CANYON with drums and a pad, and check that 3 o'clock and full feel right on the module, not "folding back too much". Fallback: `dist/v1.0.69-wear-taper/` (the curve only) or `dist/v1.0.68-rack-63-68`. If it feels right, it becomes the first beta (ADR 0046): `beta/wear`, published as `v1.0.70-beta.1` for lfad and anyone else to try, with your OK to publish; it merges into main after the beta.
 
 ### When convenient
 - [ ] **Optional: record your Ribbons and Magneto** so the tape side can be matched to measured numbers (for analysis only, never committed or shared). Play `test_audio/stimulus/08_held_tones.wav` (its first 8 s, a held 1 kHz tone) and `renders/_material_drift_rethink/held_organ.wav`, 20 s each, fully wet, into `test_audio/reference/incoming/` named `<unit>_<control>_<setting>.wav`. **Ribbons** (saturation and noise off): wow depth ¼, ½, full; wow frequency min and full; flutter depth ½ and full; flutter frequency full; crinkle ¼, ½, full; dropouts ½; your usual tape setting. **Magneto** (wet only): wow & flutter ¼, ½, full; crinkle ¼, ½, full; slow and fast tape speed with crinkle ½.
