@@ -6,7 +6,6 @@
 ## To do
 
 ### Decide
-- [ ] **Merge `claude/beta-releases`** (5 Nov 2026, your call on betas): ADR 0046, a `--beta` mode in the release script, and the rule in CLAUDE.md. A picked sound change goes out first as a beta (a GitHub pre-release tagged like `v1.0.70-beta.1`, firmware and the normal plugin) from its own `beta/<topic>` branch; the site's downloads stay on the release until the beta merges into main for a full release. A dropped beta's branch is deleted, never its tag. Branches: `beta/` (pushed, publishes betas), `proto/` (prototypes), `claude/` (docs, tools, site). No sound change.
 - [ ] **Merge `claude/install-check`** (5 Nov 2026): a "Will it run on other Daisy Seed hardware?" answer in the FAQ and a short porting section in the README, for dubsackdude's Terrarium question on Reddit. Docs only, no sound change; the site rebuilds on merge. (lfad's "did it load?" is already covered: install step 7 and the troubleshooting row describe the colour sweep at power-up.)
 
 ### Listen (after your notes)
@@ -52,6 +51,7 @@
 - **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper (Dal Santo et al., DAFx26 §4.1: a DC blocker and an adaptive gain after each in-loop shifter; ~10-19 % CPU per shifter); after v1.0.
 
 ## Done
+- [x] **Betas from branches** (5 Nov 2026, your OK; merged into main `8b15893`, not pushed): ADR 0046, `tools/make_release.sh --beta <ref> <n>` and the rule in CLAUDE.md. A picked sound change goes out first as a GitHub pre-release (`v1.0.70-beta.1`) from a `beta/<topic>` branch; the site's downloads stay on the release until it merges. Branches: `beta/` (pushed), `proto/`, `claude/`. Tags are never deleted.
 - [x] **Launch posts** (3 Nov 2026: "That's all done!"): Modwiggler, r/modular and the NE Discord, drafted in `docs/launch/` on the Resilio posts' model and posted by you; Resilio's site now links to Sublustris (a Resilio session, its main `39347d3`).
 - [x] **Released: v1.0.68, the first public release** (3 Nov 2026): the repository public (your ruleset on `main`, private vulnerability reporting on); the GitHub Release https://github.com/jeffebauer/sublustris-versio/releases/tag/v1.0.68 (firmware 111,828 B, the same bytes as your rack build; the universal plugin zip 7.8 MB; checksums), built from `133e0e0`; on Vercel `DOWNLOADS_LIVE=1` for production and Vercel Authentication on previews only, production redeployed: https://sublustris-versio.vercel.app is public with the download buttons live.
 - [x] **The site on the iPhone** (3 Nov 2026: "Mobile approved"): one tweak, the manual's panel fits the phone's screen, centred (`claude/site-mobile`).
