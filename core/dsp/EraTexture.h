@@ -69,6 +69,18 @@ constexpr float kGrainBitsHi = 9.0f, kGrainBitsLo = 5.0f;     // the grain's bit
 
 class EraTexture {
 public:
+#ifndef IV_FIXED_VOICINGS
+    // PROTOTYPE (renders/wear_drive; the owner, 5 Nov 2026: "increase the saturation ceiling as well, returning it to
+    // the strength it was before we reduced it"): the tape's drive on v1.0.69's taper. 0 (A) as built, 11.25 dB x w;
+    // 1 (B) 13.75 dB x w; 2 (C) 16.25 dB x w (v1.0.65's); 3 (D) as built to WEAR 0.75, then 5 dB more by full on a
+    // smoothstep in WEAR (no corner). w is the taper's 1 - (1 - WEAR)^2.2, so D works WEAR back out of it. Takes effect
+    // at the next set().
+    void setWearDrivePrototype(int v)
+    {
+        driveProto_ = v;
+        tapeT_ = -1.0f;
+    }
+#endif
     IV_SIZE_OPT void reset()
     {
         for (int c = 0; c < 2; ++c) {
@@ -92,7 +104,11 @@ public:
         if (m.tapeW > 0.0f && (!sameBits(m.tapeT, tapeT_) || !sameBits(sr, sr_))) {
             tapeT_ = m.tapeT;
             gEmph_ = std::pow(10.0f, tex::kTapeEmphDb * m.tapeT / 20.0f);
+#ifndef IV_FIXED_VOICINGS
+            drive_ = std::pow(10.0f, protoDriveDb(m.tapeT) / 20.0f);
+#else
             drive_ = std::pow(10.0f, tex::kTapeDriveDb * m.tapeT / 20.0f);
+#endif
             wPre_ = 1.0f - std::exp(-6.2831853f * tex::kTapeEmphHz / sr);
             wDe_ = 1.0f - std::exp(-6.2831853f * tex::kTapeEmphHz / gEmph_ / sr);
             wDc_ = 6.2831853f * 5.0f / sr;
@@ -290,6 +306,21 @@ private:
     }
 
     TexMix m_;
+#ifndef IV_FIXED_VOICINGS
+    int driveProto_ = 0; // setWearDrivePrototype
+    float protoDriveDb(float w) const
+    {
+        if (driveProto_ == 1) return 13.75f * w;
+        if (driveProto_ == 2) return 16.25f * w;
+        float db = tex::kTapeDriveDb * w;
+        if (driveProto_ == 3) {
+            const float v = 1.0f - std::pow(std::fmax(0.0f, 1.0f - w), 1.0f / 2.2f); // the knob, from the taper
+            const float a = std::fmin(1.0f, std::fmax(0.0f, (v - 0.75f) / 0.25f));
+            db += 5.0f * a * a * (3.0f - 2.0f * a);
+        }
+        return db;
+    }
+#endif
     float  sr_ IV_ZI, tapeT_ = -1.0f, breathT_ = -1.0f, bandT_ = -1.0f;
     float  gEmph_ = 1, drive_ = 1, wPre_ IV_ZI, wDe_ IV_ZI, wDc_ IV_ZI, bias_ IV_ZI, fBias_ IV_ZI;
     float  pre_[2] IV_ZI, de_[2] IV_ZI, dc_[2] IV_ZI;

@@ -236,6 +236,14 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         }
     }
 #endif
+    if (const char* wd = std::getenv("IV_WEAR_DRIVE")) { // renders/wear_drive: A as built, B 13.75 dB, C 16.25 dB, D +5 dB past 0.75
+        const int v = (wd[0] >= 'A' && wd[0] <= 'D') ? wd[0] - 'A' : std::atoi(wd);
+        const int p = v >= 0 && v <= 3 ? v : 0;
+        engine.setWearDrivePrototype(p);
+        static const char* const what[] = {"as built (11.25 dB at full)", "13.75 dB at full", "16.25 dB at full (v1.0.65's)",
+                                           "as built to 0.75, then up to 16.25 dB at full"};
+        std::fprintf(stderr, "iv_render: IV_WEAR_DRIVE=%c: the tape's drive %s\n", 'A' + p, what[p]);
+    }
     if (const char* st = std::getenv("IV_SWELL_TAPS")) {
         engine.setSwellTapsPrototype(std::atoi(st));
         std::fprintf(stderr, "iv_render: IV_SWELL_TAPS: %d swell points a side\n", engine.swellTaps());
