@@ -174,9 +174,9 @@ FILES=("$NAME.vst3" "$NAME.component" "$(basename "$README")" LICENSE NOTICE LIC
 echo "Built $OUT/$ZIP"
 
 # Stable names for .../releases/latest/download/<name> (full releases only:
-# candidates are pre-releases, which /latest/ skips anyway).
+# candidates and betas are pre-releases, which /latest/ skips anyway).
 ASSETS=("$OUT/$ZIP"); [ -n "$FW" ] && ASSETS+=("$FW")
-if [ -z "$LABEL" ]; then
+if [ -z "$LABEL$BETA" ]; then
     cp "$OUT/$ZIP" "$OUT/sublustris-versio-plugin-macos.zip"
     cp "$FW" "$OUT/sublustris-versio-firmware.bin"
     ASSETS+=("$OUT/sublustris-versio-plugin-macos.zip" "$OUT/sublustris-versio-firmware.bin")
