@@ -56,6 +56,8 @@ def main():
     ap.add_argument("--hook", required=True, help="the prototype's renderer env hook, NAME=VALUE (several: comma-separated)")
     ap.add_argument("--set", action="append", default=[], help="k=v, one grid per value (repeatable)")
     ap.add_argument("--ref", help="k=v: A is also rendered with this, and the louder A counts")
+    ap.add_argument("--ref-bin", help="A from this renderer instead of --bin (a port against the build before it)")
+    ap.add_argument("--decay", action="append", help="the grid's DECAY values, repeatable (default 0.5 0.75 0.95)")
     ap.add_argument("--no-holds", action="store_true")
     ap.add_argument("--no-levels", action="store_true")
     ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) - 2))
@@ -72,14 +74,14 @@ def main():
         grid = [(sp, sz, dc, dr, extra)
                 for extra in (args.set or [""])
                 for sp in ("PLATE", "HALL", "MASSIVE") for sz in ("0", "0.6", "1")
-                for dc in ("0.5", "0.75", "0.95") for dr in ("0", "0.25", "0.5", "0.75", "1")]
+                for dc in (args.decay or ("0.5", "0.75", "0.95")) for dr in ("0", "0.25", "0.5", "0.75", "1")]
 
         def job(g, k):
             sp, sz, dc, dr, extra = g
             sets = [f"space={sp}", f"size={sz}", f"decay={dc}", f"drift={dr}"] + ([extra] if extra else [])
-            la = windows_db(render(args.bin, stim, tmp / f"a{k}.wav", sets, ""), edges)
+            la = windows_db(render(args.ref_bin or args.bin, stim, tmp / f"a{k}.wav", sets, ""), edges)
             if args.ref:
-                r = windows_db(render(args.bin, stim, tmp / f"r{k}.wav", sets[:4] + [args.ref], ""), edges)
+                r = windows_db(render(args.ref_bin or args.bin, stim, tmp / f"r{k}.wav", sets[:4] + [args.ref], ""), edges)
                 la = [max(u, v) for u, v in zip(la, r)]
             b = render(args.bin, stim, tmp / f"b{k}.wav", sets, args.hook)
             return g, la, windows_db(b, edges), bool(np.isfinite(b).all())

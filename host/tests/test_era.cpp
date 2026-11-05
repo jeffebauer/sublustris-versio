@@ -605,8 +605,9 @@ void noBandOnWear()
     }
     char msg[160];
     std::snprintf(msg, sizeof msg, "WEAR carries no radio band (blend 0 across the knob); a 100 Hz tone at WEAR 1 %+.1f dB against "
-                  "WEAR 0 (within 1.5)", db[1] - db[0]);
-    check(none && std::fabs(db[1] - db[0]) <= 1.5, msg);
+                  "WEAR 0 (within 2)", db[1] - db[0]);
+    // (+1.2 until v1.0.70; +1.9 with the still lows in step, ADR 0047: not a band, which would cut this tone.)
+    check(none && std::fabs(db[1] - db[0]) <= 2.0, msg);
 }
 
 // v1.0.64 (ADR 0038, the owner's pick C on renders/wear_no_bbd): no BBD clock on WEAR. Until v1.0.63 its sample and

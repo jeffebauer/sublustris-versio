@@ -452,6 +452,7 @@ private:
     // HALL's floor scale over kHallFloorScale (v1.0.57: 1 up to a 5 s tail, 2 from 15 s), glided; set on every
     // way into HALL (applySpace's snap), so it needs no initialiser. Last: no other member's offset moves.
     float hallFloorNow_ IV_ZI;
+    float hallFullerNow_ IV_ZI; // v1.0.71: x2 up to DECAY's crossover, x1 at endless, glided; set as hallFloorNow_ is
     // A held endless tail (v1.0.58, applySpace): the share of its top end's mellow still to come (1 on every block
     // until the tail is held, so it needs no initialiser), and how far its modulation has calmed (0..1).
     float endlessTopLeft_ IV_ZI, endlessCalm_ IV_ZI;

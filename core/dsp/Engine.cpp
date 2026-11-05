@@ -205,8 +205,10 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     inDcR_ = 1.0f - 2.0f * map::kPi * voicing::kInputDcHz / sampleRate_; // dsp::DcBlocker::setCutoff's
     inDcB_ = 0.5f * (1.0f + inDcR_);
     {
-        // The split: a 2nd-order Butterworth pair (bilinear). The two tanks' outputs are uncorrelated,
-        // so they add in power, and a Butterworth pair is power complementary (|L|² + |H|² = 1).
+        // The split: a 2nd-order Butterworth pair (bilinear), power complementary (|L|² + |H|² = 1), so tanks that have
+        // drifted apart add flat. Early on they ring nearly in step, and a Butterworth pair's two bands are then half a
+        // turn apart at the corner: processTwoTanks gives the low tank its input in the opposite sign, so they meet in
+        // step rather than cancel across 150-500 Hz (v1.0.71, ADR 0047).
         auto butter = [this](float f, float* lp, float* hp) {
             const float k = dsp::bilinearK(f, sampleRate_);
             const float nrm = 1.0f / (1.0f + 1.41421356f * k + k * k);
@@ -593,16 +595,22 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         // HALL's deepens with its tail (v1.0.57, ADR 0035): x1 up to a 5 s tail, x2 from 15 s and at infinite, on
         // the lows' T60 (`rate`: 0 at infinite, and towards 0 while freezing, as the floor glides out); centred on
         // the lines' mean read (Fdn::setFloorCentre), so a DECAY move doesn't retune what the tail holds.
-        float floorScale = 1.0f; // MASSIVE
+        float floorScale = voicing::kMassiveFloorScale; // MASSIVE (v1.0.71, ADR 0047: at kMassiveFloorPace, below)
         if (!massive) {
             constexpr float kFrom = voicing::kHallFloorLongFromSeconds, kAt = voicing::kHallFloorLongAtSeconds;
             float t = rate > 1.0f / kAt ? (1.0f / rate - kFrom) * (1.0f / (kAt - kFrom)) : 1.0f;
             if (t < 0.0f) t = 0.0f;
             const float target = 1.0f + (voicing::kHallFloorLongScale - 1.0f) * t;
-            hallFloorNow_ = snap ? target : hallFloorNow_ + blockK(voicing::kHallFloorGlideSeconds, n) * (target - hallFloorNow_);
-            floorScale = voicing::kHallFloorScale * hallFloorNow_;
+            const float glide = snap ? 1.0f : blockK(voicing::kHallFloorGlideSeconds, n);
+            hallFloorNow_ += glide * (target - hallFloorNow_);
+            // v1.0.71 (ADR 0047): twice as deep, so the notes' upper partials don't ring on as lines, easing back to
+            // once across DECAY's crossover, where clear notes stay steady; glided, so a DECAY flick doesn't retune.
+            const float fuller = 2.0f - map::governorWeight(decay);
+            hallFullerNow_ += glide * (fuller - hallFullerNow_);
+            floorScale = voicing::kHallFloorScale * hallFloorNow_ * hallFullerNow_;
         }
         fdn_.setFloorCentre(massive ? 0.0f : 1.0f - 1.0f / hallFloorNow_);
+        fdn_.setFloorPaceExtra(massive ? voicing::kMassiveFloorPace - 1.0f : 0.0f);
         fdn_.setModDepth(modScale_ * floorScale * (1.0f - modStill));
         // Still lows: the low tank follows, unmodulated.
         lowFdn_.setDecayRate(rate);
@@ -1257,7 +1265,7 @@ void Engine::processTwoTanks(int n)
             const float x = buf[c][i];
             const float lo = bq(cA, z[c][1], bq(cL, z[c][0], x));
             buf[c][i] = bq(cH, z[c][2], x);
-            if (ph == 0) (c ? lowInR_ : lowInL_)[k] = lo;
+            if (ph == 0) (c ? lowInR_ : lowInL_)[k] = -lo; // in step with the main tank across the split (v1.0.71, ADR 0047; see prepare)
         }
         if (ph == 0) ++k;
         ph = (ph + 1) & (lowDecimate_ - 1); // 4 or 8: a power of two

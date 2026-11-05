@@ -64,6 +64,11 @@ constexpr float kHallFloorScale = 3.0f;
 constexpr float kHallFloorLongFromSeconds = 5.0f;
 constexpr float kHallFloorLongAtSeconds   = 15.0f;
 constexpr float kHallFloorLongScale       = 2.0f;
+// CANYON's floor (v1.0.71, ADR 0047, the owner's pick C on renders/fuller_tail): deeper and quicker, so the notes' upper
+// partials smear instead of ringing on as narrow lines (1.6-6.4 kHz peaks 14.5 -> 7.1 per mille at a 5 s tail; a held
+// 1 kHz wavers 0.7 -> 7.4 cents p95). HALL's is x2 up to DECAY's crossover, x1 at endless (Engine::applySpace).
+constexpr float kMassiveFloorScale = 4.0f;
+constexpr float kMassiveFloorPace  = 2.0f;
 constexpr float kHallFloorGlideSeconds    = 1.0f;
 // "Air" (v1.0.25, valhalla_round2): HALL's and PLATE's highs lose this much more than their lows
 // at every finite DECAY, in dB/s, as air does in a room (Valhalla Room measured 3-7), instead of a

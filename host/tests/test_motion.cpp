@@ -169,18 +169,20 @@ void glideOut()
 // no crinkle; 3/4 left 16.0 / 15.2 / 9.6, 13 bursts, no dips; full left 19.9 / 19.8 / 15.1, 34 bursts and 15 dips.
 // HALL's and MASSIVE's p95s are with v1.0.63's onset centred (ADR 0039) in the same build: the re-laid early taps move
 // this one tone's reading (v1.0.65 alone: HALL 15.2 / 16.8 / 23.0, MASSIVE 7.0 / 11.7 / 19.7).
+// v1.0.71 (ADR 0047): HALL's floor x2 and CANYON's x4 at x2 pace add to the left side's depth, PLATE as before. Until
+// v1.0.70: HALL 14.6 / 19.2 / 25.0, MASSIVE 5.9 / 11.8 / 19.0.
 void leftSide()
 {
     const std::vector<float> tones = heldTones();
     struct Pos { float drift; const char* name; double p95[3]; int crinkles, dips; }; // p95: PLATE, HALL, MASSIVE
-    const Pos pos[] = {{0.2f, "9 o'clock (0.2)", {14.7, 14.6, 5.9}, 12, 1},
-                       {0.1175f, "3/4 left (0.1175)", {16.5, 19.2, 11.8}, 30, 8},
-                       {0.0f, "full left", {21.5, 25.0, 19.0}, 54, 27}};
+    const Pos pos[] = {{0.2f, "9 o'clock (0.2)", {14.7, 20.4, 12.9}, 12, 1},
+                       {0.1175f, "3/4 left (0.1175)", {16.5, 25.2, 13.1}, 30, 8},
+                       {0.0f, "full left", {21.5, 27.3, 22.0}, 54, 27}};
     for (const Pos& p : pos) {
         for (int space : {0, 1, 2}) {
             const double c = p95Of(render(tones, pageSetting(space, p.drift)));
             char msg[200];
-            std::snprintf(msg, sizeof msg, "MOTION %s, %s: p95 %.1f c on a held 1.3 kHz (v1.0.63 + v1.0.65: %.1f, within 10 %%)",
+            std::snprintf(msg, sizeof msg, "MOTION %s, %s: p95 %.1f c on a held 1.3 kHz (v1.0.71: %.1f, within 10 %%)",
                           p.name, kSpaceName[space], c, p.p95[space]);
             check(std::fabs(c / p.p95[space] - 1.0) <= 0.10, msg);
         }

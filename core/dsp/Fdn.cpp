@@ -356,7 +356,8 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     float floorMean = 0.0f; // the lines' floor positions (last block's), averaged: setFloorCentre
     for (int i = 0; i < kN; ++i) floorMean += floorB_[i];
     const float floorCentre = floorDepth * floorCentre_ * floorMean * (1.0f / float(kN)); // samples
-    const float floorCoeff = floorCoeffMemo_.get(dt, [](float t) { return 1.0f - std::exp(-2.0f * 3.14159265f * 0.3f * t); });
+    const float floorDt = dt + floorPaceExtra_ * dt; // setFloorPaceExtra
+    const float floorCoeff = floorCoeffMemo_.get(floorDt, [](float t) { return 1.0f - std::exp(-2.0f * 3.14159265f * 0.3f * t); });
 
     // The floor governor's extra loss (ADR 0008). A low tank follows its leader's and nothing reads its own levels, so
     // they aren't worked out (three log10f a chunk; review2/cpu, 28 Oct 2026): the same output to the bit.
@@ -545,7 +546,7 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     bool         absReady = false;
     for (int i = 0; i < kN; ++i) {
         // Modulation floor: a new random target every ~1.7–3.1 s per line.
-        floorCountdown_[i] -= dt;
+        floorCountdown_[i] -= floorDt;
         if (floorCountdown_[i] <= 0.0f) {
             floorTarget_[i] = uniform(rng_);
             floorCountdown_[i] = voicing::kFloorStepSeconds * (1.0f + 0.12f * float(i)) * (0.8f + 0.2f * uniform(rng_));

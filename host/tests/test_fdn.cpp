@@ -283,7 +283,9 @@ void sizeAndTimeCrossfade()
                       what == 0 ? "SIZE" : "TIME", moving, still, m.clickCount);
         // Sliding: -1 dB. A crossfade between two reads of one held sine dips where they're out of phase,
         // so SIZE keeps a little more (-17 dB, back-to-back fades) than TIME's (-22, outside the loop).
-        check(moving < still + 8.0 && moving < -15.0 && m.clickCount == 0, msg);
+        // v1.0.71 (ADR 0047): HALL's floor x2 smears the held note on purpose, still -18.7 -> -12.8 dB, moving (SIZE)
+        // -16.9 -> -11.2 (TIME -19.2 -> -11.5); so -10 here, was -15. What moving adds is unchanged.
+        check(moving < still + 8.0 && moving < -10.0 && m.clickCount == 0, msg);
     }
     {   // an infinite MASSIVE holds through a minute of SIZE moves (back-to-back crossfades drained 45 dB;
         // equal-power fades grew the lows to a DC offset). Each SIZE has its own level (a bigger room is

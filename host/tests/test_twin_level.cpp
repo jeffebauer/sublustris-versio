@@ -16,6 +16,9 @@
 // unscaled room there). Every room figure is pinned within 0.3 dB of v1.0.47's; HALL's at DECAY 0.9 to v1.0.57's (ADR
 // 0035: HALL's frozen pad itself changed, 0.2-0.5 dB quieter there; the room as before; v1.0.47's -9.63 / -9.00 / -9.18).
 // Five are v1.0.63's own (ADR 0039: the early taps re-laid move the pad's and the twin's levels apart by 0.3-0.5 dB;
+// Six are v1.0.71's own (ADR 0047: the still lows in step lift the frozen pad, up to 2.7 dB in CANYON at S0.5; until
+// v1.0.70: MASSIVE S0 D0.9 -5.21, S0.5 D0.5 -0.69, S0.5 D0.9 -3.60; HALL S0 D0.5 -9.21, S0 D0.9 -10.22, S0.5 D0.9 -9.57),
+// and HALL S0 D0.9's distance from v1.0.41's is 5.6, was 5.5.
 // v1.0.47's: MASSIVE S0.9 D0.9 -4.18, S0 D0.9 -5.59; HALL S0 D0.5 -8.71, S0.5 D0.5 -10.27, S0.9 D0.5 -11.32).
 // Re-pinned at v1.0.61 (ADR 0008 amendment, endless follows the playing): at DECAY 0.9 the pad and the twin are both
 // played as DECAY 0.80 (its loss, trims and governor; no duck, no endless floor), so PLATE's and HALL's figures at
@@ -127,14 +130,14 @@ int main()
         {"HALL S0.9 D0.9 (the page's)", 1, 0.9f, 0.9f, -8.29, 1.5, -8.82},
         {"PLATE S0.9 D0.9", 0, 0.9f, 0.9f, -10.00, 1.5, -8.57},
         {"MASSIVE S0 D0.5", 2, 0.0f, 0.5f, -4.76, 3.0, -5.11},
-        {"MASSIVE S0 D0.9", 2, 0.0f, 0.9f, -4.84, 3.0, -5.21},
-        {"MASSIVE S0.5 D0.5", 2, 0.5f, 0.5f, -1.51, 3.0, -0.69},
-        {"MASSIVE S0.5 D0.9", 2, 0.5f, 0.9f, -4.45, 3.0, -3.60},
+        {"MASSIVE S0 D0.9", 2, 0.0f, 0.9f, -4.84, 3.0, -5.52},
+        {"MASSIVE S0.5 D0.5", 2, 0.5f, 0.5f, -1.51, 3.0, -3.49},
+        {"MASSIVE S0.5 D0.9", 2, 0.5f, 0.9f, -4.45, 3.0, -6.22},
         {"MASSIVE S0.9 D0.5", 2, 0.9f, 0.5f, -3.18, 3.0, -2.95},
-        {"HALL S0 D0.5", 1, 0.0f, 0.5f, -5.51, 4.0, -9.21},
-        {"HALL S0 D0.9", 1, 0.0f, 0.9f, -5.11, 5.5, -10.22},
+        {"HALL S0 D0.5", 1, 0.0f, 0.5f, -5.51, 4.0, -8.77},
+        {"HALL S0 D0.9", 1, 0.0f, 0.9f, -5.11, 5.6, -10.63},
         {"HALL S0.5 D0.5", 1, 0.5f, 0.5f, -9.13, 3.0, -9.93},
-        {"HALL S0.5 D0.9", 1, 0.5f, 0.9f, -7.68, 3.0, -9.57},
+        {"HALL S0.5 D0.9", 1, 0.5f, 0.9f, -7.68, 3.0, -9.20},
         {"HALL S0.9 D0.5", 1, 0.9f, 0.5f, -10.13, 3.0, -10.96},
     };
     for (const auto& c : cases) {

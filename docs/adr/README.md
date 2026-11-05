@@ -49,3 +49,4 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0043](0043-plate-size-crossfade.md) | PLATE's SIZE by crossfade, like HALL and CANYON; small and frozen moves glide (ADR 0025 phase 2 done) | owner, 3 Nov 2026 |
 | [0044](0044-wear-taper.md) | WEAR's taper: the wear arrives earlier on the knob (1 − (1 − v)^2.2), the grit from noon; full WEAR unchanged | owner, 5 Nov 2026 |
 | [0045](0045-wear-drive.md) | The tape's drive back to 16.25 dB on the new taper (reverses ADR 0041's drive, amends ADR 0044) | owner, 5 Nov 2026 |
+| [0047](0047-fuller-tail.md) | A fuller tail: the still lows in step with the main tank, more movement in the floor (HALL x2 easing to x1 at endless, CANYON x4 at x2 pace); PLATE unchanged | owner, 6 Nov 2026 |
