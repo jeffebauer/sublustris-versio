@@ -55,6 +55,7 @@ Start with `/sublustris-start`.
     - open the page and HEAD every `_audio/*.wav.js`;
     - the audit list must be complete.
   - Its branch lacks main's ADR 0046 commits, which it doesn't need.
+  - **Added at the wrap (owner: "Are our size floor and ceiling values appropriate?"):** CANYON's SIZE-dependent DECAY floor (6 mean lines: 2.1 s / 5 s / 12 s at SIZE 0 / noon / full) is folded into the curve (a table per SIZE, a full-SIZE card, possibly a version that spreads DECAY from the floor). There's also a measurement-only SIZE section: re-run `tools/sweetspot.py` (`docs/sweetspot.md` is stale), echo smoothness and ringing at the SIZE ends, and whether HALL's 260 ms top is grainy. Check that its report has both parts.
 - **Branches waiting on the owner's picks or OK** (all off v1.0.70 unless stated; none pushed):
   - `claude/proto-wear-taper-78e1da`: v1.0.69 + v1.0.70 (`4b95b8a`), plus the `wear_drive` prototype commit `88a5148` under them. After the rack check it becomes `beta/wear`: push it, run `tools/make_release.sh --beta beta/wear 1 --publish` (the owner's OK first), open the PR (the script prints the commands), and comment on the Modwiggler thread.
   - `claude/fuller-tail-6dcc8d` (`a3478b8`): hook `IV_FULLER` B/C/D. Firmware checked byte-identical here.
