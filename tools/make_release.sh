@@ -19,6 +19,13 @@
 #       it installs next to the main plugin (as tools/install_plugin.sh <ref>
 #       <label>). No firmware (a candidate hasn't had its CPU run on the
 #       module); published as a pre-release, never Latest.
+#   tools/make_release.sh --beta <ref> <n> [--notes <file>] [--publish]
+#       a beta for players to try (ADR 0046): the firmware and the normal
+#       plugin, tagged <sound>-beta.<n> (v1.0.70-beta.1) and published as a
+#       pre-release, never Latest, so the site's /latest/ downloads don't move.
+#       <ref> may be on any branch pushed to origin (a beta/<sound> branch), not
+#       only main. Keep the tag even if the branch is dropped: it holds the
+#       released source (the plugin is AGPLv3).
 # Assets: the dated SublustrisVersio_<sound>-<sha>.zip and
 # sublustris_versio_firmware_<sound>-<sha>.bin, plus, on full releases, the
 # same files under the stable names the site links to
@@ -37,13 +44,14 @@ cd "$REPO"
 MAIN="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"   # the main checkout
 GH_REPO="jeffebauer/sublustris-versio"
 
-PUBLISH=0 DRY=0 REF="" LABEL="" NOTES="" RELNOTES=""
+PUBLISH=0 DRY=0 REF="" LABEL="" BETA="" NOTES="" RELNOTES=""
 abspath() { echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"; }
 while [ $# -gt 0 ]; do
     case "$1" in
         --publish) PUBLISH=1; shift ;;
         --dry-run) DRY=1; shift ;;
         --candidate) REF="$2"; LABEL="$3"; shift 3 ;;
+        --beta) REF="$2"; BETA="$3"; shift 3 ;;
         --notes) NOTES="$(abspath "$2")"; shift 2 ;;
         --release-notes) RELNOTES="$(abspath "$2")"; shift 2 ;;
         -*) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -51,6 +59,8 @@ while [ $# -gt 0 ]; do
     esac
 done
 [ "$DRY" = 0 ] || [ "$PUBLISH" = 1 ] || { echo "--dry-run goes with --publish." >&2; exit 1; }
+[ -z "$LABEL" ] || [ -z "$BETA" ] || { echo "--candidate and --beta don't go together." >&2; exit 1; }
+[ -z "$BETA" ] || [[ "$BETA" =~ ^[1-9][0-9]*$ ]] || { echo "--beta <ref> <n>: n is 1, 2, 3..." >&2; exit 1; }
 
 if [ -z "$REF" ] || [ "$REF" = HEAD ]; then
     git diff --quiet HEAD -- core firmware plugin host CMakeLists.txt \
@@ -68,6 +78,9 @@ if [ -n "$LABEL" ]; then
     BUNDLE="com.OmbraAudio.ImmensioVersio$LABEL"
     CODE="ImV$(printf '%s' "$LABEL" | tr '[:lower:]' '[:upper:]' | cut -c1)"   # 4 characters, as install_plugin.sh
     STAMP="$SOUND-$SHA-candidate-$LABEL" TAG="$SOUND-$SHA-candidate-$LABEL"
+elif [ -n "$BETA" ]; then
+    NAME="Sublustris Versio" CODE="ImVs" BUNDLE="com.OmbraAudio.ImmensioVersio"   # the normal plugin: it replaces the release one
+    STAMP="$SOUND-$SHA-beta.$BETA" TAG="$SOUND-beta.$BETA"
 else
     NAME="Sublustris Versio" CODE="ImVs" BUNDLE="com.OmbraAudio.ImmensioVersio"
     STAMP="$SOUND-$SHA" TAG="$SOUND"
@@ -75,9 +88,15 @@ fi
 
 # Publishing checks first, before anything is built.
 if [ "$PUBLISH" = 1 ]; then
-    git fetch -q origin main
-    git merge-base --is-ancestor "$FULL_SHA" origin/main \
-        || { echo "$SHA isn't on origin/main: merge and push it first." >&2; exit 1; }
+    if [ -n "$BETA" ]; then
+        git fetch -q origin
+        [ -n "$(git branch -r --contains "$FULL_SHA")" ] \
+            || { echo "$SHA isn't on any branch on origin: push its beta branch first." >&2; exit 1; }
+    else
+        git fetch -q origin main
+        git merge-base --is-ancestor "$FULL_SHA" origin/main \
+            || { echo "$SHA isn't on origin/main: merge and push it first." >&2; exit 1; }
+    fi
     VIS="$(gh repo view "$GH_REPO" --json visibility -q .visibility)"
     if [ "$VIS" != PUBLIC ]; then
         if [ "$DRY" = 1 ]; then echo "Note: the repo is $VIS; a real --publish would refuse." >&2
@@ -126,7 +145,8 @@ done
 
 echo "== Package"
 README="$OUT/READ ME - $NAME.txt"
-python3 - "$REPO/releases/README.md" "$README" "$SOUND" "$NAME" "$(basename "${FW:-none}")" "${NOTES:-}" "$SOURCE_URL" "$SHA" <<'EOF'
+RVERSION="$SOUND"; [ -z "$BETA" ] || RVERSION="$TAG"   # the read-me names a beta as v1.0.70-beta.1
+python3 - "$REPO/releases/README.md" "$README" "$RVERSION" "$NAME" "$(basename "${FW:-none}")" "${NOTES:-}" "$SOURCE_URL" "$SHA" <<'EOF'
 import re, sys
 src, dst, sound, name, fw, notes, source, sha = sys.argv[1:9]
 s = open(src).read()
@@ -154,9 +174,9 @@ FILES=("$NAME.vst3" "$NAME.component" "$(basename "$README")" LICENSE NOTICE LIC
 echo "Built $OUT/$ZIP"
 
 # Stable names for .../releases/latest/download/<name> (full releases only:
-# candidates are pre-releases, which /latest/ skips anyway).
+# candidates and betas are pre-releases, which /latest/ skips anyway).
 ASSETS=("$OUT/$ZIP"); [ -n "$FW" ] && ASSETS+=("$FW")
-if [ -z "$LABEL" ]; then
+if [ -z "$LABEL$BETA" ]; then
     cp "$OUT/$ZIP" "$OUT/sublustris-versio-plugin-macos.zip"
     cp "$FW" "$OUT/sublustris-versio-firmware.bin"
     ASSETS+=("$OUT/sublustris-versio-plugin-macos.zip" "$OUT/sublustris-versio-firmware.bin")
@@ -169,8 +189,9 @@ ASSETS+=("$OUT/SHA256SUMS.txt")
 
 if [ "$PUBLISH" = 1 ]; then
     echo "== GitHub Release $TAG"
-    if [ -n "$LABEL" ]; then KIND=(--prerelease --latest=false); else KIND=(--latest); fi
+    if [ -n "$LABEL$BETA" ]; then KIND=(--prerelease --latest=false); else KIND=(--latest); fi
+    TITLE="Sublustris Versio $SOUND"; [ -z "$BETA" ] || TITLE="Sublustris Versio $SOUND beta $BETA"
     CMD=(gh release create "$TAG" "${ASSETS[@]}" -R "$GH_REPO" --target "$FULL_SHA" "${KIND[@]}"
-        --title "Sublustris Versio $SOUND" --notes-file "${RELNOTES:-$README}")
+        --title "$TITLE" --notes-file "${RELNOTES:-$README}")
     if [ "$DRY" = 1 ]; then printf 'Dry run, would run:'; printf ' %q' "${CMD[@]}"; echo; else "${CMD[@]}"; fi
 fi
