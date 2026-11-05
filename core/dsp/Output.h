@@ -67,7 +67,8 @@ private:
 // 0 -> +4.5 dB at the ends; a make-up keeps music's loudness (LUFS) where today's tilt had it (kMakeupDb). The loop's
 // TONE share is untouched (holds and freeze don't change). Coefficients once per control chunk (EraSvf::gain: sin /
 // cos, no tan), ramped per sample over it; across noon the old side's bell fades out before the new side's starts.
-// Noon is flat: out = 1 x + 0 + 0, the Tilt's output bit for bit.
+// Noon is flat: out = mk x + 0 + 0. The table carries the wet's +3 dB (v1.0.73, ADR 0049, the owner's picks on
+// renders/wet_loudness: lfad's "quieter on the output than my other reverbs"), so the limiter still has the last word.
 class ToneBell {
 public:
     void prepare(float sampleRate)
@@ -173,7 +174,7 @@ private:
     enum { kG, kK, kC0, kC1, kC2, kN };
     // dB against the Tilt alone at TONE 0, 1/8, ... 1: the mean over HALL and MASSIVE x skank, vibes, pad (LUFS;
     // renders/tone_character, tools/pages/tone_character.py at 5e2562f).
-    static constexpr float kMakeupDb[9] = {-2.26f, -1.17f, -0.52f, -0.17f, 0, -0.37f, -0.45f, -0.35f, -0.20f};
+    static constexpr float kMakeupDb[9] = {0.74f, 1.83f, 2.48f, 2.83f, 3.0f, 2.63f, 2.55f, 2.65f, 2.80f};
     static float tick(EraSvf& f, float x, float a1, float a2, float a3, float c0, float c1, float c2)
     {
         const float v3 = x - f.ic2, v1 = a1 * f.ic1 + a2 * v3, v2 = f.ic2 + a2 * f.ic1 + a3 * v3;

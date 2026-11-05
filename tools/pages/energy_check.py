@@ -59,6 +59,7 @@ def main():
     ap.add_argument("--ref-bin", help="A from this renderer instead of --bin (a port against the build before it)")
     ap.add_argument("--decay", action="append", help="the grid's DECAY values, repeatable (default 0.5 0.75 0.95)")
     ap.add_argument("--hold-decay", default="1", help="the 10-minute holds' DECAY (default 1)")
+    ap.add_argument("--allow-db", type=float, default=0.0, help="a deliberate level change on top of the 0.5 dB (a port that lifts the wet on purpose)")
     ap.add_argument("--no-holds", action="store_true")
     ap.add_argument("--no-levels", action="store_true")
     ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) - 2))
@@ -93,7 +94,7 @@ def main():
             diff = max(b - a for a, b in zip(la, lb))
             worst = max(worst, diff)
             grow = lb[-1] - lb[1] if g[2] == "0.95" else -99.0
-            bad = (not ok) or diff > 0.5 or grow > 1.0
+            bad = (not ok) or diff > 0.5 + args.allow_db or grow > 1.0
             if bad:
                 fails += 1
                 print(f"FAIL {g}: B - A up to {diff:+.2f} dB, infinite growth {grow:+.2f} dB, finite={ok}")

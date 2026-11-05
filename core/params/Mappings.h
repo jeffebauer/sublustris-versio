@@ -293,6 +293,14 @@ IV_CTL_OPT inline float decayLevelMakeup(float v, int space)
     return g;
 }
 
+// The wet's lift at short tails (v1.0.73, ADR 0049): the gain after WEAR for DECAY's scale v (finite: the Engine passes
+// decayFin). Keyed to the plain T60, so it moves with DECAY's knob curve and SIZE doesn't move it. A smoothstep, no libm.
+IV_CTL_OPT inline float decayWetLift(float v, int space)
+{
+    const float x = clamp01((1.0f / decayRate(v, space) - voicing::kWetLiftFromSeconds) / (voicing::kWetLiftToSeconds - voicing::kWetLiftFromSeconds));
+    return 1.0f + voicing::kWetLiftGain * (1.0f - x * x * (3.0f - 2.0f * x));
+}
+
 // HALL: The level a finite tail loses by being shorter (its energy goes with its
 // T60), made up on the output; none at infinite, where nothing is shorter.
 IV_CTL_OPT inline float hallSizeLevelTrim(float size, float decay)

@@ -1,9 +1,9 @@
 {
-  "spec": "v1.0.72",
-  "why": "v1.0.72: DECAY's knob on the new curve (pick C on renders/decay_curve, ADR 0048); the goldens stay on the knob",
+  "spec": "v1.0.73",
+  "why": "v1.0.73: the wet +3 dB, +1.5 dB more at T60 up to 12 s (ADR 0049). Chord loudness by the gain; c80 and smooth_after on plate_small and hall_small move through the metric's level-reading onset (a fixed window reads the same C80)",
   "corners": {
     "plate_small": {
-      "chord_loudness_db": -39.664999999999999,
+      "chord_loudness_db": -35.164999999999999,
       "chord_band_db": [
         -38.911000000000001,
         -3.6419999999999999,
@@ -22,11 +22,11 @@
         2.4510000000000001,
         2.2280000000000002
       ],
-      "smooth_after_s": 0.17999999999999999,
-      "c80_db": -5.8339999999999996
+      "smooth_after_s": 0.151,
+      "c80_db": -3.4950000000000001
     },
     "plate_large": {
-      "chord_loudness_db": -37.838999999999999,
+      "chord_loudness_db": -33.402999999999999,
       "chord_band_db": [
         -40.594000000000001,
         -2.8170000000000002,
@@ -49,7 +49,7 @@
       "c80_db": -9.3849999999999998
     },
     "plate_bright": {
-      "chord_loudness_db": -38.323,
+      "chord_loudness_db": -33.823,
       "chord_band_db": [
         -44.033999999999999,
         -3.274,
@@ -69,10 +69,10 @@
         4.4489999999999998
       ],
       "smooth_after_s": 0.34200000000000003,
-      "c80_db": -9.7750000000000004
+      "c80_db": -9.7560000000000002
     },
     "hall_small": {
-      "chord_loudness_db": -41.223999999999997,
+      "chord_loudness_db": -36.723999999999997,
       "chord_band_db": [
         -38.106000000000002,
         -5.7530000000000001,
@@ -83,19 +83,19 @@
         -88.843000000000004
       ],
       "band_t60_s": [
-        2.1930000000000001,
+        2.1970000000000001,
         2.1269999999999998,
         2.2330000000000001,
         2.194,
-        2.117,
+        2.1120000000000001,
         2.0539999999999998,
-        1.8160000000000001
+        1.8140000000000001
       ],
-      "smooth_after_s": 0.040000000000000001,
-      "c80_db": -6.0810000000000004
+      "smooth_after_s": 0,
+      "c80_db": -2.1709999999999998
     },
     "hall_large": {
-      "chord_loudness_db": -37.829999999999998,
+      "chord_loudness_db": -34.829999999999998,
       "chord_band_db": [
         -40.106000000000002,
         -2.786,
@@ -118,7 +118,7 @@
       "c80_db": -22.835999999999999
     },
     "hall_dark": {
-      "chord_loudness_db": -37.448,
+      "chord_loudness_db": -32.948,
       "chord_band_db": [
         -38.984000000000002,
         -4.9829999999999997,
@@ -126,7 +126,7 @@
         -17.649000000000001,
         -61.063000000000002,
         -94.266000000000005,
-        -104.46299999999999
+        -104.462
       ],
       "band_t60_s": [
         8.2910000000000004,
@@ -141,7 +141,7 @@
       "c80_db": -13.728999999999999
     },
     "hall_wear30": {
-      "chord_loudness_db": -39.991999999999997,
+      "chord_loudness_db": -35.491999999999997,
       "chord_band_db": [
         -36.125999999999998,
         -4.75,
@@ -164,7 +164,7 @@
       "c80_db": -15.57
     },
     "hall_wear50": {
-      "chord_loudness_db": -39.945,
+      "chord_loudness_db": -35.445,
       "chord_band_db": [
         -35.164000000000001,
         -4.7460000000000004,
@@ -187,7 +187,7 @@
       "c80_db": -16.106999999999999
     },
     "hall_wear90": {
-      "chord_loudness_db": -39.738,
+      "chord_loudness_db": -35.238,
       "chord_band_db": [
         -33.667000000000002,
         -4.7389999999999999,
@@ -210,7 +210,7 @@
       "c80_db": -16.218
     },
     "massive_small": {
-      "chord_loudness_db": -36.545999999999999,
+      "chord_loudness_db": -33.545000000000002,
       "chord_band_db": [
         -41.987000000000002,
         -3.1320000000000001,
@@ -233,7 +233,7 @@
       "c80_db": -26.155999999999999
     },
     "massive_large": {
-      "chord_loudness_db": -35.567,
+      "chord_loudness_db": -32.567,
       "chord_band_db": [
         -38.338000000000001,
         -2.9249999999999998,
@@ -256,7 +256,7 @@
       "c80_db": -32.646000000000001
     },
     "massive_shimmer": {
-      "chord_loudness_db": -36.640999999999998,
+      "chord_loudness_db": -33.640000000000001,
       "chord_band_db": [
         -40.460999999999999,
         -2.9729999999999999,

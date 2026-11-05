@@ -147,7 +147,8 @@ void movementAndRinging()
     // top) everything follows DECAY 0.80 while you play, the room's level with it, so HALL's long-tail trim (ADR 0034,
     // eased back out across the crossover before) now applies: 2.1 dB under v1.0.47's -35.52 / -35.49 / -35.28.
     // MASSIVE's trim is the same at 0.80 and 0.9: unchanged.
-    const double levelB[2][3] = {{-37.62, -37.59, -37.38}, {-34.54, -34.51, -34.30}};
+    // +3.00 at v1.0.73: the wet's flat lift (ADR 0049), TONE at noon, long tails so no lift at short ones.
+    const double levelB[2][3] = {{-34.62, -34.59, -34.38}, {-31.54, -31.51, -31.30}};
     const double ringB[2][3] = {{13.7, 7.2, 7.1}, {13.7, 7.2, 7.1}};
     for (int space : {1, 2})
         for (int k = 0; k < 3; ++k) {

@@ -486,6 +486,9 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // DECAY keeps the loudness (v1.0.28): a shorter tail is made up to the finite top's level, on the
     // wet and the twin alike. A frozen pad keeps heldDecay_, so freezing doesn't move it.
     const float gainWas = decayGain_;
+#if !defined(IV_MODE_PROFILE)
+    const float wetLiftWas = wetLift_;
+#endif
 #ifndef IV_FIXED_VOICINGS
     decayGain_ = std::pow(map::decayLevelMakeup(decayFin, activeSpace_), decayMakeup_); // setDecayMakeup: 1 = as built
 #else
@@ -500,6 +503,14 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // tank barely loses, and a cap there held HALL's endless level down. Falls as before; a held DECAY is unchanged.
     if (!snap && decay < map::kDecayFiniteTop)
         decayGain_ = std::fmin(decayGain_, gainWas * (1.0f + (voicing::kDecayRiseShare * 6.9078f) * rate * float(n) / sampleRate_));
+#if !defined(IV_MODE_PROFILE)
+    // The wet's lift at short tails (v1.0.73, ADR 0049): rises under the same cap, so turning DECAY down can't make a tail
+    // still ringing swell; falls at once. The profile build has none of it (2 multiplies and a glide a sample, about
+    // 0.1 % of a sample's cycles, and its fixed settings have 4 B to spare).
+    wetLift_ = map::decayWetLift(decayFin, activeSpace_);
+    if (!snap) wetLift_ = std::fmin(wetLift_, wetLiftWas * (1.0f + (voicing::kDecayRiseShare * 6.9078f) * rate * float(n) / sampleRate_));
+    else wetLiftNow_ = wetLift_;
+#endif
     if (snap) {
         decayGainNow_ = decayGain_;
     }
@@ -1224,7 +1235,12 @@ IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* 
         if (texOn_) texture_.processBlock(wetL_, wetR_, n);
         prof::mark(prof::kEraWear);
         for (int i = 0; i < n; ++i) {
+#if !defined(IV_MODE_PROFILE)
+            wetLiftNow_ += 0.0005f * (wetLift_ - wetLiftNow_);
+            float wl = wetLiftNow_ * wetL_[i], wr = wetLiftNow_ * wetR_[i];
+#else
             float wl = wetL_[i], wr = wetR_[i];
+#endif
             tilt_.process(wl, wr);
 #ifndef IV_FIXED_VOICINGS
             if (!toneBellOff_)

@@ -166,7 +166,9 @@ void flipAfterUnfreezeFadesTheTwin()
         char what[160];
         std::snprintf(what, sizeof what, "a flip %d->%d after an unfreeze, the twin still sounding, doesn't click (worst x%.1f)", from,
                       (from + 1) % 3, r.worstClick);
-        check(r.worstClick < 15.0f, what);
+        // 17, was 15, at v1.0.73: the wet's flat +3 dB (ADR 0049) reads x13.5 as x15.4 with no new click: the ratio's
+        // 1e-4 floor is absolute, so the same click reads higher on a louder wet.
+        check(r.worstClick < 17.0f, what);
     }
 }
 

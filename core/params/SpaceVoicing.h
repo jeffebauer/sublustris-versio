@@ -97,6 +97,11 @@ constexpr float kDecayLevelTopSeconds[3] = {12.0f, 25.0f, 120.0f};
 // the owner's pick B on renders/decay_swell): a long tail turned down fades at 0.7 of its new rate while the
 // make-up catches up, never louder; played, the shorter tail grows in at the level it had.
 constexpr float kDecayRiseShare = 0.3f;
+// The wet's lift at short tails (v1.0.73, ADR 0049, the owner's picks on renders/wet_loudness): on TONE's flat +3 dB
+// (Output.h kMakeupDb), +1.5 dB more at T60 <= kWetLiftFromSeconds, none from kWetLiftToSeconds, every SPACE. As a gain - 1.
+constexpr float kWetLiftGain = 0.18850f; // 10^(1.5 / 20) - 1
+constexpr float kWetLiftFromSeconds = 12.0f;
+constexpr float kWetLiftToSeconds = 26.0f;
 // Endless follows the playing (v1.0.61, ADR 0008 amendment; the owner's pick C on renders/decay_endless_match). Past
 // the finite top, played, the tail keeps the top's loss, level and governor; held (the input kEndlessQuietBelowDb
 // under the tail for kEndlessQuietSeconds) its loss glides out over kEndlessHoldSeconds, and the governor's floor

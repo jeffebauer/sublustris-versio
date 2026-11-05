@@ -422,6 +422,25 @@ void decayKnobCurve()
               && std::fabs(hall(0.9f) - 55.6f) < 0.8f && std::fabs(hall(kDecayKnobFiniteTop) - 60.0f) < 0.1f,
           "DECAY's knob: HALL 0.8 s, noon 12, 3 o'clock 40, 4 o'clock 56, the finite top 60");
     check(decayRate(decayScale(kDecayKnobEndlessAt), 1) == 0.0f && decayRate(decayScale(0.949f), 1) > 0.0f, "DECAY's knob: endless from half past 4, not before");
+    // The wet's lift at short tails (v1.0.73, ADR 0049): +1.5 dB to 12 s, none from 26 s, on the T60 DECAY's knob gives, every SPACE.
+    {
+        const auto liftDb = [](float knob, int space) { return 20.0f * std::log10(decayWetLift(std::fmin(decayScale(knob), kDecayFiniteTop), space)); };
+        bool shortFull = true, longNone = true, falls = true;
+        for (int space = 0; space < 3; ++space) {
+            float was = 99.0f;
+            for (int i = 0; i <= 100; ++i) {
+                const float knob = float(i) / 100.0f;
+                const float t = 1.0f / decayRate(std::fmin(decayScale(knob), kDecayFiniteTop), space);
+                const float db = liftDb(knob, space);
+                if (t <= 12.0f) shortFull = shortFull && std::fabs(db - 1.5f) < 0.01f;
+                if (t >= 26.0f) longNone = longNone && db == 0.0f;
+                falls = falls && db <= was + 1e-4f;
+                was = db;
+            }
+        }
+        check(shortFull && longNone && falls, "The wet's lift: +1.5 dB at T60 <= 12 s, none from 26 s, never rising as DECAY's knob goes up, every SPACE");
+        check(std::fabs(liftDb(1.0f, 0)) == 0.0f && std::fabs(liftDb(1.0f, 1)) == 0.0f && std::fabs(liftDb(1.0f, 2)) == 0.0f, "The wet's lift: none at endless");
+    }
     // Engine::param is the knob; only the smoother reads the scale.
     iv::Engine e;
     e.prepare(48000.0f, 48);

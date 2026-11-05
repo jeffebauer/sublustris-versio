@@ -374,6 +374,9 @@ private:
     // starts, the fade's gains (stepped by a rotation).
     float pdOld_ IV_ZI, pdLastTarget_ IV_ZI, pdRest_ IV_ZI, pdOldG_ IV_ZI, pdNewG_ = 1.0f, pdRotC_ = 1.0f, pdRotS_ IV_ZI;
     int   pdXfLeft_ IV_ZI;
+#if !defined(IV_MODE_PROFILE)
+    float wetLift_ = 1.0f, wetLiftNow_ = 1.0f; // the wet's lift at short tails, after WEAR (v1.0.73, ADR 0049)
+#endif
     float decayMakeup_ = 1.0f, decayGain_ = 1.0f, decayGainNow_ = 1.0f; // DECAY's level make-up (v1.0.28)
     float holdMix_ IV_ZI; // endless (v1.0.61): how far its loss has glided out after the input went quiet
     float holdFloor_ IV_ZI; // and how far the finite top's floor has let go

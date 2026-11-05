@@ -49,11 +49,14 @@ double bellGainDb(float tone, float f)
     return 10.0 * std::log10(out / in);
 }
 
+// The make-up table carries the wet's flat +3 dB since v1.0.73 (ADR 0049); these tests are about the bell, so they take it off.
+constexpr double kWetLiftDb = 3.0;
+
 void bellShape()
 {
     struct End { float tone, corner, far, lo, hi; double makeupDb; const char* name; };
-    for (const End& e : {End{0.0f, 600.0f, 60.0f, 400.0f, 900.0f, -2.26, "fully CCW"},
-                         End{1.0f, 5000.0f, 300.0f, 3000.0f, 8000.0f, -0.20, "fully CW"}}) {
+    for (const End& e : {End{0.0f, 600.0f, 60.0f, 400.0f, 900.0f, -2.26 + kWetLiftDb, "fully CCW"},
+                         End{1.0f, 5000.0f, 300.0f, 3000.0f, 8000.0f, -0.20 + kWetLiftDb, "fully CW"}}) {
         double best = -99.0, at = 0.0;
         for (float f = e.lo; f <= e.hi; f *= 1.01f) {
             const double g = bellGainDb(e.tone, f);
@@ -67,11 +70,12 @@ void bellShape()
         check(std::fabs(best - e.makeupDb - 4.5) < 0.3 && std::fabs(at / e.corner - 1.0) < 0.05
                   && std::fabs(far - e.makeupDb) < 0.15, msg);
     }
-    // Noon: the Tilt's output, bit for bit (the bell's sum is 1 x + 0 + 0).
+    // Noon: the Tilt's output and the flat +3 dB, nothing else (the bell's sum is mk x + 0 + 0).
     iv::dsp::ToneBell b;
     b.prepare(kSr);
     b.set(0.5f, 32);
     b.snap();
+    const float mk = float(std::pow(10.0, kWetLiftDb / 20.0));
     uint32_t seed = 7;
     bool same = true;
     for (int i = 0; i < 48000; ++i) {
@@ -80,9 +84,9 @@ void bellShape()
         const float x = float(int32_t(seed)) / 2147483648.0f;
         float l = x, r = -x;
         b.process(l, r);
-        same = same && std::memcmp(&l, &x, sizeof x) == 0 && r == -x;
+        same = same && std::fabs(l - mk * x) <= 1e-6f && r == -l;
     }
-    check(same, "TONE noon: the bell passes the wet bit for bit");
+    check(same, "TONE noon: the bell passes the wet, +3 dB and nothing else");
 }
 
 struct Stereo {
@@ -162,7 +166,7 @@ void levelOnMusic(const std::vector<float>& skankIn)
         for (int k = 0; k <= 8; ++k) {
             const float tone = float(k) / 8.0f;
             auto at = [tone](double) { return tone; };
-            const double d = kWeightedDb(render(in, space, 0.75f, at, true)) - kWeightedDb(render(in, space, 0.75f, at, false));
+            const double d = kWeightedDb(render(in, space, 0.75f, at, true)) - kWeightedDb(render(in, space, 0.75f, at, false)) - kWetLiftDb;
             if (std::fabs(d) > std::fabs(worst)) worst = d;
             char buf[32];
             std::snprintf(buf, sizeof buf, " %.3f: %+.2f", tone, d);
@@ -214,7 +218,11 @@ void cvSweeps(const std::vector<float>& skankIn)
                 const double p = std::fmod((t - 1.0) * hz + 0.25, 1.0);
                 return float(p < 0.5 ? 2.0 * p : 2.0 - 2.0 * p);
             };
-            const double on = spikeDb(render(in, space, 0.75f, tri, true), 1.0);
+            Stereo bell = render(in, space, 0.75f, tri, true); // without the flat +3 dB: spikeDb's -90 dBFS gate reads level
+            const float trim = float(std::pow(10.0, -kWetLiftDb / 20.0));
+            for (float& v : bell.l) v *= trim;
+            for (float& v : bell.r) v *= trim;
+            const double on = spikeDb(bell, 1.0);
             const double off = spikeDb(render(in, space, 0.75f, tri, false), 1.0);
             char msg[200];
             std::snprintf(msg, sizeof msg, "%s, TONE CV at %.1f Hz: worst 1 ms spike %.1f dB, %.1f without the bell (at most +3)",
