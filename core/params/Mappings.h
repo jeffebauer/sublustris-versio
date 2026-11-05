@@ -24,8 +24,8 @@ struct MixGains {
 };
 IV_CTL_OPT inline MixGains mixGains(float v) { return {std::cos(v * 0.5f * kPi), std::sin(v * 0.5f * kPi)}; }
 
-// DECAY (P2), SPEC §3: 0–0.80 T60 exponential per SPACE; 0.80–0.85 a
-// crossover to infinite (1/T60 falls linearly to 0); 0.85–1 infinite.
+// DECAY (P2), SPEC §3, on DECAY's scale (decayScale below maps the knob onto it): 0–0.80 T60 exponential per
+// SPACE; 0.80–0.85 a crossover to infinite (1/T60 falls linearly to 0); 0.85–1 infinite.
 // PLATE's and HALL's tops 30 / 60 s since v1.0.53 (ADR 0034; were 12 / 25).
 constexpr float kDecayFiniteTop   = 0.80f;
 constexpr float kDecayInfiniteAt  = 0.85f;
@@ -37,6 +37,27 @@ constexpr T60Range kT60Hall{0.8f, 60.0f};
 constexpr T60Range kT60Massive{2.0f, 120.0f};
 
 inline const T60Range& t60Range(int space) { return space == 0 ? kT60Plate : (space == 1 ? kT60Hall : kT60Massive); }
+
+// DECAY's knob onto DECAY's scale (v1.0.72, ADR 0048, the owner's pick C on renders/decay_curve). Everything keyed to
+// DECAY (this file's 0.80 and 0.85, the governor's weights and ease, endless following the playing, the make-up and its
+// trims, HALL's fuller floor) reads the scale, so it all moves with endless and stays at the same T60. The knob: finite
+// to kDecayKnobFiniteTop (0.92), the crossover to kDecayKnobEndlessAt (0.95, half past 4), endless to the stop. Over
+// the finite part the scale's share is x + b x (1 - x) of x = v / top: T60 stays exponential in that share, the bend
+// keeps noon at noon's old T60 and gives the long tails more of the knob. 0 and 1 land exactly on 0 and 1. Applied where
+// DECAY's smoother reads its target (Engine::param still returns the knob). The profile build reads no knobs and its
+// fixed test settings are on the scale, so it has none of this (it also has 4 B to spare).
+constexpr float kDecayKnobFiniteTop = 0.92f;
+constexpr float kDecayKnobEndlessAt = 0.95f;
+constexpr float kDecayKnobBend      = 0.328f;
+IV_CTL_NOINLINE IV_CTL_OPT inline float decayScale(float v)
+{
+    if (v <= kDecayKnobFiniteTop) {
+        const float x = v / kDecayKnobFiniteTop;
+        return kDecayFiniteTop * (x + kDecayKnobBend * x * (1.0f - x));
+    }
+    if (v < kDecayKnobEndlessAt) return kDecayFiniteTop + 0.05f * (v - kDecayKnobFiniteTop) / (kDecayKnobEndlessAt - kDecayKnobFiniteTop);
+    return kDecayInfiniteAt + 0.15f * (v - kDecayKnobEndlessAt) / (1.0f - kDecayKnobEndlessAt); // CANYON's attack still ends at 1's
+}
 
 // 1 / T60 in 1/s: 0 means infinite. Kept as a rate so the crossover is a
 // straight line and a loop gain follows as 10^(−3 · length · rate).

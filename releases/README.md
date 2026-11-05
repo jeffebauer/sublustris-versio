@@ -51,7 +51,7 @@ THE CONTROLS (the same on the module and in the plugin)
 Clock positions are approximate: fully left is 7 o'clock, noon is the middle, fully right is 5 o'clock.
 
 BLEND: dry to wet, with no dip in the middle. Fully right is reverb only (best on a send). Your dry signal is never touched.
-DECAY: how long the tail rings: PLATE about 0.4 to 30 s, HALL 0.8 to 60 s, CANYON 2 to 120 s. Past about 3 o'clock it's endless: while you play it follows you at the level of the longest tail just below, so crossing the line doesn't jump; when you stop, it holds the chord without running away, its notes staying notes instead of dissolving into haze.
+DECAY: how long the tail rings: PLATE about 0.4 to 30 s, HALL 0.8 to 60 s, CANYON 2 to 120 s. From about half past 4 it's endless: while you play it follows you at the level of the longest tail just below, so crossing the line doesn't jump; when you stop, it holds the chord without running away, its notes staying notes instead of dissolving into haze.
 TONE: flat at noon. Left darkens the tail as it rings, with a warm bump in the low mids; right brightens it, with a gentle sheen on top. Never harsh.
 WEAR: how worn the reverb sounds. Fully left is clean. Turning up brings in tape saturation (driven hard in the knob's upper half), a bucket-brigade delay's breathing, bit grit, and a soft hiss and crackle that follow your playing. It doesn't darken the tail (that's TONE) or move its pitch (that's MOTION).
 SIZE: the size of the space. Once the knob comes to rest, the space crossfades to its new size, so the pitch never bends (in PLATE, the smallest nudges and moves while frozen glide instead). While frozen, it sets the size of the layer you play over the pad.

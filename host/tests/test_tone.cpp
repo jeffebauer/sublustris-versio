@@ -4,6 +4,7 @@
 // (0.1, 2 and 20 Hz, 1 ms frames against their neighbours, no worse than the wet without it), and the loop
 // untouched (infinite and frozen tanks bit-identical with and without it).
 
+#include "DecayKnobFor.h"
 #include "Wav.h"
 #include "dsp/Engine.h"
 #include "dsp/Output.h"
@@ -97,7 +98,7 @@ Stereo render(const std::vector<float>& in, int space, float decay, ToneAt toneA
     e.prepare(kSr, 48);
     e.setToneBellForTests(bell);
     e.setParam(iv::ParamId::Space, iv::switchToNormalised(space));
-    e.setParam(iv::ParamId::Decay, decay);
+    e.setParam(iv::ParamId::Decay, decayKnobFor(decay));
     e.setParam(iv::ParamId::Size, 0.7f);
     e.setParam(iv::ParamId::Era, 0.0f);
     e.setParam(iv::ParamId::Mix, 1.0f);

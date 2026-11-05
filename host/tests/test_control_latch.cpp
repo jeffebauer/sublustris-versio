@@ -3,6 +3,7 @@
 // The firmware reads the gate and the switch once a block; here a sample-accurate gate and switch are read the
 // same way, block by block, into the Engine (SPEC §3 "Button + Gate", §7 M5 "pulses from a sequencer, bounces").
 
+#include "DecayKnobFor.h"
 #include "../../firmware/ControlLatch.h"
 #include "dsp/Engine.h"
 #include "params/Mappings.h"
@@ -51,7 +52,7 @@ struct Rig {
         gSeed = 7; // every run hears the same noise
         e.prepare(kSr, kBlock);
         e.setParam(iv::ParamId::Space, iv::switchToNormalised(startSpace));
-        e.setParam(iv::ParamId::Decay, 0.6f);
+        e.setParam(iv::ParamId::Decay, decayKnobFor(0.6f));
         e.setParam(iv::ParamId::Size, 0.5f);
         e.setParam(iv::ParamId::Mix, 1.0f);
         e.reset();

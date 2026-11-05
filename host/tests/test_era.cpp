@@ -10,6 +10,7 @@
 // v1.0.64 (ADR 0038, the owner's pick C on renders/wear_no_bbd): the BBD's clock left WEAR, so WEAR is tape,
 // breath and grain; it never narrows the tone, and it no longer folds the top back.
 
+#include "DecayKnobFor.h"
 #include "Fft.h"
 #include "Metrics.h"
 #include "Wav.h"
@@ -59,7 +60,7 @@ Stereo render(const std::vector<float>& in, const Setting& s, float sr = kSr)
     e.setParam(iv::ParamId::Space, iv::switchToNormalised(s.space));
     e.setParam(iv::ParamId::Era, s.era);
     e.setParam(iv::ParamId::Drift, s.drift);
-    e.setParam(iv::ParamId::Decay, s.decay);
+    e.setParam(iv::ParamId::Decay, decayKnobFor(s.decay));
     e.setParam(iv::ParamId::Size, s.size);
     e.setParam(iv::ParamId::Mix, s.mix);
     e.setParam(iv::ParamId::Tone, s.tone);

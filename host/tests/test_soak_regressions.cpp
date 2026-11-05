@@ -1,6 +1,7 @@
 // Regression tests for the bugs the overnight soak found (docs/research/soak-audit.md,
 // tools/soak/soak.cpp). Each test is the smallest reproduction of one finding.
 
+#include "DecayKnobFor.h"
 #include "dsp/Engine.h"
 #include "dsp/Filters.h"
 
@@ -151,7 +152,7 @@ void flipAfterUnfreezeFadesTheTwin()
     for (int from = 0; from < 3; ++from) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(from));
-        r.e.setParam(ParamId::Decay, 0.7f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(0.7f));
         r.e.setParam(ParamId::Mix, 1.0f);
         r.e.reset();
         r.run(3.0, 0.3f, 220.0f);
@@ -177,7 +178,7 @@ void freezeInsideAFlipKeepsThePad()
     for (int ms : {10, 25, 40}) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(1));
-        r.e.setParam(ParamId::Decay, 0.7f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(0.7f));
         r.e.setParam(ParamId::Mix, 1.0f);
         r.e.reset();
         r.run(3.0, 0.3f);
@@ -206,7 +207,7 @@ void smallHallSizeJumpsDontClick()
     for (const auto& m : moves) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(1));
-        r.e.setParam(ParamId::Decay, 0.6f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(0.6f));
         r.e.setParam(ParamId::Size, m[0]);
         r.e.setParam(ParamId::Mix, 1.0f);
         r.e.reset();
@@ -222,7 +223,7 @@ void smallHallSizeJumpsDontClick()
     // Unfreezing after SIZE moved across noon while frozen: the big tank takes SIZE back at once.
     Rig r(48000.0f, 48);
     r.e.setParam(ParamId::Space, iv::switchToNormalised(1));
-    r.e.setParam(ParamId::Decay, 0.6f);
+    r.e.setParam(ParamId::Decay, decayKnobFor(0.6f));
     r.e.setParam(ParamId::Size, 1.0f);
     r.e.setParam(ParamId::Mix, 1.0f);
     r.e.reset();
@@ -263,7 +264,7 @@ void infiniteTailDoesntPlungeWhenTheInputStops()
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(c.space));
         r.e.setParam(ParamId::Size, 0.18f);
-        r.e.setParam(ParamId::Decay, 1.0f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(1.0f));
         r.e.setParam(ParamId::Time, 1.0f);
         r.e.setParam(ParamId::Attack, c.attack);
         r.e.setParam(ParamId::Mix, 1.0f);
@@ -299,7 +300,7 @@ void endlessHoldKeepsItsSpectrum()
         const bool chord = c3 == 2;
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(space));
-        r.e.setParam(ParamId::Decay, 1.0f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(1.0f));
         r.e.setParam(ParamId::Tone, 1.0f);
         r.e.setParam(ParamId::Mix, 1.0f);
         r.e.reset();
@@ -353,7 +354,7 @@ void thirdAttackFlipWhilePlayingDoesntClickLater()
     for (int from = 0; from < 3; ++from) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(from));
-        r.e.setParam(ParamId::Decay, 0.7f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(0.7f));
         r.e.setParam(ParamId::Time, 0.7f);
         r.e.setParam(ParamId::Attack, iv::switchToNormalised(2));
         r.e.setParam(ParamId::Mix, 1.0f);
@@ -382,7 +383,7 @@ void thirdAttackComingInDoesntClick()
         for (int how = 0; how < 2; ++how) {
             Rig r(48000.0f, 48);
             r.e.setParam(ParamId::Space, iv::switchToNormalised(sp));
-            r.e.setParam(ParamId::Decay, 0.6f);
+            r.e.setParam(ParamId::Decay, decayKnobFor(0.6f));
             r.e.setParam(ParamId::Time, 0.6f);
             r.e.setParam(ParamId::Mix, 1.0f);
             r.e.setParam(ParamId::Attack, iv::switchToNormalised(how == 0 ? 2 : 0));
@@ -418,7 +419,7 @@ void paintReleaseDoesntBurst()
     for (int sp = 0; sp < 3; ++sp) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(sp));
-        r.e.setParam(ParamId::Decay, 0.6f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(0.6f));
         r.e.setParam(ParamId::Mix, 1.0f);
         r.e.reset();
         r.run(3.0, 0.3f, -220.0f);
@@ -449,7 +450,7 @@ void padFrozenFromADyingTailHolds()
     for (const Case& c : cases) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(c.space));
-        r.e.setParam(ParamId::Decay, c.wait < 0.4 ? 0.15f : 0.0f); // the 0.3 s cases: a slightly longer tail, frozen at -50..-70 dB
+        r.e.setParam(ParamId::Decay, decayKnobFor(c.wait < 0.4 ? 0.15f : 0.0f)); // the 0.3 s cases: a slightly longer tail, frozen at -50..-70 dB
         r.e.setParam(ParamId::Size, 0.0f);
         r.e.setParam(ParamId::Mix, 1.0f);
         r.e.reset();
@@ -474,7 +475,7 @@ void cassetteCompressionDoesntPlunge()
     Rig r(44100.0f, 64);
     r.e.setParam(ParamId::Space, iv::switchToNormalised(0));
     r.e.setParam(ParamId::Size, 0.8127f);
-    r.e.setParam(ParamId::Decay, 1.0f);
+    r.e.setParam(ParamId::Decay, decayKnobFor(1.0f));
     r.e.setParam(ParamId::Era, 0.82f);
     r.e.setParam(ParamId::Tone, 0.37f);
     r.e.setParam(ParamId::Drift, 0.947f);
@@ -504,7 +505,7 @@ void thirdAttackFlipWhileTimeGlidesDoesntClick()
     auto sharpestAt = [](int from, bool flip, int attack, double offset) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(from));
-        r.e.setParam(ParamId::Decay, 0.7f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(0.7f));
         r.e.setParam(ParamId::Time, 0.4f);
         r.e.setParam(ParamId::Size, 0.3f);
         r.e.setParam(ParamId::Attack, iv::switchToNormalised(attack));
@@ -554,7 +555,7 @@ void onsetAndSpaceChangesDontBurst()
     auto worst = [](int space, int onset, int toSpace, int toOnset) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(space));
-        r.e.setParam(ParamId::Decay, 0.75f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(0.75f));
         r.e.setParam(ParamId::Size, 0.75f);
         r.e.setParam(ParamId::Time, 0.75f);
         r.e.setParam(ParamId::Attack, iv::switchToNormalised(onset));

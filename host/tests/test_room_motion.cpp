@@ -6,6 +6,7 @@
 // unfreezing stay click-free. (With the wander as before, measured the same way: 56 / 15 / 6.9 c and ringing 16.9 / 7.4 /
 // 8.5 dB at SIZE 0 / 0.5 / 0.9; now 6.0 / 6.0 / 7.5 c and 13.7 / 7.2 / 7.1 dB.)
 
+#include "DecayKnobFor.h"
 #include "Metrics.h"
 #include "PitchTrack.h"
 #include "dsp/Engine.h"
@@ -61,7 +62,7 @@ Stereo render(const std::vector<float>& in, const Setting& s, const std::vector<
     iv::Engine e;
     e.prepare(kSr, 48);
     e.setParam(iv::ParamId::Space, iv::switchToNormalised(s.space));
-    e.setParam(iv::ParamId::Decay, s.decay);
+    e.setParam(iv::ParamId::Decay, decayKnobFor(s.decay));
     e.setParam(iv::ParamId::Size, s.size);
     e.setParam(iv::ParamId::Era, 0.0f);
     e.setParam(iv::ParamId::Mix, s.mix);

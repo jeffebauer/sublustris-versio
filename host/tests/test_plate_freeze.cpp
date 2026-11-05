@@ -7,6 +7,7 @@
 // and DECAY while frozen and fades back out to the pad; SHIMMER rests while
 // frozen.
 
+#include "DecayKnobFor.h"
 #include "Metrics.h"
 #include "dsp/Engine.h"
 #include "dsp/Filters.h"
@@ -69,7 +70,7 @@ Stereo render(const std::vector<float>& in, const Setting& s, const std::vector<
     e.prepare(kSr, 48);
     e.setParam(iv::ParamId::Space, iv::switchToNormalised(s.space));
     e.setParam(iv::ParamId::Attack, iv::switchToNormalised(s.attack));
-    e.setParam(iv::ParamId::Decay, s.decay);
+    e.setParam(iv::ParamId::Decay, decayKnobFor(s.decay));
     e.setParam(iv::ParamId::Size, s.size);
     e.setParam(iv::ParamId::Mix, s.mix);
     e.setParam(iv::ParamId::Time, s.time);
@@ -89,7 +90,7 @@ Stereo render(const std::vector<float>& in, const Setting& s, const std::vector<
         }
         while (mi < moves.size() && size_t(moves[mi].at * kSr) < pos + size_t(n)) {
             e.setParam(iv::ParamId::Size, moves[mi].size);
-            e.setParam(iv::ParamId::Decay, moves[mi].decay);
+            e.setParam(iv::ParamId::Decay, decayKnobFor(moves[mi].decay));
             ++mi;
         }
         e.process(in.data() + pos, in.data() + pos, out.l.data() + pos, out.r.data() + pos, n);

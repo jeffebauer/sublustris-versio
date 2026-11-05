@@ -8,6 +8,7 @@
 // must start with no more grain than 0.1 s of separate echoes
 // (echoDensityGrainS <= kEchoGrainMaxS) and stay a wash (echoDensityLate >= 0.9).
 
+#include "DecayKnobFor.h"
 #include "Metrics.h"
 #include "Sidecar.h"
 #include "dsp/Engine.h"
@@ -265,7 +266,7 @@ Channels renderClick(int space, float size, float decay, double seconds, Click k
     e.prepare(kSr, 48);
     e.setParam(iv::ParamId::Space, iv::switchToNormalised(space));
     e.setParam(iv::ParamId::Attack, iv::switchToNormalised(0)); // NORMAL
-    e.setParam(iv::ParamId::Decay, decay);
+    e.setParam(iv::ParamId::Decay, decayKnobFor(decay));
     e.setParam(iv::ParamId::Size, size);
     e.setParam(iv::ParamId::Mix, 1.0f);   // 100 % wet: the reverb's own impulse response
     e.setParam(iv::ParamId::Time, 0.0f);  // no predelay

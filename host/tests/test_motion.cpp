@@ -9,6 +9,7 @@
 // their neighbours); no energy growth, and 10-minute infinite holds at DECAY 1 at both ends in every SPACE (the
 // per-line change is in the loop); music's loudness within ±1 dB of noon across the knob.
 
+#include "DecayKnobFor.h"
 #include "DecayV1052.h"
 #include "PitchTrack.h"
 #include "Wav.h"
@@ -54,7 +55,7 @@ Stereo render(const std::vector<float>& in, const Setting& s, DriftAt driftAt, i
     iv::Engine& e = keep ? *keep : local;
     e.prepare(kSr, 48);
     e.setParam(iv::ParamId::Space, iv::switchToNormalised(s.space));
-    e.setParam(iv::ParamId::Decay, s.decay);
+    e.setParam(iv::ParamId::Decay, decayKnobFor(s.decay));
     e.setParam(iv::ParamId::Size, s.size);
     e.setParam(iv::ParamId::Era, 0.0f);
     e.setParam(iv::ParamId::Mix, 1.0f);

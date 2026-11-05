@@ -267,6 +267,9 @@ IV_SIZE_OPT void Engine::reset()
     endlessCalm_ = brightSlope_ = brightPower_ = 0.0f;
     inDcX_[0] = inDcX_[1] = inDcY_[0] = inDcY_[1] = 0.0f;
     smooth_ = values_;
+#if !defined(IV_MODE_PROFILE)
+    smooth_[static_cast<size_t>(ParamId::Decay)] = map::decayScale(values_[static_cast<size_t>(ParamId::Decay)]);
+#endif
     for (auto& p : predelay_) p.clear();
     for (auto& d : diffuser_) d.clear();
     activeSpace_ = normalisedToSwitch(values_[static_cast<size_t>(ParamId::Space)]);
@@ -848,6 +851,13 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
         smoothNext_ ^= 1;
     }
     const float* smoothK = smoothK_[n == smoothN_[0] ? 0 : 1];
+    // DECAY's smoother reads the knob on DECAY's scale (map::decayScale, ADR 0048); values_ goes back to the knob after
+    // it, so Engine::param is the knob. The profile build reads no knobs: its DECAYs are on the scale already.
+#if !defined(IV_MODE_PROFILE)
+    float& decayValue = values_[static_cast<size_t>(ParamId::Decay)];
+    const float decayKnob = decayValue;
+    decayValue = map::decayScale(decayKnob);
+#endif
     for (const auto& p : kParams) {
         const size_t i = static_cast<size_t>(p.id);
         if (p.kind == ParamKind::Switch3 || p.smoothing == Smoothing::Slewed) smooth_[i] = values_[i];
@@ -856,6 +866,9 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
             if (std::fabs(values_[i] - smooth_[i]) < 1e-5f) smooth_[i] = values_[i]; // land exactly (MIX 0 = bit-exact dry)
         }
     }
+#if !defined(IV_MODE_PROFILE)
+    decayValue = decayKnob;
+#endif
 
     // Freeze glides (ADR 0009): colour out over 0.2 s, back over 1 s.
     const float dt = float(n) / sampleRate_;

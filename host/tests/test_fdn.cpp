@@ -3,6 +3,7 @@
 // and TIME move by crossfade (ADR 0025: pitch kept, no sweep, no clicks), determinism, the
 // same tail at 44.1 / 48 / 96 kHz, and true stereo in (ADR 0013).
 
+#include "DecayKnobFor.h"
 #include "Metrics.h"
 #include "Wav.h"
 #include "dsp/Engine.h"
@@ -46,7 +47,7 @@ Stereo render(const std::vector<float>& in, const Setting& s, float sampleRate =
 {
     iv::Engine e;
     e.prepare(sampleRate, 48);
-    e.setParam(iv::ParamId::Decay, s.decay);
+    e.setParam(iv::ParamId::Decay, decayKnobFor(s.decay));
     e.setParam(iv::ParamId::Size, s.size);
     e.setParam(iv::ParamId::Tone, s.tone);
     e.setParam(iv::ParamId::Mix, s.mix);
@@ -183,7 +184,7 @@ Stereo renderMoves(const std::vector<float>& in, int space, float decay, float s
     e.prepare(48000.0f, 48);
     e.setParam(iv::ParamId::Space, iv::switchToNormalised(space));
     e.setParam(iv::ParamId::Attack, iv::switchToNormalised(attack));
-    e.setParam(iv::ParamId::Decay, decay);
+    e.setParam(iv::ParamId::Decay, decayKnobFor(decay));
     e.setParam(iv::ParamId::Size, size);
     e.setParam(iv::ParamId::Time, 0.1f);
     e.setParam(iv::ParamId::Mix, 1.0f);
@@ -396,6 +397,67 @@ void floorWeightRamp()
     check(ends && hall && rising, "floor governor's weight: 0 to DECAY 0.70, 1 from 0.85, rising; HALL's as governorWeight");
 }
 
+// The knob onto DECAY's scale (v1.0.72, ADR 0048, pick C on renders/decay_curve).
+void decayKnobCurve()
+{
+    using namespace iv::map;
+    check(decayScale(0.0f) == 0.0f && decayScale(1.0f) == 1.0f, "DECAY's knob: 0 and fully CW land exactly on the scale's ends");
+    check(std::fabs(decayScale(kDecayKnobFiniteTop) - kDecayFiniteTop) < 1e-5f && decayScale(kDecayKnobEndlessAt) == kDecayInfiniteAt,
+          "DECAY's knob: finite to 0.92, endless from 0.95");
+    bool rising = true, smooth = true;
+    float was = 0.0f;
+    for (int i = 1; i <= 2000; ++i) {
+        const float d = decayScale(float(i) / 2000.0f);
+        rising &= d > was;
+        smooth &= d - was < 0.002f; // no jump (the endless zone is the steepest: 0.15 of the scale over 100 of these steps)
+        was = d;
+    }
+    check(rising && smooth, "DECAY's knob: rises all the way, with no step");
+    bool inverse = true;
+    for (int i = 0; i <= 100; ++i) inverse &= std::fabs(decayScale(decayKnobFor(float(i) / 100.0f)) - float(i) / 100.0f) < 1e-4f;
+    check(inverse, "decayKnobFor is decayScale's inverse");
+    // The pick's table (seconds), HALL's nominal range: noon as before, 3 o'clock 40, 4 o'clock 56, endless from half past 4.
+    const auto hall = [](float knob) { return 1.0f / decayRate(decayScale(knob), 1); };
+    check(std::fabs(hall(0.0f) - 0.8f) < 1e-3f && std::fabs(hall(0.5f) - 12.0f) < 0.2f && std::fabs(hall(0.8f) - 40.3f) < 0.6f
+              && std::fabs(hall(0.9f) - 55.6f) < 0.8f && std::fabs(hall(kDecayKnobFiniteTop) - 60.0f) < 0.1f,
+          "DECAY's knob: HALL 0.8 s, noon 12, 3 o'clock 40, 4 o'clock 56, the finite top 60");
+    check(decayRate(decayScale(kDecayKnobEndlessAt), 1) == 0.0f && decayRate(decayScale(0.949f), 1) > 0.0f, "DECAY's knob: endless from half past 4, not before");
+    // Engine::param is the knob; only the smoother reads the scale.
+    iv::Engine e;
+    e.prepare(48000.0f, 48);
+    e.setParam(iv::ParamId::Decay, 0.9f);
+    e.reset();
+    check(e.param(iv::ParamId::Decay) == 0.9f, "Engine::param(Decay) is the knob");
+    // The knob reaches the sound: at 4 o'clock a tail fades once the playing stops, from half past 4 it holds.
+    const auto tail = [](float knob) {
+        iv::Engine t;
+        t.prepare(48000.0f, 48);
+        t.setParam(iv::ParamId::Decay, knob);
+        t.setParam(iv::ParamId::Mix, 1.0f);
+        t.setParam(iv::ParamId::Era, 0.0f);
+        t.reset();
+        const int total = 48000 * 26, n = 48;
+        double early = 0.0, late = 0.0;
+        uint32_t seed = 22222;
+        float in[n], l[n], r[n];
+        for (int pos = 0; pos < total; pos += n) {
+            for (int i = 0; i < n; ++i) {
+                seed = seed * 1664525u + 1013904223u;
+                in[i] = pos < 48000 * 2 ? 0.3f * (float(int32_t(seed)) / 2147483648.0f) : 0.0f;
+            }
+            t.process(in, in, l, r, n);
+            for (int i = 0; i < n; ++i) {
+                if (pos >= 48000 * 6 && pos < 48000 * 8) early += double(l[i]) * l[i];
+                if (pos >= 48000 * 24) late += double(l[i]) * l[i];
+            }
+        }
+        return 10.0 * std::log10((late + 1e-30) / (early + 1e-30));
+    };
+    const double at4 = tail(0.85f), at430 = tail(0.95f), full = tail(1.0f);
+    check(at4 < -3.0, "DECAY's knob: below the crossover a tail fades (" + std::to_string(at4) + " dB over 18 s)");
+    check(std::fabs(at430) < 1.5 && std::fabs(full) < 1.5, "DECAY's knob: half past 4 and fully CW hold (" + std::to_string(at430) + ", " + std::to_string(full) + " dB over 18 s)");
+}
+
 } // namespace
 
 int main()
@@ -403,6 +465,7 @@ int main()
     stabilityGrid();
     t60FollowsDecay();
     floorWeightRamp();
+    decayKnobCurve();
     notMetallic();
     sizeAndTimeCrossfade();
     deterministic();

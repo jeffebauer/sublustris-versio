@@ -58,6 +58,7 @@ def main():
     ap.add_argument("--ref", help="k=v: A is also rendered with this, and the louder A counts")
     ap.add_argument("--ref-bin", help="A from this renderer instead of --bin (a port against the build before it)")
     ap.add_argument("--decay", action="append", help="the grid's DECAY values, repeatable (default 0.5 0.75 0.95)")
+    ap.add_argument("--hold-decay", default="1", help="the 10-minute holds' DECAY (default 1)")
     ap.add_argument("--no-holds", action="store_true")
     ap.add_argument("--no-levels", action="store_true")
     ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) - 2))
@@ -108,7 +109,7 @@ def main():
 
             def hjob(c, k):
                 sp, extra = c
-                sets = [f"space={sp}", "decay=1", "size=0.5", "time=0"] + ([extra] if extra else [])
+                sets = [f"space={sp}", f"decay={args.hold_decay}", "size=0.5", "time=0"] + ([extra] if extra else [])
                 y = render(args.bin, hold, tmp / f"h{k}.wav", sets, args.hook)
                 w = [20 * np.log10(np.sqrt(np.mean(y[i: i + 10 * SR] ** 2)) + 1e-12) for i in range(0, len(y) - 10 * SR + 1, 10 * SR)]
                 return c, w[6], min(w[6:]), max(w[6:]), bool(np.isfinite(y).all())

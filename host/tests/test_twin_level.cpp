@@ -27,6 +27,7 @@
 // test_room_motion) and sits up to 1.7 dB further under (SIZE 0: -10.22, past v1.0.41's 4 dB, now 5.5).
 // v1.0.57's figures at DECAY 0.9: HALL -9.17 / -8.51 / -8.97 (SIZE 0.9 / 0 / 0.5), PLATE -10.00.
 
+#include "DecayKnobFor.h"
 #include "DecayV1052.h"
 #include "Wav.h"
 #include "dsp/Engine.h"
@@ -76,7 +77,7 @@ double level(const std::vector<float>& music, int space, float size, float decay
     e->prepare(kSr, kBlock);
     e->setParam(iv::ParamId::Space, iv::switchToNormalised(space));
     e->setParam(iv::ParamId::Size, size);
-    e->setParam(iv::ParamId::Decay, decaySameTailAsV1052(decay, space)); // the page's tail length (v1.0.53)
+    e->setParam(iv::ParamId::Decay, decayKnobFor(decaySameTailAsV1052(decay, space))); // the page's tail length (v1.0.53)
     e->setParam(iv::ParamId::Era, 0.0f); // the Neve alone (as the pages)
     e->setParam(iv::ParamId::Mix, 1.0f);
     e->reset();
