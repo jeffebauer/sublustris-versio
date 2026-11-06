@@ -126,7 +126,7 @@ What DEPTH does depends on ONSET:
 ### SPACE (top switch)
 
 - **PLATE** (left): a dense plate with a quick attack.
-- **HALL** (centre): a big room. It starts right behind the note.
+- **HALL** (centre): a big room. It starts right behind the note, and its low notes stay near the centre, so one note doesn't bloom on one side.
 - **CANYON** (right): long lines and mass, like a space with no roof. The reverb swells in gently with each sound and grows into a boundless wash.
 
 Switching crossfades: the old space's tail fades out quickly while the new space takes the input.

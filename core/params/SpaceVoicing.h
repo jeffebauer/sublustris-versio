@@ -29,7 +29,14 @@ constexpr float kHallSmallT60Scale = 0.49f; // v1.0.17: the small end the owner 
 // allpasses per line at this × kInLoopCoeff, their lengths scaled with the mean line (MASSIVE's at
 // 0.2 s and up), so a small room gains modes without sounding bigger.
 constexpr float kHallInLoopDiffusion = 0.5f;
-constexpr float kHallInLoopUntilSize = 0.5f; // fades to 0 by SIZE noon (the owner heard it at the small end)
+constexpr float kHallInLoopUntilSize = 0.5f; // the main tank's; fades to 0 by SIZE noon (the owner heard it at the small end)
+// HALL's low tank (v1.0.76, ADR 0052, the owner's pick D on renders/hall_lows; the owner on the rack: "a resonant build up
+// in the left channel, but not the right"). It's unmodulated, so its narrow resonances each lean left or right by chance:
+// its output keeps this much of the left-right difference, its in-loop diffusion stays this high at every SIZE so fewer
+// notes ring out, and it sits +3.3 dB up, which holds the lows' level. CANYON shares the tank and has none of this.
+constexpr float kHallLowsWidth = 0.30f;
+constexpr float kHallLowsInLoopDiffusion = 0.60f;
+constexpr float kHallLowsOutputTrim = 1.46218f; // +3.3 dB
 
 // SIZE moves glide: a line's length changes by at most this fraction of a
 // second per second, which is at most a semitone of bend (2^(1/12) − 1).

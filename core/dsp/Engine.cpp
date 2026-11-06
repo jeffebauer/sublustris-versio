@@ -632,10 +632,13 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         lowFdn_.setGovernor(governor);
         lowFdn_.setFloorDb(floorDb);
         lowFdn_.setHoldDb(holdDb);
-        lowFdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallDiff);
-        lowFdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(hallSize_) / 0.2f));
+        // HALL's lows keep their own in-loop diffusion at every SIZE, and sit louder to hold their level (v1.0.76, ADR 0052).
+        lowFdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : voicing::kHallLowsInLoopDiffusion);
+        // From the SIZE its lines crossfade to, not the glided hallSize_: its allpasses are in the loop at every SIZE now, so
+        // still gliding after the crossfade they bent everything through them (a SIZE flick on a held note, ADR 0052).
+        lowFdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, mean / 0.2f));
         lowFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decayFin, size)
-                                      : voicing::kHallOutputTrim * map::hallSizeLevelTrim(hallSize_, decayFin));
+                                      : voicing::kHallLowsOutputTrim * voicing::kHallOutputTrim * map::hallSizeLevelTrim(hallSize_, decayFin));
         lowFdn_.setEarlyTaps(1.0f);
         lowFdn_.setModDepth(0.0f);
     }
@@ -1311,11 +1314,16 @@ void Engine::processTwoTanks(int n)
     double power = 0.0;
     float zo[2][2] = {{xoZ_[0][4][0], xoZ_[0][4][1]}, {xoZ_[1][4][0], xoZ_[1][4][1]}};
     float prev[2] = {lowPrev_[0], lowPrev_[1]}, cur[2] = {lowCur_[0], lowCur_[1]};
+    // HALL's lows narrowed (v1.0.76, ADR 0052): each side keeps kHallLowsWidth of the left-right difference, so a low note
+    // can't lean far to one side. In this read, as a loop of its own overflowed the profile build. CANYON: 1 and 0, to the bit.
+    const float own = activeSpace_ == 1 ? 0.5f * (1.0f + voicing::kHallLowsWidth) : 1.0f;
+    const float other = 1.0f - own;
     ph = phase0;
     for (int i = 0; i < n; ++i) {
         if (ph == 0) {
             prev[0] = cur[0]; prev[1] = cur[1];
-            cur[0] = lowOutL_[j]; cur[1] = lowOutR_[j];
+            cur[0] = own * lowOutL_[j] + other * lowOutR_[j];
+            cur[1] = own * lowOutR_[j] + other * lowOutL_[j];
             ++j;
         }
         const float t = float(ph) / float(lowDecimate_);

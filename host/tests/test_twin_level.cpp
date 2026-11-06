@@ -28,6 +28,8 @@
 // v1.0.57's figures at DECAY 0.9: HALL -9.17 / -8.51 / -8.97 (SIZE 0.9 / 0 / 0.5), PLATE -10.00.
 // v1.0.74 (ADR 0050): the early tap and the trim act on the pad's first sound and the twin's differently: a twin of at most 8 s
 // is more of its start than a held pad is, so PLATE's sits 0.46 dB closer to its pad (-8.11, was -8.57; 1.89 from v1.0.41's, limit 2).
+// v1.0.76 (ADR 0052): HALL's frozen pad changes with its low tank, the twin as before. Three figures are its own (until v1.0.75: S0.9 D0.9
+// -8.82, S0 D0.5 -8.77, S0.9 D0.5 -10.96); S0 D0.9 reads -10.77, 5.66 from v1.0.41's, so that limit is 5.7 (was 5.6).
 
 #include "DecayKnobFor.h"
 #include "DecayV1052.h"
@@ -130,18 +132,18 @@ int main()
     // The page's setting first (the anchor), then the grid of renders/room_level.
     const Case cases[] = {
         {"MASSIVE S0.9 D0.9 (the page's)", 2, 0.9f, 0.9f, -4.04, 1.5, -3.86},
-        {"HALL S0.9 D0.9 (the page's)", 1, 0.9f, 0.9f, -8.29, 1.5, -8.82},
+        {"HALL S0.9 D0.9 (the page's)", 1, 0.9f, 0.9f, -8.29, 1.5, -8.28},
         {"PLATE S0.9 D0.9", 0, 0.9f, 0.9f, -10.00, 2.0, -8.11},
         {"MASSIVE S0 D0.5", 2, 0.0f, 0.5f, -4.76, 3.0, -5.11},
         {"MASSIVE S0 D0.9", 2, 0.0f, 0.9f, -4.84, 3.0, -5.52},
         {"MASSIVE S0.5 D0.5", 2, 0.5f, 0.5f, -1.51, 3.0, -3.49},
         {"MASSIVE S0.5 D0.9", 2, 0.5f, 0.9f, -4.45, 3.0, -6.22},
         {"MASSIVE S0.9 D0.5", 2, 0.9f, 0.5f, -3.18, 3.0, -2.95},
-        {"HALL S0 D0.5", 1, 0.0f, 0.5f, -5.51, 4.0, -8.77},
-        {"HALL S0 D0.9", 1, 0.0f, 0.9f, -5.11, 5.6, -10.63},
+        {"HALL S0 D0.5", 1, 0.0f, 0.5f, -5.51, 4.0, -9.10},
+        {"HALL S0 D0.9", 1, 0.0f, 0.9f, -5.11, 5.7, -10.63},
         {"HALL S0.5 D0.5", 1, 0.5f, 0.5f, -9.13, 3.0, -9.93},
         {"HALL S0.5 D0.9", 1, 0.5f, 0.9f, -7.68, 3.0, -9.20},
-        {"HALL S0.9 D0.5", 1, 0.9f, 0.5f, -10.13, 3.0, -10.96},
+        {"HALL S0.9 D0.5", 1, 0.9f, 0.5f, -10.13, 3.0, -10.46},
     };
     for (const auto& c : cases) {
         const double d = level(music, c.space, c.size, c.decay, false) - level(music, c.space, c.size, c.decay, true);
