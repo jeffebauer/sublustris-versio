@@ -1,0 +1,161 @@
+REALTIME MASSIVE knobs high neve            still  avg  62.7% max  65.0% | late blocks 0 of 3000
+REALTIME MASSIVE knobs high neve            jitter avg  68.7% max  70.5% | late blocks 0 of 3000
+REALTIME MASSIVE knobs high cassette        still  avg  61.0% max  63.3% | late blocks 0 of 3000
+REALTIME MASSIVE knobs high cassette        jitter avg  64.8% max  67.2% | late blocks 0 of 3000
+REALTIME MASSIVE knobs high neve FROZEN     still  avg  69.1% max  74.8% | late blocks 0 of 6000
+REALTIME MASSIVE knobs high neve FROZEN     jitter avg  72.0% max  76.2% | late blocks 0 of 6000
+REALTIME MASSIVE knobs high cassette FROZEN still  avg  69.3% max  72.8% | late blocks 0 of 6000
+REALTIME MASSIVE knobs high cassette FROZEN jitter avg  72.4% max  76.7% | late blocks 0 of 6000
+SIZEHAND MASSIVE wear10   sweep   groups 2 avg  61.1% max  79.5% | late blocks 0 of 5000
+SIZEHAND MASSIVE wear10   sweep   groups 4 avg  60.8% max  74.2% | late blocks 0 of 5000
+SIZEHAND MASSIVE wear10   sweep   groups 8 avg  60.0% max  71.2% | late blocks 0 of 5000
+SIZEHAND MASSIVE wear10   twists  groups 2 avg  74.8% max  81.4% | late blocks 0 of 5000
+SIZEHAND MASSIVE wear10   twists  groups 4 avg  71.0% max  76.6% | late blocks 0 of 5000
+SIZEHAND MASSIVE wear10   twists  groups 8 avg  68.5% max  73.6% | late blocks 0 of 5000
+SIZEHAND MASSIVE wear10   creep   groups 2 avg  74.4% max  80.3% | late blocks 0 of 6000
+SIZEHAND MASSIVE wear10   creep   groups 4 avg  70.5% max  76.1% | late blocks 0 of 6000
+SIZEHAND MASSIVE wear10   creep   groups 8 avg  67.9% max  73.1% | late blocks 0 of 6000
+SIZEHAND MASSIVE wear70   sweep   groups 2 avg  61.3% max  79.1% | late blocks 0 of 5000
+SIZEHAND MASSIVE wear70   sweep   groups 4 avg  61.1% max  74.7% | late blocks 0 of 5000
+SIZEHAND MASSIVE wear70   sweep   groups 8 avg  60.3% max  71.2% | late blocks 0 of 5000
+SIZEHAND MASSIVE wear70   twists  groups 2 avg  75.1% max  81.4% | late blocks 0 of 5000
+SIZEHAND MASSIVE wear70   twists  groups 4 avg  71.4% max  77.1% | late blocks 0 of 5000
+SIZEHAND MASSIVE wear70   twists  groups 8 avg  68.8% max  73.8% | late blocks 0 of 5000
+SIZEHAND MASSIVE wear70   creep   groups 2 avg  74.8% max  80.6% | late blocks 0 of 6000
+SIZEHAND MASSIVE wear70   creep   groups 4 avg  70.8% max  76.3% | late blocks 0 of 6000
+SIZEHAND MASSIVE wear70   creep   groups 8 avg  68.3% max  73.0% | late blocks 0 of 6000
+SIZEHAND MASSIVE FROZEN wear10   sweep   groups 2 avg  69.2% max  72.3% | late blocks 0 of 5000
+SIZEHAND MASSIVE FROZEN wear10   sweep   groups 4 avg  69.2% max  72.3% | late blocks 0 of 5000
+SIZEHAND MASSIVE FROZEN wear10   sweep   groups 8 avg  69.2% max  72.5% | late blocks 0 of 5000
+SIZEHAND MASSIVE FROZEN wear10   twists  groups 2 avg  70.7% max  72.7% | late blocks 0 of 5000
+SIZEHAND MASSIVE FROZEN wear10   twists  groups 4 avg  70.7% max  72.8% | late blocks 0 of 5000
+SIZEHAND MASSIVE FROZEN wear10   twists  groups 8 avg  70.8% max  73.1% | late blocks 0 of 5000
+SIZEHAND MASSIVE FROZEN wear70   sweep   groups 2 avg  69.5% max  72.7% | late blocks 0 of 5000
+SIZEHAND MASSIVE FROZEN wear70   sweep   groups 4 avg  69.5% max  72.6% | late blocks 0 of 5000
+SIZEHAND MASSIVE FROZEN wear70   sweep   groups 8 avg  69.5% max  72.7% | late blocks 0 of 5000
+SIZEHAND MASSIVE FROZEN wear70   twists  groups 2 avg  71.4% max  73.3% | late blocks 0 of 5000
+SIZEHAND MASSIVE FROZEN wear70   twists  groups 4 avg  71.4% max  73.5% | late blocks 0 of 5000
+SIZEHAND MASSIVE FROZEN wear70   twists  groups 8 avg  71.4% max  73.9% | late blocks 0 of 5000
+SIZEHAND MASSIVE UNFROZE wear10   twists  groups 2 avg  87.9% max  97.7% | late blocks 0 of 5000 | twin stopped
+SIZEHAND MASSIVE UNFROZE wear10   twists  groups 4 avg  84.5% max  92.9% | late blocks 0 of 5000 | twin stopped
+SIZEHAND MASSIVE UNFROZE wear10   twists  groups 8 avg  81.9% max  88.9% | late blocks 0 of 5000 | twin stopped
+SIZEHAND MASSIVE UNFROZE wear70   twists  groups 2 avg  88.3% max  97.7% | late blocks 0 of 5000 | twin stopped
+SIZEHAND MASSIVE UNFROZE wear70   twists  groups 4 avg  85.0% max  93.2% | late blocks 0 of 5000 | twin stopped
+SIZEHAND MASSIVE UNFROZE wear70   twists  groups 8 avg  82.0% max  89.0% | late blocks 0 of 5000 | twin stopped
+CORNER PLATE S0 wear10              avg  47.5% max  78.5% min  43.9% | mem 19709308 B | block 48 | fs 48000 Hz | ~4747 cyc/sample | max at block 19
+  SPLIT ctl  3.8 in  6.4 shim  1.8 swell 11.1 twin  0.6 tank 13.9 tkctl  1.8 tkloop  0.1 tkout  0.2 tkmix  0.0 wear  4.5 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  7.0 in 11.0 shim  3.0 swell 15.6 twin  1.9 tank 24.4 tkctl  7.8 tkloop 13.0 tkout 13.6 tkmix  1.5 wear  5.8 out  4.3 flip  3.6 tkabs  4.6
+BENCH clock 480 MHz icache on dcache on | FZ on (irq on) | sdram TRP 3 TRCD 3 (tight) sdclk 100 MHz | itcm 60248 B | engine 0x2000bb60 axi 0x240028c0
+SDRAMCHK libdaisy 0 tight 0 laps 0 in 1 (wrong words, of 4194304 a check)
+MICRO (cycles per op) sdr1 11.8 sdr32 35.2 sdw32 48.3 sdline8 85.7 axi32 11.4 dtcm32 4.0 exp 114.9 sin 85.1 pow 208.8 log10 157.1 div 28.0 fdnAXI 2550.4 fdnSDRAM 4111.6 wear/smp 647.0 wearSet/blk 292.5 loopNeve/smp 76.0 sub 9.0 norm 9.0 subX 9.0 vdivDep 18.0 vdivThr 19.0 vdivIndep 22.0 pld32 35.9 swell12/blk 45835.4 swellNS/blk 30142.0 swellW/blk 2078.1 fdnMassive24k 4143.2 fdnMassiveApAxi 3179.4 sdr1t 11.5 sdr32t 16.8 sdw32t 23.4 sdline8t 43.0 pld32t 22.9 fdnSDRAMt 3187.2 fdnMassive24kt 3007.6 fdnMassiveApAxit 2709.3
+CORNER PLATE S0 wear30              avg  47.3% max  49.3% min  45.5% | mem 19709308 B | block 48 | fs 48000 Hz | ~4731 cyc/sample | max at block 2055
+  SPLIT ctl  3.7 in  6.4 shim  1.8 swell 12.4 twin  0.6 tank 13.4 tkctl  1.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.5 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.4 in  8.0 shim  3.0 swell 14.2 twin  1.9 tank 15.3 tkctl  2.7 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.7 out  3.9 flip  0.0 tkabs  0.0
+CORNER PLATE S0 wear50              avg  47.7% max  49.6% min  46.3% | mem 19709308 B | block 48 | fs 48000 Hz | ~4773 cyc/sample | max at block 44
+  SPLIT ctl  3.7 in  6.4 shim  1.7 swell 12.8 twin  0.6 tank 13.4 tkctl  1.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.5 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.4 in  8.0 shim  3.0 swell 14.2 twin  1.9 tank 15.2 tkctl  2.7 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.7 out  3.9 flip  0.0 tkabs  0.0
+CORNER PLATE S0 wear70              avg  46.8% max  50.1% min  42.8% | mem 19709308 B | block 48 | fs 48000 Hz | ~4677 cyc/sample | max at block 528
+  SPLIT ctl  3.8 in  6.4 shim  1.7 swell 11.5 twin  0.6 tank 13.5 tkctl  1.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.7 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.5 in  8.0 shim  3.0 swell 14.2 twin  1.9 tank 15.5 tkctl  2.7 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.9 out  3.9 flip  0.0 tkabs  0.0
+CORNER PLATE S0 wear90              avg  44.2% max  46.4% min  42.6% | mem 19709308 B | block 48 | fs 48000 Hz | ~4423 cyc/sample | max at block 34
+  SPLIT ctl  3.8 in  6.4 shim  1.8 swell  9.0 twin  0.6 tank 13.5 tkctl  1.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.7 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.5 in  8.0 shim  3.0 swell 10.5 twin  1.9 tank 15.2 tkctl  2.6 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.9 out  3.9 flip  0.0 tkabs  0.0
+CORNER PLATE S1 wear10              avg  47.8% max  72.9% min  42.4% | mem 19709308 B | block 48 | fs 48000 Hz | ~4777 cyc/sample | max at block 328
+  SPLIT ctl  3.8 in  6.4 shim  1.7 swell  9.0 twin  0.6 tank 17.2 tkctl  1.5 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.5 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.6 in  8.0 shim  3.0 swell 10.5 twin  1.9 tank 41.7 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.8 out  3.9 flip  0.0 tkabs  0.0
+CORNER PLATE S1 wear30              avg  43.7% max  45.8% min  42.3% | mem 19709308 B | block 48 | fs 48000 Hz | ~4371 cyc/sample | max at block 26
+  SPLIT ctl  3.7 in  6.4 shim  1.7 swell  9.0 twin  0.6 tank 13.2 tkctl  1.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.5 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.5 in  8.0 shim  3.0 swell 10.5 twin  1.9 tank 14.9 tkctl  2.7 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.7 out  3.9 flip  0.0 tkabs  0.0
+CORNER PLATE S1 wear50              avg  43.7% max  45.6% min  42.4% | mem 19709308 B | block 48 | fs 48000 Hz | ~4369 cyc/sample | max at block 83
+  SPLIT ctl  3.7 in  6.4 shim  1.7 swell  9.0 twin  0.6 tank 13.2 tkctl  1.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.5 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.4 in  8.0 shim  3.0 swell 10.5 twin  1.9 tank 15.2 tkctl  2.7 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.7 out  3.9 flip  0.0 tkabs  0.0
+CORNER PLATE S1 wear70              avg  43.9% max  45.9% min  42.6% | mem 19709308 B | block 48 | fs 48000 Hz | ~4395 cyc/sample | max at block 557
+  SPLIT ctl  3.8 in  6.4 shim  1.8 swell  9.0 twin  0.6 tank 13.2 tkctl  1.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.7 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.5 in  8.0 shim  3.0 swell 10.5 twin  1.9 tank 14.9 tkctl  2.7 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.9 out  3.9 flip  0.0 tkabs  0.0
+CORNER PLATE S1 wear90              avg  44.0% max  46.5% min  42.7% | mem 19709308 B | block 48 | fs 48000 Hz | ~4401 cyc/sample | max at block 2068
+  SPLIT ctl  3.8 in  6.4 shim  1.7 swell  9.0 twin  0.6 tank 13.3 tkctl  1.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.7 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.6 in  8.0 shim  3.0 swell 10.5 twin  1.9 tank 15.8 tkctl  2.7 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.9 out  3.9 flip  0.0 tkabs  0.0
+CORNER HALL S0 wear10               avg  56.8% max  67.0% min  43.9% | mem 19709308 B | block 48 | fs 48000 Hz | ~5676 cyc/sample | max at block 107
+  SPLIT ctl  4.3 in  6.0 shim  1.8 swell 10.0 twin  0.6 tank  2.9 tkctl  4.3 tkloop 11.0 tkout  5.9 tkmix  1.4 wear  4.5 out  2.7 flip  0.0 tkabs  0.8  (% of budget)
+  PEAK  ctl  6.1 in  8.0 shim  3.0 swell 12.5 twin  1.9 tank 14.8 tkctl  5.7 tkloop 20.7 tkout  7.4 tkmix  2.7 wear  5.9 out  4.0 flip  3.3 tkabs  4.6
+CORNER HALL S0 wear30               avg  57.6% max  59.5% min  55.8% | mem 19709308 B | block 48 | fs 48000 Hz | ~5762 cyc/sample | max at block 2078
+  SPLIT ctl  4.3 in  5.8 shim  1.7 swell 12.3 twin  0.6 tank  2.7 tkctl  4.3 tkloop 10.7 tkout  6.0 tkmix  1.4 wear  4.5 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.0 in  7.4 shim  3.0 swell 14.1 twin  1.9 tank  3.9 tkctl  5.5 tkloop 12.1 tkout  7.5 tkmix  2.8 wear  5.7 out  4.0 flip  0.0 tkabs  0.0
+CORNER HALL S0 wear50               avg  57.4% max  59.3% min  56.1% | mem 19709308 B | block 48 | fs 48000 Hz | ~5745 cyc/sample | max at block 41
+  SPLIT ctl  4.3 in  5.8 shim  1.8 swell 12.7 twin  0.6 tank  2.7 tkctl  4.3 tkloop 10.5 tkout  5.5 tkmix  1.4 wear  4.5 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.0 in  7.4 shim  3.0 swell 14.2 twin  1.9 tank  3.9 tkctl  5.6 tkloop 11.8 tkout  6.9 tkmix  2.8 wear  5.7 out  4.0 flip  0.0 tkabs  0.0
+CORNER HALL S0 wear70               avg  56.4% max  59.5% min  52.5% | mem 19709308 B | block 48 | fs 48000 Hz | ~5642 cyc/sample | max at block 92
+  SPLIT ctl  4.4 in  5.8 shim  1.8 swell 11.4 twin  0.6 tank  2.7 tkctl  4.3 tkloop 10.5 tkout  5.5 tkmix  1.4 wear  4.7 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.1 in  7.4 shim  3.0 swell 14.1 twin  1.9 tank  3.9 tkctl  5.5 tkloop 11.9 tkout  7.1 tkmix  2.8 wear  5.9 out  4.0 flip  0.0 tkabs  0.0
+CORNER HALL S0 wear90               avg  53.9% max  55.7% min  52.5% | mem 19709308 B | block 48 | fs 48000 Hz | ~5392 cyc/sample | max at block 87
+  SPLIT ctl  4.4 in  5.8 shim  1.8 swell  8.9 twin  0.6 tank  2.7 tkctl  4.3 tkloop 10.5 tkout  5.5 tkmix  1.4 wear  4.7 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.1 in  7.4 shim  3.0 swell 10.4 twin  1.9 tank  3.9 tkctl  5.6 tkloop 11.8 tkout  7.0 tkmix  2.8 wear  5.9 out  4.0 flip  0.0 tkabs  0.0
+CORNER HALL S1 wear10               avg  57.7% max  77.9% min  51.0% | mem 19709308 B | block 48 | fs 48000 Hz | ~5767 cyc/sample | max at block 321
+  SPLIT ctl  4.3 in  5.8 shim  1.7 swell  8.9 twin  0.6 tank  2.7 tkctl  5.3 tkloop 11.7 tkout  6.4 tkmix  1.4 wear  4.5 out  2.7 flip  0.0 tkabs  1.0  (% of budget)
+  PEAK  ctl  6.1 in  7.4 shim  3.0 swell 10.3 twin  1.9 tank  3.9 tkctl  8.6 tkloop 23.6 tkout 11.7 tkmix  2.8 wear  5.9 out  4.0 flip  0.0 tkabs  4.6
+CORNER HALL S1 wear30               avg  52.1% max  54.3% min  50.6% | mem 19709308 B | block 48 | fs 48000 Hz | ~5214 cyc/sample | max at block 67
+  SPLIT ctl  4.3 in  5.8 shim  1.8 swell  8.9 twin  0.6 tank  2.7 tkctl  4.3 tkloop  8.9 tkout  5.7 tkmix  1.4 wear  4.5 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.0 in  7.4 shim  3.0 swell 10.4 twin  1.9 tank  3.9 tkctl  5.8 tkloop 10.3 tkout  7.1 tkmix  2.7 wear  5.7 out  4.0 flip  0.0 tkabs  0.0
+CORNER HALL S1 wear50               avg  52.0% max  53.8% min  50.5% | mem 19709308 B | block 48 | fs 48000 Hz | ~5199 cyc/sample | max at block 575
+  SPLIT ctl  4.3 in  5.8 shim  1.8 swell  8.9 twin  0.6 tank  2.7 tkctl  4.2 tkloop  8.9 tkout  5.7 tkmix  1.4 wear  4.5 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.0 in  7.4 shim  3.0 swell 10.4 twin  1.9 tank  3.9 tkctl  5.4 tkloop 10.3 tkout  7.1 tkmix  2.8 wear  5.7 out  4.0 flip  0.0 tkabs  0.0
+CORNER HALL S1 wear70               avg  52.3% max  54.1% min  50.8% | mem 19709308 B | block 48 | fs 48000 Hz | ~5231 cyc/sample | max at block 39
+  SPLIT ctl  4.4 in  5.8 shim  1.8 swell  8.9 twin  0.6 tank  2.7 tkctl  4.2 tkloop  9.0 tkout  5.7 tkmix  1.4 wear  4.7 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.1 in  7.4 shim  3.0 swell 10.4 twin  1.9 tank  3.9 tkctl  5.4 tkloop 10.3 tkout  7.2 tkmix  2.8 wear  6.0 out  4.0 flip  0.0 tkabs  0.0
+CORNER HALL S1 wear90               avg  52.3% max  54.4% min  50.9% | mem 19709308 B | block 48 | fs 48000 Hz | ~5233 cyc/sample | max at block 7
+  SPLIT ctl  4.4 in  5.8 shim  1.7 swell  8.9 twin  0.6 tank  2.7 tkctl  4.2 tkloop  9.0 tkout  5.7 tkmix  1.4 wear  4.7 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.1 in  7.4 shim  3.0 swell 10.3 twin  1.9 tank  3.9 tkctl  5.4 tkloop 10.3 tkout  7.1 tkmix  2.8 wear  5.9 out  4.0 flip  0.0 tkabs  0.0
+CORNER MASSIVE S0 wear10            avg  61.2% max  66.1% min  54.2% | mem 19709308 B | block 48 | fs 48000 Hz | ~6122 cyc/sample | max at block 50
+  SPLIT ctl  4.4 in  5.8 shim  1.8 swell 10.0 twin  0.6 tank  2.7 tkctl  4.5 tkloop 11.0 tkout 10.3 tkmix  1.4 wear  4.5 out  2.7 flip  0.0 tkabs  0.9  (% of budget)
+  PEAK  ctl  6.2 in  7.4 shim  3.0 swell 12.4 twin  1.9 tank  3.9 tkctl  5.8 tkloop 19.2 tkout 12.1 tkmix  2.7 wear  5.8 out  4.0 flip  4.2 tkabs  4.6
+CORNER MASSIVE S0 wear30            avg  62.4% max  64.2% min  60.3% | mem 19709308 B | block 48 | fs 48000 Hz | ~6238 cyc/sample | max at block 2509
+  SPLIT ctl  4.4 in  5.8 shim  1.7 swell 12.3 twin  0.6 tank  2.7 tkctl  4.4 tkloop 10.6 tkout 10.6 tkmix  1.4 wear  4.5 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.1 in  7.4 shim  3.0 swell 14.2 twin  1.9 tank  3.9 tkctl  5.6 tkloop 12.0 tkout 12.1 tkmix  2.8 wear  5.7 out  4.0 flip  0.0 tkabs  0.0
+CORNER MASSIVE S0 wear50            avg  62.0% max  63.8% min  60.2% | mem 19709308 B | block 48 | fs 48000 Hz | ~6196 cyc/sample | max at block 523
+  SPLIT ctl  4.4 in  5.8 shim  1.8 swell 12.8 twin  0.6 tank  2.7 tkctl  4.4 tkloop 10.5 tkout  9.9 tkmix  1.4 wear  4.5 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.2 in  7.4 shim  3.0 swell 14.3 twin  1.9 tank  3.9 tkctl  5.6 tkloop 11.8 tkout 11.4 tkmix  2.8 wear  5.7 out  4.0 flip  0.0 tkabs  0.0
+CORNER MASSIVE S0 wear70            avg  61.0% max  64.1% min  56.9% | mem 19709308 B | block 48 | fs 48000 Hz | ~6098 cyc/sample | max at block 547
+  SPLIT ctl  4.5 in  5.8 shim  1.8 swell 11.5 twin  0.6 tank  2.7 tkctl  4.4 tkloop 10.5 tkout  9.9 tkmix  1.4 wear  4.7 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.3 in  7.4 shim  3.0 swell 14.1 twin  1.9 tank  3.9 tkctl  5.6 tkloop 11.9 tkout 11.4 tkmix  2.8 wear  5.9 out  4.0 flip  0.0 tkabs  0.0
+CORNER MASSIVE S0 wear90            avg  58.5% max  60.6% min  56.8% | mem 19709308 B | block 48 | fs 48000 Hz | ~5848 cyc/sample | max at block 507
+  SPLIT ctl  4.5 in  5.8 shim  1.7 swell  9.0 twin  0.6 tank  2.7 tkctl  4.4 tkloop 10.5 tkout  9.9 tkmix  1.4 wear  4.7 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.3 in  7.4 shim  3.0 swell 10.4 twin  1.9 tank  3.9 tkctl  5.6 tkloop 11.9 tkout 11.4 tkmix  2.7 wear  6.0 out  4.0 flip  0.0 tkabs  0.0
+CORNER MASSIVE S1 wear10            avg  65.0% max  76.1% min  57.9% | mem 19709308 B | block 48 | fs 48000 Hz | ~6495 cyc/sample | max at block 325
+  SPLIT ctl  4.5 in  7.1 shim  1.8 swell  9.6 twin  0.6 tank  2.7 tkctl  6.7 tkloop 11.4 tkout 11.4 tkmix  1.4 wear  4.5 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.3 in  9.4 shim  3.0 swell 14.5 twin  1.9 tank  3.9 tkctl 10.3 tkloop 14.2 tkout 15.0 tkmix  2.7 wear  5.9 out  4.0 flip  0.0 tkabs  1.7
+CORNER MASSIVE S1 wear30            avg  60.1% max  62.7% min  58.3% | mem 19709308 B | block 48 | fs 48000 Hz | ~6014 cyc/sample | max at block 263
+  SPLIT ctl  4.5 in  7.1 shim  1.7 swell  9.1 twin  0.6 tank  2.7 tkctl  4.7 tkloop 10.5 tkout 10.1 tkmix  1.4 wear  4.5 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.2 in  8.7 shim  3.0 swell 10.5 twin  1.9 tank  3.9 tkctl  6.9 tkloop 11.8 tkout 11.6 tkmix  2.7 wear  5.7 out  4.0 flip  0.0 tkabs  0.0
+CORNER MASSIVE S1 wear50            avg  59.9% max  61.8% min  58.1% | mem 19709308 B | block 48 | fs 48000 Hz | ~5986 cyc/sample | max at block 51
+  SPLIT ctl  4.5 in  7.1 shim  1.7 swell  9.2 twin  0.6 tank  2.7 tkctl  4.4 tkloop 10.5 tkout 10.1 tkmix  1.4 wear  4.5 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.2 in  8.8 shim  3.1 swell 10.5 twin  1.9 tank  3.9 tkctl  5.6 tkloop 11.8 tkout 11.6 tkmix  2.7 wear  5.7 out  4.0 flip  0.0 tkabs  0.0
+CORNER MASSIVE S1 wear70            avg  60.2% max  62.1% min  58.4% | mem 19709308 B | block 48 | fs 48000 Hz | ~6016 cyc/sample | max at block 37
+  SPLIT ctl  4.5 in  7.1 shim  1.8 swell  9.2 twin  0.6 tank  2.7 tkctl  4.4 tkloop 10.5 tkout 10.1 tkmix  1.4 wear  4.7 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.3 in  8.7 shim  3.1 swell 10.6 twin  1.9 tank  3.9 tkctl  5.6 tkloop 11.8 tkout 11.7 tkmix  2.8 wear  5.9 out  4.0 flip  0.0 tkabs  0.0
+CORNER MASSIVE S1 wear90            avg  60.2% max  62.0% min  58.4% | mem 19709308 B | block 48 | fs 48000 Hz | ~6015 cyc/sample | max at block 13
+  SPLIT ctl  4.5 in  7.1 shim  1.7 swell  9.2 twin  0.6 tank  2.7 tkctl  4.4 tkloop 10.5 tkout 10.1 tkmix  1.4 wear  4.7 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.3 in  8.7 shim  3.1 swell 10.7 twin  1.9 tank  3.9 tkctl  5.6 tkloop 11.9 tkout 11.6 tkmix  2.7 wear  5.9 out  4.0 flip  0.0 tkabs  0.0
+CORNER MASSIVE S1 wear10 SHIMMER    avg  74.0% max  76.1% min  69.8% | mem 19709308 B | block 48 | fs 48000 Hz | ~7396 cyc/sample | max at block 117
+  SPLIT ctl  4.4 in  7.1 shim 14.8 swell 10.1 twin  0.6 tank  2.7 tkctl  4.4 tkloop 10.4 tkout 10.1 tkmix  1.4 wear  4.5 out  2.7 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.2 in  8.7 shim 16.1 swell 11.6 twin  1.9 tank  3.9 tkctl  5.6 tkloop 11.8 tkout 11.6 tkmix  2.7 wear  5.7 out  4.0 flip  0.0 tkabs  3.5
+CORNER MASSIVE wear10 SIZE .3<>.8   avg  70.6% max  79.0% min  60.5% | mem 19709308 B | block 48 | fs 48000 Hz | ~7056 cyc/sample | max at block 1641
+  SPLIT ctl  4.3 in  7.6 shim  1.9 swell 11.8 twin  0.6 tank  2.7 tkctl  6.9 tkloop 12.4 tkout 12.7 tkmix  1.4 wear  4.5 out  2.7 flip  0.0 tkabs  0.4  (% of budget)
+  PEAK  ctl  5.6 in 11.4 shim 16.0 swell 17.3 twin  1.9 tank  3.9 tkctl  9.5 tkloop 14.3 tkout 14.9 tkmix  2.8 wear  5.7 out  4.0 flip  0.0 tkabs  4.6
+CORNER MASSIVE S1 wear10 FROZEN+twin avg  74.8% max  82.7% min  69.5% | mem 19709308 B | block 48 | fs 48000 Hz | ~7480 cyc/sample | max at block 17 | twin on 5217 ms after
+  SPLIT ctl  6.7 in  7.1 shim  1.8 swell 12.4 twin 10.3 tank  2.7 tkctl  4.9 tkloop  9.7 tkout 10.0 tkmix  1.4 wear  4.5 out  2.7 flip  0.0 tkabs  0.1  (% of budget)
+  PEAK  ctl  8.0 in  8.8 shim  3.0 swell 14.5 twin 11.8 tank  3.9 tkctl  8.4 tkloop 11.8 tkout 11.6 tkmix  2.8 wear  5.7 out  4.0 flip  0.0 tkabs  4.6
+HEADROOM MASSIVE S1 wear90 +0% padding: avg  59.7% max  61.4% | late blocks 0 of 3000
+HEADROOM PLATE S0 wear10 +0% padding: avg  45.9% max  63.1% | late blocks 0 of 3000
+HEADROOM PLATE S0 wear10 +5% padding: avg  52.0% max  53.4% | late blocks 0 of 3000
+HEADROOM PLATE S0 wear10 +10% padding: avg  57.5% max  58.8% | late blocks 0 of 3000
+HEADROOM PLATE S0 wear10 +15% padding: avg  61.2% max  63.7% | late blocks 0 of 3000
+HEADROOM PLATE S0 wear10 +20% padding: avg  63.7% max  65.4% | late blocks 0 of 3000
+HEADROOM PLATE S0 wear10 +25% padding: avg  68.7% max  69.9% | late blocks 0 of 3000
+HEADROOM PLATE S0 wear10 +30% padding: avg  73.7% max  75.2% | late blocks 0 of 3000
+HEADROOM PLATE S0 wear10 +35% padding: avg  78.6% max  79.6% | late blocks 0 of 3000
+HEADROOM PLATE S0 wear10 +40% padding: avg  83.8% max  85.1% | late blocks 0 of 3000
+HEADROOM PLATE S0 wear10 +45% padding: avg  88.7% max  89.8% | late blocks 0 of 3000
+HEADROOM PLATE S0 wear10 +50% padding: avg  93.7% max  94.8% | late blocks 0 of 3000
+HEADROOM PLATE S0 wear10 +55% padding: avg  98.7% max  99.8% | late blocks 0 of 3000
+HEADROOM PLATE S0 wear10 +60% padding: avg 103.7% max 105.4% | late blocks 3000 of 3000
+HEADROOM PLATE S0 wear10 +65% padding: avg 108.7% max 110.1% | late blocks 3000 of 3000
