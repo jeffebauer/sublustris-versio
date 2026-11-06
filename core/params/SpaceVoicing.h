@@ -29,7 +29,14 @@ constexpr float kHallSmallT60Scale = 0.49f; // v1.0.17: the small end the owner 
 // allpasses per line at this × kInLoopCoeff, their lengths scaled with the mean line (MASSIVE's at
 // 0.2 s and up), so a small room gains modes without sounding bigger.
 constexpr float kHallInLoopDiffusion = 0.5f;
-constexpr float kHallInLoopUntilSize = 0.5f; // fades to 0 by SIZE noon (the owner heard it at the small end)
+constexpr float kHallInLoopUntilSize = 0.5f; // the main tank's; fades to 0 by SIZE noon (the owner heard it at the small end)
+// HALL's low tank (v1.0.76, ADR 0052, the owner's pick D on renders/hall_lows; the owner on the rack: "a resonant build up
+// in the left channel, but not the right"). It's unmodulated, so its narrow resonances each lean left or right by chance:
+// its output keeps this much of the left-right difference, its in-loop diffusion stays this high at every SIZE so fewer
+// notes ring out, and it sits +3.3 dB up, which holds the lows' level. CANYON shares the tank and has none of this.
+constexpr float kHallLowsWidth = 0.30f;
+constexpr float kHallLowsInLoopDiffusion = 0.60f;
+constexpr float kHallLowsOutputTrim = 1.46218f; // +3.3 dB
 
 // SIZE moves glide: a line's length changes by at most this fraction of a
 // second per second, which is at most a semitone of bend (2^(1/12) − 1).
@@ -64,6 +71,11 @@ constexpr float kHallFloorScale = 3.0f;
 constexpr float kHallFloorLongFromSeconds = 5.0f;
 constexpr float kHallFloorLongAtSeconds   = 15.0f;
 constexpr float kHallFloorLongScale       = 2.0f;
+// CANYON's floor (v1.0.71, ADR 0047, the owner's pick C on renders/fuller_tail): deeper and quicker, so the notes' upper
+// partials smear instead of ringing on as narrow lines (1.6-6.4 kHz peaks 14.5 -> 7.1 per mille at a 5 s tail; a held
+// 1 kHz wavers 0.7 -> 7.4 cents p95). HALL's is x2 up to DECAY's crossover, x1 at endless (Engine::applySpace).
+constexpr float kMassiveFloorScale = 4.0f;
+constexpr float kMassiveFloorPace  = 2.0f;
 constexpr float kHallFloorGlideSeconds    = 1.0f;
 // "Air" (v1.0.25, valhalla_round2): HALL's and PLATE's highs lose this much more than their lows
 // at every finite DECAY, in dB/s, as air does in a room (Valhalla Room measured 3-7), instead of a
@@ -92,6 +104,11 @@ constexpr float kDecayLevelTopSeconds[3] = {12.0f, 25.0f, 120.0f};
 // the owner's pick B on renders/decay_swell): a long tail turned down fades at 0.7 of its new rate while the
 // make-up catches up, never louder; played, the shorter tail grows in at the level it had.
 constexpr float kDecayRiseShare = 0.3f;
+// The wet's lift at short tails (v1.0.73, ADR 0049, the owner's picks on renders/wet_loudness): on TONE's flat +3 dB
+// (Output.h kMakeupDb), +1.5 dB more at T60 <= kWetLiftFromSeconds, none from kWetLiftToSeconds, every SPACE. As a gain - 1.
+constexpr float kWetLiftGain = 0.18850f; // 10^(1.5 / 20) - 1
+constexpr float kWetLiftFromSeconds = 12.0f;
+constexpr float kWetLiftToSeconds = 26.0f;
 // Endless follows the playing (v1.0.61, ADR 0008 amendment; the owner's pick C on renders/decay_endless_match). Past
 // the finite top, played, the tail keeps the top's loss, level and governor; held (the input kEndlessQuietBelowDb
 // under the tail for kEndlessQuietSeconds) its loss glides out over kEndlessHoldSeconds, and the governor's floor
@@ -215,7 +232,7 @@ constexpr float kSpaceFlipSeconds  = 0.05f;
 constexpr float kAttackFadeSeconds = 0.05f;
 
 // The Plate's long delays d1 and d2 wander too (owner's pick on renders/plate_modulation, v1.0.12).
-constexpr float kPlateLongModSeconds = 0.0006f; // depth: ~2 cents at these rates *(start)*
+constexpr float kPlateLongModSeconds = 0.0003f; // depth: ~1 cent at these rates (v1.0.74, ADR 0050: was 0.0006, the owner's v1.0.12 pick) *(start)*
 constexpr float kPlateLongModHz[4]   = {0.23f, 0.31f, 0.19f, 0.37f}; // L d1, L d2, R d1, R d2: none shared with ap1 *(start)*
 
 // ---- SHIMMER (SPEC §4.11, ADR 0024; owner's picks on renders/shimmer4, attack_alts2) ----------
@@ -240,7 +257,7 @@ constexpr float kPlateMinScale     = 0.5f;  // SIZE fully CCW
 // full SIZE) is longer than the T60 asked for, so those tails stay longer
 // than the mapping: a big plate can't ring for only 0.4 s.
 constexpr float kPlateRateCalibration = 1.09f;
-constexpr float kPlateOutputTrim   = 0.43f; // −7.3 dB: PLATE matches HALL's loudness (test_plate_freeze; +0.4 dB at v1.0.28, DECAY's make-up)
+constexpr float kPlateOutputTrim   = 0.40f; // −8.0 dB (0.43 until v1.0.74, whose early tap adds about 0.6 dB, ADR 0050): PLATE matches HALL's loudness (test_plate_freeze; +0.4 dB at v1.0.28, DECAY's make-up)
 
 // ---- Freeze and paint (ADR 0009, 0010; SPEC §3 "Button + Gate") -----------
 constexpr float kFreezeInputSeconds  = 0.02f; // the big tank's input closes

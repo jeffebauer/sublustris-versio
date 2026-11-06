@@ -11,7 +11,7 @@ Here are eight settings to start from, with what to play into them and what to m
 
 **Reading the panels.** Each starting point shows the panel with its knobs and switches set, and the exact values underneath. Knob values run from 0 (fully left, 7 o'clock) to 1 (fully right, 5 o'clock). Noon is 0.5, and each hour is about 0.1.
 
-MOTION is bipolar. At noon it only has a faint movement, to the left it's tape, and to the right it's an old radio. DECAY turns endless past about 3 o'clock (0.8), fully from about 3:30 (0.85).
+MOTION is bipolar. At noon it only has a faint movement, to the left it's tape, and to the right it's an old radio. DECAY turns endless from about half past 4 (0.95).
 
 <!-- OWNER: these settings are drafts. Each one gets checked by ear against a render in the demos stop before it's published. -->
 
@@ -20,7 +20,7 @@ MOTION is bipolar. At noon it only has a faint movement, to the left it's tape, 
 | Starting point | SPACE | ONSET | BLEND | DECAY | TONE | WEAR | SIZE | MOTION | DEPTH |
 |---|---|---|---|---|---|---|---|---|---|
 | Endless pad | CANYON | NATURAL | 0.8 (3) | 1 (5) | 0.4 (11) | 0 (7) | 0.7 (2) | 0.5 (12) | 0.2 (9) |
-| Dub techno hall | HALL | NATURAL | 0.4 (11) | 0.9 (4) | 0.45 (11:30) | 0.2 (9) | 0.6 (1) | 0.4 (11) | 0.3 (10) |
+| Dub techno hall | HALL | NATURAL | 0.4 (11) | 0.95 (4:30) | 0.45 (11:30) | 0.2 (9) | 0.6 (1) | 0.4 (11) | 0.3 (10) |
 | Drum plate | PLATE | NATURAL | 0.3 (10) | 0.3 (10) | 0.55 (12:30) | 0 (7) | 0.4 (11) | 0.5 (12) | 0.1 (8) |
 | Freeze bed | HALL | NATURAL | 0.6 (1) | 0.75 (2:30) | 0.5 (12) | 0.1 (8) | 0.5 (12) | 0.5 (12) | 0.2 (9) |
 | Bloom swell | CANYON | BLOOM | 0.6 (1) | 0.7 (2) | 0.45 (11:30) | 0 (7) | 0.5 (12) | 0.5 (12) | 0.7 (2) |
@@ -42,7 +42,7 @@ MOTION is bipolar. At noon it only has a faint movement, to the left it's tape, 
 
 **Play into it:** chord stabs, as an insert. On a send, turn BLEND fully right on the return.
 
-**Move next:** MOTION a little further left for tape wow. WEAR up for grit. Pull DECAY just under 3 o'clock for a long tail that fades.
+**Move next:** MOTION a little further left for tape wow. WEAR up for grit. Pull DECAY back to 4 o'clock for a long tail that fades.
 
 ## Drum plate
 
@@ -74,7 +74,7 @@ MOTION is bipolar. At noon it only has a faint movement, to the left it's tape, 
 
 **Play into it:** a slow synth lead or a high piano line.
 
-**Move next:** DEPTH for more or less octave. MOTION a little right for an old radio's haze over the octave. DECAY past 3:30 to hold it.
+**Move next:** DEPTH for more or less octave. MOTION a little right for an old radio's haze over the octave. DECAY to half past 4 to hold it.
 
 ## Worn tape room
 

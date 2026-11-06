@@ -6,8 +6,9 @@
 // feeding the other, so a sound circulates through both halves of the
 // figure 8. The stereo outputs are sums of taps across both branches.
 //
-// What makes it ours: SIZE scales every length (gliding, ≤ a semitone of
-// bend), every loss is a Jot absorbent filter set from DECAY and TONE like
+// What makes it ours: SIZE scales every length in the loop (gliding, ≤ a
+// semitone of bend) and leaves the output taps where they are, an early tap
+// off the first allpass speaks at once (v1.0.74, ADR 0050), every loss is a Jot absorbent filter set from DECAY and TONE like
 // the FDN's, the floor governor holds infinite tails (ADR 0008), and L and
 // R enter different branches (true stereo in, ADR 0013). The same code at a
 // twin is a second Plate of the same size while frozen (CONTEXT "Twin").
@@ -47,8 +48,8 @@ struct PlateXf {
         float oo, nn, on, K, dK; // dK: K's step a sample, toward control()'s value
     };
     Branch  xf_[2];
-    Agree   agree_[9]; // [4 b + e]: branch b's read e (ap1, d1, ap2, d2); [8]: the output taps
-    float   xfSeconds_, xfRest_, xfLastTarget_, xfR_, xfKOld_;
+    Agree   agree_[8]; // [4 b + e]: branch b's read e (ap1, d1, ap2, d2)
+    float   xfSeconds_, xfRest_, xfLastTarget_, xfR_;
     float   xfNew_, xfOld_, xfCos_, xfSin_, xfRotC_, xfRotS_;
     int32_t xfLen_, xfLeft_, xfEnd_; // samples
 };
@@ -100,8 +101,8 @@ public:
     // into a seasick wobble (owner, M5 listening).
     void setModDepth(float scale) { modDepth_ = scale; }
     // The long delays d1 and d2 wander too (SPEC §2.3 rule 1; Beads moves both of its long
-    // delays; owner's pick, v1.0.12): 1 normally, 0 on a frozen pad, which stays as still as
-    // before (the frozen cards were a coin flip).
+    // delays; owner's pick, v1.0.12, at half depth since v1.0.74, ADR 0050): 1 normally, 0 on a frozen
+    // pad, which stays as still as before (the frozen cards were a coin flip).
     void setLongDelayMod(float amount) { longMod_ = amount; }
     // Test hook: scales every wander in the loop (chorus, floor, long delays); 0 = still.
     void setModScale(float k) { modScale_ = k; }

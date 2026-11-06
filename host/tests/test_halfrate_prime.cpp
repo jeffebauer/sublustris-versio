@@ -10,6 +10,7 @@
 // 48-sample blocks to 17 / 31 match the block-48 render undelayed (not one sample late). Printed: the
 // same as built (the hole), for the review to quote.
 
+#include "DecayKnobFor.h"
 #include "dsp/Engine.h"
 #include "dsp/HalfRate.h"
 
@@ -84,7 +85,7 @@ void engineAfterSwitch(int space, bool primed, double& undelayedDb, double& dela
 #endif
         e->setParam(iv::ParamId::Space, iv::switchToNormalised(space));
         e->setParam(iv::ParamId::Mix, 1.0f);
-        e->setParam(iv::ParamId::Decay, 0.9f);
+        e->setParam(iv::ParamId::Decay, decayKnobFor(0.9f));
         e->setParam(iv::ParamId::Drift, 0.5f);
         e->reset();
     }

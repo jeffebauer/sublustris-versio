@@ -374,6 +374,9 @@ private:
     // starts, the fade's gains (stepped by a rotation).
     float pdOld_ IV_ZI, pdLastTarget_ IV_ZI, pdRest_ IV_ZI, pdOldG_ IV_ZI, pdNewG_ = 1.0f, pdRotC_ = 1.0f, pdRotS_ IV_ZI;
     int   pdXfLeft_ IV_ZI;
+#if !defined(IV_MODE_PROFILE)
+    float wetLift_ = 1.0f, wetLiftNow_ = 1.0f; // the wet's lift at short tails, after WEAR (v1.0.73, ADR 0049)
+#endif
     float decayMakeup_ = 1.0f, decayGain_ = 1.0f, decayGainNow_ = 1.0f; // DECAY's level make-up (v1.0.28)
     float holdMix_ IV_ZI; // endless (v1.0.61): how far its loss has glided out after the input went quiet
     float holdFloor_ IV_ZI; // and how far the finite top's floor has let go
@@ -452,6 +455,7 @@ private:
     // HALL's floor scale over kHallFloorScale (v1.0.57: 1 up to a 5 s tail, 2 from 15 s), glided; set on every
     // way into HALL (applySpace's snap), so it needs no initialiser. Last: no other member's offset moves.
     float hallFloorNow_ IV_ZI;
+    float hallFullerNow_ IV_ZI; // v1.0.71: x2 up to DECAY's crossover, x1 at endless, glided; set as hallFloorNow_ is
     // A held endless tail (v1.0.58, applySpace): the share of its top end's mellow still to come (1 on every block
     // until the tail is held, so it needs no initialiser), and how far its modulation has calmed (0..1).
     float endlessTopLeft_ IV_ZI, endlessCalm_ IV_ZI;

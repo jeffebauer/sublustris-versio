@@ -6,6 +6,7 @@
 // every control with freezes, paints and SPACE / ATTACK flips: finite,
 // bounded, click-free.
 
+#include "DecayKnobFor.h"
 #include "Metrics.h"
 #include "dsp/Engine.h"
 #include "params/Mappings.h"
@@ -39,7 +40,7 @@ iv::Engine* makeEngine(float decay, float mix = 1.0f)
 {
     auto* e = new iv::Engine;
     e->prepare(kSr, 48);
-    e->setParam(iv::ParamId::Decay, decay);
+    e->setParam(iv::ParamId::Decay, decayKnobFor(decay));
     e->setParam(iv::ParamId::Mix, mix);
     e->setParam(iv::ParamId::Era, 0.0f);
     e->setParam(iv::ParamId::Time, 0.0f);

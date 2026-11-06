@@ -205,8 +205,10 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     inDcR_ = 1.0f - 2.0f * map::kPi * voicing::kInputDcHz / sampleRate_; // dsp::DcBlocker::setCutoff's
     inDcB_ = 0.5f * (1.0f + inDcR_);
     {
-        // The split: a 2nd-order Butterworth pair (bilinear). The two tanks' outputs are uncorrelated,
-        // so they add in power, and a Butterworth pair is power complementary (|L|² + |H|² = 1).
+        // The split: a 2nd-order Butterworth pair (bilinear), power complementary (|L|² + |H|² = 1), so tanks that have
+        // drifted apart add flat. Early on they ring nearly in step, and a Butterworth pair's two bands are then half a
+        // turn apart at the corner: processTwoTanks gives the low tank its input in the opposite sign, so they meet in
+        // step rather than cancel across 150-500 Hz (v1.0.71, ADR 0047).
         auto butter = [this](float f, float* lp, float* hp) {
             const float k = dsp::bilinearK(f, sampleRate_);
             const float nrm = 1.0f / (1.0f + 1.41421356f * k + k * k);
@@ -265,6 +267,9 @@ IV_SIZE_OPT void Engine::reset()
     endlessCalm_ = brightSlope_ = brightPower_ = 0.0f;
     inDcX_[0] = inDcX_[1] = inDcY_[0] = inDcY_[1] = 0.0f;
     smooth_ = values_;
+#if !defined(IV_MODE_PROFILE)
+    smooth_[static_cast<size_t>(ParamId::Decay)] = map::decayScale(values_[static_cast<size_t>(ParamId::Decay)]);
+#endif
     for (auto& p : predelay_) p.clear();
     for (auto& d : diffuser_) d.clear();
     activeSpace_ = normalisedToSwitch(values_[static_cast<size_t>(ParamId::Space)]);
@@ -481,6 +486,9 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // DECAY keeps the loudness (v1.0.28): a shorter tail is made up to the finite top's level, on the
     // wet and the twin alike. A frozen pad keeps heldDecay_, so freezing doesn't move it.
     const float gainWas = decayGain_;
+#if !defined(IV_MODE_PROFILE)
+    const float wetLiftWas = wetLift_;
+#endif
 #ifndef IV_FIXED_VOICINGS
     decayGain_ = std::pow(map::decayLevelMakeup(decayFin, activeSpace_), decayMakeup_); // setDecayMakeup: 1 = as built
 #else
@@ -495,6 +503,14 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // tank barely loses, and a cap there held HALL's endless level down. Falls as before; a held DECAY is unchanged.
     if (!snap && decay < map::kDecayFiniteTop)
         decayGain_ = std::fmin(decayGain_, gainWas * (1.0f + (voicing::kDecayRiseShare * 6.9078f) * rate * float(n) / sampleRate_));
+#if !defined(IV_MODE_PROFILE)
+    // The wet's lift at short tails (v1.0.73, ADR 0049): rises under the same cap, so turning DECAY down can't make a tail
+    // still ringing swell; falls at once. The profile build has none of it (2 multiplies and a glide a sample, about
+    // 0.1 % of a sample's cycles, and its fixed settings have 4 B to spare).
+    wetLift_ = map::decayWetLift(decayFin, activeSpace_);
+    if (!snap) wetLift_ = std::fmin(wetLift_, wetLiftWas * (1.0f + (voicing::kDecayRiseShare * 6.9078f) * rate * float(n) / sampleRate_));
+    else wetLiftNow_ = wetLift_;
+#endif
     if (snap) {
         decayGainNow_ = decayGain_;
     }
@@ -593,16 +609,22 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         // HALL's deepens with its tail (v1.0.57, ADR 0035): x1 up to a 5 s tail, x2 from 15 s and at infinite, on
         // the lows' T60 (`rate`: 0 at infinite, and towards 0 while freezing, as the floor glides out); centred on
         // the lines' mean read (Fdn::setFloorCentre), so a DECAY move doesn't retune what the tail holds.
-        float floorScale = 1.0f; // MASSIVE
+        float floorScale = voicing::kMassiveFloorScale; // MASSIVE (v1.0.71, ADR 0047: at kMassiveFloorPace, below)
         if (!massive) {
             constexpr float kFrom = voicing::kHallFloorLongFromSeconds, kAt = voicing::kHallFloorLongAtSeconds;
             float t = rate > 1.0f / kAt ? (1.0f / rate - kFrom) * (1.0f / (kAt - kFrom)) : 1.0f;
             if (t < 0.0f) t = 0.0f;
             const float target = 1.0f + (voicing::kHallFloorLongScale - 1.0f) * t;
-            hallFloorNow_ = snap ? target : hallFloorNow_ + blockK(voicing::kHallFloorGlideSeconds, n) * (target - hallFloorNow_);
-            floorScale = voicing::kHallFloorScale * hallFloorNow_;
+            const float glide = snap ? 1.0f : blockK(voicing::kHallFloorGlideSeconds, n);
+            hallFloorNow_ += glide * (target - hallFloorNow_);
+            // v1.0.71 (ADR 0047): twice as deep, so the notes' upper partials don't ring on as lines, easing back to
+            // once across DECAY's crossover, where clear notes stay steady; glided, so a DECAY flick doesn't retune.
+            const float fuller = 2.0f - map::governorWeight(decay);
+            hallFullerNow_ += glide * (fuller - hallFullerNow_);
+            floorScale = voicing::kHallFloorScale * hallFloorNow_ * hallFullerNow_;
         }
         fdn_.setFloorCentre(massive ? 0.0f : 1.0f - 1.0f / hallFloorNow_);
+        fdn_.setFloorPaceExtra(massive ? voicing::kMassiveFloorPace - 1.0f : 0.0f);
         fdn_.setModDepth(modScale_ * floorScale * (1.0f - modStill));
         // Still lows: the low tank follows, unmodulated.
         lowFdn_.setDecayRate(rate);
@@ -610,10 +632,13 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         lowFdn_.setGovernor(governor);
         lowFdn_.setFloorDb(floorDb);
         lowFdn_.setHoldDb(holdDb);
-        lowFdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallDiff);
-        lowFdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(hallSize_) / 0.2f));
+        // HALL's lows keep their own in-loop diffusion at every SIZE, and sit louder to hold their level (v1.0.76, ADR 0052).
+        lowFdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : voicing::kHallLowsInLoopDiffusion);
+        // From the SIZE its lines crossfade to, not the glided hallSize_: its allpasses are in the loop at every SIZE now, so
+        // still gliding after the crossfade they bent everything through them (a SIZE flick on a held note, ADR 0052).
+        lowFdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, mean / 0.2f));
         lowFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decayFin, size)
-                                      : voicing::kHallOutputTrim * map::hallSizeLevelTrim(hallSize_, decayFin));
+                                      : voicing::kHallLowsOutputTrim * voicing::kHallOutputTrim * map::hallSizeLevelTrim(hallSize_, decayFin));
         lowFdn_.setEarlyTaps(1.0f);
         lowFdn_.setModDepth(0.0f);
     }
@@ -840,6 +865,13 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
         smoothNext_ ^= 1;
     }
     const float* smoothK = smoothK_[n == smoothN_[0] ? 0 : 1];
+    // DECAY's smoother reads the knob on DECAY's scale (map::decayScale, ADR 0048); values_ goes back to the knob after
+    // it, so Engine::param is the knob. The profile build reads no knobs: its DECAYs are on the scale already.
+#if !defined(IV_MODE_PROFILE)
+    float& decayValue = values_[static_cast<size_t>(ParamId::Decay)];
+    const float decayKnob = decayValue;
+    decayValue = map::decayScale(decayKnob);
+#endif
     for (const auto& p : kParams) {
         const size_t i = static_cast<size_t>(p.id);
         if (p.kind == ParamKind::Switch3 || p.smoothing == Smoothing::Slewed) smooth_[i] = values_[i];
@@ -848,6 +880,9 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
             if (std::fabs(values_[i] - smooth_[i]) < 1e-5f) smooth_[i] = values_[i]; // land exactly (MIX 0 = bit-exact dry)
         }
     }
+#if !defined(IV_MODE_PROFILE)
+    decayValue = decayKnob;
+#endif
 
     // Freeze glides (ADR 0009): colour out over 0.2 s, back over 1 s.
     const float dt = float(n) / sampleRate_;
@@ -1203,7 +1238,12 @@ IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* 
         if (texOn_) texture_.processBlock(wetL_, wetR_, n);
         prof::mark(prof::kEraWear);
         for (int i = 0; i < n; ++i) {
+#if !defined(IV_MODE_PROFILE)
+            wetLiftNow_ += 0.0005f * (wetLift_ - wetLiftNow_);
+            float wl = wetLiftNow_ * wetL_[i], wr = wetLiftNow_ * wetR_[i];
+#else
             float wl = wetL_[i], wr = wetR_[i];
+#endif
             tilt_.process(wl, wr);
 #ifndef IV_FIXED_VOICINGS
             if (!toneBellOff_)
@@ -1257,7 +1297,7 @@ void Engine::processTwoTanks(int n)
             const float x = buf[c][i];
             const float lo = bq(cA, z[c][1], bq(cL, z[c][0], x));
             buf[c][i] = bq(cH, z[c][2], x);
-            if (ph == 0) (c ? lowInR_ : lowInL_)[k] = lo;
+            if (ph == 0) (c ? lowInR_ : lowInL_)[k] = -lo; // in step with the main tank across the split (v1.0.71, ADR 0047; see prepare)
         }
         if (ph == 0) ++k;
         ph = (ph + 1) & (lowDecimate_ - 1); // 4 or 8: a power of two
@@ -1274,11 +1314,16 @@ void Engine::processTwoTanks(int n)
     double power = 0.0;
     float zo[2][2] = {{xoZ_[0][4][0], xoZ_[0][4][1]}, {xoZ_[1][4][0], xoZ_[1][4][1]}};
     float prev[2] = {lowPrev_[0], lowPrev_[1]}, cur[2] = {lowCur_[0], lowCur_[1]};
+    // HALL's lows narrowed (v1.0.76, ADR 0052): each side keeps kHallLowsWidth of the left-right difference, so a low note
+    // can't lean far to one side. In this read, as a loop of its own overflowed the profile build. CANYON: 1 and 0, to the bit.
+    const float own = activeSpace_ == 1 ? 0.5f * (1.0f + voicing::kHallLowsWidth) : 1.0f;
+    const float other = 1.0f - own;
     ph = phase0;
     for (int i = 0; i < n; ++i) {
         if (ph == 0) {
             prev[0] = cur[0]; prev[1] = cur[1];
-            cur[0] = lowOutL_[j]; cur[1] = lowOutR_[j];
+            cur[0] = own * lowOutL_[j] + other * lowOutR_[j];
+            cur[1] = own * lowOutR_[j] + other * lowOutL_[j];
             ++j;
         }
         const float t = float(ph) / float(lowDecimate_);

@@ -9,6 +9,7 @@
 // 0.5 and 0.8, and the output differs from as built by less than -80 dBFS anywhere. Printed: how long
 // it runs as built and with the hook, for the review to quote.
 
+#include "DecayKnobFor.h"
 #include "dsp/Engine.h"
 
 #include <algorithm>
@@ -47,7 +48,7 @@ double twinRuns(int space, float decay, bool fast, std::vector<float>& out)
     e->setTwinStopFast(fast);
 #endif
     e->setParam(iv::ParamId::Space, iv::switchToNormalised(space));
-    e->setParam(iv::ParamId::Decay, decay);
+    e->setParam(iv::ParamId::Decay, decayKnobFor(decay));
     e->setParam(iv::ParamId::Mix, 1.0f);
     e->reset();
     const int blocks = int(45.0f * kSr) / kBlock;

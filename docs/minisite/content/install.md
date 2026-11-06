@@ -93,4 +93,4 @@ Delete `Sublustris Versio.vst3` from `~/Library/Audio/Plug-Ins/VST3/` and `Sublu
 | The output LEDs turn blue | The reverb is frozen. Tap the button (or send a short gate) to unfreeze. |
 | Output LEDs red a lot | The output limiter is catching peaks. Lower the input level or BLEND. |
 | Input LEDs red | Your source is near clipping at the jack. Turn it down. |
-| The tail never stops | DECAY is past about 3 o'clock, where the tail is endless. Turn it down and the tail fades. |
+| The tail never stops | DECAY is past about half past 4, where the tail is endless. Turn it down and the tail fades. |

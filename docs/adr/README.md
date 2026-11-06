@@ -47,4 +47,12 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0041](0041-tape-drive-back.md) | The tape's drive back to 11.25 dB (reverses ADR 0040's drive); the worn cassette stays | owner, 3 Nov 2026 |
 | [0042](0042-radio-lighter.md) | The radio's over-modulation 8 dB lighter on MOTION's right side: a faint edge | owner, 3 Nov 2026 |
 | [0043](0043-plate-size-crossfade.md) | PLATE's SIZE by crossfade, like HALL and CANYON; small and frozen moves glide (ADR 0025 phase 2 done) | owner, 3 Nov 2026 |
+| [0044](0044-wear-taper.md) | WEAR's taper: the wear arrives earlier on the knob (1 − (1 − v)^2.2), the grit from noon; full WEAR unchanged | owner, 5 Nov 2026 |
+| [0045](0045-wear-drive.md) | The tape's drive back to 16.25 dB on the new taper (reverses ADR 0041's drive, amends ADR 0044) | owner, 5 Nov 2026 |
 | [0046](0046-betas-from-branches.md) | Sound changes go out as betas (pre-releases) from a `beta/<topic>` branch, each with a pull request into `main`, before a release; branch and tag names; tags are never deleted | owner, 5 Nov 2026 |
+| [0047](0047-fuller-tail.md) | A fuller tail: the still lows in step with the main tank, more movement in the floor (HALL x2 easing to x1 at endless, CANYON x4 at x2 pace); PLATE unchanged | owner, 6 Nov 2026 |
+| [0048](0048-decay-curve.md) | DECAY's curve: the knob onto DECAY's scale, noon kept, more knob for the long tails, endless from half past 4 | owner, 6 Nov 2026 |
+| [0049](0049-wet-level.md) | The wet's level: +3 dB, +1.5 dB more at T60 up to 12 s, gone by 26 s, after WEAR | owner, 6 Nov 2026 |
+| [0050](0050-plate-hit.md) | PLATE's hit: the output taps held, an early tap, slower movement (supersedes v1.0.12's long-delay wander for PLATE), trimmed to v1.0.73's loudness | owner, 6 Nov 2026 |
+| [0051](0051-wear-ceiling.md) | WEAR's ceiling and noon: the tape's drive 13.5 dB at full on its own gentler taper (amends ADR 0044 and 0045) | owner, 6 Nov 2026 |
+| [0052](0052-hall-lows.md) | HALL's low-note resonances: the low tank narrowed to 0.30 and denser (in-loop diffusion 0.60 at every SIZE), +3.3 dB; no modulation (amends ADR 0012's still lows and the v1.0.17 in-loop fade for the low tank) | owner, 6 Nov 2026 |

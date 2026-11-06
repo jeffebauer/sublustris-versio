@@ -148,6 +148,9 @@ public:
     // Four groups since v1.0.45 (the owner's pick C on renders/size_moves: "hardly perceptible difference from 2
     // groups, whilst 8 groups introduces some slight staggering"): lines g, g + 4, a quarter reading twice at once.
     // 1, 2 and 8 stay for the desktop's IV_SIZE_STAGGER and the profile's SIZEHAND lines.
+    // The modulation floor's pace, its smoothing and the time between its random targets, x (1 + this) (MASSIVE,
+    // v1.0.71, ADR 0047). Kept as the extra over 1 so a tank that's never told (the still lows') needs no set-up.
+    void setFloorPaceExtra(float k) { floorPaceExtra_ = k; }
     void setStagger(int groups) { xfStagger_ = groups == 1 || groups == 2 || groups == 8 ? groups : 4; }
 
 private:
@@ -247,6 +250,7 @@ private:
     EarlyLayouts* lay_ IV_ZI; // setEarlyLayouts (last: no other member's offset moves)
     float     floorCentre_ IV_ZI; // setFloorCentre (v1.0.57, after lay_ for the same reason); 0 = none
     float     endlessTop_ IV_ZI;  // setEndlessTop (v1.0.58, last for the same reason); 0 = none
+    float     floorPaceExtra_ IV_ZI; // setFloorPaceExtra (v1.0.71, last for the same reason); 0 = none
 };
 
 } // namespace iv::dsp
