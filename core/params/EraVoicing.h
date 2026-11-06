@@ -65,8 +65,12 @@ constexpr float kMakeupNeveDb = 0.2f;
 // Where WEAR's grit (the grain; the BBD's clock too until v1.0.64) starts on the knob: noon (v1.0.69, ADR 0044, the
 // owner's pick D on renders/wear_taper; 0.65 from v1.0.49, renders/wear_grit D).
 constexpr float kWearGritStart = 0.5f;
-// WEAR's taper (v1.0.69, ADR 0044): the wear's intensities follow 1 - (1 - v)^this, so they arrive early on the knob
-// (noon wears like the old 0.78) and full WEAR is unchanged (Mappings.h eraMix).
+// WEAR's taper (v1.0.69, ADR 0044): the breath, the in-loop compression, the hiss and the crackle follow 1 - (1 - v)^this,
+// so they arrive early on the knob (Mappings.h eraMix).
 constexpr float kWearTaperPower = 2.2f;
+// The tape's own taper (v1.0.75, ADR 0051, the owner's pick D on renders/wear_ceiling: "reduce the overall ceiling of the
+// effect, and have it slightly less present at noon"): gentler, so its drive, emphasis and bias are lower at noon and
+// before, and keep climbing all the way to full (tex::kTapeDriveDb; 2.2 like the rest from v1.0.69 to v1.0.74).
+constexpr float kWearTapeTaperPower = 1.3f;
 
 } // namespace iv::voicing

@@ -525,6 +525,8 @@ void notAliasing()
     // v1.0.70 (ADR 0045, the owner's pick C on renders/wear_drive): the drive back to v1.0.65's 16.25 dB on that taper, so
     // 0.75 drives the tape 15.5 dB (v1.0.65 there: 12.2): -16.7 dB here, -25.1 at 96 kHz, an 8.4 dB gap, under v1.0.65's
     // own with v1.0.63 (9.1); the third clause allows 10 dB again, as it did then. The band below 5 kHz is still under -15.
+    // v1.0.75 (ADR 0051, the owner's pick D on renders/wear_ceiling): 0.75 drives the tape 11.3 dB on its own taper: -18.7 dB
+    // here, -25.5 at 96 kHz, a 6.8 dB gap. The limits stay as v1.0.70 left them; this reading is inside them.
     char msg[240];
     std::snprintf(msg, sizeof msg, "hot 7 kHz tone at ERA 0.75: energy below 5 kHz %.1f dB re total at 48 kHz, %.1f at 96 kHz (< -32 with the "
                                    "24 kHz tank, or aliasing adds < 2 dB, or the band under -15 with aliasing adding < 10 dB, v1.0.70)", at48, at96);
@@ -647,6 +649,30 @@ void noClockImages()
     check(images < -45.0, msg);
 }
 
+// v1.0.75 (ADR 0051, the owner's pick D on renders/wear_ceiling): the tape's drive on its own, gentler taper, with a lower
+// top, climbing all the way to full; the breath, the compression, the hiss and the crackle stay on kWearTaperPower. The
+// grit's start and its full amount don't move, and WEAR 0 has no tape at all.
+void tapeOnItsOwnTaper()
+{
+    const float at[] = {0.2f, 0.5f, 0.8f, 1.0f};
+    const double want[] = {3.4, 8.0, 11.8, 13.5};
+    bool drive = true, rest = true;
+    std::string detail;
+    for (int i = 0; i < 4; ++i) {
+        const iv::map::EraWear e = iv::map::eraMix(at[i]);
+        const double db = double(iv::dsp::tex::kTapeDriveDb) * e.tex.tapeT;
+        const float w = 1.0f - std::pow(1.0f - at[i], iv::voicing::kWearTaperPower);
+        char buf[24];
+        std::snprintf(buf, sizeof buf, " %.1f", db);
+        detail += buf;
+        drive = drive && std::fabs(db - want[i]) < 0.05;
+        rest = rest && e.tex.breathT == w && e.compress == w && e.hiss == w && e.crackle == w;
+    }
+    check(drive, "WEAR's tape drive 3.4 / 8.0 / 11.8 / 13.5 dB at 9 o'clock, noon, 3 o'clock and full (dB:" + detail + ")");
+    check(rest, "the breath, the compression, the hiss and the crackle stay on WEAR's 2.2 taper");
+    check(iv::map::eraMix(0.0f).tex.tapeW == 0.0f, "WEAR 0: no tape");
+}
+
 } // namespace
 
 int main()
@@ -664,6 +690,7 @@ int main()
     gritFromItsStart();
     noClockImages();
     noBandOnWear();
+    tapeOnItsOwnTaper();
     std::printf("%d failure(s)\n", failures);
     return failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }

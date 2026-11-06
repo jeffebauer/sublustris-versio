@@ -84,9 +84,9 @@ It's never harsh and never rings on its own, even at the ends.
 
 ### WEAR
 
-How worn the reverb sounds. Fully left (the default) is clean, with only a warm, desk-like colour. As you turn it up, the wear comes in early, most of it by noon, and keeps deepening to the end of the knob:
+How worn the reverb sounds. Fully left (the default) is clean, with only a warm, desk-like colour. As you turn it up, the wear comes in early and keeps deepening to the end of the knob:
 
-- tape saturation, driven hard in the knob's upper half, and a little tape compression;
+- tape saturation, gentle at first and climbing all the way to the end of the knob, and a little tape compression;
 - a bucket-brigade delay's breathing: its noise and level rise and fall with your playing;
 - bit grit from noon up, which stays the same share of a fading tail, so the tail stays grainy right to the end;
 - a soft hiss and the odd crackle, which follow your playing, so silence stays silent.

@@ -207,10 +207,13 @@ IV_CTL_OPT inline EraWear eraMix(float v)
     const float s = t * t * (3.0f - 2.0f * t); // a smoothstep over the first twentieth
     // The intensities come in early on the knob (v1.0.69, ADR 0044, the owner's pick D on renders/wear_taper; lfad on
     // Modwiggler: WEAR was "very subtle until you get past noon"): w = 1 - (1 - v)^kWearTaperPower, so noon wears like
-    // the old 0.78 and 3 o'clock is near full. 0 and 1 are exactly as before (full WEAR is ADR 0041's to the bit).
+    // the old 0.78 and 3 o'clock is near full. The tape has its own, gentler one (v1.0.75, ADR 0051, the owner's pick D on
+    // renders/wear_ceiling), so its drive is lower at noon and keeps climbing to full: 3.4 / 8.0 / 11.8 / 13.5 dB at 9
+    // o'clock, noon, 3 o'clock and full (tex::kTapeDriveDb). Both are 0 at WEAR 0.
     const float w = 1.0f - std::pow(1.0f - clamp01(v), kWearTaperPower);
     x.tapeW = x.breathW = s;
-    x.tapeT = x.breathT = w;
+    x.tapeT = 1.0f - std::pow(1.0f - clamp01(v), kWearTapeTaperPower);
+    x.breathT = w;
     e.compress = e.hiss = e.crackle = s * w;
     // The grit (the grain; the BBD's clock with it until v1.0.64, ADR 0038) from kWearGritStart on the knob itself,
     // not w (noon since v1.0.69, ADR 0044; 0.65 from v1.0.49, the owner's pick D on renders/wear_grit). Past it the
