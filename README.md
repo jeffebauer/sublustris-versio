@@ -37,6 +37,17 @@ One DSP core with no platform code, and three hosts: an offline renderer (WAV in
 - Firmware variants, CPU runs and the flash budget are in [`firmware/README.md`](firmware/README.md).
 - The build commands are in [`CLAUDE.md`](CLAUDE.md), under "Commands".
 
+### Other Daisy Seed hardware
+
+I only build and test for the Versio, but the reverb isn't tied to it, so a Terrarium pedal, a Patch.Init or your own Seed project should work with a new host. Where to start:
+
+- `core/` has no platform code: `core/dsp/Engine.h` is its one entry point. It takes plain float buffers for audio and the settings from one table, `core/params/ParamSpec.h`, so you don't touch the sound to port it.
+- Only `firmware/main.cpp` knows about the Versio (`DaisyVersio` from libDaisy): which pot is which knob (`kPotKnob`), the two switches, the button and gate, the four LEDs and the boot sweep. Replace those with your board's controls and keep the rest: the SDRAM setup at boot and the audio callback.
+- It needs the Seed's 64 MB SDRAM for the long delay lines, and it's voiced at the Seed's default 48 kHz. Its busiest moments (a big CANYON, frozen, with someone playing over it) take most of what the chip has, so it needs the Seed's full speed and leaves little for anything else.
+- The release build is about 112 KB of the Seed's 128 KB of internal flash, so a new host has little room to grow. [`firmware/README.md`](firmware/README.md) has the flash techniques.
+
+If you get it running somewhere new, I'd love to hear about it in an [issue](https://github.com/jeffebauer/sublustris-versio/issues).
+
 ## Licence
 
 - **Code, tools and docs:** MIT, see [`LICENSE`](LICENSE).

@@ -19,6 +19,7 @@ A senior designer, new to DSP and embedded C++. Brings the ears and musical goal
 - Sound work happens on desktop first (Renderer, then Plugin); hardware is for profiling and final feel.
 - **Flash is the tightest limit** (128 KB internal, ADR 0002): release ≤ 110 KB at v1.0. Check `make -C firmware all-variants` after any Core change and record the sizes in the handoff.
 - **Git:** stage explicit paths; never `git commit -a` / `-am`. `git apply --3way` also stages, so check `git status --short` for pre-staged files before any commit. Keep the main checkout on `main`; do branch work in a worktree. Commit after each meaningful step. End messages with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+- **Releases and branches (ADR 0046):** `main` is what's released, since every push redeploys the site. A picked sound change goes out first as a beta from its own `beta/<topic>` branch (`tools/make_release.sh --beta <ref> <n> --publish`: a pre-release tagged `<sound>-beta.<n>`, never Latest, so the site's downloads don't move), with a pull request into `main` opened at beta 1 (linking the feedback, ADRs and pre-releases; no repeated text), and merges into `main` (the PR) for a full release only once players and the owner are happy; a dropped beta's PR is closed and its branch deleted, never its tag. Prototypes live on `proto/<topic>` (or the app's `claude/<topic>-<suffix>`) and aren't pushed; docs, tools and site work on `claude/<topic>` go to `main` with the owner's OK. Only `main` and `beta/` branches are pushed.
 - **Gate on ctest's summary line, not its exit code:** a pipe (`| tail`) reports 0 even when suites fail. Log to a file and check `100% tests passed`.
 - **Never delete or recreate `build/`**: agents and tools share `build/iv_render`. Experiments use a scratch build dir or a worktree.
 - **Audio system:** never run `auval -a`, kill `AudioComponentRegistrar` or `coreaudiod`, or reset AU caches (it once froze CoreAudio and Ableton for Resilio). Validate only our AU (`auval -v aumf ImVs Ombr`), and only with Ableton closed.
@@ -42,6 +43,7 @@ IV_GOLDEN_UPDATE="why" build/iv_test_golden                # after a deliberate 
 .venv/bin/python tools/make_material.py                     # listening material (python3 -m venv .venv; pip install numpy soundfile)
 .venv/bin/python tools/make_reference_kit.py                # the kit for the owner's reference units; tools/ingest_reference.py reads them back
 tools/install_plugin.sh <commit>                            # put a build in Ableton
+tools/make_release.sh --beta <ref> <n> --publish            # a beta (pre-release) from a beta/<topic> branch; --publish alone releases main
 ```
 
 ## Where things are
