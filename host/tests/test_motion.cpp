@@ -172,13 +172,16 @@ void glideOut()
 // this one tone's reading (v1.0.65 alone: HALL 15.2 / 16.8 / 23.0, MASSIVE 7.0 / 11.7 / 19.7).
 // v1.0.71 (ADR 0047): HALL's floor x2 and CANYON's x4 at x2 pace add to the left side's depth, PLATE as before. Until
 // v1.0.70: HALL 14.6 / 19.2 / 25.0, MASSIVE 5.9 / 11.8 / 19.0.
+// v1.0.74 (ADR 0050): PLATE's allpass sine at a fifth of its speed takes the constant waver out from under MOTION: noon 11.7 -> 3.1 c,
+// and the left side's own movement stays (what MOTION adds, the root of the difference of squares: 3/4 left 11.8 -> 11.3, full left
+// 18.0 -> 18.4, 9 o'clock 8.9 -> 5.1 with noon 3 c instead of 12). Until v1.0.73: PLATE 14.7 / 16.5 / 21.5.
 void leftSide()
 {
     const std::vector<float> tones = heldTones();
     struct Pos { float drift; const char* name; double p95[3]; int crinkles, dips; }; // p95: PLATE, HALL, MASSIVE
-    const Pos pos[] = {{0.2f, "9 o'clock (0.2)", {14.7, 20.4, 12.9}, 12, 1},
-                       {0.1175f, "3/4 left (0.1175)", {16.5, 25.2, 13.1}, 30, 8},
-                       {0.0f, "full left", {21.5, 27.3, 22.0}, 54, 27}};
+    const Pos pos[] = {{0.2f, "9 o'clock (0.2)", {6.0, 20.4, 12.9}, 12, 1},
+                       {0.1175f, "3/4 left (0.1175)", {11.7, 25.2, 13.1}, 30, 8},
+                       {0.0f, "full left", {18.7, 27.3, 22.0}, 54, 27}};
     for (const Pos& p : pos) {
         for (int space : {0, 1, 2}) {
             const double c = p95Of(render(tones, pageSetting(space, p.drift)));

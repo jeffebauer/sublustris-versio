@@ -13,7 +13,8 @@ using namespace plate;
 
 constexpr float kDecayDiffusion1 = 0.70f; // the modulated allpasses (drawn with inverted signs)
 constexpr float kDecayDiffusion2 = 0.50f;
-constexpr float kLfoHz[2] = {0.71f, 0.93f};
+// The allpass sine's rates: slow, at a fifth of what they were (v1.0.74, ADR 0050): the tail sits still and rings.
+constexpr float kLfoHz[2] = {0.142f, 0.186f};
 // Output taps (his Table 2): which branch, which element, offset (samples at
 // 29.761 kHz), sign. Element 0 = d1, 1 = ap2's delay, 2 = d2. Each output
 // starts from the *other* branch: the left from branch 1 (his 4217 / 2656 /
@@ -46,6 +47,9 @@ constexpr bool tapsFit(const Tap* taps)
 }
 static_assert(tapsFit(kLeft) && tapsFit(kRight), "every Plate output tap must lie inside its line");
 constexpr float kOutputGain = 0.6f;     // Dattorro's output scaling
+// Where the output taps read, as a scale of his offsets, at every SIZE (v1.0.74, ADR 0050): SIZE's floor, so they don't
+// spread out with the tank, and a big plate starts as a plate instead of a spatter of separate echoes.
+constexpr float kTapScale = voicing::kPlateMinScale;
 constexpr float kLevelRefScale = 1.0f;  // level compensation reference (√(scale / ref))
 // SIZE glides: the longest element (4453) changes by at most a semitone of
 // bend, 0.0595 s of delay per second (as the FDN, ADR 0012).
@@ -94,7 +98,7 @@ constexpr TapCodes tapCodes()
 }
 constexpr TapCodes kTapCodes = tapCodes();
 
-// The output taps' delays for a block (k, the scale, only moves in control()): whole samples and the
+// The output taps' delays for a block: whole samples and the
 // fraction, as the per-sample read worked them out (the same bits; overnight review, 26 Oct 2026).
 // Once a block, built for size (flash).
 IV_NOINLINE IV_SIZE_OPT void tapDelays(float k, int32_t (&di)[2][kTapsPerSide], float (&t)[2][kTapsPerSide])
@@ -223,7 +227,6 @@ IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash;
         else slewPerSecond = kXfSmallSlewPerSecond;
         if (pending && !small && xfSince_ < 0 && X.xfRest_ >= voicing::kSizeRestSeconds) {
             starting = true;
-            X.xfKOld_ = scaleNow_ * sampleRate_ / kPaperRate;
             // The level that follows SIZE (levelGain_, on the output) steps with the jump; what is in the tank
             // is scaled by the old gain over the new as it is read (xfR_), so the tail carries on at its level
             // and only new sound comes in at the new one (ADR 0025's "level that follows SIZE", here on the output).
@@ -268,7 +271,7 @@ IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash;
         }
         br.floorA += floorCoeff * (br.floorTarget - br.floorA);
         br.floorB += floorCoeff * (br.floorA - br.floorB);
-        float target = excursion * (1.0f + modScale_ * (modDepth_ * 0.7f * std::sin(6.2831853f * br.lfoPhase) + 0.3f * br.floorB));
+        float target = excursion * (1.0f + modScale_ * (modDepth_ * 0.7f * std::sin(6.2831853f * br.lfoPhase) + 0.15f * br.floorB));
         if (colour_) {
             // DRIFT swings the modulated allpass's length (the buffer has
             // room for the longest swing).
@@ -280,7 +283,7 @@ IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash;
         br.modStep = (target - br.modNow) / float(n);
 
         // d1 and d2 wander too, each at its own rate (a sine plus the floor's random walk),
-        // about 2 cents; still on a frozen pad (longMod_ 0).
+        // about 1 cent; still on a frozen pad (longMod_ 0).
         const float longDepth = longMod_ * modDepth_ * modScale_ * voicing::kPlateLongModSeconds * sampleRate_;
         for (int j = 0; j < 2; ++j) {
             br.longPhase[j] += voicing::kPlateLongModHz[2 * b + j] * dt;
@@ -334,8 +337,8 @@ IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash;
 // glide). Lexicon's units mute the reverb while Size changes (PCM 80 manual, Size; the MPX 550 reloads the program);
 // Valhalla smooths every control for live tweaking (ValhallaShimmer's notes), and a moving Size there bends the pitch
 // like an analogue delay (a user's review): what the PLATE's glide did. Here, as HALL's and
-// CANYON's lines: once SIZE has rested every one of the eight lengths (each branch's ap1, d1, ap2, d2) and the output
-// taps jump to the new scale inside the same lines (they are sized for the largest), and the old reads fade out
+// CANYON's lines: once SIZE has rested every one of the eight lengths (each branch's ap1, d1, ap2, d2) jumps to the
+// new scale inside the same lines (they are sized for the largest), and the old reads fade out
 // sin^2 / cos^2 with each pair's agreement gain (Bristow-Johnson). Inside the two allpasses the delayed read is
 // crossfaded the same way (as HALL's in-loop allpasses present on both sides). The loss filters fade from old to new;
 // the new d1 / d2 reads carry the one-trip decay correction. No extra memory: about twice the reads for the fade.
@@ -455,13 +458,11 @@ IV_SIZE_OPT void Plate::startCrossfade(float rate, float k)
 IV_SIZE_OPT void Plate::processXf(const float* inL, const float* inR, float* outL, float* outR, int start, int m)
 {
     PlateXf& X = *xs_;
-    const float k = scaleNow_ * sampleRate_ / kPaperRate;
     const float outGain = kOutputGain * levelGain_;
     const float r = X.xfR_;
-    int32_t tapDi[2][kTapsPerSide], oldDi[2][kTapsPerSide];
-    float   tapT[2][kTapsPerSide], oldT[2][kTapsPerSide];
-    tapDelays(k, tapDi, tapT);
-    tapDelays(X.xfKOld_, oldDi, oldT);
+    int32_t tapDi[2][kTapsPerSide];
+    float   tapT[2][kTapsPerSide];
+    tapDelays(kTapScale * sampleRate_ / kPaperRate, tapDi, tapT);
     for (int s = start; s < start + m; ++s) {
         XfNow f{xfSince_, r, 0.0f, 1.0f, X.xfLeft_ > 0}; // t: writes since the jump, before this sample's
         const int32_t t = f.t;
@@ -484,7 +485,7 @@ IV_SIZE_OPT void Plate::processXf(const float* inL, const float* inR, float* out
         // output's level, it clicked, and ap1 rang the click on every old length (a full grow under a pad, 3 Nov 2026).
         const float inGain = r + (1.0f - r) * w;
         const float in[2] = {inL[s] * inGain, inR[s] * inGain};
-        float next[2];
+        float next[2], early[2];
         for (int b = 0; b < 2; ++b) {
             Branch& br = b_[b];
             PlateXf::Branch& o = X.xf_[b];
@@ -495,6 +496,7 @@ IV_SIZE_OPT void Plate::processXf(const float* inL, const float* inR, float* out
             const float v1 = x - kDecayDiffusion1 * d;
             br.ap1.write(v1);
             x = d + kDecayDiffusion1 * v1;
+            early[b] = x;
             br.d1.write(x);
             br.longNow[0] += br.longStep[0];
             x = xfRead(br.d1, br.d1Len + br.longNow[0], o.len[1] + br.longNow[0], br.i2, o.st[1], t + 1, o.corr[0], g[1], f);
@@ -515,8 +517,9 @@ IV_SIZE_OPT void Plate::processXf(const float* inL, const float* inR, float* out
         b_[0].out = next[0];
         b_[1].out = next[1];
 
-        // The output taps (lerpFull's sums), new and, while fading, old, the samples from before the jump scaled.
-        float sum[2][2] = {}; // [new, old][left, right]
+        // The output taps (lerpFull's sums), the samples from before the jump scaled. They don't move with SIZE, so
+        // there's one read to fade between and no agreement to keep (v1.0.74). The early tap crosses, as in process().
+        float sum[2] = {early[1], early[0]};
         for (int c = 0; c < 2; ++c)
             for (int j = 0; j < kTapsPerSide; ++j) {
                 const unsigned   code = kTapCodes.v[c][j];
@@ -524,23 +527,11 @@ IV_SIZE_OPT void Plate::processXf(const float* inL, const float* inR, float* out
                 const unsigned   el = (code >> 1) & 3u;
                 const ExactLine& line = el == 0 ? br.d1 : (el == 1 ? br.ap2 : br.d2);
                 const float      sign = code & 8u ? -1.0f : 1.0f;
-                for (int v = 0; v < (fading ? 2 : 1); ++v) {
-                    const int32_t di = v ? oldDi[c][j] : tapDi[c][j];
-                    const float   ta = agoSc(line, di, t + 1, r);
-                    sum[v][c] += sign * (ta + (v ? oldT[c][j] : tapT[c][j]) * (agoSc(line, di + 1, t + 1, r) - ta));
-                }
+                const int32_t    di = tapDi[c][j];
+                const float      ta = agoSc(line, di, t + 1, r);
+                sum[c] += sign * (ta + tapT[c][j] * (agoSc(line, di + 1, t + 1, r) - ta));
             }
-        const float nl = sum[0][0], nr = sum[0][1], ol = sum[1][0], orr = sum[1][1];
-        float l = nl, rr = nr;
-        if (fading) {
-            PlateXf::Agree& go = X.agree_[8];
-            go.oo += kXfAgree * (ol * ol + orr * orr - go.oo);
-            go.nn += kXfAgree * (nl * nl + nr * nr - go.nn);
-            go.on += kXfAgree * (ol * nl + orr * nr - go.on);
-            go.K += go.dK;
-            l = go.K * (w * nl + a * ol);
-            rr = go.K * (w * nr + a * orr);
-        }
+        const float l = sum[0], rr = sum[1];
         outL[s] += outGain * l;
         outR[s] += outGain * rr;
         governor_.add(0.5f * outGain * outGain * (l * l + rr * rr));
@@ -564,7 +555,6 @@ void Plate::process(const float* inL, const float* inR, float* outL, float* outR
             processXf(inL, inR, outL, outR, start, m);
             continue;
         }
-        const float k = scaleNow_ * sampleRate_ / kPaperRate;
         const float outGain = kOutputGain * levelGain_;
         // What stays put through the block is worked out once, with the same float operations as per
         // sample, so the same bits (overnight review, 26 Oct 2026): the output taps' delays, and ap2's
@@ -572,7 +562,7 @@ void Plate::process(const float* inL, const float* inR, float* outL, float* outR
         // gone round since the last reset, the reads skip the ring's fill tests.
         int32_t tapDi[2][kTapsPerSide], ap2Di[2];
         float   tapT[2][kTapsPerSide], ap2Eta[2];
-        tapDelays(k, tapDi, tapT);
+        tapDelays(kTapScale * sampleRate_ / kPaperRate, tapDi, tapT);
         bool steady = true;
         for (int b = 0; b < 2; ++b) {
             const Branch& br = b_[b];
@@ -586,7 +576,7 @@ void Plate::process(const float* inL, const float* inR, float* outL, float* outR
         };
         for (int s = start; s < start + m; ++s) {
             const float in[2] = {inL[s], inR[s]};
-            float next[2];
+            float next[2], early[2];
             for (int b = 0; b < 2; ++b) {
                 Branch& br = b_[b];
                 // Input plus the other branch's output (the figure 8).
@@ -597,6 +587,7 @@ void Plate::process(const float* inL, const float* inR, float* outL, float* outR
                 const float v1 = x - kDecayDiffusion1 * d1;
                 br.ap1.write(v1);
                 x = d1 + kDecayDiffusion1 * v1;
+                early[b] = x;
                 // Delay, then loss (DECAY + TONE, Jot).
                 br.d1.write(x);
                 br.longNow[0] += br.longStep[0];
@@ -620,7 +611,9 @@ void Plate::process(const float* inL, const float* inR, float* outL, float* outR
             b_[0].out = next[0];
             b_[1].out = next[1];
 
-            float l = 0.0f, r = 0.0f;
+            // The early tap (v1.0.74, ADR 0050): each side starts from the first allpass of the other side's branch, so the
+            // wet speaks at once, and a hard-left source still answers on the right first (v1.0.16's "more cohesive" pick).
+            float l = early[1], r = early[0];
             for (int j = 0; j < kTapsPerSide; ++j) {
                 const Tap& t = kLeft[j];
                 const Branch& br = b_[t.branch];

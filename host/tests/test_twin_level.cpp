@@ -26,6 +26,8 @@
 // duck's reduction; the twin as before), so its v1.0.41 limit is 1.5 dB; HALL's room takes the long-tail trim (2.1 dB,
 // test_room_motion) and sits up to 1.7 dB further under (SIZE 0: -10.22, past v1.0.41's 4 dB, now 5.5).
 // v1.0.57's figures at DECAY 0.9: HALL -9.17 / -8.51 / -8.97 (SIZE 0.9 / 0 / 0.5), PLATE -10.00.
+// v1.0.74 (ADR 0050): the early tap and the trim act on the pad's first sound and the twin's differently: a twin of at most 8 s
+// is more of its start than a held pad is, so PLATE's sits 0.46 dB closer to its pad (-8.11, was -8.57; 1.89 from v1.0.41's, limit 2).
 
 #include "DecayKnobFor.h"
 #include "DecayV1052.h"
@@ -129,7 +131,7 @@ int main()
     const Case cases[] = {
         {"MASSIVE S0.9 D0.9 (the page's)", 2, 0.9f, 0.9f, -4.04, 1.5, -3.86},
         {"HALL S0.9 D0.9 (the page's)", 1, 0.9f, 0.9f, -8.29, 1.5, -8.82},
-        {"PLATE S0.9 D0.9", 0, 0.9f, 0.9f, -10.00, 1.5, -8.57},
+        {"PLATE S0.9 D0.9", 0, 0.9f, 0.9f, -10.00, 2.0, -8.11},
         {"MASSIVE S0 D0.5", 2, 0.0f, 0.5f, -4.76, 3.0, -5.11},
         {"MASSIVE S0 D0.9", 2, 0.0f, 0.9f, -4.84, 3.0, -5.52},
         {"MASSIVE S0.5 D0.5", 2, 0.5f, 0.5f, -1.51, 3.0, -3.49},

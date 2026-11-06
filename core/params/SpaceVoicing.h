@@ -225,7 +225,7 @@ constexpr float kSpaceFlipSeconds  = 0.05f;
 constexpr float kAttackFadeSeconds = 0.05f;
 
 // The Plate's long delays d1 and d2 wander too (owner's pick on renders/plate_modulation, v1.0.12).
-constexpr float kPlateLongModSeconds = 0.0006f; // depth: ~2 cents at these rates *(start)*
+constexpr float kPlateLongModSeconds = 0.0003f; // depth: ~1 cent at these rates (v1.0.74, ADR 0050: was 0.0006, the owner's v1.0.12 pick) *(start)*
 constexpr float kPlateLongModHz[4]   = {0.23f, 0.31f, 0.19f, 0.37f}; // L d1, L d2, R d1, R d2: none shared with ap1 *(start)*
 
 // ---- SHIMMER (SPEC §4.11, ADR 0024; owner's picks on renders/shimmer4, attack_alts2) ----------
@@ -250,7 +250,7 @@ constexpr float kPlateMinScale     = 0.5f;  // SIZE fully CCW
 // full SIZE) is longer than the T60 asked for, so those tails stay longer
 // than the mapping: a big plate can't ring for only 0.4 s.
 constexpr float kPlateRateCalibration = 1.09f;
-constexpr float kPlateOutputTrim   = 0.43f; // −7.3 dB: PLATE matches HALL's loudness (test_plate_freeze; +0.4 dB at v1.0.28, DECAY's make-up)
+constexpr float kPlateOutputTrim   = 0.40f; // −8.0 dB (0.43 until v1.0.74, whose early tap adds about 0.6 dB, ADR 0050): PLATE matches HALL's loudness (test_plate_freeze; +0.4 dB at v1.0.28, DECAY's make-up)
 
 // ---- Freeze and paint (ADR 0009, 0010; SPEC §3 "Button + Gate") -----------
 constexpr float kFreezeInputSeconds  = 0.02f; // the big tank's input closes

@@ -52,3 +52,4 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0047](0047-fuller-tail.md) | A fuller tail: the still lows in step with the main tank, more movement in the floor (HALL x2 easing to x1 at endless, CANYON x4 at x2 pace); PLATE unchanged | owner, 6 Nov 2026 |
 | [0048](0048-decay-curve.md) | DECAY's curve: the knob onto DECAY's scale, noon kept, more knob for the long tails, endless from half past 4 | owner, 6 Nov 2026 |
 | [0049](0049-wet-level.md) | The wet's level: +3 dB, +1.5 dB more at T60 up to 12 s, gone by 26 s, after WEAR | owner, 6 Nov 2026 |
+| [0050](0050-plate-hit.md) | PLATE's hit: the output taps held, an early tap, slower movement (supersedes v1.0.12's long-delay wander for PLATE), trimmed to v1.0.73's loudness | owner, 6 Nov 2026 |
