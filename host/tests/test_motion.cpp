@@ -376,6 +376,34 @@ double rmsDb(const std::vector<float>& l, const std::vector<float>& r, double fr
 // The left side (the transport) within +0.5 dB of noon in every window. The right side (v1.0.60) carries the radio
 // band, whose level hold catches up over the first seconds after the burst (+1.2-1.7 dB in the 2-4 s window, as on
 // WEAR before v1.0.60: 1.3-1.7): the first window within +2 dB, and no later one more than 0.5 dB over the first.
+// The read point a hair before the ring's start rounded to exactly kSize, so one sample read past the buffer: the left
+// got the right's oldest sample, the right whatever follows the buffer, a one-sample tick (from v1.0.46; integrationSweep's
+// run 7 at 3.349 s, about 7 times an hour on the left side). A different constant in each channel shows any such read.
+void readStaysInTheRing()
+{
+    iv::dsp::Transport tp;
+    tp.prepare(kSr, 0x7a9e5u);
+    tp.reset(true);
+    const iv::dsp::TransportAmounts a = iv::map::transportAmounts(0.33f);
+    const int chunk = 48;
+    float l[chunk], r[chunk];
+    long wrong = 0;
+    const long chunks = long(3600.0f * kSr) / chunk; // an hour: 7 of them before the fix
+    for (long c = 0; c < chunks; ++c) {
+        for (int i = 0; i < chunk; ++i) {
+            l[i] = 0.5f;
+            r[i] = -0.5f;
+        }
+        tp.control(chunk, a, true);
+        tp.processBlock(l, r, chunk);
+        if (c < 100) continue; // the ring filling
+        for (int i = 0; i < chunk; ++i) wrong += l[i] < 0.25f || r[i] > -0.25f;
+    }
+    char msg[120];
+    std::snprintf(msg, sizeof msg, "the transport's read stays in its ring (%ld wrong samples in an hour)", wrong);
+    check(wrong == 0, msg);
+}
+
 void energy()
 {
     std::vector<float> in(size_t(30.0f * kSr), 0.0f);
@@ -505,6 +533,7 @@ int main()
     leftSide();
     rightSide();
     dipClicks();
+    readStaysInTheRing();
     std::vector<float> sk;
     if (!skank(sk)) {
         check(false, "MOTION on music: test_audio/stimulus/04_skank.wav (python3 tools/make_stimulus.py)");

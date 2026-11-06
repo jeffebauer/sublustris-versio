@@ -254,8 +254,12 @@ public:
                 if (scrapeNow < 1e-6f && scrapeAmt <= 0.0f) scrapeNow = 0.0f;
             }
             if (pos < 0.0f) pos += float(kSize);
-            const int i1 = int(pos);
-            const float f = pos - float(i1);
+            // A read point a hair before the ring's start rounds to exactly kSize above: wrap the index too, or that one
+            // sample reads past the buffer (the left the right's oldest, the right whatever follows it), a one-sample tick
+            // about 7 times an hour on the left side from v1.0.46 to v1.0.73.
+            const int ip = int(pos);
+            const float f = pos - float(ip);
+            const int i1 = ip & (kSize - 1);
             const int i0 = (i1 - 1) & (kSize - 1), i2 = (i1 + 1) & (kSize - 1), i3 = (i1 + 2) & (kSize - 1);
             auto cr = [f](float a, float b, float c, float e) {
                 return b + 0.5f * f * (c - a + f * (2.0f * a - 5.0f * b + 4.0f * c - e + f * (3.0f * (b - c) + e - a)));
