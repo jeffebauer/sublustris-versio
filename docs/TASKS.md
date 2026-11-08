@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 8 Nov 2026: `v1.0.76-beta.1` is out and posted on Modwiggler; next for you: the `space_morph2` page under "Listen", then "At the rack". Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
+**Last updated:** 8 Nov 2026: `v1.0.76-beta.1` is out and posted on Modwiggler; next for you: the morph's CPU lap under "At the rack". Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
 **Plugin installed:** `4140997` on `main` (v1.0.68, Sublustris Versio), 3 Nov 2026; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan). It now matches the rack build: the lighter tape, the lighter radio and PLATE's SIZE crossfade.
 
 ## To do
@@ -25,7 +25,7 @@
   - **PLATE:** the attack and the stiller tail; MOTION left of noon; a big SIZE move on a pad.
   - **Level:** does CANYON want a trim (it reads up to 1.9 LU louder than you picked)? Is MIX at noon too loud (up 1.9 to 2.9 LU)?
   - **Crackle played hot:** HALL's endless pad, CANYON at short tails, frozen pads at SIZE noon.
-- [ ] **CPU lap for the SPACE morph** (after `space_morph2`; USB power, about 3 min a lap, serial log on)
+- [ ] **CPU lap for the SPACE morph** (USB power, about 3 min a lap, serial log on)
   - Build: `dist/v1.0.76-morph-s/sublustris_versio-v1.0.76-morph-s-profile.bin`. Let one lap run from `SPACE START` to `SPACE LAP 1 DONE`; I read `screenlog.0`.
   - To play it: `dist/v1.0.76-morph-s/sublustris_versio-v1.0.76-morph-s.bin` (rack power), flipping SPACE by hand.
 - [ ] **Measure the module's input level** (10 minutes, rack power, never with USB)
@@ -44,10 +44,6 @@
   - At 96 kHz the plugin's HALL and CANYON come out much brighter above 12 kHz than the module. At 48 kHz they match.
 
 ### Listen
-- [ ] **`space_morph2`: does the spread-out change still sound like the C you picked?** http://localhost:8766/space_morph2/index.html
-  - A is today, C is what you picked, S is C spread out so the module can run it.
-  - Cards 01 and 02: does S feel like C, or like steps or a different speed?
-  - Cards 03 and 04, SIZE full: the tail lifts for a moment about 1 s after the change. Settling in, or a bump to fix?
 - [ ] **`input_stop2`: not ready, don't listen yet.** It needs re-rendering on the current build first (that's with me).
 
 ### When convenient
@@ -85,7 +81,7 @@
 - **The unfreeze-after-SIZE overload in CANYON** (your audit lap, 29 Oct 2026, `docs/research/m3-review2-audit-212b68b.log`): unfreezing after SIZE moved while frozen runs up to 107.5 %, two-thirds of the blocks late while it settles: a crackle (it's in the zip's troubleshooting). The whole SIZE move lands as one crossfade while the twin room is still running. Next: a prototype that glides SIZE or waits for the twin after an unfreeze, then a page. The most important sound fix left.
 - **Plateau against our PLATE** (6 Nov 2026, your question; `docs/research/plateau-vs-plate-2026-11-06.md`, on `claude/plateau-research`; numbers only, nothing heard): the leads are output taps held still across SIZE (0 B), an early tap answering on the other side (about +16 B to +56 B) and slower PLATE modulation (about 0 B, but it goes against your v1.0.12 long-delay pick). Your pick on `plate_hit` (6 Nov 2026): **D on every card** (taps held still, the early tap, slower and shallower movement; it replaces your v1.0.12 long-delay wander for PLATE). Ported as v1.0.74 (ADR 0050; `claude/port-plate-hit`, `7098f28`; release 112,036 B, 604 B left; profile 130,820 B, 252 B under the chip), trimmed -0.63 dB to keep v1.0.73's loudness, rack build ready. **The tick found and fixed** (`ff52544`): one sample at full wet level about every 10 minutes at MOTION left of noon, in every build since v1.0.46, including the public v1.0.68; every other sample unchanged; the fix goes out with the beta.
 - **The HALL/CANYON level match** (your pick C on `rack_levels`, 29 Oct: at endless HALL down 2 dB and CANYON up 2 dB; MIX at noon as built): branch `claude/rack-levels`, prototype only; re-measure on the current endless (v1.0.61 on) before building.
-- **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): for 3 s after a flip both spaces hear the music while one crossfades into the other; the freeze's spare tank went in v1.0.43, so HALL with CANYON can't run two tanks. Prototyped 8 Nov 2026 (`renders/space_morph`, `proto/space-morph`, `403e83c`): PLATE with HALL or CANYON runs both tanks for 3 s; HALL with CANYON reshapes the one tank in place. Trial build +4,288 B (B) / +4,328 B (C) against 468 B free, and it doesn't fit the profile build; module CPU unmeasured. **Your pick (8 Nov 2026): C on all 20 cards you scored** (the 3 s morph on PLATE with HALL or CANYON; the slower in-place reshape on HALL with CANYON). **Flash found (8 Nov 2026, `proto/space-morph-flash`, `faf55db`):** STM32's start-up code built for size (`HAL_OS`), no sound change. With the morph: release 110,156 B (2,484 B free), profile 130,108 B (964 B free). Without it, the same trims give release 106,564 B and profile 126,532 B. Not yet flashed, so the boot path is unproven on the module. **S, C spread out (`proto/space-morph-c`, `b6b9b0a`):** at most 2 of the 8 lines read twice at once, against all 8 in C; release 110,708 B, profile 130,796 B. Still to do before a port: your ears on `space_morph2`, the module CPU lap.
+- **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): for 3 s after a flip both spaces hear the music while one crossfades into the other; the freeze's spare tank went in v1.0.43, so HALL with CANYON can't run two tanks. Prototyped 8 Nov 2026 (`renders/space_morph`, `proto/space-morph`, `403e83c`): PLATE with HALL or CANYON runs both tanks for 3 s; HALL with CANYON reshapes the one tank in place. Trial build +4,288 B (B) / +4,328 B (C) against 468 B free, and it doesn't fit the profile build; module CPU unmeasured. **Your pick (8 Nov 2026): C on all 20 cards you scored** (the 3 s morph on PLATE with HALL or CANYON; the slower in-place reshape on HALL with CANYON). **Flash found (8 Nov 2026, `proto/space-morph-flash`, `faf55db`):** STM32's start-up code built for size (`HAL_OS`), no sound change. With the morph: release 110,156 B (2,484 B free), profile 130,108 B (964 B free). Without it, the same trims give release 106,564 B and profile 126,532 B. Not yet flashed, so the boot path is unproven on the module. **S, C spread out (`proto/space-morph-c`, `b6b9b0a`):** at most 2 of the 8 lines read twice at once, against all 8 in C; release 110,708 B, profile 130,796 B. **Your pick (8 Nov 2026): S on all 20 cards of `space_morph2`**, the SIZE-full cards included. Still to do before a port: the module CPU lap; your call on whether a held endless tail with nothing playing dies away in the 3 s (as now) or carries on.
 - **Found by review 2, still open** (each needs the module or your ears):
   - the tight SDRAM timing on rack power, warm: merged in v1.0.63; if your 3 Nov rack session wasn't an hour warm, an hour's play on the next session settles it;
   - absolute levels on the module (volts to dBFS) are unmeasured;
@@ -97,6 +93,7 @@
 - **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper (Dal Santo et al., DAFx26 §4.1: a DC blocker and an adaptive gain after each in-loop shifter; ~10-19 % CPU per shifter); after v1.0.
 
 ## Done
+- [x] **`space_morph2` picked: S on all 20 cards** (8 Nov 2026, the repeated cards agreeing; HALL with CANYON at your picked settings, and the SIZE-full cards). Prototype on `proto/space-morph-c`, `b6b9b0a`, not merged.
 - [x] **`space_morph` picked: C on all 20 cards you scored** (8 Nov 2026; the repeated card agreeing; PLATE to CANYON's and CANYON to HALL's bass among them; the CANYON to PLATE pad has no pick). Prototype on `proto/space-morph`, `403e83c`, not merged; see "SPACE flips morph between spaces" under Waiting on Claude.
 - [x] **`v1.0.76-beta.1` posted in the Modwiggler thread** (confirmed 8 Nov 2026): https://github.com/jeffebauer/sublustris-versio/releases/tag/v1.0.76-beta.1. The site's downloads stay on v1.0.68 until the beta merges.
 - [x] **`hall_lows` picked: D, both** (6 Nov 2026), on every card you scored; the bass at SIZE noon, DECAY 2 o'clock has no pick (prototype on `claude/proto-hall-lows-f1f7e5`, `69a020c`). Ported as v1.0.76 (ADR 0052; `claude/port-hall-lows`, `b6f325e`, not merged; HALL only: lows narrowed to 0.3, in-loop diffusion 0.6 at every SIZE, lows +3.3 dB). Release 112,172 B (468 B left), profile 130,988 B (84 B left); my rebuild from the commit is byte-identical; ctest 100% of 25.
