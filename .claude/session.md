@@ -7,8 +7,10 @@ hold all session long are `CLAUDE.md`'s Hard rules, and they apply from the firs
 ## Handoff
 - Path: docs/handoff/HANDOFF.md
 - Template: docs/handoff/TEMPLATE.md (open it and write from it)
-- Owner list: docs/TASKS.md. Its "Last updated" line, the "Plugin installed" line and "Waiting on
-  Claude" are what a session changes most; ticked items move to Done with the date.
+- Owner list: docs/TASKS.md. The "Last updated" line stays one sentence: replace it each
+  time (date, and where the owner's next step is), so the to-dos stay at the top of the page. The
+  "Plugin installed" line and "Waiting on Claude" also change often; ticked items move to Done with
+  the date.
 
 ## Read first
 - `docs/TASKS.md`, then the handoff's "Where to look" files.
