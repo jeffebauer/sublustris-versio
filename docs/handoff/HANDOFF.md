@@ -1,15 +1,13 @@
 # Handoff
 
-**Written:** 8 Nov 2026, end of session 15 (6 to 8 Nov); checkpoint later on 8 Nov, session 16 (the session skills moved over; no sound or code work); corrected against the repo by session 17's start, 8 Nov.
+**Written:** 8 Nov 2026, end of session 17 (8 Nov).
 
-This session took the launch feedback to a **public beta**:
-- **Every pick ported, one SPEC version each,** stacked v1.0.69 → v1.0.76: WEAR's taper (0044), the tape's drive (0045), a fuller tail (0047), DECAY's curve (0048), the louder wet (0049), PLATE's hit (0050), WEAR's ceiling (0051), HALL's low notes (0052), plus the tape's one-sample tick fix (`ff52544`).
-- **HALL's left-side build-up** (the owner's Serge patch on the rack) was traced to the still low tank's narrow, chance-panned resonances. The fix was picked on `renders/hall_lows` (D: the lows narrowed to 0.30, in-loop diffusion 0.60 at every SIZE, +3.3 dB). Its port added one change the page didn't have: the low tank's allpass lengths follow the SIZE the lines crossfade to, which stops a smear on SIZE flicks.
-- **v1.0.76 profiled on the module** (`docs/research/m3-v1076-hall-lows.log`): HALL 52-58 % average, worst 78 %; it fits. The owner played the release build on the rack: "sounding really good".
-- **`v1.0.76-beta.1` published** (pre-release, never Latest; https://github.com/jeffebauer/sublustris-versio/releases/tag/v1.0.76-beta.1) from `beta/player-feedback` (`e4a9738`: `b6f325e` plus a merge of `origin/main` for ADR 0046's tooling, no code change). Its firmware is byte-identical to the rack build; checksums verified on the downloaded assets. **PR 1** into `main`: https://github.com/jeffebauer/sublustris-versio/pull/1 (mergeable, clean).
-- **The owner's Modwiggler post** (BBCode, crediting lfad, danishchairs and dubsackdude, in their own reply voice) is posted (owner, 8 Nov).
-- **Clean-up:** judged pages, 16 worktrees and eight merged branches gone; 17 GB free when session 17 started.
-- **Session 16 (docs only):** `/sublustris-start` and `/sublustris-wrap` retired for the shared `/session-start`, `/session-checkpoint` and `/session-wrap`; this project's facts are in `.claude/session.md`, the orchestrator guide in `docs/orchestrator.md`, the handoff's shape in `docs/handoff/TEMPLATE.md`. Then a writing-for-agents pass over `CLAUDE.md`, the session file and the memory (32 files to 28).
+- **Smooth SPACE changes, picked and built as a prototype.** Today a SPACE change fades out, wipes the tanks and fades in. The owner picked **S on all 20 cards** of `renders/space_morph2` (after C on all 20 scored cards of `renders/space_morph`): a 3 s morph between PLATE and HALL/CANYON (both tanks run for 3 s), and HALL ↔ CANYON reshaped in place in the one tank, spread over SIZE's four groups of 0.3 s (never more than 2 of 8 lines reading twice).
+- **The owner's call:** a held endless tail with nothing playing dies away in the 3 s on a PLATE change, as built.
+- **Flash found, no sound change:** STM32's HAL set-up files and DMA driver built `-Os` (`HAL_OS=1`), plus 61 member initialisers dropped (`IV_RI`). Release 112,172 → 106,564 B, without the morph. The constructors lead was only 360 B, not 1.7 KB.
+- **The trimmed v1.0.76 played on the rack:** "sounding great! No issues at all", rapid knob moves at settings that push the unit included.
+- **The shared `/session-start` had its first real run;** nothing from the old routine is missing. This is `/session-wrap`'s first. The old wrap pushed on its own; pushing is now ask-first.
+- **The Modwiggler post is up** (owner). No player feedback has come in yet: PR 1 had only Vercel's bot at this session's start; the thread itself wasn't read.
 
 Start with `/session-start`.
 
@@ -17,61 +15,82 @@ Start with `/session-start`.
 
 | Milestone | State |
 |---|---|
-| Spec | v1.0 frozen plus amendments; `main` at v1.0.68; **v1.0.69-v1.0.76 on `beta/player-feedback`** (PR 1), not merged |
+| Spec | v1.0 frozen plus amendments; `main` at v1.0.68; v1.0.69-v1.0.76 on `beta/player-feedback` (PR 1), not merged. The morph is prototype only, no SPEC version yet |
 | M0 | Passed (25 Oct) |
 | M1/M4-M8 | Built and listened |
-| M2 | Plugin installed `4140997` (v1.0.68), 3 Nov; **the beta's plugin hasn't been played by the owner** (its Plugin test passes) |
-| M3 | v1.0.76 on the module, profiled (it fits) and liked; the red-LED recheck and the rest of the rack list open |
-| M9 | Released v1.0.68 (Latest); **v1.0.76-beta.1 published** 6 Nov |
+| M2 | Plugin installed `4140997` (v1.0.68), 3 Nov; the beta's plugin hasn't been played by the owner |
+| M3 | Trimmed v1.0.76 on the module and liked (first listen); the morph has never run on a module; the red-LED recheck and the rest of the rack list open |
+| M9 | Released v1.0.68 (Latest); `v1.0.76-beta.1` published 6 Nov |
 
-- **main HEAD:** docs commits on top of `3de8889` (the agent-docs review) and `949593f` (the session skills). `3de8889` and everything before it is pushed; the later docs commits (the checkpoint, two task-list tidies, session 17's corrections) aren't unless the owner says so. Main changed no sound in sessions 15 or 16.
-
-## In flight
-
-- **Nothing running.** Linked sessions are all idle (decay-curve, wear-taper, wet-loudness, fuller-tail, port sessions, hall-lows-page, launch-posts, resilio-site-links, plateau ones); they can be archived with the owner's OK.
-- **A backup of the memory folder** from before the pruning is in `~/.Trash/sublustris-memory-2026-11-08/` (all 32 files plus the index). The Trash can go once the memory has proved fine.
-- **`beta/player-feedback`** (pushed, PR 1): the beta. Its worktree `.claude/worktrees/beta`; `.claude/worktrees/release` is the release script's own (keep both).
-- **Prototype and research branches kept** (not pushed; each holds only its hook and page scripts or notes): `claude/fuller-tail-6dcc8d`, `claude/proto-decay-curve-01af2c`, `claude/wet-loudness-8e55d6`, `claude/plate-hit`, `proto/wear-ceiling`, `claude/proto-hall-lows-f1f7e5`, `claude/hall-left-hunt`, `claude/plateau-research`. Per ADR 0046 they go with the owner's OK once the beta merges. Older: `claude/rack-levels`, `claude/input-stop` (to re-measure), `proto/more-tape`, `proto/radio-lighter`, `proto/tape-fold`, `proto/wear-no-bbd` (ported long ago; delete with OK).
+**main HEAD:** this handoff's commit, on top of `c677ec5`; docs only since session 15, all pushed with this wrap. Nothing merged or released this session. All gates green.
 
 ## Start here
 
-**First:** `/session-start` had its first real run in session 17 and nothing from the old routine is missing; `/session-wrap` has yet to have one (the session-skills README asks for one of each). The old wrap pushed on its own; pushing is now ask-first. Fix `.claude/session.md`, not the shared skills, if a gap is a project fact. Then:
+**1. Read the owner's SPACE CPU lap** (they run it in the morning). Build: `dist/v1.0.76-morph-s/sublustris_versio-v1.0.76-morph-s-profile.bin`, USB power. Copy `screenlog.0`, never move it; slice `SPACE START` to `SPACE LAP 1 DONE` (18 lines, ~3 min); a subagent files it as `docs/research/m3-…log`. Each line: `SPACE <FROM>-><TO> <heavy|SHIMMER|REFLIP|UNFREEZE> … avg % max % | late blocks`. The pass: no late blocks, and max under about 95 % (the module starts dropping audio near 99 %). PLATE → CANYON with SHIMMER is the likeliest to go over; my sum of averages was 89-101 %.
 
-1. **Players' feedback on the beta** (PR 1, the Modwiggler thread). A tuning change is a new SPEC version on `beta/player-feedback` (v1.0.77) and a new beta (`v1.0.77-beta.1`), with a comment on PR 1; a repackage is `v1.0.76-beta.2`. Run the release script from the beta worktree (memory "betas from the beta worktree").
-2. **The red output LEDs** (owner's recheck): if they hear squash or crackle, bring level options (the limiter catches peaks since v1.0.73's +3 dB, +1.5 at short tails); if only the light, maybe leave it or make the LED less jumpy.
-3. **The full release** once players and the owner are happy: merge PR 1 (owner's OK), `tools/make_release.sh --publish` from `main`, re-render the site's demos on v1.0.76, check the presets' starting points at DECAY 0.6-0.75 (the curve moved), the site changelog, and a release note that saved sets at DECAY 0.85-0.95 now open as long tails (the owner accepted this).
-4. **The unfreeze-after-SIZE overload in CANYON:** still the most important crackle fix (`docs/research/m3-review2-audit-212b68b.log`).
-5. **The plugin UI** (danishchairs' DM; Figma first, compact DAW layout; parameter keys unchanged).
-6. **lfad's other notes not yet acted on:** ONSET's modes sounding alike, and PLATE vs HALL contrast beyond PLATE's hit; ask after the beta.
-7. As before: `input_stop2` (re-render on the current build), the SPACE flip morph (a flash plan first: 468 B left), the housekeeping list, the module's volts.
+**2. If it's clean, port S** to `beta/player-feedback` as a new SPEC version (v1.0.77) and `v1.0.77-beta.1` (run the release script from the beta worktree). The port needs:
+- an ADR amending 0013 ("only one big tank ever runs"), a SPEC changelog line, one golden update;
+- `test_control_latch` changed: it asserts the tail is wiped, the only test that fails with S on;
+- S always on: the A/B/C/S hook, `IV_SPACE_MORPH` and its log removed, `SPACE_MORPH` no longer a measuring flag;
+- the trims `4327229`, `f9912f9`, `faf55db`; `firmware/README.md` documents `HAL_OS`; `firmware/Makefile`'s comment still says the morph is C only;
+- the Plugin's test (24 of 25 pass in worktrees, which have no JUCE; run the Plugin against main's JUCE).
 
-## Waiting on Jesse (`docs/TASKS.md`)
+**If the lap isn't clean:** spread the PLATE-side load or shorten its 3 s, or cut SHIMMER's share during the change, and bring it back to the owner by ear.
 
-- **At the rack:** the red-LED recheck and the rest of the check list on v1.0.76; the module's input volts.
-- **Try the beta's plugin** in Ableton (`tools/install_plugin.sh e4a9738` installs it; update the "Plugin installed" line).
-- **Answer:** whether the GitHub release notes should credit lfad by name (they say "feedback on Modwiggler and r/modular"; the launch posts promised changelog credits).
+Then, in order:
+3. Offer the trims to the beta on their own: 5.6 KB of room, already played. The owner's call.
+4. Players' feedback on the beta (PR 1, the Modwiggler thread).
+5. The red output LEDs (`firmware/LedMeter.h`, `core/dsp/Output.h`), from the rack list.
+6. The full release once players and the owner are happy: merge PR 1 (owner's OK), `tools/make_release.sh --publish` from `main`, re-render the site's demos on the new sound, check the presets' starting points at DECAY 0.6-0.75, the site changelog, and a release note that saved sets at DECAY 0.85-0.95 now open as long tails.
+7. The unfreeze-after-SIZE overload in CANYON, the most important crackle fix (`docs/research/m3-review2-audit-212b68b.log`). The owner said "not now" on 8 Nov.
+8. The plugin UI (danishchairs' DM; Figma first, parameter keys unchanged). lfad's notes on ONSET's modes and PLATE vs HALL contrast. As before: `input_stop2`, the housekeeping list.
+
+## Waiting on Jesse
+
+See `docs/TASKS.md`:
+- **The CPU lap for the morph** (planned for the morning of 9 Nov). The release build `dist/v1.0.76-morph-s/sublustris_versio-v1.0.76-morph-s.bin` is there to play by hand on rack power.
+- **At the rack:** the red-LED recheck, the rest of the v1.0.76 list on the trimmed build (`dist/v1.0.76-trimmed/`), cold starts and an hour warm, the module's input volts.
+- **Try the beta's plugin** (`tools/install_plugin.sh e4a9738`; update the "Plugin installed" line).
+- **Answer:** should the GitHub release notes credit lfad by name?
+
+## In flight
+
+**Nothing running.** All three prototype agents finished and were reviewed: firmware rebuilt from scratch, `SAME 60/60` re-run, default release `cmp`-identical to the build played on the rack.
+
+Kept on purpose, none pushed:
+- **`proto/space-morph-c`** (`b6b9b0a`, worktree `.claude/worktrees/space-morph-flash`, the folder name is older than the branch): S, the trims and the SPACE lap. **This is the one to port.**
+- `proto/space-morph-flash` (`faf55db`): the trims alone, an ancestor of the above.
+- `proto/space-morph` (`403e83c`, worktree `.claude/worktrees/space-morph`): the first page's prototype, superseded; can go with the owner's OK.
+- `beta/player-feedback` (pushed, PR 1), worktree `.claude/worktrees/beta`; `.claude/worktrees/release` is the release script's own. Keep both.
+- Older prototype and research branches, to go with the owner's OK once the beta merges: `claude/fuller-tail-6dcc8d`, `claude/proto-decay-curve-01af2c`, `claude/wet-loudness-8e55d6`, `claude/plate-hit`, `proto/wear-ceiling`, `claude/proto-hall-lows-f1f7e5`, `claude/hall-left-hunt`, `claude/plateau-research`. Older still: `claude/rack-levels`, `claude/input-stop` (to re-measure), `proto/more-tape`, `proto/radio-lighter`, `proto/tape-fold`, `proto/wear-no-bbd` (ported long ago).
+
+Local only: `renders/space_morph` (611 MB) and `renders/space_morph2` (528 MB), both judged, keep until the port is heard; `dist/v1.0.76-trimmed/`, `dist/v1.0.76-morph-s/`. The memory backup is in `~/.Trash/sublustris-memory-2026-11-08/`.
 
 ## Will bite
 
-- **Flash:** release 468 B left on v1.0.76, profile 84 B. Anything new needs a trim plan first.
-- **The profile lap has no v1.0.75 baseline**, so D's exact CPU cost is unknown, and it never moves SIZE in HALL; the owner heard no drop-outs by hand.
-- **The beta branch has a merge of `origin/main`** (`e4a9738`); main is now ahead with docs only. If PR 1 shows conflicts later, they'll be in `docs/TASKS.md` (take main's) or `docs/adr/README.md` (keep both lists, in number order).
-- **`make_release.sh` reads `releases/README.md` from the checkout it runs in**, not the ref: run betas from the beta worktree. `--dry-run` also needs the branch pushed.
-- **The release notes are the GitHub release body**, edited with `gh release edit v1.0.76-beta.1 --notes-file`; the zip's read-me has its own copy (`THIS IS A BETA` section).
-- **reddit is blocked in the built-in browser;** ask the owner for screenshots (memory "owner forum voice").
-- **The new session setup is unproven:** `.claude/session.md` was written from the old skills line by line, but no session has opened from it yet.
-- **The preview server's port (8765) is held by the `pearls` project's `beads/test/listen.py`** (session 17's start). Ask before stopping it, or serve the next page from `main` on another port.
-- As before: one golden update per SPEC version; `screenlog.0` appends across flashes (copy, don't move); never connect USB and rack power at once.
+- **Morph flash, on `proto/space-morph-c`:** release 110,708 B (1,932 B under budget), **profile 130,796 B (276 B under the chip)**, ITCM 62,432 of 64,512 B. To fit, the morph's profile build leaves out SIZEHAND and the HEADROOM steps. There are more bytes in libDaisy's C++ (about 10 KB at `-O3`), leaving `audio.cpp` out because it runs per sample.
+- **Module CPU for the morph is unmeasured.** `morphRunOld` is `-O3` in ITCM, but `morphFlip` and `morphAdvance` run from flash, and `morphAdvance` runs every block, a small cost even when idle.
+- **The trims change boot code** (clocks, SDRAM, codec I2C, ADC, DMA), proven so far by one good listen at the rack. Cold starts and an hour warm aren't confirmed. `IV_RI`'s proof ran on the host, not on ARM.
+- **Level at transitions, kept on purpose (the owner picked S having heard them on SIZE-full cards):** worst +3.8 dB over the louder steady space at CANYON → HALL, SIZE 0, DECAY 0.5, which the page didn't play; +2.2 dB at SIZE full. An in-place tail at endless settles about 4 dB above today's.
+- **The half builds** (`SPACE_MORPH=1` and `2`) are size measurements only: never listened to, and the wet dips on the other half's flips.
+- **Not tested:** freeze or re-flips combined with BLOOM or SHIMMER ONSET; the 10-minute holds with a flip inside them.
+- **Page server:** port 8765 is held by `pearls`' `beads/test/listen.py`. Use `preview_start` "review-pages-lan" (8766), and check the link answers before sending it, because the app stopped it once within about an hour.
+- **`/research` can't run here:** `uv` isn't installed and the skill's stated repo path is wrong (the script is in `~/.claude/skills/obsidian-second-brain`). Nothing from this session's research went to the vault.
+- **Disk: 12 GB free.** Each page was 0.5-0.6 GB.
+- **Flash on the beta and on `main` is untrimmed:** 468 B left on v1.0.76 release, 84 B on profile, until the trims are ported.
+- As before: one golden update per SPEC version; `screenlog.0` appends across flashes; never connect USB and rack power at once; `make_release.sh` reads `releases/README.md` from the checkout it runs in, and `--dry-run` needs the branch pushed; if PR 1 shows conflicts they'll be in `docs/TASKS.md` (take main's) or `docs/adr/README.md` (keep both, in number order).
 
 ## Gates
 
-- **Gates on main (8 Nov, session 15's wrap-up at `667e99b`; not re-run since: only docs and `CLAUDE.md` changed):** ctest **"100% tests passed out of 24"**; firmware unchanged from v1.0.68: release **111,828 B** (85 %), m0test 83,556 (63 %), profile 130,956 (99 %, 116 B under the chip). Installed in Ableton: `4140997` (v1.0.68), the same sound as `main`.
-- **v1.0.76 (`b6f325e`, the beta's sound):** ctest "100% tests passed out of 25" (the port's session; Plugin test included); release **112,172 B** (468 B under the 112,640 budget), m0test 83,556, profile **130,988 B (84 B under the chip)**; my rebuild from `git archive` byte-identical.
+- **main (`c677ec5`, 8 Nov):** ctest **"100% tests passed out of 24"**; release **111,828 B** (85 %), m0test 83,556 (63 %), profile 130,956 (99 %, 116 B under the chip). Installed in Ableton: `4140997` (v1.0.68), the same sound as `main`.
+- **v1.0.76 beta (`e4a9738`, from session 15, unchanged):** ctest "100% tests passed out of 25"; release 112,172 B, m0test 83,556, profile 130,988 B.
+- **`proto/space-morph-c` (`b6b9b0a`), default build, sound of v1.0.76 (re-run this session):** release 106,564 B, `cmp`-identical to the rack build; m0test 83,556; profile 126,532 B; `SAME 60/60` against `e4a9738`. ctest "100% tests passed out of 24" (agent; no JUCE in the worktree).
+- **`SPACE_MORPH=3` on the same commit:** release 110,708 B, profile 130,796 B (re-run this session). With S on, ctest "96% tests passed, 1 tests failed out of 24", only `test_control_latch` (agent).
 
 ## Where to look
 
-- `docs/TASKS.md` ("Share the beta", "At the rack", "Waiting on Claude").
-- `docs/adr/0046-betas-from-branches.md`, then 0051 and 0052 on `beta/player-feedback`.
-- PR 1 and the release page (links above).
-- `tools/make_release.sh` (`--beta`).
-- `firmware/LedMeter.h` and `core/dsp/Output.h` for the red-LED question.
+- `docs/TASKS.md` ("At the rack", "SPACE flips morph between spaces" under Waiting on Claude).
+- `git log e4a9738..proto/space-morph-c` and `core/dsp/SizeOpt.h` (`IV_MORPH_*`).
+- `renders/space_morph2/_verify.txt`.
+- `docs/adr/0013-space-crossfade-and-true-stereo-in.md`, `docs/adr/0025-size-and-time-crossfade.md`.
+- `firmware/main.cpp` around the `SPACE START` lap.
