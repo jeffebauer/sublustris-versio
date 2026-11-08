@@ -109,6 +109,9 @@ subagents. What goes where, what every brief states and how to review the result
 `docs/orchestrator.md`. Read it before the first delegation of the session.
 
 ## Extensions
+- **checkpoint and wrap:** archive the nested sessions that are no longer needed (owner, 8 Nov 2026):
+  their work is merged, ported or dropped. Keep any still working or holding unreviewed work, and
+  name it in the handoff.
 - **start step 6:** report one line per active milestone (M0-M9) and say which parts of the next step
   go to sessions or subagents.
 - **wrap step 7:** the handoff's milestone table (in the template).

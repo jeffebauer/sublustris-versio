@@ -22,7 +22,7 @@ Start with `/session-start`.
 | M3 | Trimmed v1.0.76 on the module and liked (first listen); the morph has never run on a module; the red-LED recheck and the rest of the rack list open |
 | M9 | Released v1.0.68 (Latest); `v1.0.76-beta.1` published 6 Nov |
 
-**main HEAD:** this handoff's commit, on top of `c677ec5`; docs only since session 15, all pushed with this wrap. Nothing merged or released this session. All gates green.
+**main HEAD:** a clean-up commit on top of `f107e4e` (the wrap). Docs only since session 15. All of it is pushed. Nothing merged or released this session. All gates green.
 
 ## Start here
 
@@ -55,16 +55,14 @@ See `docs/TASKS.md`:
 
 ## In flight
 
-**Nothing running.** All three prototype agents finished and were reviewed: firmware rebuilt from scratch, `SAME 60/60` re-run, default release `cmp`-identical to the build played on the rack.
+**Nothing running.** All three prototype agents finished and were reviewed: firmware rebuilt from scratch, `SAME 60/60` re-run, default release `cmp`-identical to the build played on the rack. The 11 finished sessions started earlier were archived.
 
-Kept on purpose, none pushed:
-- **`proto/space-morph-c`** (`b6b9b0a`, worktree `.claude/worktrees/space-morph-flash`, the folder name is older than the branch): S, the trims and the SPACE lap. **This is the one to port.**
-- `proto/space-morph-flash` (`faf55db`): the trims alone, an ancestor of the above.
-- `proto/space-morph` (`403e83c`, worktree `.claude/worktrees/space-morph`): the first page's prototype, superseded; can go with the owner's OK.
+Kept on purpose:
+- **`proto/space-morph-c`** (`b6b9b0a`, not pushed, worktree `.claude/worktrees/space-morph-flash`; the folder name is older than the branch): S, the trims (`faf55db` and before) and the SPACE lap. **This is the one to port.**
 - `beta/player-feedback` (pushed, PR 1), worktree `.claude/worktrees/beta`; `.claude/worktrees/release` is the release script's own. Keep both.
-- Older prototype and research branches, to go with the owner's OK once the beta merges: `claude/fuller-tail-6dcc8d`, `claude/proto-decay-curve-01af2c`, `claude/wet-loudness-8e55d6`, `claude/plate-hit`, `proto/wear-ceiling`, `claude/proto-hall-lows-f1f7e5`, `claude/hall-left-hunt`, `claude/plateau-research`. Older still: `claude/rack-levels`, `claude/input-stop` (to re-measure), `proto/more-tape`, `proto/radio-lighter`, `proto/tape-fold`, `proto/wear-no-bbd` (ported long ago).
+- `claude/input-stop` and `claude/rack-levels` (not pushed): prototypes for open items, to re-measure on the current build.
 
-Local only: `renders/space_morph` (611 MB) and `renders/space_morph2` (528 MB), both judged, keep until the port is heard; `dist/v1.0.76-trimmed/`, `dist/v1.0.76-morph-s/`. The memory backup is in `~/.Trash/sublustris-memory-2026-11-08/`.
+Local only: `dist/v1.0.76-trimmed/`, `dist/v1.0.76-morph-s/`, `dist/branches-backup-2026-11-08.bundle` (the 12 prototype branches deleted in the clean-up; `git fetch <bundle>` restores any). `renders/space_morph` and `space_morph2` are deleted; re-render from `proto/space-morph-c` (`tools/pages/space_morph2.py`) if a comparison is needed. Unsure: the memory backup in `~/.Trash/sublustris-memory-2026-11-08/` (the shell can't list the Trash).
 
 ## Will bite
 
@@ -76,7 +74,7 @@ Local only: `renders/space_morph` (611 MB) and `renders/space_morph2` (528 MB), 
 - **Not tested:** freeze or re-flips combined with BLOOM or SHIMMER ONSET; the 10-minute holds with a flip inside them.
 - **Page server:** port 8765 is held by `pearls`' `beads/test/listen.py`. Use `preview_start` "review-pages-lan" (8766), and check the link answers before sending it, because the app stopped it once within about an hour.
 - **`/research` can't run here:** `uv` isn't installed and the skill's stated repo path is wrong (the script is in `~/.claude/skills/obsidian-second-brain`). Nothing from this session's research went to the vault.
-- **Disk: 12 GB free.** Each page was 0.5-0.6 GB.
+- **Disk: 15 GB free.** Each page was 0.5-0.6 GB.
 - **Flash on the beta and on `main` is untrimmed:** 468 B left on v1.0.76 release, 84 B on profile, until the trims are ported.
 - As before: one golden update per SPEC version; `screenlog.0` appends across flashes; never connect USB and rack power at once; `make_release.sh` reads `releases/README.md` from the checkout it runs in, and `--dry-run` needs the branch pushed; if PR 1 shows conflicts they'll be in `docs/TASKS.md` (take main's) or `docs/adr/README.md` (keep both, in number order).
 
@@ -91,6 +89,5 @@ Local only: `renders/space_morph` (611 MB) and `renders/space_morph2` (528 MB), 
 
 - `docs/TASKS.md` ("At the rack", "SPACE flips morph between spaces" under Waiting on Claude).
 - `git log e4a9738..proto/space-morph-c` and `core/dsp/SizeOpt.h` (`IV_MORPH_*`).
-- `renders/space_morph2/_verify.txt`.
 - `docs/adr/0013-space-crossfade-and-true-stereo-in.md`, `docs/adr/0025-size-and-time-crossfade.md`.
 - `firmware/main.cpp` around the `SPACE START` lap.
