@@ -66,11 +66,8 @@ gates were red or the tree changed since its gate numbers.
 - Anything the owner does at the rack: they flash and log; this session reads the log.
 
 ## Hazards
-- ⚠ **Flash is the tightest limit.** Release builds have hundreds of bytes left, the profile build
-  under 100 B under the chip: any Core change needs `make -C firmware all-variants` and a trim plan
-  first.
-- ⚠ **A delegate's report is a lead.** Session 8's stagger prototype passed its first checks and still
-  had three clicks: re-run the cheapest decisive gate yourself.
+- ⚠ **Flash headroom is in bytes, not KB:** the handoff's Gates give what's left. A change that adds
+  code brings a trim plan with it.
 - ⚠ **`tools/make_release.sh` reads `releases/README.md` from the checkout it runs in**, so betas run
   from the beta worktree, and `--dry-run` needs the branch pushed.
 
@@ -81,8 +78,8 @@ export PATH="$HOME/.local/arm-gnu-toolchain/bin:$PATH"; make -C firmware all-var
 cat dist/installed_plugin.txt 2>/dev/null
 ```
 - Record: ctest's "100% tests passed out of N" line (slow: ~5 minutes; run it in the background);
-  each firmware variant's bytes and % (release against the release budget in the last handoff,
-  profile against the 128 KB chip); the installed plugin's commit against `main`'s HEAD; the same for
+  each firmware variant's bytes and % (release against the 112,640 B budget, profile against
+  the 131,072 B chip); the installed plugin's commit against `main`'s HEAD; the same for
   any `beta/` branch whose sound differs from `main`.
 - There is no remote CI: these are the only gates.
 
@@ -96,15 +93,11 @@ cat dist/installed_plugin.txt 2>/dev/null
 
 ## Push
 - Remote: origin (`github.com/jeffebauer/sublustris-versio`, public).
-- What a push does: a push to `main` redeploys the site on Vercel (it builds when `site/` or
-  `docs/minisite/` changed), and `main` is what's released. A `beta/` branch push updates its PR.
-- Only `main` and `beta/` branches are pushed; `proto/` and `claude/` branches stay local.
+- What a push does: to `main`, it is the release line and Vercel rebuilds the site (only when
+  `site/` or `docs/minisite/` changed); to a `beta/` branch, it updates that beta's PR.
 
 ## Branches
-- The main checkout stays on `main`; branch work happens in a worktree under `.claude/worktrees/`.
-- `beta/<topic>` for a picked sound change on its way to players (ADR 0046) · `proto/<topic>` or
-  `claude/<topic>-<suffix>` for prototypes · `claude/<topic>` for docs, tools and site work, merged to
-  `main` with the owner's OK.
+`CLAUDE.md`'s Git and "Releases and branches" rules. Worktrees go under `.claude/worktrees/`.
 
 ## Delegation
 on. This session orchestrates: the owner, decisions, reviews, commits, `docs/TASKS.md` and the
