@@ -1,15 +1,15 @@
 # Handoff
 
-**Written:** 8 Nov 2026, end of session 15 (6 to 8 Nov); checkpoint later on 8 Nov, session 16 (the session skills moved over; no sound or code work).
+**Written:** 8 Nov 2026, end of session 15 (6 to 8 Nov); checkpoint later on 8 Nov, session 16 (the session skills moved over; no sound or code work); corrected against the repo by session 17's start, 8 Nov.
 
 This session took the launch feedback to a **public beta**:
 - **Every pick ported, one SPEC version each,** stacked v1.0.69 → v1.0.76: WEAR's taper (0044), the tape's drive (0045), a fuller tail (0047), DECAY's curve (0048), the louder wet (0049), PLATE's hit (0050), WEAR's ceiling (0051), HALL's low notes (0052), plus the tape's one-sample tick fix (`ff52544`).
 - **HALL's left-side build-up** (the owner's Serge patch on the rack) was traced to the still low tank's narrow, chance-panned resonances. The fix was picked on `renders/hall_lows` (D: the lows narrowed to 0.30, in-loop diffusion 0.60 at every SIZE, +3.3 dB). Its port added one change the page didn't have: the low tank's allpass lengths follow the SIZE the lines crossfade to, which stops a smear on SIZE flicks.
 - **v1.0.76 profiled on the module** (`docs/research/m3-v1076-hall-lows.log`): HALL 52-58 % average, worst 78 %; it fits. The owner played the release build on the rack: "sounding really good".
 - **`v1.0.76-beta.1` published** (pre-release, never Latest; https://github.com/jeffebauer/sublustris-versio/releases/tag/v1.0.76-beta.1) from `beta/player-feedback` (`e4a9738`: `b6f325e` plus a merge of `origin/main` for ADR 0046's tooling, no code change). Its firmware is byte-identical to the rack build; checksums verified on the downloaded assets. **PR 1** into `main`: https://github.com/jeffebauer/sublustris-versio/pull/1 (mergeable, clean).
-- **The owner's Modwiggler post** was drafted (BBCode, crediting lfad, danishchairs and dubsackdude, in their own reply voice); they post it.
-- **Clean-up:** judged pages, 16 worktrees and eight merged branches gone; 24 GB free.
-- **Session 16 (docs only):** `/sublustris-start` and `/sublustris-wrap` retired for the shared `/session-start`, `/session-checkpoint` and `/session-wrap`; this project's facts are in `.claude/session.md`, the orchestrator guide in `docs/orchestrator.md`, the handoff's shape in `docs/handoff/TEMPLATE.md`. Then a writing-for-agents pass over `CLAUDE.md`, the session file and the memory (32 files to 27).
+- **The owner's Modwiggler post** (BBCode, crediting lfad, danishchairs and dubsackdude, in their own reply voice) is posted (owner, 8 Nov).
+- **Clean-up:** judged pages, 16 worktrees and eight merged branches gone; 17 GB free when session 17 started.
+- **Session 16 (docs only):** `/sublustris-start` and `/sublustris-wrap` retired for the shared `/session-start`, `/session-checkpoint` and `/session-wrap`; this project's facts are in `.claude/session.md`, the orchestrator guide in `docs/orchestrator.md`, the handoff's shape in `docs/handoff/TEMPLATE.md`. Then a writing-for-agents pass over `CLAUDE.md`, the session file and the memory (32 files to 28).
 
 Start with `/session-start`.
 
@@ -24,7 +24,7 @@ Start with `/session-start`.
 | M3 | v1.0.76 on the module, profiled (it fits) and liked; the red-LED recheck and the rest of the rack list open |
 | M9 | Released v1.0.68 (Latest); **v1.0.76-beta.1 published** 6 Nov |
 
-- **main HEAD:** this checkpoint's commit, on top of `3de8889` (the agent-docs review) and `949593f` (the session skills). `3de8889` and everything before it is pushed; the checkpoint commit isn't unless the owner says so. Main changed no sound in sessions 15 or 16.
+- **main HEAD:** docs commits on top of `3de8889` (the agent-docs review) and `949593f` (the session skills). `3de8889` and everything before it is pushed; the later docs commits (the checkpoint, two task-list tidies, session 17's corrections) aren't unless the owner says so. Main changed no sound in sessions 15 or 16.
 
 ## In flight
 
@@ -35,7 +35,7 @@ Start with `/session-start`.
 
 ## Start here
 
-**First:** this is the new `/session-start`'s first real run, and `/session-wrap` has yet to have one (the session-skills README asks for one of each). Check nothing the old skills did is missing; fix `.claude/session.md`, not the shared skills, if it's a project fact. Then:
+**First:** `/session-start` had its first real run in session 17 and nothing from the old routine is missing; `/session-wrap` has yet to have one (the session-skills README asks for one of each). The old wrap pushed on its own; pushing is now ask-first. Fix `.claude/session.md`, not the shared skills, if a gap is a project fact. Then:
 
 1. **Players' feedback on the beta** (PR 1, the Modwiggler thread). A tuning change is a new SPEC version on `beta/player-feedback` (v1.0.77) and a new beta (`v1.0.77-beta.1`), with a comment on PR 1; a repackage is `v1.0.76-beta.2`. Run the release script from the beta worktree (memory "betas from the beta worktree").
 2. **The red output LEDs** (owner's recheck): if they hear squash or crackle, bring level options (the limiter catches peaks since v1.0.73's +3 dB, +1.5 at short tails); if only the light, maybe leave it or make the LED less jumpy.
@@ -47,7 +47,6 @@ Start with `/session-start`.
 
 ## Waiting on Jesse (`docs/TASKS.md`)
 
-- **Post the beta** in the Modwiggler thread (the draft is in this session's chat; danishchairs' UI notes came by DM, which the post mentions only in general).
 - **At the rack:** the red-LED recheck and the rest of the check list on v1.0.76; the module's input volts.
 - **Try the beta's plugin** in Ableton (`tools/install_plugin.sh e4a9738` installs it; update the "Plugin installed" line).
 - **Answer:** whether the GitHub release notes should credit lfad by name (they say "feedback on Modwiggler and r/modular"; the launch posts promised changelog credits).
@@ -61,7 +60,7 @@ Start with `/session-start`.
 - **The release notes are the GitHub release body**, edited with `gh release edit v1.0.76-beta.1 --notes-file`; the zip's read-me has its own copy (`THIS IS A BETA` section).
 - **reddit is blocked in the built-in browser;** ask the owner for screenshots (memory "owner forum voice").
 - **The new session setup is unproven:** `.claude/session.md` was written from the old skills line by line, but no session has opened from it yet.
-- **The preview server** (port 8765) was last restarted from a worktree now removed; restart it from `main` before the next page.
+- **The preview server's port (8765) is held by the `pearls` project's `beads/test/listen.py`** (session 17's start). Ask before stopping it, or serve the next page from `main` on another port.
 - As before: one golden update per SPEC version; `screenlog.0` appends across flashes (copy, don't move); never connect USB and rack power at once.
 
 ## Gates

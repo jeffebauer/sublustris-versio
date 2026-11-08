@@ -49,7 +49,8 @@ df -h . | tail -1                              # renders need room: ~2 GB per re
 - Ableton may be open at any time, with the installed plugin in a set: leave it and the audio system
   alone.
 - The page server must serve the main checkout's `renders/`. Started from a worktree that is now
-  removed, it serves nothing: restart it from `main` before the next page.
+  removed, it serves nothing: restart it from `main` before the next page. Another project can
+  hold the port: ask before stopping its server, or use another port.
 
 ## Safe repairs
 ```bash

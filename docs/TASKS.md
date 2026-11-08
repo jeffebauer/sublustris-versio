@@ -1,15 +1,11 @@
 # Owner tasks
 
-**Last updated:** 8 Nov 2026: `v1.0.76-beta.1` is out; what's next for you is under "Share the beta" and "At the rack". Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
+**Last updated:** 8 Nov 2026: `v1.0.76-beta.1` is out and posted on Modwiggler; what's next for you is under "At the rack". Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
 **Plugin installed:** `4140997` on `main` (v1.0.68, Sublustris Versio), 3 Nov 2026; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan). It now matches the rack build: the lighter tape, the lighter radio and PLATE's SIZE crossfade.
 
 ## To do
 
 ### Share the beta
-- [ ] **Post `v1.0.76-beta.1` in the Modwiggler thread**
-  - Link: https://github.com/jeffebauer/sublustris-versio/releases/tag/v1.0.76-beta.1
-  - The draft is in session 15's chat; ask me if you need it again.
-  - The site's downloads stay on v1.0.68 until the beta merges.
 - [ ] **Decide: should the GitHub release notes credit lfad by name?**
   - They say "feedback on Modwiggler and r/modular" now; the launch posts promised changelog credits.
 
@@ -92,6 +88,7 @@
 - **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper (Dal Santo et al., DAFx26 §4.1: a DC blocker and an adaptive gain after each in-loop shifter; ~10-19 % CPU per shifter); after v1.0.
 
 ## Done
+- [x] **`v1.0.76-beta.1` posted in the Modwiggler thread** (confirmed 8 Nov 2026): https://github.com/jeffebauer/sublustris-versio/releases/tag/v1.0.76-beta.1. The site's downloads stay on v1.0.68 until the beta merges.
 - [x] **`hall_lows` picked: D, both** (6 Nov 2026), on every card you scored; the bass at SIZE noon, DECAY 2 o'clock has no pick (prototype on `claude/proto-hall-lows-f1f7e5`, `69a020c`). Ported as v1.0.76 (ADR 0052; `claude/port-hall-lows`, `b6f325e`, not merged; HALL only: lows narrowed to 0.3, in-loop diffusion 0.6 at every SIZE, lows +3.3 dB). Release 112,172 B (468 B left), profile 130,988 B (84 B left); my rebuild from the commit is byte-identical; ctest 100% of 25.
 - [x] **Profile lap on v1.0.76: it fits** (6 Nov 2026, `docs/research/m3-v1076-hall-lows.log`, one full lap on USB power). HALL: 52-58 % average, worst 78 % (S1 wear10, briefly, block 321), under CANYON's 60-75 %, worst 83 %, and no late blocks in the realtime lines. Not measured: there's no v1.0.75 lap to compare with, so D's exact cost is unknown, and the lap doesn't move SIZE in HALL or sit at SIZE noon; the release build's listen covers moves.
 - [x] **Clean-up** (8 Nov 2026, your OK): the eight judged pages (`wear_taper`, `wear_drive`, `wear_ceiling`, `wet_loudness`, `fuller_tail`, `decay_curve`, `plate_hit`, `hall_lows`) and their three material folders deleted, 16 old worktrees removed and the eight branches already in `beta/player-feedback` or `main` deleted (the seven ports and `claude/install-check`). Prototype and research branches kept; any page can be re-rendered from them. Disk 8.5 → 24 GB free. Older builds in `dist/` (v1.0.60 to v1.0.67, about 1 MB) are still there.
