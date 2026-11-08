@@ -7,7 +7,7 @@
 - **Flash found, no sound change:** STM32's HAL set-up files and DMA driver built `-Os` (`HAL_OS=1`), plus 61 member initialisers dropped (`IV_RI`). Release 112,172 → 106,564 B, without the morph. The constructors lead was only 360 B, not 1.7 KB.
 - **The trimmed v1.0.76 played on the rack:** "sounding great! No issues at all", rapid knob moves at settings that push the unit included.
 - **The shared `/session-start` had its first real run;** nothing from the old routine is missing. This is `/session-wrap`'s first. The old wrap pushed on its own; pushing is now ask-first.
-- **The Modwiggler post is up** (owner). No player feedback has come in yet: PR 1 had only Vercel's bot at this session's start; the thread itself wasn't read.
+- **The Modwiggler post is up** (owner). PR 1 had only Vercel's bot at this session's start; the thread itself wasn't read. **Corrected 9 Nov:** player feedback had come in. [Issue 2](https://github.com/jeffebauer/sublustris-versio/issues/2) (chriisu, 6 Nov, v1.0.68 on the module, no reply yet): a fast SIZE move from big to small makes a very loud blast, in HALL or CANYON. Not reproduced; unknown on v1.0.76.
 
 Start with `/session-start`.
 
@@ -39,7 +39,7 @@ Start with `/session-start`.
 
 Then, in order:
 3. Offer the trims to the beta on their own: 5.6 KB of room, already played. The owner's call.
-4. Players' feedback on the beta (PR 1, the Modwiggler thread).
+4. Players' feedback on the beta (PR 1, the Modwiggler thread). Issue 2, the SIZE blast, is the urgent one: it's on the public release. The owner put the CPU lap first on 9 Nov; where the hunt falls against the port is still to agree.
 5. The red output LEDs (`firmware/LedMeter.h`, `core/dsp/Output.h`), from the rack list.
 6. The full release once players and the owner are happy: merge PR 1 (owner's OK), `tools/make_release.sh --publish` from `main`, re-render the site's demos on the new sound, check the presets' starting points at DECAY 0.6-0.75, the site changelog, and a release note that saved sets at DECAY 0.85-0.95 now open as long tails.
 7. The unfreeze-after-SIZE overload in CANYON, the most important crackle fix (`docs/research/m3-review2-audit-212b68b.log`). The owner said "not now" on 8 Nov.
@@ -72,11 +72,11 @@ Local only: `dist/v1.0.76-trimmed/`, `dist/v1.0.76-morph-s/`, `dist/branches-bac
 - **Level at transitions, kept on purpose (the owner picked S having heard them on SIZE-full cards):** worst +3.8 dB over the louder steady space at CANYON → HALL, SIZE 0, DECAY 0.5, which the page didn't play; +2.2 dB at SIZE full. An in-place tail at endless settles about 4 dB above today's.
 - **The half builds** (`SPACE_MORPH=1` and `2`) are size measurements only: never listened to, and the wet dips on the other half's flips.
 - **Not tested:** freeze or re-flips combined with BLOOM or SHIMMER ONSET; the 10-minute holds with a flip inside them.
-- **Page server:** port 8765 is held by `pearls`' `beads/test/listen.py`. Use `preview_start` "review-pages-lan" (8766), and check the link answers before sending it, because the app stopped it once within about an hour.
+- **Page server:** port 8765 was held by `pearls`' `beads/test/listen.py` on 8 Nov and was free on 9 Nov. Use `preview_start` "review-pages-lan" (8766), and check the link answers before sending it, because the app stopped it once within about an hour.
 - **`/research` can't run here:** `uv` isn't installed and the skill's stated repo path is wrong (the script is in `~/.claude/skills/obsidian-second-brain`). Nothing from this session's research went to the vault.
-- **Disk: 15 GB free.** Each page was 0.5-0.6 GB.
+- **Disk: 18 GB free (9 Nov).** Each page was 0.5-0.6 GB.
 - **Flash on the beta and on `main` is untrimmed:** 468 B left on v1.0.76 release, 84 B on profile, until the trims are ported.
-- As before: one golden update per SPEC version; `screenlog.0` appends across flashes; never connect USB and rack power at once; `make_release.sh` reads `releases/README.md` from the checkout it runs in, and `--dry-run` needs the branch pushed; if PR 1 shows conflicts they'll be in `docs/TASKS.md` (take main's) or `docs/adr/README.md` (keep both, in number order).
+- As before: one golden update per SPEC version; `screenlog.0` appends across flashes; never connect USB and rack power at once; `make_release.sh` reads `releases/README.md` from the checkout it runs in, and `--dry-run` needs the branch pushed; if PR 1 shows conflicts they'll be in `docs/TASKS.md` (take main's) or `docs/adr/README.md` (keep both, in number order). **It conflicts now (9 Nov), in other files:** `docs/research/decay-curve-2026-11-06.md` and `wet-loudness-2026-11-05.md`, which the clean-up commit also added to `main`. Docs only; not resolved yet.
 
 ## Gates
 
