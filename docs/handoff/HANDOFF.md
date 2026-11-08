@@ -30,6 +30,8 @@ Start with `/session-start`.
 
 **1. Read the owner's SPACE CPU lap.** Build: `dist/v1.0.76-morph-s2/sublustris_versio-v1.0.76-morph-s2-profile.bin`, USB power. Copy `screenlog.0`, never move it; slice `SPACE START` to `SPACE LAP n DONE` (19 lines, ~3 min); a subagent files it as `docs/research/m3-…log`. Each line: `SPACE <FROM>-><TO> <heavy|SHIMMER|REFLIP|UNFREEZE> … avg % max % | late blocks`. The pass: no late blocks, and max under about 95 % (the module starts dropping audio near 99 %). PLATE → CANYON with SHIMMER is the likeliest to go over; my sum of averages was 89-101 %.
 
+**Lap result, 9 Nov (`docs/research/m3-morph-s2-lap.log`, every line fired as expected): not clean.** Worst 105.9 %, 966 late blocks, all on two swap lines where SPACE changes again 1.2 s into a morph out of CANYON (`CANYON->PLATE->HALL` 101.1 %, 100 late; `CANYON->PLATE->CANYON` 105.9 %, 866 late). Also over 95 % with no late blocks: `PLATE->CANYON` SHIMMER 99.2 %, `HALL->CANYON` SHIMMER 97.5 %, and two other REFLIP lines (97.6 %, 98.1 %). The other 13 lines are at 94.6 % or below; the UNFREEZE lines 91 %. Owner by hand on the release build: no dropouts. Not ported.
+
 **2. If it's clean, port S** to `beta/player-feedback` as a new SPEC version (v1.0.77) and `v1.0.77-beta.1` (run the release script from the beta worktree). The port needs:
 - an ADR amending 0013 ("only one big tank ever runs"), a SPEC changelog line, one golden update;
 - `test_control_latch` changed: it asserts the tail is wiped, the only test that fails with S on;

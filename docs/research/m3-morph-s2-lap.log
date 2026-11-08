@@ -1,0 +1,20 @@
+SPACE PLATE->HALL heavy W0.1 avg  74.6% max  80.4% | late blocks 0 of 3600 | max at 2861 ms | fired 1
+SPACE PLATE->CANYON heavy W0.1 avg  81.2% max  89.1% | late blocks 0 of 3600 | max at 2205 ms | fired 1
+SPACE HALL->PLATE heavy W0.1 avg  73.5% max  84.1% | late blocks 0 of 3600 | max at 190 ms | fired 1
+SPACE HALL->CANYON heavy W0.1 avg  77.1% max  86.2% | late blocks 0 of 2100 | max at 1001 ms | fired 1
+SPACE CANYON->PLATE heavy W0.1 avg  79.6% max  91.8% | late blocks 0 of 3600 | max at 179 ms | fired 1
+SPACE CANYON->HALL heavy W0.1 avg  74.7% max  82.9% | late blocks 0 of 2100 | max at 661 ms | fired 1
+SPACE PLATE->HALL SHIMMER W1.0 avg  74.6% max  81.3% | late blocks 0 of 3600 | max at 215 ms | fired 1
+SPACE PLATE->CANYON SHIMMER W1.0 avg  90.0% max  99.2% | late blocks 0 of 3600 | max at 219 ms | fired 1
+SPACE HALL->PLATE SHIMMER W1.0 avg  71.2% max  83.6% | late blocks 0 of 3600 | max at 239 ms | fired 1
+SPACE HALL->CANYON SHIMMER W1.0 avg  86.4% max  97.5% | late blocks 0 of 2100 | max at 489 ms | fired 1
+SPACE CANYON->PLATE SHIMMER W1.0 avg  77.8% max  89.9% | late blocks 0 of 3600 | max at 139 ms | fired 1
+SPACE CANYON->HALL SHIMMER W1.0 avg  75.5% max  82.9% | late blocks 0 of 2100 | max at 400 ms | fired 1
+SPACE HALL->CANYON->HALL REFLIP W0.5 avg  78.4% max  97.6% | late blocks 0 of 2800 | max at 403 ms | fired 2
+SPACE CANYON->HALL->CANYON REFLIP W0.5 avg  86.0% max  94.6% | late blocks 0 of 2800 | max at 1826 ms | fired 2
+SPACE PLATE->CANYON->PLATE REFLIP W0.5 avg  69.1% max  98.1% | late blocks 0 of 4600 | max at 217 ms | fired 2
+SPACE CANYON->PLATE->HALL REFLIP W0.5 avg  77.9% max 101.1% | late blocks 100 of 4600 | max at 1600 ms | fired 2
+SPACE CANYON->PLATE->CANYON REFLIP W0.5 avg  85.8% max 105.9% | late blocks 866 of 4600 | max at 1577 ms | fired 2
+SPACE CANYON->HALL UNFREEZE W0.5 avg  82.5% max  91.2% | late blocks 0 of 2800 | max at 438 ms | fired 3
+SPACE CANYON->PLATE UNFREEZE W0.5 avg  83.0% max  91.1% | late blocks 0 of 4200 | max at 671 ms | fired 3
+SPACE LAP 1 DONE: 19 lines, worst max 105.9%, late blocks in all 966
