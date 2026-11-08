@@ -11,7 +11,9 @@
 
 ### At the rack
 - [ ] **Check v1.0.76 on the module** (rack power, about an hour warm)
-  - Build: `dist/v1.0.76-hall-lows/sublustris_versio-v1.0.76-hall-lows.bin` (the same firmware as the beta). If something's wrong, earlier builds are in `dist/`, back to `v1.0.70-wear`.
+  - Build: `dist/v1.0.76-trimmed/sublustris_versio-v1.0.76-trimmed.bin`: the beta's sound with the start-up code built for size, 5.6 KB smaller, first time on a module.
+  - **The trims:** does it start every time from a cold power-up? Knobs, switches, LEDs, FREEZE gate and audio in and out all normal? Any crackle or dropout that the plain build doesn't have?
+  - If something's wrong, flash `dist/v1.0.76-hall-lows/sublustris_versio-v1.0.76-hall-lows.bin` (the same firmware as the beta) and see if it goes away. Earlier builds are in `dist/`, back to `v1.0.70-wear`.
   - **Red output LEDs:** do you hear squash or crackle, or is it only the light?
   - **HALL, your Serge patch:** is the build-up gone, and do low notes stay defined?
   - **HALL, moves the page didn't play:**
