@@ -1,0 +1,20 @@
+SPACE START (S, 18 lines, ~3 min)
+SPACE PLATE->HALL heavy W0.1 avg  50.8% max  52.9% | late blocks 0 of 3600 | max at 2010 ms
+SPACE PLATE->CANYON heavy W0.1 avg  50.7% max  52.6% | late blocks 0 of 3600 | max at 3245 ms
+SPACE HALL->PLATE heavy W0.1 avg  61.2% max  63.0% | late blocks 0 of 3600 | max at 2687 ms
+SPACE HALL->CANYON heavy W0.1 avg  61.3% max  62.7% | late blocks 0 of 2100 | max at 551 ms
+SPACE CANYON->PLATE heavy W0.1 avg  68.8% max  71.1% | late blocks 0 of 3600 | max at 1408 ms
+SPACE CANYON->HALL heavy W0.1 avg  68.9% max  70.8% | late blocks 0 of 2100 | max at 817 ms
+SPACE PLATE->HALL SHIMMER W1.0 avg  49.6% max  52.3% | late blocks 0 of 3600 | max at 125 ms
+SPACE PLATE->CANYON SHIMMER W1.0 avg  49.5% max  50.7% | late blocks 0 of 3600 | max at 2667 ms
+SPACE HALL->PLATE SHIMMER W1.0 avg  60.2% max  61.4% | late blocks 0 of 3600 | max at 3085 ms
+SPACE HALL->CANYON SHIMMER W1.0 avg  60.2% max  61.3% | late blocks 0 of 2100 | max at 427 ms
+SPACE CANYON->PLATE SHIMMER W1.0 avg  77.8% max  78.9% | late blocks 0 of 3600 | max at -121 ms
+SPACE CANYON->HALL SHIMMER W1.0 avg  77.5% max  78.9% | late blocks 0 of 2100 | max at 259 ms
+SPACE HALL->CANYON->HALL REFLIP W0.5 avg  60.3% max  61.7% | late blocks 0 of 2800 | max at 1193 ms
+SPACE CANYON->HALL->CANYON REFLIP W0.5 avg  77.9% max  79.1% | late blocks 0 of 2800 | max at 2335 ms
+SPACE PLATE->CANYON->PLATE REFLIP W0.5 avg  49.7% max  51.1% | late blocks 0 of 4600 | max at 49 ms
+SPACE CANYON->PLATE->HALL REFLIP W0.5 avg  77.8% max  79.2% | late blocks 0 of 4600 | max at 3921 ms
+SPACE CANYON->HALL UNFREEZE W0.5 avg  71.8% max  73.0% | late blocks 0 of 2800 | max at 1029 ms
+SPACE CANYON->PLATE UNFREEZE W0.5 avg  70.7% max  73.0% | late blocks 0 of 4200 | max at 785 ms
+SPACE LAP 2 DONE: 18 lines, worst max  79.2%, late blocks in all 0

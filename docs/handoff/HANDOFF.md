@@ -26,7 +26,9 @@ Start with `/session-start`.
 
 ## Start here
 
-**1. Read the owner's SPACE CPU lap** (they run it in the morning). Build: `dist/v1.0.76-morph-s/sublustris_versio-v1.0.76-morph-s-profile.bin`, USB power. Copy `screenlog.0`, never move it; slice `SPACE START` to `SPACE LAP 1 DONE` (18 lines, ~3 min); a subagent files it as `docs/research/m3-…log`. Each line: `SPACE <FROM>-><TO> <heavy|SHIMMER|REFLIP|UNFREEZE> … avg % max % | late blocks`. The pass: no late blocks, and max under about 95 % (the module starts dropping audio near 99 %). PLATE → CANYON with SHIMMER is the likeliest to go over; my sum of averages was 89-101 %.
+**Corrected 9 Nov:** the first lap (flashed from `dist/v1.0.76-morph-s/`) never flipped SPACE: `gMorphEv` wasn't volatile, so the compiler dropped the event times (checked in the ELF). Its lines are only steady loads for each start space, about PLATE 50 %, HALL 60 %, CANYON 69-78 % (`docs/research/m3-morph-s-lap-no-flips.log`). The lap is fixed on `proto/space-morph-c` (19 lines, each printing `fired N`; expect 1 on a plain change, 2 on REFLIP, 3 on UNFREEZE); profile 130,996 B, **76 B under the chip**. A desktop trace puts the worst moment at 2.4-3.05 s after a PLATE → CANYON change, inside the window, and guesses a peak of 80-100 %: only the module can say.
+
+**1. Read the owner's SPACE CPU lap.** Build: `dist/v1.0.76-morph-s2/sublustris_versio-v1.0.76-morph-s2-profile.bin`, USB power. Copy `screenlog.0`, never move it; slice `SPACE START` to `SPACE LAP n DONE` (19 lines, ~3 min); a subagent files it as `docs/research/m3-…log`. Each line: `SPACE <FROM>-><TO> <heavy|SHIMMER|REFLIP|UNFREEZE> … avg % max % | late blocks`. The pass: no late blocks, and max under about 95 % (the module starts dropping audio near 99 %). PLATE → CANYON with SHIMMER is the likeliest to go over; my sum of averages was 89-101 %.
 
 **2. If it's clean, port S** to `beta/player-feedback` as a new SPEC version (v1.0.77) and `v1.0.77-beta.1` (run the release script from the beta worktree). The port needs:
 - an ADR amending 0013 ("only one big tank ever runs"), a SPEC changelog line, one golden update;
@@ -58,7 +60,7 @@ See `docs/TASKS.md`:
 **Nothing running.** All three prototype agents finished and were reviewed: firmware rebuilt from scratch, `SAME 60/60` re-run, default release `cmp`-identical to the build played on the rack. The 11 finished sessions started earlier were archived.
 
 Kept on purpose:
-- **`proto/space-morph-c`** (`b6b9b0a`, not pushed, worktree `.claude/worktrees/space-morph-flash`; the folder name is older than the branch): S, the trims (`faf55db` and before) and the SPACE lap. **This is the one to port.**
+- **`proto/space-morph-c`** (`b6b9b0a` plus the 9 Nov lap fix, not pushed, worktree `.claude/worktrees/space-morph-flash`; the folder name is older than the branch): S, the trims (`faf55db` and before) and the SPACE lap. **This is the one to port.**
 - `beta/player-feedback` (pushed, PR 1), worktree `.claude/worktrees/beta`; `.claude/worktrees/release` is the release script's own. Keep both.
 - `claude/input-stop` and `claude/rack-levels` (not pushed): prototypes for open items, to re-measure on the current build.
 
