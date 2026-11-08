@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 8 Nov 2026: `v1.0.76-beta.1` is out and posted on Modwiggler; what's next for you is under "At the rack". Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
+**Last updated:** 8 Nov 2026: `v1.0.76-beta.1` is out and posted on Modwiggler; next for you: the `space_morph` page under "Listen", then "At the rack". Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
 **Plugin installed:** `4140997` on `main` (v1.0.68, Sublustris Versio), 3 Nov 2026; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan). It now matches the rack build: the lighter tape, the lighter radio and PLATE's SIZE crossfade.
 
 ## To do
@@ -39,6 +39,9 @@
   - At 96 kHz the plugin's HALL and CANYON come out much brighter above 12 kHz than the module. At 48 kHz they match.
 
 ### Listen
+- [ ] **`space_morph`: should tails carry on when SPACE changes?** http://localhost:8766/space_morph/index.html
+  - A is today's cut. On PLATE with HALL or CANYON: B rings out, C is the 3 s morph. On HALL with CANYON: B and C reshape the tail in place, and the reference (R) is the true morph the module can't run.
+  - Desktop prototype on the beta's sound (`proto/space-morph`). It needs about 4.3 KB of flash and only 468 B is free, so a pick here also tells me what's worth finding room for.
 - [ ] **`input_stop2`: not ready, don't listen yet.** It needs re-rendering on the current build first (that's with me).
 
 ### When convenient
@@ -76,7 +79,7 @@
 - **The unfreeze-after-SIZE overload in CANYON** (your audit lap, 29 Oct 2026, `docs/research/m3-review2-audit-212b68b.log`): unfreezing after SIZE moved while frozen runs up to 107.5 %, two-thirds of the blocks late while it settles: a crackle (it's in the zip's troubleshooting). The whole SIZE move lands as one crossfade while the twin room is still running. Next: a prototype that glides SIZE or waits for the twin after an unfreeze, then a page. The most important sound fix left.
 - **Plateau against our PLATE** (6 Nov 2026, your question; `docs/research/plateau-vs-plate-2026-11-06.md`, on `claude/plateau-research`; numbers only, nothing heard): the leads are output taps held still across SIZE (0 B), an early tap answering on the other side (about +16 B to +56 B) and slower PLATE modulation (about 0 B, but it goes against your v1.0.12 long-delay pick). Your pick on `plate_hit` (6 Nov 2026): **D on every card** (taps held still, the early tap, slower and shallower movement; it replaces your v1.0.12 long-delay wander for PLATE). Ported as v1.0.74 (ADR 0050; `claude/port-plate-hit`, `7098f28`; release 112,036 B, 604 B left; profile 130,820 B, 252 B under the chip), trimmed -0.63 dB to keep v1.0.73's loudness, rack build ready. **The tick found and fixed** (`ff52544`): one sample at full wet level about every 10 minutes at MOTION left of noon, in every build since v1.0.46, including the public v1.0.68; every other sample unchanged; the fix goes out with the beta.
 - **The HALL/CANYON level match** (your pick C on `rack_levels`, 29 Oct: at endless HALL down 2 dB and CANYON up 2 dB; MIX at noon as built): branch `claude/rack-levels`, prototype only; re-measure on the current endless (v1.0.61 on) before building.
-- **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): for 3 s after a flip both spaces hear the music while one crossfades into the other; it needs a second reverb running for those 3 s (the freeze's spare) and ~0.5-1 KB of flash, which crowds what's left. A plan before building.
+- **SPACE flips morph between spaces** (your pick on `space_flip`: "Morph 3s wins overall"): for 3 s after a flip both spaces hear the music while one crossfades into the other; the freeze's spare tank went in v1.0.43, so HALL with CANYON can't run two tanks. Prototyped 8 Nov 2026 (`renders/space_morph`, `proto/space-morph`, `403e83c`): PLATE with HALL or CANYON runs both tanks for 3 s; HALL with CANYON reshapes the one tank in place. Trial build +4,288 B (B) / +4,328 B (C) against 468 B free, and it doesn't fit the profile build; module CPU unmeasured. Your pick first, then a flash plan.
 - **Found by review 2, still open** (each needs the module or your ears):
   - the tight SDRAM timing on rack power, warm: merged in v1.0.63; if your 3 Nov rack session wasn't an hour warm, an hour's play on the next session settles it;
   - absolute levels on the module (volts to dBFS) are unmeasured;
