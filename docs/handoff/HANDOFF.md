@@ -1,22 +1,14 @@
 # Handoff
 
-**Written:** 6 Nov 2026, end of session 14 (5 to 6 Nov).
+**Written:** 8 Nov 2026, end of session 15 (6 to 8 Nov).
 
-This session acted on the launch feedback (Modwiggler and r/modular; lfad's, danishchairs' and dubsackdude's posts; summary in `docs/TASKS.md` "Waiting on Claude", "Launch feedback"):
-- **WEAR, two picks, built for the rack but not yet tried on the module:**
-  - v1.0.69: the taper, D on every card of `wear_taper` (ADR 0044). The intensities follow 1-(1-v)^2.2 and the grit starts at noon.
-  - v1.0.70: the tape's drive back to 16.25 dB at full, C on every card of `wear_drive` (ADR 0045).
-  - Both are on `claude/proto-wear-taper-78e1da`, with the rack build in `dist/v1.0.70-wear/`. I rebuilt it and it's byte-identical.
-- **Betas from branches, each with a PR** (ADR 0046):
-  - `tools/make_release.sh --beta <ref> <n>` publishes a pre-release, never Latest, so the site's downloads don't move.
-  - Branch names: `beta/`, `proto/`, `claude/`. Tags are never deleted.
-  - CLAUDE.md has the rule. Merged and pushed (`da014f1`).
-- **Two investigations, each with a page ready:**
-  - `fuller_tail`: the "thin/reedy" note. Its causes are a low-mid cancellation between the still bass tank and the main tank, and too little slow movement.
-  - `wet_loudness`: about 1 LU under the dry at full wet, and 4-5 LU under Valhalla Room at short decays.
-- **A DECAY curve prototype is running overnight** (the owner's note after playing; see In flight).
-- **A porting note** for other Daisy Seed hardware (README and FAQ) waits on `claude/install-check` for the owner's merge OK.
-- **The task list:** brought into main from that branch at this wrap.
+This session took the launch feedback to a **public beta**:
+- **Every pick ported, one SPEC version each,** stacked v1.0.69 → v1.0.76: WEAR's taper (0044), the tape's drive (0045), a fuller tail (0047), DECAY's curve (0048), the louder wet (0049), PLATE's hit (0050), WEAR's ceiling (0051), HALL's low notes (0052), plus the tape's one-sample tick fix (`ff52544`).
+- **HALL's left-side build-up** (the owner's Serge patch on the rack) was traced to the still low tank's narrow, chance-panned resonances. The fix was picked on `renders/hall_lows` (D: the lows narrowed to 0.30, in-loop diffusion 0.60 at every SIZE, +3.3 dB). Its port added one change the page didn't have: the low tank's allpass lengths follow the SIZE the lines crossfade to, which stops a smear on SIZE flicks.
+- **v1.0.76 profiled on the module** (`docs/research/m3-v1076-hall-lows.log`): HALL 52-58 % average, worst 78 %; it fits. The owner played the release build on the rack: "sounding really good".
+- **`v1.0.76-beta.1` published** (pre-release, never Latest; https://github.com/jeffebauer/sublustris-versio/releases/tag/v1.0.76-beta.1) from `beta/player-feedback` (`e4a9738`: `b6f325e` plus a merge of `origin/main` for ADR 0046's tooling, no code change). Its firmware is byte-identical to the rack build; checksums verified on the downloaded assets. **PR 1** into `main`: https://github.com/jeffebauer/sublustris-versio/pull/1 (mergeable, clean).
+- **The owner's Modwiggler post** was drafted (BBCode, crediting lfad, danishchairs and dubsackdude, in their own reply voice); they post it.
+- **Clean-up:** judged pages, 16 worktrees and eight merged branches gone; 24 GB free.
 
 Start with `/sublustris-start`.
 
@@ -24,92 +16,55 @@ Start with `/sublustris-start`.
 
 | Milestone | State |
 |---|---|
-| Spec | v1.0 frozen plus amendments to v1.0.68 on main; **v1.0.69 and v1.0.70 on `claude/proto-wear-taper-78e1da`**, not merged (the beta first, ADR 0046) |
+| Spec | v1.0 frozen plus amendments; `main` at v1.0.68; **v1.0.69-v1.0.76 on `beta/player-feedback`** (PR 1), not merged |
 | M0 | Passed (25 Oct) |
 | M1/M4-M8 | Built and listened |
-| M2 | Plugin installed `4140997` (v1.0.68), 3 Nov; AU check passed |
-| M3 | v1.0.68 on the module; **v1.0.70 rack check pending** (`dist/v1.0.70-wear/`); module CPU not profiled since v1.0.58 |
-| M9 | Released v1.0.68 (3 Nov). No betas yet; the first is WEAR, after the rack check |
+| M2 | Plugin installed `4140997` (v1.0.68), 3 Nov; **the beta's plugin hasn't been played by the owner** (its Plugin test passes) |
+| M3 | v1.0.76 on the module, profiled (it fits) and liked; the red-LED recheck and the rest of the rack list open |
+| M9 | Released v1.0.68 (Latest); **v1.0.76-beta.1 published** 6 Nov |
 
-- **main HEAD:** `da014f1` plus the wrap-up commit, pushed to `origin/main`. Main changed only in docs and `tools/make_release.sh` this session; no sound change on main.
-- **Gates on main (6 Nov, wrap-up):** ctest **"100% tests passed out of 24"**; firmware unchanged from v1.0.68: release **111,828** B (812 B under budget), m0test 83,556, profile 130,956 (116 B under the chip).
-- **v1.0.70 on its branch** (rebuilt and compared here):
-
-  | Variant | Bytes | |
-  |---|---|---|
-  | release | **111,844** | 796 B under the 112,640 budget |
-  | m0test | 83,556 | |
-  | profile | 131,028 | **44 B under the 131,072 limit** |
-
-  Its session reported ctest 24/24, SAME 40/60 against v1.0.69 (only mid-WEAR cases differ; WEAR 1 checked SAME 12/12 separately), click and endless-hold checks clean.
+- **main HEAD:** the wrap-up commit, pushed (it carried only docs: the task list, the profile log, the handoff). Main changed no sound this session.
+- **Gates on main (8 Nov, wrap-up):** ctest **"100% tests passed out of 24"**; firmware unchanged from v1.0.68: release **111,828 B** (85 %), m0test 83,556 (63 %), profile 130,956 (99 %, 116 B under the chip). Installed in Ableton: `4140997` (v1.0.68), the same sound as `main`.
+- **v1.0.76 (`b6f325e`, the beta's sound):** ctest "100% tests passed out of 25" (the port's session; Plugin test included); release **112,172 B** (468 B under the 112,640 budget), m0test 83,556, profile **130,988 B (84 B under the chip)**; my rebuild from `git archive` byte-identical.
 
 ## In flight
 
-- **`decay-curve`** ([its session](#local_03e43d72-4190-4923-82e1-4144e43eada5), `local_03e43d72-4190-4923-82e1-4144e43eada5`, branch `claude/proto-decay-curve-01af2c`, off v1.0.70): started at the wrap, running overnight.
-  - The owner's note: the long decays are squeezed into noon to 3 o'clock, and 3:30 to fully clockwise is all identical endless.
-  - Today: `kDecayFiniteTop` 0.80, `kDecayInfiniteAt` 0.85, exponential T60 (HALL is 12 s at noon, 60 s at 3).
-  - The brief: research where established units put infinite; audit everything tied to the endless point (endless follows your playing, the governor's ease, the radio at endless, SHIMMER, `decayLevelMakeup`, `rack-levels`, `input-stop`, tests); prototype `IV_DECAY_CURVE` (as now, endless in the last ~5 %, plus a long-end taper, endless at the end stop); build the page `renders/decay_curve` with a T60-per-hour table.
-  - **Check when it reports:**
-    - read its diff, confirm everything is fenced with `#ifndef IV_FIXED_VOICINGS`, and that the `#else` paths are today's code;
-    - build its release firmware in a scratch worktree and `cmp` it against `dist/v1.0.70-wear/…bin`;
-    - open the page and HEAD every `_audio/*.wav.js`;
-    - the audit list must be complete.
-  - Its branch lacks main's ADR 0046 commits, which it doesn't need.
-  - **Added at the wrap (owner: "Are our size floor and ceiling values appropriate?"):** CANYON's SIZE-dependent DECAY floor (6 mean lines: 2.1 s / 5 s / 12 s at SIZE 0 / noon / full) is folded into the curve (a table per SIZE, a full-SIZE card, possibly a version that spreads DECAY from the floor). There's also a measurement-only SIZE section: re-run `tools/sweetspot.py` (`docs/sweetspot.md` is stale), echo smoothness and ringing at the SIZE ends, and whether HALL's 260 ms top is grainy. Check that its report has both parts.
-- **Branches waiting on the owner's picks or OK** (all off v1.0.70 unless stated; none pushed):
-  - `claude/proto-wear-taper-78e1da`: v1.0.69 + v1.0.70 (`4b95b8a`), plus the `wear_drive` prototype commit `88a5148` under them. After the rack check it becomes `beta/wear`: push it, run `tools/make_release.sh --beta beta/wear 1 --publish` (the owner's OK first), open the PR (the script prints the commands), and comment on the Modwiggler thread.
-  - `claude/fuller-tail-6dcc8d` (`a3478b8`): hook `IV_FULLER` B/C/D. Firmware checked byte-identical here.
-  - `claude/wet-loudness-8e55d6` (`41d13ae`): hook `IV_WET_MAKEUP` +2/+3/+4.5 dB. Firmware checked byte-identical here. Its lean is +3 dB with the `rack-levels` trim.
-  - `claude/install-check` (`997a412`): the README and FAQ porting note (`95abc67`). Its task-list commits are already in main, so on merge take main's `docs/TASKS.md`.
-  - `claude/rack-levels` (`6eab077`) and `claude/input-stop` (`1ef34bc`): as before (re-measure on the current build). Both now interact with `wet_loudness` and `decay_curve`.
-  - `proto/more-tape`, `proto/radio-lighter`, `proto/tape-fold`, `proto/wear-no-bbd`: their picks are already ported; delete them with the owner's OK.
-- **Worktrees:**
-  - each prototype's under `.claude/worktrees/` (keep until its pick is ported);
-  - `.claude/worktrees/release`, the release script's own reusable worktree (local);
-  - `../sublustris-install-check`.
-- **Idle linked sessions:** `wear-taper`, `wet-loudness` and `fuller-tail` have the context for follow-ups (SendMessage to their `local_…` ids, in "Linked sessions"). `resilio-site-links` and `launch-posts` are done; archive them with the owner's OK.
+- **Nothing running.** Linked sessions are all idle (decay-curve, wear-taper, wet-loudness, fuller-tail, port sessions, hall-lows-page, launch-posts, resilio-site-links, plateau ones); they can be archived with the owner's OK.
+- **`beta/player-feedback`** (pushed, PR 1): the beta. Its worktree `.claude/worktrees/beta`; `.claude/worktrees/release` is the release script's own (keep both).
+- **Prototype and research branches kept** (not pushed; each holds only its hook and page scripts or notes): `claude/fuller-tail-6dcc8d`, `claude/proto-decay-curve-01af2c`, `claude/wet-loudness-8e55d6`, `claude/plate-hit`, `proto/wear-ceiling`, `claude/proto-hall-lows-f1f7e5`, `claude/hall-left-hunt`, `claude/plateau-research`. Per ADR 0046 they go with the owner's OK once the beta merges. Older: `claude/rack-levels`, `claude/input-stop` (to re-measure), `proto/more-tape`, `proto/radio-lighter`, `proto/tape-fold`, `proto/wear-no-bbd` (ported long ago; delete with OK).
 
 ## Next steps
 
-1. **Review `decay_curve`** when it reports (the checks above), then send the page.
-2. **Owner picks:** `fuller_tail`, `wet_loudness` and `decay_curve`.
-   - Listen to fuller first: fuller tone sounds a little bigger, so it's worth settling before choosing a loudness.
-   - Port each pick on top of v1.0.70 as new SPEC versions (one golden update per version), each with an ADR.
-   - Decide with the owner whether they ride the WEAR beta (beta.2 or v1.0.7x-beta.1) or wait for their own beta.
-   - The loudness pick also settles the `rack-levels` trim.
-3. **The WEAR beta** after the owner's rack check of v1.0.70 (ADR 0046):
-   - rename or create `beta/wear` at `4b95b8a`, or later if more picks join;
-   - push it, `--beta … 1 --publish`, then the PR with links to lfad's post, ADRs 0044/0045 and what to listen for.
-   - **First real publish of the beta mode: dry-run it first.**
-4. **The unfreeze-after-SIZE overload in CANYON:** still the most important crackle fix (`docs/research/m3-review2-audit-212b68b.log`, UNFRZ lines).
-5. **The plugin UI** (danishchairs' DM; the owner's backlog, shared with Resilio): Figma first, in a compact DAW layout. Parameter keys must not change.
-6. **The module's level in volts** (the owner's 10-minute rack task) feeds the loudness report.
-7. As before: `input_stop2`, the SPACE flip morph (a flash plan first), the housekeeping list, a profile lap (the profile build has 44 B left).
+1. **Players' feedback on the beta** (PR 1, the Modwiggler thread). A tuning change is a new SPEC version on `beta/player-feedback` (v1.0.77) and a new beta (`v1.0.77-beta.1`), with a comment on PR 1; a repackage is `v1.0.76-beta.2`. Run the release script from the beta worktree (memory "betas from the beta worktree").
+2. **The red output LEDs** (owner's recheck): if they hear squash or crackle, bring level options (the limiter catches peaks since v1.0.73's +3 dB, +1.5 at short tails); if only the light, maybe leave it or make the LED less jumpy.
+3. **The full release** once players and the owner are happy: merge PR 1 (owner's OK), `tools/make_release.sh --publish` from `main`, re-render the site's demos on v1.0.76, check the presets' starting points at DECAY 0.6-0.75 (the curve moved), the site changelog, and a release note that saved sets at DECAY 0.85-0.95 now open as long tails (the owner accepted this).
+4. **The unfreeze-after-SIZE overload in CANYON:** still the most important crackle fix (`docs/research/m3-review2-audit-212b68b.log`).
+5. **The plugin UI** (danishchairs' DM; Figma first, compact DAW layout; parameter keys unchanged).
+6. **lfad's other notes not yet acted on:** ONSET's modes sounding alike, and PLATE vs HALL contrast beyond PLATE's hit; ask after the beta.
+7. As before: `input_stop2` (re-render on the current build), the SPACE flip morph (a flash plan first: 468 B left), the housekeeping list, the module's volts.
 
 ## Waiting on the owner (`docs/TASKS.md`)
 
-- **At the rack:**
-  - try v1.0.70 (`dist/v1.0.70-wear/sublustris_versio-v1.0.70-wear.bin`);
-  - measure the module's input level (sine to the red In LED, volts peak to peak).
-- **Listen:** `fuller_tail` and `wet_loudness` (ready), `decay_curve` (overnight).
-- **Decide:** merge `claude/install-check`.
-- **When convenient:** trash `wear_taper` and `wear_drive` (3.4 GB) and the old `dist/` builds; the sample-rate check in Ableton; the reference recordings.
+- **Post the beta** in the Modwiggler thread (the draft is in this session's chat; danishchairs' UI notes came by DM, which the post mentions only in general).
+- **At the rack:** the red-LED recheck and the rest of the check list on v1.0.76; the module's input volts.
+- **Try the beta's plugin** in Ableton (`tools/install_plugin.sh e4a9738` installs it; update the "Plugin installed" line).
+- **Answer:** whether the GitHub release notes should credit lfad by name (they say "feedback on Modwiggler and r/modular"; the launch posts promised changelog credits).
 
 ## Will bite
 
-- **Main is public and deploys the site**, so sound changes go out as betas from branches first (ADR 0046). `--beta` has been tested by building a package but has never actually published. Its test package is `dist/release/v1.0.70-4b95b8a-beta.1/`, built before the stable-name fix; I removed the stray copies by hand.
-- **One golden update per SPEC version:** stacking picks means one new version per port (v1.0.71, v1.0.72…).
-- **Flash:** release has 796 B left on v1.0.70, the profile build only 44 B. Faster CANYON movement (fuller C/D) costs about 40-100 B and won't fit the profile build without a trim.
-- **Several prototypes share v1.0.70 and touch the same areas.** `fuller_tail` and `decay_curve` both touch `Engine`/`Fdn`, and `wet_loudness` the output. Port them one at a time, re-running the others' checks after each.
-- **The preview server** (`review-pages`, port 8765) stops overnight. The pane's first navigation after a restart can come up empty, so reload. Pages store audio as `_audio/*.wav.js`, not `.wav`. Curl to localhost is blocked by the sandbox; use the browser pane.
-- **`docs/TASKS.md` is edited on several branches** (each prototype's session added a line). Main's copy is the master: on merging a prototype branch, take main's version and re-apply only what's new.
-- **`IV_WEAR_TAPER`/`IV_WEAR_DRIVE` are gone** on v1.0.70; old notes that mention them refer to the prototypes.
-- As before: `screenlog.0` appends across flashes; never connect USB and rack power at once; `site/node_modules` with `npm ci` in a fresh worktree.
+- **Flash:** release 468 B left on v1.0.76, profile 84 B. Anything new needs a trim plan first.
+- **The profile lap has no v1.0.75 baseline**, so D's exact CPU cost is unknown, and it never moves SIZE in HALL; the owner heard no drop-outs by hand.
+- **The beta branch has a merge of `origin/main`** (`e4a9738`); main is now ahead with docs only. If PR 1 shows conflicts later, they'll be in `docs/TASKS.md` (take main's) or `docs/adr/README.md` (keep both lists, in number order).
+- **`make_release.sh` reads `releases/README.md` from the checkout it runs in**, not the ref: run betas from the beta worktree. `--dry-run` also needs the branch pushed.
+- **The release notes are the GitHub release body**, edited with `gh release edit v1.0.76-beta.1 --notes-file`; the zip's read-me has its own copy (`THIS IS A BETA` section).
+- **reddit is blocked in the built-in browser;** ask the owner for screenshots (memory "owner forum voice").
+- **The preview server** (port 8765) was last restarted from a worktree now removed; restart it from `main` before the next page.
+- As before: one golden update per SPEC version; `screenlog.0` appends across flashes (copy, don't move); never connect USB and rack power at once.
 
 ## Where to look
 
-- `docs/TASKS.md` ("Listen", "At the rack", "Waiting on Claude" > "Launch feedback").
-- `docs/adr/0044-wear-taper.md`, `0045-wear-drive.md` (on the WEAR branch), `0046-betas-from-branches.md`.
-- `docs/research/fuller-tail-2026-11-05.md` and `wet-loudness-2026-11-05.md` (on their branches).
+- `docs/TASKS.md` ("Share the beta", "At the rack", "Waiting on Claude").
+- `docs/adr/0046-betas-from-branches.md`, then 0051 and 0052 on `beta/player-feedback`.
+- PR 1 and the release page (links above).
 - `tools/make_release.sh` (`--beta`).
-- `core/params/Mappings.h` (`decayRate`, `kDecayFiniteTop`, `eraMix`) for the DECAY review.
+- `firmware/LedMeter.h` and `core/dsp/Output.h` for the red-LED question.
