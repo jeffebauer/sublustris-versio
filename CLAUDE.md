@@ -4,7 +4,7 @@ Called Immensio Versio until 27 Oct 2026 (ADR 0032): internal identifiers (`iv::
 
 A huge, warm, lush reverb firmware for the Noise Engineering Versio (Daisy Seed, STM32H750), sibling to Resilio Versio. One DSP Core, three Hosts: Renderer (offline CLI), JUCE Plugin (AU/VST3 test bench), Versio Firmware.
 
-**Start a session with `/sublustris-start`, end one with `/sublustris-wrap`.** The handoff lives in `docs/handoff/HANDOFF.md`. The main session orchestrates (the owner, decisions, reviews, commits); prototypes, pages, debug and flash hunts and hardware-log reads go to nested sessions or subagents (`/sublustris-start`, "Working as the orchestrator").
+**Start a session with `/session-start`, clear context mid-session with `/session-checkpoint`, end one with `/session-wrap`.** These are the shared skills; this project's facts for them (handoff, gates, hazards, push and branch rules) are in `.claude/session.md`. The handoff lives in `docs/handoff/HANDOFF.md`. The main session orchestrates (the owner, decisions, reviews, commits); prototypes, pages, debug and flash hunts and hardware-log reads go to nested sessions or subagents: read `docs/orchestrator.md` before the first delegation.
 
 ## Read first
 - `SPEC.md`: the spec (frozen v1.0; changes via ADR + changelog line). `CONTEXT.md`: the glossary (use its terms in code, comments and chat). `docs/adr/`: every decision (index `docs/adr/README.md`). `docs/TASKS.md`: the owner's to-do list.

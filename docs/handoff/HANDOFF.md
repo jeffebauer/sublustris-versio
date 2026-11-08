@@ -10,9 +10,9 @@ This session took the launch feedback to a **public beta**:
 - **The owner's Modwiggler post** was drafted (BBCode, crediting lfad, danishchairs and dubsackdude, in their own reply voice); they post it.
 - **Clean-up:** judged pages, 16 worktrees and eight merged branches gone; 24 GB free.
 
-Start with `/sublustris-start`.
+Start with `/session-start`.
 
-## State
+## Where things stand
 
 | Milestone | State |
 |---|---|
@@ -33,7 +33,7 @@ Start with `/sublustris-start`.
 - **`beta/player-feedback`** (pushed, PR 1): the beta. Its worktree `.claude/worktrees/beta`; `.claude/worktrees/release` is the release script's own (keep both).
 - **Prototype and research branches kept** (not pushed; each holds only its hook and page scripts or notes): `claude/fuller-tail-6dcc8d`, `claude/proto-decay-curve-01af2c`, `claude/wet-loudness-8e55d6`, `claude/plate-hit`, `proto/wear-ceiling`, `claude/proto-hall-lows-f1f7e5`, `claude/hall-left-hunt`, `claude/plateau-research`. Per ADR 0046 they go with the owner's OK once the beta merges. Older: `claude/rack-levels`, `claude/input-stop` (to re-measure), `proto/more-tape`, `proto/radio-lighter`, `proto/tape-fold`, `proto/wear-no-bbd` (ported long ago; delete with OK).
 
-## Next steps
+## Start here
 
 1. **Players' feedback on the beta** (PR 1, the Modwiggler thread). A tuning change is a new SPEC version on `beta/player-feedback` (v1.0.77) and a new beta (`v1.0.77-beta.1`), with a comment on PR 1; a repackage is `v1.0.76-beta.2`. Run the release script from the beta worktree (memory "betas from the beta worktree").
 2. **The red output LEDs** (owner's recheck): if they hear squash or crackle, bring level options (the limiter catches peaks since v1.0.73's +3 dB, +1.5 at short tails); if only the light, maybe leave it or make the LED less jumpy.
@@ -43,7 +43,7 @@ Start with `/sublustris-start`.
 6. **lfad's other notes not yet acted on:** ONSET's modes sounding alike, and PLATE vs HALL contrast beyond PLATE's hit; ask after the beta.
 7. As before: `input_stop2` (re-render on the current build), the SPACE flip morph (a flash plan first: 468 B left), the housekeeping list, the module's volts.
 
-## Waiting on the owner (`docs/TASKS.md`)
+## Waiting on Jesse (`docs/TASKS.md`)
 
 - **Post the beta** in the Modwiggler thread (the draft is in this session's chat; danishchairs' UI notes came by DM, which the post mentions only in general).
 - **At the rack:** the red-LED recheck and the rest of the check list on v1.0.76; the module's input volts.
