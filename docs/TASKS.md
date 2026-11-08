@@ -28,7 +28,7 @@
 - [ ] **CPU lap for the SPACE morph** (USB power, about 3 min a lap, serial log on)
   - **Run it again with the new build (9 Nov 2026):** the first lap's SPACE changes never fired, a bug in the test, not in the morph. Logging on first, then power up.
   - Build: `dist/v1.0.76-morph-s2/sublustris_versio-v1.0.76-morph-s2-profile.bin`. Let one lap run from `SPACE START (S, 19 lines` to `SPACE LAP 1 DONE: 19 lines`; I read `screenlog.0`.
-  - To play it: `dist/v1.0.76-morph-s/sublustris_versio-v1.0.76-morph-s.bin` (rack power), flipping SPACE by hand.
+  - To play it: `dist/v1.0.76-morph-s/sublustris_versio-v1.0.76-morph-s.bin` (rack power), flipping SPACE by hand. First play 9 Nov 2026: no dropouts.
 - [ ] **Measure the module's input level** (10 minutes, rack power, never with USB)
   1. Patch a steady sine (200 Hz to 1 kHz) into IN L, with MIX fully left.
   2. Raise it until the In L LED just turns red.
