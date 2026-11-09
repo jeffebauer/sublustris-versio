@@ -7,7 +7,7 @@ Paste everything below the line into a **new** Claude Code session started in **
 Let's build the Sublustris Versio minisite together: a sister site to the Resilio Versio site we built (`https://resilio-versio.vercel.app`). The brief is `docs/minisite/BRIEF.md`; read it first and follow it.
 
 ## Read first
-1. **This repo's rules and state:** `CLAUDE.md` (the rules bind you), then run `/sublustris-start`, but take only what the website needs. Don't pick up sound work: other sessions do that.
+1. **This repo's rules and state:** `CLAUDE.md` (the rules bind you), then run `/session-start`, but take only what the website needs. Don't pick up sound work: other sessions do that.
 2. **The brief:** `docs/minisite/BRIEF.md`.
 3. **Resilio's site, the model:**
    - its brief, `~/Documents/Sites/resilio-versio/docs/minisite/BRIEF.md`;
@@ -58,7 +58,7 @@ Let's build the Sublustris Versio minisite together: a sister site to the Resili
   - `renders/`;
   - anything whose licence doesn't allow publishing.
 - **Don't do these yourself:** create Vercel projects, domains, environment variables or secrets; make the repository public; run system-wide Audio Unit commands; or install the plugin.
-- **Hand the long, noisy work to subagents or nested sessions,** and keep the decisions and my questions here (`/sublustris-start`, "Working as the orchestrator"). That covers demo renders, copy fact-checks, the style-tile directions and the build's accessibility and Lighthouse runs. Review their work before showing me.
+- **Hand the long, noisy work to subagents or nested sessions,** and keep the decisions and my questions here (`docs/orchestrator.md`). That covers demo renders, copy fact-checks, the style-tile directions and the build's accessibility and Lighthouse runs. Review their work before showing me.
 - **Quality gates before you show me a build:**
   - `npm run build` and `npx astro check` clean;
   - axe-core with no violations on every page;

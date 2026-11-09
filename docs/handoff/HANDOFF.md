@@ -1,115 +1,93 @@
 # Handoff
 
-**Written:** 6 Nov 2026, end of session 14 (5 to 6 Nov).
+**Written:** 8 Nov 2026, end of session 17 (8 Nov).
 
-This session acted on the launch feedback (Modwiggler and r/modular; lfad's, danishchairs' and dubsackdude's posts; summary in `docs/TASKS.md` "Waiting on Claude", "Launch feedback"):
-- **WEAR, two picks, built for the rack but not yet tried on the module:**
-  - v1.0.69: the taper, D on every card of `wear_taper` (ADR 0044). The intensities follow 1-(1-v)^2.2 and the grit starts at noon.
-  - v1.0.70: the tape's drive back to 16.25 dB at full, C on every card of `wear_drive` (ADR 0045).
-  - Both are on `claude/proto-wear-taper-78e1da`, with the rack build in `dist/v1.0.70-wear/`. I rebuilt it and it's byte-identical.
-- **Betas from branches, each with a PR** (ADR 0046):
-  - `tools/make_release.sh --beta <ref> <n>` publishes a pre-release, never Latest, so the site's downloads don't move.
-  - Branch names: `beta/`, `proto/`, `claude/`. Tags are never deleted.
-  - CLAUDE.md has the rule. Merged and pushed (`da014f1`).
-- **Two investigations, each with a page ready:**
-  - `fuller_tail`: the "thin/reedy" note. Its causes are a low-mid cancellation between the still bass tank and the main tank, and too little slow movement.
-  - `wet_loudness`: about 1 LU under the dry at full wet, and 4-5 LU under Valhalla Room at short decays.
-- **A DECAY curve prototype is running overnight** (the owner's note after playing; see In flight).
-- **A porting note** for other Daisy Seed hardware (README and FAQ) waits on `claude/install-check` for the owner's merge OK.
-- **The task list:** brought into main from that branch at this wrap.
+- **Smooth SPACE changes, picked and built as a prototype.** Today a SPACE change fades out, wipes the tanks and fades in. The owner picked **S on all 20 cards** of `renders/space_morph2` (after C on all 20 scored cards of `renders/space_morph`): a 3 s morph between PLATE and HALL/CANYON (both tanks run for 3 s), and HALL ↔ CANYON reshaped in place in the one tank, spread over SIZE's four groups of 0.3 s (never more than 2 of 8 lines reading twice).
+- **The owner's call:** a held endless tail with nothing playing dies away in the 3 s on a PLATE change, as built.
+- **Flash found, no sound change:** STM32's HAL set-up files and DMA driver built `-Os` (`HAL_OS=1`), plus 61 member initialisers dropped (`IV_RI`). Release 112,172 → 106,564 B, without the morph. The constructors lead was only 360 B, not 1.7 KB.
+- **The trimmed v1.0.76 played on the rack:** "sounding great! No issues at all", rapid knob moves at settings that push the unit included.
+- **The shared `/session-start` had its first real run;** nothing from the old routine is missing. This is `/session-wrap`'s first. The old wrap pushed on its own; pushing is now ask-first.
+- **The Modwiggler post is up** (owner). No player feedback has come in yet: PR 1 had only Vercel's bot at this session's start; the thread itself wasn't read.
 
-Start with `/sublustris-start`.
+Start with `/session-start`.
 
-## State
+## Where things stand
 
 | Milestone | State |
 |---|---|
-| Spec | v1.0 frozen plus amendments to v1.0.68 on main; **v1.0.69 and v1.0.70 on `claude/proto-wear-taper-78e1da`**, not merged (the beta first, ADR 0046) |
+| Spec | v1.0 frozen plus amendments; `main` at v1.0.68; v1.0.69-v1.0.76 on `beta/player-feedback` (PR 1), not merged. The morph is prototype only, no SPEC version yet |
 | M0 | Passed (25 Oct) |
 | M1/M4-M8 | Built and listened |
-| M2 | Plugin installed `4140997` (v1.0.68), 3 Nov; AU check passed |
-| M3 | v1.0.68 on the module; **v1.0.70 rack check pending** (`dist/v1.0.70-wear/`); module CPU not profiled since v1.0.58 |
-| M9 | Released v1.0.68 (3 Nov). No betas yet; the first is WEAR, after the rack check |
+| M2 | Plugin installed `4140997` (v1.0.68), 3 Nov; the beta's plugin hasn't been played by the owner |
+| M3 | Trimmed v1.0.76 on the module and liked (first listen); the morph has never run on a module; the red-LED recheck and the rest of the rack list open |
+| M9 | Released v1.0.68 (Latest); `v1.0.76-beta.1` published 6 Nov |
 
-- **main HEAD:** `da014f1` plus the wrap-up commit, pushed to `origin/main`. Main changed only in docs and `tools/make_release.sh` this session; no sound change on main.
-- **Gates on main (6 Nov, wrap-up):** ctest **"100% tests passed out of 24"**; firmware unchanged from v1.0.68: release **111,828** B (812 B under budget), m0test 83,556, profile 130,956 (116 B under the chip).
-- **v1.0.70 on its branch** (rebuilt and compared here):
+**main HEAD:** a clean-up commit on top of `f107e4e` (the wrap). Docs only since session 15. All of it is pushed. Nothing merged or released this session. All gates green.
 
-  | Variant | Bytes | |
-  |---|---|---|
-  | release | **111,844** | 796 B under the 112,640 budget |
-  | m0test | 83,556 | |
-  | profile | 131,028 | **44 B under the 131,072 limit** |
+## Start here
 
-  Its session reported ctest 24/24, SAME 40/60 against v1.0.69 (only mid-WEAR cases differ; WEAR 1 checked SAME 12/12 separately), click and endless-hold checks clean.
+**1. Read the owner's SPACE CPU lap** (they run it in the morning). Build: `dist/v1.0.76-morph-s/sublustris_versio-v1.0.76-morph-s-profile.bin`, USB power. Copy `screenlog.0`, never move it; slice `SPACE START` to `SPACE LAP 1 DONE` (18 lines, ~3 min); a subagent files it as `docs/research/m3-…log`. Each line: `SPACE <FROM>-><TO> <heavy|SHIMMER|REFLIP|UNFREEZE> … avg % max % | late blocks`. The pass: no late blocks, and max under about 95 % (the module starts dropping audio near 99 %). PLATE → CANYON with SHIMMER is the likeliest to go over; my sum of averages was 89-101 %.
+
+**2. If it's clean, port S** to `beta/player-feedback` as a new SPEC version (v1.0.77) and `v1.0.77-beta.1` (run the release script from the beta worktree). The port needs:
+- an ADR amending 0013 ("only one big tank ever runs"), a SPEC changelog line, one golden update;
+- `test_control_latch` changed: it asserts the tail is wiped, the only test that fails with S on;
+- S always on: the A/B/C/S hook, `IV_SPACE_MORPH` and its log removed, `SPACE_MORPH` no longer a measuring flag;
+- the trims `4327229`, `f9912f9`, `faf55db`; `firmware/README.md` documents `HAL_OS`; `firmware/Makefile`'s comment still says the morph is C only;
+- the Plugin's test (24 of 25 pass in worktrees, which have no JUCE; run the Plugin against main's JUCE).
+
+**If the lap isn't clean:** spread the PLATE-side load or shorten its 3 s, or cut SHIMMER's share during the change, and bring it back to the owner by ear.
+
+Then, in order:
+3. Offer the trims to the beta on their own: 5.6 KB of room, already played. The owner's call.
+4. Players' feedback on the beta (PR 1, the Modwiggler thread).
+5. The red output LEDs (`firmware/LedMeter.h`, `core/dsp/Output.h`), from the rack list.
+6. The full release once players and the owner are happy: merge PR 1 (owner's OK), `tools/make_release.sh --publish` from `main`, re-render the site's demos on the new sound, check the presets' starting points at DECAY 0.6-0.75, the site changelog, and a release note that saved sets at DECAY 0.85-0.95 now open as long tails.
+7. The unfreeze-after-SIZE overload in CANYON, the most important crackle fix (`docs/research/m3-review2-audit-212b68b.log`). The owner said "not now" on 8 Nov.
+8. The plugin UI (danishchairs' DM; Figma first, parameter keys unchanged). lfad's notes on ONSET's modes and PLATE vs HALL contrast. As before: `input_stop2`, the housekeeping list.
+
+## Waiting on Jesse
+
+See `docs/TASKS.md`:
+- **The CPU lap for the morph** (planned for the morning of 9 Nov). The release build `dist/v1.0.76-morph-s/sublustris_versio-v1.0.76-morph-s.bin` is there to play by hand on rack power.
+- **At the rack:** the red-LED recheck, the rest of the v1.0.76 list on the trimmed build (`dist/v1.0.76-trimmed/`), cold starts and an hour warm, the module's input volts.
+- **Try the beta's plugin** (`tools/install_plugin.sh e4a9738`; update the "Plugin installed" line).
+- **Answer:** should the GitHub release notes credit lfad by name?
 
 ## In flight
 
-- **`decay-curve`** ([its session](#local_03e43d72-4190-4923-82e1-4144e43eada5), `local_03e43d72-4190-4923-82e1-4144e43eada5`, branch `claude/proto-decay-curve-01af2c`, off v1.0.70): started at the wrap, running overnight.
-  - The owner's note: the long decays are squeezed into noon to 3 o'clock, and 3:30 to fully clockwise is all identical endless.
-  - Today: `kDecayFiniteTop` 0.80, `kDecayInfiniteAt` 0.85, exponential T60 (HALL is 12 s at noon, 60 s at 3).
-  - The brief: research where established units put infinite; audit everything tied to the endless point (endless follows your playing, the governor's ease, the radio at endless, SHIMMER, `decayLevelMakeup`, `rack-levels`, `input-stop`, tests); prototype `IV_DECAY_CURVE` (as now, endless in the last ~5 %, plus a long-end taper, endless at the end stop); build the page `renders/decay_curve` with a T60-per-hour table.
-  - **Check when it reports:**
-    - read its diff, confirm everything is fenced with `#ifndef IV_FIXED_VOICINGS`, and that the `#else` paths are today's code;
-    - build its release firmware in a scratch worktree and `cmp` it against `dist/v1.0.70-wear/…bin`;
-    - open the page and HEAD every `_audio/*.wav.js`;
-    - the audit list must be complete.
-  - Its branch lacks main's ADR 0046 commits, which it doesn't need.
-  - **Added at the wrap (owner: "Are our size floor and ceiling values appropriate?"):** CANYON's SIZE-dependent DECAY floor (6 mean lines: 2.1 s / 5 s / 12 s at SIZE 0 / noon / full) is folded into the curve (a table per SIZE, a full-SIZE card, possibly a version that spreads DECAY from the floor). There's also a measurement-only SIZE section: re-run `tools/sweetspot.py` (`docs/sweetspot.md` is stale), echo smoothness and ringing at the SIZE ends, and whether HALL's 260 ms top is grainy. Check that its report has both parts.
-- **Branches waiting on the owner's picks or OK** (all off v1.0.70 unless stated; none pushed):
-  - `claude/proto-wear-taper-78e1da`: v1.0.69 + v1.0.70 (`4b95b8a`), plus the `wear_drive` prototype commit `88a5148` under them. After the rack check it becomes `beta/wear`: push it, run `tools/make_release.sh --beta beta/wear 1 --publish` (the owner's OK first), open the PR (the script prints the commands), and comment on the Modwiggler thread.
-  - `claude/fuller-tail-6dcc8d` (`a3478b8`): hook `IV_FULLER` B/C/D. Firmware checked byte-identical here.
-  - `claude/wet-loudness-8e55d6` (`41d13ae`): hook `IV_WET_MAKEUP` +2/+3/+4.5 dB. Firmware checked byte-identical here. Its lean is +3 dB with the `rack-levels` trim.
-  - `claude/install-check` (`997a412`): the README and FAQ porting note (`95abc67`). Its task-list commits are already in main, so on merge take main's `docs/TASKS.md`.
-  - `claude/rack-levels` (`6eab077`) and `claude/input-stop` (`1ef34bc`): as before (re-measure on the current build). Both now interact with `wet_loudness` and `decay_curve`.
-  - `proto/more-tape`, `proto/radio-lighter`, `proto/tape-fold`, `proto/wear-no-bbd`: their picks are already ported; delete them with the owner's OK.
-- **Worktrees:**
-  - each prototype's under `.claude/worktrees/` (keep until its pick is ported);
-  - `.claude/worktrees/release`, the release script's own reusable worktree (local);
-  - `../sublustris-install-check`.
-- **Idle linked sessions:** `wear-taper`, `wet-loudness` and `fuller-tail` have the context for follow-ups (SendMessage to their `local_…` ids, in "Linked sessions"). `resilio-site-links` and `launch-posts` are done; archive them with the owner's OK.
+**Nothing running.** All three prototype agents finished and were reviewed: firmware rebuilt from scratch, `SAME 60/60` re-run, default release `cmp`-identical to the build played on the rack. The 11 finished sessions started earlier were archived.
 
-## Next steps
+Kept on purpose:
+- **`proto/space-morph-c`** (`b6b9b0a`, not pushed, worktree `.claude/worktrees/space-morph-flash`; the folder name is older than the branch): S, the trims (`faf55db` and before) and the SPACE lap. **This is the one to port.**
+- `beta/player-feedback` (pushed, PR 1), worktree `.claude/worktrees/beta`; `.claude/worktrees/release` is the release script's own. Keep both.
+- `claude/input-stop` and `claude/rack-levels` (not pushed): prototypes for open items, to re-measure on the current build.
 
-1. **Review `decay_curve`** when it reports (the checks above), then send the page.
-2. **Owner picks:** `fuller_tail`, `wet_loudness` and `decay_curve`.
-   - Listen to fuller first: fuller tone sounds a little bigger, so it's worth settling before choosing a loudness.
-   - Port each pick on top of v1.0.70 as new SPEC versions (one golden update per version), each with an ADR.
-   - Decide with the owner whether they ride the WEAR beta (beta.2 or v1.0.7x-beta.1) or wait for their own beta.
-   - The loudness pick also settles the `rack-levels` trim.
-3. **The WEAR beta** after the owner's rack check of v1.0.70 (ADR 0046):
-   - rename or create `beta/wear` at `4b95b8a`, or later if more picks join;
-   - push it, `--beta … 1 --publish`, then the PR with links to lfad's post, ADRs 0044/0045 and what to listen for.
-   - **First real publish of the beta mode: dry-run it first.**
-4. **The unfreeze-after-SIZE overload in CANYON:** still the most important crackle fix (`docs/research/m3-review2-audit-212b68b.log`, UNFRZ lines).
-5. **The plugin UI** (danishchairs' DM; the owner's backlog, shared with Resilio): Figma first, in a compact DAW layout. Parameter keys must not change.
-6. **The module's level in volts** (the owner's 10-minute rack task) feeds the loudness report.
-7. As before: `input_stop2`, the SPACE flip morph (a flash plan first), the housekeeping list, a profile lap (the profile build has 44 B left).
-
-## Waiting on the owner (`docs/TASKS.md`)
-
-- **At the rack:**
-  - try v1.0.70 (`dist/v1.0.70-wear/sublustris_versio-v1.0.70-wear.bin`);
-  - measure the module's input level (sine to the red In LED, volts peak to peak).
-- **Listen:** `fuller_tail` and `wet_loudness` (ready), `decay_curve` (overnight).
-- **Decide:** merge `claude/install-check`.
-- **When convenient:** trash `wear_taper` and `wear_drive` (3.4 GB) and the old `dist/` builds; the sample-rate check in Ableton; the reference recordings.
+Local only: `dist/v1.0.76-trimmed/`, `dist/v1.0.76-morph-s/`, `dist/branches-backup-2026-11-08.bundle` (the 12 prototype branches deleted in the clean-up; `git fetch <bundle>` restores any). `renders/space_morph` and `space_morph2` are deleted; re-render from `proto/space-morph-c` (`tools/pages/space_morph2.py`) if a comparison is needed. Unsure: the memory backup in `~/.Trash/sublustris-memory-2026-11-08/` (the shell can't list the Trash).
 
 ## Will bite
 
-- **Main is public and deploys the site**, so sound changes go out as betas from branches first (ADR 0046). `--beta` has been tested by building a package but has never actually published. Its test package is `dist/release/v1.0.70-4b95b8a-beta.1/`, built before the stable-name fix; I removed the stray copies by hand.
-- **One golden update per SPEC version:** stacking picks means one new version per port (v1.0.71, v1.0.72…).
-- **Flash:** release has 796 B left on v1.0.70, the profile build only 44 B. Faster CANYON movement (fuller C/D) costs about 40-100 B and won't fit the profile build without a trim.
-- **Several prototypes share v1.0.70 and touch the same areas.** `fuller_tail` and `decay_curve` both touch `Engine`/`Fdn`, and `wet_loudness` the output. Port them one at a time, re-running the others' checks after each.
-- **The preview server** (`review-pages`, port 8765) stops overnight. The pane's first navigation after a restart can come up empty, so reload. Pages store audio as `_audio/*.wav.js`, not `.wav`. Curl to localhost is blocked by the sandbox; use the browser pane.
-- **`docs/TASKS.md` is edited on several branches** (each prototype's session added a line). Main's copy is the master: on merging a prototype branch, take main's version and re-apply only what's new.
-- **`IV_WEAR_TAPER`/`IV_WEAR_DRIVE` are gone** on v1.0.70; old notes that mention them refer to the prototypes.
-- As before: `screenlog.0` appends across flashes; never connect USB and rack power at once; `site/node_modules` with `npm ci` in a fresh worktree.
+- **Morph flash, on `proto/space-morph-c`:** release 110,708 B (1,932 B under budget), **profile 130,796 B (276 B under the chip)**, ITCM 62,432 of 64,512 B. To fit, the morph's profile build leaves out SIZEHAND and the HEADROOM steps. There are more bytes in libDaisy's C++ (about 10 KB at `-O3`), leaving `audio.cpp` out because it runs per sample.
+- **Module CPU for the morph is unmeasured.** `morphRunOld` is `-O3` in ITCM, but `morphFlip` and `morphAdvance` run from flash, and `morphAdvance` runs every block, a small cost even when idle.
+- **The trims change boot code** (clocks, SDRAM, codec I2C, ADC, DMA), proven so far by one good listen at the rack. Cold starts and an hour warm aren't confirmed. `IV_RI`'s proof ran on the host, not on ARM.
+- **Level at transitions, kept on purpose (the owner picked S having heard them on SIZE-full cards):** worst +3.8 dB over the louder steady space at CANYON → HALL, SIZE 0, DECAY 0.5, which the page didn't play; +2.2 dB at SIZE full. An in-place tail at endless settles about 4 dB above today's.
+- **The half builds** (`SPACE_MORPH=1` and `2`) are size measurements only: never listened to, and the wet dips on the other half's flips.
+- **Not tested:** freeze or re-flips combined with BLOOM or SHIMMER ONSET; the 10-minute holds with a flip inside them.
+- **Page server:** port 8765 is held by `pearls`' `beads/test/listen.py`. Use `preview_start` "review-pages-lan" (8766), and check the link answers before sending it, because the app stopped it once within about an hour.
+- **`/research` can't run here:** `uv` isn't installed and the skill's stated repo path is wrong (the script is in `~/.claude/skills/obsidian-second-brain`). Nothing from this session's research went to the vault.
+- **Disk: 15 GB free.** Each page was 0.5-0.6 GB.
+- **Flash on the beta and on `main` is untrimmed:** 468 B left on v1.0.76 release, 84 B on profile, until the trims are ported.
+- As before: one golden update per SPEC version; `screenlog.0` appends across flashes; never connect USB and rack power at once; `make_release.sh` reads `releases/README.md` from the checkout it runs in, and `--dry-run` needs the branch pushed; if PR 1 shows conflicts they'll be in `docs/TASKS.md` (take main's) or `docs/adr/README.md` (keep both, in number order).
+
+## Gates
+
+- **main (`c677ec5`, 8 Nov):** ctest **"100% tests passed out of 24"**; release **111,828 B** (85 %), m0test 83,556 (63 %), profile 130,956 (99 %, 116 B under the chip). Installed in Ableton: `4140997` (v1.0.68), the same sound as `main`.
+- **v1.0.76 beta (`e4a9738`, from session 15, unchanged):** ctest "100% tests passed out of 25"; release 112,172 B, m0test 83,556, profile 130,988 B.
+- **`proto/space-morph-c` (`b6b9b0a`), default build, sound of v1.0.76 (re-run this session):** release 106,564 B, `cmp`-identical to the rack build; m0test 83,556; profile 126,532 B; `SAME 60/60` against `e4a9738`. ctest "100% tests passed out of 24" (agent; no JUCE in the worktree).
+- **`SPACE_MORPH=3` on the same commit:** release 110,708 B, profile 130,796 B (re-run this session). With S on, ctest "96% tests passed, 1 tests failed out of 24", only `test_control_latch` (agent).
 
 ## Where to look
 
-- `docs/TASKS.md` ("Listen", "At the rack", "Waiting on Claude" > "Launch feedback").
-- `docs/adr/0044-wear-taper.md`, `0045-wear-drive.md` (on the WEAR branch), `0046-betas-from-branches.md`.
-- `docs/research/fuller-tail-2026-11-05.md` and `wet-loudness-2026-11-05.md` (on their branches).
-- `tools/make_release.sh` (`--beta`).
-- `core/params/Mappings.h` (`decayRate`, `kDecayFiniteTop`, `eraMix`) for the DECAY review.
+- `docs/TASKS.md` ("At the rack", "SPACE flips morph between spaces" under Waiting on Claude).
+- `git log e4a9738..proto/space-morph-c` and `core/dsp/SizeOpt.h` (`IV_MORPH_*`).
+- `docs/adr/0013-space-crossfade-and-true-stereo-in.md`, `docs/adr/0025-size-and-time-crossfade.md`.
+- `firmware/main.cpp` around the `SPACE START` lap.
