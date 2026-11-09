@@ -10,8 +10,7 @@
   - They say "feedback on Modwiggler and r/modular" now; the launch posts promised changelog credits.
 
 ### At the rack
-- [ ] **CPU lap for the morph with your pick C** (USB power only, about 3 min)
-  - Build: `dist/v1.0.76-morph-s5/sublustris_versio-v1.0.76-morph-s5-profile.bin`. The same 19 lines as last time. I'll read `screenlog.0` afterwards. To hear it instead, on rack power: `dist/v1.0.76-morph-s5/sublustris_versio-v1.0.76-morph-s5.bin`.
+- [x] **CPU lap for the morph with your pick C** (9 Nov 2026, `dist/v1.0.76-morph-s5/`, `docs/research/m3-morph-s5-lap.log`): 0 late blocks. From half a second into a change, C works: the heavy lines are about 3 points lower (97-98 % down to 94-95 %). But there's a new peak right at the start of a change from PLATE into CANYON with SHIMMER on, 99.5 % at 50 ms, before the voices can rest, so the worst moment rose from 98.2 %. Not understood yet. To hear it, on rack power: `dist/v1.0.76-morph-s5/sublustris_versio-v1.0.76-morph-s5.bin`.
 - [ ] **Check v1.0.76 on the module** (rack power, about an hour warm)
   - Build: `dist/v1.0.76-trimmed/sublustris_versio-v1.0.76-trimmed.bin`: the beta's sound with the start-up code built for size, 5.6 KB smaller, first time on a module.
   - **The trims:** first listen 8 Nov 2026: "sounding great! No issues at all", rapid knob moves at settings that push the unit included. Still worth noting: does it start every time from a cold power-up, and after about an hour warm?
