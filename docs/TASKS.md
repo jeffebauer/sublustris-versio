@@ -10,8 +10,7 @@
   - They say "feedback on Modwiggler and r/modular" now; the launch posts promised changelog credits.
 
 ### At the rack
-- [ ] **Diagnostic lap: where the 50 ms peak comes from** (USB power only, about 3 min; leave it for a second lap if you can)
-  - Build: `dist/v1.0.76-morph-peak-hunt/sublustris_versio-v1.0.76-morph-peak-hunt-profile.bin`. Measures the heavy changes three ways in one firmware: before C, C's code with C off, and C on. For measuring only, not for playing. I'll read `screenlog.0` afterwards.
+- [x] **Diagnostic lap: where the 50 ms peak comes from** (9 Nov 2026, four laps, `docs/research/m3-morph-peak-hunt.log`): the spike at the handover was already 97.4 % before C. C's code adds about 1.2 points there even when C is idle, and its level correction about 0.7 more, reaching 99.3 % on average and 100.1 % once, with one late block. After the first 0.5 s, C saves about 3 points. Next: stop C's costs landing on the handover (not built yet).
 - [x] **CPU lap for the morph with your pick C** (9 Nov 2026, `dist/v1.0.76-morph-s5/`, `docs/research/m3-morph-s5-lap.log`): 0 late blocks. From half a second into a change, C works: the heavy lines are about 3 points lower (97-98 % down to 94-95 %). But there's a new peak right at the start of a change from PLATE into CANYON with SHIMMER on, 99.5 % at 50 ms, before the voices can rest, so the worst moment rose from 98.2 %. Not understood yet. To hear it, on rack power: `dist/v1.0.76-morph-s5/sublustris_versio-v1.0.76-morph-s5.bin`.
 - [ ] **Check v1.0.76 on the module** (rack power, about an hour warm)
   - Build: `dist/v1.0.76-trimmed/sublustris_versio-v1.0.76-trimmed.bin`: the beta's sound with the start-up code built for size, 5.6 KB smaller, first time on a module.
