@@ -10,6 +10,8 @@
   - They say "feedback on Modwiggler and r/modular" now; the launch posts promised changelog credits.
 
 ### At the rack
+- [ ] **CPU lap for the morph with your pick C** (USB power only, about 3 min)
+  - Build: `dist/v1.0.76-morph-s5/sublustris_versio-v1.0.76-morph-s5-profile.bin`. The same 19 lines as last time. I'll read `screenlog.0` afterwards. To hear it instead, on rack power: `dist/v1.0.76-morph-s5/sublustris_versio-v1.0.76-morph-s5.bin`.
 - [ ] **Check v1.0.76 on the module** (rack power, about an hour warm)
   - Build: `dist/v1.0.76-trimmed/sublustris_versio-v1.0.76-trimmed.bin`: the beta's sound with the start-up code built for size, 5.6 KB smaller, first time on a module.
   - **The trims:** first listen 8 Nov 2026: "sounding great! No issues at all", rapid knob moves at settings that push the unit included. Still worth noting: does it start every time from a cold power-up, and after about an hour warm?
