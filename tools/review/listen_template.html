@@ -462,7 +462,8 @@ function makeGroup(row, col, panel, key) {
     return s;
   };
   const REF = n + 1;
-  g.duration = () => (g.bufs ? Math.max(...g.bufs.filter(Boolean).map(b => b.duration)) : 0) ||
+  // The versions' length, not the dry's: a clip cut shorter than its material still ends (and loops) at the clip's end.
+  g.duration = () => (g.bufs ? Math.max(0, ...g.bufs.slice(0, n).filter(Boolean).map(b => b.duration)) : 0) ||
     Math.max(0, ...panel.variants.map(v => { const s = DATA.items[v.item].spec; return s ? s.t1 : 0; }));
 
   // Level-match (dB) towards the card's median loudness, capped; Dry and the reference follow the same rule.
