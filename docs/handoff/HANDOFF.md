@@ -15,12 +15,12 @@ Start with `/session-start`.
 
 | Milestone | State |
 |---|---|
-| Spec | v1.0 frozen plus amendments; `main` at v1.0.68; v1.0.69-v1.0.76 on `beta/player-feedback` (PR 1), not merged; v1.0.77 merged into that branch locally on 9 Nov, not pushed. The morph is prototype only, no SPEC version yet |
+| Spec | v1.0 frozen plus amendments; `main` at v1.0.68; v1.0.69-v1.0.77 on `beta/player-feedback` (PR 1), pushed, mergeable, not merged. The morph is prototype only, no SPEC version yet |
 | M0 | Passed (25 Oct) |
 | M1/M4-M8 | Built and listened |
 | M2 | Plugin installed `4140997` (v1.0.68), 3 Nov; the beta's plugin hasn't been played by the owner |
 | M3 | Trimmed v1.0.76 on the module and liked (first listen); the morph has never run on a module; the red-LED recheck and the rest of the rack list open |
-| M9 | Released v1.0.68 (Latest); `v1.0.76-beta.1` published 6 Nov |
+| M9 | Released v1.0.68 (Latest); `v1.0.76-beta.1` published 6 Nov; `v1.0.77-beta.1` published 9 Nov from `f4814a7` (release 112,228 B) |
 
 **main HEAD:** a clean-up commit on top of `f107e4e` (the wrap). Docs only since session 15. All of it is pushed. Nothing merged or released this session. All gates green.
 
@@ -32,7 +32,7 @@ Start with `/session-start`.
 
 **Lap result, 9 Nov (`docs/research/m3-morph-s2-lap.log`, every line fired as expected): not clean.** Worst 105.9 %, 966 late blocks, all on two swap lines where SPACE changes again 1.2 s into a morph out of CANYON (`CANYON->PLATE->HALL` 101.1 %, 100 late; `CANYON->PLATE->CANYON` 105.9 %, 866 late). Also over 95 % with no late blocks: `PLATE->CANYON` SHIMMER 99.2 %, `HALL->CANYON` SHIMMER 97.5 %, and two other REFLIP lines (97.6 %, 98.1 %). The other 13 lines are at 94.6 % or below; the UNFREEZE lines 91 %. Owner by hand on the release build: no dropouts. Not ported. **The owner's call (9 Nov): a second flip during a morph waits for it to finish, then goes;** when it ends, the switch's latest position decides, so a there-and-back morphs there, then back (up to about 6 s). Built as `ec361fd` on `proto/space-morph-c` (release 110,484 B, profile 130,804 B; clean rebuild byte-identical; with the morph on, ctest 96 % of 25, only `test_control_latch`). The lap on it: `dist/v1.0.76-morph-s3/`, REFLIP windows lengthened. **That lap (`docs/research/m3-morph-s3-lap.log`): 0 late blocks, worst 99.4 %.** Six lines peak at 95.0-99.4 %, each a change into CANYON with SHIMMER on, mostly 0.2-0.4 s after it; the other 13 are at 91.9 % or below. Cause of the 0.2 s peak: a new CANYON tank ran every line's slow path until its in-loop allpass rings were full (`Fdn::lineFast`). Fixed on `proto/space-morph-c` (release 110,548 B, profile 131,020 B, **52 B under the chip**; bit-identical audio against `ec361fd` across 37,000+ scenarios). Its lap (`dist/v1.0.76-morph-s4/`, `docs/research/m3-morph-s4-lap.log`): 0 late blocks, worst 98.2 %. The 0.2 s peak is gone, and the second hump is real: the same six lines are at 95.1-98.2 %, mostly 2.2-2.8 s after a change into CANYON with SHIMMER on, the other 13 at 91.8 % or below. The remaining options change the sound: fewer swell taps during that change (estimated 4-5 points, 80-150 B against 52 B free on the profile build) or fewer shimmer heads (3-5 points). Unexplained, from that check: output differs depending on what ran earlier in the process, even after `Engine::reset()`, with and without the patch; harness or a real gap in `reset()`, not looked at. Keep `lineXf`'s `a.full()` test: it's what makes its `pos`-only write-back safe.
 
-**2. If it's clean, port S** to `beta/player-feedback` as a new SPEC version (v1.0.77) and `v1.0.77-beta.1` (run the release script from the beta worktree). The port needs:
+**2. If it's clean, port S** to `beta/player-feedback` as a new SPEC version (v1.0.78, since v1.0.77 went to the SIZE limit) and `v1.0.78-beta.1` (run the release script from the beta worktree). The port needs:
 - an ADR amending 0013 ("only one big tank ever runs"), a SPEC changelog line, one golden update;
 - `test_control_latch` changed: it asserts the tail is wiped, the only test that fails with S on;
 - S always on: the A/B/C/S hook, `IV_SPACE_MORPH` and its log removed, `SPACE_MORPH` no longer a measuring flag;
