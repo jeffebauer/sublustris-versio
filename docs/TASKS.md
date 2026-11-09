@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 9 Nov 2026: the morph is v1.0.78 on the local beta branch; your next step is to hear it and run its CPU lap at the rack, before it goes out as a beta. Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
+**Last updated:** 10 Nov 2026: you found a crackle on v1.0.78 when FREEZE lands on a SPACE flip; your next step is the measuring lap at the rack, and the beta waits for it. Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
 **Plugin installed:** `4140997` on `main` (v1.0.68, Sublustris Versio), 3 Nov 2026; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan). It now matches the rack build: the lighter tape, the lighter radio and PLATE's SIZE crossfade.
 
 ## To do
@@ -10,7 +10,12 @@
   - They say "feedback on Modwiggler and r/modular" now; the launch posts promised changelog credits.
 
 ### At the rack
-- [ ] **Listen to v1.0.78 and run its CPU lap, before it goes out as a beta**
+- [ ] **Measuring lap: the crackle when FREEZE lands on a SPACE flip** (USB power only, about 6 min)
+  - Build: `dist/v1.0.78-unfreeze-hunt/sublustris_versio_profile-freeze-at-flip-2s-hold-MEASURING-31lines.bin` (`proto/unfreeze-reshape`, `fa838a7`, for measuring only). One full lap, logged to `screenlog.0`.
+  - Your note, 10 Nov 2026: pressing FREEZE as you flip SPACE (HALL -> PLATE, PLATE -> HALL, CANYON -> PLATE, PLATE -> CANYON; your first report was HALL -> CANYON), then turning FREEZE off gives one dropout with a staticky crackle, less than about a second after.
+  - The desktop finds no click on any path (about 9,000 renders, v1.0.78 no worse than v1.0.77), so the module running out of CPU time leads, unmeasured. A line near 99 % or a late block confirms it; if the lap is clean, we need a recording of the module's output.
+  - Still useful by ear: does HALL <-> CANYON crackle with both pressed together?
+- [ ] **Listen to v1.0.78 and run its CPU lap, before it goes out as a beta** (first listen 10 Nov 2026: "Sounding good", apart from the crackle above)
   - The morph, merged into `beta/player-feedback` (`40850ee`), not pushed or published. To hear it, on rack power: `dist/v1.0.78-morph-port/sublustris_versio-v1.0.78-morph-port.bin`. The lap, USB power only, about 3 min: `dist/v1.0.78-morph-port/sublustris_versio-v1.0.78-morph-port-profile.bin`.
   - While listening, try flipping SPACE and flipping again mid-morph: the first change plays out, then the second.
 - [x] **CPU lap with C kept off the handover** (9 Nov 2026, `dist/v1.0.76-morph-s6/`, `docs/research/m3-morph-s6-lap.log`): 0 late blocks, worst 98.2 %, the same as before C (s5 was 99.5 %). The 50 ms peak on the two PLATE-into-CANYON lines is down from 99.4-99.5 % to 97.7-98.0 %. From half a second in, those lines are 2-2.5 points lower than before C. The worst line is now `CANYON->PLATE->CANYON` (98.2 %, 156 ms after its second change), which C doesn't help. One lap; a line can vary by up to 1.5 points between laps. To hear it, on rack power: `dist/v1.0.76-morph-s6/sublustris_versio-v1.0.76-morph-s6.bin`.

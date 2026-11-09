@@ -4,7 +4,8 @@
 
 - **The SPACE morph is ported as v1.0.78 and merged into `beta/player-feedback`** (`40850ee`, local, not pushed or published; ADR 0054 amending 0013). A SPACE change keeps the tail: PLATE with HALL or CANYON morphs over 3 s on two tanks, HALL with CANYON reshapes one tank over 1.5 s, a change during one waits for it to end. Nobody has heard the port on a module, and it hasn't had its own lap.
 - **The owner picked C on every card of `renders/morph_last_98`:** during a change into CANYON with SHIMMER on, 4 shimmer heads a side instead of 8. Its first build spiked to 99.5 % at the handover; the fix keeps C's code out of the handover's block.
-- **Module CPU (one lap of the pick, s6, `docs/research/m3-morph-s6-lap.log`): 0 late blocks, worst 98.2 %.** Level with before C (s4), not under the 95 % target. The module starts dropping audio near 99 %, and a line varies by up to 1.5 points between laps.
+- **Update, 10 Nov:** the owner's first listen to v1.0.78 found one repeatable crackle: FREEZE pressed as SPACE flips (the four PLATE changes, and HALL -> CANYON in the first report), one dropout after the unfreeze. The desktop finds no click; CPU on the module leads, unmeasured. The measuring lap is `proto/unfreeze-reshape` (`fa838a7`), build in `dist/v1.0.78-unfreeze-hunt/`, and the beta waits for it (`docs/TASKS.md`).
+- **Module CPU (s6, `docs/research/m3-morph-s6-lap.log`): 0 late blocks, worst 98.2 %.** `screenlog.0` holds three full s6 laps, worst 98.2, 98.6 and 98.0 % (corrected 10 Nov: the log note filed one). Level with before C (s4), not under the 95 % target. The module starts dropping audio near 99 %, and a line varies by up to 1.5 points between laps.
 - **`v1.0.77-beta.1` is published** (pre-release; the site's downloads stay on v1.0.68): the SIZE safety limit for issue 2. PR 1 has a comment linking it.
 - **Issue 2's blast was not reproduced on a module** (v1.0.68, input LEDs red, CANYON, BLOOM, full to none: a slight swell only). The desktop cause is real but not shown to be what chriisu heard, so don't tell them it's solved. They've been asked for a recording.
 - **Page tool:** a card's length is now its versions', not the longer dry's (`7f20fbd`, on `main`).
@@ -72,7 +73,7 @@ Local only: `dist/` builds; `dist/branches-backup-2026-11-08.bundle` (12 deleted
 - **PR 1 conflicts, if they show,** are usually `docs/TASKS.md` (take main's) or `docs/adr/README.md` (keep both, in number order).
 - **Page server:** use `preview_start` "review-pages-lan" (8766) and check the link answers before sending it; 8765 is sometimes held by `pearls`.
 - **`/research` can't run here** (`uv` missing, wrong repo path in the skill).
-- **Disk: 14 GB free.** Each page is 0.3-0.6 GB.
+- **Disk: 20 GB free (10 Nov).** Each page is 0.3-0.6 GB.
 - As before: `screenlog.0` appends across flashes; never connect USB and rack power at once; in zsh `echo =====` fails (`=word` expansion) and `ls` is eza.
 
 ## Gates
