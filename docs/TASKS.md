@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 9 Nov 2026: next for you: the SIZE blast test under "At the rack", with the fix's build (the morph waits at 98 %); a player's report of a loud blast on fast SIZE moves is under "Waiting on Claude". Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
+**Last updated:** 9 Nov 2026: the SIZE blast didn't reproduce at the rack (only a slight swell), so next is a reply to the player (the morph waits at 98 %); a player's report of a loud blast on fast SIZE moves is under "Waiting on Claude". Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
 **Plugin installed:** `4140997` on `main` (v1.0.68, Sublustris Versio), 3 Nov 2026; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan). It now matches the rack build: the lighter tape, the lighter radio and PLATE's SIZE crossfade.
 
 ## To do
@@ -27,12 +27,6 @@
   - **Crackle played hot:** HALL's endless pad, CANYON at short tails, frozen pads at SIZE noon.
 - [ ] **Play the morph, "finish, then go"** (rack power)
   - Build: `dist/v1.0.76-morph-s4/sublustris_versio-v1.0.76-morph-s4.bin` (the same sound as `morph-s3`). Try flipping SPACE and flipping again mid-morph: the first change plays out, then the second.
-- [ ] **Try to make the SIZE blast happen** (rack power, **monitors low**, about 5 minutes)
-  - Set MIX full, CANYON, BLOOM, DECAY about 3 o'clock, TONE and WEAR noon, SIZE fully clockwise.
-  - Feed a steady hot tone and wait 10 s. Flick SIZE fully counter-clockwise and listen for 2 s. Do it three times.
-  - Repeat from SIZE noon, then in HALL, then with DECAY at 9 o'clock.
-  - A smooth swell of about 1.5 s matches what I found; a broken buzz is something else. Does the reverb go silent afterwards until a restart?
-  - On the beta (9 Nov 2026): no loud crash and no CPU drops, which proves little: the desktop only measured +4.2 dB there. Try the public build the player had, with the input hot enough to turn its LED amber or red: `dist/release/v1.0.68-133e0e0/sublustris_versio_firmware_v1.0.68-133e0e0.bin` (desktop: +9.5 dB). With the fix: `dist/v1.0.77-size-limit/sublustris_versio-v1.0.77-size-limit.bin`. Same steps on each: the blast should be gone or much smaller on the second.
 - [ ] **Measure the module's input level** (10 minutes, rack power, never with USB)
   1. Patch a steady sine (200 Hz to 1 kHz) into IN L, with MIX fully left.
   2. Raise it until the In L LED just turns red.
@@ -99,6 +93,7 @@
 - **Shimmer inside the reverb** (tried in round 2, not on the page): re-shifting each trip collapsed the tail, and a stronger blend grew held chords. It needs the energy compensation from the 2026 DAFx shimmer paper (Dal Santo et al., DAFx26 §4.1: a DC blocker and an adaptive gain after each in-loop shifter; ~10-19 % CPU per shifter); after v1.0.
 
 ## Done
+- [x] **The SIZE blast at the rack** (9 Nov 2026): the beta, no loud crash or CPU drops. The public v1.0.68 with the input LEDs at red, CANYON, BLOOM, DECAY about 3 o'clock, SIZE flicked from full to none: a slight swell, no burst or crackle, output LEDs never red, no sign of CPU overload. Not the blast the player described, and well under the desktop's +9.5 dB.
 - [x] **`size_blast` picked: C** (9 Nov 2026): the boost after a SIZE shrink limited to 6 dB, with the safety restart; see "A loud blast on fast SIZE moves" under Waiting on Claude.
 - [x] **CPU lap with the first 0.2 s lighter** (9 Nov 2026; `dist/v1.0.76-morph-s4/`): no late blocks, worst 98.2 %; see "SPACE flips morph between spaces" under Waiting on Claude.
 - [x] **CPU lap for "finish, then go"** (9 Nov 2026; `dist/v1.0.76-morph-s3/`): no late blocks, worst 99.4 %; see "SPACE flips morph between spaces" under Waiting on Claude.
