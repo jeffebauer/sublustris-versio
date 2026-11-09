@@ -1040,6 +1040,14 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
     wetStep_ = (g.wet - wetNow_) / float(n);
 }
 
+#ifndef IV_FIXED_VOICINGS
+void Engine::poisonTankPrototype(int tank)
+{
+    if (tank == 2) plate_.poisonPrototype();
+    else (tank == 1 ? lowFdn_ : fdn_).poisonPrototype();
+}
+#endif
+
 IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* outL, float* outR, int numSamples)
 {
     if (!ready_) {
@@ -1204,6 +1212,9 @@ IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* 
 
         transport_.control(n, transportAmt_, transportOn_); // MOTION's tape transport (returns at once when out)
         const bool transportLive = !transport_.idle();
+#if !defined(IV_FIXED_VOICINGS) || defined(IV_SIZE_BLAST_BUILTIN)
+        float wetSum = 0.0f; // the tanks' health (below)
+#endif
         for (int i = 0; i < n; ++i) {
             // DECAY's level make-up (v1.0.28) on the forward wet and the twin, a ~40 ms glide.
             decayGainNow_ += 0.0005f * (decayGain_ - decayGainNow_);
@@ -1227,8 +1238,32 @@ IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* 
             wr *= eraMakeup_;
             wetL_[i] = wl;
             wetR_[i] = wr;
+#if !defined(IV_FIXED_VOICINGS) || defined(IV_SIZE_BLAST_BUILTIN)
+            wetSum += wl + wr;
+#endif
             prof::mark(prof::kOutput);
         }
+#if !defined(IV_FIXED_VOICINGS) || defined(IV_SIZE_BLAST_BUILTIN)
+        // The tanks' health, once a chunk, on the wet before anything downstream with a memory hears it (renders/size_blast,
+        // issue 2; Pure Data's filters check their state once a block the same way). The wet's own sum: a NaN or Inf in any
+        // sample stays in the sum, and adds up to nothing else, so one test on its exponent catches it. Nothing else changes the output. Failed: the
+        // Engine restarts where it stands (reset(): every tank and filter a NaN could have reached, keeping the knobs), this
+        // chunk's wet is dropped, and the reverb builds again from silence with the next sound.
+#ifndef IV_FIXED_VOICINGS
+        if (sizeBlast_)
+#endif
+        {
+            uint32_t sumBits;
+            std::memcpy(&sumBits, &wetSum, sizeof sumBits);
+            if ((sumBits << 1) >= 0xFF000000u) { // exponent all ones: NaN or Inf
+                reset();
+                std::memset(wetL_, 0, sizeof wetL_ + sizeof wetR_); // (adjacent members: one call)
+#ifndef IV_FIXED_VOICINGS
+                ++blastRestarts_;
+#endif
+            }
+        }
+#endif
         // MOTION's tape transport (dsp/Transport.h) over the chunk.
         if (transportLive) transport_.processBlock(wetL_, wetR_, n);
         else transport_.writeBlock(wetL_, wetR_, n);

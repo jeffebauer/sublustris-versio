@@ -75,6 +75,9 @@ public:
 
     bool prepare(Arena& arena, float sampleRate, float maxScale, bool colour, uint32_t seed);
     void reset();
+#ifndef IV_FIXED_VOICINGS
+    void poisonPrototype() { b_[0].y1 = std::nanf(""); } // renders/size_blast: the restart's test
+#endif
 
     // SIZE: scale of every length (1 = Dattorro's). Glides unless snap.
     void setScale(float scale, bool snap = false);

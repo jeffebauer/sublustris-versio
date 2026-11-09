@@ -139,6 +139,17 @@ public:
     // 0..1 × kInLoopCoeff, fading out by SIZE noon).
     void  setHallInLoopDiffusion(float a) { hallInLoop_ = a; }
 #ifndef IV_FIXED_VOICINGS
+    // PROTOTYPE (renders/size_blast, issue 2): SIZE's trip correction limited, and a tank that goes invalid restarted.
+    // voicing 0 = A, as built (no limit, no restart); 1 = B and 2 = C, the boost limited to capDb; 3 = D, limited and on
+    // DECAY's own loss (the governor's left out). B, C and D also get the restart.
+    void  setSizeBlastPrototype(int voicing, float capDb)
+    {
+        sizeBlast_ = voicing;
+        fdn_.setSizeBlastPrototype(voicing ? capDb : 0.0f, voicing == 3);
+        lowFdn_.setSizeBlastPrototype(voicing ? capDb : 0.0f, voicing == 3);
+    }
+    void  poisonTankPrototype(int tank); // 0: the FDN, 1: the still lows, 2: the plate (a NaN in its state)
+    int   tankRestartsPrototype() const { return blastRestarts_; }
     // PROTOTYPE (renders/fit_cpu's D, held back: "reduce the early reflections to 1 instead of 3 if
     // needed"): the tanks with fewer early taps per line. Re-prepares the Engine.
     void  setEarlyTapPrototype(int earlyTaps);
@@ -361,6 +372,9 @@ private:
     // SPACE flips (ADR 0013): the wet and the tank's input fade out, the
     // tank restarts in the new voicing, and both fade back in.
     int   activeSpace_ = 1, flipPhase_ IV_ZI; // 0 steady, 1 fading out, 2 fading in
+#ifndef IV_FIXED_VOICINGS
+    int   sizeBlast_ = 0, blastRestarts_ = 0; // setSizeBlastPrototype
+#endif
     float flipGain_ = 1.0f, flipStep_ IV_ZI;
     // An ONSET change dips the swell out and back in (applySpace): the ONSET it is voiced for, the dip
     // (0 none .. 1 out) and its step per sample.

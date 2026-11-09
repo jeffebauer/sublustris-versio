@@ -224,6 +224,14 @@ bool buildEngine(iv::Engine& engine, float sampleRate, int block, const std::str
         engine.setFloorPrototype(float(std::atof(fl)));
         std::fprintf(stderr, "iv_render: IV_FLOOR_DB: %s dBFS\n", fl);
     }
+    if (const char* sb = std::getenv("IV_SIZE_BLAST")) { // renders/size_blast: A as built, B / C the boost limited, D limited on DECAY's own loss; IV_SIZE_BLAST_DB overrides the limit
+        const int v = (sb[0] >= 'A' && sb[0] <= 'D') ? sb[0] - 'A' : std::atoi(sb);
+        const int p = v >= 0 && v <= 3 ? v : 0;
+        float capDb = p == 1 ? 3.0f : 6.0f;
+        if (const char* d = std::getenv("IV_SIZE_BLAST_DB")) capDb = float(std::atof(d));
+        engine.setSizeBlastPrototype(p, capDb);
+        std::fprintf(stderr, "iv_render: IV_SIZE_BLAST=%c: cap %.1f dB%s, restart %s\n", 'A' + p, p ? capDb : 0.0f, p == 3 ? ", DECAY's own loss" : "", p ? "on" : "off");
+    }
     { // renders/hall_level: HALL's endless tail over the floor, dB (IV_HALL_TAIL_DB; as built 3, v1.0.52) and/or brighter (IV_HALL_TAIL_TILT "low,high" dB)
         const char* td = std::getenv("IV_HALL_TAIL_DB");
         const char* tt = std::getenv("IV_HALL_TAIL_TILT");

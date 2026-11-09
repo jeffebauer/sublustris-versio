@@ -457,7 +457,16 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
             // (louder, the tail was younger) when longer, nearer (quieter) when shorter. Its level is
             // corrected by the tail's own decay over the difference for exactly that trip, then eased
             // back over the crossfade (owner: "some jumps in amplitude with the crossfades").
+#ifdef IV_FIXED_VOICINGS
+#ifdef IV_SIZE_BLAST_BUILTIN // the fix built in (the size estimate; renders/size_blast): limited after a shrink, the rate as is
+            xfLnGain_[i] = std::fmin(IV_SIZE_BLAST_BUILTIN, 6.9077553f * xfDelta_[i] / sampleRate_ * rate);
+#else
             xfLnGain_[i] = 6.9077553f * xfDelta_[i] / sampleRate_ * rate;
+#endif
+#else
+            xfLnGain_[i] = 6.9077553f * xfDelta_[i] / sampleRate_ * (blastDecayOnly_ ? decayRate_ + extraRate_ : rate);
+            if (blastCapLn_ > 0.0f && xfLnGain_[i] > blastCapLn_) xfLnGain_[i] = blastCapLn_; // renders/size_blast
+#endif
             xfHold_[i] = lenTarget_[i];
             lenNow_[i] = lenTarget_[i];
             readNow_[i] -= xfDelta_[i];
