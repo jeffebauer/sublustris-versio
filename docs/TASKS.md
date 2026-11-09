@@ -43,7 +43,7 @@
   - At 96 kHz the plugin's HALL and CANYON come out much brighter above 12 kHz than the module. At 48 kHz they match.
 
 ### Listen
-- [ ] **`renders/morph_last_98`: is the change into CANYON as good when it's lighter?** (9 Nov 2026) The change into CANYON with SHIMMER on peaks at 98 % CPU on the module, so it needs a little less work for its few seconds. A as now, B fewer swell points during the change (12 to 8 a side), C fewer shimmer voices during it (8 to 4 a side). Card 07 is a control: all three should sound the same. Branch `proto/morph-last-98` (`6df116d`), not pushed. Neither option fits the profile build yet (B about +1,230 B, C about +350 B, 52 B free, and v1.0.77 takes 80 B more), so a pick means finding space first; the real CPU saving is still only an estimate until a module lap.
+- [x] **`renders/morph_last_98` picked: C on every card** (9 Nov 2026; level-matched, repeated cards agreeing; the control cards are identical, so those picks say nothing). C: 4 shimmer voices a side instead of 8 during a change into CANYON with SHIMMER on. Branch `proto/morph-last-98` (`6df116d`), not pushed. Next: fit it in firmware (C is about +350 B on the profile build, 52 B free, and v1.0.77 takes 80 B more), then a lap on the module, since the saving is still only an estimate.
 - [ ] **`input_stop2`: not ready, don't listen yet.** It needs re-rendering on the current build first (that's with me).
 
 ### When convenient
