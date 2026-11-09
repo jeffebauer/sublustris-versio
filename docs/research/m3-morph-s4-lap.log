@@ -1,0 +1,20 @@
+SPACE PLATE->HALL heavy W0.1 avg  74.6% max  80.5% | late blocks 0 of 3600 | max at 2873 ms | fired 1 | after 0.5 s  80.5%
+SPACE PLATE->CANYON heavy W0.1 avg  81.1% max  89.2% | late blocks 0 of 3600 | max at 2780 ms | fired 1 | after 0.5 s  89.2%
+SPACE HALL->PLATE heavy W0.1 avg  73.6% max  84.1% | late blocks 0 of 3600 | max at 191 ms | fired 1 | after 0.5 s  79.7%
+SPACE HALL->CANYON heavy W0.1 avg  77.3% max  86.4% | late blocks 0 of 2100 | max at 1156 ms | fired 1 | after 0.5 s  86.4%
+SPACE CANYON->PLATE heavy W0.1 avg  79.6% max  91.8% | late blocks 0 of 3600 | max at 183 ms | fired 1 | after 0.5 s  85.2%
+SPACE CANYON->HALL heavy W0.1 avg  74.9% max  83.0% | late blocks 0 of 2100 | max at 1000 ms | fired 1 | after 0.5 s  83.0%
+SPACE PLATE->HALL SHIMMER W1.0 avg  74.8% max  80.3% | late blocks 0 of 3600 | max at 747 ms | fired 1 | after 0.5 s  80.3%
+SPACE PLATE->CANYON SHIMMER W1.0 avg  90.0% max  97.7% | late blocks 0 of 3600 | max at 2607 ms | fired 1 | after 0.5 s  97.7%
+SPACE HALL->PLATE SHIMMER W1.0 avg  71.4% max  83.8% | late blocks 0 of 3600 | max at 243 ms | fired 1 | after 0.5 s  75.5%
+SPACE HALL->CANYON SHIMMER W1.0 avg  86.7% max  98.0% | late blocks 0 of 2100 | max at 489 ms | fired 1 | after 0.5 s  97.0%
+SPACE CANYON->PLATE SHIMMER W1.0 avg  78.0% max  89.9% | late blocks 0 of 3600 | max at 139 ms | fired 1 | after 0.5 s  82.2%
+SPACE CANYON->HALL SHIMMER W1.0 avg  75.8% max  83.5% | late blocks 0 of 2100 | max at 400 ms | fired 1 | after 0.5 s  82.7%
+SPACE HALL->CANYON->HALL REFLIP W0.5 avg  81.8% max  97.8% | late blocks 0 of 3700 | max at 1170 ms | fired 2 | after 0.5 s  97.8%
+SPACE CANYON->HALL->CANYON REFLIP W0.5 avg  84.2% max  95.1% | late blocks 0 of 3700 | max at 2765 ms | fired 2 | after 0.5 s  95.1%
+SPACE PLATE->CANYON->PLATE REFLIP W0.5 avg  84.7% max  98.2% | late blocks 0 of 6700 | max at 2745 ms | fired 2 | after 0.5 s  98.2%
+SPACE CANYON->PLATE->HALL REFLIP W0.5 avg  79.0% max  91.9% | late blocks 0 of 6700 | max at 97 ms | fired 2 | after 0.5 s  85.1%
+SPACE CANYON->PLATE->CANYON REFLIP W0.5 avg  86.5% max  97.5% | late blocks 0 of 6700 | max at 5495 ms | fired 2 | after 0.5 s  97.5%
+SPACE CANYON->HALL UNFREEZE W0.5 avg  82.6% max  91.1% | late blocks 0 of 2800 | max at 305 ms | fired 3 | after 0.5 s  90.9%
+SPACE CANYON->PLATE UNFREEZE W0.5 avg  83.2% max  91.6% | late blocks 0 of 4200 | max at 46 ms | fired 3 | after 0.5 s  91.3%
+SPACE LAP 1 DONE: 19 lines, worst max  98.2%, late blocks in all 0
