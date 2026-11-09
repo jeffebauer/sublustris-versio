@@ -153,15 +153,7 @@ public:
     void setFloorPaceExtra(float k) { floorPaceExtra_ = k; }
     void setStagger(int groups) { xfStagger_ = groups == 1 || groups == 2 || groups == 8 ? groups : 4; }
 #ifndef IV_FIXED_VOICINGS
-    // PROTOTYPE (renders/size_blast, issue 2): the SIZE crossfade's trip correction. capDb (> 0): the boost after a shrink
-    // limited to this many dB (a growth's cut is left alone); decayOnly: its rate from DECAY's own loss, the governor's left
-    // out. 0, false: as built. poisonPrototype: a NaN in one line's loss filter, the restart's test.
-    void setSizeBlastPrototype(float capDb, bool decayOnly)
-    {
-        blastCapLn_ = capDb > 0.0f ? capDb * 0.11512925f : 0.0f; // dB to ln
-        blastDecayOnly_ = decayOnly;
-    }
-    void poisonPrototype() { absorbY_[0] = std::nanf(""); }
+    void poisonForTests() { absorbY_[0] = std::nanf(""); } // a NaN in one line's loss filter: Engine::poisonTankForTests
 #endif
 
 private:
@@ -262,10 +254,6 @@ private:
     float     floorCentre_ IV_ZI; // setFloorCentre (v1.0.57, after lay_ for the same reason); 0 = none
     float     endlessTop_ IV_ZI;  // setEndlessTop (v1.0.58, last for the same reason); 0 = none
     float     floorPaceExtra_ IV_ZI; // setFloorPaceExtra (v1.0.71, last for the same reason); 0 = none
-#ifndef IV_FIXED_VOICINGS
-    float     blastCapLn_ = 0.0f; // setSizeBlastPrototype: 0 = no limit
-    bool      blastDecayOnly_ = false;
-#endif
 };
 
 } // namespace iv::dsp

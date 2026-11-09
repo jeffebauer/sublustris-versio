@@ -86,6 +86,7 @@ IV_SIZE_OPT uint32_t primeAtOrAbove(uint32_t n, const float* taken, int count)
 // The 80 ms glides' one-pole coefficient for a step of t seconds (Memo1, one copy for its two users).
 float glide80(float t) { return 1.0f - std::exp(-t / 0.08f); }
 
+constexpr float kXfMaxBoostLn = 0.6875f; // SIZE's crossfade: the most a shrink's trip correction boosts, ln (5.97 dB; a value that loads in one instruction)
 constexpr float kXfAgreeA = 0.004f; // SIZE's crossfade: the reads' agreement follower (Fdn::xfMix), ~5 ms
 
 float uniform(uint32_t& s) // −1..1
@@ -457,16 +458,10 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
             // (louder, the tail was younger) when longer, nearer (quieter) when shorter. Its level is
             // corrected by the tail's own decay over the difference for exactly that trip, then eased
             // back over the crossfade (owner: "some jumps in amplitude with the crossfades").
-#ifdef IV_FIXED_VOICINGS
-#ifdef IV_SIZE_BLAST_BUILTIN // the fix built in (the size estimate; renders/size_blast): limited after a shrink, the rate as is
-            xfLnGain_[i] = std::fmin(IV_SIZE_BLAST_BUILTIN, 6.9077553f * xfDelta_[i] / sampleRate_ * rate);
-#else
-            xfLnGain_[i] = 6.9077553f * xfDelta_[i] / sampleRate_ * rate;
-#endif
-#else
-            xfLnGain_[i] = 6.9077553f * xfDelta_[i] / sampleRate_ * (blastDecayOnly_ ? decayRate_ + extraRate_ : rate);
-            if (blastCapLn_ > 0.0f && xfLnGain_[i] > blastCapLn_) xfLnGain_[i] = blastCapLn_; // renders/size_blast
-#endif
+            // A shrink's boost is limited (v1.0.77, ADR 0053, the owner's pick C on renders/size_blast, issue 2): that "quieter"
+            // holds for a dying tail, not while playing, when the nearer sound is as loud and the boost is real gain in the loop.
+            // A growth's cut is left alone (negative, always under the limit), so is a boost under it.
+            xfLnGain_[i] = std::fmin(kXfMaxBoostLn, 6.9077553f * xfDelta_[i] / sampleRate_ * rate);
             xfHold_[i] = lenTarget_[i];
             lenNow_[i] = lenTarget_[i];
             readNow_[i] -= xfDelta_[i];

@@ -56,3 +56,4 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0050](0050-plate-hit.md) | PLATE's hit: the output taps held, an early tap, slower movement (supersedes v1.0.12's long-delay wander for PLATE), trimmed to v1.0.73's loudness | owner, 6 Nov 2026 |
 | [0051](0051-wear-ceiling.md) | WEAR's ceiling and noon: the tape's drive 13.5 dB at full on its own gentler taper (amends ADR 0044 and 0045) | owner, 6 Nov 2026 |
 | [0052](0052-hall-lows.md) | HALL's low-note resonances: the low tank narrowed to 0.30 and denser (in-loop diffusion 0.60 at every SIZE), +3.3 dB; no modulation (amends ADR 0012's still lows and the v1.0.17 in-loop fade for the low tank) | owner, 6 Nov 2026 |
+| [0053](0053-size-blast.md) | The SIZE blast: a shrink's boost limited to about 6 dB, and a tank that goes invalid restarts (amends ADR 0025's one-trip correction) | owner, 9 Nov 2026 |
