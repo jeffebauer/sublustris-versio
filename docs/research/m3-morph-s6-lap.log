@@ -1,0 +1,24 @@
+# morph-s6 (dist/v1.0.76-morph-s6: C kept off the handover, plain shimmer loop unless voices are resting), 9 Nov 2026.
+# The module's START line wasn't captured (USB serial came up after it). It is the new build: MICRO has no vdivDep and no swell12/blk.
+# One lap; between laps a line can vary by up to 1.5 points. Compare with m3-morph-s4-lap.log (before C) and m3-morph-s5-lap.log (C).
+SPACE PLATE->HALL heavy W0.1 avg  74.8% max  80.8% | late blocks 0 of 3600 | max at 2861 ms | fired 1 | after 0.5 s  80.8%
+SPACE PLATE->CANYON heavy W0.1 avg  81.4% max  89.5% | late blocks 0 of 3600 | max at 2215 ms | fired 1 | after 0.5 s  89.5%
+SPACE HALL->PLATE heavy W0.1 avg  73.8% max  84.4% | late blocks 0 of 3600 | max at 190 ms | fired 1 | after 0.5 s  79.8%
+SPACE HALL->CANYON heavy W0.1 avg  77.5% max  86.7% | late blocks 0 of 2100 | max at 1003 ms | fired 1 | after 0.5 s  86.7%
+SPACE CANYON->PLATE heavy W0.1 avg  79.8% max  92.2% | late blocks 0 of 3600 | max at 183 ms | fired 1 | after 0.5 s  85.5%
+SPACE CANYON->HALL heavy W0.1 avg  75.0% max  83.8% | late blocks 0 of 2100 | max at 1000 ms | fired 1 | after 0.5 s  83.8%
+SPACE PLATE->HALL SHIMMER W1.0 avg  74.8% max  80.5% | late blocks 0 of 3600 | max at 747 ms | fired 1 | after 0.5 s  80.5%
+SPACE PLATE->CANYON SHIMMER W1.0 avg  88.3% max  98.0% | late blocks 0 of 3600 | max at 107 ms | fired 1 | after 0.5 s  95.4%
+SPACE HALL->PLATE SHIMMER W1.0 avg  71.4% max  83.9% | late blocks 0 of 3600 | max at 143 ms | fired 1 | after 0.5 s  75.6%
+SPACE HALL->CANYON SHIMMER W1.0 avg  85.5% max  97.3% | late blocks 0 of 2100 | max at 245 ms | fired 1 | after 0.5 s  94.9%
+SPACE CANYON->PLATE SHIMMER W1.0 avg  78.0% max  90.1% | late blocks 0 of 3600 | max at 139 ms | fired 1 | after 0.5 s  82.3%
+SPACE CANYON->HALL SHIMMER W1.0 avg  75.9% max  83.6% | late blocks 0 of 2100 | max at 400 ms | fired 1 | after 0.5 s  82.9%
+SPACE HALL->CANYON->HALL REFLIP W0.5 avg  81.1% max  97.7% | late blocks 0 of 3700 | max at 265 ms | fired 2 | after 0.5 s  95.1%
+SPACE CANYON->HALL->CANYON REFLIP W0.5 avg  83.6% max  92.8% | late blocks 0 of 3700 | max at 1956 ms | fired 2 | after 0.5 s  92.8%
+SPACE PLATE->CANYON->PLATE REFLIP W0.5 avg  83.9% max  97.7% | late blocks 0 of 6700 | max at 50 ms | fired 2 | after 0.5 s  96.2%
+SPACE CANYON->PLATE->HALL REFLIP W0.5 avg  79.0% max  91.8% | late blocks 0 of 6700 | max at 144 ms | fired 2 | after 0.5 s  84.4%
+SPACE CANYON->PLATE->CANYON REFLIP W0.5 avg  85.7% max  98.2% | late blocks 0 of 6700 | max at 3156 ms | fired 2 | after 0.5 s  98.2%
+SPACE CANYON->HALL UNFREEZE W0.5 avg  82.8% max  91.5% | late blocks 0 of 2800 | max at 358 ms | fired 3 | after 0.5 s  91.3%
+SPACE CANYON->PLATE UNFREEZE W0.5 avg  83.3% max  91.8% | late blocks 0 of 4200 | max at 34 ms | fired 3 | after 0.5 s  91.8%
+SPACE LAP 1 DONE: 19 lines, worst max  98.2%, late blocks in all 0
+MICRO (cycles per op) sdr1 11.8 sdr32 33.9 sdw32 48.7 sdline8 95.6 axi32 11.2 dtcm32 3.2 exp 112.3 sin 85.1 pow 208.9 log10 158.2 div 28.1 fdnAXI 2557.4 fdnSDRAM 4123.8 wear/smp 648.0 wearSet/blk 288.1 loopNeve/smp 77.0 sub 9.0 norm 9.0 subX 9.0 pld32 34.7 fdnMassive24k 4154.9 fdnMassiveApAxi 3186.7 sdr1t 11.5 sdr32t 16.9 sdw32t 22.3 sdline8t 47.8 pld32t 21.2 fdnSDRAMt 3196.8 fdnMassive24kt 3015.5 fdnMassiveApAxit 2716.7
