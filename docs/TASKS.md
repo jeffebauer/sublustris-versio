@@ -10,11 +10,10 @@
   - They say "feedback on Modwiggler and r/modular" now; the launch posts promised changelog credits.
 
 ### At the rack
-- [ ] **Measuring lap: the crackle when FREEZE lands on a SPACE flip** (USB power only, about 6 min)
-  - Build: `dist/v1.0.78-unfreeze-hunt/sublustris_versio_profile-freeze-at-flip-2s-hold-MEASURING-31lines.bin` (`proto/unfreeze-reshape`, `fa838a7`, for measuring only). One full lap, logged to `screenlog.0`.
-  - Your note, 10 Nov 2026: pressing FREEZE as you flip SPACE (HALL -> PLATE, PLATE -> HALL, CANYON -> PLATE, PLATE -> CANYON; your first report was HALL -> CANYON), then turning FREEZE off gives one dropout with a staticky crackle, less than about a second after.
-  - The desktop finds no click on any path (about 9,000 renders, v1.0.78 no worse than v1.0.77), so the module running out of CPU time leads, unmeasured. A line near 99 % or a late block confirms it; if the lap is clean, we need a recording of the module's output.
-  - Still useful by ear: does HALL <-> CANYON crackle with both pressed together?
+- [ ] **The crackle when FREEZE lands on a SPACE flip: one check by ear** (rack power, the release build `dist/v1.0.78-morph-port/sublustris_versio-v1.0.78-morph-port.bin`)
+  - Press SPACE and FREEZE together, then leave FREEZE on for several seconds. Does the crackle come before you turn it off, or only when you do? Also: does HALL <-> CANYON crackle with both pressed together?
+  - Your note, 10 Nov 2026: pressing FREEZE as you flip SPACE (HALL -> PLATE, PLATE -> HALL, CANYON -> PLATE, PLATE -> CANYON; your first report was HALL -> CANYON), then turning FREEZE off gives one dropout with a staticky crackle.
+- [x] **Measuring lap: FREEZE landing on a SPACE flip** (10 Nov 2026, `docs/research/m3-freeze-at-flip-lap.log`, one lap): the module overruns on all 9 lines with FREEZE 100 ms after a flip: 104-120.7 %, 30-843 late blocks. The peaks come about 0-100 ms after the FREEZE press; HALL -> CANYON stays over 100 % for longer, about 1.9 s after the flip. With FREEZE held 2 s (HALL -> PLATE, PLATE -> CANYON) nothing goes late after the first half-second, so this lap doesn't yet show an overload at the unfreeze itself. SPACE moved during a held freeze: no late blocks, worst 97.3 %. The usual 19 lines: no late blocks, worst 97.6 % (v1.0.78's Core; the s6 laps were 98.0-98.6 %).
 - [ ] **Listen to v1.0.78 and run its CPU lap, before it goes out as a beta** (first listen 10 Nov 2026: "Sounding good", apart from the crackle above)
   - The morph, merged into `beta/player-feedback` (`40850ee`), not pushed or published. To hear it, on rack power: `dist/v1.0.78-morph-port/sublustris_versio-v1.0.78-morph-port.bin`. The lap, USB power only, about 3 min: `dist/v1.0.78-morph-port/sublustris_versio-v1.0.78-morph-port-profile.bin`.
   - While listening, try flipping SPACE and flipping again mid-morph: the first change plays out, then the second.
