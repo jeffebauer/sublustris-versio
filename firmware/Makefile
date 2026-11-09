@@ -79,7 +79,7 @@ ABSORB_EXP ?=
 SHIMMER_POLY ?=
 CANDIDATE ?=
 SIZESPIKE ?=
-TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)$(if $(filter 1,$(LEAN)),,-nolean)$(if $(filter 1,$(ABSORB_EXP)),-absexp)$(if $(filter 1,$(SHIMMER_POLY)),-shpoly)
+TRIAL_TAG = $(if $(SIZE_GROUPS),-g$(SIZE_GROUPS))$(if $(CTL_O3),-ctlo3)$(if $(filter 1,$(LEAN)),,-nolean)$(if $(filter 1,$(ABSORB_EXP)),-absexp)$(if $(filter 1,$(SHIMMER_POLY)),-shpoly)$(if $(filter 0,$(HAL_OS)),-nohalos)
 TRIAL_DEFS =$(if $(SIZE_GROUPS), -DIV_SIZE_GROUPS=$(SIZE_GROUPS))$(if $(CTL_O3), -DIV_CTL_O3)$(if $(filter 1,$(LEAN)), -DIV_LEAN_LOOPS)$(if $(CANDIDATE), -DIV_PROFILE_CANDIDATE=1)$(if $(SIZESPIKE), -DIV_PROFILE_SIZESPIKE=$(SIZESPIKE))$(if $(filter 1,$(ABSORB_EXP)), -DIV_ABSORB_EXP)$(if $(filter 1,$(SHIMMER_POLY)), -DIV_SHIMMER_POLY)$(if $(filter 5,$(SIZESPIKE)),$(if $(filter 1,$(SHIMMER_POLY)),, -DIV_PROFILE_SHPOLY_AB))
 # AUDIO_DIRECT and SDRAM_REFRESH are release only, so their tags and defines live with release's (not TRIAL_*:
 # all-variants names the profile .bin from the release-mode make, and m0test / profile keep libDaisy's AudioHandle
@@ -158,6 +158,21 @@ override BUILD_DIR = build/obj-$(MODE)-$(PROFILE_BLOCK)$(if $(filter profile,$(M
 $(shell mkdir -p $(BUILD_DIR))
 
 LIBDAISY_DIR = ../libs/libDaisy
+# HAL_OS=1 (the flash hunt, Nov 2026): STM32 HAL's set-up files built here for size, ahead of libdaisy.a (whose -O3 copies then
+# stay out of the link). -Os + libDaisy's own defines. No audio runs in them: boot, clocks, GPIO, ADC / SAI / I2C / TIM set-up, DMA set-up
+# and the DMA interrupt (once per audio block; no per-sample code). Not m0test.
+HAL_OS ?= 1
+ifneq ($(MODE),m0test)
+ifeq ($(HAL_OS),1)
+HAL_OS_NAMES = stm32h7xx_hal stm32h7xx_hal_adc stm32h7xx_hal_adc_ex stm32h7xx_hal_cortex stm32h7xx_hal_gpio stm32h7xx_hal_i2c stm32h7xx_hal_i2c_ex \
+               stm32h7xx_hal_rcc stm32h7xx_hal_rcc_ex stm32h7xx_hal_sai stm32h7xx_hal_sai_ex stm32h7xx_hal_sdram stm32h7xx_hal_tim stm32h7xx_hal_tim_ex \
+               stm32h7xx_ll_fmc stm32h7xx_hal_dma
+C_SOURCES += $(addprefix $(LIBDAISY_DIR)/Drivers/STM32H7xx_HAL_Driver/Src/,$(addsuffix .c,$(HAL_OS_NAMES)))
+HAL_OS_OBJS = $(addprefix $(BUILD_DIR)/,$(addsuffix .o,$(HAL_OS_NAMES)))
+$(HAL_OS_OBJS): OPT = -Os
+$(HAL_OS_OBJS): C_DEFS += -Dflash_layout -DDATA_IN_D2_SRAM -DNDEBUG=1 -DRELEASE=1
+endif
+endif
 SYSTEM_FILES_DIR = $(LIBDAISY_DIR)/core
 include $(SYSTEM_FILES_DIR)/Makefile
 

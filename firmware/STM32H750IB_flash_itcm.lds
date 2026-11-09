@@ -59,6 +59,7 @@ SECTIONS
 
 		*(.text)
 		*(.text*)
+		*(.flash_text*) /* code the Core keeps out of ITCM (core/dsp/SizeOpt.h IV_MORPH_COLD) */
 		*(.rodata)
 		*(.rodata*)
 		*(.glue_7)

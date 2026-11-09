@@ -185,13 +185,25 @@ void spaceBrushes()
     int sp = -1;
     tailAfterBrush(2, 10.0, true, &sp);
     check(sp == 2, "SPACE moved and left there flips after the settle");
-    // And a switch that stays away past the fade's bottom restarts the tank there, as before (here and back
-    // again: two restarts, the tail gone).
-    const double gone = tailAfterBrush(2, 0.2, false, &sp);
-    char what[200];
-    std::snprintf(what, sizeof what, "SPACE away 200 ms: the flips went ahead (the tail %.0f dB down: restarted), as before",
-                  db(gone) - db(still));
-    check(sp == 1 && db(gone) < db(still) - 20.0, what);
+    // And a switch that stays away past the fade's bottom commits to the change (ADR 0054): the tail is kept, not wiped, and when
+    // the change has finished, the switch's latest position decides (it's back at HALL, so back it goes). A tank restarted at
+    // the change (the tail gone), a change that never starts, or a switch left unread after it finishes each fail here.
+    for (int away : {0, 2}) {
+        Rig r(1);
+        r.useSettle   = false;
+        const long at = long(0.6 * kSr), back = at + long(0.2 * kSr);
+        r.space       = [=](long s) { return (s >= at && s < back) ? away : 1; };
+        r.measureFrom = long(1.0 * kSr);
+        r.measureTo   = long(1.5 * kSr);
+        r.run(0.5, true);
+        r.run(1.0, false);
+        const int during = r.e.activeSpace();
+        r.run(6.5, false); // a morph's 3 s, the short wait, and the 3 s back
+        char what[200];
+        std::snprintf(what, sizeof what, "SPACE to %d for 200 ms: the change goes ahead and the tail carries on (%.1f dB from still)", away, db(r.tailPower) - db(still));
+        check(during == away && db(r.tailPower) > db(still) - 6.0, what);
+        check(r.e.activeSpace() == 1, "  and when it has finished, the switch (back at HALL) takes it back");
+    }
 }
 
 } // namespace

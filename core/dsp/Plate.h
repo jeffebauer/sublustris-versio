@@ -152,11 +152,11 @@ private:
         Drift     drift;
     };
 
-    float    sampleRate_ = 48000.0f, maxScale_ = 1.0f, scaleNow_ = 1.0f, scaleTarget_ = 1.0f;
+    float    sampleRate_ IV_RI(48000.0f), maxScale_ IV_RI(1.0f), scaleNow_ IV_RI(1.0f), scaleTarget_ IV_RI(1.0f);
     Branch   b_[2];
-    uint32_t rng_ = 1;
+    uint32_t rng_ IV_RI(1);
     float    decayRate_ = 0.2f, highRatio_ = 0.45f, levelGain_ = 1.0f, extraRate_ IV_ZI;
-    bool     colour_ = true;
+    bool     colour_ IV_RI(true);
     float    modDepth_ = 1.0f;
     float    shelfK_ IV_ZI, modScale_ = 1.0f; // lossShelfK(sampleRate_)
     float    air_ IV_ZI;

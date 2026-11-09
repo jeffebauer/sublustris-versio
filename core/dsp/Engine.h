@@ -196,6 +196,18 @@ public:
     }
     int   lowDecimate() const { return lowDecimate_; }
     int   swellTaps() const { return swell_.tapCount(); }
+    // Tests only (ADR 0054, test_space_morph_waits): what the SPACE morph did, by time. Kinds: 1 a new tank starts (the old rings on),
+    // 2 the two tanks swap roles, 3 a reshape in place, 4 the old tank stopped, 5 a reshape ended, 6 a freeze sent the change back
+    // to the tank that had the sound.
+    struct MorphEvent {
+        double t;
+        int    kind, from, to;
+    };
+    struct MorphLog {
+        int        count;
+        MorphEvent events[64];
+    };
+    const MorphLog& morphLogForTests() const { return morphLog_; }
 #endif
 #if !defined(IV_FIXED_VOICINGS) || defined(IV_PROFILE_HOOKS) // the profile firmware's SIZEHAND lines too
     // SIZE's crossfade in groups of lines (Fdn::setStagger: 4 since v1.0.45, 2 from v1.0.39), in every FDN (the tank,
@@ -244,7 +256,7 @@ private:
     static constexpr int kLowDecimate = 4; // still lows' low tank runs at 12 kHz
 #ifndef IV_FIXED_VOICINGS
     static constexpr int kLowDecimateMax = 8; // setLowDecimatePrototype; the chunk buffers below fit any d >= 4
-    int lowDecimate_ = kLowDecimate;
+    int lowDecimate_ IV_RI(kLowDecimate);
 #else
     static constexpr int lowDecimate_ = kLowDecimate;
 #endif
@@ -277,8 +289,8 @@ private:
     bool eraChanged(int which, const dsp::EraMix& m);
     float smoothed(ParamId id) const { return smooth_[static_cast<size_t>(id)]; }
 
-    float sampleRate_   = 48000.0f;
-    int   maxBlockSize_ = 48;
+    float sampleRate_ IV_RI(48000.0f);
+    int   maxBlockSize_ IV_RI(48);
     std::array<float, static_cast<size_t>(ParamId::Count)> values_{};
     std::array<float, static_cast<size_t>(ParamId::Count)> smooth_{};
     bool  buttonDown_ IV_ZI, gateHigh_ IV_ZI;
@@ -316,14 +328,14 @@ private:
     int               fitEarlyTaps_ IV_ZI; // setEarlyTapPrototype; 0 = as built
     uint32_t          fitSwellSeed_ IV_ZI; // setSwellSeedPrototype; 0 = as built
     bool              halfPrime_ IV_ZI; // setHalfRatePrime; false = as built
-    bool              twinStopFast_ = true; // setTwinStopFast; false = before v1.0.37
+    bool              twinStopFast_ IV_RI(true); // setTwinStopFast; false = before v1.0.37
     int               fitSwellTaps_ IV_ZI; // setSwellTapsPrototype; 0 = as built
-    bool              layerSolo_ = false; // setLayerSoloPrototype
-    float             twinGain_ = 1.0f;  // setTwinGainPrototype; 1 = as built
-    bool              twinOff_ = false;
-    bool              shimmerLazy_ IV_ZI, shimmerArmed_ = true, shimmerResting_ IV_ZI; // setShimmerLazyPrototype
-    float             floorDbfs_ = voicing::kFloorDbfs;                     // setFloorPrototype
-    float             hallTailDb_ = voicing::kHallTailDb;                  // setHallTailPrototype
+    bool              layerSolo_ IV_RI(false); // setLayerSoloPrototype
+    float             twinGain_ IV_RI(1.0f);  // setTwinGainPrototype; 1 = as built
+    bool              twinOff_ IV_RI(false);
+    bool              shimmerLazy_ IV_ZI, shimmerArmed_ IV_RI(true), shimmerResting_ IV_ZI; // setShimmerLazyPrototype
+    float             floorDbfs_ IV_RI(voicing::kFloorDbfs);                     // setFloorPrototype
+    float             hallTailDb_ IV_RI(voicing::kHallTailDb);                  // setHallTailPrototype
     float             hallTiltLowDb_ IV_ZI, hallTiltHighDb_ IV_ZI;          // setHallTailPrototype (not built)
     float floorDbfs() const { return floorDbfs_; }
     float hallTailDb() const { return hallTailDb_; }
@@ -338,13 +350,13 @@ private:
     dsp::TwinRoom     room_;
     float             roomGain_[2] = {1.0f, 1.0f}, roomLevel_ IV_ZI, roomStep_ IV_ZI;
     float             roomTrim_ = 1.0f; // the room's output trim over SIZE (v1.0.47, voicing::kTwinRoomTrimDb)
-    int               roomStepN_ = -1;
+    int               roomStepN_ IV_RI(-1);
     bool              twinSized_ IV_ZI;
     dsp::Diffuser<4>  twinDiffuser_[2];
     float             twinIn_ IV_ZI, twinInStep_ IV_ZI;
     bool              twinActive_ IV_ZI;
     dsp::Shimmer      shimmer_; // ATTACK's third position (ADR 0024)
-    float             eraMakeup_ = 1.0f;
+    float             eraMakeup_ IV_RI(1.0f);
     // The limiter (SPEC §4.10).
     dsp::Tilt         tilt_;
     dsp::ToneBell     toneBell_; // TONE's resonant tilt, after tilt_ (v1.0.44)
@@ -358,15 +370,15 @@ private:
 #endif
     dsp::Limiter      limiter_;
     // ERA's sources into the tank's input (SPEC §4.7): the tape's hiss, the Midiverb's crackle.
-    uint32_t          noiseSeed_ = 0xA11CEu;
+    uint32_t          noiseSeed_ IV_RI(0xA11CEu);
     float             hissLp_[2] IV_ZI, hissGain_ IV_ZI, crackleChance_ IV_ZI, crackleGain_ IV_ZI;
-    float             lastMean_ = -1.0f, lastSpread_ = -1.0f;
-    float             hallSize_ = 0.5f; // HALL's SIZE for its gains, glided (applySpace)
+    float             lastMean_ IV_RI(-1.0f), lastSpread_ IV_RI(-1.0f);
+    float             hallSize_ IV_RI(0.5f); // HALL's SIZE for its gains, glided (applySpace)
 
-    // SPACE flips (ADR 0013): the wet and the tank's input fade out, the
-    // tank restarts in the new voicing, and both fade back in.
-    int   activeSpace_ = 1, flipPhase_ IV_ZI; // 0 steady, 1 fading out, 2 fading in
-    float flipGain_ = 1.0f, flipStep_ IV_ZI;
+    // SPACE changes (ADR 0013, 0054): the tank's input fades out and back, and at the silent point between (morphFlip) the morph or
+    // the reshape starts; the tail keeps ringing through it.
+    int   activeSpace_ IV_RI(1), flipPhase_ IV_ZI; // 0 steady, 1 fading out, 2 fading in
+    float flipGain_ IV_RI(1.0f), flipStep_ IV_ZI;
     // An ONSET change dips the swell out and back in (applySpace): the ONSET it is voiced for, the dip
     // (0 none .. 1 out) and its step per sample.
     int   swellOnset_ IV_ZI;
@@ -377,12 +389,12 @@ private:
     float modScale_ = 1.0f;  // test hook (setModulationScale)
     // TIME's pre-delay crossfade (Engine::controlTick, ADR 0025): the old delay, the rest before it
     // starts, the fade's gains (stepped by a rotation).
-    float pdOld_ IV_ZI, pdLastTarget_ IV_ZI, pdRest_ IV_ZI, pdOldG_ IV_ZI, pdNewG_ = 1.0f, pdRotC_ = 1.0f, pdRotS_ IV_ZI;
+    float pdOld_ IV_ZI, pdLastTarget_ IV_ZI, pdRest_ IV_ZI, pdOldG_ IV_ZI, pdNewG_ IV_RI(1.0f), pdRotC_ = 1.0f, pdRotS_ IV_ZI;
     int   pdXfLeft_ IV_ZI;
 #if !defined(IV_MODE_PROFILE)
-    float wetLift_ = 1.0f, wetLiftNow_ = 1.0f; // the wet's lift at short tails, after WEAR (v1.0.73, ADR 0049)
+    float wetLift_ IV_RI(1.0f), wetLiftNow_ IV_RI(1.0f); // the wet's lift at short tails, after WEAR (v1.0.73, ADR 0049)
 #endif
-    float decayMakeup_ = 1.0f, decayGain_ = 1.0f, decayGainNow_ = 1.0f; // DECAY's level make-up (v1.0.28)
+    float decayMakeup_ = 1.0f, decayGain_ IV_RI(1.0f), decayGainNow_ IV_RI(1.0f); // DECAY's level make-up (v1.0.28)
     float holdMix_ IV_ZI; // endless (v1.0.61): how far its loss has glided out after the input went quiet
     float holdFloor_ IV_ZI; // and how far the finite top's floor has let go
     dsp::EraTexture texture_; // ERA's wear on the wet (v1.0.42)
@@ -401,8 +413,8 @@ private:
     uint64_t      clock_ IV_ZI;            // samples since prepare
     float heldSize_ = 0.5f, heldDecay_ = 0.5f; // the big tank's SIZE and DECAY, frozen with it
     float freezeMix_ IV_ZI;             // 0 normal .. 1 a still pad (in-loop colour out, gain 1)
-    float tankIn_ = 1.0f, tankInStep_ IV_ZI;
-    float paint_ IV_ZI, paintRoom_ = 1.0f; // paintRoom_: 1 → 0 as a painted pad nears its ceiling
+    float tankIn_ IV_RI(1.0f), tankInStep_ IV_ZI;
+    float paint_ IV_ZI, paintRoom_ IV_RI(1.0f); // paintRoom_: 1 → 0 as a painted pad nears its ceiling
     float padFloorDb_ = -24.0f;
     bool  padCaptured_ IV_ZI; // the pad's own level has been taken as its ceiling
     uint64_t frozeAt_ IV_ZI;
@@ -413,10 +425,10 @@ private:
     uint64_t endlessPlayedAt_ IV_ZI; // endless (v1.0.61): last block its input sustained the tail
     bool     tailCaptured_ IV_ZI;
     float    tailCeilingDb_ = -24.0f;
-    float tankInTarget_ = 1.0f;
+    float tankInTarget_ IV_RI(1.0f);
 
     // MIX, ramped per sample across each control chunk.
-    float dryNow_ = 1.0f, wetNow_ IV_ZI, dryStep_ IV_ZI, wetStep_ IV_ZI;
+    float dryNow_ IV_RI(1.0f), wetNow_ IV_ZI, dryStep_ IV_ZI, wetStep_ IV_ZI;
 
     // Scratch for one chunk.
     float bufL_[kChunk] IV_ZI, bufR_[kChunk] IV_ZI, wetL_[kChunk] IV_ZI, wetR_[kChunk] IV_ZI;
@@ -479,6 +491,36 @@ private:
     }
     // The PLATE's SIZE crossfade state (dsp::PlateXf, v1.0.68; the twin glides). Last: no other member's offset moves.
     dsp::PlateXf plateXf_;
+    // The SPACE morph (ADR 0054). Last: no other member's offset moves.
+#ifndef IV_FIXED_VOICINGS
+    void  morphNote(int kind, int from, int to);
+    MorphLog morphLog_{};
+#endif
+    void  morphFlip(int to, int n);          // the flip's silent point
+    void  morphAdvance(int n);               // once a chunk: the fades and the in-place ramps
+    void  morphStopTwin();                   // the twin of the old space stops at the flip's silent point
+    bool  morphKeepTank_ IV_ZI;
+    uint8_t morphLightWait_ IV_ZI;           // control ticks left before the heads may rest after a change (morphAdvance)
+    void  morphLend(float* ol, float* orr);
+    void  morphRunOld(int n);                // the old tank over this chunk, mixed into wetL_ / wetR_
+    float tankFastDb(int tank) const { return tank == 0 ? plate_.fastLevelDb() : fdn_.fastLevelDb(); }
+    // All set before they're read: morphOld_ by reset() (via prepare()), the rest by morphFlip's fresh start.
+    int   morphOld_ IV_RI(-1);            // the tank ringing out: -1 none, 0 the plate, 1 fdn_ and lowFdn_
+    int   morphOldSpace_ IV_ZI;           // the SPACE it was voiced for
+    float morphX_ IV_ZI;                  // how far the morph is, 0..1
+    float morphGOld_ IV_ZI, morphGNew_ IV_ZI, morphGOldWas_ IV_ZI, morphGNewWas_ IV_ZI; // per chunk, ramped per sample
+    float morphOldDecayGain_ IV_ZI, morphOldLift_ IV_ZI; // the old tank's own make-ups, held
+    bool  morphFast_ IV_ZI;               // a freeze: the old tank goes in 0.3 s and stops hearing the music
+    bool  morphRevert_ IV_ZI, morphFreezeSeen_ IV_ZI;
+    float morphInL_[kChunk] IV_ZI, morphInR_[kChunk] IV_ZI;
+    enum { kPlaceRate, kPlaceHigh, kPlaceGovernor, kPlaceFloorDb, kPlaceDecayGain, kPlaceWetLift, kPlaceFloorScale,
+           kPlaceFloorCentre, kPlaceAir, kPlaceEndlessTop, kPlaceShelf, kPlaceLowsOwn, kPlaceCount };
+    float placeRamp(int id, float target);
+    // As above: placeOn_ guards them, and morphFlip sets them.
+    bool  placeOn_ IV_ZI;
+    float placeT_ IV_ZI, placeS_ IV_ZI, placeSeconds_ IV_ZI, earlyW_ IV_ZI;
+    float placeNow_[kPlaceCount] IV_ZI, placeStart_[kPlaceCount] IV_ZI;
+    float lowsOwnNow_ IV_ZI;              // applySpace, whenever a tank is voiced
 };
 
 } // namespace iv

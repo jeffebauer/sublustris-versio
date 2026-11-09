@@ -234,8 +234,8 @@ private:
     static constexpr float kSlew = 0.0595f; // samples a sample: 2^(1/12) - 1, a semitone's bend at most
     static constexpr float kRatio[kN] = {0.31f, 0.42f, 0.51f, 0.60f, 0.70f, 0.79f, 0.90f, 1.0f};
     // IV_ZI (SizeOpt.h): a member of the Engine only, never a local; prepare() sets the rest.
-    float sr_ = 24000.0f, gain_ = 1.0f, shelfK_ IV_ZI;
-    bool  ok_ IV_ZI, snap_ = true, fresh_ = true;
+    float sr_ IV_RI(24000.0f), gain_ = 1.0f, shelfK_ IV_ZI;
+    bool  ok_ IV_ZI, snap_ IV_RI(true), fresh_ IV_RI(true);
     float* mem_ IV_ZI; // the rings' memory (prepare()): memFloats_ floats, [0, clearedTo_) zero since the last process()
     int   memFloats_ IV_ZI, clearedTo_ IV_ZI;
     float target_[kN] IV_ZI;

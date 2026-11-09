@@ -247,6 +247,65 @@ IV_SIZE_OPT void Fdn::setEarlyTapCount(int n)
         }
 }
 
+IV_MORPH_COLD bool Fdn::xfIdle() const
+{
+    if (xfLeft_ > 0 || (!xfSpread() && (inLoopTarget_ > 0.0f) != (inLoopNow_ > 0.0f))) return false;
+    for (int i = 0; i < kN; ++i)
+        if (std::fabs(lenTarget_[i] - lenNow_[i]) > 0.5f || (xfSpread() && (apAmtNow_[i] > 0.0f) != (inLoopTarget_ > 0.0f))) return false;
+    return true;
+}
+
+IV_MORPH_COLD void Fdn::beginEarlyMorph()
+{
+    if (!lay_) return;
+    constexpr int hall = voicing::kHallEarlyTaps, canyon = voicing::kMassiveEarlyTaps;
+    static_assert(hall + canyon <= kEarlyTaps, "both layouts need their own slots");
+    const int from = earlyCount_;
+    for (int c = 0; c < 2; ++c)
+        if (lay_->count[c] != (c ? canyon : hall)) return; // (a prototype's other count: left as it is)
+    for (int i = 0; i < kN; ++i) {
+        float corr[2][kEarlyTaps];
+        for (int k = 0; k < kEarlyTaps; ++k) corr[0][k] = corr[1][k] = 1.0f;
+        for (int k = 0; k < from && k < kEarlyTaps; ++k) corr[from == canyon ? 1 : 0][k] = xfTapCorr_[i][k];
+        for (int k = 0; k < hall; ++k) {
+            earlyFrac_[i][k] = lay_->frac[0][i][k];
+            earlyMorphGain_[0][i][k] = lay_->gain[0][i][k];
+            xfTapCorr_[i][k] = corr[0][k];
+        }
+        for (int k = 0; k < canyon; ++k) {
+            earlyFrac_[i][hall + k] = lay_->frac[1][i][k];
+            earlyMorphGain_[1][i][k] = lay_->gain[1][i][k];
+            xfTapCorr_[i][hall + k] = corr[1][k];
+        }
+    }
+    earlyCount_ = hall + canyon;
+}
+
+IV_MORPH_COLD void Fdn::setEarlyMorph(float canyonShare)
+{
+    if (earlyCount_ != voicing::kHallEarlyTaps + voicing::kMassiveEarlyTaps) return;
+    const float c = std::sqrt(1.0f - canyonShare), s = std::sqrt(canyonShare); // equal power: the taps don't agree
+    for (int i = 0; i < kN; ++i) {
+        for (int k = 0; k < voicing::kHallEarlyTaps; ++k) earlyGain_[i][k] = c * earlyMorphGain_[0][i][k];
+        for (int k = 0; k < voicing::kMassiveEarlyTaps; ++k) earlyGain_[i][voicing::kHallEarlyTaps + k] = s * earlyMorphGain_[1][i][k];
+    }
+}
+
+IV_MORPH_COLD void Fdn::endEarlyMorph(int count)
+{
+    float corr[kN][kEarlyTaps];
+    for (int i = 0; i < kN; ++i)
+        for (int k = 0; k < kEarlyTaps; ++k) corr[i][k] = xfTapCorr_[i][k];
+    const int first = count == voicing::kMassiveEarlyTaps ? voicing::kHallEarlyTaps : 0;
+    earlyCount_ = count;
+    layoutEarly();
+    for (int i = 0; i < kN; ++i)
+        for (int k = 0; k < kEarlyTaps; ++k) {
+            xfTapCorr_[i][k] = k < count ? corr[i][first + k] : 1.0f;
+            tapGainNow_[i][k] = earlyGain_[i][k] * xfTapCorr_[i][k];
+        }
+}
+
 IV_SIZE_OPT void Fdn::setMeanSeconds(float meanSeconds, float spread, bool snap)
 {
     for (int i = 0; i < kN; ++i) {
@@ -287,6 +346,10 @@ IV_SIZE_OPT void Fdn::controlInLoop(float dt, int n, float slew, bool pending)
     const bool joining = wasBypassed && inLoopNow_ > 0.0f;
     for (int i = 0; i < kN; ++i)
         for (int k = 0; k < 2; ++k) {
+            if ((xfHoldLines_ >> i) & 1u) { // spread: a line waiting for its fade stays on the fast path, its allpasses as they are
+                apLenStep_[i][k] = 0.0f;
+                continue;
+            }
             apLenNow_[i][k] = apTargetLength(i, k);
             float& glide = apLenGlide_[i][k];
             if (joining) glide = 0.0f;
@@ -318,7 +381,9 @@ IV_NOINLINE IV_SIZE_OPT float Fdn::xfMix(int i, float nw, float od, float gOld)
 // In-loop diffusion joining or leaving with a SIZE crossfade: it runs on its own read, the new one
 // (joining) or the old (leaving), each a whole allpass. Blended inside the allpass between straight
 // through and delayed, mid-fade it passed 14 %, every trip: a small HALL 13 dB down in 0.25 s.
-IV_NOINLINE IV_SIZE_OPT float Fdn::xfAllpass(int i, float x, float g, bool old)
+IV_NOINLINE IV_SIZE_OPT float Fdn::xfAllpass(int i, float x, float g, bool old
+                                              , float w
+)
 {
     for (int k = 0; k < 2; ++k) {
         const float len = old ? apOld_[i][k] : apLenGlide_[i][k];
@@ -328,6 +393,7 @@ IV_NOINLINE IV_SIZE_OPT float Fdn::xfAllpass(int i, float x, float g, bool old)
             const float t = len - float(li);
             const float a0 = apLine_[i][k].read(li), a1 = apLine_[i][k].read(li + 1);
             d = a0 + t * (a1 - a0);
+            d *= w;
         }
         const float v = x + g * d;
         apLine_[i][k].write(v);
@@ -374,11 +440,20 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
     // leaving (it started after a crossfade that had already gone, and joined on its own: a dropout).
     unsigned need = 0; // bit i: line i's length has to move
     for (int i = 0; i < kN; ++i) need |= unsigned(std::fabs(lenTarget_[i] - lenNow_[i]) > 0.5f) << i;
-    const bool pending = ((inLoopTarget_ > 0.0f) != (inLoopNow_ > 0.0f)) || need != 0;
+    // The reshape (ADR 0054): the in-loop diffusion joins or leaves line by line, each with its own group's fade, so a line
+    // that hasn't crossed yet counts as a line that has to move, and the shared amount follows the lines instead of leading them.
+    const bool spread = xfSpread();
+    if (spread) {
+        for (int i = 0; i < kN; ++i) need |= unsigned((apAmtNow_[i] > 0.0f) != (inLoopTarget_ > 0.0f)) << i;
+        if (need == 0 && (inLoopTarget_ > 0.0f) != (inLoopNow_ > 0.0f)) inLoopNow_ = inLoopTarget_;
+    }
+    xfHoldLines_ = spread ? need : 0u;
+    const bool amountCrossing = (inLoopTarget_ > 0.0f) != (inLoopNow_ > 0.0f);
+    const bool pending = (!spread && amountCrossing) || need != 0;
     controlInLoop(dt, n, slew, pending);
     if (staggered()) // a line waiting for its fade keeps its amount; every other line is on the shared one
         for (int i = 0; i < kN; ++i)
-            if (!((need >> i) & 1u)) apAmtNow_[i] = inLoopNow_;
+            if (!((need >> i) & 1u) && !(spread && amountCrossing)) apAmtNow_[i] = inLoopNow_;
     earlyNow_ += glide80Memo_.get(dt, glide80) * (earlyTarget_ - earlyNow_);
     if (earlyNow_ < 1e-4f && earlyTarget_ == 0.0f) earlyNow_ = 0.0f;
     float meanLen = 0.0f;
@@ -413,7 +488,7 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
         // (Not when the in-loop diffusion joins or leaves with this move, a small HALL crossing SIZE noon:
         // the lines that waited rejoined it on stale allpass memory, a click; then all fade together.)
         unsigned sw = 0xFFu; // bit i: line i fades now
-        if (staggered() && (inLoopTarget_ > 0.0f) == (inLoopNow_ > 0.0f)) {
+        if (staggered() && (spread || (inLoopTarget_ > 0.0f) == (inLoopNow_ > 0.0f))) {
             // Group g: lines g, g + G, ... (G groups): 0x55 << g for two (0, 2, 4, 6 and 1, 3, 5, 7), 0x11 << g for four.
             const unsigned base = 0xFFu / ((1u << xfStagger_) - 1u);
             for (int t = 0; t < xfStagger_; ++t) {
@@ -427,7 +502,7 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
         }
         prof::countXfStart();
         const float elapsed = xfSince_ >= 0 ? float(xfSince_) : -1.0f;
-        xfLen_ = xfLeft_ = int(voicing::kSizeCrossfadeSeconds * sampleRate_);
+        xfLen_ = xfLeft_ = int((spread ? 0.3f : voicing::kSizeCrossfadeSeconds) * sampleRate_);
         xfSince_ = 0;
         xfTrim_ = outputTrim_;
         // The fade's angle per sample: a rotation, no cos per sample. The gains sum to one, sin² and cos²
@@ -461,7 +536,10 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
             // A shrink's boost is limited (v1.0.77, ADR 0053, the owner's pick C on renders/size_blast, issue 2): that "quieter"
             // holds for a dying tail, not while playing, when the nearer sound is as loud and the boost is real gain in the loop.
             // A growth's cut is left alone (negative, always under the limit), so is a boost under it.
-            xfLnGain_[i] = std::fmin(kXfMaxBoostLn, 6.9077553f * xfDelta_[i] / sampleRate_ * rate);
+            // The reshape (ADR 0054): this group may start a second after the flip, with DECAY's rate already most of the way to the
+            // new SPACE's, but the sound these reads hear was left in the line at the old rate: the correction takes the rate at the first group.
+            if (spread && xfPlaceRate_ < 0.0f) xfPlaceRate_ = rate;
+            xfLnGain_[i] = std::fmin(kXfMaxBoostLn, 6.9077553f * xfDelta_[i] / sampleRate_ * (spread ? xfPlaceRate_ : rate));
             xfHold_[i] = lenTarget_[i];
             lenNow_[i] = lenTarget_[i];
             readNow_[i] -= xfDelta_[i];
@@ -475,6 +553,7 @@ IV_SIZE_OPT void Fdn::control(int n) // once per block: built for size (flash)
             // state is the previous output): the old position's state there rang at Nyquist.
             interp_[i] = line_[i].readCubic(readNow_[i] + 1.0f);
             for (int k = 0; k < 2; ++k) { // HALL's in-loop allpasses jump too, their old length fading out
+                if (spread) apLenNow_[i][k] = apTargetLength(i, k); // (held while the line waited)
                 apOld_[i][k] = apLenGlide_[i][k];
                 apLenGlide_[i][k] = float(apLenNow_[i][k]);
             }
@@ -841,7 +920,9 @@ IV_NO_UNSWITCH bool Fdn::lineFast(int i, int m, float apG, float eraIn, float er
     for (int k = 0; k < 2; ++k) {
         const DelayLine& a = apLine_[i][k];
         if (apG > 0.0f && !(apLenStep_[i][k] == 0.0f && apLenGlide_[i][k] == float(apLenNow_[i][k])
-                            && apLenGlide_[i][k] >= 1.0f && a.full()))
+                            && apLenGlide_[i][k] >= 1.0f
+                            && (a.full() || a.fill >= apLenNow_[i][k])
+                            ))
             return false;
         apBuf[k] = a.buf;
         apPos[k] = a.pos;
@@ -897,7 +978,11 @@ IV_NO_UNSWITCH bool Fdn::lineFast(int i, int m, float apG, float eraIn, float er
     }
     era_[i].run(y, m, eraIn, eraOut);
     if (apG > 0.0f)
-        for (int k = 0; k < 2; ++k) apLine_[i][k].pos = apPos[k];
+        for (int k = 0; k < 2; ++k) {
+            apLine_[i][k].pos = apPos[k];
+            DelayLine& a = apLine_[i][k];
+            a.fill = a.fill + uint32_t(m) > a.mask ? a.mask + 1u : a.fill + uint32_t(m);
+        }
     readNow_[i] = read;
     interp_[i] = state;
     absorbY_[i] = ay;
@@ -939,13 +1024,13 @@ IV_SIZE_OPT bool Fdn::lineXf(int i, int m, int q, const float* xn, const float* 
             apL[k] = apLenNow_[i][k];
         }
     // xfAllpass: the two allpasses at their joining or leaving lengths (between samples), each read and written.
-    auto apXf = [&](float x, float g) {
+    auto apXf = [&](float x, float g, float w = 1.0f) {
         for (int k = 0; k < 2; ++k) {
             const auto     li = uint32_t(apX[k]);
             const float    t = apX[k] - float(li);
             const uint32_t at = apPos[k] - li;
             const float    a0 = apBuf[k][at & apMask[k]], a1 = apBuf[k][(at - 1u) & apMask[k]];
-            const float    d = a0 + t * (a1 - a0);
+            const float    d = w * (a0 + t * (a1 - a0));
             const float    v = x + g * d;
             apBuf[k][apPos[k]] = v;
             apPos[k] = (apPos[k] + 1) & apMask[k];
@@ -979,7 +1064,9 @@ IV_SIZE_OPT bool Fdn::lineXf(int i, int m, int q, const float* xn, const float* 
             stateOld = bO + etaO * (aO - stateOld);
             float od = stateOld;
             if (leave) od = apXf(od, apGOld); // xfMix's: the old read through the allpasses it had
-            if (join) x = apXf(x, apG);       // the new read through the allpasses it joins
+            // Spread: joining with a 0.3 s fade, the allpasses' first returns (what entered them at the fade's start) came back with the new read
+            // already well up, a burst in a held chord (x1.7 the steady sound's sharpest step): those returns are eased in over the allpass delay.
+            if (join) x = apXf(x, apG, xfSpread() ? std::fmin(1.0f, float(xfLen_ - xfLeft_ - q + s) / (apX[1] + apX[0] + 1.0f)) : 1.0f);
             oo += kXfAgreeA * (od * od - oo); // xfMix
             nn += kXfAgreeA * (x * x - nn);
             on += kXfAgreeA * (od * x - on);
@@ -1030,7 +1117,7 @@ IV_NOINLINE IV_SIZE_OPT IV_FLATTEN void Fdn::lineSlow(int i, int m, int q, const
             // The old length, read the way it was before (allpass, its own state: a cubic read there differed
             // by a hair from the sample before, a click at the start), on the old timeline (no correction).
             const float od = v.readAllpass(readNow_[i] + xfDelta_[i], interpOld_[i]);
-            if (apG > 0.0f && apGOld == 0.0f) x = xfAllpass(i, x, apG, false); // joining: on the new read
+            if (apG > 0.0f && apGOld == 0.0f) x = xfAllpass(i, x, apG, false, xfSpread() ? std::fmin(1.0f, float(xfLen_ - xfLeft_ - q + s) / (apLenGlide_[i][0] + apLenGlide_[i][1] + 1.0f)) : 1.0f); // as lineXf
             x = xfMix(i, x, od, apG == 0.0f ? apGOld : 0.0f);                  // leaving: on the old
         }
         if (apG > 0.0f && (!xf || apGOld > 0.0f))

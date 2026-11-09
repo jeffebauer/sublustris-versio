@@ -155,6 +155,16 @@ public:
 #ifndef IV_FIXED_VOICINGS
     void poisonForTests() { absorbY_[0] = std::nanf(""); } // a NaN in one line's loss filter: Engine::poisonTankForTests
 #endif
+    // The SPACE morph's reshape (HALL <-> CANYON, ADR 0054): spread, its crossfade runs in the four staggered groups of 0.3 s, 1.2 s
+    // in all (a quarter of the lines reading twice, SIZE's shipped stagger), the in-loop diffusion joining or leaving line by line.
+    void setXfSpread(bool on) { xfSpread_ = on; xfPlaceRate_ = -1.0f; } // (the rate is taken at the first group)
+    bool xfSpread() const { return xfSpread_; }
+    // No line waiting for its crossfade and none fading.
+    bool xfIdle() const;
+    // HALL's two early taps and CANYON's four, all six at once on their own slots (0-1, 2-5) while the share moves.
+    void beginEarlyMorph();
+    void setEarlyMorph(float canyonShare);
+    void endEarlyMorph(int count);
 
 private:
     bool staggered() const { return xfStagger_ > 1; }
@@ -170,13 +180,13 @@ private:
     void tapsMoving(int i, int m, const float* tl, const DelayLine& was, float* e) const;
     void tapsOld(int i, int q, const float* tl, const DelayLine& was, float* ol, float* orr) const;
     float xfMix(int i, float nw, float od, float gOld);
-    float xfAllpass(int i, float x, float g, bool old);
+    float xfAllpass(int i, float x, float g, bool old, float w = 1.0f);
     float xfOldAllpass(int i, int k, float x, float d);
     void  layoutEarly();
     void controlInLoop(float dt, int n, float slew, bool pending);
     uint32_t apTargetLength(int i, int k) const;
 
-    float     sampleRate_ = 48000.0f;
+    float     sampleRate_ IV_RI(48000.0f);
     DelayLine line_[kN];
     float     lenTarget_[kN] IV_ZI; // samples
     float     lenNow_[kN] IV_ZI; // samples, gliding toward the target
@@ -184,7 +194,7 @@ private:
     // Modulation floor, per line: a random target, smoothed twice.
     float     floorTarget_[kN] IV_ZI, floorA_[kN] IV_ZI, floorB_[kN] IV_ZI;
     float     floorCountdown_[kN] IV_ZI;
-    uint32_t  rng_ = 1;
+    uint32_t  rng_ IV_RI(1);
     // Per-sample read position for the current control block.
     float     readNow_[kN] IV_ZI, readStep_[kN] IV_ZI;
     float     tapLen_[kN] IV_ZI, tapStep_[kN] IV_ZI; // the early taps' line length, gliding per sample
@@ -205,10 +215,10 @@ private:
     // jumping with the knob clicked loudly in a small HALL (soak audit). Still, it is the exact integer read.
     // Bypassed allpasses (no in-loop diffusion) have length 0: they join and leave the loop from there.
     float     apLenGlide_[kN][2] IV_ZI, apLenStep_[kN][2] IV_ZI; // per sample
-    float     apScale_ = 1.0f;
+    float     apScale_ IV_RI(1.0f);
     static constexpr int kEarlyTaps = voicing::kEarlyTaps;
     float     earlyFrac_[kN][kEarlyTaps] IV_ZI, earlyGain_[kN][kEarlyTaps] IV_ZI;
-    int       earlyCount_ = kEarlyTaps; // taps per line in use (setEarlyTapCount, a prototype)
+    int       earlyCount_ IV_RI(kEarlyTaps); // taps per line in use (setEarlyTapCount, a prototype)
     // The line whose output signs (kOutL / kOutR) line i's early taps go out with (v1.0.63, ADR 0039: the owner's
     // pick B on renders/onset_phase, "centred"). While one early tap is all that sounds, L and R carry it fully in
     // or out of phase. Before, i + 3 sent a centred source's two earliest taps in HALL and CANYON (lines 0 and 2)
@@ -220,8 +230,8 @@ private:
     static constexpr int earlyOut(int i) { return i ^ (((i >> 1) & 1) | 2); }
     float     earlyTarget_ IV_ZI, earlyNow_ IV_ZI;
     float     inLoopOld_ IV_ZI; // the in-loop amount fading out during a SIZE crossfade
-    float     inLoopTarget_ IV_ZI, inLoopNow_ IV_ZI, outputTrim_ = 1.0f, levelGain_ = 1.0f;
-    float     outputTrimNow_ = 1.0f; // glides to outputTrim_ (~50 ms): it follows SIZE and DECAY, which can jump (soak audit)
+    float     inLoopTarget_ IV_ZI, inLoopNow_ IV_ZI, outputTrim_ IV_RI(1.0f), levelGain_ = 1.0f;
+    float     outputTrimNow_ IV_RI(1.0f); // glides to outputTrim_ (~50 ms): it follows SIZE and DECAY, which can jump (soak audit)
     FloorGovernor governor_;
     const Fdn* leader_ IV_ZI;
     float     externalPower_ IV_ZI;
@@ -230,7 +240,7 @@ private:
     float     xfDelta_[kN] IV_ZI, xfLastTarget_[kN] IV_ZI, interpOld_[kN] IV_ZI, apOld_[kN][2] IV_ZI;
     float     xfLnGain_[kN] IV_ZI, xfHold_[kN] IV_ZI, xfLineCorr_[kN] IV_ZI;
     float     xfTapCorr_[kN][kEarlyTaps] IV_ZI, tapGainNow_[kN][kEarlyTaps] IV_ZI; // tapGainNow_: earlyGain_ x the correction
-    float     xfRest_ IV_ZI, xfTrim_ = 1.0f, xfOld_ IV_ZI, xfNew_ = 1.0f, xfRotC_ = 1.0f, xfRotS_ IV_ZI;
+    float     xfRest_ IV_ZI, xfTrim_ IV_RI(1.0f), xfOld_ IV_ZI, xfNew_ IV_RI(1.0f), xfRotC_ = 1.0f, xfRotS_ IV_ZI;
     float     xfOO_[kN] IV_ZI, xfNN_[kN] IV_ZI, xfON_[kN] IV_ZI, xfK_[kN] IV_ZI; // the reads' powers, their agreement, the fade's gain
     // Each line's loss filter (absorbent()) and the length it was worked out for; the inputs every line shares
     // (DECAY's rate, the governor's, highRatio_, darken, shelfK_, air_, endlessTop_) once (a per-line AbsorbMemo
@@ -240,7 +250,7 @@ private:
     Memo1     floorCoeffMemo_, glide80Memo_, glideXfMemo_; // per-block smoothing coefficients, worked out once per dt
     float     xfLastInLoop_ IV_ZI, xfAbsOld_[kN][3] IV_ZI; // the loss filter (b1, gain, pole) at the fade's start
     float     xfCos_ = -1.0f, xfSin_ IV_ZI; // the fade's angle (twice it): xfNew_ = (1 - cos) / 2
-    int       xfLen_ = 1, xfLeft_ IV_ZI, xfSince_ = -1; // samples; xfSince_: since the start, -1 when no correction runs
+    int       xfLen_ = 1, xfLeft_ IV_ZI, xfSince_ IV_RI(-1); // samples; xfSince_: since the start, -1 when no correction runs
 #ifndef IV_SIZE_GROUPS
 #define IV_SIZE_GROUPS 4 // v1.0.45 (firmware/Makefile SIZE_GROUPS=n builds another default, a trial)
 #endif
@@ -254,6 +264,10 @@ private:
     float     floorCentre_ IV_ZI; // setFloorCentre (v1.0.57, after lay_ for the same reason); 0 = none
     float     endlessTop_ IV_ZI;  // setEndlessTop (v1.0.58, last for the same reason); 0 = none
     float     floorPaceExtra_ IV_ZI; // setFloorPaceExtra (v1.0.71, last for the same reason); 0 = none
+    bool      xfSpread_ IV_ZI;    // setXfSpread
+    float     xfPlaceRate_ IV_ZI;     // spread: DECAY's rate at the flip's first group (< 0: not yet), for the one-trip correction
+    unsigned  xfHoldLines_ IV_ZI;     // spread: bit i, line i is waiting for its fade: its allpasses as they are
+    float     earlyMorphGain_[2][kN][kEarlyTaps] IV_ZI;
 };
 
 } // namespace iv::dsp

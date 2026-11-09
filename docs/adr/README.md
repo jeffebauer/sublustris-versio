@@ -57,3 +57,4 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0051](0051-wear-ceiling.md) | WEAR's ceiling and noon: the tape's drive 13.5 dB at full on its own gentler taper (amends ADR 0044 and 0045) | owner, 6 Nov 2026 |
 | [0052](0052-hall-lows.md) | HALL's low-note resonances: the low tank narrowed to 0.30 and denser (in-loop diffusion 0.60 at every SIZE), +3.3 dB; no modulation (amends ADR 0012's still lows and the v1.0.17 in-loop fade for the low tank) | owner, 6 Nov 2026 |
 | [0053](0053-size-blast.md) | The SIZE blast: a shrink's boost limited to about 6 dB, and a tank that goes invalid restarts (amends ADR 0025's one-trip correction) | owner, 9 Nov 2026 |
+| [0054](0054-space-morph.md) | The SPACE morph: a change keeps the tail, two tanks for 3 s or one reshaped over 1.5 s, finish then go, half the shimmer's heads resting into CANYON (amends ADR 0013's "only one big tank ever runs") | owner, 9 Nov 2026 |
