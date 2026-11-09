@@ -11,3 +11,5 @@
 **Rejected:** the old tail ringing out (two tanks at once); summing L and R into a mono send (as Resilio).
 
 **Amendment (24 Oct 2026, owner's picks on `renders/valhalla_round2`; SPEC v1.0.25):** the PLATE's cross-branch output taps are added, not subtracted as in Dattorro's table. With true-stereo input his signs made left and right lows near mirror images, which sounded vague and less centred than Valhalla's plates. Added, the lows centre and the highs stay wide. The HALL now takes MASSIVE's early taps too, so it starts ~10 ms after the note instead of ~80 ms.
+
+**Amendment (9 Nov 2026, owner's picks on `renders/space_flip`, `space_morph`, `space_morph2`, `morph_last_98`; SPEC v1.0.78; ADR 0054):** a SPACE change no longer cuts the tail, so "only one big tank ever runs" no longer holds: PLATE <-> HALL or CANYON runs both big tanks for the 3 s of the morph. HALL <-> CANYON reshapes the one FDN. True stereo in is unchanged.

@@ -56,8 +56,8 @@ public:
 
 private:
     static constexpr float kGlide = 0.002f; // ~10 ms at 48 kHz
-    float coeff_ = 0.1f, low_ = 1.0f, high_ = 1.0f, lowTarget_ = 1.0f, highTarget_ = 1.0f, lp_[2] IV_ZI;
-    float setTone_ = -1.0f, setLow_ = 1.0f, setHigh_ = 1.0f; // set()'s last TONE and its targets
+    float coeff_ IV_RI(0.1f), low_ IV_RI(1.0f), high_ IV_RI(1.0f), lowTarget_ IV_RI(1.0f), highTarget_ IV_RI(1.0f), lp_[2] IV_ZI;
+    float setTone_ IV_RI(-1.0f), setLow_ IV_RI(1.0f), setHigh_ IV_RI(1.0f); // set()'s last TONE and its targets
 };
 
 // TONE's resonant tilt (v1.0.44; owner's pick A, renders/tone_character: "adds a little character without creating
@@ -183,12 +183,12 @@ private:
         return c0 * x + c1 * v2 + c2 * v1;
     }
 
-    float sr_ = 48000.0f;
+    float sr_ IV_RI(48000.0f);
     EraSvf svf_[2];
     float cur_[kN] IV_ZI, tgt_[kN] IV_ZI, step_[kN] IV_ZI;
     int   left_ IV_ZI, side_ IV_ZI;
     bool  leaving_ IV_ZI;
-    float memoTone_ = -1.0f, memoT_[kN] IV_ZI, memoMk_ IV_ZI; // set()'s coefficients for memoTone_ / memoCcw_
+    float memoTone_ IV_RI(-1.0f), memoT_[kN] IV_ZI, memoMk_ IV_ZI; // set()'s coefficients for memoTone_ / memoCcw_
     bool  memoCcw_ IV_ZI;
     float aG_ = -1.0f, aK_ IV_ZI, a1_ IV_ZI, a2_ IV_ZI, a3_ IV_ZI; // process()'s a1-a3 for g aG_, k aK_
 };
@@ -215,7 +215,7 @@ public:
     float gain() const { return gain_; }
 
 private:
-    float release_ = 0.0001f, gain_ = 1.0f;
+    float release_ IV_RI(0.0001f), gain_ = 1.0f;
 };
 
 } // namespace iv::dsp

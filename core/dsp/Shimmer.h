@@ -68,6 +68,8 @@ public:
                 base_[c][h] = 2.0f; // 2 + the grain's extra delay (none yet)
             }
         }
+        lightWant_ = lightOn_ = false;
+        headOff_[0] = headOff_[1] = 0;
         seed_ = 0x5A1A7u;
     }
 
@@ -84,6 +86,16 @@ public:
             for (int k = 0; k < 4; ++k) z_[c][k][0] = z_[c][k][1] = 0.0f;
     }
 #endif
+
+    // The owner's pick C (renders/morph_last_98): half the heads rest while a morph into CANYON is running with SHIMMER
+    // on, the module's heaviest moment. A resting head is never cut: it finishes the grain it is in (the window reaches zero) and just doesn't start
+    // another, as Mutable Instruments' Clouds lets a grain run out; it comes back at the start of a grain, from the same
+    // zero. Every head keeps drawing its random onset, so the heads that stay play exactly the grains they would have.
+    void setLighter(bool want)
+    {
+        lightWant_ = want;
+        if (want) lightOn_ = true;
+    }
 
     // Always records (cheap); with shift, also returns the octave in l and r. Both channels' feed filters
     // first, then each channel's heads (the random onsets drawn in the same order as ever: channel by
@@ -114,6 +126,15 @@ public:
         if (prof::shimmerPoly) headsAB<true>(out);
         else headsAB<false>(out);
 #else
+        // C's own loop only while a head may be resting. Everywhere else the loop below costs what it did before C (the
+        // module's handover block, m3-morph-peak-hunt.log: C's extra sum and test a head were 1.2 points with C idle).
+        if (lightOn_) {
+            float o[2];
+            headsLight(o);
+            l = o[0];
+            r = o[1];
+            return;
+        }
         const float step = step_, window = window_;
         float out[2];
         for (int c = 0; c < 2; ++c) {
@@ -174,6 +195,66 @@ public:
     }
 
 private:
+    // The head loop of process() above with C's resting heads and their level: lightOn_ only. Out of line, so only one copy of
+    // it is ever in the caller's way; in Engine.o, so in ITCM with the rest of the per-sample code.
+    IV_NOINLINE void headsLight(float (&out)[2])
+    {
+        const float step = step_, window = window_;
+        for (int c = 0; c < 2; ++c) {
+            const Ring&    ln   = line_[c];
+            const float*   buf  = ln.buf;
+            const uint32_t n    = ln.n, pos = ln.pos, fill = ln.fill;
+            float y = 0.0f;
+            float lightSq = 0.0f; // the running windows' squares, for the level below
+            for (int h = 0; h < kHeads; ++h) {
+                float& p = phase_[c][h];
+                p -= step;
+                if (p < 0.0f) {
+                    p += 1.0f;
+                    seed_ = seed_ * 1664525u + 1013904223u;
+                    const float extra = voicing::kShimmerScatter * window * (float(seed_ >> 8) * (1.0f / 16777216.0f));
+                    base_[c][h] = 2.0f + extra;
+                    const uint8_t odd = uint8_t((h & 1) << h); // a grain boundary: the window is at zero here
+                    headOff_[c] = uint8_t(lightWant_ ? headOff_[c] | odd : headOff_[c] & ~odd);
+                }
+                if ((headOff_[c] >> h) & 1) continue; // no reads and no divide: what the module saves
+#if defined(IV_SHIMMER_POLY)
+                const float q = p * (1.0f - p), w = shimmerWindowPoly(q);
+#elif !defined(IV_FIXED_VOICINGS)
+                const float q = p * (1.0f - p);
+                float       w;
+                if (prof::shimmerPoly) w = shimmerWindowPoly(q);
+                else {
+                    const float s = 16.0f * q / (5.0f - 4.0f * q);
+                    w = s * s;
+                }
+#else
+                const float q = p * (1.0f - p), s = 16.0f * q / (5.0f - 4.0f * q), w = s * s;
+#endif
+                const float d = base_[c][h] + window * p;
+                const auto  di = uint32_t(d);
+                const float t = d - float(di);
+                uint32_t i0 = pos - di;
+                if (pos < di) i0 += n;
+                const uint32_t i1 = (i0 ? i0 : n) - 1;
+                float a = buf[i0], b = buf[i1];
+                if (di > fill) a = 0.0f;
+                if (di >= fill) b = 0.0f;
+                y += w * (a + t * (b - a));
+                lightSq += w * w;
+            }
+            y *= 2.0f / float(kHeads);
+            // The heads hold unrelated sound (their random onsets), so they add as power: the level follows the square root
+            // of the sum of the running windows' squares (Clouds' 1/sqrt(grains), here from the windows themselves, so it is
+            // exact through the staggered hand-over). 8 heads' sum is a constant 2.99186, so all running this is 1.
+            if (lightSq > 1e-3f) y *= std::sqrt(2.99186f / lightSq);
+            after_[c] += afterA_ * (y - after_[c]); // each octave a little softer than the note
+            lowCut_[c] += lowCutA_ * (after_[c] - lowCut_[c]);
+            out[c] = after_[c] - lowCut_[c];
+        }
+        if (!lightWant_ && (headOff_[0] | headOff_[1]) == 0) lightOn_ = false; // the last head back at its grain's start: as built again
+    }
+
 #if defined(IV_PROFILE_SHPOLY_AB)
     // The head loop of process() above (its firmware text), with the window picked at compile time.
     template <bool kPoly> IV_INLINE void headsAB(float (&out)[2])
@@ -253,11 +334,13 @@ private:
     };
 
     Ring      line_[2];
-    float     window_ = 19200.0f, step_ IV_ZI;
+    float     window_ IV_RI(19200.0f), step_ IV_ZI;
     float     b0_[4] IV_ZI, b1_[4] IV_ZI, a1_[4] IV_ZI, a2_[4] IV_ZI, z_[2][4][2] IV_ZI;
-    float     afterA_ = 1.0f, lowCutA_ IV_ZI, after_[2] IV_ZI, lowCut_[2] IV_ZI;
+    float     afterA_ IV_RI(1.0f), lowCutA_ IV_ZI, after_[2] IV_ZI, lowCut_[2] IV_ZI;
     float     phase_[2][kHeads] IV_ZI, base_[2][kHeads] IV_ZI; // base_: 2 + the grain's random extra delay
     uint32_t  seed_ = 1;
+    bool      lightWant_ IV_ZI, lightOn_ IV_ZI; // setLighter
+    uint8_t   headOff_[2] IV_ZI;                // a side's resting heads, a bit each (only odd heads ever rest)
 };
 
 } // namespace iv::dsp

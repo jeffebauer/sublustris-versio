@@ -342,7 +342,7 @@ public:
     }
 
 private:
-    float     sampleRate_ = 48000.0f;
+    float     sampleRate_ IV_RI(48000.0f);
     DelayLine line_[2];
     float     frac_[2][kTapSlots] IV_ZI, sign_[2][kTapSlots] IV_ZI, gain_[2][kTapSlots] IV_ZI, tapDelay_[2][kTapSlots + 1] IV_ZI;
     // The TIME crossfade (setAttackSeconds, control()): the fading tap and the samples since
@@ -354,7 +354,7 @@ private:
     int       restSamples_ IV_ZI;
     uint32_t  smearOld_[kSmearStages] IV_ZI; // (control() sets it before the first block)
 #ifndef IV_FIXED_VOICINGS
-    int       taps_ = kTaps; // setTapCount (a prototype)
+    int       taps_ IV_RI(kTaps); // setTapCount (a prototype)
 #else
     static constexpr int taps_ = kTaps;
 #endif

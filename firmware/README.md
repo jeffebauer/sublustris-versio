@@ -57,6 +57,9 @@ All in `firmware/` (no changes inside `libs/libDaisy`):
 - **`IV_SIZE_OPT` / `IV_NO_UNSWITCH` (`core/dsp/SizeOpt.h`)**: mark control-rate Core code for `-Os` in the firmware only (`IV_FIXED_VOICINGS` is defined here).
 - **Profile's serial line** is built with small integer helpers and sent straight to USB CDC, never through `printf` (~2.1 KB).
 - **`-ffp-contract=off`**: no fused multiply-add. On the M7, GCC's `vfma` serialises every multiply-add (~9 cycles each, Resilio's M3 bench); separate `vmul` + `vadd` pipeline.
+- **`HAL_OS` (`firmware/Makefile`, default 1; release and profile):** STM32 HAL's set-up files built here for size (`-Os`, with libDaisy's own defines), ahead of `libdaisy.a`, whose `-O3` copies then stay out of the link. About 5.2 KB off release, 4.5 KB off profile. No audio runs in them: boot, clocks, GPIO, ADC / SAI / I2C / TIM set-up, DMA set-up and the DMA interrupt. `HAL_OS=0` builds without it (`-nohalos` in the file name).
+- **`IV_RI` (`core/dsp/SizeOpt.h`):** a member's non-zero initialiser, left out of the release firmware where `prepare()` / `reset()` sets the same value before the first `process()` (-360 B). Proved by comparing the whole prepared Engine's bytes with and without. Desktop hosts and the profile build, whose micro-tests build their own Fdns and Swells, keep them.
+- **`IV_MORPH_COLD` (`core/dsp/SizeOpt.h`):** the SPACE morph's once-a-change code stays in flash, out of ITCM (the link script's `.flash_text`).
 - Rejected in Resilio and not used here: `-flto` (a few hundred bytes larger on this few translation units).
 
 ## Which `.bin` to flash

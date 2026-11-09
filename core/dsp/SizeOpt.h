@@ -73,6 +73,24 @@
 #define IV_ZI = {}
 #endif
 
+// The SPACE morph's once-a-change code (ADR 0054) stays in flash, out of the 63 KB of ITCM it would otherwise overflow (the link script's .text
+// takes .flash_text). Desktop: nothing.
+#if defined(IV_FIXED_VOICINGS) && defined(__GNUC__) && !defined(__clang__)
+#define IV_MORPH_COLD __attribute__((section(".flash_text"), optimize("Os")))
+#else
+#define IV_MORPH_COLD
+#endif
+// IV_RI(v): a member's non-zero initialiser ("float x_ IV_RI(1.0f);"), left out where prepare() / reset() sets the same value
+// before the first process(): the release firmware builds its Engine once by value-initialisation (see IV_ZI) and calls
+// prepare() before anything else, so those stores only cost flash. Desktop hosts and the profile build (its micro-tests build
+// Fdns and Swells of their own, without an Engine) keep them. A member prepare() / reset() doesn't set keeps its "= v"; proved
+// by comparing the whole prepared Engine's bytes with and without (the flash hunt, Nov 2026).
+#if defined(IV_FIXED_VOICINGS) && !defined(IV_MODE_PROFILE)
+#define IV_RI(v)
+#else
+#define IV_RI(v) = v
+#endif
+
 // IV_D2_BSS: a Core array the firmware places in its D2 SRAM (the linker script's .d2_bss, NOLOAD: whoever uses it
 // zeroes it). Only with IV_FIRMWARE_D2 (firmware/Makefile); elsewhere an ordinary array.
 #if defined(IV_FIRMWARE_D2)
