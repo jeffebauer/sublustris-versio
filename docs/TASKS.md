@@ -32,7 +32,7 @@
   - Feed a steady hot tone and wait 10 s. Flick SIZE fully counter-clockwise and listen for 2 s. Do it three times.
   - Repeat from SIZE noon, then in HALL, then with DECAY at 9 o'clock.
   - A smooth swell of about 1.5 s matches what I found; a broken buzz is something else. Does the reverb go silent afterwards until a restart?
-  - Before the fix: `dist/v1.0.76-hall-lows/sublustris_versio-v1.0.76-hall-lows.bin` (the beta as it is). With the fix: `dist/v1.0.77-size-limit/sublustris_versio-v1.0.77-size-limit.bin`. Same steps on each: the blast should be gone or much smaller on the second.
+  - On the beta (9 Nov 2026): no loud crash and no CPU drops, which proves little: the desktop only measured +4.2 dB there. Try the public build the player had, with the input hot enough to turn its LED amber or red: `dist/release/v1.0.68-133e0e0/sublustris_versio_firmware_v1.0.68-133e0e0.bin` (desktop: +9.5 dB). With the fix: `dist/v1.0.77-size-limit/sublustris_versio-v1.0.77-size-limit.bin`. Same steps on each: the blast should be gone or much smaller on the second.
 - [ ] **Measure the module's input level** (10 minutes, rack power, never with USB)
   1. Patch a steady sine (200 Hz to 1 kHz) into IN L, with MIX fully left.
   2. Raise it until the In L LED just turns red.
