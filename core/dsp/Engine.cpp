@@ -1040,6 +1040,14 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
     wetStep_ = (g.wet - wetNow_) / float(n);
 }
 
+#ifndef IV_FIXED_VOICINGS
+void Engine::poisonTankForTests(int tank)
+{
+    if (tank == 2) plate_.poisonForTests();
+    else (tank == 1 ? lowFdn_ : fdn_).poisonForTests();
+}
+#endif
+
 IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* outL, float* outR, int numSamples)
 {
     if (!ready_) {
@@ -1204,6 +1212,7 @@ IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* 
 
         transport_.control(n, transportAmt_, transportOn_); // MOTION's tape transport (returns at once when out)
         const bool transportLive = !transport_.idle();
+        float wetSum = 0.0f; // the tanks' health (below)
         for (int i = 0; i < n; ++i) {
             // DECAY's level make-up (v1.0.28) on the forward wet and the twin, a ~40 ms glide.
             decayGainNow_ += 0.0005f * (decayGain_ - decayGainNow_);
@@ -1227,7 +1236,23 @@ IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* 
             wr *= eraMakeup_;
             wetL_[i] = wl;
             wetR_[i] = wr;
+            wetSum += wl + wr;
             prof::mark(prof::kOutput);
+        }
+        // The tanks' health, once a chunk, on the wet before anything downstream with a memory hears it (v1.0.77, ADR 0053, issue 2;
+        // Pure Data's filters check their state once a block the same way). A NaN or Inf in any sample stays in the sum, so one
+        // test on its exponent catches it. Failed: the Engine restarts where it stands (reset(): every tank and filter a NaN could
+        // have reached, keeping the knobs), this chunk's wet is dropped, and the reverb builds again from silence with the next sound.
+        {
+            uint32_t sumBits;
+            std::memcpy(&sumBits, &wetSum, sizeof sumBits);
+            if ((sumBits << 1) >= 0xFF000000u) { // exponent all ones: NaN or Inf
+                reset();
+                std::memset(wetL_, 0, sizeof wetL_ + sizeof wetR_); // (adjacent members: one call)
+#ifndef IV_FIXED_VOICINGS
+                ++tankRestarts_;
+#endif
+            }
         }
         // MOTION's tape transport (dsp/Transport.h) over the chunk.
         if (transportLive) transport_.processBlock(wetL_, wetR_, n);

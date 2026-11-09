@@ -210,6 +210,10 @@ public:
     // Tests only: false leaves TONE's resonant tilt out of the wet (the wet as it was before v1.0.44), to show the
     // bell is the only difference and the loop is untouched.
     void  setToneBellForTests(bool on) { toneBellOff_ = !on; }
+    // Tests only (v1.0.77, ADR 0053): a NaN in a tank's state (0 the FDN, 1 the still lows, 2 the plate), and how many times
+    // process() has restarted a tank that went invalid.
+    void  poisonTankForTests(int tank);
+    int   tankRestartsForTests() const { return tankRestarts_; }
 #endif
     bool  twinActive() const { return twinActive_; } // read-only view for tests
     const dsp::Transport& transport() const { return transport_; } // read-only view for tests
@@ -350,6 +354,7 @@ private:
     bool                   transportOn_ IV_ZI;
 #ifndef IV_FIXED_VOICINGS
     bool              toneBellOff_ IV_ZI; // setToneBellForTests
+    int               tankRestarts_ IV_ZI; // tankRestartsForTests
 #endif
     dsp::Limiter      limiter_;
     // ERA's sources into the tank's input (SPEC §4.7): the tape's hiss, the Midiverb's crackle.

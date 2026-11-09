@@ -152,6 +152,9 @@ public:
     // v1.0.71, ADR 0047). Kept as the extra over 1 so a tank that's never told (the still lows') needs no set-up.
     void setFloorPaceExtra(float k) { floorPaceExtra_ = k; }
     void setStagger(int groups) { xfStagger_ = groups == 1 || groups == 2 || groups == 8 ? groups : 4; }
+#ifndef IV_FIXED_VOICINGS
+    void poisonForTests() { absorbY_[0] = std::nanf(""); } // a NaN in one line's loss filter: Engine::poisonTankForTests
+#endif
 
 private:
     bool staggered() const { return xfStagger_ > 1; }
