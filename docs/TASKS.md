@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 9 Nov 2026: `v1.0.77-beta.1` is published (a pre-release; the site's downloads stay on v1.0.68), with the SIZE safety limit. The blast didn't reproduce at the rack (only a slight swell) and the player has been asked for a recording; the morph waits at 98 %. Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
+**Last updated:** 9 Nov 2026: `v1.0.77-beta.1` is published (a pre-release; the site's downloads stay on v1.0.68), with the SIZE safety limit. The blast didn't reproduce at the rack (only a slight swell) and the player has been asked for a recording; the morph is ported as v1.0.78 on its own branch, waiting for your OK and a rack check. Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
 **Plugin installed:** `4140997` on `main` (v1.0.68, Sublustris Versio), 3 Nov 2026; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan). It now matches the rack build: the lighter tape, the lighter radio and PLATE's SIZE crossfade.
 
 ## To do
@@ -10,6 +10,8 @@
   - They say "feedback on Modwiggler and r/modular" now; the launch posts promised changelog credits.
 
 ### At the rack
+- [ ] **Listen to v1.0.78 and run its CPU lap, before it goes out as a beta**
+  - The morph, ported on `claude/port-space-morph` (`c1e54d2`), not merged or pushed. To hear it, on rack power: `dist/v1.0.78-morph-port/sublustris_versio-v1.0.78-morph-port.bin`. The lap, USB power only, about 3 min: `dist/v1.0.78-morph-port/sublustris_versio-v1.0.78-morph-port-profile.bin`.
 - [x] **CPU lap with C kept off the handover** (9 Nov 2026, `dist/v1.0.76-morph-s6/`, `docs/research/m3-morph-s6-lap.log`): 0 late blocks, worst 98.2 %, the same as before C (s5 was 99.5 %). The 50 ms peak on the two PLATE-into-CANYON lines is down from 99.4-99.5 % to 97.7-98.0 %. From half a second in, those lines are 2-2.5 points lower than before C. The worst line is now `CANYON->PLATE->CANYON` (98.2 %, 156 ms after its second change), which C doesn't help. One lap; a line can vary by up to 1.5 points between laps. To hear it, on rack power: `dist/v1.0.76-morph-s6/sublustris_versio-v1.0.76-morph-s6.bin`.
 - [x] **Diagnostic lap: where the 50 ms peak comes from** (9 Nov 2026, four laps, `docs/research/m3-morph-peak-hunt.log`): the spike at the handover was already 97.4 % before C. C's code adds about 1.2 points there even when C is idle, and its level correction about 0.7 more, reaching 99.3 % on average and 100.1 % once, with one late block. After the first 0.5 s, C saves about 3 points. Fix built: see the CPU lap above.
 - [x] **CPU lap for the morph with your pick C** (9 Nov 2026, `dist/v1.0.76-morph-s5/`, `docs/research/m3-morph-s5-lap.log`): 0 late blocks. From half a second into a change, C works: the heavy lines are about 3 points lower (97-98 % down to 94-95 %). But there's a new peak right at the start of a change from PLATE into CANYON with SHIMMER on, 99.5 % at 50 ms, before the voices can rest, so the worst moment rose from 98.2 %. Not understood yet. To hear it, on rack power: `dist/v1.0.76-morph-s5/sublustris_versio-v1.0.76-morph-s5.bin`.
