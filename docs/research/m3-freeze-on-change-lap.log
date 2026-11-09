@@ -1,0 +1,34 @@
+# Lap of the fix, 10 Nov 2026: dist/v1.0.78-freeze-on-change/sublustris_versio_profile-freeze-on-change-MEASURING-30lines.bin (proto/unfreeze-reshape, 4e3e5c7).
+# 'max at' is from the first SPACE flip. ATFLIP: FREEZE 100 ms after the flip, unfreeze 120 ms later (the two 4000-block lines: FREEZE 1500 ms after the flip; 2S: held 2000 ms).
+# One lap. Slice of screenlog.0 lines 5051-5081. The lap's START line wasn't captured for this run, and its text says 31 lines (a leftover: the build has 30).
+SPACE PLATE->HALL heavy W0.1 avg  74.5% max  80.6% | late blocks 0 of 3600 | max at 2877 ms | fired 1 | after 0.5 s  80.6%
+SPACE PLATE->CANYON heavy W0.1 avg  81.1% max  89.2% | late blocks 0 of 3600 | max at 2222 ms | fired 1 | after 0.5 s  89.2%
+SPACE HALL->PLATE heavy W0.1 avg  73.5% max  84.0% | late blocks 0 of 3600 | max at 191 ms | fired 1 | after 0.5 s  79.1%
+SPACE HALL->CANYON heavy W0.1 avg  77.2% max  86.1% | late blocks 0 of 2100 | max at 1163 ms | fired 1 | after 0.5 s  86.1%
+SPACE CANYON->PLATE heavy W0.1 avg  79.6% max  92.0% | late blocks 0 of 3600 | max at 181 ms | fired 1 | after 0.5 s  85.4%
+SPACE CANYON->HALL heavy W0.1 avg  74.7% max  82.8% | late blocks 0 of 2100 | max at 661 ms | fired 1 | after 0.5 s  82.8%
+SPACE PLATE->HALL SHIMMER W1.0 avg  74.6% max  80.1% | late blocks 0 of 3600 | max at 749 ms | fired 1 | after 0.5 s  80.1%
+SPACE PLATE->CANYON SHIMMER W1.0 avg  87.9% max  97.6% | late blocks 0 of 3600 | max at 104 ms | fired 1 | after 0.5 s  95.0%
+SPACE HALL->PLATE SHIMMER W1.0 avg  71.2% max  83.5% | late blocks 0 of 3600 | max at 239 ms | fired 1 | after 0.5 s  75.5%
+SPACE HALL->CANYON SHIMMER W1.0 avg  85.0% max  96.6% | late blocks 0 of 2100 | max at 270 ms | fired 1 | after 0.5 s  94.2%
+SPACE CANYON->PLATE SHIMMER W1.0 avg  77.8% max  89.8% | late blocks 0 of 3600 | max at 177 ms | fired 1 | after 0.5 s  82.1%
+SPACE CANYON->HALL SHIMMER W1.0 avg  75.6% max  83.1% | late blocks 0 of 2100 | max at 400 ms | fired 1 | after 0.5 s  82.8%
+SPACE HALL->CANYON->HALL REFLIP W0.5 avg  80.7% max  97.0% | late blocks 0 of 3700 | max at 248 ms | fired 2 | after 0.5 s  94.8%
+SPACE CANYON->HALL->CANYON REFLIP W0.5 avg  83.2% max  92.4% | late blocks 0 of 3700 | max at 2742 ms | fired 2 | after 0.5 s  92.4%
+SPACE PLATE->CANYON->PLATE REFLIP W0.5 avg  83.5% max  97.3% | late blocks 0 of 6700 | max at 105 ms | fired 2 | after 0.5 s  95.8%
+SPACE CANYON->PLATE->HALL REFLIP W0.5 avg  78.8% max  91.8% | late blocks 0 of 6700 | max at 145 ms | fired 2 | after 0.5 s  84.0%
+SPACE CANYON->PLATE->CANYON REFLIP W0.5 avg  85.3% max  97.6% | late blocks 0 of 6700 | max at 3156 ms | fired 2 | after 0.5 s  97.6%
+SPACE CANYON->HALL UNFREEZE W0.5 avg  82.6% max  91.5% | late blocks 0 of 2800 | max at 358 ms | fired 3 | after 0.5 s  91.2%
+SPACE CANYON->PLATE UNFREEZE W0.5 avg  83.2% max  91.7% | late blocks 0 of 4200 | max at 40 ms | fired 3 | after 0.5 s  91.5%
+SPACE HALL->PLATE ATFLIP W0.5 avg  73.3% max  98.9% | late blocks 0 of 5200 | max at 290 ms | fired 5 | after 0.5 s  85.0%
+SPACE PLATE->HALL ATFLIP W0.5 avg  75.1% max  83.7% | late blocks 0 of 5200 | max at 2902 ms | fired 5 | after 0.5 s  83.7%
+SPACE CANYON->PLATE ATFLIP W0.5 avg  77.9% max 101.4% | late blocks 93 of 5200 | max at 1108 ms | fired 5 | after 0.5 s 101.4%
+SPACE PLATE->CANYON ATFLIP W0.5 avg  79.8% max  90.2% | late blocks 0 of 5200 | max at 2038 ms | fired 5 | after 0.5 s  90.2%
+SPACE PLATE->CANYON ATFLIP W0.5 avg  86.3% max  98.6% | late blocks 0 of 5200 | max at 50 ms | fired 5 | after 0.5 s  98.4%
+SPACE CANYON->PLATE ATFLIP W0.5 avg  77.8% max  96.2% | late blocks 0 of 5200 | max at 443 ms | fired 5 | after 0.5 s  95.6%
+SPACE HALL->CANYON ATFLIP W0.5 avg  75.0% max  92.5% | late blocks 0 of 5200 | max at 1975 ms | fired 5 | after 0.5 s  92.5%
+SPACE PLATE->CANYON ATFLIP W0.5 avg  82.3% max 118.6% | late blocks 146 of 4000 | max at 1582 ms | fired 5 | after 0.5 s 118.6%
+SPACE CANYON->PLATE ATFLIP W0.5 avg  72.8% max 115.0% | late blocks 155 of 4000 | max at 1581 ms | fired 5 | after 0.5 s 115.0%
+SPACE HALL->PLATE 2S ATFLIP W0.5 avg  73.4% max  84.4% | late blocks 0 of 6700 | max at 3272 ms | fired 5 | after 0.5 s  84.4%
+SPACE PLATE->CANYON 2S ATFLIP W0.5 avg  77.6% max  90.7% | late blocks 0 of 6700 | max at 6022 ms | fired 5 | after 0.5 s  90.7%
+SPACE LAP 1 DONE: 30 lines, worst max 118.6%, late blocks in all 394
