@@ -1,6 +1,6 @@
 # Lap of the fix, 10 Nov 2026: dist/v1.0.78-freeze-on-change/sublustris_versio_profile-freeze-on-change-MEASURING-30lines.bin (proto/unfreeze-reshape, 4e3e5c7).
 # 'max at' is from the first SPACE flip. ATFLIP: FREEZE 100 ms after the flip, unfreeze 120 ms later (the two 4000-block lines: FREEZE 1500 ms after the flip; 2S: held 2000 ms).
-# One lap. Slice of screenlog.0 lines 5051-5081. The lap's START line wasn't captured for this run, and its text says 31 lines (a leftover: the build has 30).
+# One lap. Slice of screenlog.0 lines 5051-5081. This lap's START line wasn't captured. The START just before it in the log, reading 31 lines, belongs to the previous build, which ran for 11 more lines before this one was flashed.
 SPACE PLATE->HALL heavy W0.1 avg  74.5% max  80.6% | late blocks 0 of 3600 | max at 2877 ms | fired 1 | after 0.5 s  80.6%
 SPACE PLATE->CANYON heavy W0.1 avg  81.1% max  89.2% | late blocks 0 of 3600 | max at 2222 ms | fired 1 | after 0.5 s  89.2%
 SPACE HALL->PLATE heavy W0.1 avg  73.5% max  84.0% | late blocks 0 of 3600 | max at 191 ms | fired 1 | after 0.5 s  79.1%
