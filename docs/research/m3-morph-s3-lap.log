@@ -1,0 +1,20 @@
+SPACE PLATE->HALL heavy W0.1 avg  74.6% max  80.4% | late blocks 0 of 3600 | max at 877 ms | fired 1
+SPACE PLATE->CANYON heavy W0.1 avg  81.3% max  89.2% | late blocks 0 of 3600 | max at 2207 ms | fired 1
+SPACE HALL->PLATE heavy W0.1 avg  73.6% max  84.1% | late blocks 0 of 3600 | max at 191 ms | fired 1
+SPACE HALL->CANYON heavy W0.1 avg  77.1% max  86.0% | late blocks 0 of 2100 | max at 1151 ms | fired 1
+SPACE CANYON->PLATE heavy W0.1 avg  79.6% max  91.9% | late blocks 0 of 3600 | max at 178 ms | fired 1
+SPACE CANYON->HALL heavy W0.1 avg  74.7% max  83.0% | late blocks 0 of 2100 | max at 700 ms | fired 1
+SPACE PLATE->HALL SHIMMER W1.0 avg  74.8% max  81.5% | late blocks 0 of 3600 | max at 209 ms | fired 1
+SPACE PLATE->CANYON SHIMMER W1.0 avg  90.1% max  99.4% | late blocks 0 of 3600 | max at 213 ms | fired 1
+SPACE HALL->PLATE SHIMMER W1.0 avg  71.4% max  84.0% | late blocks 0 of 3600 | max at 241 ms | fired 1
+SPACE HALL->CANYON SHIMMER W1.0 avg  86.6% max  97.9% | late blocks 0 of 2100 | max at 409 ms | fired 1
+SPACE CANYON->PLATE SHIMMER W1.0 avg  78.0% max  90.0% | late blocks 0 of 3600 | max at 181 ms | fired 1
+SPACE CANYON->HALL SHIMMER W1.0 avg  75.7% max  83.3% | late blocks 0 of 2100 | max at 400 ms | fired 1
+SPACE HALL->CANYON->HALL REFLIP W0.5 avg  81.6% max  97.6% | late blocks 0 of 3700 | max at 400 ms | fired 2
+SPACE CANYON->HALL->CANYON REFLIP W0.5 avg  84.1% max  95.0% | late blocks 0 of 3700 | max at 2759 ms | fired 2
+SPACE PLATE->CANYON->PLATE REFLIP W0.5 avg  84.8% max  99.0% | late blocks 0 of 6700 | max at 209 ms | fired 2
+SPACE CANYON->PLATE->HALL REFLIP W0.5 avg  78.9% max  91.8% | late blocks 0 of 6700 | max at 144 ms | fired 2
+SPACE CANYON->PLATE->CANYON REFLIP W0.5 avg  86.6% max  98.6% | late blocks 0 of 6700 | max at 3270 ms | fired 2
+SPACE CANYON->HALL UNFREEZE W0.5 avg  82.5% max  91.0% | late blocks 0 of 2800 | max at 314 ms | fired 3
+SPACE CANYON->PLATE UNFREEZE W0.5 avg  83.1% max  91.3% | late blocks 0 of 4200 | max at 54 ms | fired 3
+SPACE LAP 1 DONE: 19 lines, worst max  99.4%, late blocks in all 0
