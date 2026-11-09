@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 9 Nov 2026: the morph's lap now has no dropouts, with one peak left to settle; a player's report of a loud blast on fast SIZE moves is under "Waiting on Claude". Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
+**Last updated:** 9 Nov 2026: next for you: the morph's new CPU lap under "At the rack"; a player's report of a loud blast on fast SIZE moves is under "Waiting on Claude". Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
 **Plugin installed:** `4140997` on `main` (v1.0.68, Sublustris Versio), 3 Nov 2026; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan). It now matches the rack build: the lighter tape, the lighter radio and PLATE's SIZE crossfade.
 
 ## To do
@@ -25,8 +25,10 @@
   - **PLATE:** the attack and the stiller tail; MOTION left of noon; a big SIZE move on a pad.
   - **Level:** does CANYON want a trim (it reads up to 1.9 LU louder than you picked)? Is MIX at noon too loud (up 1.9 to 2.9 LU)?
   - **Crackle played hot:** HALL's endless pad, CANYON at short tails, frozen pads at SIZE noon.
+- [ ] **CPU lap for the morph, with the first 0.2 s made lighter** (USB power, about 3 min a lap)
+  - Build: `dist/v1.0.76-morph-s4/sublustris_versio-v1.0.76-morph-s4-profile.bin`. Let one lap run to `SPACE LAP 1 DONE`; I read `screenlog.0`.
 - [ ] **Play the morph, "finish, then go"** (rack power)
-  - Build: `dist/v1.0.76-morph-s3/sublustris_versio-v1.0.76-morph-s3.bin`. Try flipping SPACE and flipping again mid-morph: the first change plays out, then the second.
+  - Build: `dist/v1.0.76-morph-s4/sublustris_versio-v1.0.76-morph-s4.bin` (the same sound as `morph-s3`). Try flipping SPACE and flipping again mid-morph: the first change plays out, then the second.
 - [ ] **Measure the module's input level** (10 minutes, rack power, never with USB)
   1. Patch a steady sine (200 Hz to 1 kHz) into IN L, with MIX fully left.
   2. Raise it until the In L LED just turns red.
