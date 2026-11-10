@@ -13,7 +13,7 @@
 - **The input still dips** over 0.05 s each way, as the flip always did, so its jumps stay unheard. The tank's sound doesn't dip.
 - **Finish, then go** (owner, 9 Nov): while a morph or reshape runs the switch isn't read. When it ends the switch's latest position decides: a different space starts a normal new change, the same one does nothing. A there-and-back takes up to about 6 s.
 - **C: half the shimmer's heads rest during a change into CANYON with SHIMMER on** (4 a side, not 8). A resting head finishes its grain and doesn't start another; it comes back at a grain's start. The level follows the running windows' power. It starts two control ticks (48 samples) after the handover, the module's heaviest block, and has its own loop (`Shimmer::headsLight`, in ITCM), so nothing else pays for it.
-- **A freeze during a morph** keeps the sound you hear: the tank holding the most of it becomes the pad, the other goes in 0.3 s. A change while frozen waits for the unfreeze, as before.
+- **A freeze during a morph** keeps the sound you hear: the tank holding the most of it becomes the pad, the other goes in 0.3 s. (Amended by ADR 0055, v1.0.79: early in a morph the old space stays and the change waits for the unfreeze; the twin waits for one tank.) A change while frozen waits for the unfreeze, as before.
 - **A held endless tail dies away on a change to or from PLATE** (owner's call): the new tank only hears what's played next. HALL <-> CANYON carries it on.
 - **Always on, every Host.** The prototype's hooks (`IV_SPACE_MORPH`, `IV_MORPH_LIGHT`, the log, the A/B/C/S switch, `SPACE_MORPH` as a measuring flag) are gone. Only a small event log stays, behind `#ifndef IV_FIXED_VOICINGS`, for `test_space_morph_waits`: no firmware bytes.
 

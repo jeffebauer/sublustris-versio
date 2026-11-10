@@ -294,7 +294,7 @@ IV_SIZE_OPT void Engine::reset()
     flipStep_ = 0.0f;
     onsetDip_ = 0.0f;
     morphOld_ = -1;
-    morphFast_ = morphRevert_ = morphFreezeSeen_ = false;
+    morphFast_ = morphFreezeSeen_ = false;
     placeOn_ = false;
     fdn_.setXfSpread(false);
     lowFdn_.setXfSpread(false);
@@ -375,7 +375,6 @@ IV_SIZE_OPT void Engine::handleEdges(int chunkStart, int chunkEnd) // once per b
 
 IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: built for size (flash)
 {
-    const float twinStep = 1.0f / (voicing::kTwinFadeSeconds * sampleRate_);
     const float tankStep = 1.0f / (voicing::kFreezeInputSeconds * sampleRate_);
     switch (e) {
     case GestureReader::Event::Freeze:
@@ -392,27 +391,15 @@ IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: 
         plate_.resyncHoldLevel();
         tankInTarget_ = 0.0f;
         tankInStep_ = tankStep;
-#ifndef IV_FIXED_VOICINGS
-        if (!twinActive_ && !twinOff_) { // setTwinGainPrototype: no twin at all
-#else
-        if (!twinActive_) {
-#endif
-            resetHalf(twinHalf_);
-            twinPlate_.reset();
-            for (auto& d : twinDiffuser_) d.clear();
-            twinSwell_.setAttackSeconds(0.0f, true); // PLATE's twin: no attack
-            twinSwell_.reset();
-            room_.reset();
-            roomLevel_ = 0.0f;
-            twinSized_ = false;
-            twinActive_ = true;
-        }
-        twinInStep_ = twinStep;
+        // A freeze during a change: the twin waits for its end (morphAdvance, morphRunOld, morphHoldOld). On top of the reshape's
+        // crossfades, or of two tanks, it overloaded the module.
+        if (placeOn_ || morphOld_ >= 0) twinInStep_ = 0.0f;
+        else startTwin();
         break;
     case GestureReader::Event::Unfreeze:
         tankInTarget_ = 1.0f;
         tankInStep_ = tankStep;
-        twinInStep_ = -twinStep;
+        twinInStep_ = -twinInStep_; // (0 if the twin never started)
         break;
     case GestureReader::Event::PaintStart:
         // Room to grow while painting: the pad's level or the floor, + kPaintHeadroomDb.
@@ -429,6 +416,26 @@ IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: 
     case GestureReader::Event::None:
         break;
     }
+}
+
+IV_MORPH_COLD void Engine::startTwin()
+{
+#ifndef IV_FIXED_VOICINGS
+    if (!twinActive_ && !twinOff_) { // setTwinGainPrototype: no twin at all
+#else
+    if (!twinActive_) {
+#endif
+        resetHalf(twinHalf_);
+        twinPlate_.reset();
+        for (auto& d : twinDiffuser_) d.clear();
+        twinSwell_.setAttackSeconds(0.0f, true); // PLATE's twin: no attack
+        twinSwell_.reset();
+        room_.reset();
+        roomLevel_ = 0.0f;
+        twinSized_ = false;
+        twinActive_ = true;
+    }
+    twinInStep_ = 1.0f / (voicing::kTwinFadeSeconds * sampleRate_);
 }
 
 // ---- Voicing -------------------------------------------------------------------
@@ -1008,22 +1015,17 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
     // that differs from the space now playing starts a normal new change; one that's there already does nothing. (A
     // second change on top of a running one overloaded the module: docs/research/m3-morph-s2-lap.log.)
     if (morphOld_ >= 0 || placeOn_) space = activeSpace_;
-    // A freeze during a transition keeps the sound you hear: the tank that holds the most of it becomes the pad. The
-    // other goes in 0.3 s (holding both frozen would be two big tanks and the twin).
+    // A freeze during a morph keeps the sound you hear: the tank that holds the most of it becomes the pad. The other goes
+    // in 0.3 s (holding both frozen would be two big tanks and the twin). If that's the old tank, the change waits for the unfreeze.
     if (gesture_.frozen() && morphOld_ >= 0 && !morphFreezeSeen_) {
         morphFreezeSeen_ = true;
         const float oldDb = tankFastDb(morphOld_) + 20.0f * std::log10(morphGOld_ + 1e-9f);
         const float newDb = tankFastDb(activeSpace_ == 0 ? 0 : 1) + 20.0f * std::log10(morphGNew_ + 1e-9f);
         morphFast_ = true;
-        if (oldDb > newDb) {
-            morphRevert_ = true;
-            flipPhase_ = 1;
-        }
+        if (oldDb > newDb) morphHoldOld();
     }
     if (!gesture_.frozen()) morphFreezeSeen_ = false;
-    if (morphRevert_ && morphOld_ < 0) morphRevert_ = false; // (it had finished in the meantime)
-    if (morphRevert_) space = morphOldSpace_;
-    const bool flipHeld = gesture_.frozen() && !morphRevert_;
+    const bool flipHeld = gesture_.frozen();
     if (flipPhase_ == 0 && space != activeSpace_ && !gesture_.frozen() && freezeMix_ == 0.0f) flipPhase_ = 1;
     if (flipPhase_ == 1) {
         flipStep_ = -flipChunk / float(n);
@@ -1451,17 +1453,12 @@ IV_MORPH_COLD void Engine::morphStopTwin()
     twinPlate_.reset();
     twinSwell_.reset();
     for (auto& d : twinDiffuser_) d.clear();
-    if (gesture_.frozen()) { // a freeze sent the flip back: the pad's twin starts again, in the pad's own space
-        twinActive_ = true;
-        twinInStep_ = 1.0f / (voicing::kTwinFadeSeconds * sampleRate_);
-    }
 }
 
 // The flip's silent point (the input has dipped out; the wet hasn't). Which tank holds what decides what happens to it.
 IV_MORPH_COLD void Engine::morphFlip(int to, int n)
 {
-    // Nothing else is running here: a change waits for the last to end. The one exception is a freeze sending a morph
-    // back (morphRevert_), which is what the swap below is for.
+    // Nothing else is running here: a change waits for the last to end.
     const int from = activeSpace_;
     morphLightWait_ = 2;
     const float keepGain = decayGainNow_;
@@ -1486,27 +1483,7 @@ IV_MORPH_COLD void Engine::morphFlip(int to, int n)
         IV_IF_LIFT(wetLiftNow_ = keepLift;)
         IV_MORPH_NOTE(3, from, to);
     }
-    else
-    if (morphRevert_) { // the tank we're going back to is the one still ringing out
-        IV_MORPH_NOTE(6, from, to);
-        morphRevert_ = false;
-        morphKeepTank_ = true;
-        applySpace(true, n, false);
-        morphKeepTank_ = false;
-        decayGainNow_ = morphOldDecayGain_; // this tank's own, held while it rang out
-        IV_IF_LIFT(wetLiftNow_ = morphOldLift_;)
-        morphOldDecayGain_ = keepGain;
-        IV_IF_LIFT(morphOldLift_ = keepLift;)
-        morphOld_ = from == 0 ? 0 : 1;
-        morphOldSpace_ = from;
-        const float o = morphGOld_;
-        morphGOld_ = morphGNew_;
-        morphGNew_ = o;
-        morphGOldWas_ = morphGOld_;
-        morphGNewWas_ = morphGNew_;
-        morphX_ = 1.0f - morphX_;
-        IV_MORPH_NOTE(2, from, to);
-    } else {
+    else {
         // A fresh start for the new tank only; the old one keeps everything it has, its early taps and shelf too.
         if (to != 0) setEarlyTapsForSpace();
         applySpace(true, n, false);
@@ -1531,6 +1508,35 @@ IV_MORPH_COLD void Engine::morphFlip(int to, int n)
     for (auto& d : diffuser_) d.clear();
 }
 
+// A freeze early in a morph, the old tank holding most of the sound: it goes back to being the tank in use, under the freeze (its
+// input is closing), with no second handover. The change waits for the unfreeze. The two tanks only trade roles and gains, so the
+// old tank's sound carries straight on; the new one, with only a whisper in it, stops here unless it's already audible.
+IV_MORPH_COLD void Engine::morphHoldOld()
+{
+    const int from = activeSpace_;
+    const float keepGain = decayGainNow_;
+    IV_IF_LIFT(const float keepLift = wetLiftNow_;)
+    activeSpace_ = morphOldSpace_;
+    decayGainNow_ = decayGain_ = morphOldDecayGain_; // this tank's own, held while it rang out
+    IV_IF_LIFT(wetLiftNow_ = wetLift_ = morphOldLift_;)
+    morphOldDecayGain_ = keepGain;
+    IV_IF_LIFT(morphOldLift_ = keepLift;)
+    morphOld_ = from == 0 ? 0 : 1;
+    morphOldSpace_ = from;
+    const float o = morphGOld_;
+    morphGOld_ = morphGNew_;
+    morphGNew_ = o;
+    morphX_ = 1.0f - morphX_;
+    if (from != 0) std::memset(xoZ_, 0, sizeof xoZ_); // the FDN path's crossover: left holding music, it would feed the next change's new tank
+    IV_MORPH_NOTE(2, from, activeSpace_); // (the twin the freeze just started serves either space)
+    if (morphGOld_ < kMorphDropGain) {
+        IV_MORPH_NOTE(4, morphOldSpace_, activeSpace_);
+        morphOld_ = -1;
+        morphFast_ = false;
+        startTwin(); // waiting since the press
+    }
+}
+
 IV_MORPH_COLD void Engine::morphAdvance(int n)
 {
     const float dt = float(n) / sampleRate_;
@@ -1551,6 +1557,7 @@ IV_MORPH_COLD void Engine::morphAdvance(int n)
             lowFdn_.setXfSpread(false);
             placeOn_ = false;
             IV_MORPH_NOTE(5, activeSpace_, activeSpace_);
+            if (gesture_.frozen()) startTwin(); // a freeze during the reshape: its twin starts now (a no-op if it's running)
         }
     }
     // Only while a change into CANYON runs with SHIMMER on (the owner's pick C, renders/morph_last_98): half the shimmer's heads rest.
@@ -1620,6 +1627,7 @@ void Engine::morphRunOld(int n)
         morphOld_ = -1;
         morphFast_ = false;
         morphGNew_ = morphGNewWas_ = 1.0f;
+        if (gesture_.frozen()) startTwin(); // a freeze during the morph: its twin starts now
     }
 }
 

@@ -499,6 +499,9 @@ private:
     void  morphFlip(int to, int n);          // the flip's silent point
     void  morphAdvance(int n);               // once a chunk: the fades and the in-place ramps
     void  morphStopTwin();                   // the twin of the old space stops at the flip's silent point
+    void  morphHoldOld();                    // a freeze early in a morph: the old tank stays, the change waits
+    void  startTwin();                       // the twin starts: at a freeze, or a reshape's end
+    static constexpr float kMorphDropGain = 0.05f; // morphHoldOld: under this the new tank's cut can't be heard (click check)
     bool  morphKeepTank_ IV_ZI;
     uint8_t morphLightWait_ IV_ZI;           // control ticks left before the heads may rest after a change (morphAdvance)
     void  morphLend(float* ol, float* orr);
@@ -511,7 +514,7 @@ private:
     float morphGOld_ IV_ZI, morphGNew_ IV_ZI, morphGOldWas_ IV_ZI, morphGNewWas_ IV_ZI; // per chunk, ramped per sample
     float morphOldDecayGain_ IV_ZI, morphOldLift_ IV_ZI; // the old tank's own make-ups, held
     bool  morphFast_ IV_ZI;               // a freeze: the old tank goes in 0.3 s and stops hearing the music
-    bool  morphRevert_ IV_ZI, morphFreezeSeen_ IV_ZI;
+    bool  morphFreezeSeen_ IV_ZI;
     float morphInL_[kChunk] IV_ZI, morphInR_[kChunk] IV_ZI;
     enum { kPlaceRate, kPlaceHigh, kPlaceGovernor, kPlaceFloorDb, kPlaceDecayGain, kPlaceWetLift, kPlaceFloorScale,
            kPlaceFloorCentre, kPlaceAir, kPlaceEndlessTop, kPlaceShelf, kPlaceLowsOwn, kPlaceCount };
