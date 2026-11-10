@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 10 Nov 2026: you picked B ("SIZE waits") on `renders/flipflick_size`; its module lap build is next. Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
+**Last updated:** 10 Nov 2026 (night): two CPU laps for your pick B are built and waiting under "At the rack", first item. Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
 **Plugin installed:** `4140997` on `main` (v1.0.68, Sublustris Versio), 3 Nov 2026; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan). It now matches the rack build: the lighter tape, the lighter radio and PLATE's SIZE crossfade.
 
 ## To do
@@ -10,6 +10,11 @@
   - They say "feedback on Modwiggler and r/modular" now; the launch posts promised changelog credits.
 
 ### At the rack
+- [ ] **Two CPU laps for "SIZE waits" (your pick B), USB power only, logging on, about 13 min each, B first** (`proto/flipflick-size` `fcecb00`; `dist/v1.0.79-flipflick/`, its README has the line list):
+  1. `sublustris_versio_profile-flipflick-B-MEASURING-47lines.bin`
+  2. `sublustris_versio_profile-flipflick-OFF-MEASURING-47lines.bin` (the same build without B)
+  - 47 lines: the usual 19; the 11 PLATE <-> CANYON flip-flicks; 4 new PLATE <-> HALL flicks; 4 new lines that flip SPACE while a SIZE crossfade is still running (a gap the prototype found: today a flip doesn't wait for one); the 9 unfreeze-SIZE lines. DONE lines say `[FLIPFLICK-B]` / `[FLIPFLICK-OFF]`.
+  - To play B on rack power: `sublustris_versio-flipflick-B-RELEASE.bin` (111,660 B, 980 B under budget). After a PLATE <-> HALL / CANYON flip, SIZE does nothing for up to 3 s, then lands. It also carries the room makes way and the room keeps its size.
 - [x] **`v1.0.79-beta.1` published** (10 Nov 2026, from `e9bc141`; pre-release, the site's downloads stay on v1.0.68; PR 1 has a comment linking it). The Modwiggler thread still links `v1.0.76-beta.1`: a post about the new beta is yours if you want one.
 - [x] **Hear and lap the fix for the crackle when FREEZE lands on a SPACE flip** (`proto/unfreeze-reshape`, `3bfeb76`; ported as v1.0.79)
   - To hear it, rack power: `dist/v1.0.78-freeze-on-change/sublustris_versio-freeze-on-change-2-RELEASE.bin`. Flip SPACE and press FREEZE a moment later, every direction, then unfreeze: is the crackle gone, and does the old space hold cleanly with the new one arriving after the unfreeze?
@@ -63,6 +68,7 @@
 - [ ] **`input_stop2`: not ready, don't listen yet.** It needs re-rendering on the current build first (that's with me).
 
 ### When convenient
+- [ ] **OK to delete two judged pages?** `renders/unfreeze_size` (827 MB, picked A) and `renders/flipflick_size` (501 MB, picked B). Either can be re-rendered from its branch. Disk is at 17 GB free.
 - [ ] **Empty the Trash** when you're happy
   - Old clean-ups: `sublustris-wrap-2026-11-02` (2.9 GB), and `sublustris-cleanup-2026-10-29`, `sublustris-old-builds-2026-10-29` and `-29b` if still there.
   - `sublustris-memory-2026-11-08` is a backup from today's memory tidy: keep it until the new session setup has proved fine.
