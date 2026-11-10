@@ -1,0 +1,46 @@
+SPACE START (S, 39 lines, ~8 min; UFS CONTROL; FLIPFLICK) [CONTROL]
+SPACE PLATE->HALL heavy W0.1 avg  74.4% max  80.4% | late blocks 0 of 3600 | max at 879 ms | fired 1 | after 0.5 s  80.4%
+SPACE PLATE->CANYON heavy W0.1 avg  81.0% max  89.3% | late blocks 0 of 3600 | max at 2223 ms | fired 1 | after 0.5 s  89.3%
+SPACE HALL->PLATE heavy W0.1 avg  73.4% max  83.9% | late blocks 0 of 3600 | max at 190 ms | fired 1 | after 0.5 s  79.6%
+SPACE HALL->CANYON heavy W0.1 avg  77.1% max  86.2% | late blocks 0 of 2100 | max at 1003 ms | fired 1 | after 0.5 s  86.2%
+SPACE CANYON->PLATE heavy W0.1 avg  79.4% max  91.7% | late blocks 0 of 3600 | max at 179 ms | fired 1 | after 0.5 s  85.2%
+SPACE CANYON->HALL heavy W0.1 avg  74.6% max  83.0% | late blocks 0 of 2100 | max at 700 ms | fired 1 | after 0.5 s  83.0%
+SPACE PLATE->HALL SHIMMER W1.0 avg  74.5% max  80.0% | late blocks 0 of 3600 | max at 741 ms | fired 1 | after 0.5 s  80.0%
+SPACE PLATE->CANYON SHIMMER W1.0 avg  87.5% max  97.5% | late blocks 0 of 3600 | max at 107 ms | fired 1 | after 0.5 s  94.4%
+SPACE HALL->PLATE SHIMMER W1.0 avg  71.1% max  83.4% | late blocks 0 of 3600 | max at 143 ms | fired 1 | after 0.5 s  75.3%
+SPACE HALL->CANYON SHIMMER W1.0 avg  84.7% max  96.3% | late blocks 0 of 2100 | max at 247 ms | fired 1 | after 0.5 s  93.9%
+SPACE CANYON->PLATE SHIMMER W1.0 avg  77.7% max  89.5% | late blocks 0 of 3600 | max at 145 ms | fired 1 | after 0.5 s  81.9%
+SPACE CANYON->HALL SHIMMER W1.0 avg  75.5% max  83.0% | late blocks 0 of 2100 | max at 400 ms | fired 1 | after 0.5 s  82.5%
+SPACE HALL->CANYON->HALL REFLIP W0.5 avg  80.5% max  96.8% | late blocks 0 of 3700 | max at 248 ms | fired 2 | after 0.5 s  94.4%
+SPACE CANYON->HALL->CANYON REFLIP W0.5 avg  82.9% max  91.8% | late blocks 0 of 3700 | max at 1957 ms | fired 2 | after 0.5 s  91.8%
+SPACE PLATE->CANYON->PLATE REFLIP W0.5 avg  83.3% max  97.3% | late blocks 0 of 6700 | max at 50 ms | fired 2 | after 0.5 s  95.0%
+SPACE CANYON->PLATE->HALL REFLIP W0.5 avg  78.6% max  91.5% | late blocks 0 of 6700 | max at 185 ms | fired 2 | after 0.5 s  84.6%
+SPACE CANYON->PLATE->CANYON REFLIP W0.5 avg  85.1% max  97.3% | late blocks 0 of 6700 | max at 3156 ms | fired 2 | after 0.5 s  97.3%
+SPACE CANYON->HALL UNFREEZE W0.5 avg  82.4% max  91.1% | late blocks 0 of 2800 | max at 358 ms | fired 3 | after 0.5 s  91.0%
+SPACE CANYON->PLATE UNFREEZE W0.5 avg  83.0% max  91.4% | late blocks 0 of 4200 | max at 32 ms | fired 3 | after 0.5 s  91.2%
+SPACE PLATE->CANYON FLIPFLICK S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.0->1.0 +100 ms W0.5 avg  95.2% max 114.9% | late blocks 1201 of 3600 | max at 644 ms | fired 2 | after 0.5 s 114.9%
+SPACE PLATE->CANYON FLIPFLICK S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.0->1.0 +300 ms W0.5 avg  95.0% max 112.0% | late blocks 1201 of 3600 | max at 830 ms | fired 2 | after 0.5 s 112.0%
+SPACE PLATE->CANYON FLIPFLICK S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z1.0->0.0 +100 ms W0.5 avg  92.7% max 107.8% | late blocks 1201 of 3600 | max at 438 ms | fired 2 | after 0.5 s 107.6%
+SPACE PLATE->CANYON FLIPFLICK S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z1.0->0.0 +300 ms W0.5 avg  93.7% max 111.4% | late blocks 1201 of 3600 | max at 822 ms | fired 2 | after 0.5 s 111.4%
+SPACE CANYON->PLATE FLIPFLICK S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.0->1.0 +100 ms W0.5 avg  82.1% max 109.8% | late blocks 300 of 3600 | max at 466 ms | fired 2 | after 0.5 s 109.7%
+SPACE CANYON->PLATE FLIPFLICK S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.0->1.0 +300 ms W0.5 avg  82.1% max 110.0% | late blocks 300 of 3600 | max at 634 ms | fired 2 | after 0.5 s 110.0%
+SPACE CANYON->PLATE FLIPFLICK S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z1.0->0.0 +100 ms W0.5 avg  82.4% max 109.7% | late blocks 300 of 3600 | max at 364 ms | fired 2 | after 0.5 s 109.7%
+SPACE CANYON->PLATE FLIPFLICK S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z1.0->0.0 +300 ms W0.5 avg  82.4% max 109.7% | late blocks 300 of 3600 | max at 674 ms | fired 2 | after 0.5 s 109.7%
+SPACE PLATE->CANYON FLIPFLICK S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.0->1.0 +100 ms W0.5 avg  86.4% max 101.8% | late blocks 111 of 3600 | max at 650 ms | fired 2 | after 0.5 s 101.8%
+SPACE CANYON->PLATE FLIPFLICK S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.0->1.0 +100 ms W0.5 avg  80.4% max 106.7% | late blocks 300 of 3600 | max at 356 ms | fired 2 | after 0.5 s 106.5%
+SPACE PLATE->CANYON FLIPFLICK S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.0->1.0->0.0 +100 ms W0.5 avg  89.0% max 101.4% | late blocks 7 of 3600 | max at 114 ms | fired 2 | after 0.5 s  96.9%
+SPACE HALL->HALL UNFRZ SIZE DOWN S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8->0.4 +100 ms W0.5 avg  78.8% max 104.3% | late blocks 171 of 2910 | max at 698 ms | fired 3 | after 0.5 s 104.3%
+SPACE HALL->HALL UNFRZ SIZE DOWN S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8->0.4 +300 ms W0.5 avg  71.8% max 105.1% | late blocks 171 of 3110 | max at 650 ms | fired 3 | after 0.5 s 105.1%
+SPACE HALL->HALL UNFRZ SIZE MOVED FROZEN S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8->0.4 W0.5 avg  78.7% max 104.6% | late blocks 171 of 3220 | max at 520 ms | fired 2 | after 0.5 s 104.6%
+SPACE CANYON->CANYON UNFRZ SIZE DOWN S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8->0.4 +100 ms W0.5 avg  93.7% max 103.8% | late blocks 851 of 2910 | max at 1235 ms | fired 3 | after 0.5 s 103.8%
+SPACE CANYON->CANYON UNFRZ SIZE DOWN S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8->0.4 +300 ms W0.5 avg  95.0% max 102.1% | late blocks 971 of 3110 | max at 1599 ms | fired 3 | after 0.5 s 102.1%
+SPACE CANYON->CANYON UNFRZ SIZE MOVED FROZEN S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8->0.4 W0.5 avg  92.2% max 101.9% | late blocks 1000 of 3220 | max at 1807 ms | fired 2 | after 0.5 s 101.9%
+SPACE CANYON->CANYON UNFRZ SIZE TWISTS S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 TWIST 0.5<->0.9 W0.5 avg 102.4% max 110.2% | late blocks 3113 of 3820 | max at 902 ms | fired 2 | after 0.5 s 110.2%
+SPACE HALL->HALL UNFRZ SIZE DOWN S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8->0.4 +300 ms W0.5 avg  72.3% max 104.4% | late blocks 170 of 3110 | max at 668 ms | fired 3 | after 0.5 s 104.4%
+SPACE CANYON->CANYON UNFRZ SIZE DOWN S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8->0.4 +300 ms W0.5 avg  82.8% max  93.2% | late blocks 0 of 3110 | max at 872 ms | fired 3 | after 0.5 s  93.2%
+SPACE LAP 1 DONE [CONTROL]: 39 lines, worst max 114.9%, late blocks in all 13040
+CORNER PLATE S0 wear10              avg  83.1% max  94.8% min  65.0% | mem 19710748 B | block 48 | fs 48000 Hz | ~8314 cyc/sample | max at block 116
+  SPLIT ctl  4.1 in  6.5 shim  1.8 swell 10.9 twin  0.7 tank 18.1 tkctl  7.5 tkloop 12.7 tkout 11.5 tkmix  1.4 wear  4.5 out  2.9 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  8.0 in  8.3 shim  3.0 swell 14.8 twin  1.9 tank 29.0 tkctl 10.9 tkloop 15.6 tkout 15.2 tkmix  2.8 wear  5.7 out  4.1 flip  2.1 tkabs  4.7
+BENCH clock 480 MHz icache on dcache on | FZ on (irq on) | sdram TRP 3 TRCD 3 (tight) sdclk 100 MHz | itcm 62680 B | engine 0x20009000 axi 0x24002320
+SDRAMCHK libdaisy 0 tight 0 laps 0 in 0 (wrong words, of 4194304 a check)
