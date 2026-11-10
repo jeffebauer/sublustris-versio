@@ -68,7 +68,7 @@
 - [ ] **`input_stop2`: not ready, don't listen yet.** It needs re-rendering on the current build first (that's with me).
 
 ### When convenient
-- [ ] **OK to delete two judged pages?** `renders/unfreeze_size` (827 MB, picked A) and `renders/flipflick_size` (501 MB, picked B). Either can be re-rendered from its branch. Disk is at 17 GB free.
+- [x] **Two judged pages deleted** (10 Nov, your OK): `renders/unfreeze_size` and `renders/flipflick_size`. Either can be re-rendered from its branch.
 - [ ] **Empty the Trash** when you're happy
   - Old clean-ups: `sublustris-wrap-2026-11-02` (2.9 GB), and `sublustris-cleanup-2026-10-29`, `sublustris-old-builds-2026-10-29` and `-29b` if still there.
   - `sublustris-memory-2026-11-08` is a backup from today's memory tidy: keep it until the new session setup has proved fine.

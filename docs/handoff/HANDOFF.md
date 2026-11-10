@@ -26,7 +26,7 @@ Start with `/session-start`.
 | M3 | Laps today on the module: unfreeze-SIZE (A, fixed room, control, SHIMMER on) and flip-flick (fixed room, control). B's laps are built, not run. The owner played A's and fixed room's release builds on the rack |
 | M9 | Released v1.0.68 (Latest); `v1.0.79-beta.1` (10 Nov, pre-release) is the newest |
 
-**main:** `59ace73` plus this wrap's commit, docs only since v1.0.68; **30 commits ahead of origin, not pushed** (the owner's OK is needed; no `site/` change, so no site rebuild). **`beta/player-feedback`:** `e9bc141`, pushed, equal to origin.
+**main:** docs only since v1.0.68; **pushed to origin at wrap** (the owner's OK, 10 Nov; no `site/` change, so no site rebuild). **`beta/player-feedback`:** `e9bc141`, pushed, equal to origin.
 
 ## Start here
 
@@ -53,8 +53,6 @@ Then, in order:
 
 See `docs/TASKS.md`:
 - **The two B laps** (morning).
-- **Pushing `main`'s 30 docs commits.**
-- **Deleting two judged pages:** `renders/unfreeze_size` (827 MB) and `renders/flipflick_size` (501 MB).
 - As before:
   - lfad credit in the release notes;
   - a Modwiggler post about the beta;
@@ -92,7 +90,7 @@ Local only: `dist/v1.0.79-unfreeze-size/` (this session's earlier builds), `dist
   - never connect USB and rack power at once;
   - `ls` is eza (use `/bin/ls`);
   - a new worktree needs `tools/make_stimulus.py`, and firmware built with `LIBDAISY_DIR=` pointing at main's `libs/libDaisy`;
-  - disk is at 17 GB free.
+  - disk is at 18 GB free (both judged pages deleted).
 
 ## Gates
 
