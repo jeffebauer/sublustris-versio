@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 10 Nov 2026: you found a crackle on v1.0.78 when FREEZE lands on a SPACE flip; your next step is the measuring lap at the rack, and the beta waits for it. Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
+**Last updated:** 10 Nov 2026: the FREEZE-on-flip crackle is fixed by your ear and ported as v1.0.79; next is your yes to publish `v1.0.79-beta.1`, then the SIZE-during-unfreeze crackle. Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
 **Plugin installed:** `4140997` on `main` (v1.0.68, Sublustris Versio), 3 Nov 2026; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan). It now matches the rack build: the lighter tape, the lighter radio and PLATE's SIZE crossfade.
 
 ## To do
@@ -10,7 +10,8 @@
   - They say "feedback on Modwiggler and r/modular" now; the launch posts promised changelog credits.
 
 ### At the rack
-- [ ] **Hear and lap the fix for the crackle when FREEZE lands on a SPACE flip** (`proto/unfreeze-reshape`, `3bfeb76`, not merged)
+- [ ] **Say yes to publishing `v1.0.79-beta.1`** (your call, 10 Nov 2026: beta now, the SIZE crackle next). The fix is ported as v1.0.79 (ADR 0055) on `claude/port-freeze-on-flip`, to merge into `beta/player-feedback`; its release build is byte-identical to the round 2 build you heard. Publishing pushes the beta branch, makes the pre-release (not Latest, the site's downloads stay put) and comments on PR 1.
+- [x] **Hear and lap the fix for the crackle when FREEZE lands on a SPACE flip** (`proto/unfreeze-reshape`, `3bfeb76`; ported as v1.0.79)
   - To hear it, rack power: `dist/v1.0.78-freeze-on-change/sublustris_versio-freeze-on-change-2-RELEASE.bin`. Flip SPACE and press FREEZE a moment later, every direction, then unfreeze: is the crackle gone, and does the old space hold cleanly with the new one arriving after the unfreeze?
   - The lap, USB power only, about 5 min: `dist/v1.0.78-freeze-on-change/sublustris_versio_profile-freeze-on-change-2-MEASURING-32lines.bin`.
   - **Your listen to round 2 (10 Nov 2026): the flip-then-FREEZE crackle is gone.** A crackle remains when you turn SIZE during the second the pad fades out after you let go of FREEZE, in HALL and CANYON. That's the known unfreeze-after-SIZE overload (below; `docs/research/m3-review2-audit-212b68b.log`, 29 Oct: CANYON up to 107.5 %, HALL 97.5 %), in every build since before v1.0.68 and not caused by this fix: SIZE's change lands while the twin room is still fading.
