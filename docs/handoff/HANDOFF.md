@@ -30,7 +30,9 @@ Start with `/session-start`.
 
 ## Start here
 
-**Read the owner's two B laps** (`docs/TASKS.md`, "At the rack", first item). The owner flashes `dist/v1.0.79-flipflick/sublustris_versio_profile-flipflick-B-MEASURING-47lines.bin`, then `...-OFF-MEASURING-47lines.bin`. Each takes about 13 min with the corner lines.
+**Update, 11 Nov morning (session 20): the B laps are run and read** (`docs/research/m3-flipflick-B-lap.log`, `-B-OFF-lap.log`). B clears 12 of 15 flip-flick lines (OFF: all 15 late). Left: PLATE -> CANYON, SHIMMER on, SIZE flicked 0.1-0.3 s after the flip (3 lines, 100.8-102.5 %, peak ~3.4 s, when the waiting SIZE lands at the morph's end), and the XFFLIP lines (3 of 4 late in both builds, up to 125.5 %). The usual 19 and the unfreeze lines 0 late. The owner's call on what next is pending. The page server on 8766 is no longer running: restart it from `main` before the next page.
+
+**(Done) Read the owner's two B laps** (`docs/TASKS.md`, "At the rack", first item). The owner flashes `dist/v1.0.79-flipflick/sublustris_versio_profile-flipflick-B-MEASURING-47lines.bin`, then `...-OFF-MEASURING-47lines.bin`. Each takes about 13 min with the corner lines.
 
 - **How to wait for it:** take a `wc -l screenlog.0` baseline and wait for the first `LAP .* DONE \[FLIPFLICK-B\]` after it (memory "watching a lap"). Slice START→DONE into `docs/research/m3-flipflick-B-lap.log` / `-OFF-lap.log`.
 - **Pass:**

@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 10 Nov 2026 (night): two CPU laps for your pick B are built and waiting under "At the rack", first item. Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
+**Last updated:** 11 Nov 2026 (morning): your two B laps are read (B clears 12 of the 15 flip-flick lines; two gaps left); your call on what comes next. Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
 **Plugin installed:** `4140997` on `main` (v1.0.68, Sublustris Versio), 3 Nov 2026; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan). It now matches the rack build: the lighter tape, the lighter radio and PLATE's SIZE crossfade.
 
 ## To do
@@ -10,7 +10,7 @@
   - They say "feedback on Modwiggler and r/modular" now; the launch posts promised changelog credits.
 
 ### At the rack
-- [ ] **Two CPU laps for "SIZE waits" (your pick B), USB power only, logging on, about 13 min each, B first** (`proto/flipflick-size` `fcecb00`; `dist/v1.0.79-flipflick/`, its README has the line list):
+- [x] **Two CPU laps for "SIZE waits" (your pick B)** (11 Nov 2026, `docs/research/m3-flipflick-B-lap.log` and `m3-flipflick-B-OFF-lap.log`, one lap each). Without B all 15 flip-flick lines overload (101.6-115.2 %, 121-1,201 late blocks). With B, 12 of the 15 are clean: CANYON -> PLATE, PLATE <-> HALL and the slow flicks, worst 98.8 %. Still late with B: PLATE -> CANYON, SHIMMER on, SIZE flicked 0.1-0.3 s after the flip (3 lines, 100.8-102.5 %, 29-111 late blocks, down from 1,201), peaking about 3.4 s after the flip, when the waiting SIZE lands as the morph ends. B doesn't touch the four lines that flip SPACE while a SIZE crossfade is still running: 3 of 4 overload in both builds (109.6-125.5 %, 148-337 late blocks). The usual 19 and the 9 unfreeze lines: 0 late in both, worst 97.6 % and 95.1 %. Earlier notes on the builds: (`proto/flipflick-size` `fcecb00`; `dist/v1.0.79-flipflick/`, its README has the line list):
   1. `sublustris_versio_profile-flipflick-B-MEASURING-47lines.bin`
   2. `sublustris_versio_profile-flipflick-OFF-MEASURING-47lines.bin` (the same build without B)
   - 47 lines: the usual 19; the 11 PLATE <-> CANYON flip-flicks; 4 new PLATE <-> HALL flicks; 4 new lines that flip SPACE while a SIZE crossfade is still running (a gap the prototype found: today a flip doesn't wait for one); the 9 unfreeze-SIZE lines. DONE lines say `[FLIPFLICK-B]` / `[FLIPFLICK-OFF]`.
