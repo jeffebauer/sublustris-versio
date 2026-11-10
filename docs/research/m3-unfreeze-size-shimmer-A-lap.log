@@ -1,4 +1,5 @@
 # SHIMMER-on lap, A alone (room follows SIZE; proto/unfreeze-size d906c7a, FIXED_ROOM=0), one lap, 10 Nov 2026, screenlog.0 lines 8645-8682
+# NOTE: the first lap after a flash prints the previous build's START banner; screenlog.0 8494-8543 is A alone's lap 1 (BENCH after it: itcm 62736 = A alone), also 0 late.
 SPACE START (S, 36 lines, ~7.5 min; UFS A, ROOM FOLLOWS SIZE; SHIMMER UNFRZ SIZE)
 SPACE PLATE->HALL heavy W0.1 avg  75.1% max  81.7% | late blocks 0 of 3600 | max at 2985 ms | fired 1 | after 0.5 s  81.7%
 SPACE PLATE->CANYON heavy W0.1 avg  80.4% max  88.3% | late blocks 0 of 3600 | max at 2390 ms | fired 1 | after 0.5 s  88.3%
