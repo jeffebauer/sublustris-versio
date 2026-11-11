@@ -20,7 +20,7 @@ Start with `/session-start`.
 | M3 | The v1.0.80 code lapped on the module as the landing build (all 47 lines 0 late, worst 98.9 %); the published v1.0.80 release itself is the same machine code (agent's disassembly check) but not lapped. The owner was flashing the beta firmware at wrap |
 | M9 | v1.0.68 Latest; `v1.0.80-beta.1` (11 Nov) the newest pre-release |
 
-**main:** `e02e8c5` plus this wrap's commit, docs only since v1.0.68; ahead of origin by the session's docs commits, **push pending the owner's answer** (see the end of this file). **`beta/player-feedback`:** `4f6f950`, pushed, equal to origin.
+**main:** `e02e8c5` plus this wrap's commit, docs only since v1.0.68; **pushed to origin at wrap** (the owner's OK; no `site/` change, so no site rebuild). **`beta/player-feedback`:** `4f6f950`, pushed, equal to origin.
 
 ## Start here
 
