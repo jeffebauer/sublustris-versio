@@ -72,6 +72,7 @@
 - [ ] **`input_stop2`: not ready, don't listen yet.** It needs re-rendering on the current build first (that's with me).
 
 ### When convenient
+- [x] **Clean-up** (11 Nov 2026, your OK): the pages `flip_waits_size`, `morph_last_98`, `size_blast` (+ its material) and `shimmer_fizz_hunt`; the test firmware folders `dist/v1.0.70-*` to `v1.0.79-*` and the three older beta packages (on GitHub); 11 worktrees and 12 branches, all in beta 2, backed up first in `dist/branches-backup-2026-11-11.bundle` (`git fetch <bundle>` restores any). Kept: `claude/input-stop`, `claude/rack-levels`, the beta and release worktrees, v1.0.68's and beta 2's packages. Disk: 7.8 to 11 GB free. Builds named in older items below are gone.
 - [x] **Two judged pages deleted** (10 Nov, your OK): `renders/unfreeze_size` and `renders/flipflick_size`. Either can be re-rendered from its branch.
 - [ ] **Empty the Trash** when you're happy
   - Old clean-ups: `sublustris-wrap-2026-11-02` (2.9 GB), and `sublustris-cleanup-2026-10-29`, `sublustris-old-builds-2026-10-29` and `-29b` if still there.
