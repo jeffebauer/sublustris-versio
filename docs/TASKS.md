@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 11 Nov 2026: you picked A on all 14 cards of `renders/flip_waits_size`; its lap passed (all 47 lines 0 late); beta 2 is next. Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
+**Last updated:** 11 Nov 2026: you picked A on all 14 cards of `renders/flip_waits_size`; its lap passed (all 47 lines 0 late). Beta 2 (v1.0.80) is ported on `claude/port-flipflick` (`c1c2dc7`, ADRs 0056-0058; ctest 100 % of 30, goldens unchanged, release 112,236 B, 404 B left), and its notes (`dist/v1.0.80-beta-notes.md`) wait for you to read before it's merged and published. Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
 **Plugin installed:** `4140997` on `main` (v1.0.68, Sublustris Versio), 3 Nov 2026; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan). It now matches the rack build: the lighter tape, the lighter radio and PLATE's SIZE crossfade.
 
 ## To do
