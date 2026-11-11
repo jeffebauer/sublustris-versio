@@ -22,6 +22,10 @@
 #else
 #define IV_XF_FAST true
 #endif
+// The faster paths also run on a line still filling after a reset (v1.0.80, ADR 0058; docs/research/flipflick-landing-2026-11-11.md
+// 1a): once its writes reach every read in the block (+ the block + 4), a read gives what DelayLine::ago() gives, so the same
+// output to the bit. A landing after a flip into HALL / CANYON (SIZE waits for the morph, 3 s in) falls before the lines are
+// full (5.46 s), and the slow paths cost the module ~5 points there.
 
 namespace iv::dsp {
 
@@ -856,7 +860,7 @@ IV_LEAN_RUNBLOCK void Fdn::runBlock(const float* inL, const float* inR, float* o
                 ol[s] += kOutL[j] * e[i][s];
                 orr[s] += kOutR[j] * e[i][s];
             }
-        } else if (q > 0 && step == 0.0f && w.full() && IV_XF_FAST) {
+        } else if (q > 0 && step == 0.0f && IV_XF_FAST && (w.full() || oldTapsReach(i, tl[0], w, m))) {
             // The old taps while SIZE crossfades, the everyday case (the taps jumped with the lines, so each old
             // tap sits still all block), as the still taps above: each tap one stream, its b1 the sample before's
             // b0 (tapsOld reads both, every sample, through a copy of the line). The same values read and the same
@@ -1002,7 +1006,10 @@ IV_SIZE_OPT bool Fdn::lineXf(int i, int m, int q, const float* xn, const float* 
                                 float eraIn, float eraOut, float* y)
 {
     const DelayLine& line = line_[i];
-    if (!line.full()) return false;
+    // Every read below at most d samples back, d + 1 at the allpass read's second sample: written since the reset.
+    if (!line.full() && !(float(line.fill) >= std::fmax(readNow_[i], readNow_[i] + xfDelta_[i])
+                                                 + std::fabs(readStep_[i]) * float(m) + float(m) + 4.0f))
+        return false;
     const bool join = apG > 0.0f && !(apGOld > 0.0f), leave = apGOld > 0.0f && !(apG > 0.0f);
     float*   apBuf[2] = {};
     uint32_t apPos[2] = {}, apMask[2] = {}, apL[2] = {};
@@ -1160,6 +1167,15 @@ IV_NOINLINE IV_SIZE_OPT IV_FLATTEN void Fdn::tapsMoving(int i, int m, const floa
             const float a0 = v.read(di), a1 = v.read(di + 1);
             e[s] += tapGainNow_[i][k] * (a0 + t * (a1 - a0));
         }
+}
+
+// The old early taps' deepest read (the sample after the farthest tap) written since a reset, + the block + 4: their
+// fast stream reads what tapsOld's DelayLine::read gives (1a above). Built for size: a few taps, once a block.
+IV_SIZE_OPT bool Fdn::oldTapsReach(int i, float tl, const DelayLine& w, int m) const
+{
+    float deepest = 0.0f;
+    for (int k = 0; k < earlyCount_; ++k) deepest = std::fmax(deepest, 1.0f + earlyFrac_[i][k] * (tl + xfDelta_[i]));
+    return float(w.fill) >= deepest + 1.0f + float(m) + 4.0f;
 }
 
 // SIZE's crossfade, its first q samples: a line's early taps at the old positions, on the old timeline

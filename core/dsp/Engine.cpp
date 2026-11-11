@@ -301,6 +301,11 @@ IV_SIZE_OPT void Engine::reset()
 #ifndef IV_FIXED_VOICINGS
     morphLog_.count = 0;
 #endif
+    fwsWait_ = 0.0f; // the flip waits for SIZE (controlTick)
+    ffWaiting_ = false; // SIZE waits for the morph (applySpace's snap below sets ffSize_)
+    ufsWaiting_ = false; // the room makes way (applySpace)
+    ufsGain_ = 1.0f;
+    ufsStep_ = 0.0f;
     applySpace(true);
     swell_.reset();
     fdn_.reset();
@@ -380,8 +385,19 @@ IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: 
     case GestureReader::Event::Freeze:
         // The big tank keeps the SIZE and DECAY it had; the knobs move to
         // the twin. Its input closes, its colour glides out.
-        heldSize_ = smoothed(ParamId::Size);
-        if (sizeHyst_ > 0.0f && sizeHeld_ >= 0.0f) heldSize_ = sizeHeld_; // the SIZE the tank has (hysteresisSize)
+        // A freeze while SIZE waits for the room (applySpace) keeps the lengths the tank has (heldSize_: it never took the
+        // waiting SIZE), and a room making way comes back up.
+        if (ufsStep_ < 0.0f) ufsStep_ = -ufsStep_;
+        if (!ufsWaiting_) {
+            heldSize_ = smoothed(ParamId::Size);
+            if (sizeHyst_ > 0.0f && sizeHeld_ >= 0.0f) heldSize_ = sizeHeld_; // the SIZE the tank has (hysteresisSize)
+        }
+        ufsWaiting_ = false;
+        // SIZE waits for the morph (ffHold): a freeze while SIZE waits for the old tank ends the wait; the pad keeps the lengths the
+        // new tank has (it never took the waiting SIZE), and a morph still running after the unfreeze holds those.
+        if (ffWaiting_) heldSize_ = ffSize_;
+        ffWaiting_ = false;
+        ffSize_ = heldSize_;
         heldDecay_ = smoothed(ParamId::Decay);
         padFloorDb_ = 0.0f; // no cap until the pad has settled (controlTick)
         padCaptured_ = false;
@@ -434,8 +450,64 @@ IV_MORPH_COLD void Engine::startTwin()
         roomLevel_ = 0.0f;
         twinSized_ = false;
         twinActive_ = true;
+        ufsGain_ = 1.0f; // (the room makes way: a new room starts at full)
+        ufsStep_ = 0.0f;
     }
     twinInStep_ = 1.0f / (voicing::kTwinFadeSeconds * sampleRate_);
+}
+
+// The room makes way (applySpace): unfrozen in HALL and CANYON, while the room still rings after an unfreeze, a SIZE off the one the
+// tank froze with waits (the tank keeps heldSize_) and the room starts its 0.3 s fade-out. Once a block, out of ITCM (flash).
+IV_MORPH_COLD float Engine::ufsSize(float size, bool snap)
+{
+    if (snap || activeSpace_ == 0 || !twinActive_) ufsWaiting_ = false;
+    else if (size != heldSize_) ufsWaiting_ = true;
+    if (!ufsWaiting_) return size;
+    if (ufsStep_ >= 0.0f) ufsStep_ = -1.0f / (0.3f * sampleRate_);
+    return heldSize_;
+}
+
+// The room's make-way gain over this chunk (the room's own output, before painting reads it): down to 0, where the room stops,
+// or back up to 1 after a new freeze. Only in those 0.3 s.
+IV_MORPH_COLD void Engine::ufsRamp(int n)
+{
+    float       g = ufsGain_;
+    const float st = ufsStep_;
+    float* const l = twinL_;
+    float* const r = twinR_;
+    for (int i = 0; i < n; ++i) {
+        g = clamp01(g + st);
+        l[i] *= g;
+        r[i] *= g;
+    }
+    ufsGain_ = g;
+    if (st > 0.0f) {
+        if (g >= 1.0f) ufsStep_ = 0.0f;
+    } else if (g <= 0.0f && !gesture_.frozen()) {
+        twinActive_ = false; // the room has made way
+    }
+}
+
+// SIZE waits for the morph (the owner's pick B on renders/flipflick_size): during a two-tank morph the new tank keeps the SIZE it
+// started with (the flip's snap sets ffSize_), so its SIZE crossfade never runs while the old tank still rings (on the module the
+// two overloaded it, docs/research/flipflick-size-2026-11-10.md). A SIZE off it waits while the old tank fades over its own 3 s;
+// once it has gone (morphOld_ < 0) the latest SIZE lands, once, as any SIZE move does. Once a block, out of ITCM; no per-sample
+// work. Not while frozen (the pad has heldSize_). ADR 0057.
+IV_MORPH_COLD float Engine::ffHold(float size, bool snap)
+{
+    if (snap || morphOld_ < 0) {
+        ffWaiting_ = false;
+        ffSize_ = size;
+        return size;
+    }
+    if (size != ffSize_) ffWaiting_ = true;
+    return ffSize_;
+}
+
+// The flip waits for SIZE (controlTick; ADR 0058): the tank in use crossfades its SIZE, or has a SIZE waiting for the knob's rest.
+IV_SIZE_OPT bool Engine::tankSizeBusy() const
+{
+    return activeSpace_ == 0 ? plate_.xfBusy() : !(fdn_.xfIdle() && lowFdn_.xfIdle());
 }
 
 // ---- Voicing -------------------------------------------------------------------
@@ -473,7 +545,22 @@ IV_CTL_OPT float Engine::decayRate(float decay, float size) const
 IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once per block: built for size (flash)
 {
     const bool frozen = gesture_.frozen();
-    const float size = frozen ? heldSize_ : hysteresisSize(smoothed(ParamId::Size), sizeHeld_, snap);
+    float size = frozen ? heldSize_ : hysteresisSize(smoothed(ParamId::Size), sizeHeld_, snap);
+    // The room makes way (the owner's pick A on renders/unfreeze_size): in HALL and CANYON a SIZE crossfade and the small room
+    // never run together (on the module the two overloaded it). Unfrozen, the room runs only while it rings out after an
+    // unfreeze (it starts only frozen, and a SPACE change stops it), so this is only ever the second after an unfreeze. A SIZE
+    // off the one the tank froze with waits (the tank keeps heldSize_), the room fades out in 0.3 s (a morph's fast drop) and
+    // stops (process), and then the latest SIZE lands, once, as ever. A new freeze ends the wait (onGesture).
+    if (!frozen) {
+        size = ufsSize(size, snap);
+        // SIZE waits for the morph (ffHold; ADR 0057): during a PLATE <-> HALL / CANYON morph the new tank keeps the SIZE it
+        // started with.
+        size = ffHold(size, snap);
+        // The flip waits for SIZE (ADR 0058): a SIZE moved inside the flip's 0.05 s fade-out waits for the handover (snap), so
+        // the tank about to leave never starts a crossfade under the morph or the reshape.
+        if (flipPhase_ == 1 && !snap) size = fwsSize_;
+        else fwsSize_ = size;
+    }
     // HALL's SIZE also sets its T60 scale, output trim and in-loop diffusion, which act at once (the
     // lines' lengths glide on their own): they follow a ~80 ms glide of SIZE, so a SIZE jump (CV, or an
     // unfreeze after SIZE moved) doesn't step the loop's gains (soak audit).
@@ -814,7 +901,16 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // DECAY play it while frozen (at the freeze they're where the pad froze, so it starts as the
     // pad's twin); it always fades within kTwinMaxT60. Full in-loop diffusion in MASSIVE, like the pad.
     if (twinActive_) {
-        const float tSize = hysteresisSize(smoothed(ParamId::Size), twinSizeHeld_, snap || !twinSized_);
+        float tSize = hysteresisSize(smoothed(ParamId::Size), twinSizeHeld_, snap || !twinSized_);
+        // The room keeps its size (the owner's idea after A on the rack: "fix the twin so size doesn't affect it"): in HALL and
+        // CANYON the room takes the SIZE the pad froze with (heldSize_) when it starts, from silence, and keeps it, frozen or
+        // ringing out; SIZE never bends its lines (the glide was per-sample work in the second after an unfreeze). A re-freeze
+        // while it rings keeps it too (under A a SIZE off heldSize_ waits, so the new freeze's heldSize_ is this one); a new size
+        // only ever lands on a room started from silence. Everything the room's SIZE sets (T60 scale, level) follows it.
+        if (!plate) {
+            if (!twinSized_) roomSize_ = heldSize_;
+            tSize = roomSize_;
+        }
         const float tDecay = smoothed(ParamId::Decay);
         twinSwell_.setAttackSeconds(0.0f, snap); // PLATE's twin: no attack
         const float tT60 = activeSpace_ == 1 ? map::hallT60Scale(tSize) : 1.0f;
@@ -1015,6 +1111,14 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
     // that differs from the space now playing starts a normal new change; one that's there already does nothing. (A
     // second change on top of a running one overloaded the module: docs/research/m3-morph-s2-lap.log.)
     if (morphOld_ >= 0 || placeOn_) space = activeSpace_;
+    // The flip waits for SIZE (ADR 0058): nor while the tank in use crossfades its SIZE (or waits
+    // for the knob's rest to), up to kFlipWaitsSizeCapSeconds from the switch. Only before a flip starts: inside its fade-out
+    // a switch back where it was cancels the flip, so the wait must not read as one (applySpace holds SIZE there instead).
+    if (flipPhase_ == 0 && space != activeSpace_ && !gesture_.frozen() && freezeMix_ == 0.0f && tankSizeBusy()
+        && fwsWait_ < kFlipWaitsSizeCapSeconds) {
+        fwsWait_ += float(n) / sampleRate_;
+        space = activeSpace_;
+    } else if (flipPhase_ == 0 && space == activeSpace_) fwsWait_ = 0.0f;
     // A freeze during a morph keeps the sound you hear: the tank that holds the most of it becomes the pad. The other goes
     // in 0.3 s (holding both frozen would be two big tanks and the twin). If that's the old tank, the change waits for the unfreeze.
     if (gesture_.frozen() && morphOld_ >= 0 && !morphFreezeSeen_) {
@@ -1228,6 +1332,7 @@ IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* 
         if (twinActive_) {
             if (activeSpace_ == 0) twinPlate_.process(twinInL_, twinInR_, twinL_, twinR_, n);
             else twinHalf_.process(room_, twinInL_, twinInR_, twinL_, twinR_, n);
+            if (ufsStep_ != 0.0f) ufsRamp(n); // the room making way (applySpace), or back up after a new freeze
             // The twin stops on its 50 ms level (v1.0.37; overnight review, lit-plate 6): ~15-24 s sooner
             // after an unfreeze than on its 1.5 s level, which kept a silent second tank running.
             float lvl = twinPlate_.fastLevelDb();

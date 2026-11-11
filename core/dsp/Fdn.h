@@ -179,6 +179,7 @@ private:
                   float eraOut, float* y);
     void tapsMoving(int i, int m, const float* tl, const DelayLine& was, float* e) const;
     void tapsOld(int i, int q, const float* tl, const DelayLine& was, float* ol, float* orr) const;
+    bool oldTapsReach(int i, float tl, const DelayLine& w, int m) const;
     float xfMix(int i, float nw, float od, float gOld);
     float xfAllpass(int i, float x, float g, bool old, float w = 1.0f);
     float xfOldAllpass(int i, int k, float x, float d);

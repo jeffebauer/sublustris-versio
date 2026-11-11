@@ -21,6 +21,7 @@
 #include <cstdint>
 
 
+
 namespace iv::dsp {
 
 // Dattorro's Table 1 lengths (samples at 29.761 kHz). Branch 0 is his left
@@ -122,6 +123,9 @@ public:
     void setCrossfadeState(PlateXf* s); // reset() sets the rest before any use
     bool sizeCrossfade() const { return xs_ != nullptr; }
     bool crossfading() const { return xfSince_ >= 0; }
+    // The flip waits for SIZE (Engine::tankSizeBusy, ADR 0058): a SIZE crossfade running, or one waiting for the knob's
+    // rest (a target off the scale by more than a glide's small step).
+    bool xfBusy() const;
     // While true SIZE glides (as before v1.0.68): the Engine sets it while FREEZE is on or its unfreeze still glides
     // back (the owner's pick A on renders/plate_size_xfade's frozen card, ADR 0043); a glide under way finishes.
     void setSizeGlideNow(bool on) { xfGlideAsk_ = on; }

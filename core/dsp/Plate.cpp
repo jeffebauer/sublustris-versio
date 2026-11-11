@@ -200,6 +200,13 @@ IV_SIZE_OPT void Plate::setScale(float scale, bool snap)
     if (snap) cancelCrossfade(scale); // a restart (prepare, a SPACE flip): no crossfade
 }
 
+IV_SIZE_OPT bool Plate::xfBusy() const
+{
+    if (xfSince_ >= 0) return true;
+    const float diff = std::fabs(scaleTarget_ - scaleNow_);
+    return xs_ != nullptr && !xfGlideNow_ && diff * (kD1[0] * sampleRate_ / kPaperRate) > 0.5f && diff > kXfSmallStep * scaleNow_;
+}
+
 IV_SIZE_OPT void Plate::control(int n) // once per block: built for size (flash; it shares Fdn::control's helpers)
 {
     const float dt = float(n) / sampleRate_;
