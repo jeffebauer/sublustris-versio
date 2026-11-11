@@ -145,6 +145,17 @@ public:
     // PROTOTYPE (renders/swell_seed, owner: "the 12 points seemed to accentuate the mids"): the swell's
     // jitter and signs from another seed (0 = as built). Re-prepares the Engine.
     void  setSwellSeedPrototype(uint32_t seed);
+    // SIZE around FREEZE and SPACE (v1.0.80; ADR 0056-0058), each so two SIZE-driven jobs never run on the module at once:
+    // - the room makes way (ADR 0056, ufsSize / ufsRamp): unfrozen in HALL and CANYON, while the small room rings out after an
+    //   unfreeze, a SIZE off the one the pad froze with waits; the room fades out in 0.3 s, then the latest SIZE lands once;
+    // - the room keeps its size (ADR 0056, applySpace): the small room plays the SIZE the pad froze with, never the live knob;
+    // - SIZE waits for the morph (ADR 0057, ffHold): during a PLATE <-> HALL / CANYON morph the new tank keeps the SIZE it
+    //   started with until the old tank has faded over its own 3 s, then the latest SIZE lands once;
+    // - the flip waits for SIZE (ADR 0058, controlTick): while the tank in use crossfades its SIZE, or waits for the knob's
+    //   rest to start one, the SPACE switch isn't read (ADR 0054's "finish, then go"), up to kFlipWaitsSizeCapSeconds from
+    //   the switch; a SIZE moved in the flip's own 0.05 s fade-out waits for the handover.
+    bool  flipFlickWaitingForTests() const { return ffWaiting_; } // read-only view for tests (SIZE waiting for the morph)
+    float roomLineLengthForTests(int i) const { return room_.lineLength(i); } // read-only view for tests (samples at 24 kHz)
     // SIZE moves on only when the mean line length it means has moved by more than rel of the last one
     // (overnight review, 26 Oct 2026, arch F1; on since v1.0.37 at voicing::kSizeHysteresis; 0 = before:
     // every move). A noisy knob reading moved the lines' targets (and MASSIVE's in-loop diffusion) a
@@ -209,6 +220,7 @@ public:
     };
     const MorphLog& morphLogForTests() const { return morphLog_; }
 #endif
+    static constexpr float kFlipWaitsSizeCapSeconds = 1.3f; // the flip waits for SIZE: at most this from the switch (ADR 0058)
 #if !defined(IV_FIXED_VOICINGS) || defined(IV_PROFILE_HOOKS) // the profile firmware's SIZEHAND lines too
     // SIZE's crossfade in groups of lines (Fdn::setStagger: 4 since v1.0.45, 2 from v1.0.39), in every FDN (the tank,
     // the still lows); 1: all lines together, as before v1.0.39; 2 or 8: the size_moves prototypes.
@@ -228,6 +240,7 @@ public:
     int   tankRestartsForTests() const { return tankRestarts_; }
 #endif
     bool  twinActive() const { return twinActive_; } // read-only view for tests
+    bool  unfreezeSizeWaiting() const { return ufsWaiting_; } // read-only view for tests (the room making way)
     const dsp::Transport& transport() const { return transport_; } // read-only view for tests
     bool  buttonDown() const { return buttonDown_; }
     bool  gateHigh() const { return gateHigh_; }
@@ -343,6 +356,8 @@ private:
     static constexpr float floorDbfs() { return voicing::kFloorDbfs; }
     static constexpr float hallTailDb() { return voicing::kHallTailDb; }
 #endif
+    float             fwsWait_ IV_ZI, fwsSize_ IV_ZI; // the flip waits for SIZE: how long the switch has waited; the SIZE the tank keeps in a fade-out
+    bool  tankSizeBusy() const;           // the tank in use crossfades its SIZE, or waits to
     dsp::Plate        twinPlate_; // PLATE's twin
     // HALL's and MASSIVE's twin (v1.0.43, the owner's pick E on renders/small_room): the small room, its rings in
     // AXI SRAM; its gain by SPACE (HALL, MASSIVE: ~8 dB under a frozen pad); its 50 ms power (the twin stops on
@@ -350,11 +365,16 @@ private:
     dsp::TwinRoom     room_;
     float             roomGain_[2] = {1.0f, 1.0f}, roomLevel_ IV_ZI, roomStep_ IV_ZI;
     float             roomTrim_ = 1.0f; // the room's output trim over SIZE (v1.0.47, voicing::kTwinRoomTrimDb)
+    float             roomSize_ IV_ZI; // the SIZE the room keeps (ADR 0056): heldSize_ when it started
     int               roomStepN_ IV_RI(-1);
     bool              twinSized_ IV_ZI;
     dsp::Diffuser<4>  twinDiffuser_[2];
     float             twinIn_ IV_ZI, twinInStep_ IV_ZI;
     bool              twinActive_ IV_ZI;
+    // The room makes way (applySpace): SIZE waiting for it; its make-way gain (1 .. 0) and that gain's step a sample (0 resting,
+    // < 0 fading out, > 0 back up after a new freeze).
+    bool              ufsWaiting_ IV_ZI;
+    float             ufsGain_ IV_RI(1.0f), ufsStep_ IV_ZI;
     dsp::Shimmer      shimmer_; // ATTACK's third position (ADR 0024)
     float             eraMakeup_ IV_RI(1.0f);
     // The limiter (SPEC §4.10).
@@ -501,6 +521,9 @@ private:
     void  morphStopTwin();                   // the twin of the old space stops at the flip's silent point
     void  morphHoldOld();                    // a freeze early in a morph: the old tank stays, the change waits
     void  startTwin();                       // the twin starts: at a freeze, or a reshape's end
+    float ufsSize(float size, bool snap);    // the room makes way: the SIZE the tank takes after an unfreeze (applySpace)
+    void  ufsRamp(int n);                    // the room making way: its gain over this chunk; it stops at 0 (process)
+    float ffHold(float size, bool snap);     // SIZE waits for the morph: the SIZE the new tank takes during a two-tank morph
     static constexpr float kMorphDropGain = 0.05f; // morphHoldOld: under this the new tank's cut can't be heard (click check)
     bool  morphKeepTank_ IV_ZI;
     uint8_t morphLightWait_ IV_ZI;           // control ticks left before the heads may rest after a change (morphAdvance)
@@ -524,6 +547,10 @@ private:
     float placeT_ IV_ZI, placeS_ IV_ZI, placeSeconds_ IV_ZI, earlyW_ IV_ZI;
     float placeNow_[kPlaceCount] IV_ZI, placeStart_[kPlaceCount] IV_ZI;
     float lowsOwnNow_ IV_ZI;              // applySpace, whenever a tank is voiced
+    // SIZE waits for the morph (ffHold): a SIZE waiting for the old tank to go; the SIZE the new tank has (set at the flip's
+    // snap, or by a freeze).
+    bool  ffWaiting_ IV_ZI;
+    float ffSize_ IV_ZI;
 };
 
 } // namespace iv

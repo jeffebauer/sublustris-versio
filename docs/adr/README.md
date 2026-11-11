@@ -59,3 +59,6 @@ Every decision behind `SPEC.md` (v1.0, frozen 21 Oct 2026). Changes after the fr
 | [0053](0053-size-blast.md) | The SIZE blast: a shrink's boost limited to about 6 dB, and a tank that goes invalid restarts (amends ADR 0025's one-trip correction) | owner, 9 Nov 2026 |
 | [0054](0054-space-morph.md) | The SPACE morph: a change keeps the tail, two tanks for 3 s or one reshaped over 1.5 s, finish then go, half the shimmer's heads resting into CANYON (amends ADR 0013's "only one big tank ever runs") | owner, 9 Nov 2026 |
 | [0055](0055-freeze-on-flip.md) | FREEZE just after a SPACE flip holds the old space; the change waits for the unfreeze, the twin for one tank (amends ADR 0054's freeze during a morph) | owner, 10 Nov 2026 |
+| [0056](0056-unfreeze-size.md) | SIZE after an unfreeze: the room makes way (SIZE waits while the small room fades out in 0.3 s) and keeps the SIZE the pad froze with | owner, 10 Nov 2026 |
+| [0057](0057-size-waits-for-morph.md) | SIZE waits for the morph: during a PLATE <-> HALL / CANYON morph the new tank keeps its SIZE until the old one has gone (amends ADR 0054) | owner, 10 Nov 2026 |
+| [0058](0058-flip-waits-for-size.md) | The flip waits for SIZE: SPACE isn't read while SIZE crossfades, 1.3 s at most; SIZE's fast paths on lines still filling (amends ADR 0054) | owner, 11 Nov 2026 |

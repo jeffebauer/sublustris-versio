@@ -1132,6 +1132,13 @@ uint32_t gChkLibDaisy = 0, gChkTight = 0, gChkLap = 0, gChkLaps = 0; // errors
 constexpr size_t kTestFdnFloats = iv::dsp::Fdn::memoryFloats(12000.0f, 0.25f);
 constexpr size_t kTestArenaFloats = kTestFdnFloats + iv::dsp::Arena::kSkewLines * iv::dsp::Arena::kLineFloats;
 static_assert(kTestArenaFloats <= kAxiFloats, "the AXI test tank lives in gAxi (before engine.prepare)");
+// The boot micro-tests (BENCH's MICRO line, RunMicroTests) are left out of the profile by default since v1.0.80, to fit
+// the Core's SIZE waits (ADR 0056-0058: ~1 KB) in flash; the SDRAM checks and the tight timing stay. IV_PROFILE_MICRO=1
+// (CPPFLAGS) puts them back, with something else taken out. The MICRO line then prints zeros.
+#ifndef IV_PROFILE_MICRO
+#define IV_PROFILE_MICRO 0
+#endif
+#if IV_PROFILE_MICRO // the micro-tests' helpers (RunMicroTests)
 IV_DTCM alignas(iv::dsp::Fdn) unsigned char gTestFdnStorage[sizeof(iv::dsp::Fdn)]; // DTCM: see gMassiveStorage
 
 int TimeTestFdn(float* mem, size_t floats, bool skew)
@@ -1286,12 +1293,19 @@ void OnePole(float y0)
     for (int i = 0; i < 1000; ++i) y += a * (x - y);
     gSink = y;
 }
+#endif // IV_PROFILE_MICRO
 
 void RunMicroTests()
 {
+    gSdtrLibDaisy = FMC_Bank5_6_R->SDTR[0];
+#if !IV_PROFILE_MICRO
+    gChkLibDaisy = SdramCheck();
+    SdramSetTiming(SdtrWith(gSdtrLibDaisy, kTightTrp, kTightTrcd));
+    gChkTight = SdramCheck();
+    if (!IV_PROFILE_SDRAM_TIGHT) SdramSetTiming(gSdtrLibDaisy);
+#else
     float* sd = gLarge; // all of it free until engine.prepare()
     float  acc = 0.0f;
-    gSdtrLibDaisy = FMC_Bank5_6_R->SDTR[0];
     RunSdramTests(sd, acc, kSdr1, kSdr32, kSdw32, kSdline8, kPld32);
     gMicro[kAxi32] = Tenths(32 * 512, [&] {
         for (int s = 0; s < 512; ++s)
@@ -1355,6 +1369,7 @@ void RunMicroTests()
     gMicro[kFdnSdramt] = TimeTestFdn(gLarge, kLargeFloats, true);
     if (!IV_PROFILE_SDRAM_TIGHT) SdramSetTiming(gSdtrLibDaisy);
     gSink = acc;
+#endif
 }
 
 // One corner: its `seconds` of the test signal through the Engine, each block timed by the cycle
