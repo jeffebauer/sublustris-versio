@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 11 Nov 2026: `renders/flip_waits_size` is ready to listen to and pick (Listen, first item). Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
+**Last updated:** 11 Nov 2026: you picked A on all 14 cards of `renders/flip_waits_size`; its lap firmware is being built. Earlier notes: [`tasks-done-archive.md`](tasks-done-archive.md).
 **Plugin installed:** `4140997` on `main` (v1.0.68, Sublustris Versio), 3 Nov 2026; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan). It now matches the rack build: the lighter tape, the lighter radio and PLATE's SIZE crossfade.
 
 ## To do
@@ -64,7 +64,7 @@
   - At 96 kHz the plugin's HALL and CANYON come out much brighter above 12 kHz than the module. At 48 kHz they match.
 
 ### Listen
-- [ ] **Listen and pick: `renders/flip_waits_size`** (http://localhost:8766/flip_waits_size/ or http://192.168.1.30:8766/flip_waits_size/; `proto/flipflick-landing`, `f53210c`, desktop only). 14 cards: SIZE turned end to end, then SPACE flipped 0.2 s or 0.8 s later, at your knobs with SHIMMER on (two on BLOOM). A: the flip waits for SIZE to finish (about 0.4 s from PLATE, about 1.1 s from HALL or CANYON, 1.3 s at most); C: today's B, the flip goes at once. The desktop can't crackle, so judge only the feel: does the wait feel like a dead switch? On `plate_to_canyon_keys_02`, listen around 3.6 s in A for anything sharp (the click check's loudest frame there is no louder than a key strike, but worth your ear).
+- [x] **Picked A, "the flip waits for SIZE", on all 14 cards (11 Nov).** Next: a module lap with it built into firmware. **Listen and pick: `renders/flip_waits_size`** (http://localhost:8766/flip_waits_size/ or http://192.168.1.30:8766/flip_waits_size/; `proto/flipflick-landing`, `f53210c`, desktop only). 14 cards: SIZE turned end to end, then SPACE flipped 0.2 s or 0.8 s later, at your knobs with SHIMMER on (two on BLOOM). A: the flip waits for SIZE to finish (about 0.4 s from PLATE, about 1.1 s from HALL or CANYON, 1.3 s at most); C: today's B, the flip goes at once. The desktop can't crackle, so judge only the feel: does the wait feel like a dead switch? On `plate_to_canyon_keys_02`, listen around 3.6 s in A for anything sharp (the click check's loudest frame there is no louder than a key strike, but worth your ear).
   - Also in the build, no sound change (60/60 identical): SIZE's landing after a flip into CANYON takes the faster path while CANYON's lines are still filling, which the research says is about 5 points of the landing's overload (`docs/research/flipflick-landing-2026-11-11.md`). Release 111,876 B (764 B left), profile 127,076 B. 100 % of 29 tests.
   - Next, after your pick: a lap on the module.
 - [x] **`renders/morph_last_98` picked: C on every card** (9 Nov 2026; level-matched, repeated cards agreeing; the control cards are identical, so those picks say nothing). C: 4 shimmer voices a side instead of 8 during a change into CANYON with SHIMMER on. Branch `proto/morph-last-98` (`6df116d`), not pushed. Next: fit it in firmware (C is about +350 B on the profile build, 52 B free, and v1.0.77 takes 80 B more), then a lap on the module, since the saving is still only an estimate.
