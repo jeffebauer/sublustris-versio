@@ -6,7 +6,7 @@
 ## To do
 
 ### Share the beta
-- [ ] **Decide: should the GitHub release notes credit lfad by name?**
+- [x] **lfad is credited by name** in beta 2's notes (your call, 11 Nov 2026): WEAR, the louder wet, the fuller tails.
   - They say "feedback on Modwiggler and r/modular" now; the launch posts promised changelog credits.
 
 ### At the rack
