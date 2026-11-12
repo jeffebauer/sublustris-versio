@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 12 Nov 2026: you picked from Fable's review (`renders/fable_review`); v1.0.81 (your picks, CANYON's level and three CPU savings) is built for a lap: `dist/lap-v1.0.81-3b77392`.
+**Last updated:** 12 Nov 2026: the v1.0.82 candidate (Fable picks, CANYON's level, CANYON's mellow and wear, the FREEZE-after-flip fix) lapped clean; your next step is the rack listen on CANYON's endless level (`dist/lap-v1.0.82-a331a08`), then the OK to merge into the beta and publish beta 3.
 **Plugin installed:** `4140997` on `main` (v1.0.68, Sublustris Versio), 3 Nov 2026; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan). It now matches the rack build: the lighter tape, the lighter radio and PLATE's SIZE crossfade.
 
 ## To do

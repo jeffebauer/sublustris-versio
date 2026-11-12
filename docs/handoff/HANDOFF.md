@@ -1,11 +1,23 @@
 # Handoff
 
-**Written:** 11 Nov 2026, end of session 20 (11 Nov).
+**Written:** 12 Nov 2026, end of session 21 (12 Nov).
 
-- **The two B laps were read:** B ("SIZE waits for the morph") cleared 12 of 15 flip-flick lines. Two crackles were left: the PLATE -> CANYON landing, and a SPACE flip during a SIZE crossfade (`docs/research/flipflick-landing-2026-11-11.md`).
-- **The owner picked A, "the flip waits for SIZE", on all 14 cards of `renders/flip_waits_size`.** Built with fix 1a (SIZE's fast crossfade paths on lines still filling, bit-identical), the 47-line lap was all 0 late, worst 98.9 % (`docs/research/m3-flipflick-landing-lap.log`).
-- **Beta 2 is out:** v1.0.80 (ADRs 0056-0058) ported, merged into `beta/player-feedback` (`4f6f950`, pushed) and published as [`v1.0.80-beta.1`](https://github.com/jeffebauer/sublustris-versio/releases/tag/v1.0.80-beta.1) (pre-release; the site stays on v1.0.68). Linked on PR 1; the owner posted it on Modwiggler (BBCode draft written here). The notes credit lfad and list one known issue.
-- **Clean-up** (the owner's OK): judged pages, test firmware v1.0.70-v1.0.79, older beta packages, 11 worktrees and 12 branches (bundled first in `dist/branches-backup-2026-11-11.bundle`). Disk 7.8 to 11 GB free.
+- **Fable's review** (brief and report on `proto/fable-review`, `docs/research/fable-review-2026-11-12.md` there; page `renders/fable_review`). The owner picked:
+  - the radio band arriving earlier on MOTION's right;
+  - PLATE's long tails keeping their mids;
+  - CANYON's bass centred and fuller in mono;
+  - three CPU savings nobody can hear.
+- **CANYON's whole wet level:** the owner picked C on all 25 cards of `renders/canyon_level`.
+- **v1.0.81:** those picks were ported on `claude/port-fable` (ADR 0059, plus amendments). It was lapped twice, on the 55-line landing set and the 47-line ATFLIP set: 0 late blocks, worst 98.4 %.
+- **CANYON endless highs:**
+  - The whole-tank turnover page (`renders/canyon_turnover`) was rejected ("highs remove the lows").
+  - The owner then picked **C, "mellow and wear"**, on all 7 cards of `renders/canyon_darken`: a held tail's top mellows, and old highs wear while played; the lows stay endless.
+  - It was fitted into flash with bit-identical savings (`proto/canyon-darken-fit`, `0ddbfcc`).
+- **The rack crackle** (FREEZE right after a CANYON <-> PLATE flip) is found and fixed on `proto/flip-freeze` (`3d5a3a9`):
+  - Cause: the flip saved SIZE together with the pot's jitter, so a frozen CANYON crossfaded all its lines for ~1.7 s.
+  - It was lapped: those lines went from up to 98.4 % to 92-93 %.
+  - Audible change: the move into PLATE starts ~1 s sooner. The owner said that's fine.
+- **v1.0.82 candidate:** both changes are combined on `claude/v1082` (`08e1ba3`, which carries v1.0.81). Its lap build is `proto/lap-v1082` (`a331a08`): 2 laps, 0 late blocks, worst 97.7 % then 96.5 %.
 
 Start with `/session-start`.
 
@@ -13,62 +25,98 @@ Start with `/session-start`.
 
 | Milestone | State |
 |---|---|
-| Spec | `main` at v1.0.68; v1.0.69-v1.0.80 on `beta/player-feedback` (PR 1, open, not merged). ADRs 0047-0058 live on the beta branch only |
+| Spec | `main` at v1.0.68. `beta/player-feedback` at v1.0.80 (PR 1, open). `claude/v1082` at v1.0.82 (v1.0.81 + v1.0.82, not merged into the beta). ADRs 0059 and the 0008/0022 amendments live on that branch only |
 | M0 | Passed (25 Oct) |
 | M1/M4-M8 | Built and listened |
-| M2 | Plugin installed `4140997` (v1.0.68), 3 Nov; the beta's plugin (now v1.0.80) not played by the owner |
-| M3 | The v1.0.80 code lapped on the module as the landing build (all 47 lines 0 late, worst 98.9 %); the published v1.0.80 release itself is the same machine code (agent's disassembly check) but not lapped. The owner was flashing the beta firmware at wrap |
-| M9 | v1.0.68 Latest; `v1.0.80-beta.1` (11 Nov) the newest pre-release |
+| M2 | Plugin installed `4140997` (v1.0.68), 3 Nov; no later plugin installed |
+| M3 | The module runs the v1.0.82 lap build `a331a08` (profile); lapped clean |
+| M9 | v1.0.68 Latest; `v1.0.80-beta.1` the newest pre-release; beta 3 (v1.0.82) not published |
 
-**main:** `e02e8c5` plus this wrap's commit, docs only since v1.0.68; **pushed to origin at wrap** (the owner's OK; no `site/` change, so no site rebuild). **`beta/player-feedback`:** `4f6f950`, pushed, equal to origin.
+**main:** `01d7752` plus this wrap's commit: docs, research logs and the task list only (no code change). 16+ commits ahead of origin, **not pushed** (see Push below). **`beta/player-feedback`:** `4f6f950`, equal to origin.
 
 ## Start here
 
-**The owner plays beta 2 on the rack, and players' feedback comes in** (`docs/TASKS.md`, "At the rack", first item). Read PR 1's comments, issue 2 and anything the owner brings from Modwiggler first.
+**The owner decides CANYON endless's level after a rack listen.** C plays bright material 2-2.5 LU under v1.0.81 while played and up to 4.6 LU under once held; they listened level-matched. The choice is keep it quieter, or add make-up back to v1.0.81's level.
+- If they choose make-up: there are only 12 B of flash. It's a constant change in `core/params/SpaceVoicing.h` (`kCanyonWear*`, or a trim next to `kCanyonWetTrimEndless`). After it, measure, re-pin the goldens, and update the v1.0.82 SPEC line.
 
 Then, in order:
-1. **The known issue:** CANYON -> PLATE with FREEZE pressed within ~220 ms of the flip, 101.5 %, 96 late blocks (`docs/research/m3-freeze-on-change-2-lap.log`). Research first (memory "research before designing"), then prototype, page if it changes the sound, and lap.
-2. Issue 2's recording (still waiting on chriisu).
-3. The red output LEDs.
-4. The full release (merge PR 1) once players and the owner are happy.
-5. The plugin UI.
+1. **Merging into the beta:** with the owner's OK, merge `claude/v1082` (not `proto/lap-v1082`, which only adds the lap lines) into `beta/player-feedback`, re-run the gates, and publish beta 3 from the beta worktree (`tools/make_release.sh --beta`; memory "betas from the beta worktree").
+2. **The owner's second question, still unanswered:** with very hot, bright noise, CANYON's lows rise ~4 dB as the highs wear (under 0.4 dB on music). Is that fine, or should the lows hold exactly?
+3. **Still open from Fable's report:** should the three SPACEs add the same warmth at the same playing level? Is SHIMMER's octave in CANYON, 7 dB stronger at full DEPTH, wanted?
+4. **Later and separate:** CANYON's held-tail smear (5-7 dB over two minutes). The SHIMMER-recorder saving on its own is still not measured on the module.
 
 ## Waiting on Jesse
 
-See `docs/TASKS.md`:
-- playing beta 2 on the rack (first "At the rack" item);
-- measuring the module's input level;
-- playing the beta's plugin in Ableton (say when, and it gets installed);
-- emptying the Trash of the older clean-ups.
+See `docs/TASKS.md`, "Waiting on Claude", under Fable's review:
+- the rack listen on CANYON's endless level;
+- the lows question above;
+- the OK to merge into the beta and publish beta 3;
+- the clean-up list below.
 
 ## In flight
 
-**Nothing running.** Both agents this session (the lap firmware, the v1.0.80 port) finished; I read both diffs and re-ran their gates (below). No nested sessions were started.
+**Nothing running.** All four subagents this session finished, and I reviewed each one's diff and re-ran its gate:
+- the Fable review;
+- the CANYON darken page;
+- the CANYON fit;
+- the flip-freeze fix.
 
-Kept:
-- `beta/player-feedback` (worktree `.claude/worktrees/beta`) and `.claude/worktrees/release` (the release script's, detached at `4f6f950`).
-- `claude/input-stop`, `claude/rack-levels`: open work, unmerged.
-- `dist/branches-backup-2026-11-08.bundle` and `-2026-11-11.bundle` (the 12 branches removed today, `proto/flipflick-landing` among them).
-- No page server is running (8766 is free): start `review-pages-lan` from `main` before the next page.
+The earlier port and lap agents were reviewed before the context summary. No nested sessions were started.
+
+The page server `review-pages-lan` (port 8766, serving main's `renders/`, LAN 192.168.1.238) was started from the desktop app's preview this session. It may still be running.
+
+**Kept on purpose:**
+- `claude/v1082` (worktree `.claude/worktrees/v1082`, which is checked out on `proto/lap-v1082`): the beta 3 candidate. Switch the worktree back with `git -C .claude/worktrees/v1082 checkout claude/v1082` before working there.
+- `proto/lap-v1082`: the lap lines for v1.0.82.
+- `beta/player-feedback` (worktree `beta`) and `.claude/worktrees/release` (detached at `4f6f950`).
+- `claude/input-stop`, `claude/rack-levels`: older open work.
+
+**Proposed clean-up, awaiting the owner's OK:**
+- Branches and worktrees whose work is in `claude/v1082` or was dropped:
+  - `proto/canyon-turnover`, `proto/canyon-darken`, `proto/canyon-darken-fit`, `proto/flip-freeze`, `proto/lap-flipfix`;
+  - `claude/port-fable`, `proto/lap-v1081`, `proto/lap-v1081-atflip`, `proto/unfreeze-reshape`, `proto/flipflick-landing`;
+  - `proto/fable-review`: keep it until the report is copied to main, or keep it as is.
+- Judged pages: `renders/canyon_turnover` (707 MB), `canyon_darken` (869 MB), `canyon_level` (1.5 GB), `shimmer_level` (432 MB), `fable_review` (689 MB).
+- `dist/` lap builds older than v1.0.82.
+- Disk: 20 GB free (96 % used).
 
 ## Will bite
 
-- **Flash:** v1.0.80 release 112,236 B, **404 B under budget**; profile 126,960 B. The profile only fits because the boot micro-tests are out by default (`IV_PROFILE_MICRO=0` in `firmware/main.cpp`, ported from the prototype); turning them back on overflows by ~530 B.
-- **CPU is at the edge:** worst lap line 98.9 % (flip-flick and XFFLIP lines); drops start near 99 %. Anything that adds work in a SPACE or SIZE transition needs a lap.
-- **The XFFLIP lap lines watch 3.4 s from the switch;** with the flip now waiting up to ~1.2 s, they don't see the end of its 3 s morph.
-- **`LIBDAISY_DIR` must go on the make command line** (the Makefile assigns it hard).
-- **The desktop can't hear these crackles.** Judge them with a lap.
-- As before: `screenlog.0` appends (copy, never move); never USB and rack power at once; `ls` is eza (`/bin/ls`); a new worktree needs `tools/make_stimulus.py`; a `while … $(…)` loop in Bash trips the rm safety check even with no rm: use plain commands.
+- **Flash: v1.0.82's release is 112,628 B, only 12 B under budget.** The flip fix cost +8 B alone but +48 B once merged (memory "flash-libm-costs": branch sizes don't add). Any make-up or new feature needs bytes freed first. The CANYON fit's savings list is in its commit message (`0ddbfcc`).
+- **CPU:** the worst lap line is 96.5-97.7 %.
+  - HALL->CANYON FREEZE +50 ms reads 97.7 % on a fresh flash's first lap and 95.1 % after.
+  - PLATE->CANYON (the direction the fix doesn't touch) is 96.4-96.7 %.
+  - Drops start near 99 %.
+- **Desktop renders have no knob jitter**, so `same_render` can't see the flip fix (memory "desktop has no knob jitter"). `host/tests/test_flip_freeze_size.cpp` adds the lap's noise.
+- **The beta 3 merge brings in v1.0.81 too:** `claude/v1082` contains `claude/port-fable`. Its ADR 0059 and the amendments come with it.
+- **The flip fix has no ADR of its own:** it's described in the v1.0.82 SPEC line only. Add an ADR amendment (the morph's ADR) if the next session wants one.
+- **`LIBDAISY_DIR` must go on the make command line in worktrees** (their submodules aren't initialised).
 
 ## Gates
 
-- **`beta/player-feedback` `4f6f950` (tree = `c1c2dc7`, v1.0.80):** ctest **"100% tests passed out of 30"** (re-run by me in the port worktree); goldens unchanged; `same_render` 60/60 vs v1.0.79 and 55/55 page cards identical to the prototype with its hooks on (agent); firmware clean rebuild by me: release **112,236 B** (99.6 % of budget), m0test 83,556 B, profile **126,960 B** (96.9 % of the chip). The published `.bin` is byte-identical to my rebuild.
-- **main:** at `e02e8c5` (docs only since v1.0.68): ctest **"100% tests passed out of 24"** (`build/ctest.log`, run at wrap); firmware release **111,828 B** (99.3 %), m0test 83,556 B, profile **130,956 B** (99.9 % of the chip), the same as before.
-- **Installed plugin:** `4140997` (v1.0.68), unchanged; main's HEAD differs only by docs.
+**`main`, at `01d7752`** (v1.0.68; this session changed docs only):
+- ctest: "100% tests passed out of 24".
+- Firmware:
+  - release 111,828 B (99.3 % of 112,640);
+  - m0test 83,556 B;
+  - profile 130,956 B (99.9 % of 131,072).
+  - The `-direct` and `-latelight` bins in `firmware/build` are left over from older builds, not from this run's targets: unsure.
+- Plugin installed `4140997` (v1.0.68), against main's HEAD `01d7752`: docs-only difference.
+
+**`claude/v1082`, at `08e1ba3`** (the beta 3 candidate; its sound differs from main's):
+- ctest: "100% tests passed out of 30".
+- Firmware (clean build):
+  - release 112,628 B (99.99 %, 12 B left);
+  - m0test 83,556 B;
+  - profile 127,336 B.
+- `same_render` against the CANYON fit build (`0ddbfcc`): SAME 60/60.
+- Lap build `a331a08`: profile 127,972 B, the same release size, 2 laps 0 late (`docs/research/m3-v1082-lap.log`).
+- No plugin installed for it.
 
 ## Where to look
 
-- `docs/TASKS.md`, "At the rack", first item.
-- `docs/adr/0056-unfreeze-size.md`, `0057-size-waits-for-morph.md`, `0058-flip-waits-for-size.md` (beta branch).
-- `docs/research/m3-flipflick-landing-lap.log`, `docs/research/m3-freeze-on-change-2-lap.log` (the known issue).
-- PR 1: https://github.com/jeffebauer/sublustris-versio/pull/1
+- `docs/TASKS.md` ("Waiting on Claude", Fable's review)
+- `SPEC.md` on `claude/v1082`: the v1.0.82 changelog line
+- `docs/research/m3-v1082-lap.log`, `m3-v1081-flipfix-lap.log`, `m3-v1081-atflip-lap.log`
+- `docs/research/canyon-endless-turnover.md`
+- `tools/pages/canyon_darken_README.txt` on `claude/v1082`
