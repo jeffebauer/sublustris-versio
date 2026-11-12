@@ -1,0 +1,200 @@
+BUILD v1.0.82 a331a08 profile [V1082]
+SPACE START (S, 47 lines, ~11 min; v1.0.82 (CANYON mellow and wear + the flip-freeze fix): ATFLIP, FREEZE +50..+350 ms after the flip; the owner's gesture; controls) [V1082]
+SPACE CANYON->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  74.2% max  90.2% | late blocks 0 of 5320 | max at 709 ms | fired 5 | after 0.5 s  90.2%
+SPACE CANYON->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  74.6% max  93.1% | late blocks 0 of 5320 | max at 421 ms | fired 5 | after 0.5 s  90.7%
+SPACE CANYON->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +150 ms UNFRZ +120 ms W0.5 avg  75.0% max  92.1% | late blocks 0 of 5320 | max at 487 ms | fired 5 | after 0.5 s  90.7%
+SPACE CANYON->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  75.6% max  92.4% | late blocks 0 of 5320 | max at 561 ms | fired 5 | after 0.5 s  92.4%
+SPACE CANYON->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +350 ms UNFRZ +120 ms W0.5 avg  76.4% max  92.5% | late blocks 0 of 5320 | max at 696 ms | fired 5 | after 0.5 s  92.5%
+SPACE PLATE->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  80.9% max  94.4% | late blocks 0 of 5320 | max at 932 ms | fired 5 | after 0.5 s  94.4%
+SPACE PLATE->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  82.2% max  96.7% | late blocks 0 of 5320 | max at 50 ms | fired 5 | after 0.5 s  94.5%
+SPACE PLATE->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +150 ms UNFRZ +120 ms W0.5 avg  82.3% max  95.8% | late blocks 0 of 5320 | max at 50 ms | fired 5 | after 0.5 s  94.8%
+SPACE PLATE->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  83.0% max  96.4% | late blocks 0 of 5320 | max at 50 ms | fired 5 | after 0.5 s  94.5%
+SPACE PLATE->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +350 ms UNFRZ +120 ms W0.5 avg  82.7% max  95.0% | late blocks 0 of 5320 | max at 50 ms | fired 5 | after 0.5 s  94.4%
+SPACE CANYON->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  72.4% max  86.1% | late blocks 0 of 5320 | max at 1012 ms | fired 5 | after 0.5 s  86.1%
+SPACE CANYON->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  72.1% max  85.1% | late blocks 0 of 5320 | max at 1094 ms | fired 5 | after 0.5 s  85.1%
+SPACE CANYON->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +150 ms UNFRZ +120 ms W0.5 avg  72.6% max  86.0% | late blocks 0 of 5320 | max at 1148 ms | fired 5 | after 0.5 s  86.0%
+SPACE CANYON->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  73.2% max  85.8% | late blocks 0 of 5320 | max at 1240 ms | fired 5 | after 0.5 s  85.8%
+SPACE CANYON->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +350 ms UNFRZ +120 ms W0.5 avg  73.9% max  86.0% | late blocks 0 of 5320 | max at 230 ms | fired 5 | after 0.5 s  85.9%
+SPACE PLATE->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  74.3% max  84.6% | late blocks 0 of 5320 | max at 3329 ms | fired 5 | after 0.5 s  84.6%
+SPACE PLATE->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  73.8% max  85.0% | late blocks 0 of 5320 | max at 3606 ms | fired 5 | after 0.5 s  85.0%
+SPACE PLATE->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +150 ms UNFRZ +120 ms W0.5 avg  73.9% max  85.1% | late blocks 0 of 5320 | max at 3786 ms | fired 5 | after 0.5 s  85.1%
+SPACE PLATE->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  74.2% max  85.5% | late blocks 0 of 5320 | max at 3936 ms | fired 5 | after 0.5 s  85.5%
+SPACE PLATE->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +350 ms UNFRZ +120 ms W0.5 avg  74.4% max  85.5% | late blocks 0 of 5320 | max at 4103 ms | fired 5 | after 0.5 s  85.5%
+SPACE HALL->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  66.5% max  82.8% | late blocks 0 of 5320 | max at 1073 ms | fired 5 | after 0.5 s  82.8%
+SPACE HALL->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  67.0% max  83.0% | late blocks 0 of 5320 | max at 1025 ms | fired 5 | after 0.5 s  83.0%
+SPACE HALL->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  67.8% max  83.6% | late blocks 0 of 5320 | max at 1141 ms | fired 5 | after 0.5 s  83.6%
+SPACE HALL->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  66.9% max  79.9% | late blocks 0 of 5320 | max at 1097 ms | fired 5 | after 0.5 s  79.9%
+SPACE HALL->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  67.7% max  79.7% | late blocks 0 of 5320 | max at 1165 ms | fired 5 | after 0.5 s  79.7%
+SPACE PLATE->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  68.9% max  77.4% | late blocks 0 of 5320 | max at 1724 ms | fired 5 | after 0.5 s  77.4%
+SPACE PLATE->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  69.1% max  77.6% | late blocks 0 of 5320 | max at 50 ms | fired 5 | after 0.5 s  77.2%
+SPACE PLATE->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  69.4% max  77.8% | late blocks 0 of 5320 | max at 50 ms | fired 5 | after 0.5 s  76.9%
+SPACE PLATE->HALL ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  69.0% max  78.0% | late blocks 0 of 5320 | max at 3307 ms | fired 5 | after 0.5 s  78.0%
+SPACE PLATE->HALL ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  69.3% max  78.3% | late blocks 0 of 5320 | max at 3906 ms | fired 5 | after 0.5 s  78.3%
+SPACE HALL->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  78.3% max  97.7% | late blocks 0 of 5320 | max at 1096 ms | fired 5 | after 0.5 s  97.7%
+SPACE HALL->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  79.3% max  94.3% | late blocks 0 of 5320 | max at 1920 ms | fired 5 | after 0.5 s  94.3%
+SPACE HALL->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  79.5% max  94.5% | late blocks 0 of 5320 | max at 1738 ms | fired 5 | after 0.5 s  94.5%
+SPACE HALL->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  70.1% max  85.8% | late blocks 0 of 5320 | max at 1923 ms | fired 5 | after 0.5 s  85.8%
+SPACE HALL->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  70.5% max  85.8% | late blocks 0 of 5320 | max at 1802 ms | fired 5 | after 0.5 s  85.8%
+SPACE CANYON->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  70.0% max  90.8% | late blocks 0 of 5320 | max at 60 ms | fired 5 | after 0.5 s  90.2%
+SPACE CANYON->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  65.5% max  87.1% | late blocks 0 of 5320 | max at 400 ms | fired 5 | after 0.5 s  84.2%
+SPACE CANYON->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  65.6% max  87.8% | late blocks 0 of 5320 | max at 358 ms | fired 5 | after 0.5 s  84.8%
+SPACE CANYON->HALL ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  65.3% max  85.3% | late blocks 0 of 5320 | max at 356 ms | fired 5 | after 0.5 s  82.5%
+SPACE CANYON->HALL ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  65.1% max  85.0% | late blocks 0 of 5320 | max at 284 ms | fired 5 | after 0.5 s  82.4%
+SPACE CANYON->PLATE ATFLIP SIZE S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.0->1.0 FRZ +100 ms UNFRZ +500 ms SIZE +50 ms W0.5 avg  75.3% max  91.1% | late blocks 0 of 7200 | max at 2344 ms | fired 6 | after 0.5 s  91.1%
+SPACE CANYON->PLATE ATFLIP SIZE S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z1.0->0.0 FRZ +100 ms UNFRZ +500 ms SIZE +50 ms W0.5 avg  78.1% max  91.5% | late blocks 0 of 7200 | max at 2976 ms | fired 6 | after 0.5 s  91.5%
+SPACE PLATE->CANYON ATFLIP SIZE S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.0->1.0 FRZ +100 ms UNFRZ +500 ms SIZE +50 ms W0.5 avg  77.3% max  97.0% | late blocks 0 of 7200 | max at 1660 ms | fired 6 | after 0.5 s  97.0%
+SPACE PLATE->CANYON ATFLIP SIZE S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z1.0->0.0 FRZ +100 ms UNFRZ +500 ms SIZE +50 ms W0.5 avg  78.2% max  96.2% | late blocks 0 of 7200 | max at 1716 ms | fired 6 | after 0.5 s  96.2%
+SPACE PLATE->CANYON SHIMMER W1.0 avg  84.8% max  94.8% | late blocks 0 of 3600 | max at 50 ms | fired 1 | after 0.5 s  92.1%
+SPACE CANYON->PLATE SHIMMER W1.0 avg  76.4% max  89.2% | late blocks 0 of 3600 | max at 142 ms | fired 1 | after 0.5 s  81.7%
+SPACE CANYON->PLATE ATFLIP S1 NOON D0.67 Z0.5 FRZ +100 ms UNFRZ +120 ms W0.5 avg  74.6% max  90.7% | late blocks 0 of 5320 | max at 1057 ms | fired 5 | after 0.5 s  90.7%
+SPACE LAP 1 DONE [V1082]: 47 lines, worst max  97.7%, late blocks in all 0
+CORNER PLATE S0 wear10              avg  52.2% max  79.0% min  45.6% | mem 19710716 B | block 48 | fs 48000 Hz | ~5220 cyc/sample | max at block 51
+  SPLIT ctl  3.9 in  6.4 shim  0.8 swell 13.8 twin  0.7 tank 17.3 tkctl  1.5 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.5 out  2.8 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.4 in  8.1 shim  2.1 swell 18.2 twin  1.9 tank 41.4 tkctl  3.3 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.7 out  4.4 flip  0.0 tkabs  0.0
+BENCH clock 480 MHz icache on dcache on | FZ on (irq on) | sdram TRP 3 TRCD 3 (tight) sdclk 100 MHz | itcm 63536 B | engine 0x20009000 axi 0x24002340
+SDRAMCHK libdaisy 0 tight 0 laps 0 in 0 (wrong words, of 4194304 a check)
+CORNER PLATE S0 wear30              avg  47.2% max  49.2% min  45.7% | mem 19710716 B | block 48 | fs 48000 Hz | ~4721 cyc/sample | max at block 1408
+  SPLIT ctl  3.8 in  6.4 shim  0.8 swell 12.9 twin  0.7 tank 13.4 tkctl  1.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.5 out  2.8 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.5 in  8.1 shim  2.1 swell 14.3 twin  1.9 tank 15.4 tkctl  2.7 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.7 out  4.1 flip  0.0 tkabs  0.0
+CORNER PLATE S0 wear50              avg  44.4% max  49.3% min  41.8% | mem 19710716 B | block 48 | fs 48000 Hz | ~4441 cyc/sample | max at block 472
+  SPLIT ctl  3.7 in  6.4 shim  0.8 swell 10.2 twin  0.7 tank 13.3 tkctl  1.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.5 out  2.8 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.4 in  8.1 shim  2.1 swell 14.3 twin  1.9 tank 15.2 tkctl  2.7 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.7 out  4.1 flip  0.0 tkabs  0.0
+CORNER PLATE S0 wear70              avg  43.7% max  45.9% min  42.1% | mem 19710716 B | block 48 | fs 48000 Hz | ~4368 cyc/sample | max at block 471
+  SPLIT ctl  3.8 in  6.4 shim  0.8 swell  9.1 twin  0.7 tank 13.4 tkctl  1.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.7 out  2.8 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.5 in  8.1 shim  2.1 swell 10.6 twin  1.9 tank 15.2 tkctl  2.7 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.9 out  4.1 flip  0.0 tkabs  0.0
+CORNER PLATE S0 wear90              avg  43.6% max  45.8% min  42.2% | mem 19710716 B | block 48 | fs 48000 Hz | ~4361 cyc/sample | max at block 415
+  SPLIT ctl  3.8 in  6.4 shim  0.8 swell  9.1 twin  0.7 tank 13.3 tkctl  1.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.7 out  2.8 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.5 in  8.1 shim  2.1 swell 10.7 twin  1.9 tank 15.2 tkctl  2.7 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.9 out  4.1 flip  0.0 tkabs  0.0
+CORNER PLATE S1 wear10              avg  47.2% max  72.2% min  41.7% | mem 19710716 B | block 48 | fs 48000 Hz | ~4723 cyc/sample | max at block 51
+  SPLIT ctl  3.8 in  6.4 shim  0.8 swell  9.1 twin  0.7 tank 17.1 tkctl  1.5 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.5 out  2.8 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.5 in  8.1 shim  2.1 swell 10.7 twin  1.9 tank 41.7 tkctl  3.2 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.9 out  4.1 flip  0.0 tkabs  0.0
+CORNER PLATE S1 wear30              avg  43.1% max  45.3% min  41.7% | mem 19710716 B | block 48 | fs 48000 Hz | ~4311 cyc/sample | max at block 437
+  SPLIT ctl  3.7 in  6.4 shim  0.8 swell  9.1 twin  0.7 tank 13.1 tkctl  1.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.5 out  2.9 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.4 in  8.1 shim  2.1 swell 10.6 twin  1.9 tank 14.9 tkctl  2.7 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.7 out  4.1 flip  0.0 tkabs  0.0
+CORNER PLATE S1 wear50              avg  43.2% max  45.3% min  41.8% | mem 19710716 B | block 48 | fs 48000 Hz | ~4319 cyc/sample | max at block 446
+  SPLIT ctl  3.7 in  6.4 shim  0.8 swell  9.1 twin  0.7 tank 13.2 tkctl  1.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.5 out  2.8 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.4 in  8.1 shim  2.1 swell 10.6 twin  1.9 tank 15.0 tkctl  2.7 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.7 out  4.1 flip  0.0 tkabs  0.0
+CORNER PLATE S1 wear70              avg  43.5% max  45.4% min  42.0% | mem 19710716 B | block 48 | fs 48000 Hz | ~4347 cyc/sample | max at block 465
+  SPLIT ctl  3.8 in  6.4 shim  0.8 swell  9.1 twin  0.7 tank 13.2 tkctl  1.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.7 out  2.8 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.6 in  8.1 shim  2.1 swell 10.6 twin  1.9 tank 15.1 tkctl  2.7 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  6.0 out  4.1 flip  0.0 tkabs  0.0
+CORNER PLATE S1 wear90              avg  43.4% max  45.6% min  41.9% | mem 19710716 B | block 48 | fs 48000 Hz | ~4345 cyc/sample | max at block 382
+  SPLIT ctl  3.8 in  6.4 shim  0.8 swell  9.1 twin  0.7 tank 13.2 tkctl  1.4 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  4.7 out  2.8 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  5.6 in  8.1 shim  2.1 swell 10.6 twin  1.9 tank 14.9 tkctl  2.7 tkloop  0.0 tkout  0.0 tkmix  0.0 wear  5.9 out  4.1 flip  0.0 tkabs  0.0
+CORNER HALL S0 wear10               avg  71.7% max  77.8% min  42.9% | mem 19710716 B | block 48 | fs 48000 Hz | ~7170 cyc/sample | max at block 50
+  SPLIT ctl  4.6 in  6.1 shim  0.8 swell 10.2 twin  0.7 tank 16.8 tkctl  5.9 tkloop 10.7 tkout  6.0 tkmix  1.4 wear  4.5 out  2.9 flip  0.0 tkabs  0.5  (% of budget)
+  PEAK  ctl  6.3 in  8.2 shim  2.1 swell 12.8 twin  1.9 tank 18.6 tkctl  7.3 tkloop 18.8 tkout  7.5 tkmix  2.8 wear  5.9 out  4.1 flip  4.6 tkabs  3.5
+CORNER HALL S0 wear30               avg  57.6% max  74.0% min  55.6% | mem 19710716 B | block 48 | fs 48000 Hz | ~5764 cyc/sample | max at block 0
+  SPLIT ctl  4.4 in  5.9 shim  0.8 swell 12.4 twin  0.7 tank  2.9 tkctl  4.4 tkloop 10.8 tkout  5.9 tkmix  1.4 wear  4.5 out  2.9 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.3 in  7.6 shim  2.1 swell 14.2 twin  1.9 tank 18.1 tkctl  7.1 tkloop 12.1 tkout  7.3 tkmix  2.8 wear  5.7 out  4.2 flip  0.0 tkabs  0.0
+CORNER HALL S0 wear50               avg  57.2% max  59.0% min  55.7% | mem 19710716 B | block 48 | fs 48000 Hz | ~5720 cyc/sample | max at block 404
+  SPLIT ctl  4.4 in  5.9 shim  0.8 swell 12.8 twin  0.7 tank  2.7 tkctl  4.4 tkloop 10.7 tkout  5.5 tkmix  1.4 wear  4.5 out  2.9 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.1 in  7.6 shim  2.1 swell 14.3 twin  1.9 tank  3.9 tkctl  5.6 tkloop 12.0 tkout  6.9 tkmix  2.8 wear  5.7 out  4.1 flip  0.0 tkabs  0.0
+CORNER HALL S0 wear70               avg  56.2% max  59.5% min  52.2% | mem 19710716 B | block 48 | fs 48000 Hz | ~5620 cyc/sample | max at block 386
+  SPLIT ctl  4.5 in  5.9 shim  0.8 swell 11.5 twin  0.7 tank  2.7 tkctl  4.4 tkloop 10.6 tkout  5.5 tkmix  1.4 wear  4.7 out  2.9 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.2 in  7.6 shim  2.1 swell 14.3 twin  1.9 tank  3.9 tkctl  5.6 tkloop 12.0 tkout  6.9 tkmix  2.8 wear  5.9 out  4.1 flip  0.0 tkabs  0.0
+CORNER HALL S0 wear90               avg  53.6% max  55.6% min  52.2% | mem 19710716 B | block 48 | fs 48000 Hz | ~5365 cyc/sample | max at block 426
+  SPLIT ctl  4.5 in  5.9 shim  0.8 swell  9.0 twin  0.7 tank  2.7 tkctl  4.4 tkloop 10.6 tkout  5.5 tkmix  1.4 wear  4.7 out  2.9 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.2 in  7.6 shim  2.1 swell 10.5 twin  1.9 tank  3.9 tkctl  5.6 tkloop 12.0 tkout  6.9 tkmix  2.7 wear  5.9 out  4.1 flip  0.0 tkabs  0.0
+CORNER HALL S1 wear10               avg  57.0% max  76.9% min  50.6% | mem 19710716 B | block 48 | fs 48000 Hz | ~5702 cyc/sample | max at block 400
+  SPLIT ctl  4.4 in  5.9 shim  0.8 swell  9.0 twin  0.7 tank  2.7 tkctl  5.4 tkloop 11.8 tkout  6.4 tkmix  1.4 wear  4.5 out  2.9 flip  0.0 tkabs  0.6  (% of budget)
+  PEAK  ctl  7.0 in  7.6 shim  2.1 swell 10.5 twin  1.9 tank  3.9 tkctl  9.1 tkloop 23.7 tkout 11.6 tkmix  2.8 wear  5.9 out  4.1 flip  0.0 tkabs  3.5
+CORNER HALL S1 wear30               avg  51.8% max  54.3% min  50.2% | mem 19710716 B | block 48 | fs 48000 Hz | ~5182 cyc/sample | max at block 418
+  SPLIT ctl  4.4 in  5.9 shim  0.8 swell  9.0 twin  0.7 tank  2.7 tkctl  4.4 tkloop  9.0 tkout  5.6 tkmix  1.4 wear  4.5 out  2.9 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.1 in  7.6 shim  2.1 swell 10.5 twin  1.9 tank  3.9 tkctl  5.9 tkloop 10.4 tkout  7.1 tkmix  2.8 wear  5.7 out  4.1 flip  0.0 tkabs  0.0
+CORNER HALL S1 wear50               avg  51.7% max  53.8% min  50.1% | mem 19710716 B | block 48 | fs 48000 Hz | ~5168 cyc/sample | max at block 430
+  SPLIT ctl  4.4 in  5.9 shim  0.8 swell  9.0 twin  0.7 tank  2.7 tkctl  4.2 tkloop  9.0 tkout  5.6 tkmix  1.4 wear  4.5 out  2.9 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.1 in  7.6 shim  2.1 swell 10.5 twin  1.9 tank  3.9 tkctl  5.5 tkloop 10.3 tkout  7.1 tkmix  2.8 wear  5.7 out  4.1 flip  0.0 tkabs  0.0
+CORNER HALL S1 wear70               avg  52.0% max  54.1% min  50.5% | mem 19710716 B | block 48 | fs 48000 Hz | ~5199 cyc/sample | max at block 470
+  SPLIT ctl  4.5 in  5.9 shim  0.8 swell  9.0 twin  0.7 tank  2.7 tkctl  4.2 tkloop  9.0 tkout  5.6 tkmix  1.4 wear  4.7 out  2.9 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.2 in  7.6 shim  2.1 swell 10.4 twin  1.9 tank  3.9 tkctl  5.5 tkloop 10.4 tkout  7.1 tkmix  2.8 wear  5.9 out  4.1 flip  0.0 tkabs  0.0
+CORNER HALL S1 wear90               avg  52.0% max  54.0% min  50.5% | mem 19710716 B | block 48 | fs 48000 Hz | ~5199 cyc/sample | max at block 416
+  SPLIT ctl  4.5 in  5.9 shim  0.8 swell  9.0 twin  0.7 tank  2.7 tkctl  4.2 tkloop  9.0 tkout  5.6 tkmix  1.4 wear  4.7 out  2.9 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  6.2 in  7.6 shim  2.1 swell 10.5 twin  1.9 tank  3.9 tkctl  5.5 tkloop 10.3 tkout  7.2 tkmix  2.8 wear  5.9 out  4.1 flip  0.0 tkabs  0.0
+CORNER MASSIVE S0 wear10            avg  67.7% max  80.7% min  51.1% | mem 19710716 B | block 48 | fs 48000 Hz | ~6769 cyc/sample | max at block 400
+  SPLIT ctl  4.8 in  5.9 shim  0.8 swell 10.1 twin  0.7 tank  2.7 tkctl  6.8 tkloop 11.6 tkout 13.5 tkmix  1.4 wear  4.5 out  2.9 flip  0.0 tkabs  1.4  (% of budget)
+  PEAK  ctl  6.7 in  7.6 shim  2.1 swell 12.6 twin  1.9 tank  3.9 tkctl 12.6 tkloop 15.2 tkout 19.8 tkmix  2.7 wear  5.9 out  4.1 flip  3.1 tkabs  3.5
+CORNER MASSIVE S0 wear30            avg  61.9% max  64.4% min  59.6% | mem 19710716 B | block 48 | fs 48000 Hz | ~6190 cyc/sample | max at block 2384
+  SPLIT ctl  4.6 in  5.9 shim  0.8 swell 12.4 twin  0.7 tank  2.7 tkctl  4.7 tkloop 10.6 tkout  9.8 tkmix  1.3 wear  4.5 out  2.9 flip  0.0 tkabs  0.3  (% of budget)
+  PEAK  ctl  6.3 in  7.6 shim  2.1 swell 14.2 twin  1.9 tank  3.9 tkctl  6.3 tkloop 12.0 tkout 11.4 tkmix  2.7 wear  5.7 out  4.1 flip  0.0 tkabs  2.3
+CORNER MASSIVE S0 wear50            avg  62.2% max  65.0% min  60.1% | mem 19710716 B | block 48 | fs 48000 Hz | ~6218 cyc/sample | max at block 392
+  SPLIT ctl  4.6 in  5.9 shim  0.8 swell 12.8 twin  0.7 tank  2.7 tkctl  4.5 tkloop 10.6 tkout  9.8 tkmix  1.4 wear  4.5 out  2.9 flip  0.0 tkabs  0.3  (% of budget)
+  PEAK  ctl  6.3 in  7.6 shim  2.1 swell 14.2 twin  1.9 tank  3.9 tkctl  5.8 tkloop 12.0 tkout 11.4 tkmix  2.7 wear  5.7 out  4.1 flip  0.0 tkabs  2.3
+CORNER MASSIVE S0 wear70            avg  61.2% max  65.4% min  56.7% | mem 19710716 B | block 48 | fs 48000 Hz | ~6120 cyc/sample | max at block 414
+  SPLIT ctl  4.7 in  5.9 shim  0.8 swell 11.5 twin  0.7 tank  2.7 tkctl  4.5 tkloop 10.6 tkout  9.8 tkmix  1.4 wear  4.7 out  2.9 flip  0.0 tkabs  0.3  (% of budget)
+  PEAK  ctl  6.4 in  7.6 shim  2.1 swell 14.2 twin  1.9 tank  3.9 tkctl  5.8 tkloop 12.0 tkout 11.4 tkmix  2.8 wear  5.9 out  4.2 flip  0.0 tkabs  2.3
+CORNER MASSIVE S0 wear90            avg  58.7% max  61.7% min  56.7% | mem 19710716 B | block 48 | fs 48000 Hz | ~5871 cyc/sample | max at block 392
+  SPLIT ctl  4.7 in  5.9 shim  0.8 swell  9.0 twin  0.7 tank  2.7 tkctl  4.5 tkloop 10.6 tkout  9.8 tkmix  1.4 wear  4.7 out  2.9 flip  0.0 tkabs  0.3  (% of budget)
+  PEAK  ctl  6.5 in  7.6 shim  2.1 swell 10.5 twin  1.9 tank  3.9 tkctl  5.8 tkloop 12.0 tkout 11.4 tkmix  2.7 wear  5.9 out  4.1 flip  0.0 tkabs  2.3
+CORNER MASSIVE S1 wear10            avg  65.2% max  75.5% min  57.4% | mem 19710716 B | block 48 | fs 48000 Hz | ~6521 cyc/sample | max at block 344
+  SPLIT ctl  4.7 in  7.2 shim  0.8 swell  9.7 twin  0.7 tank  2.7 tkctl  6.8 tkloop 11.6 tkout 11.4 tkmix  1.4 wear  4.5 out  2.9 flip  0.0 tkabs  0.3  (% of budget)
+  PEAK  ctl  6.4 in  8.9 shim  2.1 swell 14.6 twin  1.9 tank  3.9 tkctl  9.7 tkloop 14.5 tkout 14.9 tkmix  2.8 wear  5.7 out  4.1 flip  0.0 tkabs  2.3
+CORNER MASSIVE S1 wear30            avg  60.5% max  64.0% min  58.1% | mem 19710716 B | block 48 | fs 48000 Hz | ~6047 cyc/sample | max at block 382
+  SPLIT ctl  4.7 in  7.1 shim  0.8 swell  9.3 twin  0.7 tank  2.7 tkctl  4.9 tkloop 10.6 tkout 10.0 tkmix  1.4 wear  4.5 out  2.9 flip  0.0 tkabs  0.3  (% of budget)
+  PEAK  ctl  6.3 in  8.8 shim  2.1 swell 10.7 twin  1.9 tank  3.9 tkctl  7.0 tkloop 12.0 tkout 11.5 tkmix  2.7 wear  5.7 out  4.1 flip  0.0 tkabs  2.3
+CORNER MASSIVE S1 wear50            avg  60.1% max  62.9% min  57.9% | mem 19710716 B | block 48 | fs 48000 Hz | ~6011 cyc/sample | max at block 412
+  SPLIT ctl  4.6 in  7.1 shim  0.8 swell  9.3 twin  0.7 tank  2.7 tkctl  4.6 tkloop 10.6 tkout 10.0 tkmix  1.4 wear  4.5 out  2.9 flip  0.0 tkabs  0.3  (% of budget)
+  PEAK  ctl  6.3 in  8.9 shim  2.1 swell 10.7 twin  1.9 tank  3.9 tkctl  5.8 tkloop 12.0 tkout 11.4 tkmix  2.7 wear  5.7 out  4.1 flip  0.0 tkabs  2.3
+CORNER MASSIVE S1 wear70            avg  60.4% max  63.3% min  58.3% | mem 19710716 B | block 48 | fs 48000 Hz | ~6044 cyc/sample | max at block 444
+  SPLIT ctl  4.7 in  7.1 shim  0.8 swell  9.3 twin  0.7 tank  2.7 tkctl  4.5 tkloop 10.6 tkout 10.0 tkmix  1.4 wear  4.7 out  2.9 flip  0.0 tkabs  0.3  (% of budget)
+  PEAK  ctl  6.4 in  8.9 shim  2.1 swell 10.8 twin  1.9 tank  3.9 tkctl  5.8 tkloop 11.9 tkout 11.6 tkmix  2.7 wear  6.0 out  4.1 flip  0.0 tkabs  2.3
+CORNER MASSIVE S1 wear90            avg  60.4% max  63.1% min  58.1% | mem 19710716 B | block 48 | fs 48000 Hz | ~6042 cyc/sample | max at block 472
+  SPLIT ctl  4.7 in  7.1 shim  0.8 swell  9.3 twin  0.7 tank  2.7 tkctl  4.5 tkloop 10.6 tkout 10.0 tkmix  1.4 wear  4.7 out  2.9 flip  0.0 tkabs  0.3  (% of budget)
+  PEAK  ctl  6.4 in  8.9 shim  2.1 swell 10.8 twin  1.9 tank  3.9 tkctl  5.8 tkloop 11.9 tkout 11.7 tkmix  2.7 wear  6.0 out  4.1 flip  0.0 tkabs  2.3
+CORNER MASSIVE S1 wear10 SHIMMER    avg  72.9% max  75.6% min  66.5% | mem 19710716 B | block 48 | fs 48000 Hz | ~7289 cyc/sample | max at block 460
+  SPLIT ctl  4.6 in  7.2 shim 12.8 swell 10.1 twin  0.7 tank  2.7 tkctl  4.5 tkloop 10.6 tkout 10.0 tkmix  1.4 wear  4.5 out  2.9 flip  0.0 tkabs  0.4  (% of budget)
+  PEAK  ctl  6.3 in  8.9 shim 14.1 swell 11.7 twin  1.9 tank  3.9 tkctl  5.9 tkloop 11.9 tkout 11.5 tkmix  2.8 wear  5.9 out  4.1 flip  0.0 tkabs  3.4
+CORNER MASSIVE wear10 SIZE .3<>.8   avg  70.4% max  77.9% min  61.1% | mem 19710716 B | block 48 | fs 48000 Hz | ~7043 cyc/sample | max at block 1558
+  SPLIT ctl  4.5 in  7.6 shim  0.9 swell 11.8 twin  0.7 tank  2.7 tkctl  7.0 tkloop 12.7 tkout 12.6 tkmix  1.4 wear  4.5 out  2.9 flip  0.0 tkabs  0.5  (% of budget)
+  PEAK  ctl  5.8 in 10.7 shim 14.0 swell 17.3 twin  1.9 tank  3.9 tkctl  9.2 tkloop 14.6 tkout 14.9 tkmix  2.7 wear  5.7 out  4.1 flip  0.0 tkabs  3.4
+CORNER MASSIVE S1 wear10 FROZEN+twin avg  74.3% max  80.3% min  69.2% | mem 19710716 B | block 48 | fs 48000 Hz | ~7435 cyc/sample | max at block 11 | twin on 299 ms after
+  SPLIT ctl  6.2 in  7.2 shim  0.8 swell 12.4 twin 10.2 tank  2.7 tkctl  5.0 tkloop 10.4 tkout 10.0 tkmix  1.4 wear  4.5 out  2.9 flip  0.0 tkabs  0.0  (% of budget)
+  PEAK  ctl  7.5 in  9.0 shim  2.1 swell 14.4 twin 11.9 tank  3.9 tkctl  8.6 tkloop 11.9 tkout 11.5 tkmix  2.8 wear  5.7 out  4.1 flip  0.0 tkabs  3.4
+SPACE START (S, 47 lines, ~11 min; v1.0.82 (CANYON mellow and wear + the flip-freeze fix): ATFLIP, FREEZE +50..+350 ms after the flip; the owner's gesture; controls) [V1082]
+SPACE CANYON->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  74.2% max  90.5% | late blocks 0 of 5320 | max at 61 ms | fired 5 | after 0.5 s  89.8%
+SPACE CANYON->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  74.7% max  92.6% | late blocks 0 of 5320 | max at 426 ms | fired 5 | after 0.5 s  90.6%
+SPACE CANYON->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +150 ms UNFRZ +120 ms W0.5 avg  75.0% max  93.2% | late blocks 0 of 5320 | max at 486 ms | fired 5 | after 0.5 s  91.2%
+SPACE CANYON->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  75.6% max  92.6% | late blocks 0 of 5320 | max at 567 ms | fired 5 | after 0.5 s  92.6%
+SPACE CANYON->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +350 ms UNFRZ +120 ms W0.5 avg  76.4% max  92.5% | late blocks 0 of 5320 | max at 692 ms | fired 5 | after 0.5 s  92.5%
+SPACE PLATE->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  81.0% max  94.5% | late blocks 0 of 5320 | max at 928 ms | fired 5 | after 0.5 s  94.5%
+SPACE PLATE->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  82.1% max  95.6% | late blocks 0 of 5320 | max at 50 ms | fired 5 | after 0.5 s  94.9%
+SPACE PLATE->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +150 ms UNFRZ +120 ms W0.5 avg  82.3% max  95.6% | late blocks 0 of 5320 | max at 50 ms | fired 5 | after 0.5 s  95.2%
+SPACE PLATE->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  82.7% max  96.5% | late blocks 0 of 5320 | max at 50 ms | fired 5 | after 0.5 s  94.7%
+SPACE PLATE->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +350 ms UNFRZ +120 ms W0.5 avg  82.5% max  95.9% | late blocks 0 of 5320 | max at 50 ms | fired 5 | after 0.5 s  94.5%
+SPACE CANYON->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  72.3% max  85.7% | late blocks 0 of 5320 | max at 1044 ms | fired 5 | after 0.5 s  85.7%
+SPACE CANYON->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  72.2% max  86.8% | late blocks 0 of 5320 | max at 1092 ms | fired 5 | after 0.5 s  86.8%
+SPACE CANYON->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +150 ms UNFRZ +120 ms W0.5 avg  72.5% max  85.9% | late blocks 0 of 5320 | max at 1164 ms | fired 5 | after 0.5 s  85.9%
+SPACE CANYON->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  73.1% max  86.2% | late blocks 0 of 5320 | max at 1238 ms | fired 5 | after 0.5 s  86.2%
+SPACE CANYON->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +350 ms UNFRZ +120 ms W0.5 avg  73.9% max  85.4% | late blocks 0 of 5320 | max at 1298 ms | fired 5 | after 0.5 s  85.4%
+SPACE PLATE->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  74.2% max  85.8% | late blocks 0 of 5320 | max at 3831 ms | fired 5 | after 0.5 s  85.8%
+SPACE PLATE->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  74.0% max  84.8% | late blocks 0 of 5320 | max at 3838 ms | fired 5 | after 0.5 s  84.8%
+SPACE PLATE->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +150 ms UNFRZ +120 ms W0.5 avg  74.0% max  85.8% | late blocks 0 of 5320 | max at 3677 ms | fired 5 | after 0.5 s  85.8%
+SPACE PLATE->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  74.2% max  85.6% | late blocks 0 of 5320 | max at 3824 ms | fired 5 | after 0.5 s  85.6%
+SPACE PLATE->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +350 ms UNFRZ +120 ms W0.5 avg  74.4% max  85.4% | late blocks 0 of 5320 | max at 4069 ms | fired 5 | after 0.5 s  85.4%
+SPACE HALL->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  66.6% max  82.9% | late blocks 0 of 5320 | max at 1047 ms | fired 5 | after 0.5 s  82.9%
+SPACE HALL->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  67.0% max  83.2% | late blocks 0 of 5320 | max at 1011 ms | fired 5 | after 0.5 s  83.2%
+SPACE HALL->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  67.7% max  83.5% | late blocks 0 of 5320 | max at 131 ms | fired 5 | after 0.5 s  82.8%
+SPACE HALL->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  66.9% max  79.6% | late blocks 0 of 5320 | max at 1091 ms | fired 5 | after 0.5 s  79.6%
+SPACE HALL->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  67.4% max  79.5% | late blocks 0 of 5320 | max at 219 ms | fired 5 | after 0.5 s  79.3%
+SPACE PLATE->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  68.9% max  76.9% | late blocks 0 of 5320 | max at 1596 ms | fired 5 | after 0.5 s  76.9%
+SPACE PLATE->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  69.1% max  77.3% | late blocks 0 of 5320 | max at 50 ms | fired 5 | after 0.5 s  77.0%
+SPACE PLATE->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  69.4% max  77.7% | late blocks 0 of 5320 | max at 1519 ms | fired 5 | after 0.5 s  77.7%
+SPACE PLATE->HALL ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  69.0% max  77.9% | late blocks 0 of 5320 | max at 3405 ms | fired 5 | after 0.5 s  77.9%
+SPACE PLATE->HALL ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  69.3% max  78.0% | late blocks 0 of 5320 | max at 3434 ms | fired 5 | after 0.5 s  78.0%
+SPACE HALL->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  78.1% max  95.1% | late blocks 0 of 5320 | max at 1974 ms | fired 5 | after 0.5 s  95.1%
+SPACE HALL->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  79.0% max  94.8% | late blocks 0 of 5320 | max at 1916 ms | fired 5 | after 0.5 s  94.8%
+SPACE HALL->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  79.7% max  94.5% | late blocks 0 of 5320 | max at 268 ms | fired 5 | after 0.5 s  94.3%
+SPACE HALL->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  70.1% max  85.9% | late blocks 0 of 5320 | max at 1920 ms | fired 5 | after 0.5 s  85.9%
+SPACE HALL->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  70.5% max  85.7% | late blocks 0 of 5320 | max at 1766 ms | fired 5 | after 0.5 s  85.7%
+SPACE CANYON->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  70.1% max  90.3% | late blocks 0 of 5320 | max at 366 ms | fired 5 | after 0.5 s  89.6%
+SPACE CANYON->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  65.6% max  87.6% | late blocks 0 of 5320 | max at 400 ms | fired 5 | after 0.5 s  84.9%
+SPACE CANYON->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  65.6% max  87.4% | late blocks 0 of 5320 | max at 378 ms | fired 5 | after 0.5 s  84.7%
+SPACE CANYON->HALL ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  65.3% max  85.4% | late blocks 0 of 5320 | max at 400 ms | fired 5 | after 0.5 s  82.7%
+SPACE CANYON->HALL ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  65.1% max  85.2% | late blocks 0 of 5320 | max at 378 ms | fired 5 | after 0.5 s  82.6%
+SPACE CANYON->PLATE ATFLIP SIZE S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.0->1.0 FRZ +100 ms UNFRZ +500 ms SIZE +50 ms W0.5 avg  75.3% max  91.4% | late blocks 0 of 7200 | max at 2324 ms | fired 6 | after 0.5 s  91.4%
+SPACE CANYON->PLATE ATFLIP SIZE S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z1.0->0.0 FRZ +100 ms UNFRZ +500 ms SIZE +50 ms W0.5 avg  78.1% max  91.4% | late blocks 0 of 7200 | max at 2987 ms | fired 6 | after 0.5 s  91.4%
+SPACE PLATE->CANYON ATFLIP SIZE S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.0->1.0 FRZ +100 ms UNFRZ +500 ms SIZE +50 ms W0.5 avg  77.0% max  95.9% | late blocks 0 of 7200 | max at 1660 ms | fired 6 | after 0.5 s  95.9%
+SPACE PLATE->CANYON ATFLIP SIZE S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z1.0->0.0 FRZ +100 ms UNFRZ +500 ms SIZE +50 ms W0.5 avg  77.2% max  95.4% | late blocks 0 of 7200 | max at 50 ms | fired 6 | after 0.5 s  94.3%
+SPACE PLATE->CANYON SHIMMER W1.0 avg  84.8% max  94.6% | late blocks 0 of 3600 | max at 50 ms | fired 1 | after 0.5 s  92.1%
+SPACE CANYON->PLATE SHIMMER W1.0 avg  75.3% max  87.3% | late blocks 0 of 3600 | max at 187 ms | fired 1 | after 0.5 s  79.3%
+SPACE CANYON->PLATE ATFLIP S1 NOON D0.67 Z0.5 FRZ +100 ms UNFRZ +120 ms W0.5 avg  74.4% max  91.1% | late blocks 0 of 5320 | max at 1064 ms | fired 5 | after 0.5 s  91.1%
+SPACE LAP 2 DONE [V1082]: 47 lines, worst max  96.5%, late blocks in all 0
