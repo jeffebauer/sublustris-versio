@@ -1,0 +1,51 @@
+# v1.0.81 ATFLIP lap, 12 Nov 2026: dist/lap-v1.0.81-atflip-2812c34 (proto/lap-v1081-atflip). One lap, screenlog.0 lines 10566-10615.
+BUILD v1.0.81 2812c34 profile [V1081-ATFLIP]
+SPACE START (S, 47 lines, ~11 min; v1.0.81: ATFLIP, FREEZE +50..+350 ms after the flip; the owner's gesture; controls) [V1081-ATFLIP]
+SPACE CANYON->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  73.9% max  89.8% | late blocks 0 of 5320 | max at 61 ms | fired 5 | after 0.5 s  89.3%
+SPACE CANYON->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  83.1% max  98.4% | late blocks 0 of 5320 | max at 937 ms | fired 5 | after 0.5 s  98.4%
+SPACE CANYON->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +150 ms UNFRZ +120 ms W0.5 avg  84.5% max  97.2% | late blocks 0 of 5320 | max at 1122 ms | fired 5 | after 0.5 s  97.2%
+SPACE CANYON->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  84.1% max  95.8% | late blocks 0 of 5320 | max at 1313 ms | fired 5 | after 0.5 s  95.8%
+SPACE CANYON->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +350 ms UNFRZ +120 ms W0.5 avg  80.0% max  96.0% | late blocks 0 of 5320 | max at 1469 ms | fired 5 | after 0.5 s  96.0%
+SPACE PLATE->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  80.8% max  94.5% | late blocks 0 of 5320 | max at 928 ms | fired 5 | after 0.5 s  94.5%
+SPACE PLATE->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  82.1% max  95.4% | late blocks 0 of 5320 | max at 50 ms | fired 5 | after 0.5 s  94.7%
+SPACE PLATE->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +150 ms UNFRZ +120 ms W0.5 avg  82.2% max  95.9% | late blocks 0 of 5320 | max at 50 ms | fired 5 | after 0.5 s  94.7%
+SPACE PLATE->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  82.9% max  95.8% | late blocks 0 of 5320 | max at 50 ms | fired 5 | after 0.5 s  94.5%
+SPACE PLATE->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +350 ms UNFRZ +120 ms W0.5 avg  82.7% max  94.8% | late blocks 0 of 5320 | max at 1231 ms | fired 5 | after 0.5 s  94.8%
+SPACE CANYON->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  72.3% max  86.2% | late blocks 0 of 5320 | max at 1042 ms | fired 5 | after 0.5 s  86.2%
+SPACE CANYON->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  76.4% max  88.0% | late blocks 0 of 5320 | max at 1744 ms | fired 5 | after 0.5 s  88.0%
+SPACE CANYON->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +150 ms UNFRZ +120 ms W0.5 avg  79.3% max  89.3% | late blocks 0 of 5320 | max at 2420 ms | fired 5 | after 0.5 s  89.3%
+SPACE CANYON->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  79.5% max  88.2% | late blocks 0 of 5320 | max at 2486 ms | fired 5 | after 0.5 s  88.2%
+SPACE CANYON->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +350 ms UNFRZ +120 ms W0.5 avg  76.9% max  88.7% | late blocks 0 of 5320 | max at 1714 ms | fired 5 | after 0.5 s  88.7%
+SPACE PLATE->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  74.2% max  84.9% | late blocks 0 of 5320 | max at 3783 ms | fired 5 | after 0.5 s  84.9%
+SPACE PLATE->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  73.9% max  85.2% | late blocks 0 of 5320 | max at 3652 ms | fired 5 | after 0.5 s  85.2%
+SPACE PLATE->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +150 ms UNFRZ +120 ms W0.5 avg  73.9% max  85.0% | late blocks 0 of 5320 | max at 3749 ms | fired 5 | after 0.5 s  85.0%
+SPACE PLATE->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  74.2% max  85.7% | late blocks 0 of 5320 | max at 3980 ms | fired 5 | after 0.5 s  85.7%
+SPACE PLATE->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +350 ms UNFRZ +120 ms W0.5 avg  74.3% max  85.6% | late blocks 0 of 5320 | max at 4153 ms | fired 5 | after 0.5 s  85.6%
+SPACE HALL->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  66.3% max  82.4% | late blocks 0 of 5320 | max at 971 ms | fired 5 | after 0.5 s  82.4%
+SPACE HALL->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  67.7% max  84.1% | late blocks 0 of 5320 | max at 1067 ms | fired 5 | after 0.5 s  84.1%
+SPACE HALL->PLATE ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  68.4% max  83.6% | late blocks 0 of 5320 | max at 1209 ms | fired 5 | after 0.5 s  83.6%
+SPACE HALL->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  67.3% max  80.0% | late blocks 0 of 5320 | max at 1091 ms | fired 5 | after 0.5 s  80.0%
+SPACE HALL->PLATE ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  68.4% max  80.4% | late blocks 0 of 5320 | max at 1177 ms | fired 5 | after 0.5 s  80.4%
+SPACE PLATE->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  68.7% max  77.1% | late blocks 0 of 5320 | max at 1682 ms | fired 5 | after 0.5 s  77.1%
+SPACE PLATE->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  68.9% max  77.8% | late blocks 0 of 5320 | max at 50 ms | fired 5 | after 0.5 s  77.0%
+SPACE PLATE->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  69.2% max  78.2% | late blocks 0 of 5320 | max at 50 ms | fired 5 | after 0.5 s  76.8%
+SPACE PLATE->HALL ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  69.0% max  78.0% | late blocks 0 of 5320 | max at 3263 ms | fired 5 | after 0.5 s  78.0%
+SPACE PLATE->HALL ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  69.4% max  78.2% | late blocks 0 of 5320 | max at 3472 ms | fired 5 | after 0.5 s  78.2%
+SPACE HALL->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  78.1% max  95.1% | late blocks 0 of 5320 | max at 1086 ms | fired 5 | after 0.5 s  95.1%
+SPACE HALL->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  79.1% max  94.1% | late blocks 0 of 5320 | max at 1998 ms | fired 5 | after 0.5 s  94.1%
+SPACE HALL->CANYON ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  79.4% max  94.3% | late blocks 0 of 5320 | max at 248 ms | fired 5 | after 0.5 s  94.0%
+SPACE HALL->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  70.0% max  85.4% | late blocks 0 of 5320 | max at 1990 ms | fired 5 | after 0.5 s  85.4%
+SPACE HALL->CANYON ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  70.4% max  85.5% | late blocks 0 of 5320 | max at 1818 ms | fired 5 | after 0.5 s  85.5%
+SPACE CANYON->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +50 ms UNFRZ +120 ms W0.5 avg  69.7% max  90.5% | late blocks 0 of 5320 | max at 56 ms | fired 5 | after 0.5 s  89.5%
+SPACE CANYON->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  65.2% max  86.8% | late blocks 0 of 5320 | max at 400 ms | fired 5 | after 0.5 s  83.7%
+SPACE CANYON->HALL ATFLIP S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  65.3% max  87.5% | late blocks 0 of 5320 | max at 400 ms | fired 5 | after 0.5 s  84.5%
+SPACE CANYON->HALL ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +100 ms UNFRZ +120 ms W0.5 avg  65.2% max  85.5% | late blocks 0 of 5320 | max at 400 ms | fired 5 | after 0.5 s  82.3%
+SPACE CANYON->HALL ATFLIP S1 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.8 FRZ +220 ms UNFRZ +120 ms W0.5 avg  65.1% max  85.1% | late blocks 0 of 5320 | max at 354 ms | fired 5 | after 0.5 s  82.2%
+SPACE CANYON->PLATE ATFLIP SIZE S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.0->1.0 FRZ +100 ms UNFRZ +500 ms SIZE +50 ms W0.5 avg  75.3% max  94.4% | late blocks 0 of 7200 | max at 611 ms | fired 6 | after 0.5 s  94.4%
+SPACE CANYON->PLATE ATFLIP SIZE S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z1.0->0.0 FRZ +100 ms UNFRZ +500 ms SIZE +50 ms W0.5 avg  77.9% max  91.7% | late blocks 0 of 7200 | max at 3000 ms | fired 6 | after 0.5 s  91.7%
+SPACE PLATE->CANYON ATFLIP SIZE S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z0.0->1.0 FRZ +100 ms UNFRZ +500 ms SIZE +50 ms W0.5 avg  77.2% max  96.6% | late blocks 0 of 7200 | max at 1660 ms | fired 6 | after 0.5 s  96.6%
+SPACE PLATE->CANYON ATFLIP SIZE S2 D0.7 T0.8 MIX1 MO0.5 TO0.5 Z1.0->0.0 FRZ +100 ms UNFRZ +500 ms SIZE +50 ms W0.5 avg  78.2% max  96.1% | late blocks 0 of 7200 | max at 1713 ms | fired 6 | after 0.5 s  96.1%
+SPACE PLATE->CANYON SHIMMER W1.0 avg  84.8% max  93.8% | late blocks 0 of 3600 | max at 50 ms | fired 1 | after 0.5 s  91.7%
+SPACE CANYON->PLATE SHIMMER W1.0 avg  76.1% max  89.0% | late blocks 0 of 3600 | max at 136 ms | fired 1 | after 0.5 s  80.6%
+SPACE CANYON->PLATE ATFLIP S1 NOON D0.67 Z0.5 FRZ +100 ms UNFRZ +120 ms W0.5 avg  81.3% max  92.2% | late blocks 0 of 5320 | max at 2041 ms | fired 5 | after 0.5 s  92.2%
+SPACE LAP 1 DONE [V1081-ATFLIP]: 47 lines, worst max  98.4%, late blocks in all 0
