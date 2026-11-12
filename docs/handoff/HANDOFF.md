@@ -32,7 +32,7 @@ Start with `/session-start`.
 | M3 | The module runs the v1.0.82 lap build `a331a08` (profile); lapped clean |
 | M9 | v1.0.68 Latest; `v1.0.80-beta.1` the newest pre-release; beta 3 (v1.0.82) not published |
 
-**main:** `01d7752` plus this wrap's commit: docs, research logs and the task list only (no code change). 16+ commits ahead of origin, **not pushed** (see Push below). **`beta/player-feedback`:** `4f6f950`, equal to origin.
+**main:** `01d7752` plus this wrap's commit: docs, research logs and the task list only (no code change). Pushed to origin on 13 Nov (docs only, so the site was not rebuilt). **`beta/player-feedback`:** `4f6f950`, equal to origin.
 
 ## Start here
 
