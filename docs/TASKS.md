@@ -1,6 +1,6 @@
 # Owner tasks
 
-**Last updated:** 12 Nov 2026: you picked from Fable's review (`renders/fable_review`); three sound picks and three CPU savings are being ported for beta 3. Still next for you: playing beta 2 on the rack.
+**Last updated:** 12 Nov 2026: you picked from Fable's review (`renders/fable_review`); v1.0.81 (your picks, CANYON's level and three CPU savings) is built for a lap: `dist/lap-v1.0.81-3b77392`.
 **Plugin installed:** `4140997` on `main` (v1.0.68, Sublustris Versio), 3 Nov 2026; AU check passed. Rescan plug-ins in Ableton (Option-click Rescan). It now matches the rack build: the lighter tape, the lighter radio and PLATE's SIZE crossfade.
 
 ## To do
@@ -20,7 +20,7 @@
   - **DECAY:** does the end of the knob reliably land in endless (from half past 4)? How do the long tails feel by hand?
   - **WEAR:** the lower top and noon at your real levels; is 9 o'clock still noticeable? MOTION fully right.
   - **PLATE:** the attack and the stiller tail; MOTION left of noon; a big SIZE move on a pad.
-  - **Level:** does CANYON want a trim (it reads up to 1.9 LU louder than you picked)? Is MIX at noon too loud (up 1.9 to 2.9 LU)?
+  - **Level:** is MIX at noon too loud (up 1.9 to 2.9 LU)? (CANYON's trim: picked on `renders/canyon_level`, 12 Nov, in v1.0.81.)
   - **Crackle played hot:** HALL's endless pad, CANYON at short tails, frozen pads at SIZE noon.
 - [ ] **Measure the module's input level** (10 minutes, rack power, never with USB)
   1. Patch a steady sine (200 Hz to 1 kHz) into IN L, with MIX fully left.
@@ -64,8 +64,9 @@
 - **Fable's review, your picks** (12 Nov 2026; `renders/fable_review`, report `docs/research/fable-review-2026-11-12.md` on `proto/fable-review`):
   - **Taken:** the radio band arrives earlier on MOTION's right (B on 3 of 4 cards; your call: earlier everywhere); PLATE's long tails keep their mids (B on every card); CANYON's bass centred, fuller in mono (B on every card); and the three inaudible CPU savings (the two already lapped, and SHIMMER's recorder resting outside SHIMMER).
   - **Kept as now:** the tape's taper on MOTION's left (A on every card), and HALL's held endless tail stays completely still (A on both cards).
-  - **Ported** as v1.0.81 on `claude/port-fable` (12 Nov; ADR 0059, amendments to 0012, 0035, 0036, 0052): tests pass, release 112,516 B (124 B left). Not yet merged into the beta.
-  - **Next for you:** pick on `renders/canyon_level` (CANYON's whole wet level: A as now, B level with PLATE and HALL, C half way; played at real levels, keep "level match" off). It replaces `renders/shimmer_level`, which only turned the octave down: the octave's share is already the same in every SPACE, and it's CANYON as a whole that plays ~3.4 dB louder on finite tails (~0.7-1 dB at endless). Then lap `dist/lap-v1.0.81-d39d860/sublustris_versio_profile.bin` on the module (rack power).
+  - **CANYON's level:** your pick **C on all 25 cards** of `renders/canyon_level` (12 Nov): -1.7 dB on finite tails, -0.45 dB at endless, half way to PLATE and HALL (ADR 0049 amended). The octave's share was already the same in every SPACE, so `renders/shimmer_level` was skipped.
+  - **Ported** as v1.0.81 on `claude/port-fable` (12 Nov; ADR 0059, amendments to 0012, 0035, 0036, 0049, 0052): 29/29 tests pass, release 112,580 B (60 B left). Not yet merged into the beta.
+  - **Next for you:** lap `dist/lap-v1.0.81-3b77392/sublustris_versio_profile.bin` on the module (rack power; not the older `-d39d860` folder). Then play its release `.bin` beside it: a frozen CANYON pad now comes down with the wet (not on a page).
   - **Still open from the report:** should the three SPACEs add the same warmth at the same playing level (needs the input-level measurement first); is SHIMMER's octave in CANYON, 7 dB stronger at full DEPTH, wanted.
 
 - **A loud blast on fast SIZE moves** ([issue 2](https://github.com/jeffebauer/sublustris-versio/issues/2), chriisu, 6 Nov 2026; found 9 Nov; replied 9 Nov with your OK, asking for a recording and their settings): on the module, v1.0.68, HALL or CANYON, probably BLOOM, playing violin. Turning SIZE quickly from big to small, even from about the middle, "blasts the speaker with very loud audio"; easy for them to reproduce, and they offered a recording. **Found on the desktop (`docs/research/size-blast-2026-11-09.md`), in v1.0.68 and the beta:** after a SIZE shrink the tank is boosted to make up for decay, with no limit, so sustained playing can jump the wet up to the limiter's ceiling (+9.5 dB near the report's settings, +4.2 dB on the beta, worst +19.6 dB). Extreme cases can also kill the wet until a restart. Not yet confirmed on a module. Prototyped on `proto/size-blast` (`3905c32`, 9 Nov 2026, your OK): a limit on that boost and a safety restart. It fits, barely: release +56 B (412 B left), profile +80 B (4 B left). **Your pick (9 Nov 2026): C on `size_blast`, the boost limited to 6 dB, with the safety restart.** **Ported as v1.0.77 (ADR 0053; `claude/port-size-blast`, `24ea031`; merged into `beta/player-feedback` 9 Nov 2026, your OK; published 9 Nov as [`v1.0.77-beta.1`](https://github.com/jeffebauer/sublustris-versio/releases/tag/v1.0.77-beta.1) from `f4814a7`, your OK; described there as a safety limit, not as the fix for issue 2):** release 112,228 B (412 B left), profile 131,068 B (4 B left); ctest 100 % of 26; my clean rebuild is byte-identical. Rack build ready (see At the rack). Still rising, unchanged by this fix: a steady low note into a short CANYON (about 12 dB) and a big PLATE shrink on a steady 70 Hz (up to 13.7 dB). Your call (9 Nov 2026): this next, before the morph's last 98 %.
