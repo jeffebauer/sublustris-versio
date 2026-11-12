@@ -6,6 +6,7 @@
 // unfreezing stay click-free. (With the wander as before, measured the same way: 56 / 15 / 6.9 c and ringing 16.9 / 7.4 /
 // 8.5 dB at SIZE 0 / 0.5 / 0.9; now 6.0 / 6.0 / 7.5 c and 13.7 / 7.2 / 7.1 dB.)
 
+#include "DecayKnobFor.h"
 #include "Metrics.h"
 #include "PitchTrack.h"
 #include "dsp/Engine.h"
@@ -61,7 +62,7 @@ Stereo render(const std::vector<float>& in, const Setting& s, const std::vector<
     iv::Engine e;
     e.prepare(kSr, 48);
     e.setParam(iv::ParamId::Space, iv::switchToNormalised(s.space));
-    e.setParam(iv::ParamId::Decay, s.decay);
+    e.setParam(iv::ParamId::Decay, decayKnobFor(s.decay));
     e.setParam(iv::ParamId::Size, s.size);
     e.setParam(iv::ParamId::Era, 0.0f);
     e.setParam(iv::ParamId::Mix, s.mix);
@@ -146,7 +147,8 @@ void movementAndRinging()
     // top) everything follows DECAY 0.80 while you play, the room's level with it, so HALL's long-tail trim (ADR 0034,
     // eased back out across the crossover before) now applies: 2.1 dB under v1.0.47's -35.52 / -35.49 / -35.28.
     // MASSIVE's trim is the same at 0.80 and 0.9: unchanged.
-    const double levelB[2][3] = {{-37.62, -37.59, -37.38}, {-34.54, -34.51, -34.30}};
+    // +3.00 at v1.0.73: the wet's flat lift (ADR 0049), TONE at noon, long tails so no lift at short ones.
+    const double levelB[2][3] = {{-34.62, -34.59, -34.38}, {-31.54, -31.51, -31.30}};
     const double ringB[2][3] = {{13.7, 7.2, 7.1}, {13.7, 7.2, 7.1}};
     for (int space : {1, 2})
         for (int k = 0; k < 3; ++k) {

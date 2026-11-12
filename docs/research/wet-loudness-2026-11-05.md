@@ -1,5 +1,7 @@
 # Wet loudness at full wet: how loud the reverb comes back
 
+*Ported as v1.0.73 (ADR 0049). The prototype's hooks (`IV_WET_MAKEUP`, `IV_DECAY_TAPER`, `IV_LIMIT_*`, `IV_LOOP_SAT_OFF`) and page scripts stay on branch `claude/wet-loudness-8e55d6`; numbers here are v1.0.70's.*
+
 5 Nov 2026, overnight, on v1.0.70 (`claude/proto-wear-taper-78e1da` at `4b95b8a`; branch `claude/wet-loudness-8e55d6`). The report: lfad on Modwiggler (4 Nov 2026), comparing against Desmodus, Pleroma and their other reverbs: "I always run full wet pretty much, but yeah, the gain makes a difference on mine for sure, and pumping the levels helped a bit (though it does remain quieter on the output than my other reverbs)."
 
 Scripts: `tools/pages/wet_loudness.py` (`grid`, `kit`, `refs`, `table`) and `tools/pages/wet_loudness_page.py` (the page and its gates). Loudness is BS.1770-4 integrated, gated (`wet_loudness_lib.py`, checked against the standard's 997 Hz tones to 0.01 dB), over each render's whole file. "Wet − dry" is the reverb's loudness at MIX full minus the loudness of the sound that went in, in LU (1 LU = 1 dB of loudness).

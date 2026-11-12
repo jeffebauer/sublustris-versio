@@ -56,8 +56,8 @@ public:
 
 private:
     static constexpr float kGlide = 0.002f; // ~10 ms at 48 kHz
-    float coeff_ = 0.1f, low_ = 1.0f, high_ = 1.0f, lowTarget_ = 1.0f, highTarget_ = 1.0f, lp_[2] IV_ZI;
-    float setTone_ = -1.0f, setLow_ = 1.0f, setHigh_ = 1.0f; // set()'s last TONE and its targets
+    float coeff_ IV_RI(0.1f), low_ IV_RI(1.0f), high_ IV_RI(1.0f), lowTarget_ IV_RI(1.0f), highTarget_ IV_RI(1.0f), lp_[2] IV_ZI;
+    float setTone_ IV_RI(-1.0f), setLow_ IV_RI(1.0f), setHigh_ IV_RI(1.0f); // set()'s last TONE and its targets
 };
 
 // TONE's resonant tilt (v1.0.44; owner's pick A, renders/tone_character: "adds a little character without creating
@@ -67,7 +67,8 @@ private:
 // 0 -> +4.5 dB at the ends; a make-up keeps music's loudness (LUFS) where today's tilt had it (kMakeupDb). The loop's
 // TONE share is untouched (holds and freeze don't change). Coefficients once per control chunk (EraSvf::gain: sin /
 // cos, no tan), ramped per sample over it; across noon the old side's bell fades out before the new side's starts.
-// Noon is flat: out = 1 x + 0 + 0, the Tilt's output bit for bit.
+// Noon is flat: out = mk x + 0 + 0. The table carries the wet's +3 dB (v1.0.73, ADR 0049, the owner's picks on
+// renders/wet_loudness: lfad's "quieter on the output than my other reverbs"), so the limiter still has the last word.
 class ToneBell {
 public:
     void prepare(float sampleRate)
@@ -173,7 +174,7 @@ private:
     enum { kG, kK, kC0, kC1, kC2, kN };
     // dB against the Tilt alone at TONE 0, 1/8, ... 1: the mean over HALL and MASSIVE x skank, vibes, pad (LUFS;
     // renders/tone_character, tools/pages/tone_character.py at 5e2562f).
-    static constexpr float kMakeupDb[9] = {-2.26f, -1.17f, -0.52f, -0.17f, 0, -0.37f, -0.45f, -0.35f, -0.20f};
+    static constexpr float kMakeupDb[9] = {0.74f, 1.83f, 2.48f, 2.83f, 3.0f, 2.63f, 2.55f, 2.65f, 2.80f};
     static float tick(EraSvf& f, float x, float a1, float a2, float a3, float c0, float c1, float c2)
     {
         const float v3 = x - f.ic2, v1 = a1 * f.ic1 + a2 * v3, v2 = f.ic2 + a2 * f.ic1 + a3 * v3;
@@ -182,12 +183,12 @@ private:
         return c0 * x + c1 * v2 + c2 * v1;
     }
 
-    float sr_ = 48000.0f;
+    float sr_ IV_RI(48000.0f);
     EraSvf svf_[2];
     float cur_[kN] IV_ZI, tgt_[kN] IV_ZI, step_[kN] IV_ZI;
     int   left_ IV_ZI, side_ IV_ZI;
     bool  leaving_ IV_ZI;
-    float memoTone_ = -1.0f, memoT_[kN] IV_ZI, memoMk_ IV_ZI; // set()'s coefficients for memoTone_ / memoCcw_
+    float memoTone_ IV_RI(-1.0f), memoT_[kN] IV_ZI, memoMk_ IV_ZI; // set()'s coefficients for memoTone_ / memoCcw_
     bool  memoCcw_ IV_ZI;
     float aG_ = -1.0f, aK_ IV_ZI, a1_ IV_ZI, a2_ IV_ZI, a3_ IV_ZI; // process()'s a1-a3 for g aG_, k aK_
 };
@@ -214,7 +215,7 @@ public:
     float gain() const { return gain_; }
 
 private:
-    float release_ = 0.0001f, gain_ = 1.0f;
+    float release_ IV_RI(0.0001f), gain_ = 1.0f;
 };
 
 } // namespace iv::dsp

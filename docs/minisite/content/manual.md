@@ -13,7 +13,7 @@ Sublustris Versio is a huge, warm reverb for the Noise Engineering Versio. It ha
 
 <dl class="terms">
 <dt>Tail</dt><dd>The sound ringing on after you stop.</dd>
-<dt>Endless</dt><dd>DECAY past about 3 o'clock: the tail never fades. It follows your playing, and holds when you stop.</dd>
+<dt>Endless</dt><dd>DECAY from about half past 4: the tail never fades. It follows your playing, and holds when you stop.</dd>
 <dt>Freeze</dt><dd>The tail held still as a pad, with the input closed, so you can play over it.</dd>
 <dt>Paint</dt><dd>Holding the button while frozen, to blend a little of what you're playing into the pad.</dd>
 <dt>Onset</dt><dd>How a sound enters the reverb: at once, swelling in, or with an octave on top.</dd>
@@ -60,9 +60,11 @@ How long the tail rings. Each space has its own range:
 | HALL | about 0.8 s | about 60 s |
 | CANYON | about 2 s | about 120 s |
 
+Noon is about 12 s in HALL at full SIZE, 3 o'clock about 40 s and 4 o'clock about 56 s, so the long tails have plenty of the knob to dial in.
+
 The tail keeps the same loudness wherever you set it, so a short room isn't quieter than a long hall.
 
-**Past about 3 o'clock the tail turns endless** (fully from about 3:30). It never fades. While you play into it, it sounds like the longest tail just before 3 o'clock, at the same level, so turning DECAY across the line, quiet or hot, doesn't jump. When you stop, the tail stops fading within about a second and holds where it is, and it never runs away. Play again and it picks straight back up.
+**From about half past 4 the tail is endless**, right up to the stop. It never fades. While you play into it, it sounds like the longest tail just before it, at the same level, so turning DECAY across the line, quiet or hot, doesn't jump. When you stop, the tail stops fading within about a second and holds where it is, and it never runs away. Play again and it picks straight back up.
 
 When you stop playing for a couple of seconds, PLATE and HALL hold what you left them: over about ten seconds the tail's movement settles, so held notes stay notes instead of smearing into haze. If what you played was bright, like a cymbal wash or noise, the top end also mellows slowly over a minute or two. Play again and the movement comes back. CANYON keeps its slow, moving wash.
 
@@ -82,11 +84,11 @@ It's never harsh and never rings on its own, even at the ends.
 
 ### WEAR
 
-How worn the reverb sounds. Fully left (the default) is clean, with only a warm, desk-like colour. As you turn it up, everything comes in at once and deepens together:
+How worn the reverb sounds. Fully left (the default) is clean, with only a warm, desk-like colour. As you turn it up, the wear comes in early and keeps deepening to the end of the knob:
 
-- tape saturation and a little tape compression;
+- tape saturation, gentle at first and climbing all the way to the end of the knob, and a little tape compression;
 - a bucket-brigade delay's breathing: its noise and level rise and fall with your playing;
-- bit grit, which stays the same share of a fading tail, so the tail stays grainy right to the end;
+- bit grit from noon up, which stays the same share of a fading tail, so the tail stays grainy right to the end;
 - a soft hiss and the odd crackle, which follow your playing, so silence stays silent.
 
 WEAR doesn't darken the tail (that's TONE's job) or move its pitch (that's MOTION's). The level stays about the same across the knob. Your dry signal is never worn.
@@ -124,7 +126,7 @@ What DEPTH does depends on ONSET:
 ### SPACE (top switch)
 
 - **PLATE** (left): a dense plate with a quick attack.
-- **HALL** (centre): a big room. It starts right behind the note.
+- **HALL** (centre): a big room. It starts right behind the note, and its low notes stay near the centre, so one note doesn't bloom on one side.
 - **CANYON** (right): long lines and mass, like a space with no roof. The reverb swells in gently with each sound and grows into a boundless wash.
 
 Switching crossfades: the old space's tail fades out quickly while the new space takes the input.

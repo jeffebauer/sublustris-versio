@@ -290,3 +290,18 @@ is 20 % of travel under 0.25 a step, a cliff one step over 3 and over 3× the me
   - The 2.5 dB loudness drop and the darkening from noon to full belong with the level work: `claude/rack-levels`, `claude/wet-loudness-8e55d6`.
   - Its floor follows SIZE without flattening DECAY (§4).
 - **The floors** (PLATE 0.5×, HALL 35 ms and its 0.49 T60 scale, CANYON 0.35 s) show nothing to fix: no dead zones or cliffs, and HALL at SIZE 0 is the densest of all (NED 0.97).
+
+## 10. The audit again, for the port (v1.0.72, on v1.0.71)
+
+The owner picked C. The port (`map::decayScale`, ADR 0048) applies the remap where DECAY's smoother reads its target, not in `setParam` as the prototype did. Every reader of DECAY in `core/dsp/Engine.cpp` goes through `smoothed(ParamId::Decay)` or `heldDecay_` (taken from it), so every row of §3 reads the scale.
+
+| Row of §3 | On v1.0.71 |
+|---|---|
+| T60 curve, follows the playing, governor weight, floor ease, make-up and trims, output trims, CANYON's high share, the Neve's even harmonics, held tail's mellowing and calm, HALL's tail prototype, CANYON's SIZE floor, CANYON's attack, HALL's floor depth | all still read the scale; unchanged |
+| **New: HALL's fuller ease** (`Engine::applySpace`, `fuller = 2 - governorWeight(decay)`, ADR 0047) | reads the scale, so it eases across the knob's 0.92-0.95 with endless |
+| The radio's band, SHIMMER, firmware's `main.cpp` | not affected |
+| `claude/rack-levels` (`floorW`), `claude/input-stop` (`governorWeight(smoothed(Decay))`) | move with the remap when merged, since they read the same values |
+| Tests | §3 said they would pass as they are. Those testing the map functions did, but seven Engine-level tests pin a tail by DECAY, and setting the knob now means another tail. They set `decayKnobFor(scale)`. `test_set_args` passes unchanged, since `param(Decay)` is the knob |
+| Goldens | moved once, for v1.0.72 |
+
+Proof that no row was missed: at a knob position the port is bit-identical to v1.0.71 at that position's scale value (126/126, `tools/pages/decay_port_checks.py`), at MOTION noon and both extremes, which covers the HALL ease.

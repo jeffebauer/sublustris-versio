@@ -4,12 +4,27 @@
 #include "dsp/SizeOpt.h"
 #include "params/Mappings.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstring>
 
 
 namespace iv {
+
+// The Engine's own record of what the SPACE morph did: desktop only, for test_space_morph_waits.
+#ifndef IV_FIXED_VOICINGS
+#define IV_MORPH_NOTE(kind, from, to) morphNote(kind, from, to)
+#else
+#define IV_MORPH_NOTE(kind, from, to) ((void)0)
+#endif
+
+// The profile build has no wet lift (Engine.h).
+#if !defined(IV_MODE_PROFILE)
+#define IV_IF_LIFT(x) x
+#else
+#define IV_IF_LIFT(x)
+#endif
 
 namespace {
 
@@ -205,8 +220,10 @@ IV_SIZE_OPT void Engine::prepare(float sampleRate, int maxBlockSize)
     inDcR_ = 1.0f - 2.0f * map::kPi * voicing::kInputDcHz / sampleRate_; // dsp::DcBlocker::setCutoff's
     inDcB_ = 0.5f * (1.0f + inDcR_);
     {
-        // The split: a 2nd-order Butterworth pair (bilinear). The two tanks' outputs are uncorrelated,
-        // so they add in power, and a Butterworth pair is power complementary (|L|² + |H|² = 1).
+        // The split: a 2nd-order Butterworth pair (bilinear), power complementary (|L|² + |H|² = 1), so tanks that have
+        // drifted apart add flat. Early on they ring nearly in step, and a Butterworth pair's two bands are then half a
+        // turn apart at the corner: processTwoTanks gives the low tank its input in the opposite sign, so they meet in
+        // step rather than cancel across 150-500 Hz (v1.0.71, ADR 0047).
         auto butter = [this](float f, float* lp, float* hp) {
             const float k = dsp::bilinearK(f, sampleRate_);
             const float nrm = 1.0f / (1.0f + 1.41421356f * k + k * k);
@@ -265,6 +282,9 @@ IV_SIZE_OPT void Engine::reset()
     endlessCalm_ = brightSlope_ = brightPower_ = 0.0f;
     inDcX_[0] = inDcX_[1] = inDcY_[0] = inDcY_[1] = 0.0f;
     smooth_ = values_;
+#if !defined(IV_MODE_PROFILE)
+    smooth_[static_cast<size_t>(ParamId::Decay)] = map::decayScale(values_[static_cast<size_t>(ParamId::Decay)]);
+#endif
     for (auto& p : predelay_) p.clear();
     for (auto& d : diffuser_) d.clear();
     activeSpace_ = normalisedToSwitch(values_[static_cast<size_t>(ParamId::Space)]);
@@ -273,6 +293,19 @@ IV_SIZE_OPT void Engine::reset()
     flipGain_ = 1.0f;
     flipStep_ = 0.0f;
     onsetDip_ = 0.0f;
+    morphOld_ = -1;
+    morphFast_ = morphFreezeSeen_ = false;
+    placeOn_ = false;
+    fdn_.setXfSpread(false);
+    lowFdn_.setXfSpread(false);
+#ifndef IV_FIXED_VOICINGS
+    morphLog_.count = 0;
+#endif
+    fwsWait_ = 0.0f; // the flip waits for SIZE (controlTick)
+    ffWaiting_ = false; // SIZE waits for the morph (applySpace's snap below sets ffSize_)
+    ufsWaiting_ = false; // the room makes way (applySpace)
+    ufsGain_ = 1.0f;
+    ufsStep_ = 0.0f;
     applySpace(true);
     swell_.reset();
     fdn_.reset();
@@ -347,14 +380,24 @@ IV_SIZE_OPT void Engine::handleEdges(int chunkStart, int chunkEnd) // once per b
 
 IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: built for size (flash)
 {
-    const float twinStep = 1.0f / (voicing::kTwinFadeSeconds * sampleRate_);
     const float tankStep = 1.0f / (voicing::kFreezeInputSeconds * sampleRate_);
     switch (e) {
     case GestureReader::Event::Freeze:
         // The big tank keeps the SIZE and DECAY it had; the knobs move to
         // the twin. Its input closes, its colour glides out.
-        heldSize_ = smoothed(ParamId::Size);
-        if (sizeHyst_ > 0.0f && sizeHeld_ >= 0.0f) heldSize_ = sizeHeld_; // the SIZE the tank has (hysteresisSize)
+        // A freeze while SIZE waits for the room (applySpace) keeps the lengths the tank has (heldSize_: it never took the
+        // waiting SIZE), and a room making way comes back up.
+        if (ufsStep_ < 0.0f) ufsStep_ = -ufsStep_;
+        if (!ufsWaiting_) {
+            heldSize_ = smoothed(ParamId::Size);
+            if (sizeHyst_ > 0.0f && sizeHeld_ >= 0.0f) heldSize_ = sizeHeld_; // the SIZE the tank has (hysteresisSize)
+        }
+        ufsWaiting_ = false;
+        // SIZE waits for the morph (ffHold): a freeze while SIZE waits for the old tank ends the wait; the pad keeps the lengths the
+        // new tank has (it never took the waiting SIZE), and a morph still running after the unfreeze holds those.
+        if (ffWaiting_) heldSize_ = ffSize_;
+        ffWaiting_ = false;
+        ffSize_ = heldSize_;
         heldDecay_ = smoothed(ParamId::Decay);
         padFloorDb_ = 0.0f; // no cap until the pad has settled (controlTick)
         padCaptured_ = false;
@@ -364,27 +407,15 @@ IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: 
         plate_.resyncHoldLevel();
         tankInTarget_ = 0.0f;
         tankInStep_ = tankStep;
-#ifndef IV_FIXED_VOICINGS
-        if (!twinActive_ && !twinOff_) { // setTwinGainPrototype: no twin at all
-#else
-        if (!twinActive_) {
-#endif
-            resetHalf(twinHalf_);
-            twinPlate_.reset();
-            for (auto& d : twinDiffuser_) d.clear();
-            twinSwell_.setAttackSeconds(0.0f, true); // PLATE's twin: no attack
-            twinSwell_.reset();
-            room_.reset();
-            roomLevel_ = 0.0f;
-            twinSized_ = false;
-            twinActive_ = true;
-        }
-        twinInStep_ = twinStep;
+        // A freeze during a change: the twin waits for its end (morphAdvance, morphRunOld, morphHoldOld). On top of the reshape's
+        // crossfades, or of two tanks, it overloaded the module.
+        if (placeOn_ || morphOld_ >= 0) twinInStep_ = 0.0f;
+        else startTwin();
         break;
     case GestureReader::Event::Unfreeze:
         tankInTarget_ = 1.0f;
         tankInStep_ = tankStep;
-        twinInStep_ = -twinStep;
+        twinInStep_ = -twinInStep_; // (0 if the twin never started)
         break;
     case GestureReader::Event::PaintStart:
         // Room to grow while painting: the pad's level or the floor, + kPaintHeadroomDb.
@@ -401,6 +432,82 @@ IV_SIZE_OPT void Engine::onGesture(GestureReader::Event e) // once per gesture: 
     case GestureReader::Event::None:
         break;
     }
+}
+
+IV_MORPH_COLD void Engine::startTwin()
+{
+#ifndef IV_FIXED_VOICINGS
+    if (!twinActive_ && !twinOff_) { // setTwinGainPrototype: no twin at all
+#else
+    if (!twinActive_) {
+#endif
+        resetHalf(twinHalf_);
+        twinPlate_.reset();
+        for (auto& d : twinDiffuser_) d.clear();
+        twinSwell_.setAttackSeconds(0.0f, true); // PLATE's twin: no attack
+        twinSwell_.reset();
+        room_.reset();
+        roomLevel_ = 0.0f;
+        twinSized_ = false;
+        twinActive_ = true;
+        ufsGain_ = 1.0f; // (the room makes way: a new room starts at full)
+        ufsStep_ = 0.0f;
+    }
+    twinInStep_ = 1.0f / (voicing::kTwinFadeSeconds * sampleRate_);
+}
+
+// The room makes way (applySpace): unfrozen in HALL and CANYON, while the room still rings after an unfreeze, a SIZE off the one the
+// tank froze with waits (the tank keeps heldSize_) and the room starts its 0.3 s fade-out. Once a block, out of ITCM (flash).
+IV_MORPH_COLD float Engine::ufsSize(float size, bool snap)
+{
+    if (snap || activeSpace_ == 0 || !twinActive_) ufsWaiting_ = false;
+    else if (size != heldSize_) ufsWaiting_ = true;
+    if (!ufsWaiting_) return size;
+    if (ufsStep_ >= 0.0f) ufsStep_ = -1.0f / (0.3f * sampleRate_);
+    return heldSize_;
+}
+
+// The room's make-way gain over this chunk (the room's own output, before painting reads it): down to 0, where the room stops,
+// or back up to 1 after a new freeze. Only in those 0.3 s.
+IV_MORPH_COLD void Engine::ufsRamp(int n)
+{
+    float       g = ufsGain_;
+    const float st = ufsStep_;
+    float* const l = twinL_;
+    float* const r = twinR_;
+    for (int i = 0; i < n; ++i) {
+        g = clamp01(g + st);
+        l[i] *= g;
+        r[i] *= g;
+    }
+    ufsGain_ = g;
+    if (st > 0.0f) {
+        if (g >= 1.0f) ufsStep_ = 0.0f;
+    } else if (g <= 0.0f && !gesture_.frozen()) {
+        twinActive_ = false; // the room has made way
+    }
+}
+
+// SIZE waits for the morph (the owner's pick B on renders/flipflick_size): during a two-tank morph the new tank keeps the SIZE it
+// started with (the flip's snap sets ffSize_), so its SIZE crossfade never runs while the old tank still rings (on the module the
+// two overloaded it, docs/research/flipflick-size-2026-11-10.md). A SIZE off it waits while the old tank fades over its own 3 s;
+// once it has gone (morphOld_ < 0) the latest SIZE lands, once, as any SIZE move does. Once a block, out of ITCM; no per-sample
+// work. Not while frozen (the pad has heldSize_). ADR 0057.
+IV_MORPH_COLD float Engine::ffHold(float size, bool snap)
+{
+    if (snap || morphOld_ < 0) {
+        ffWaiting_ = false;
+        ffSize_ = size;
+        return size;
+    }
+    if (size != ffSize_) ffWaiting_ = true;
+    return ffSize_;
+}
+
+// The flip waits for SIZE (controlTick; ADR 0058): the tank in use crossfades its SIZE, or has a SIZE waiting for the knob's rest.
+IV_SIZE_OPT bool Engine::tankSizeBusy() const
+{
+    return activeSpace_ == 0 ? plate_.xfBusy() : !(fdn_.xfIdle() && lowFdn_.xfIdle());
 }
 
 // ---- Voicing -------------------------------------------------------------------
@@ -438,7 +545,22 @@ IV_CTL_OPT float Engine::decayRate(float decay, float size) const
 IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once per block: built for size (flash)
 {
     const bool frozen = gesture_.frozen();
-    const float size = frozen ? heldSize_ : hysteresisSize(smoothed(ParamId::Size), sizeHeld_, snap);
+    float size = frozen ? heldSize_ : hysteresisSize(smoothed(ParamId::Size), sizeHeld_, snap);
+    // The room makes way (the owner's pick A on renders/unfreeze_size): in HALL and CANYON a SIZE crossfade and the small room
+    // never run together (on the module the two overloaded it). Unfrozen, the room runs only while it rings out after an
+    // unfreeze (it starts only frozen, and a SPACE change stops it), so this is only ever the second after an unfreeze. A SIZE
+    // off the one the tank froze with waits (the tank keeps heldSize_), the room fades out in 0.3 s (a morph's fast drop) and
+    // stops (process), and then the latest SIZE lands, once, as ever. A new freeze ends the wait (onGesture).
+    if (!frozen) {
+        size = ufsSize(size, snap);
+        // SIZE waits for the morph (ffHold; ADR 0057): during a PLATE <-> HALL / CANYON morph the new tank keeps the SIZE it
+        // started with.
+        size = ffHold(size, snap);
+        // The flip waits for SIZE (ADR 0058): a SIZE moved inside the flip's 0.05 s fade-out waits for the handover (snap), so
+        // the tank about to leave never starts a crossfade under the morph or the reshape.
+        if (flipPhase_ == 1 && !snap) size = fwsSize_;
+        else fwsSize_ = size;
+    }
     // HALL's SIZE also sets its T60 scale, output trim and in-loop diffusion, which act at once (the
     // lines' lengths glide on their own): they follow a ~80 ms glide of SIZE, so a SIZE jump (CV, or an
     // unfreeze after SIZE moved) doesn't step the loop's gains (soak audit).
@@ -481,6 +603,9 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // DECAY keeps the loudness (v1.0.28): a shorter tail is made up to the finite top's level, on the
     // wet and the twin alike. A frozen pad keeps heldDecay_, so freezing doesn't move it.
     const float gainWas = decayGain_;
+#if !defined(IV_MODE_PROFILE)
+    const float wetLiftWas = wetLift_;
+#endif
 #ifndef IV_FIXED_VOICINGS
     decayGain_ = std::pow(map::decayLevelMakeup(decayFin, activeSpace_), decayMakeup_); // setDecayMakeup: 1 = as built
 #else
@@ -493,8 +618,30 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // = 6.9078 per unit of rate x seconds (a block's step is small, so linear). Finite DECAYs only: across the
     // crossover the make-up rises as DECAY goes up (PLATE's and HALL's long-tail trim letting go) while the
     // tank barely loses, and a cap there held HALL's endless level down. Falls as before; a held DECAY is unchanged.
+    const float decayGainFree = decayGain_; // (an in-place flip's ramp, below, goes there uncapped)
     if (!snap && decay < map::kDecayFiniteTop)
         decayGain_ = std::fmin(decayGain_, gainWas * (1.0f + (voicing::kDecayRiseShare * 6.9078f) * rate * float(n) / sampleRate_));
+    if (!plate) {
+        if (placeOn_) decayGain_ = placeRamp(kPlaceDecayGain, decayGainFree);
+        else placeNow_[kPlaceDecayGain] = decayGain_;
+    }
+#if !defined(IV_MODE_PROFILE)
+    // The wet's lift at short tails (v1.0.73, ADR 0049): rises under the same cap, so turning DECAY down can't make a tail
+    // still ringing swell; falls at once. The profile build has none of it (2 multiplies and a glide a sample, about
+    // 0.1 % of a sample's cycles, and its fixed settings have 4 B to spare).
+    wetLift_ = map::decayWetLift(decayFin, activeSpace_);
+    const float wetLiftFree = wetLift_;
+    if (!snap) wetLift_ = std::fmin(wetLift_, wetLiftWas * (1.0f + (voicing::kDecayRiseShare * 6.9078f) * rate * float(n) / sampleRate_));
+    else wetLiftNow_ = wetLift_;
+    if (!plate) {
+        if (placeOn_) {
+            wetLift_ = placeRamp(kPlaceWetLift, wetLiftFree);
+            if (snap) wetLiftNow_ = wetLift_;
+        } else {
+            placeNow_[kPlaceWetLift] = wetLift_;
+        }
+    }
+#endif
     if (snap) {
         decayGainNow_ = decayGain_;
     }
@@ -541,8 +688,9 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         if (endlessCalm_ > modStill) modStill = endlessCalm_;
     }
 
+    const bool snapTank = snap && !morphKeepTank_; // an in-place flip or a swap: the tank's sound stays, its lengths crossfade
     if (plate) {
-        plate_.setScale(map::plateScale(size), snap);
+        plate_.setScale(map::plateScale(size), snapTank);
         // Frozen, and while the unfreeze glides back to SIZE, SIZE glides (ADR 0043: the owner's pick A on the
         // frozen card; a crossfade there lost the tail's upper mids).
         plate_.setSizeGlideNow(freezeMix_ > 0.0f);
@@ -564,13 +712,15 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         if (snap || std::fabs(mean - lastMean_) > 1e-6f || std::fabs(spread - lastSpread_) > 1e-6f) {
             lastMean_ = mean;
             lastSpread_ = spread;
-            fdn_.setMeanSeconds(mean, spread, snap);
-            lowFdn_.setMeanSeconds(mean, spread, snap);
+            fdn_.setMeanSeconds(mean, spread, snapTank);
+            lowFdn_.setMeanSeconds(mean, spread, snapTank);
         }
-        fdn_.setDecayRate(rate);
-        fdn_.setHighT60Ratio(highRatio);
-        fdn_.setGovernor(governor);
-        fdn_.setFloorDb(floorDb);
+        const float rampRate = placeRamp(kPlaceRate, rate), rampHigh = placeRamp(kPlaceHigh, highRatio);
+        const float rampGov = placeRamp(kPlaceGovernor, governor), rampFloor = placeRamp(kPlaceFloorDb, floorDb);
+        fdn_.setDecayRate(rampRate);
+        fdn_.setHighT60Ratio(rampHigh);
+        fdn_.setGovernor(rampGov);
+        fdn_.setFloorDb(rampFloor);
         fdn_.setHoldDb(holdDb);
         // A frozen MASSIVE goes to full in-loop diffusion: its long lines otherwise replay painted
         // material as audible repeats (owner, M5 listening).
@@ -586,34 +736,49 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
         fdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decayFin, size)
                                    : voicing::kHallOutputTrim * map::hallSizeLevelTrim(hallSize_, decayFin));
         fdn_.setEarlyTaps(1.0f); // HALL too (v1.0.25: no gap after the note, its "slap-back")
-        fdn_.setAir(massive ? 0.0f : voicing::kAirHallDbPerSecond / 60.0f); // v1.0.25
-        fdn_.setEndlessTop(massive ? 0.0f : endlessTop);
+        fdn_.setAir(placeRamp(kPlaceAir, massive ? 0.0f : voicing::kAirHallDbPerSecond / 60.0f)); // v1.0.25
+        fdn_.setEndlessTop(placeRamp(kPlaceEndlessTop, massive ? 0.0f : endlessTop));
+        {
+            const float shelf = placeRamp(kPlaceShelf, massive ? voicing::kLossShelfHz : voicing::kHallLossShelfHz);
+            if (placeOn_) fdn_.setLossShelfHz(shelf);
+            lowsOwnNow_ = placeRamp(kPlaceLowsOwn, massive ? 1.0f : 0.5f * (1.0f + voicing::kHallLowsWidth));
+        }
         // The floor glides out with the freeze (v1.0.22, A3; Costello: mod depth to 0 for a freeze), and with a held
         // endless tail's calm (v1.0.58, above).
         // HALL's deepens with its tail (v1.0.57, ADR 0035): x1 up to a 5 s tail, x2 from 15 s and at infinite, on
         // the lows' T60 (`rate`: 0 at infinite, and towards 0 while freezing, as the floor glides out); centred on
         // the lines' mean read (Fdn::setFloorCentre), so a DECAY move doesn't retune what the tail holds.
-        float floorScale = 1.0f; // MASSIVE
+        float floorScale = voicing::kMassiveFloorScale; // MASSIVE (v1.0.71, ADR 0047: at kMassiveFloorPace, below)
         if (!massive) {
             constexpr float kFrom = voicing::kHallFloorLongFromSeconds, kAt = voicing::kHallFloorLongAtSeconds;
             float t = rate > 1.0f / kAt ? (1.0f / rate - kFrom) * (1.0f / (kAt - kFrom)) : 1.0f;
             if (t < 0.0f) t = 0.0f;
             const float target = 1.0f + (voicing::kHallFloorLongScale - 1.0f) * t;
-            hallFloorNow_ = snap ? target : hallFloorNow_ + blockK(voicing::kHallFloorGlideSeconds, n) * (target - hallFloorNow_);
-            floorScale = voicing::kHallFloorScale * hallFloorNow_;
+            const float glide = snap ? 1.0f : blockK(voicing::kHallFloorGlideSeconds, n);
+            hallFloorNow_ += glide * (target - hallFloorNow_);
+            // v1.0.71 (ADR 0047): twice as deep, so the notes' upper partials don't ring on as lines, easing back to
+            // once across DECAY's crossover, where clear notes stay steady; glided, so a DECAY flick doesn't retune.
+            const float fuller = 2.0f - map::governorWeight(decay);
+            hallFullerNow_ += glide * (fuller - hallFullerNow_);
+            floorScale = voicing::kHallFloorScale * hallFloorNow_ * hallFullerNow_;
         }
-        fdn_.setFloorCentre(massive ? 0.0f : 1.0f - 1.0f / hallFloorNow_);
+        floorScale = placeRamp(kPlaceFloorScale, floorScale);
+        fdn_.setFloorCentre(placeRamp(kPlaceFloorCentre, massive ? 0.0f : 1.0f - 1.0f / hallFloorNow_));
+        fdn_.setFloorPaceExtra(massive ? voicing::kMassiveFloorPace - 1.0f : 0.0f);
         fdn_.setModDepth(modScale_ * floorScale * (1.0f - modStill));
         // Still lows: the low tank follows, unmodulated.
-        lowFdn_.setDecayRate(rate);
-        lowFdn_.setHighT60Ratio(highRatio);
-        lowFdn_.setGovernor(governor);
-        lowFdn_.setFloorDb(floorDb);
+        lowFdn_.setDecayRate(rampRate);
+        lowFdn_.setHighT60Ratio(rampHigh);
+        lowFdn_.setGovernor(rampGov);
+        lowFdn_.setFloorDb(rampFloor);
         lowFdn_.setHoldDb(holdDb);
-        lowFdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : hallDiff);
-        lowFdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, map::hallMeanSeconds(hallSize_) / 0.2f));
+        // HALL's lows keep their own in-loop diffusion at every SIZE, and sit louder to hold their level (v1.0.76, ADR 0052).
+        lowFdn_.setInLoopDiffusion(massive ? diff + freezeMix_ * (1.0f - diff) : voicing::kHallLowsInLoopDiffusion);
+        // From the SIZE its lines crossfade to, not the glided hallSize_: its allpasses are in the loop at every SIZE now, so
+        // still gliding after the crossfade they bent everything through them (a SIZE flick on a held note, ADR 0052).
+        lowFdn_.setInLoopScale(massive ? 1.0f : std::fmin(1.0f, mean / 0.2f));
         lowFdn_.setOutputTrim(massive ? voicing::kMassiveOutputTrim * map::massiveDecayLevelTrim(decayFin, size)
-                                      : voicing::kHallOutputTrim * map::hallSizeLevelTrim(hallSize_, decayFin));
+                                      : voicing::kHallLowsOutputTrim * voicing::kHallOutputTrim * map::hallSizeLevelTrim(hallSize_, decayFin));
         lowFdn_.setEarlyTaps(1.0f);
         lowFdn_.setModDepth(0.0f);
     }
@@ -736,7 +901,16 @@ IV_SIZE_OPT void Engine::applySpace(bool snap, int n, bool snapInput) // once pe
     // DECAY play it while frozen (at the freeze they're where the pad froze, so it starts as the
     // pad's twin); it always fades within kTwinMaxT60. Full in-loop diffusion in MASSIVE, like the pad.
     if (twinActive_) {
-        const float tSize = hysteresisSize(smoothed(ParamId::Size), twinSizeHeld_, snap || !twinSized_);
+        float tSize = hysteresisSize(smoothed(ParamId::Size), twinSizeHeld_, snap || !twinSized_);
+        // The room keeps its size (the owner's idea after A on the rack: "fix the twin so size doesn't affect it"): in HALL and
+        // CANYON the room takes the SIZE the pad froze with (heldSize_) when it starts, from silence, and keeps it, frozen or
+        // ringing out; SIZE never bends its lines (the glide was per-sample work in the second after an unfreeze). A re-freeze
+        // while it rings keeps it too (under A a SIZE off heldSize_ waits, so the new freeze's heldSize_ is this one); a new size
+        // only ever lands on a room started from silence. Everything the room's SIZE sets (T60 scale, level) follows it.
+        if (!plate) {
+            if (!twinSized_) roomSize_ = heldSize_;
+            tSize = roomSize_;
+        }
         const float tDecay = smoothed(ParamId::Decay);
         twinSwell_.setAttackSeconds(0.0f, snap); // PLATE's twin: no attack
         const float tT60 = activeSpace_ == 1 ? map::hallT60Scale(tSize) : 1.0f;
@@ -840,6 +1014,13 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
         smoothNext_ ^= 1;
     }
     const float* smoothK = smoothK_[n == smoothN_[0] ? 0 : 1];
+    // DECAY's smoother reads the knob on DECAY's scale (map::decayScale, ADR 0048); values_ goes back to the knob after
+    // it, so Engine::param is the knob. The profile build reads no knobs: its DECAYs are on the scale already.
+#if !defined(IV_MODE_PROFILE)
+    float& decayValue = values_[static_cast<size_t>(ParamId::Decay)];
+    const float decayKnob = decayValue;
+    decayValue = map::decayScale(decayKnob);
+#endif
     for (const auto& p : kParams) {
         const size_t i = static_cast<size_t>(p.id);
         if (p.kind == ParamKind::Switch3 || p.smoothing == Smoothing::Slewed) smooth_[i] = values_[i];
@@ -848,6 +1029,9 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
             if (std::fabs(values_[i] - smooth_[i]) < 1e-5f) smooth_[i] = values_[i]; // land exactly (MIX 0 = bit-exact dry)
         }
     }
+#if !defined(IV_MODE_PROFILE)
+    decayValue = decayKnob;
+#endif
 
     // Freeze glides (ADR 0009): colour out over 0.2 s, back over 1 s.
     const float dt = float(n) / sampleRate_;
@@ -919,14 +1103,37 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
     // to full while the paint was still letting go, a burst of the twin into the pad (soak audit).
     if (gesture_.painting()) paintRoom_ = clamp01((padFloorDb_ - tankLevelDb()) / voicing::kPaintFadeDb);
 
-    // SPACE flip (ADR 0013): fade out, restart the tank in the new voicing,
-    // fade back in. Not while frozen: the pad waits for the unfreeze.
-    const int space = normalisedToSwitch(smoothed(ParamId::Space));
+    // SPACE change (ADR 0013, 0054): the input dips out and back while the tail carries on: PLATE <-> HALL/CANYON a 3 s morph between
+    // two tanks, HALL <-> CANYON the one tank reshaped over 1.5 s (morphFlip, morphAdvance). Not while frozen: the pad waits for the unfreeze.
+    int space = normalisedToSwitch(smoothed(ParamId::Space));
     const float flipChunk = float(n) / (voicing::kSpaceFlipSeconds * sampleRate_);
+    // Finish, then go (owner, 9 Nov 2026): while a morph or a reshape runs the switch isn't read. When it ends, a switch
+    // that differs from the space now playing starts a normal new change; one that's there already does nothing. (A
+    // second change on top of a running one overloaded the module: docs/research/m3-morph-s2-lap.log.)
+    if (morphOld_ >= 0 || placeOn_) space = activeSpace_;
+    // The flip waits for SIZE (ADR 0058): nor while the tank in use crossfades its SIZE (or waits
+    // for the knob's rest to), up to kFlipWaitsSizeCapSeconds from the switch. Only before a flip starts: inside its fade-out
+    // a switch back where it was cancels the flip, so the wait must not read as one (applySpace holds SIZE there instead).
+    if (flipPhase_ == 0 && space != activeSpace_ && !gesture_.frozen() && freezeMix_ == 0.0f && tankSizeBusy()
+        && fwsWait_ < kFlipWaitsSizeCapSeconds) {
+        fwsWait_ += float(n) / sampleRate_;
+        space = activeSpace_;
+    } else if (flipPhase_ == 0 && space == activeSpace_) fwsWait_ = 0.0f;
+    // A freeze during a morph keeps the sound you hear: the tank that holds the most of it becomes the pad. The other goes
+    // in 0.3 s (holding both frozen would be two big tanks and the twin). If that's the old tank, the change waits for the unfreeze.
+    if (gesture_.frozen() && morphOld_ >= 0 && !morphFreezeSeen_) {
+        morphFreezeSeen_ = true;
+        const float oldDb = tankFastDb(morphOld_) + 20.0f * std::log10(morphGOld_ + 1e-9f);
+        const float newDb = tankFastDb(activeSpace_ == 0 ? 0 : 1) + 20.0f * std::log10(morphGNew_ + 1e-9f);
+        morphFast_ = true;
+        if (oldDb > newDb) morphHoldOld();
+    }
+    if (!gesture_.frozen()) morphFreezeSeen_ = false;
+    const bool flipHeld = gesture_.frozen();
     if (flipPhase_ == 0 && space != activeSpace_ && !gesture_.frozen() && freezeMix_ == 0.0f) flipPhase_ = 1;
     if (flipPhase_ == 1) {
         flipStep_ = -flipChunk / float(n);
-        if (gesture_.frozen() || space == activeSpace_) {
+        if (flipHeld || space == activeSpace_) {
             // A freeze inside the fade-out keeps the old space: it fades back in as the pad, and the
             // flip waits for the unfreeze like any other (soak audit: the tank used to restart under
             // the freeze, so the pad came out silent).
@@ -936,35 +1143,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
             flipPhase_ = 2;
         } else if (flipGain_ <= 0.0f) {
             prof::mark(prof::kControl);
-            activeSpace_ = space;
-            setEarlyTapsForSpace(); // the tanks restart here, so their early taps re-lay out unheard
-            // Targets first, so the resets below land on them (the FDN's output trim). The predelay
-            // jumps too, here where the tank's input is silent; the input diffusers glide
-            // (a jump in their amount rang on in them for ~100 ms, past the fade back in).
-            applySpace(true, n, false);
-            fdn_.reset();
-            resetHalf(tankHalf_);
-            lowFdn_.reset();
-            plate_.reset();
-            swell_.reset();
-            // The shimmer doesn't depend on SPACE: it keeps recording and its send fades with the flip.
-            // A twin still fading after an unfreeze belongs to the old space: it has faded out with
-            // the wet, so it stops here and the new space's twin starts clean at the next freeze
-            // (soak audit: it was cut off mid-sound, a click, and the other twin replayed stale sound).
-            twinActive_ = false;
-            twinIn_ = twinInStep_ = 0.0f;
-            room_.reset();
-            roomLevel_ = 0.0f;
-            twinSized_ = false;
-            resetHalf(twinHalf_);
-            twinPlate_.reset();
-            twinSwell_.reset();
-            for (auto& d : twinDiffuser_) d.clear();
-            // The input side fades with the flip (process(): before the diffusers), so the predelay's jump
-            // here is silent and the diffusers and swell start from silence. Faded only at the tank (after
-            // them), that jump and the swell's cleared line under the unfaded input rang into the new space
-            // as clicks, hiss over its tail's highs for seconds (owner: a burst switching MASSIVE and HALL).
-            for (auto& d : diffuser_) d.clear();
+            morphFlip(space, n);
             flipPhase_ = 2;
             prof::mark(prof::kFlip);
         }
@@ -978,6 +1157,7 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
     }
     if (flipPhase_ == 0) flipStep_ = 0.0f;
 
+    morphAdvance(n);
     applySpace(false, n);
     if (onsetStep_ < 0.0f) swell_.control(n); // dipping out for an ONSET change (applySpace), its taps and smear stay put
     twinSwell_.control(n);
@@ -1004,6 +1184,14 @@ IV_SIZE_OPT void Engine::controlTick(int n) // once per block: built for size (f
     dryStep_ = (g.dry - dryNow_) / float(n);
     wetStep_ = (g.wet - wetNow_) / float(n);
 }
+
+#ifndef IV_FIXED_VOICINGS
+void Engine::poisonTankForTests(int tank)
+{
+    if (tank == 2) plate_.poisonForTests();
+    else (tank == 1 ? lowFdn_ : fdn_).poisonForTests();
+}
+#endif
 
 IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* outL, float* outR, int numSamples)
 {
@@ -1094,6 +1282,8 @@ IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* 
             const float og = 1.0f - onsetDip_;
             bufL_[i] = og * pl; // the swell's input; it runs over the whole chunk below
             bufR_[i] = og * pr;
+            morphInL_[i] = bufL_[i]; // what the old tank hears (it has no swell of its own)
+            morphInR_[i] = bufR_[i];
             chunkGain_[i] = tankIn_ * flipGain_ * og;
             wetL_[i] = wetR_[i] = 0.0f;
             prof::mark(prof::kInput);
@@ -1125,6 +1315,15 @@ IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* 
             const float g = chunkGain_[i];
             bufL_[i] = g * pl;
             bufR_[i] = g * pr;
+            if (morphOld_ >= 0) {
+                if (swellOnset_ == 1) { // BLOOM: every SPACE swells, so the old tank hears it too
+                    morphInL_[i] = bufL_[i];
+                    morphInR_[i] = bufR_[i];
+                } else {
+                    morphInL_[i] *= g;
+                    morphInR_[i] *= g;
+                }
+            }
             tankInPower_ += 0.002f * (0.5f * (bufL_[i] * bufL_[i] + bufR_[i] * bufR_[i]) - tankInPower_);
             prof::mark(prof::kInput);
         }
@@ -1133,6 +1332,7 @@ IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* 
         if (twinActive_) {
             if (activeSpace_ == 0) twinPlate_.process(twinInL_, twinInR_, twinL_, twinR_, n);
             else twinHalf_.process(room_, twinInL_, twinInR_, twinL_, twinR_, n);
+            if (ufsStep_ != 0.0f) ufsRamp(n); // the room making way (applySpace), or back up after a new freeze
             // The twin stops on its 50 ms level (v1.0.37; overnight review, lit-plate 6): ~15-24 s sooner
             // after an unfreeze than on its 1.5 s level, which kept a silent second tank running.
             float lvl = twinPlate_.fastLevelDb();
@@ -1165,10 +1365,12 @@ IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* 
         if (activeSpace_ == 0) plate_.process(bufL_, bufR_, wetL_, wetR_, n);
         else if (!lowTank_) tankHalf_.process(fdn_, bufL_, bufR_, wetL_, wetR_, n); // the test hook's one tank
         else processTwoTanks(n);
+        if (morphOld_ >= 0) morphRunOld(n);
         prof::mark(prof::kTank);
 
         transport_.control(n, transportAmt_, transportOn_); // MOTION's tape transport (returns at once when out)
         const bool transportLive = !transport_.idle();
+        float wetSum = 0.0f; // the tanks' health (below)
         for (int i = 0; i < n; ++i) {
             // DECAY's level make-up (v1.0.28) on the forward wet and the twin, a ~40 ms glide.
             decayGainNow_ += 0.0005f * (decayGain_ - decayGainNow_);
@@ -1186,13 +1388,30 @@ IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* 
 #endif
             const float tl = decayGainNow_ * twinK * twinL_[i];
             const float tr = decayGainNow_ * twinK * twinR_[i];
-            float wl = (fl + tl) * flipGain_;
-            float wr = (fr + tr) * flipGain_;
+            // A SPACE change: the input side dips as ever (its jumps stay unheard), the tank's sound doesn't; a twin still fading does.
+            float wl = fl + tl * flipGain_;
+            float wr = fr + tr * flipGain_;
             wl *= eraMakeup_;
             wr *= eraMakeup_;
             wetL_[i] = wl;
             wetR_[i] = wr;
+            wetSum += wl + wr;
             prof::mark(prof::kOutput);
+        }
+        // The tanks' health, once a chunk, on the wet before anything downstream with a memory hears it (v1.0.77, ADR 0053, issue 2;
+        // Pure Data's filters check their state once a block the same way). A NaN or Inf in any sample stays in the sum, so one
+        // test on its exponent catches it. Failed: the Engine restarts where it stands (reset(): every tank and filter a NaN could
+        // have reached, keeping the knobs), this chunk's wet is dropped, and the reverb builds again from silence with the next sound.
+        {
+            uint32_t sumBits;
+            std::memcpy(&sumBits, &wetSum, sizeof sumBits);
+            if ((sumBits << 1) >= 0xFF000000u) { // exponent all ones: NaN or Inf
+                reset();
+                std::memset(wetL_, 0, sizeof wetL_ + sizeof wetR_); // (adjacent members: one call)
+#ifndef IV_FIXED_VOICINGS
+                ++tankRestarts_;
+#endif
+            }
         }
         // MOTION's tape transport (dsp/Transport.h) over the chunk.
         if (transportLive) transport_.processBlock(wetL_, wetR_, n);
@@ -1203,7 +1422,12 @@ IV_LEAN_PROCESS void Engine::process(const float* inL, const float* inR, float* 
         if (texOn_) texture_.processBlock(wetL_, wetR_, n);
         prof::mark(prof::kEraWear);
         for (int i = 0; i < n; ++i) {
+#if !defined(IV_MODE_PROFILE)
+            wetLiftNow_ += 0.0005f * (wetLift_ - wetLiftNow_);
+            float wl = wetLiftNow_ * wetL_[i], wr = wetLiftNow_ * wetR_[i];
+#else
             float wl = wetL_[i], wr = wetR_[i];
+#endif
             tilt_.process(wl, wr);
 #ifndef IV_FIXED_VOICINGS
             if (!toneBellOff_)
@@ -1257,7 +1481,7 @@ void Engine::processTwoTanks(int n)
             const float x = buf[c][i];
             const float lo = bq(cA, z[c][1], bq(cL, z[c][0], x));
             buf[c][i] = bq(cH, z[c][2], x);
-            if (ph == 0) (c ? lowInR_ : lowInL_)[k] = lo;
+            if (ph == 0) (c ? lowInR_ : lowInL_)[k] = -lo; // in step with the main tank across the split (v1.0.71, ADR 0047; see prepare)
         }
         if (ph == 0) ++k;
         ph = (ph + 1) & (lowDecimate_ - 1); // 4 or 8: a power of two
@@ -1274,11 +1498,16 @@ void Engine::processTwoTanks(int n)
     double power = 0.0;
     float zo[2][2] = {{xoZ_[0][4][0], xoZ_[0][4][1]}, {xoZ_[1][4][0], xoZ_[1][4][1]}};
     float prev[2] = {lowPrev_[0], lowPrev_[1]}, cur[2] = {lowCur_[0], lowCur_[1]};
+    // HALL's lows narrowed (v1.0.76, ADR 0052): each side keeps kHallLowsWidth of the left-right difference, so a low note
+    // can't lean far to one side. In this read, as a loop of its own overflowed the profile build. CANYON: 1 and 0, to the bit.
+    const float own = lowsOwnNow_; // applySpace's: HALL's, CANYON's, or the morph's ramp between them
+    const float other = 1.0f - own;
     ph = phase0;
     for (int i = 0; i < n; ++i) {
         if (ph == 0) {
             prev[0] = cur[0]; prev[1] = cur[1];
-            cur[0] = lowOutL_[j]; cur[1] = lowOutR_[j];
+            cur[0] = own * lowOutL_[j] + other * lowOutR_[j];
+            cur[1] = own * lowOutR_[j] + other * lowOutL_[j];
             ++j;
         }
         const float t = float(ph) / float(lowDecimate_);
@@ -1299,6 +1528,212 @@ void Engine::processTwoTanks(int n)
         xoZ_[c][4][1] = zo[c][1];
     }
     fdn_.setExternalPower(float(power / double(n)));
+}
+
+// ---- The SPACE morph (ADR 0054) ------------------------------------------------------------------------------------
+
+#ifndef IV_FIXED_VOICINGS
+void Engine::morphNote(int kind, int from, int to)
+{
+    if (morphLog_.count >= int(sizeof morphLog_.events / sizeof morphLog_.events[0])) return;
+    morphLog_.events[morphLog_.count++] = {double(clock_) / double(sampleRate_), kind, from, to};
+}
+#endif
+
+
+float Engine::placeRamp(int id, float target)
+{
+    if (!placeOn_) return placeNow_[id] = target;
+    return placeNow_[id] = placeStart_[id] + placeS_ * (target - placeStart_[id]);
+}
+
+IV_MORPH_COLD void Engine::morphStopTwin()
+{
+    twinActive_ = false;
+    twinIn_ = twinInStep_ = 0.0f;
+    room_.reset();
+    roomLevel_ = 0.0f;
+    twinSized_ = false;
+    resetHalf(twinHalf_);
+    twinPlate_.reset();
+    twinSwell_.reset();
+    for (auto& d : twinDiffuser_) d.clear();
+}
+
+// The flip's silent point (the input has dipped out; the wet hasn't). Which tank holds what decides what happens to it.
+IV_MORPH_COLD void Engine::morphFlip(int to, int n)
+{
+    // Nothing else is running here: a change waits for the last to end.
+    const int from = activeSpace_;
+    morphLightWait_ = 2;
+    const float keepGain = decayGainNow_;
+    IV_IF_LIFT(const float keepLift = wetLiftNow_;)
+    activeSpace_ = to;
+    if (from != 0 && to != 0) {
+        for (int k = 0; k < kPlaceCount; ++k) placeStart_[k] = placeNow_[k];
+        placeOn_ = true;
+        placeT_ = placeS_ = 0.0f;
+        placeSeconds_ = 1.5f;
+        fdn_.setXfSpread(true);
+        lowFdn_.setXfSpread(true);
+        earlyW_ = from == 2 ? 1.0f : 0.0f;
+        fdn_.beginEarlyMorph();
+        lowFdn_.beginEarlyMorph();
+        fdn_.setEarlyMorph(earlyW_);
+        lowFdn_.setEarlyMorph(earlyW_);
+        morphKeepTank_ = true;
+        applySpace(true, n, false);
+        morphKeepTank_ = false;
+        decayGainNow_ = keepGain;
+        IV_IF_LIFT(wetLiftNow_ = keepLift;)
+        IV_MORPH_NOTE(3, from, to);
+    }
+    else {
+        // A fresh start for the new tank only; the old one keeps everything it has, its early taps and shelf too.
+        if (to != 0) setEarlyTapsForSpace();
+        applySpace(true, n, false);
+        if (to != 0) {
+            fdn_.reset();
+            resetHalf(tankHalf_);
+            lowFdn_.reset();
+        } else {
+            plate_.reset();
+        }
+        morphOldDecayGain_ = keepGain;
+        IV_IF_LIFT(morphOldLift_ = keepLift;)
+        morphOld_ = from == 0 ? 0 : 1;
+        morphOldSpace_ = from;
+        morphX_ = 0.0f;
+        morphGOld_ = morphGOldWas_ = 1.0f;
+        morphGNew_ = morphGNewWas_ = 0.0f;
+        IV_MORPH_NOTE(1, from, to);
+    }
+    swell_.reset();
+    morphStopTwin();
+    for (auto& d : diffuser_) d.clear();
+}
+
+// A freeze early in a morph, the old tank holding most of the sound: it goes back to being the tank in use, under the freeze (its
+// input is closing), with no second handover. The change waits for the unfreeze. The two tanks only trade roles and gains, so the
+// old tank's sound carries straight on; the new one, with only a whisper in it, stops here unless it's already audible.
+IV_MORPH_COLD void Engine::morphHoldOld()
+{
+    const int from = activeSpace_;
+    const float keepGain = decayGainNow_;
+    IV_IF_LIFT(const float keepLift = wetLiftNow_;)
+    activeSpace_ = morphOldSpace_;
+    decayGainNow_ = decayGain_ = morphOldDecayGain_; // this tank's own, held while it rang out
+    IV_IF_LIFT(wetLiftNow_ = wetLift_ = morphOldLift_;)
+    morphOldDecayGain_ = keepGain;
+    IV_IF_LIFT(morphOldLift_ = keepLift;)
+    morphOld_ = from == 0 ? 0 : 1;
+    morphOldSpace_ = from;
+    const float o = morphGOld_;
+    morphGOld_ = morphGNew_;
+    morphGNew_ = o;
+    morphX_ = 1.0f - morphX_;
+    if (from != 0) std::memset(xoZ_, 0, sizeof xoZ_); // the FDN path's crossover: left holding music, it would feed the next change's new tank
+    IV_MORPH_NOTE(2, from, activeSpace_); // (the twin the freeze just started serves either space)
+    if (morphGOld_ < kMorphDropGain) {
+        IV_MORPH_NOTE(4, morphOldSpace_, activeSpace_);
+        morphOld_ = -1;
+        morphFast_ = false;
+        startTwin(); // waiting since the press
+    }
+}
+
+IV_MORPH_COLD void Engine::morphAdvance(int n)
+{
+    const float dt = float(n) / sampleRate_;
+    if (placeOn_) {
+        placeT_ += dt / placeSeconds_;
+        placeS_ = placeT_ >= 1.0f ? 1.0f : 0.5f - 0.5f * std::cos(map::kPi * placeT_);
+        const float earlyTo = activeSpace_ == 2 ? 1.0f : 0.0f;
+        earlyW_ = approach(earlyW_, earlyTo, dt / placeSeconds_);
+        fdn_.setEarlyMorph(earlyW_);
+        lowFdn_.setEarlyMorph(earlyW_);
+        // The lines' last fades end it, or twice its length if SIZE keeps them busy (under a CV they never rest, and the next
+        // SPACE change waits for this): whatever SIZE still has to do goes on at SIZE's own crossfade.
+        if (placeT_ >= 1.0f && earlyW_ == earlyTo && ((fdn_.xfIdle() && lowFdn_.xfIdle()) || placeT_ >= 2.0f)) {
+            fdn_.endEarlyMorph(activeSpace_ == 2 ? voicing::kMassiveEarlyTaps : voicing::kHallEarlyTaps);
+            lowFdn_.endEarlyMorph(activeSpace_ == 2 ? voicing::kMassiveEarlyTaps : voicing::kHallEarlyTaps);
+            fdn_.setLossShelfHz(activeSpace_ == 2 ? voicing::kLossShelfHz : voicing::kHallLossShelfHz);
+            fdn_.setXfSpread(false);
+            lowFdn_.setXfSpread(false);
+            placeOn_ = false;
+            IV_MORPH_NOTE(5, activeSpace_, activeSpace_);
+            if (gesture_.frozen()) startTwin(); // a freeze during the reshape: its twin starts now (a no-op if it's running)
+        }
+    }
+    // Only while a change into CANYON runs with SHIMMER on (the owner's pick C, renders/morph_last_98): half the shimmer's heads rest.
+    // Not in the handover's block, the module's heaviest (m3-morph-peak-hunt.log): two control ticks, 48 samples on the module (its
+    // 32 + 16), so the whole of that 1 ms block runs the plain loop whichever of the two chunks the flip is in.
+    shimmer_.setLighter(activeSpace_ == 2 && (morphOld_ >= 0 || placeOn_) && shimmerTarget_ > 0.0f && morphLightWait_ == 0);
+    if (morphLightWait_ != 0) --morphLightWait_;
+    if (morphOld_ < 0) return;
+    morphGOldWas_ = morphGOld_;
+    morphGNewWas_ = morphGNew_;
+    // Equal power, on a raised cosine.
+    morphX_ = std::fmin(1.0f, morphX_ + dt / (morphFast_ ? 0.3f : 3.0f));
+    const float xo = 0.5f - 0.5f * std::cos(map::kPi * morphX_);
+    morphGOld_ = std::cos(0.5f * map::kPi * xo);
+    morphGNew_ = std::sin(0.5f * map::kPi * xo);
+    if (morphX_ >= 1.0f) morphGOld_ = 0.0f, morphGNew_ = 1.0f;
+}
+
+// Trades the Engine's tank buffers with the old tank's: its input (morphInL_ / R_) and its output (ol, orr).
+IV_MORPH_COLD void Engine::morphLend(float* ol, float* orr)
+{
+    float* const a[4] = {bufL_, bufR_, wetL_, wetR_};
+    float* const b[4] = {morphInL_, morphInR_, ol, orr};
+    for (int k = 0; k < 4; ++k)
+        for (int i = 0; i < kChunk; ++i) {
+            const float t = a[k][i];
+            a[k][i] = b[k][i];
+            b[k][i] = t;
+        }
+}
+
+// The old tank over this chunk, on its own held settings, under its own fade.
+void Engine::morphRunOld(int n)
+{
+    float ol[kChunk] = {}, orr[kChunk] = {};
+    const bool hears = !morphFast_;
+    if (!hears) { // (the swell's input is over for this chunk: this is only what the old tank hears)
+        std::memset(morphInL_, 0, sizeof morphInL_);
+        std::memset(morphInR_, 0, sizeof morphInR_);
+    }
+    if (morphOld_ == 0) {
+        plate_.process(morphInL_, morphInR_, ol, orr, n);
+    } else {
+        // The two FDNs' one path reads bufL_ and adds to wetL_: lent to the old tank for this call.
+        morphLend(ol, orr);
+        const int keepSpace = activeSpace_;
+        activeSpace_ = morphOldSpace_;
+#ifndef IV_FIXED_VOICINGS
+        if (!lowTank_) tankHalf_.process(fdn_, bufL_, bufR_, wetL_, wetR_, n); else // the test hook's one tank
+#endif
+        processTwoTanks(n);
+        activeSpace_ = keepSpace;
+        morphLend(ol, orr);
+    }
+    // Its make-ups are its own (they're one per SPACE and the wet path's are the new space's now).
+    const float base = decayGainNow_ IV_IF_LIFT(* wetLiftNow_);
+    const float ratio = base > 1e-6f ? (morphOldDecayGain_ IV_IF_LIFT(* morphOldLift_)) / base : 0.0f;
+    for (int i = 0; i < n; ++i) {
+        const float t = float(i + 1) / float(n);
+        const float go = ratio * (morphGOldWas_ + t * (morphGOld_ - morphGOldWas_));
+        const float gn = morphGNewWas_ + t * (morphGNew_ - morphGNewWas_);
+        wetL_[i] = gn * wetL_[i] + go * ol[i];
+        wetR_[i] = gn * wetR_[i] + go * orr[i];
+    }
+    if (morphGOld_ <= 0.0f && morphGOldWas_ <= 0.0f) {
+        IV_MORPH_NOTE(4, morphOldSpace_, activeSpace_);
+        morphOld_ = -1;
+        morphFast_ = false;
+        morphGNew_ = morphGNewWas_ = 1.0f;
+        if (gesture_.frozen()) startTwin(); // a freeze during the morph: its twin starts now
+    }
 }
 
 } // namespace iv

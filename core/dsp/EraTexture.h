@@ -48,9 +48,11 @@ struct TexMix {
 };
 
 namespace tex {
-// The tape's drive at full, 11.25 dB (v1.0.49). v1.0.65 drove it 5 dB harder (ADR 0040, pick D on renders/more_tape);
-// on the module that squashed the tail by 3 o'clock, so v1.0.66 put it back (ADR 0041, pick B on renders/tape_fold).
-constexpr float kTapeDriveDb = 11.25f, kTapeEmphDb = 6.0f, kTapeEmphHz = 2000.0f, kTapeBias = 0.12f;
+// The tape's drive at full, 13.5 dB (v1.0.75, ADR 0051, the owner's pick D on renders/wear_ceiling: "reduce the overall
+// ceiling of the effect, and have it slightly less present at noon"), on the tape's own taper
+// (voicing::kWearTapeTaperPower). 16.25 dB in v1.0.70-v1.0.74 (ADR 0045) and v1.0.65 (ADR 0040); 11.25 dB from v1.0.49
+// to v1.0.64 and v1.0.66 to v1.0.69 (ADR 0041: "folding back too much").
+constexpr float kTapeDriveDb = 13.5f, kTapeEmphDb = 6.0f, kTapeEmphHz = 2000.0f, kTapeBias = 0.12f;
 // The level hold's ceiling, +15 dB (10^(15/20); v1.0.49, renders/wear_fizz): at +12 the band took a low chord's or
 // pad's fundamentals down and WEAR 1 lost 1.1-1.8 dB on held chords and pads; now within +-1 dB of WEAR 0.
 constexpr float kHoldMax = 5.62341309f;

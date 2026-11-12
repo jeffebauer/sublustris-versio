@@ -867,6 +867,17 @@ float SpikeInput(int kind)
 }
 #endif
 
+// The SPACE morph lap (ADR 0054; RunMorphLap): at block `at`, what happens: 0-2 SPACE, 3 the button pressed, 4 released.
+struct MorphEv {
+    uint32_t at;
+    int      what;
+};
+constexpr uint32_t kNever = 0xFFFFFFFFu;
+MorphEv            gMorphEv[4] = {{kNever, 0}, {kNever, 0}, {kNever, 0}, {kNever, 0}};
+uint32_t           gMorphMaxAt = 0;
+volatile uint8_t   gMorphFired = 0; // events that really fired this line: printed, so a lap that flips nothing shows
+volatile uint32_t  gMorphLateFrom = 0, gMorphLateMax = 0; // the highest block from 0.5 s after the first change on
+
 void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer out, size_t size)
 {
     if (!gRealtime) {
@@ -906,6 +917,12 @@ void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer ou
         }
     }
 #endif
+    for (const MorphEv& e : gMorphEv)
+        if (gBlocks == e.at) {
+            gMorphFired = uint8_t(gMorphFired + 1);
+            if (e.what < 3) engine.setParam(ParamId::Space, iv::switchToNormalised(e.what));
+            else engine.button(e.what == 3, 0);
+        }
     static float buf[kBlockSize];
 #if IV_PROFILE_SIZESPIKE
     if (gSpikeInput >= 0)
@@ -969,6 +986,8 @@ void AudioCallback(AudioHandle::InputBuffer /*in*/, AudioHandle::OutputBuffer ou
         if (d > gSpkFadeMax) gSpkFadeMax = d;
     }
 #endif
+    if (d > gMaxCycles) gMorphMaxAt = gBlocks;
+    if (gBlocks >= gMorphLateFrom && d > gMorphLateMax) gMorphLateMax = d;
     if (d > gMaxCycles) gMaxCycles = d;
     if (d > gPeriodCycles) ++gLate;
     gSumCycles = gSumCycles + d;
@@ -1022,7 +1041,9 @@ enum Micro {
     kSdr1, kSdr32, kSdw32, kSdline8, kAxi32, kDtcm32, kExp, kSin, kPow, kLog10, kDiv, kFdnAxi, kFdnSdram,
     kWear, kWearSet, kLoopNeve,
     // overnight review, 26 Oct 2026
-    kSub, kNorm, kSubX, kVdivDep, kVdivThr, kVdivIndep, kPld32, kSwell12, kSwellNS, kSwellW, kFdnMassive,
+    kSub, kNorm, kSubX,
+    kPld32,
+    kFdnMassive,
     kFdnMassiveApAxi, kSdr1t, kSdr32t, kSdw32t, kSdline8t, kPld32t, kFdnSdramt, kFdnMassivet,
     kFdnMassiveApAxit, kMicro
 };
@@ -1030,8 +1051,9 @@ int               gMicro[kMicro]{};
 const char* const kMicroNames[] = {"sdr1", "sdr32", "sdw32", "sdline8", "axi32", "dtcm32",
                                    "exp", "sin", "pow", "log10", "div", "fdnAXI", "fdnSDRAM",
                                    "wear/smp", "wearSet/blk", "loopNeve/smp",
-                                   "sub", "norm", "subX", "vdivDep", "vdivThr", "vdivIndep", "pld32",
-                                   "swell12/blk", "swellNS/blk", "swellW/blk", "fdnMassive24k", "fdnMassiveApAxi",
+                                   "sub", "norm", "subX",
+                                   "pld32",
+                                   "fdnMassive24k", "fdnMassiveApAxi",
                                    "sdr1t", "sdr32t", "sdw32t", "sdline8t", "pld32t", "fdnSDRAMt",
                                    "fdnMassive24kt", "fdnMassiveApAxit"};
 static_assert(sizeof(kMicroNames) / sizeof(kMicroNames[0]) == kMicro, "one name per micro-test, in order");
@@ -1110,6 +1132,13 @@ uint32_t gChkLibDaisy = 0, gChkTight = 0, gChkLap = 0, gChkLaps = 0; // errors
 constexpr size_t kTestFdnFloats = iv::dsp::Fdn::memoryFloats(12000.0f, 0.25f);
 constexpr size_t kTestArenaFloats = kTestFdnFloats + iv::dsp::Arena::kSkewLines * iv::dsp::Arena::kLineFloats;
 static_assert(kTestArenaFloats <= kAxiFloats, "the AXI test tank lives in gAxi (before engine.prepare)");
+// The boot micro-tests (BENCH's MICRO line, RunMicroTests) are left out of the profile by default since v1.0.80, to fit
+// the Core's SIZE waits (ADR 0056-0058: ~1 KB) in flash; the SDRAM checks and the tight timing stay. IV_PROFILE_MICRO=1
+// (CPPFLAGS) puts them back, with something else taken out. The MICRO line then prints zeros.
+#ifndef IV_PROFILE_MICRO
+#define IV_PROFILE_MICRO 0
+#endif
+#if IV_PROFILE_MICRO // the micro-tests' helpers (RunMicroTests)
 IV_DTCM alignas(iv::dsp::Fdn) unsigned char gTestFdnStorage[sizeof(iv::dsp::Fdn)]; // DTCM: see gMassiveStorage
 
 int TimeTestFdn(float* mem, size_t floats, bool skew)
@@ -1264,12 +1293,19 @@ void OnePole(float y0)
     for (int i = 0; i < 1000; ++i) y += a * (x - y);
     gSink = y;
 }
+#endif // IV_PROFILE_MICRO
 
 void RunMicroTests()
 {
+    gSdtrLibDaisy = FMC_Bank5_6_R->SDTR[0];
+#if !IV_PROFILE_MICRO
+    gChkLibDaisy = SdramCheck();
+    SdramSetTiming(SdtrWith(gSdtrLibDaisy, kTightTrp, kTightTrcd));
+    gChkTight = SdramCheck();
+    if (!IV_PROFILE_SDRAM_TIGHT) SdramSetTiming(gSdtrLibDaisy);
+#else
     float* sd = gLarge; // all of it free until engine.prepare()
     float  acc = 0.0f;
-    gSdtrLibDaisy = FMC_Bank5_6_R->SDTR[0];
     RunSdramTests(sd, acc, kSdr1, kSdr32, kSdw32, kSdline8, kPld32);
     gMicro[kAxi32] = Tenths(32 * 512, [&] {
         for (int s = 0; s < 512; ++s)
@@ -1311,71 +1347,6 @@ void RunMicroTests()
     SetFlushToZero(!IV_PROFILE_FZ);
     gMicro[kSubX] = Tenths(1000, [&] { OnePole(tiny); });
     SetFlushToZero(IV_PROFILE_FZ);
-    // VDIV.F32: a dependent chain (latency), independent divides (throughput), and independent
-    // divides each with 4 independent multiplies (if the divider blocks the FPU, vdivIndep is about
-    // vdivThr + 4-5; if independent work hides behind a divide, about vdivThr). Cycles per divide.
-    {
-        volatile float cv = 1.0001f, kv = 0.99999f, x0 = 0.7f;
-        gMicro[kVdivDep] = Tenths(1000, [&] {
-            const float c = cv;
-            float       q = x0;
-            for (int i = 0; i < 1000; ++i) q = c / q;
-            gSink = q;
-        });
-        gMicro[kVdivThr] = Tenths(1000, [&] {
-            const float c = cv;
-            float       b = 1.0f, s = 0.0f;
-            for (int i = 0; i < 1000; ++i) {
-                s += c / b;
-                b += 1.0f;
-            }
-            gSink = s;
-        });
-        gMicro[kVdivIndep] = Tenths(1000, [&] {
-            const float c = cv, k = kv;
-            float       b = 1.0f, s = 0.0f, m1 = 1.0f, m2 = 1.1f, m3 = 1.2f, m4 = 1.3f;
-            for (int i = 0; i < 1000; ++i) {
-                s += c / b;
-                b += 1.0f;
-                m1 *= k;
-                m2 *= k;
-                m3 *= k;
-                m4 *= k;
-            }
-            gSink = s + m1 + m2 + m3 + m4;
-        });
-    }
-    // The swell (BLOOM at MASSIVE S1: the longest span, 7.5 s), one processBlock of 32 samples, its
-    // 12 taps a side: without the smear, with it (BLOOM), and with no taps (the writes alone). The
-    // taps' part is swellNS - swellW; 24 taps would cost about swell12 + (swellNS - swellW).
-    {
-        static iv::dsp::Swell swell;
-        iv::dsp::Arena a;
-        a.reset(gLarge + kSwellAt, kLargeFloats - kSwellAt, true);
-        swell.prepare(a, 48000.0f);
-        swell.setAttackSeconds(iv::map::bloomSeconds(1.0f) * iv::map::massiveMass(1.0f), true);
-        static float l[32], r[32];
-        auto run = [&](int blocks) {
-            uint32_t cycles = 0;
-            for (int b = 0; b < blocks; ++b) {
-                for (int i = 0; i < 32; ++i) l[i] = r[i] = 0.1f * NextNoise();
-                swell.control(32);
-                const uint32_t t0 = DWT->CYCCNT;
-                swell.processBlock(l, r, 32);
-                cycles += DWT->CYCCNT - t0;
-            }
-            gSink = l[0];
-            return int(float(cycles) * 10.0f / float(blocks));
-        };
-        run(17000); // the line full (2^19 writes): the steady-state read path
-        gMicro[kSwellNS] = run(1000);
-        swell.setSmear(true);
-        run(3000); // the smear glides in (150 ms a step, ~2 s)
-        gMicro[kSwell12] = run(1000);
-        swell.setAttackSeconds(0.0f, true);
-        run(10);
-        gMicro[kSwellW] = run(1000);
-    }
     // The real-size MASSIVE tank, allpasses in SDRAM (A) and in AXI SRAM (B). 4,500 blocks of warm-up
     // (6 s: every line full, so the steady-state read path), then 375 blocks (0.5 s) timed.
     gMassive[0] = PrepareMassive(0, gLarge + kMassiveA, kMassiveB - kMassiveA, nullptr, 0);
@@ -1398,6 +1369,7 @@ void RunMicroTests()
     gMicro[kFdnSdramt] = TimeTestFdn(gLarge, kLargeFloats, true);
     if (!IV_PROFILE_SDRAM_TIGHT) SdramSetTiming(gSdtrLibDaisy);
     gSink = acc;
+#endif
 }
 
 // One corner: its `seconds` of the test signal through the Engine, each block timed by the cycle
@@ -2098,6 +2070,145 @@ void RunSpikeLap(float fs)
 }
 #endif
 
+// The SPACE morph on the module (ADR 0054; docs/research/m3-morph-s6-lap.log). Every SPACE change at CANYON's heavy settings (SIZE and
+// DECAY 0.9, BLEND / TONE / MOTION / DEPTH noon, ONSET BLOOM, WEAR 0.1), the same with the heavy stack (ONSET SHIMMER, WEAR full), then the
+// awkward ones with SHIMMER and WEAR 0.5 (the audit's heaviest): a re-flip during a transition, and a change just after an unfreeze while
+// the twin is fading. Each line: Engine::reset(), 6 s untimed, then real time with the knobs sent every block and their jitter, the flip at
+// 0.2 s (after the unfreeze's 0.3 s, if any), until the transition's end. FZ off, as release runs.
+struct MorphLine {
+    int8_t   from, to, then; // SPACEs; then: -1 none
+    bool     shimmer;
+    float    wear;
+    uint16_t thenMs, unfreezeMs, windowMs; // after the flip; before the flip; the window after the flip
+};
+unsigned gMorphLaps = 0;
+
+void RunMorphLine(const MorphLine& c, float fs, float& worst, unsigned& lateAll, const char* tag)
+{
+    static const char* const kSp[3] = {"PLATE", "HALL", "CANYON"};
+    const auto b = [&](float ms) { return uint32_t(ms * 0.001f * fs / float(kBlockSize)); };
+    ApplyRealtime(c.wear);
+    engine.setParam(ParamId::Space, iv::switchToNormalised(c.from));
+    if (c.shimmer) engine.setParam(ParamId::Attack, iv::switchToNormalised(2));
+    engine.reset();
+    RunUntimed(int(6.0f * fs) / kBlockSize, fs); // past the lines' first trip after the reset (5.5 s: until then they read as filling)
+    if (c.unfreezeMs) { // freeze, the glide settled
+        engine.button(true, 0);
+        RunUntimed(10, fs);
+        engine.button(false, 0);
+        RunUntimed(int(2.0f * fs) / kBlockSize, fs);
+    }
+    const uint32_t flipAt = b(200.0f + float(c.unfreezeMs));
+    gMorphEv[0] = {c.unfreezeMs ? b(200.0f) : kNever, 3};
+    gMorphEv[1] = {c.unfreezeMs ? b(200.0f) + 10u : kNever, 4};
+    gMorphEv[2] = {flipAt, c.to};
+    gMorphEv[3] = {c.then >= 0 ? flipAt + b(float(c.thenMs)) : kNever, c.then};
+    gKnobSend = true;
+    gJitterAmp = 2.0e-4f;
+    gLate = gBlocks = gMaxCycles = 0;
+    gSumCycles = 0;
+    gStepBlocks = flipAt + b(float(c.windowMs));
+    gMorphFired = 0;
+    gMorphLateFrom = flipAt + b(500.0f);
+    gMorphLateMax = 0;
+    // gMorphEv isn't volatile and only the callback reads it: without this the compiler dropped the writes above as
+    // dead (the .at fields are overwritten after the loop), so the first S lap (9 Nov 2026) never flipped anything.
+    __asm__ volatile("" ::: "memory");
+    gRealtime = true;
+    while (gRealtime) {
+    }
+    gKnobSend = false;
+    gJitterAmp = 0.0f;
+    for (auto& e : gMorphEv) e.at = kNever;
+    System::Delay(5);
+    RunUntimed(-1, fs); // the twin stops before the next line
+    const float period = float(gPeriodCycles), load = float(gMaxCycles) / period;
+    if (load > worst) worst = load;
+    lateAll += unsigned(gLate);
+    const float avg = gBlocks ? float(gSumCycles) / float(gBlocks) / period : 0.0f;
+    static char lb[kLineBufSize];
+    char*       p = lb;
+    const char* e = lb + sizeof(lb);
+    AppendStr(p, e, "SPACE ");
+    AppendStr(p, e, kSp[c.from]);
+    AppendStr(p, e, "->");
+    AppendStr(p, e, kSp[c.to]);
+    if (c.then >= 0) {
+        AppendStr(p, e, "->");
+        AppendStr(p, e, kSp[c.then]);
+    }
+    AppendStr(p, e, " ");
+    AppendStr(p, e, tag);
+    AppendStr(p, e, " W");
+    AppendFixed1(p, e, int(c.wear * 10.0f + 0.5f), 1);
+    AppendStr(p, e, " avg ");
+    AppendFixed1(p, e, FracToPercentTenths(avg), 5);
+    AppendStr(p, e, "% max ");
+    AppendFixed1(p, e, FracToPercentTenths(load), 5);
+    AppendStr(p, e, "% | late blocks ");
+    AppendUInt(p, e, unsigned(gLate));
+    AppendStr(p, e, " of ");
+    AppendUInt(p, e, unsigned(gBlocks));
+    AppendStr(p, e, " | max at ");
+    AppendInt(p, e, int((float(gMorphMaxAt) - float(flipAt)) * 1000.0f * float(kBlockSize) / fs));
+    AppendStr(p, e, " ms | fired ");
+    AppendInt(p, e, int(gMorphFired));
+    AppendStr(p, e, " | after 0.5 s ");
+    AppendFixed1(p, e, FracToPercentTenths(float(gMorphLateMax) / period), 5);
+    AppendStr(p, e, "%\r\n");
+    TransmitLine(lb, size_t(p - lb));
+}
+
+void RunMorphLap(float fs)
+{
+    gPeriodCycles = uint32_t(float(SystemCoreClock) / fs * float(kBlockSize));
+    SetFlushToZero(false); // as release runs
+    static const char kHi[] = "SPACE START (S, 19 lines, ~3 min)\r\n";
+    TransmitLine(kHi, sizeof(kHi) - 1);
+    float    worst = 0.0f;
+    unsigned late = 0;
+    int      lines = 0;
+    for (int shim = 0; shim < 2; ++shim)
+        for (int from = 0; from < 3; ++from)
+            for (int to = 0; to < 3; ++to) {
+                if (to == from) continue;
+                const uint16_t w = from == 0 || to == 0 ? 3400u : 1900u; // the 3 s morph, or the 1.5 s reshape in place
+                const MorphLine c = {int8_t(from), int8_t(to), -1, shim != 0, shim ? 1.0f : 0.1f, 0, 0, w};
+                RunMorphLine(c, fs, worst, late, shim ? "SHIMMER" : "heavy");
+                ++lines;
+            }
+    static const MorphLine kExtra[] = {
+        // The second change waits for the first to end, then runs: the window holds both (a reshape 1.55 s, a morph 3.05 s, 0.05 s
+        // between them, 0.4 s over).
+        {1, 2, 1, true, 0.5f, 700, 0, 3500},   // HALL -> CANYON, back while the reshape runs: goes back when it ends
+        {2, 1, 2, true, 0.5f, 700, 0, 3500},   // CANYON -> HALL, back
+        {0, 2, 0, true, 0.5f, 1200, 0, 6500},  // PLATE -> CANYON, back mid-morph
+        {2, 0, 1, true, 0.5f, 1200, 0, 6500},  // CANYON -> PLATE, on to HALL mid-morph
+        {2, 0, 2, true, 0.5f, 1200, 0, 6500},  // CANYON -> PLATE, back mid-morph
+        {2, 1, -1, true, 0.5f, 0, 300, 2300},  // CANYON frozen, unfrozen, 0.3 s later (the twin fading) -> HALL
+        {2, 0, -1, true, 0.5f, 0, 300, 3700},  // the same, -> PLATE
+    };
+    for (const MorphLine& c : kExtra) {
+        RunMorphLine(c, fs, worst, late, c.unfreezeMs ? "UNFREEZE" : "REFLIP");
+        ++lines;
+    }
+    ++gMorphLaps;
+    static char db[120];
+    char*       p = db;
+    const char* e = db + sizeof(db);
+    AppendStr(p, e, "SPACE LAP ");
+    AppendInt(p, e, int(gMorphLaps));
+    AppendStr(p, e, " DONE: ");
+    AppendInt(p, e, lines);
+    AppendStr(p, e, " lines, worst max ");
+    AppendFixed1(p, e, FracToPercentTenths(worst), 5);
+    AppendStr(p, e, "%, late blocks in all ");
+    AppendUInt(p, e, late);
+    AppendStr(p, e, "\r\n");
+    TransmitLine(db, size_t(p - db));
+    SetFlushToZero(IV_PROFILE_FZ);
+}
+
 } // namespace
 
 int main()
@@ -2219,6 +2330,10 @@ int main()
 #else
     bool everExceeded = false;
     while (true) {
+        if (gCurrentCorner == 0) { // the morph's lap first: it matters most, and it reads the module warm from the second lap on
+            RunMorphLap(fs);
+            ApplyCorner(0);
+        }
         {
             const Result r = MeasureCorner(gCurrentCorner, fs);
             gCurrentCorner = (gCurrentCorner + 1) % kNumCorners;
@@ -2346,39 +2461,6 @@ int main()
             // The heaviest corner as it is (pct -1: no padding), then the lightest stepped up with padding
             // until blocks come late twice: where drop-outs start.
             gPeriodCycles = uint32_t(float(SystemCoreClock) / fs * float(kBlockSize));
-            int lateSteps = 0;
-            for (int pct = -5; pct <= 100 && lateSteps < 2; pct += 5) {
-                const int corner = pct < 0 ? kHeaviestCorner : 0;
-                ApplyCorner(corner);
-                gPadCycles = pct < 0 ? 0u : uint32_t(float(gPeriodCycles) * float(pct) / 100.0f);
-                gLate = gBlocks = gMaxCycles = 0;
-                gSumCycles = 0;
-                gStepBlocks = uint32_t(3.0f * fs / float(kBlockSize)); // 3 s of blocks
-                gRealtime = true;
-                while (gRealtime) {
-                }
-                System::Delay(5);
-                const float period = float(gPeriodCycles);
-                const float avg = gBlocks ? float(gSumCycles) / float(gBlocks) / period : 0.0f;
-                static char hb[160];
-                char*       p   = hb;
-                const char* end = hb + sizeof(hb);
-                AppendStr(p, end, "HEADROOM ");
-                AppendStr(p, end, gCorners[corner].name);
-                AppendStr(p, end, " +");
-                AppendInt(p, end, pct < 0 ? 0 : pct);
-                AppendStr(p, end, "% padding: avg ");
-                AppendFixed1(p, end, FracToPercentTenths(avg), 5);
-                AppendStr(p, end, "% max ");
-                AppendFixed1(p, end, FracToPercentTenths(float(gMaxCycles) / period), 5);
-                AppendStr(p, end, "% | late blocks ");
-                AppendUInt(p, end, unsigned(gLate));
-                AppendStr(p, end, " of ");
-                AppendUInt(p, end, unsigned(gBlocks));
-                AppendStr(p, end, "\r\n");
-                TransmitLine(hb, size_t(p - hb));
-                if (pct >= 0 && gLate > 0) ++lateSteps;
-            }
             gPadCycles = 0;
 
             // Round 13: the release's case in real time. Four settings (MASSIVE knobs high; Neve or
@@ -2436,70 +2518,6 @@ int main()
                 }
             }
 
-            // The size_moves hunt: SIZE turned by hand (SizeHand) in MASSIVE with the knobs high, Neve and
-            // cassette, with the crossfade in 2 groups (as built, v1.0.39), 4 and 8 (the prototypes). Three
-            // states: playing; frozen (the pad holds its SIZE, the twin follows the knob and crossfades); just
-            // unfrozen (the pad jumps to the knob's SIZE and crossfades while the twin rings on and crossfades
-            // too; the owner: drop-outs mostly frozen, "very occasionally when unfrozen too"). The frozen ones
-            // the sweep and the twists, just unfrozen the twists.
-            static const char* const kHandNames[3] = {"sweep", "twists", "creep"};
-            static const char* const kStateNames[3] = {"", "FROZEN ", "UNFROZE "};
-            static const int kGroups[3] = {2, 4, 8};
-            auto tap = [&](int hold) { // a press, released `hold` blocks later
-                engine.button(true, 0);
-                RunUntimed(hold, fs);
-                engine.button(false, 0);
-            };
-            for (int state = 0; state < 3; ++state)
-                for (int era = 0; era < 2; ++era)
-                    for (int hand = 0; hand < 3; ++hand)
-                        for (int gi = 0; gi < 3; ++gi) {
-                            if ((state > 0 && hand == 2) || (state == 2 && hand == 0)) continue;
-                            ApplyRealtime(era ? 0.7f : 0.1f);
-                            engine.setSizeStagger(kGroups[gi]);
-                            engine.setParam(ParamId::Size, ivpot::endStops(SizeHand(hand, 0)));
-                            RunUntimed(int(3.0f * fs) / kBlockSize, fs); // the move to the start, its crossfades done
-                            if (state > 0) { // freeze (the twin starts), let the freeze's glide settle
-                                tap(10);
-                                RunUntimed(int(2.0f * fs) / kBlockSize, fs);
-                            }
-                            if (state == 2) tap(1); // unfreeze: the twin rings on through the timed moves
-                            gLate = gBlocks = gMaxCycles = 0;
-                            gSumCycles = 0;
-                            gStepBlocks = uint32_t((hand == 2 ? 6.0f : 5.0f) * fs / float(kBlockSize));
-                            gSizeHand = hand;
-                            gRealtime = true;
-                            while (gRealtime) {
-                            }
-                            gSizeHand = -1;
-                            System::Delay(5);
-                            const bool twin = engine.twinActive();
-                            if (state == 1) tap(1); // unfreeze
-                            if (state > 0) RunUntimed(-1, fs); // run on until the twin stops
-                            const float period = float(gPeriodCycles);
-                            const float avg = gBlocks ? float(gSumCycles) / float(gBlocks) / period : 0.0f;
-                            static char sb[160];
-                            char*       p   = sb;
-                            const char* end = sb + sizeof(sb);
-                            AppendStr(p, end, "SIZEHAND MASSIVE ");
-                            AppendStr(p, end, kStateNames[state]);
-                            AppendStr(p, end, era ? "wear70   " : "wear10   ");
-                            AppendPadRight(p, end, kHandNames[hand], 7);
-                            AppendStr(p, end, " groups ");
-                            AppendInt(p, end, kGroups[gi]);
-                            AppendStr(p, end, " avg ");
-                            AppendFixed1(p, end, FracToPercentTenths(avg), 5);
-                            AppendStr(p, end, "% max ");
-                            AppendFixed1(p, end, FracToPercentTenths(float(gMaxCycles) / period), 5);
-                            AppendStr(p, end, "% | late blocks ");
-                            AppendUInt(p, end, unsigned(gLate));
-                            AppendStr(p, end, " of ");
-                            AppendUInt(p, end, unsigned(gBlocks));
-                            if (state == 2) AppendStr(p, end, twin ? " | twin still on" : " | twin stopped");
-                            AppendStr(p, end, "\r\n");
-                            TransmitLine(sb, size_t(p - sb));
-                        }
-            engine.setSizeStagger(4); // the default (v1.0.45)
             ApplyCorner(gCurrentCorner);
         }
 

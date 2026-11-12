@@ -6,7 +6,7 @@ The Versio firmware: a standard libDaisy app in the Seed's internal flash, insta
 |---|---|---|---|
 | **release** | `make -C firmware` (MODE defaults to `release`) | `build/sublustris_versio.bin` | The instrument: P1–P7 MIX, DECAY, TONE, ERA, SIZE, DRIFT, TIME (+CV); SW0 SPACE, SW1 ATTACK; button and gate edges to the Engine (it reads tap / hold itself). LEDs: In L / In R / Out L / Out R level meters, green → amber with level, red on input clip or when the output limiter pulls down; while frozen the output pair shows cool blue under the meter, pulsing slowly while painting. LED dimming is DMA-driven (`LedPwm` in `main.cpp`, TIM5 + DMA, 512 steps at ~1 kHz), not libDaisy's flickery software PWM. No serial printing (flash). **At M0 the Engine is a passthrough**, so the release build is a calibrated cable with meters. |
 | **m0test** | `make -C firmware MODE=m0test` | `build/sublustris_versio_m0test.bin` | The M0 hardware check (`docs/m0-hardware-check.md`): dry passthrough (no trim), every control → LEDs and USB serial, in panel order. Doesn't link the Core. |
-| **profile** | `make -C firmware MODE=profile` | `build/sublustris_versio_profile.bin` | M3 CPU profiling: ignores the controls, cycles 24 setting corners (SPACE × DECAY × SIZE × ERA) on a synthetic click + noise signal, prints CPU load per corner and per section over USB serial. Until M1 it measures the callback's own overhead only. |
+| **profile** | `make -C firmware MODE=profile` | `build/sublustris_versio_profile.bin` | M3 CPU profiling: ignores the controls (so its fixed DECAYs are on DECAY's scale, without the knob's curve, v1.0.72, or the wet's lift at short tails, v1.0.73), cycles 24 setting corners (SPACE × DECAY × SIZE × ERA) on a synthetic click + noise signal, prints CPU load per corner and per section over USB serial. Until M1 it measures the callback's own overhead only. |
 
 ## How to build
 
@@ -57,6 +57,9 @@ All in `firmware/` (no changes inside `libs/libDaisy`):
 - **`IV_SIZE_OPT` / `IV_NO_UNSWITCH` (`core/dsp/SizeOpt.h`)**: mark control-rate Core code for `-Os` in the firmware only (`IV_FIXED_VOICINGS` is defined here).
 - **Profile's serial line** is built with small integer helpers and sent straight to USB CDC, never through `printf` (~2.1 KB).
 - **`-ffp-contract=off`**: no fused multiply-add. On the M7, GCC's `vfma` serialises every multiply-add (~9 cycles each, Resilio's M3 bench); separate `vmul` + `vadd` pipeline.
+- **`HAL_OS` (`firmware/Makefile`, default 1; release and profile):** STM32 HAL's set-up files built here for size (`-Os`, with libDaisy's own defines), ahead of `libdaisy.a`, whose `-O3` copies then stay out of the link. About 5.2 KB off release, 4.5 KB off profile. No audio runs in them: boot, clocks, GPIO, ADC / SAI / I2C / TIM set-up, DMA set-up and the DMA interrupt. `HAL_OS=0` builds without it (`-nohalos` in the file name).
+- **`IV_RI` (`core/dsp/SizeOpt.h`):** a member's non-zero initialiser, left out of the release firmware where `prepare()` / `reset()` sets the same value before the first `process()` (-360 B). Proved by comparing the whole prepared Engine's bytes with and without. Desktop hosts and the profile build, whose micro-tests build their own Fdns and Swells, keep them.
+- **`IV_MORPH_COLD` (`core/dsp/SizeOpt.h`):** the SPACE morph's once-a-change code stays in flash, out of ITCM (the link script's `.flash_text`).
 - Rejected in Resilio and not used here: `-flto` (a few hundred bytes larger on this few translation units).
 
 ## Which `.bin` to flash

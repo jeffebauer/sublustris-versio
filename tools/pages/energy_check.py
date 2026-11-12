@@ -56,6 +56,10 @@ def main():
     ap.add_argument("--hook", required=True, help="the prototype's renderer env hook, NAME=VALUE (several: comma-separated)")
     ap.add_argument("--set", action="append", default=[], help="k=v, one grid per value (repeatable)")
     ap.add_argument("--ref", help="k=v: A is also rendered with this, and the louder A counts")
+    ap.add_argument("--ref-bin", help="A from this renderer instead of --bin (a port against the build before it)")
+    ap.add_argument("--decay", action="append", help="the grid's DECAY values, repeatable (default 0.5 0.75 0.95)")
+    ap.add_argument("--hold-decay", default="1", help="the 10-minute holds' DECAY (default 1)")
+    ap.add_argument("--allow-db", type=float, default=0.0, help="a deliberate level change on top of the 0.5 dB (a port that lifts the wet on purpose)")
     ap.add_argument("--no-holds", action="store_true")
     ap.add_argument("--no-levels", action="store_true")
     ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) - 2))
@@ -72,14 +76,14 @@ def main():
         grid = [(sp, sz, dc, dr, extra)
                 for extra in (args.set or [""])
                 for sp in ("PLATE", "HALL", "MASSIVE") for sz in ("0", "0.6", "1")
-                for dc in ("0.5", "0.75", "0.95") for dr in ("0", "0.25", "0.5", "0.75", "1")]
+                for dc in (args.decay or ("0.5", "0.75", "0.95")) for dr in ("0", "0.25", "0.5", "0.75", "1")]
 
         def job(g, k):
             sp, sz, dc, dr, extra = g
             sets = [f"space={sp}", f"size={sz}", f"decay={dc}", f"drift={dr}"] + ([extra] if extra else [])
-            la = windows_db(render(args.bin, stim, tmp / f"a{k}.wav", sets, ""), edges)
+            la = windows_db(render(args.ref_bin or args.bin, stim, tmp / f"a{k}.wav", sets, ""), edges)
             if args.ref:
-                r = windows_db(render(args.bin, stim, tmp / f"r{k}.wav", sets[:4] + [args.ref], ""), edges)
+                r = windows_db(render(args.ref_bin or args.bin, stim, tmp / f"r{k}.wav", sets[:4] + [args.ref], ""), edges)
                 la = [max(u, v) for u, v in zip(la, r)]
             b = render(args.bin, stim, tmp / f"b{k}.wav", sets, args.hook)
             return g, la, windows_db(b, edges), bool(np.isfinite(b).all())
@@ -90,7 +94,7 @@ def main():
             diff = max(b - a for a, b in zip(la, lb))
             worst = max(worst, diff)
             grow = lb[-1] - lb[1] if g[2] == "0.95" else -99.0
-            bad = (not ok) or diff > 0.5 or grow > 1.0
+            bad = (not ok) or diff > 0.5 + args.allow_db or grow > 1.0
             if bad:
                 fails += 1
                 print(f"FAIL {g}: B - A up to {diff:+.2f} dB, infinite growth {grow:+.2f} dB, finite={ok}")
@@ -106,7 +110,7 @@ def main():
 
             def hjob(c, k):
                 sp, extra = c
-                sets = [f"space={sp}", "decay=1", "size=0.5", "time=0"] + ([extra] if extra else [])
+                sets = [f"space={sp}", f"decay={args.hold_decay}", "size=0.5", "time=0"] + ([extra] if extra else [])
                 y = render(args.bin, hold, tmp / f"h{k}.wav", sets, args.hook)
                 w = [20 * np.log10(np.sqrt(np.mean(y[i: i + 10 * SR] ** 2)) + 1e-12) for i in range(0, len(y) - 10 * SR + 1, 10 * SR)]
                 return c, w[6], min(w[6:]), max(w[6:]), bool(np.isfinite(y).all())

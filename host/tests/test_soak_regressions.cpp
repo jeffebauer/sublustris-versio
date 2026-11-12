@@ -1,6 +1,7 @@
 // Regression tests for the bugs the overnight soak found (docs/research/soak-audit.md,
 // tools/soak/soak.cpp). Each test is the smallest reproduction of one finding.
 
+#include "DecayKnobFor.h"
 #include "dsp/Engine.h"
 #include "dsp/Filters.h"
 
@@ -151,7 +152,7 @@ void flipAfterUnfreezeFadesTheTwin()
     for (int from = 0; from < 3; ++from) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(from));
-        r.e.setParam(ParamId::Decay, 0.7f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(0.7f));
         r.e.setParam(ParamId::Mix, 1.0f);
         r.e.reset();
         r.run(3.0, 0.3f, 220.0f);
@@ -165,7 +166,9 @@ void flipAfterUnfreezeFadesTheTwin()
         char what[160];
         std::snprintf(what, sizeof what, "a flip %d->%d after an unfreeze, the twin still sounding, doesn't click (worst x%.1f)", from,
                       (from + 1) % 3, r.worstClick);
-        check(r.worstClick < 15.0f, what);
+        // 17, was 15, at v1.0.73: the wet's flat +3 dB (ADR 0049) reads x13.5 as x15.4 with no new click: the ratio's
+        // 1e-4 floor is absolute, so the same click reads higher on a louder wet.
+        check(r.worstClick < 17.0f, what);
     }
 }
 
@@ -177,7 +180,7 @@ void freezeInsideAFlipKeepsThePad()
     for (int ms : {10, 25, 40}) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(1));
-        r.e.setParam(ParamId::Decay, 0.7f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(0.7f));
         r.e.setParam(ParamId::Mix, 1.0f);
         r.e.reset();
         r.run(3.0, 0.3f);
@@ -206,7 +209,7 @@ void smallHallSizeJumpsDontClick()
     for (const auto& m : moves) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(1));
-        r.e.setParam(ParamId::Decay, 0.6f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(0.6f));
         r.e.setParam(ParamId::Size, m[0]);
         r.e.setParam(ParamId::Mix, 1.0f);
         r.e.reset();
@@ -222,7 +225,7 @@ void smallHallSizeJumpsDontClick()
     // Unfreezing after SIZE moved across noon while frozen: the big tank takes SIZE back at once.
     Rig r(48000.0f, 48);
     r.e.setParam(ParamId::Space, iv::switchToNormalised(1));
-    r.e.setParam(ParamId::Decay, 0.6f);
+    r.e.setParam(ParamId::Decay, decayKnobFor(0.6f));
     r.e.setParam(ParamId::Size, 1.0f);
     r.e.setParam(ParamId::Mix, 1.0f);
     r.e.reset();
@@ -263,7 +266,7 @@ void infiniteTailDoesntPlungeWhenTheInputStops()
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(c.space));
         r.e.setParam(ParamId::Size, 0.18f);
-        r.e.setParam(ParamId::Decay, 1.0f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(1.0f));
         r.e.setParam(ParamId::Time, 1.0f);
         r.e.setParam(ParamId::Attack, c.attack);
         r.e.setParam(ParamId::Mix, 1.0f);
@@ -299,7 +302,7 @@ void endlessHoldKeepsItsSpectrum()
         const bool chord = c3 == 2;
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(space));
-        r.e.setParam(ParamId::Decay, 1.0f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(1.0f));
         r.e.setParam(ParamId::Tone, 1.0f);
         r.e.setParam(ParamId::Mix, 1.0f);
         r.e.reset();
@@ -353,7 +356,7 @@ void thirdAttackFlipWhilePlayingDoesntClickLater()
     for (int from = 0; from < 3; ++from) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(from));
-        r.e.setParam(ParamId::Decay, 0.7f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(0.7f));
         r.e.setParam(ParamId::Time, 0.7f);
         r.e.setParam(ParamId::Attack, iv::switchToNormalised(2));
         r.e.setParam(ParamId::Mix, 1.0f);
@@ -382,7 +385,7 @@ void thirdAttackComingInDoesntClick()
         for (int how = 0; how < 2; ++how) {
             Rig r(48000.0f, 48);
             r.e.setParam(ParamId::Space, iv::switchToNormalised(sp));
-            r.e.setParam(ParamId::Decay, 0.6f);
+            r.e.setParam(ParamId::Decay, decayKnobFor(0.6f));
             r.e.setParam(ParamId::Time, 0.6f);
             r.e.setParam(ParamId::Mix, 1.0f);
             r.e.setParam(ParamId::Attack, iv::switchToNormalised(how == 0 ? 2 : 0));
@@ -418,7 +421,7 @@ void paintReleaseDoesntBurst()
     for (int sp = 0; sp < 3; ++sp) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(sp));
-        r.e.setParam(ParamId::Decay, 0.6f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(0.6f));
         r.e.setParam(ParamId::Mix, 1.0f);
         r.e.reset();
         r.run(3.0, 0.3f, -220.0f);
@@ -449,7 +452,7 @@ void padFrozenFromADyingTailHolds()
     for (const Case& c : cases) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(c.space));
-        r.e.setParam(ParamId::Decay, c.wait < 0.4 ? 0.15f : 0.0f); // the 0.3 s cases: a slightly longer tail, frozen at -50..-70 dB
+        r.e.setParam(ParamId::Decay, decayKnobFor(c.wait < 0.4 ? 0.15f : 0.0f)); // the 0.3 s cases: a slightly longer tail, frozen at -50..-70 dB
         r.e.setParam(ParamId::Size, 0.0f);
         r.e.setParam(ParamId::Mix, 1.0f);
         r.e.reset();
@@ -469,12 +472,14 @@ void padFrozenFromADyingTailHolds()
 
 // The same plunge from ERA's tape compression (the cassette's until v1.0.42), which also judged the tail on
 // the 1.5 s level: an infinite PLATE at ERA 0.82, a loud tone, then silence (soak seed 225's settings).
+// v1.0.74 (ADR 0050): 5.7 dB, was 3.7 (limit 4), and not a plunge: the tank's own slow beating on one lone sine, with less modulation
+// to smear it. It's this tone at this rate: 2.8 at the module's 48 kHz (v1.0.73 3.2); chords 1.0-1.4, a pad 1.1. Limit 6.5.
 void cassetteCompressionDoesntPlunge()
 {
     Rig r(44100.0f, 64);
     r.e.setParam(ParamId::Space, iv::switchToNormalised(0));
     r.e.setParam(ParamId::Size, 0.8127f);
-    r.e.setParam(ParamId::Decay, 1.0f);
+    r.e.setParam(ParamId::Decay, decayKnobFor(1.0f));
     r.e.setParam(ParamId::Era, 0.82f);
     r.e.setParam(ParamId::Tone, 0.37f);
     r.e.setParam(ParamId::Drift, 0.947f);
@@ -489,7 +494,7 @@ void cassetteCompressionDoesntPlunge()
     char what[160];
     std::snprintf(what, sizeof what, "PLATE infinite, ERA 0.82's tape compression: no plunge when a loud tone stops (lowest %.1f dB, %.1f under where it holds)",
                   lowest, end - lowest);
-    check(end - lowest < 4.0, what);
+    check(end - lowest < 6.5, what);
 }
 
 // ...and with TIME and SIZE still gliding when the flip reaches its silent point (found with REVERSE,
@@ -504,7 +509,7 @@ void thirdAttackFlipWhileTimeGlidesDoesntClick()
     auto sharpestAt = [](int from, bool flip, int attack, double offset) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(from));
-        r.e.setParam(ParamId::Decay, 0.7f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(0.7f));
         r.e.setParam(ParamId::Time, 0.4f);
         r.e.setParam(ParamId::Size, 0.3f);
         r.e.setParam(ParamId::Attack, iv::switchToNormalised(attack));
@@ -554,7 +559,7 @@ void onsetAndSpaceChangesDontBurst()
     auto worst = [](int space, int onset, int toSpace, int toOnset) {
         Rig r(48000.0f, 48);
         r.e.setParam(ParamId::Space, iv::switchToNormalised(space));
-        r.e.setParam(ParamId::Decay, 0.75f);
+        r.e.setParam(ParamId::Decay, decayKnobFor(0.75f));
         r.e.setParam(ParamId::Size, 0.75f);
         r.e.setParam(ParamId::Time, 0.75f);
         r.e.setParam(ParamId::Attack, iv::switchToNormalised(onset));

@@ -63,7 +63,7 @@ The same seven as Resilio, in the same order of importance: **Overview, Manual, 
 | Control | Positions or words |
 |---|---|
 | BLEND | dry ↔ wet, equal-power; fully right is 100 % wet |
-| DECAY | a short room to minutes-long tails; endless from about 3 o'clock |
+| DECAY | a short room to minutes-long tails; endless from about half past 4 |
 | TONE | darker or brighter, noon flat |
 | WEAR | one amount of tape, BBD and bit wear over a warm Neve colour |
 | SIZE | the space's size; in MASSIVE, long echoes to a boundless wash |

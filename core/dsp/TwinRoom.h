@@ -10,8 +10,8 @@
 // T60, at most kTwinMaxT60, the highs' T60 TONE's share of the lows', × kTwinRoomBrightness: the top a little
 // softer than the tank's), and its read wanders slowly on a rotating phasor (no sin a sample), by 0.5 % of
 // the line's length (v1.0.47). Run at 24 kHz,
-// inside the twin's HalfRate stage. SIZE moves glide the lines, at most a semitone's bend (as the tank's SIZE
-// slew), with no crossfade. Its rings (~42 KB at 24 kHz) come from the caller: AXI SRAM on the module.
+// inside the twin's HalfRate stage. It keeps the SIZE the pad froze with (the Engine; v1.0.80, ADR 0056): SIZE never
+// bends its lines, so they never glide. Its rings (~42 KB at 24 kHz) come from the caller: AXI SRAM on the module.
 //
 // Adds its output into outL / outR (the HalfRate "tank" contract) and takes n <= 64 samples a call.
 #include "dsp/Governor.h"
@@ -86,7 +86,6 @@ public:
         for (auto& l : line_) l.pos = 0;
         fresh_ = true;
         for (int i = 0; i < kN; ++i) ay_[i] = ax_[i] = ap_[i] = 0.0f;
-        snap_ = true; // the next set() lands at once: the lines are empty
         for (auto& c : hz_)
             for (auto& z : c) z = 0.0f;
     }
@@ -98,10 +97,9 @@ public:
         const float ratio = highRatio * kBrightness;
         for (int i = 0; i < kN; ++i) {
             target_[i] = std::fmax(8.0f, kRatio[i] * longest) + float(i);
-            if (snap_) len_[i] = target_[i];
+            len_[i] = target_[i]; // (a new size only ever on the first set() after a reset: the Engine keeps the room's size)
             ab_[i] = absorbent(target_[i] / sr_, rate, ratio < 0.02f ? 0.02f : ratio, 0.0f, shelfK_);
         }
-        snap_ = false;
     }
     // Built for size (IV_SIZE_OPT, firmware only): at -O3 it was 2,808 B of flash, at -Os 1.4 KB less (the
     // integration dry run's candidate profile measured its CPU).
@@ -115,6 +113,7 @@ public:
         return clearedTo_ >= memFloats_;
     }
     bool cleared() const { return clearedTo_ >= memFloats_; }
+    float lineLength(int i) const { return len_[i]; } // (tests)
 
     IV_SIZE_OPT void process(const float* inL, const float* inR, float* outL, float* outR, int n)
     {
@@ -129,7 +128,6 @@ public:
         constexpr float kOutS[2][kN] = {{1, 1, -1, -1, 1, 1, -1, -1}, {1, -1, -1, 1, 1, -1, -1, 1}};
         int   di[kN];
         float eta[kN], dep[kN];
-        bool  moving[kN];
         for (int i = 0; i < kN; ++i) { // keep the phasors on the unit circle (a first-order step, once a call)
             // The wander's depth, a share of the line's own length (v1.0.47, owner's pick B on renders/room_motion: 0.15 ms
             // on every line bent the short ones most, the bend building up pass after pass; scaled, it stays a few cents
@@ -140,7 +138,6 @@ public:
             s0_[i] *= r;
             // The read, fixed for the call (n <= 33 samples; the wander moves it ~0.01 sample in that time), through
             // a first-order allpass for its fraction, as the tank's reads: linear interpolation dulled every pass.
-            moving[i] = len_[i] != target_[i];
             const float d = len_[i] + dep[i] * (1.0f + s0_[i]);
             di[i] = int(d);
             const float t = d - float(di[i]);
@@ -167,14 +164,6 @@ public:
                 const float c = c0_[j];
                 c0_[j] = c * rc_[j] - s0_[j] * rs_[j];
                 s0_[j] = s0_[j] * rc_[j] + c * rs_[j];
-                if (moving[j]) { // SIZE moved: the line glides there, at most a semitone's bend (as the tank's SIZE slew)
-                    const float step = target_[j] - len_[j];
-                    len_[j] = std::fabs(step) <= kSlew ? target_[j] : len_[j] + (step > 0.0f ? kSlew : -kSlew);
-                    const float d = len_[j] + dep[j] * (1.0f + s0_[j]);
-                    di[j] = int(d);
-                    const float f = d - float(di[j]);
-                    eta[j] = (1.0f - f) / (1.0f + f);
-                }
                 const float r = eta[j] * line_[j].at(di[j]) + line_[j].at(di[j] + 1) - eta[j] * ap_[j];
                 ap_[j] = r;
                 const float a = ab_[j].gain * r + ab_[j].b1 * ax_[j] + ab_[j].pole * ay_[j]; // the tank's loss shelf
@@ -231,11 +220,10 @@ private:
     static constexpr float kMaxSeconds = 0.052f, kApCoeff = 0.6f;
     static constexpr float kApSeconds[2][2] = {{0.0033f, 0.0059f}, {0.0039f, 0.0067f}};
     static constexpr float kWanderShare = 0.005f; // the wander's depth x the line's length (v1.0.46's 0.15 ms on a SIZE 0.9 line)
-    static constexpr float kSlew = 0.0595f; // samples a sample: 2^(1/12) - 1, a semitone's bend at most
     static constexpr float kRatio[kN] = {0.31f, 0.42f, 0.51f, 0.60f, 0.70f, 0.79f, 0.90f, 1.0f};
     // IV_ZI (SizeOpt.h): a member of the Engine only, never a local; prepare() sets the rest.
-    float sr_ = 24000.0f, gain_ = 1.0f, shelfK_ IV_ZI;
-    bool  ok_ IV_ZI, snap_ = true, fresh_ = true;
+    float sr_ IV_RI(24000.0f), gain_ = 1.0f, shelfK_ IV_ZI;
+    bool  ok_ IV_ZI, fresh_ IV_RI(true);
     float* mem_ IV_ZI; // the rings' memory (prepare()): memFloats_ floats, [0, clearedTo_) zero since the last process()
     int   memFloats_ IV_ZI, clearedTo_ IV_ZI;
     float target_[kN] IV_ZI;

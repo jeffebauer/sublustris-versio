@@ -9,6 +9,7 @@
 // their neighbours); no energy growth, and 10-minute infinite holds at DECAY 1 at both ends in every SPACE (the
 // per-line change is in the loop); music's loudness within ±1 dB of noon across the knob.
 
+#include "DecayKnobFor.h"
 #include "DecayV1052.h"
 #include "PitchTrack.h"
 #include "Wav.h"
@@ -54,7 +55,7 @@ Stereo render(const std::vector<float>& in, const Setting& s, DriftAt driftAt, i
     iv::Engine& e = keep ? *keep : local;
     e.prepare(kSr, 48);
     e.setParam(iv::ParamId::Space, iv::switchToNormalised(s.space));
-    e.setParam(iv::ParamId::Decay, s.decay);
+    e.setParam(iv::ParamId::Decay, decayKnobFor(s.decay));
     e.setParam(iv::ParamId::Size, s.size);
     e.setParam(iv::ParamId::Era, 0.0f);
     e.setParam(iv::ParamId::Mix, 1.0f);
@@ -169,18 +170,23 @@ void glideOut()
 // no crinkle; 3/4 left 16.0 / 15.2 / 9.6, 13 bursts, no dips; full left 19.9 / 19.8 / 15.1, 34 bursts and 15 dips.
 // HALL's and MASSIVE's p95s are with v1.0.63's onset centred (ADR 0039) in the same build: the re-laid early taps move
 // this one tone's reading (v1.0.65 alone: HALL 15.2 / 16.8 / 23.0, MASSIVE 7.0 / 11.7 / 19.7).
+// v1.0.71 (ADR 0047): HALL's floor x2 and CANYON's x4 at x2 pace add to the left side's depth, PLATE as before. Until
+// v1.0.70: HALL 14.6 / 19.2 / 25.0, MASSIVE 5.9 / 11.8 / 19.0.
+// v1.0.74 (ADR 0050): PLATE's allpass sine at a fifth of its speed takes the constant waver out from under MOTION: noon 11.7 -> 3.1 c,
+// and the left side's own movement stays (what MOTION adds, the root of the difference of squares: 3/4 left 11.8 -> 11.3, full left
+// 18.0 -> 18.4, 9 o'clock 8.9 -> 5.1 with noon 3 c instead of 12). Until v1.0.73: PLATE 14.7 / 16.5 / 21.5.
 void leftSide()
 {
     const std::vector<float> tones = heldTones();
     struct Pos { float drift; const char* name; double p95[3]; int crinkles, dips; }; // p95: PLATE, HALL, MASSIVE
-    const Pos pos[] = {{0.2f, "9 o'clock (0.2)", {14.7, 14.6, 5.9}, 12, 1},
-                       {0.1175f, "3/4 left (0.1175)", {16.5, 19.2, 11.8}, 30, 8},
-                       {0.0f, "full left", {21.5, 25.0, 19.0}, 54, 27}};
+    const Pos pos[] = {{0.2f, "9 o'clock (0.2)", {6.0, 20.4, 12.9}, 12, 1},
+                       {0.1175f, "3/4 left (0.1175)", {11.7, 25.2, 13.1}, 30, 8},
+                       {0.0f, "full left", {18.7, 27.3, 22.0}, 54, 27}};
     for (const Pos& p : pos) {
         for (int space : {0, 1, 2}) {
             const double c = p95Of(render(tones, pageSetting(space, p.drift)));
             char msg[200];
-            std::snprintf(msg, sizeof msg, "MOTION %s, %s: p95 %.1f c on a held 1.3 kHz (v1.0.63 + v1.0.65: %.1f, within 10 %%)",
+            std::snprintf(msg, sizeof msg, "MOTION %s, %s: p95 %.1f c on a held 1.3 kHz (v1.0.71: %.1f, within 10 %%)",
                           p.name, kSpaceName[space], c, p.p95[space]);
             check(std::fabs(c / p.p95[space] - 1.0) <= 0.10, msg);
         }
@@ -373,6 +379,34 @@ double rmsDb(const std::vector<float>& l, const std::vector<float>& r, double fr
 // The left side (the transport) within +0.5 dB of noon in every window. The right side (v1.0.60) carries the radio
 // band, whose level hold catches up over the first seconds after the burst (+1.2-1.7 dB in the 2-4 s window, as on
 // WEAR before v1.0.60: 1.3-1.7): the first window within +2 dB, and no later one more than 0.5 dB over the first.
+// The read point a hair before the ring's start rounded to exactly kSize, so one sample read past the buffer: the left
+// got the right's oldest sample, the right whatever follows the buffer, a one-sample tick (from v1.0.46; integrationSweep's
+// run 7 at 3.349 s, about 7 times an hour on the left side). A different constant in each channel shows any such read.
+void readStaysInTheRing()
+{
+    iv::dsp::Transport tp;
+    tp.prepare(kSr, 0x7a9e5u);
+    tp.reset(true);
+    const iv::dsp::TransportAmounts a = iv::map::transportAmounts(0.33f);
+    const int chunk = 48;
+    float l[chunk], r[chunk];
+    long wrong = 0;
+    const long chunks = long(3600.0f * kSr) / chunk; // an hour: 7 of them before the fix
+    for (long c = 0; c < chunks; ++c) {
+        for (int i = 0; i < chunk; ++i) {
+            l[i] = 0.5f;
+            r[i] = -0.5f;
+        }
+        tp.control(chunk, a, true);
+        tp.processBlock(l, r, chunk);
+        if (c < 100) continue; // the ring filling
+        for (int i = 0; i < chunk; ++i) wrong += l[i] < 0.25f || r[i] > -0.25f;
+    }
+    char msg[120];
+    std::snprintf(msg, sizeof msg, "the transport's read stays in its ring (%ld wrong samples in an hour)", wrong);
+    check(wrong == 0, msg);
+}
+
 void energy()
 {
     std::vector<float> in(size_t(30.0f * kSr), 0.0f);
@@ -502,6 +536,7 @@ int main()
     leftSide();
     rightSide();
     dipClicks();
+    readStaysInTheRing();
     std::vector<float> sk;
     if (!skank(sk)) {
         check(false, "MOTION on music: test_audio/stimulus/04_skank.wav (python3 tools/make_stimulus.py)");

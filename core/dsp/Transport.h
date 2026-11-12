@@ -254,8 +254,12 @@ public:
                 if (scrapeNow < 1e-6f && scrapeAmt <= 0.0f) scrapeNow = 0.0f;
             }
             if (pos < 0.0f) pos += float(kSize);
-            const int i1 = int(pos);
-            const float f = pos - float(i1);
+            // A read point a hair before the ring's start rounds to exactly kSize above: wrap the index too, or that one
+            // sample reads past the buffer (the left the right's oldest, the right whatever follows it), a one-sample tick
+            // about 7 times an hour on the left side from v1.0.46 to v1.0.73.
+            const int ip = int(pos);
+            const float f = pos - float(ip);
+            const int i1 = ip & (kSize - 1);
             const int i0 = (i1 - 1) & (kSize - 1), i2 = (i1 + 1) & (kSize - 1), i3 = (i1 + 2) & (kSize - 1);
             auto cr = [f](float a, float b, float c, float e) {
                 return b + 0.5f * f * (c - a + f * (2.0f * a - 5.0f * b + 4.0f * c - e + f * (3.0f * (b - c) + e - a)));
@@ -324,22 +328,22 @@ private:
     }
     float uniform01() { return 0.5f + 0.5f * uniform(); }
 
-    float    sampleRate_ = 48000.0f;
-    uint32_t seed_ = 1, rng_ = 1;
+    float    sampleRate_ IV_RI(48000.0f);
+    uint32_t seed_ = 1, rng_ IV_RI(1);
     float    bufL_[kSize] IV_ZI, bufR_[kSize] IV_ZI;
     int      w_ IV_ZI;
     float    wowPhase_ IV_ZI, flPhase_ IV_ZI, wowRnd_ IV_ZI, wowRndA_ IV_ZI, wowRndT_ IV_ZI, wowDrift_ IV_ZI, wowCount_ IV_ZI;
-    float    smooth_ = 0.02f, delaySm_ = kMin, gainSm_ = 1, lpSm_ = 1;
-    float    delayNow_ = kMin, dStep_ IV_ZI, gainNow_ = 1, gStep_ IV_ZI, lpNow_ = 1, lStep_ IV_ZI, lpL_ IV_ZI, lpR_ IV_ZI;
-    float    base_ = kMin, glideFrom_ = kMin, glideTo_ = kMin, glide_ = 1;
+    float    smooth_ IV_RI(0.02f), delaySm_ IV_RI(kMin), gainSm_ IV_RI(1), lpSm_ IV_RI(1);
+    float    delayNow_ IV_RI(kMin), dStep_ IV_ZI, gainNow_ IV_RI(1), gStep_ IV_ZI, lpNow_ IV_RI(1), lStep_ IV_ZI, lpL_ IV_ZI, lpR_ IV_ZI;
+    float    base_ IV_RI(kMin), glideFrom_ IV_RI(kMin), glideTo_ IV_RI(kMin), glide_ IV_RI(1);
     float    mixNow_ IV_ZI, mixT_ IV_ZI, mStep_ IV_ZI;
-    bool     idle_ = true;
+    bool     idle_ IV_RI(true);
     float    crinkleLeft_ IV_ZI, crinkleLen_ IV_ZI;
     float    jitA_ IV_ZI, jitB_ IV_ZI, roughA_ IV_ZI;
-    float    crinkleDue_ IV_ZI, crinkleNext_ = 0.5f; // expected bursts so far, the next's due
+    float    crinkleDue_ IV_ZI, crinkleNext_ IV_RI(0.5f); // expected bursts so far, the next's due
     int      crinkles_ IV_ZI;
-    uint32_t dipRng_ = 1;
-    float    dipAcc_ = 0.5f, dipLen_ IV_ZI, dipLeft_ IV_ZI;
+    uint32_t dipRng_ IV_RI(1);
+    float    dipAcc_ IV_RI(0.5f), dipLen_ IV_ZI, dipLeft_ IV_ZI;
     bool     dipThis_ IV_ZI;
     int      dips_ IV_ZI;
     float    rateMul_ IV_ZI, rateT_ IV_ZI, rateCount_ IV_ZI, slow_ IV_ZI, slowA_ IV_ZI, slowT_ IV_ZI, slowCount_ IV_ZI; // variance

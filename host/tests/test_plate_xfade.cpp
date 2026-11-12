@@ -7,6 +7,7 @@
 //   against the same minute with SIZE held (within 1 dB);
 // - a small move (SIZE 0.30 -> 0.31, under 4 % of the scale) glides at 0.0193 a second and never crossfades;
 // - frozen, a SIZE move and the unfreeze that follows glide (no crossfade).
+#include "DecayKnobFor.h"
 #include "dsp/Engine.h"
 #include "params/Mappings.h"
 
@@ -38,7 +39,7 @@ std::unique_ptr<iv::Engine> plate(float size, float decay)
     e->prepare(48000.0f, 48);
     e->setParam(iv::ParamId::Space, iv::switchToNormalised(0));
     e->setParam(iv::ParamId::Size, size);
-    e->setParam(iv::ParamId::Decay, decay);
+    e->setParam(iv::ParamId::Decay, decayKnobFor(decay));
     e->setParam(iv::ParamId::Mix, 1.0f);
     e->reset();
     return e;

@@ -6,6 +6,7 @@
 // note over TIME and stops, with no hole or jumps; SPACE flips are click-free; HALL and MASSIVE match in
 // loudness; MASSIVE is stable at every corner.
 
+#include "DecayKnobFor.h"
 #include "Metrics.h"
 #include "dsp/Engine.h"
 #include "dsp/Shimmer.h"
@@ -54,7 +55,7 @@ Stereo render(const std::vector<float>& in, const Setting& s, const std::vector<
     e.setParam(iv::ParamId::Space, iv::switchToNormalised(s.space));
     e.setParam(iv::ParamId::Attack, iv::switchToNormalised(s.attack));
     e.setParam(iv::ParamId::Time, s.time);
-    e.setParam(iv::ParamId::Decay, s.decay);
+    e.setParam(iv::ParamId::Decay, decayKnobFor(s.decay));
     e.setParam(iv::ParamId::Size, s.size);
     e.setParam(iv::ParamId::Mix, s.mix);
     e.setParam(iv::ParamId::Era, s.era);
@@ -186,7 +187,7 @@ void infiniteHoldsTheFloor()
         iv::Engine e;
         e.prepare(kSr, 48);
         e.setParam(iv::ParamId::Space, iv::switchToNormalised(space));
-        e.setParam(iv::ParamId::Decay, 1.0f);
+        e.setParam(iv::ParamId::Decay, decayKnobFor(1.0f));
         e.setParam(iv::ParamId::Size, 0.5f);
         e.setParam(iv::ParamId::Mix, 1.0f);
         e.setParam(iv::ParamId::Era, 0.0f);

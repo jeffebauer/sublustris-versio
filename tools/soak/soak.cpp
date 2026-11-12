@@ -714,7 +714,7 @@ struct Soak {
         const bool extremes = rng.chance(0.5f);
         staticSettings(extremes);
         setKnob(ParamId::Mix, 1.0f);
-        setKnob(ParamId::Decay, freeze ? rng.knob() : (rng.chance(0.4f) ? 1.0f : rng.range(0.85f, 1.0f)));
+        setKnob(ParamId::Decay, freeze ? rng.knob() : (rng.chance(0.4f) ? 1.0f : rng.range(iv::map::kDecayKnobEndlessAt, 1.0f)));
         src.set(Stim::Silence, 0.0f);
         run(0.5); // settle (a SPACE flip)
         const double inS = rng.range(2.0f, 8.0f);
@@ -784,12 +784,12 @@ struct Soak {
         beginEpisode("decay");
         staticSettings(rng.chance(0.4f));
         setKnob(ParamId::Mix, 1.0f);
-        const float d = rng.chance(0.2f) ? (rng.chance(0.5f) ? 0.0f : 0.8f) : rng.range(0.0f, 0.8f);
+        const float d = rng.chance(0.2f) ? (rng.chance(0.5f) ? 0.0f : iv::map::kDecayKnobFiniteTop) : rng.range(0.0f, iv::map::kDecayKnobFiniteTop);
         setKnob(ParamId::Decay, d);
         run(0.5);
         playInput(rng.range(0.3f, 5.0f), true);
         const int space = iv::normalisedToSwitch(knobs[int(ParamId::Space)].value);
-        float t60 = 1.0f / iv::map::decayRate(d, space);
+        float t60 = 1.0f / iv::map::decayRate(iv::map::decayScale(d), space);
         if (space == 1) t60 *= iv::map::hallT60Scale(knobs[int(ParamId::Size)].value);
         if (space == 0) t60 = std::max(t60, 0.6f);
         const double silenceS = std::min(330.0, std::max(30.0, 3.0 * t60 + 15.0));

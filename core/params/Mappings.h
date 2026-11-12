@@ -24,8 +24,8 @@ struct MixGains {
 };
 IV_CTL_OPT inline MixGains mixGains(float v) { return {std::cos(v * 0.5f * kPi), std::sin(v * 0.5f * kPi)}; }
 
-// DECAY (P2), SPEC §3: 0–0.80 T60 exponential per SPACE; 0.80–0.85 a
-// crossover to infinite (1/T60 falls linearly to 0); 0.85–1 infinite.
+// DECAY (P2), SPEC §3, on DECAY's scale (decayScale below maps the knob onto it): 0–0.80 T60 exponential per
+// SPACE; 0.80–0.85 a crossover to infinite (1/T60 falls linearly to 0); 0.85–1 infinite.
 // PLATE's and HALL's tops 30 / 60 s since v1.0.53 (ADR 0034; were 12 / 25).
 constexpr float kDecayFiniteTop   = 0.80f;
 constexpr float kDecayInfiniteAt  = 0.85f;
@@ -37,6 +37,27 @@ constexpr T60Range kT60Hall{0.8f, 60.0f};
 constexpr T60Range kT60Massive{2.0f, 120.0f};
 
 inline const T60Range& t60Range(int space) { return space == 0 ? kT60Plate : (space == 1 ? kT60Hall : kT60Massive); }
+
+// DECAY's knob onto DECAY's scale (v1.0.72, ADR 0048, the owner's pick C on renders/decay_curve). Everything keyed to
+// DECAY (this file's 0.80 and 0.85, the governor's weights and ease, endless following the playing, the make-up and its
+// trims, HALL's fuller floor) reads the scale, so it all moves with endless and stays at the same T60. The knob: finite
+// to kDecayKnobFiniteTop (0.92), the crossover to kDecayKnobEndlessAt (0.95, half past 4), endless to the stop. Over
+// the finite part the scale's share is x + b x (1 - x) of x = v / top: T60 stays exponential in that share, the bend
+// keeps noon at noon's old T60 and gives the long tails more of the knob. 0 and 1 land exactly on 0 and 1. Applied where
+// DECAY's smoother reads its target (Engine::param still returns the knob). The profile build reads no knobs and its
+// fixed test settings are on the scale, so it has none of this (it also has 4 B to spare).
+constexpr float kDecayKnobFiniteTop = 0.92f;
+constexpr float kDecayKnobEndlessAt = 0.95f;
+constexpr float kDecayKnobBend      = 0.328f;
+IV_CTL_NOINLINE IV_CTL_OPT inline float decayScale(float v)
+{
+    if (v <= kDecayKnobFiniteTop) {
+        const float x = v / kDecayKnobFiniteTop;
+        return kDecayFiniteTop * (x + kDecayKnobBend * x * (1.0f - x));
+    }
+    if (v < kDecayKnobEndlessAt) return kDecayFiniteTop + 0.05f * (v - kDecayKnobFiniteTop) / (kDecayKnobEndlessAt - kDecayKnobFiniteTop);
+    return kDecayInfiniteAt + 0.15f * (v - kDecayKnobEndlessAt) / (1.0f - kDecayKnobEndlessAt); // CANYON's attack still ends at 1's
+}
 
 // 1 / T60 in 1/s: 0 means infinite. Kept as a rate so the crossover is a
 // straight line and a loop gain follows as 10^(−3 · length · rate).
@@ -169,9 +190,10 @@ IV_SIZE_OPT inline dsp::TransportAmounts transportAmounts(float drift)
 // five eras): the Neve stays in the loop as the base at every setting (its warmth and its ×0.7 highs,
 // voicing::kNeveHighRatio, never darker with ERA; no wow or flutter, DRIFT's), and the wear on the wet
 // (dsp/EraTexture.h) comes in over the first twentieth of the knob, then deepens with it: tape saturation and
-// the BBD's compander breathing; the grit (the grain, the Midiverb's floating step) from 0.65 on (v1.0.49; the
-// BBD's clock with it until v1.0.64, ADR 0038); and with them the tape's in-loop compression, its hiss and the
-// crackle into the tank. ERA 0 is the Neve alone. (The radio's band left for MOTION's right side in v1.0.60: radioBand.)
+// the BBD's compander breathing; the grit (the grain, the Midiverb's floating step) from noon on (v1.0.69, ADR 0044;
+// 0.65 from v1.0.49; the BBD's clock with it until v1.0.64, ADR 0038); and with them the tape's in-loop compression,
+// its hiss and the crackle into the tank. ERA 0 is the Neve alone. (The radio's band left for MOTION's right side in
+// v1.0.60: radioBand.)
 struct EraWear {
     dsp::TexMix tex;                           // the wet's chain (dsp/EraTexture.h)
     float compress = 0, hiss = 0, crackle = 0; // the tape's in-loop compression, hiss and crackle, 0..1
@@ -183,11 +205,18 @@ IV_CTL_OPT inline EraWear eraMix(float v)
     dsp::TexMix& x = e.tex;
     const float t = clamp01(v / 0.05f);
     const float s = t * t * (3.0f - 2.0f * t); // a smoothstep over the first twentieth
+    // The intensities come in early on the knob (v1.0.69, ADR 0044, the owner's pick D on renders/wear_taper; lfad on
+    // Modwiggler: WEAR was "very subtle until you get past noon"): w = 1 - (1 - v)^kWearTaperPower, so noon wears like
+    // the old 0.78 and 3 o'clock is near full. The tape has its own, gentler one (v1.0.75, ADR 0051, the owner's pick D on
+    // renders/wear_ceiling), so its drive is lower at noon and keeps climbing to full: 3.4 / 8.0 / 11.8 / 13.5 dB at 9
+    // o'clock, noon, 3 o'clock and full (tex::kTapeDriveDb). Both are 0 at WEAR 0.
+    const float w = 1.0f - std::pow(1.0f - clamp01(v), kWearTaperPower);
     x.tapeW = x.breathW = s;
-    x.tapeT = x.breathT = v;
-    e.compress = e.hiss = e.crackle = s * v;
-    // The grit (the grain; the BBD's clock with it until v1.0.64, ADR 0038) from 0.65 on the knob (v1.0.49, the
-    // owner's pick D on renders/wear_grit: "it feels like the bit reduction is coming in too early"). Past 0.65 the
+    x.tapeT = 1.0f - std::pow(1.0f - clamp01(v), kWearTapeTaperPower);
+    x.breathT = w;
+    e.compress = e.hiss = e.crackle = s * w;
+    // The grit (the grain; the BBD's clock with it until v1.0.64, ADR 0038) from kWearGritStart on the knob itself,
+    // not w (noon since v1.0.69, ADR 0044; 0.65 from v1.0.49, the owner's pick D on renders/wear_grit). Past it the
     // rest of the knob is u (0..1): the grit's blend comes in over its first fifth (a smoothstep) and its intensity
     // goes from its finest (9 bits) to its full at WEAR 1.
     const float u = clamp01((v - kWearGritStart) / (1.0f - kWearGritStart));
@@ -265,6 +294,14 @@ IV_CTL_OPT inline float decayLevelMakeup(float v, int space)
         g *= std::pow(10.0f, -db / 20.0f);
     }
     return g;
+}
+
+// The wet's lift at short tails (v1.0.73, ADR 0049): the gain after WEAR for DECAY's scale v (finite: the Engine passes
+// decayFin). Keyed to the plain T60, so it moves with DECAY's knob curve and SIZE doesn't move it. A smoothstep, no libm.
+IV_CTL_OPT inline float decayWetLift(float v, int space)
+{
+    const float x = clamp01((1.0f / decayRate(v, space) - voicing::kWetLiftFromSeconds) / (voicing::kWetLiftToSeconds - voicing::kWetLiftFromSeconds));
+    return 1.0f + voicing::kWetLiftGain * (1.0f - x * x * (3.0f - 2.0f * x));
 }
 
 // HALL: The level a finite tail loses by being shorter (its energy goes with its
